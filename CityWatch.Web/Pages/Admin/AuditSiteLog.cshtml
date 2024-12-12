@@ -22,7 +22,7 @@
 <div id="loader"></div>
 <div class="full-width">
     <ul class="nav nav-tabs" role="tablist">
-        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator)
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminThirdParty)
         {
             <li class="nav-item">
                 <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
@@ -62,10 +62,10 @@
         }
     </ul>
     <div class="tab-content">
-        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator)
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminThirdParty)
         {
         <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
-            <partial name="_DailyGuardAuditSiteLog"></partial>
+            <partial name="_DailyGuardAuditSiteLog" model="Model"></partial>
         </div>
         <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
             <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>

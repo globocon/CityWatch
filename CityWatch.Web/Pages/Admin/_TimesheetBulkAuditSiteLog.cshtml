@@ -8,10 +8,12 @@
     <div class="form-row">
         <div class="form-group col-md-3">
             <label class="mx-1">Client Type</label>
+               @if (Model.ClientTypeId != 0)
+                                        {
             <select class="form-control" id="vklClientTypeTimesheet">
                 <option value="">Select</option>
                 @{
-                    var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId).Where(x => x.Id == Model.ClientTypeId);
                     var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
                     sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
                     foreach (var clientType in sortedClientTypes)
@@ -21,6 +23,23 @@
                     }
                 }
             </select>
+                                        }
+            @if (Model.ClientTypeId == 0)
+            {
+                <select class="form-control" id="vklClientTypeTimesheet">
+                    <option value="">Select</option>
+                    @{
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                        var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                        sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                        foreach (var clientType in sortedClientTypes)
+                        {
+                            var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                            <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                        }
+                    }
+                </select>
+            }
         </div>
         <div class="form-group col-md-3">
             <label class="mx-1">Client Site</label>

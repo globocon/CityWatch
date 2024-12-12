@@ -1560,6 +1560,21 @@ $(function () {
 
 
     //p6-102 Add Photo -end
+    
+    //if ($('#vklClientType').val() != null && $('#vklClientType').val() != '' && $('#vklClientType').val() != undefined) {
+
+    //    $('#vklClientType').change();
+    //}
+    
+    if ($('#fusionClientType').val() != null && $('#fusionClientType').val() != '' && $('#fusionClientType').val() != undefined) {
+
+        $('#fusionClientType').change();
+    }
+    
+    if ($('#vklClientTypeTimesheet').val() != null && $('#vklClientTypeTimesheet').val() != '' && $('#vklClientTypeTimesheet').val() != undefined) {
+
+        $('#vklClientTypeTimesheet').change();
+    }
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
         /*timer pause while editing*/
@@ -1966,7 +1981,11 @@ $(function () {
 
     });
 
-
+    //if ($('#dglClientType').val() != null && $('#dglClientType').val() != '' && $('#dglClientType').val() != undefined) {
+    //    var value = $('#dglClientType').val()
+    //    $('#dglClientType').val(value)
+    //    $('#dglClientType').change();
+    //}
     $('#dglClientSiteId').on('change', function () {
         const clientTypeId = $(this).val();
         $("#vklClientSiteId").val(clientTypeId);
@@ -1976,7 +1995,7 @@ $(function () {
 
 
     });
-
+   
     $('#btnGenerateDglAuditReport').on('click', function () {
 
         if ($('#dglClientSiteId').val() === '') {
