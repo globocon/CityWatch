@@ -1794,10 +1794,11 @@ $('#btnGuardHrUpdate').on('click', function () {
                     if (response[0].isSTATS) {
                         selectedValues.push(2);
                     }
-                    selectedValues.forEach(function (value) {
+                    //selectedValues.forEach(function (value) {
 
-                        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-                    });
+                    //    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    //});
+                  
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
                     $("#Guard_Access1").multiselect();
