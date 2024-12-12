@@ -25,7 +25,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
-        public readonly IClientDataProvider _clientDataProvider
+        public readonly IClientDataProvider _clientDataProvider;
 
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
