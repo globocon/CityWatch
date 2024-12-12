@@ -413,8 +413,36 @@ namespace CityWatch.Web.Pages.Admin
                 guardId
             });
         }
+        public JsonResult OnPostPersonalDetails(Data.Models.Guard guard)
+        {
+            var status = true;
+            var message = "Success";
+            var guardId = 0;
 
-        public JsonResult OnPostExportGuardsToExcel(bool active, bool inactive, int[] guardIdsFilter)
+            try
+            {
+                 guardId = _guardDataProvider.SaveLanguageDetails(guard);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "A guard with same name or security number already exists";
+                }
+            }
+            return new JsonResult(new
+            {
+                status,
+                message,
+               
+            });
+        }
+            public JsonResult OnPostExportGuardsToExcel(bool active, bool inactive, int[] guardIdsFilter)
         {
              return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active,inactive, guardIdsFilter) });
             //return new JsonResult("message");
@@ -1812,6 +1840,10 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetLicensesTypes());
         }
+        public JsonResult OnGetLanguages()
+        {
+            return new JsonResult(_guardLogDataProvider.GetLanguages());
+        }
         // p1-191 hr files task 3-end
 
 
@@ -1942,6 +1974,10 @@ namespace CityWatch.Web.Pages.Admin
             var arClientSiteIds = clientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds, searchKeyNo));
 
+        }
+        public JsonResult OnGetLanguageDetails(int guardId)
+        {
+            return new JsonResult(new { data = _guardLogDataProvider.GetLanguageDetails(guardId) });
         }
 
     }

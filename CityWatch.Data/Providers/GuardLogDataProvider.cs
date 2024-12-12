@@ -317,6 +317,10 @@ namespace CityWatch.Data.Providers
 
 
         public int GetDosandDontsFieldsCount(int type);
+        public List<LanguageMaster> GetLanguages();
+        public void SaveLanguages(LanguageMaster languageMaster);
+        public void DeleteLanguage(int id);
+        public List<LanguageDetails> GetLanguageDetails(int GuardID);
 
         public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater();
 
@@ -5355,6 +5359,45 @@ namespace CityWatch.Data.Providers
             return irh;
         }
 
+        public List<LanguageMaster> GetLanguages()
+        {
+            return _context.LanguageMaster.Where(x => x.IsDeleted == false)
+                .OrderBy(x => x.Id).ToList();
+        }
+        public List<LanguageDetails> GetLanguageDetails(int GuardID)
+        {
+            return _context.LanguageDetails
+                .Include(x=>x.LanguageMaster)
+                .Where(x => x.GuardId == GuardID)
+                .OrderBy(x => x.Id).ToList();
+        }
+        public void SaveLanguages(LanguageMaster languageMaster)
+        {
+            if (languageMaster.Id == -1)
+            {
+                languageMaster.Id = 0;
+                _context.LanguageMaster.Add(languageMaster);
+            }
+            else
+            {
+                var languageToUpdate = _context.LanguageMaster.SingleOrDefault(x => x.Id == languageMaster.Id);
+                if (languageToUpdate != null)
+                {
+                    languageToUpdate.Language = languageMaster.Language;
+                    languageToUpdate.IsDeleted = false;
+
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteLanguage(int id)
+        {
+            var languageToDelete = _context.LanguageMaster.SingleOrDefault(x => x.Id == id);
+            if (languageToDelete != null)
+                languageToDelete.IsDeleted = true;
+            _context.SaveChanges();
+        }
+
 
         public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater()
         {
@@ -5363,6 +5406,7 @@ namespace CityWatch.Data.Providers
             ////param1.SqlDbType = SqlDbType.VarChar;
             ////param1.SqlValue = pattern;
             return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
+
         }
     }
 

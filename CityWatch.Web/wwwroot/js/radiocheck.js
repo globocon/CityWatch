@@ -2,6 +2,8 @@
 const duration = 60 * 3;
 var isPaused = false;
 window.onload = function () {
+     updateLanguagesDropdown();
+   
     if (document.querySelector('#clockRefresh')) {
         startClock();
        
@@ -12,6 +14,42 @@ window.onload = function () {
     }
     
 };
+function updateLanguagesDropdown() {
+    var GuardID = $('#Guard_Id1').val();
+   
+
+    if (!GuardID) {
+        console.error("GuardID is missing or invalid.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=LanguageDetails',
+        type: 'GET',
+        data: { guardId: GuardID },
+        success: function (response) {
+            $(".multiselect-option input[type=checkbox]").prop("checked", false);
+            var selectedLanguages = response.data.map(function (item) {
+                return item.languageID.toString();
+            });
+            
+            
+            selectedLanguages.forEach(function (value) {
+
+                $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+            });
+            $("#LoteDrp").multiselect();
+            $("#LoteDrp").val(selectedLanguages);
+            $("#LoteDrp").multiselect("refresh");
+            
+        },
+        error: function (xhr, status, error) {
+            console.error("Error occurred during AJAX request:", status, error);
+        }
+    });
+}
+
+
 
 function startClock() {
     let timer = duration, minutes, seconds;
@@ -1756,10 +1794,11 @@ $('#btnGuardHrUpdate').on('click', function () {
                     if (response[0].isSTATS) {
                         selectedValues.push(2);
                     }
-                    selectedValues.forEach(function (value) {
+                    //selectedValues.forEach(function (value) {
 
-                        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-                    });
+                    //    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    //});
+                  
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
                     $("#Guard_Access1").multiselect();
@@ -2546,3 +2585,49 @@ $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_dele
 });
 //To get the Compliance and License data stop
 /*to enable for guard to update their documents - end*/
+
+//For personal tab start
+$('#LoteDrp').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#btnAddpersonalDetails').on('click', function () {
+    
+    $('#addpersonalModal').modal('show');
+});
+$('#btn_save_Personal').on('click', function () {
+    clearGuardValidationSummary('glValidationSummary');
+    
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=PersonalDetails',
+        data: $('#frm_add_personal').serialize(),
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.status) {
+            if (result.status) {
+                alert("Saved Successfully");
+               
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                
+            }
+        } else {
+            displayGuardValidationSummary('glValidationSummary', result.message);
+        }
+    });
+});
+//For personal tab stop
