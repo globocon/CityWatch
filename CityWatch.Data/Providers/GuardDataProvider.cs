@@ -944,19 +944,21 @@ namespace CityWatch.Data.Providers
         public void SaveGuardLotes(Guard guard)
         {
 
-            if (guard.LanguageDetails != null)
+            var getGuardsLotes = _context.LanguageDetails.Where(x => x.GuardId == guard.Id).ToList();
+            if (getGuardsLotes.Count() > 0)
             {
-                LanguageDetails languageDetails = new LanguageDetails();
-                foreach (var item in guard.LanguageDetails)
-                {
-                    languageDetails.Id = 0;
-                    languageDetails.LanguageID = Convert.ToInt32(item);
-                    languageDetails.CreatedDate = DateTime.Now;
-                    languageDetails.GuardId = guard.Id;
-                    languageDetails.IsDeleted = false;
-                    _context.LanguageDetails.Add(languageDetails);
-                    _context.SaveChanges();
-                }
+                DeleteGuardLotes(guard.Id);
+            }
+            LanguageDetails languageDetails = new LanguageDetails();
+            foreach (var item in guard.LanguageDetails)
+            {
+                languageDetails.Id = 0;
+                languageDetails.LanguageID = Convert.ToInt32(item);
+                languageDetails.CreatedDate = DateTime.Now;
+                languageDetails.GuardId = guard.Id;
+                languageDetails.IsDeleted = false;
+                _context.LanguageDetails.Add(languageDetails);
+                _context.SaveChanges();
             }
 
         }
