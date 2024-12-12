@@ -1,7 +1,9 @@
 ﻿@using CityWatch.Data.Models;
 @using CityWatch.Web.Helpers;
+@using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
 @inject IViewDataService viewDataService
+@inject IClientDataProvider clientDataProvider
 @model CityWatch.Web.Pages.Admin.AuditSiteLogModel
 
 <form id="form_kvl_auditlog_request" method="post" class="border-bottom">
@@ -41,7 +43,26 @@
         </div>
         <div class="form-group col-md-2">
             <label class="mx-1">Client Site</label>
+            @if (Model.ClientTypeId == 0)
+                                        {
             <select class="form-control mx-1" multiple="multiple" id="vklClientSiteId"></select>
+                                        }
+            @if (Model.ClientTypeId != 0)
+            {
+                <select class="form-control mx-1" multiple="multiple" id="vklClientSiteId">
+                    
+
+                    @{
+                        var userClientSites = clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == Model.ClientTypeId);
+                        foreach (var clientSite in userClientSites)
+                        {
+
+                            <option value="@clientSite.ClientSite.Id">@clientSite.ClientSite.Name </option>
+                        }
+                    }
+
+                </select>
+            }
         </div>
         <div class="form-group col-md-2">
             <label class="mx-1">From Date</label>

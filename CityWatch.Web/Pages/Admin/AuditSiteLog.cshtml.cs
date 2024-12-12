@@ -25,14 +25,14 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
-
+        public readonly IClientDataProvider _clientDataProvider
 
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService,
-            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider)
+            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider,IClientDataProvider clientDataProvider)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -41,6 +41,7 @@ namespace CityWatch.Web.Pages.Admin
             _clientViewDataService = clientViewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
             _configDataProvider = configDataProvider;
+            _clientDataProvider = clientDataProvider;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
@@ -304,7 +305,14 @@ namespace CityWatch.Web.Pages.Admin
         //to check with bdm-start
         public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            if (ClientTypeId == 0)
+                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            else
+            {
+                var userClientSiteIds = _clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == ClientTypeId).Select(x=>x.ClientSiteId).Distinct().ToList();
+
+                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x => userClientSiteIds.Contains(x.ClientSiteId));
+            }
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)

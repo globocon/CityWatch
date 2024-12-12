@@ -1,7 +1,9 @@
 ﻿@using CityWatch.Data.Models;
 @using CityWatch.Web.Helpers;
 @using CityWatch.Web.Services;
+@using CityWatch.Data.Providers;
 @inject IViewDataService viewDataService
+@inject IClientDataProvider clientDataProvider
 @model CityWatch.Web.Pages.Admin.AuditSiteLogModel
 
 <form id="form_kvl_auditlog_request" method="post" class="border-bottom">
@@ -19,7 +21,7 @@
                     foreach (var clientType in sortedClientTypes)
                     {
                         var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
-                        <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                        <option value="@clientType.Id" selected>@clientType.Name (@countClientType)</option>
                     }
                 }
             </select>
@@ -42,8 +44,26 @@
             }
         </div>
         <div class="form-group col-md-3">
-            <label class="mx-1">Client Site</label>
-            <select class="form-control mx-1" multiple="multiple" id="vklClientSiteIdTimesheet"></select>
+            <label class="mx-1">Client Site</label>@if (Model.ClientTypeId == 0)
+            {
+                <select class="form-control mx-1" multiple="multiple" id="vklClientSiteIdTimesheet"></select>
+            }
+            @if (Model.ClientTypeId != 0)
+            {
+                <select class="form-control mx-1" id="fusionClientSiteId">
+                    <option value="">Select</option>
+
+                    @{
+                        var userClientSites = clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == Model.ClientTypeId);
+                        foreach (var clientSite in userClientSites)
+                        {
+
+                            <option value="@clientSite.ClientSite.Id">@clientSite.ClientSite.Name </option>
+                        }
+                    }
+
+                </select>
+            }
         </div>
       
        
