@@ -129,7 +129,7 @@ namespace CityWatch.Web.Models
             get
             {
                 return string.IsNullOrEmpty(_languageString)
-                    ? string.Join(",<br />", _languages.Select(z => z.Language).Distinct().OrderBy(z => z))
+                    ? string.Join(",", _languages.Select(z => z.Language).Distinct().OrderBy(z => z))
                     : _languageString;
             }
             set
