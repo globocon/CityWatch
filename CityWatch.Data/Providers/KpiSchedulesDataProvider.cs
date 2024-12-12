@@ -30,6 +30,7 @@ namespace CityWatch.Data.Providers
         List<KpiSendTimesheetSchedules> GetAllTimesheetSchedules();
         KpiSendTimesheetSchedules GetTimesheetScheduleById(int scheduleId);
         KpiSendTimesheetSchedules GetTimesheetScheduleByIdandGuardId(int scheduleId, int GuardId);
+        public void RemoveAllKpiSendScheduleJobsOldNotComplete();
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -304,6 +305,25 @@ namespace CityWatch.Data.Providers
         {
             return _context.KpiSendScheduleJobs.ToList();
         }
+
+
+        public void RemoveAllKpiSendScheduleJobsOldNotComplete()
+        {
+            // Remove all old schedules with no completion date and created before today
+            var oldSchedules = _context.KpiSendScheduleJobs
+                                       .Where(z => !z.CompletedDate.HasValue && z.CreatedDate.Date < DateTime.Now.Date)
+                                       .ToList();
+
+            if (oldSchedules.Any())
+            {
+                _context.KpiSendScheduleJobs.RemoveRange(oldSchedules);
+                _context.SaveChanges();
+            }
+        }
+
+
+
+
         public List<KpiSendScheduleJobsTimeSheet> GetAllKpiSendScheduleJobsTimesheet()
         {
             return _context.KpiSendScheduleJobsTimeSheet.ToList();
