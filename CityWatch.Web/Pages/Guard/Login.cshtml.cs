@@ -82,9 +82,9 @@ namespace CityWatch.Web.Pages.Guard
                 if (
                     clientName.Trim().ToLower() != "www" &&
                     clientName.Trim().ToLower() != "cws-ir" &&
-                    clientName.Trim().ToLower() != "test"  
-                    //&&
-                    //clientName.Trim().ToLower() != "localhost"
+                    clientName.Trim().ToLower() != "test"
+                    &&
+                    clientName.Trim().ToLower() != "localhost"
                 )
                 {
                     int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
