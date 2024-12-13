@@ -79,8 +79,8 @@ namespace CityWatch.Web.Pages.Admin
                     clientName.Trim().ToLower() != "www" &&
                     clientName.Trim().ToLower() != "cws-ir" &&
                     clientName.Trim().ToLower() != "test"
-                //&&
-                //clientName.Trim().ToLower() != "localhost"
+                &&
+                clientName.Trim().ToLower() != "localhost"
                 )
                 {
                     int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
@@ -303,16 +303,26 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         //to check with bdm-start
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
+        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi,int clientTypeId)
         {
-            if (ClientTypeId == 0)
+            if (clientTypeId == 0)
+            {
+
                 return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            }
             else
             {
-                var userClientSiteIds = _clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == ClientTypeId).Select(x=>x.ClientSiteId).Distinct().ToList();
-
-                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x => userClientSiteIds.Contains((int)x.ClientSiteId)));
+                var userClientSiteIds = _clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == clientTypeId).Select(x => x.ClientSiteId).Distinct().ToList();
+                var value = _viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x=>!string.IsNullOrEmpty(x.ClientSite));
+                List<KeyVehicleLogProfileViewModel> newdata = new List<KeyVehicleLogProfileViewModel>();
+                foreach(var item in userClientSiteIds)
+                {
+                    newdata.AddRange(value.Where(x => x.ClientSiteId == item));
+                }
+                // var newdata = value.Where(x => userClientSiteIds.Contains((int)x.ClientSiteId));
+                return new JsonResult(newdata);
             }
+           
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)

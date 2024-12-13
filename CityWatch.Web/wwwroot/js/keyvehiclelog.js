@@ -4413,6 +4413,7 @@ $(function () {
             data: function (d) {
                 d.truckRego = $('#kvlProfileRegos').find(':selected').val();
                 d.poi = $('#kvlProfileIsPOIBDMSupplier').find(':selected').val();
+                d.clientTypeId = $('#VisitorProfileClientTypeId').val();
             },
             dataSrc: ''
         },
@@ -4443,7 +4444,7 @@ $(function () {
             },
         ],
     });
-
+   
     $('#tbl-audit-kvl-profiles tbody').on('click', 'td.dt-control', function () {
         var tr = $(this).closest('tr');
         var row = gridKeyVehicleLogProfiles.row(tr);
