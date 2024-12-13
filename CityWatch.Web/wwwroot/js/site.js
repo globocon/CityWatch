@@ -4556,7 +4556,7 @@ if (gridLanguage) {
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
-            if (result.success) gridLicenseTypes.reload();
+            if (result.success) gridLanguage.reload();
             else alert(result.message);
         }).fail(function () {
             console.log('error');

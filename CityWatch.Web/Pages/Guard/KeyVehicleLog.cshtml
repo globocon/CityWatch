@@ -751,6 +751,10 @@
                                     <li class="nav-item">
                                         <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="lote-tab" data-toggle="tab" href="#lote" role="tab" aria-controls="lote" aria-selected="true">Personal</a>
+                                    </li>
+
                                     @* <li class="nav-item">
                                         <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
                                     </li>
@@ -782,55 +786,77 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @* <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
-                                        <div class="form-row mb-2 btn-add-guard-addl-details">
-                                            <div class="col-md-2 offset-md-10 text-right">
-                                                <button class="btn btn-success" id="btnAddGuardLicenseLogDaily"><i class="fa fa-plus mr-2"></i>Add License</button>
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="col-md-12">
-                                                <table id="tbl_guard_licenses1" class="table table-bordered table-sm" width="100%">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>License No</th>
-                                                            <th>Type</th>
-                                                            <th>Expiry Date</th>
-                                                            <th>Reminder 1</th>
-                                                            <th>Reminder 2</th>
-                                                            <th>File</th>
-                                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
+                                    <div class="tab-pane fade show py-3" id="lote" role="tabpanel" aria-labelledby="lote-tab">
+                                        <div class="container-fluid">
+                                            <div class="form-row">
+                                                <div class="col-md-6">
+                                                    <form id="frm_add_personal">
+                                                        <input type="hidden" id="Guard_Id1" name="Guard.Id" value="@Model.KeyVehicleLog.GuardLogin.Guard.Id" />
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userName" class="col-sm-4 col-form-label">Guard Name</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="guardName" value="@Model.KeyVehicleLog.GuardLogin.Guard.Name" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userPassword" class="col-sm-4 col-form-label">License No(Primary)</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="licenseNo" value="@Model.KeyVehicleLog.GuardLogin.Guard.SecurityNo" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Mobile</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="mobile" value="@Model.KeyVehicleLog.GuardLogin.Guard.Mobile" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Email</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="email" value="@Model.KeyVehicleLog.GuardLogin.Guard.Email" disabled="disabled">
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">LOTE</label>
+                                                            <div class="col-sm-6">
+                                                                <select class="form-control" multiple="multiple" id="LoteDrp" name="Guard.LanguageDetails">
+                                                                    @foreach (var AccessType in viewDataServiceNew.GetLanguageMaster(true))
+                                                                    {
+
+                                                                        <option value="@AccessType.Value">@AccessType.Text</option>
+                                                                    }
+
+
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <div class="col-sm-4">
+                                                                <button type="button" class="btn btn-primary" id="btn_save_Personal">Save</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="col-sm-7" style="padding-top:164px">
+                                                        <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+                                                            <p class="left-text">Note:</p>&nbsp;&nbsp;
+
+                                                            <p class="right-text">
+                                                                Only LOTE can be edited  from this portal.<br>If other details need to be updated,Please
+                                                                contact your supervior or ADMIN
+                                                            </p>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade py-3" id="guardCompliances" role="tabpanel" aria-labelledby="compliances-tab">
-                                        <div class="form-row mb-2 btn-add-guard-addl-details">
-                                            <div class="col-md-2 offset-md-10 text-right">
-                                                <button class="btn btn-success" id="btnAddGuardCompliance1"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="col-md-12">
-                                                <table id="tbl_guard_compliances1" class="table table-bordered table-sm" width="100%">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Reference No</th>
-                                                            <th>HR Group</th>
-                                                            <th>Description</th>
-                                                            <th>Expiry Date</th>
-                                                            <th>Reminder 1</th>
-                                                            <th>Reminder 2</th>
-                                                            <th>File</th>
-                                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div> *@
+
                                 </div>
                             </div>
                         </div>

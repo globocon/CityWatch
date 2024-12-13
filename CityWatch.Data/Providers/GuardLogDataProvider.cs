@@ -5362,7 +5362,7 @@ namespace CityWatch.Data.Providers
         public List<LanguageMaster> GetLanguages()
         {
             return _context.LanguageMaster.Where(x => x.IsDeleted == false)
-                .OrderBy(x => x.Id).ToList();
+                .OrderBy(x => x.Language).ToList();
         }
         public List<LanguageDetails> GetLanguageDetails(int GuardID)
         {

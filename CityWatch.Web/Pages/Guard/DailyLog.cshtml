@@ -572,56 +572,72 @@
                                     </div>
 
                                     <div class="tab-pane fade show py-3" id="lote" role="tabpanel" aria-labelledby="lote-tab">
-                                       
+                                        <div class="container-fluid">
                                         <div class="form-row">
-                                            <div class="col-md-12">
-                                                <form id="frm_add_personal">
-                                                    <input type="hidden" id="Guard_Id1" name="Guard.Id" value="@Model.GuardLog.GuardLogin.Guard.Id" />
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <label for="userName" class="col-sm-2 col-form-label">Guard Name</label>
-                                                        <div class="col-sm-4">
-                                                            <input type="text" class="form-control" id="guardName" value="@Model.GuardLog.GuardLogin.Guard.Name" disabled="disabled">
+                                                <div class="col-md-6">
+                                                    <form id="frm_add_personal">
+                                                        <input type="hidden" id="Guard_Id1" name="Guard.Id" value="@Model.GuardLog.GuardLogin.Guard.Id" />
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userName" class="col-sm-4 col-form-label">Guard Name</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="guardName" value="@Model.GuardLog.GuardLogin.Guard.Name" disabled="disabled">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <label for="userPassword" class="col-sm-2 col-form-label">License No(Primary)</label>
-                                                        <div class="col-sm-4">
-                                                            <input type="text" class="form-control" id="licenseNo" value="@Model.GuardLog.GuardLogin.Guard.SecurityNo" disabled="disabled">
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userPassword" class="col-sm-4 col-form-label">License No(Primary)</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="licenseNo" value="@Model.GuardLog.GuardLogin.Guard.SecurityNo" disabled="disabled">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <label for="userConfirmPassword" class="col-sm-2 col-form-label">Mobile</label>
-                                                        <div class="col-sm-4">
-                                                            <input type="text" class="form-control" id="mobile" value="@Model.GuardLog.GuardLogin.Guard.Mobile" disabled="disabled">
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Mobile</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="mobile" value="@Model.GuardLog.GuardLogin.Guard.Mobile" disabled="disabled">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <label for="userConfirmPassword" class="col-sm-2 col-form-label">Email</label>
-                                                        <div class="col-sm-4">
-                                                            <input type="text" class="form-control" id="email" value="@Model.GuardLog.GuardLogin.Guard.Email" disabled="disabled">
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <label for="userConfirmPassword" class="col-sm-2 col-form-label">LOTE</label>
-                                                        <div class="col-sm-4">
-                                                            <select class="form-control" multiple="multiple" id="LoteDrp" name="Guard.LanguageDetails">
-                                                        @foreach (var AccessType in viewDataServiceNew.GetLanguageMaster(true))
-                                                            {
-                                                                    
-                                                                <option value="@AccessType.Value">@AccessType.Text</option>
-                                                            }
-                                                        
-                                                       
-                                                    </select>
-                                                        </div>
-                                                    </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Email</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="email" value="@Model.GuardLog.GuardLogin.Guard.Email" disabled="disabled">
+                                                            </div>
 
-                                                    <div class="form-group row m-0 mb-3">
-                                                        <div class="col-sm-4">
-                                                            <button type="button" class="btn btn-primary" id="btn_save_Personal">Save</button>
                                                         </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">LOTE</label>
+                                                            <div class="col-sm-6">
+                                                                <select class="form-control" multiple="multiple" id="LoteDrp" name="Guard.LanguageDetails">
+                                                                    @foreach (var AccessType in viewDataServiceNew.GetLanguageMaster(true))
+                                                                    {
+
+                                                                        <option value="@AccessType.Value">@AccessType.Text</option>
+                                                                    }
+
+
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <div class="col-sm-4">
+                                                                <button type="button" class="btn btn-primary" id="btn_save_Personal">Save</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="col-sm-7" style="padding-top:164px">
+                                                        <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+                                                            <p class="left-text">Note:</p>&nbsp;&nbsp;
+
+                                                            <p class="right-text">
+                                                                Only LOTE can be edited  from this portal.<br>If other details need to be updated,Please
+                                                                contact your supervior or ADMIN
+                                                            </p>
+                                                        </div>
+
                                                     </div>
-                                                </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
