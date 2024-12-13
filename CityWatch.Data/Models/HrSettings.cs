@@ -16,7 +16,7 @@ namespace CityWatch.Data.Models
         Settings = 4,
         [Display(Name = "Timesheets")]
         Timesheets = 5,
-        [Display(Name = "Lote")]
+        [Display(Name = "LOTE")]
         Lote = 6,
     }
     public enum HrCriticalType
