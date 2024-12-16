@@ -2057,15 +2057,15 @@ namespace CityWatch.Web.Pages.Admin
                 HtmlBody = mailBodyHtml
             };
             message.Body = builder.ToMessageBody();
-            //using (var client = new SmtpClient())
-            //{
-            //    client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-            //    if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
-            //        !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
-            //        client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
-            //    //client.Send(message);
-            //    client.Disconnect(true);
-            //}
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                //client.Send(message);
+                client.Disconnect(true);
+            }
 
         }
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
