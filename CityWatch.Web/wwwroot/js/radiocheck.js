@@ -1832,6 +1832,59 @@ $('#btnGuardHrUpdate').on('click', function () {
 
 
 
+function displayGuardValidationSummaryNew(divId, message, isSuccess) {
+    const $summaryDiv = $('#' + divId);
+
+    // Set the message
+    $summaryDiv.text(message);
+
+    // Apply success or error styling
+    if (isSuccess) {
+        $summaryDiv.css({
+            'color': 'green',            
+            'font-size': '12px' // Set font size
+        });
+    } else {
+        $summaryDiv.css({
+            'color': 'red',           
+            'font-size': '12px' // Set font size
+        });
+    }
+
+    // Ensure the div is visible
+    $summaryDiv.show();
+}
+
+
+$('#forgotpassword').click(function (e) {
+    e.preventDefault(); // Prevent the default anchor behavior
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    // AJAX request example
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
+        type: 'POST',
+        data: {
+            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+            
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+
+        if (result.success) {
+            displayGuardValidationSummaryNew('GuardLoginValidationSummaryHR', result.message, true);
+        }
+        else {
+            displayGuardValidationSummaryNew('GuardLoginValidationSummaryHR', result.message, false);
+        }
+    });
+});
+
+
+
+
+
+
 //$('#btnHRDetails').on('click', function () {
 //    $.ajax({
 //        type: 'GET',

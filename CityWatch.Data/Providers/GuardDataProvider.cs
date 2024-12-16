@@ -333,13 +333,18 @@ namespace CityWatch.Data.Providers
         public List<LanguageDetails> GetGuardLotes(int[] guardIds)
         {
             List<LanguageDetails> guardLogins = new List<LanguageDetails>();
-            foreach (int guardId in guardIds)
+            if (guardIds.Length != 0)
             {
+                foreach (int guardId in guardIds)
+                {
+                    var temp = _context.LanguageDetails.Where(z => z.GuardId == guardId).ToList();
+                    if (temp.Any())
+                    {
+                        guardLogins.AddRange(temp);
 
-                guardLogins.AddRange(_context.LanguageDetails
-                .Where(z => z.GuardId == guardId)
+                    }
+                }
 
-                    .ToList());
             }
 
 
