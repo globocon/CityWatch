@@ -111,5 +111,12 @@ namespace CityWatch.Web.Models
         public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
         public bool IsRCHRAccess { get { return _guard.IsRCHRAccess; } }
         public List<LanguageDetails> languageDetails1 { get { return _languageDetails.Where(x => x.GuardId == _guard.Id).ToList(); } }
+        public string languages
+        {
+            get
+            {
+                return string.Join(",", _languageDetails.Where(x => x.GuardId == _guard.Id).Select(z => z.LanguageMaster.Language).Distinct().OrderBy(z => z));
+            }
+        }
     }
 }
