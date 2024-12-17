@@ -65,7 +65,7 @@ namespace CityWatch.Web.Services
         public void Process()
         {
             /* Select only doc has ExpiryDate  and type is ExpiryDate type*/
-            var guardLicenses = _guardDataProvider.GetAllGuardLicensesAndCompliances().Where(z => z.ExpiryDate.HasValue && z.DateType == false).ToList();
+            var guardLicenses = _guardDataProvider.GetAllGuardLicensesAndCompliances().Where(z => z.ExpiryDate.HasValue && z.DateType == false && z.Guard.IsActive==true).ToList();
 
             var guardDocHaveExpiryToday = guardLicenses.Where(x => x.ExpiryDate == DateTime.Today.AddDays(x.Reminder1) || x.ExpiryDate == DateTime.Today.AddDays(x.Reminder2));
             if (guardDocHaveExpiryToday.Count() != 0 && guardDocHaveExpiryToday != null)
