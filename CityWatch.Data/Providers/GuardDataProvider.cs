@@ -338,7 +338,7 @@ namespace CityWatch.Data.Providers
 
                 guardLogins.AddRange(_context.LanguageDetails
                 .Where(z => z.GuardId == guardId)
-
+                .Include(z=>z.LanguageMaster)
                     .ToList());
             }
 

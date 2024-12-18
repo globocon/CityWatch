@@ -908,13 +908,15 @@
                                         <div id="loader"></div>
                                     </div>
 
-                                    <div class="" style="width: 142px;">
+                                    <div class="" style="width: 152px;">
                                         <input type="checkbox" class="form-check-input" id="chkbxHR1">
                                         <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
                                         <input type="checkbox" class="form-check-input" id="chkbxHR2">
                                         <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
                                         <input type="checkbox" class="form-check-input" id="chkbxHR3">
-                                        <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+                                        <label class="font-weight-normal pr-4" for="chkbxHR3">HR3</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxLote">
+                                        <label class="font-weight-normal" for="chkbxLote">LOTE</label>
 
                                     </div>
                                     <div class="col-md-2 text-left p-0">
@@ -933,9 +935,23 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-left p-0 mr-2">
+                                        <div class="hrsearchandeditkeyslist">
                                         <select class="form-control" id="list_HrSearchandEdit_keys">
                                             <option></option>
                                         </select>
+                                        </div>
+                                        <div class="languagedetailslist" hidden>
+                                        <select class="form-control" multiple="multiple" id="list_Lote_keys" name="Guard.LanguageDetails" >
+
+                                            @foreach (var AccessType in viewDataServiceNew.GetLanguages(true))
+                                            {
+
+                                                <option value="@AccessType.Text">@AccessType.Text</option>
+                                            }
+
+
+                                        </select>
+                                        </div>
                                     </div>
 
                                     <div class="col-md-1 offset-md-2 px-0 text-left ml-5">
@@ -979,6 +995,7 @@
                                             <th>hr1Description</th>
                                             <th>hr2Description</th>
                                             <th>hr3Description</th>
+                                            <th>languages</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
                                     </thead>

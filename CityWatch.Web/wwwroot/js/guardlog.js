@@ -96,6 +96,13 @@ $(function () {
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    $('#list_Lote_keys').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     $("#fileUpload").fileUpload();
 
 
@@ -4608,7 +4615,7 @@ $(function () {
             { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
-           
+            { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
 
 
         {
@@ -5595,6 +5602,9 @@ $(function () {
         if (thisCheck.is(':checked')) {
             $('#chkbxHR2').prop('checked', false);
             $('#chkbxHR3').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
 
             $('#list_HrSearchandEdit_keys').prop('disabled', false);
@@ -5624,6 +5634,9 @@ $(function () {
         if (thisCheck.is(':checked')) {
             $('#chkbxHR1').prop('checked', false);
             $('#chkbxHR3').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
             $('#list_HrSearchandEdit_keys').prop('disabled', false);
         }
@@ -5652,8 +5665,12 @@ $(function () {
         if (thisCheck.is(':checked')) {
             $('#chkbxHR1').prop('checked', false);
             $('#chkbxHR2').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
             $('#list_HrSearchandEdit_keys').prop('disabled', false);
+
         }
         else {
             $('.dropdownGuardHrFilter > button').prop('disabled', true);
@@ -5674,10 +5691,62 @@ $(function () {
         filterActiveInActiveGuards(guardSettings);
         //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
     });
+    $('#chkbxLote').on('click', function () {
+        var thisCheck = $(this);
+        reloadDropdown();
+        if (thisCheck.is(':checked')) {
+            $('#chkbxHR1').prop('checked', false);
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('.hrsearchandeditkeyslist').attr('hidden', true);
+            $('.languagedetailslist').attr('hidden', false)
+            
+            
+            $("#list_Lote_keys").multiselect();
+            $("#list_Lote_keys").val('');
+            $("#list_Lote_keys").multiselect("refresh");
+        }
+        else {
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
+        }
+        $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
+        // Clear global search
+        guardSettings.search('');
+
+        // Clear individual column searches
+        guardSettings.columns().search('');
+
+        // Redraw the table
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+        //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+    });
 
 
+    $('#list_Lote_keys').on('change', function () {
+        var selectedValues = $(this).val();
 
+        var laguages = '';
+        selectedValues.forEach(function (value) {
+            if (laguages == '') {
+                laguages = value;
+            }
+            else {
+                laguages = laguages + '|' + value;
+            }
+        })
+        guardSettings.column('languages:name').search(laguages, true, false)
+        guardSettings.ajax.reload();
     
+         
+        })
 
 
 
