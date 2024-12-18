@@ -337,7 +337,7 @@ namespace CityWatch.Data.Providers
             {
                 foreach (int guardId in guardIds)
                 {
-                    var temp = _context.LanguageDetails.Where(z => z.GuardId == guardId).ToList();
+                    var temp = _context.LanguageDetails.Where(z => z.GuardId == guardId).Include(z=>z.LanguageMaster).ToList();
                     if (temp.Any())
                     {
                         guardLogins.AddRange(temp);
