@@ -451,7 +451,8 @@
     window.myChart4;
     window.myChart5;
     window.myChart6;
-    $('#btnPatrolReportSumbit').on('click', function () {
+
+    $('#btnPatrolReportSumbitGraphOnly').on('click', function () {
 
         if (window.myChart1 != undefined)
             window.myChart1.destroy();
@@ -530,20 +531,20 @@
         //calculate month difference-end
         $('#loader-p').show();
         $.ajax({
-            url: '/Reports/PatrolData?handler=GenerateReport',
+            url: '/Reports/PatrolData?handler=GenerateReportGraph',
             type: 'POST',
             dataType: 'json',
             data: $('#frm_patrol_report_request').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
-            patrolReport.clear().rows.add(response.results).draw();
+            /* patrolReport.clear().rows.add(response.results).draw();*/
 
             drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
             /*drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");*/
             /*drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")*/
             drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
             drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
-            $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+            /*    $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);*/
             $('#count_by_site').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
 
@@ -577,19 +578,19 @@
             drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
             drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
             /* expanding grapph - start*/
-            
-            
+
+
             $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
             if (response.rcChartTypesForWeekNewCount != 0) {
                 drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
             }
-            
-           
+
+
             $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
             if (response.rcChartTypesForMonthNewCount != 0) {
                 drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
             }
-           
+
             $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
             if (response.rcChartTypesForYearNewCount != 0) {
                 drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
@@ -608,37 +609,290 @@
             if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
                 drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
             }
-           
-            $('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
-            $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
-            if (response.yearOfOnBoardingcount != 0) {
-                drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
-            }
-           
 
-            $('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
-            if (response.activeAndInActiveCount != 0) {
-                drawPieChartUsingChartJsActiveGuardVsInactiveGuard(response.activeAndInActive);
+            //$('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
+            //$('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+            //if (response.yearOfOnBoardingcount != 0) {
+            //    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
+            //}
 
-            }
-            $('#count_hr_GenderGuard').html(response.genderReportCount);
-            if (response.genderReportCount != 0) {
-                drawPieChartUsingChartJsGenderGuard(response.genderReport);
 
-            }
-            $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
-            if (response.yearOfOnBoardingcount != 0) {
-                drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
-            }
-            
+            //$('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
+            //if (response.activeAndInActiveCount != 0) {
+            //    drawPieChartUsingChartJsActiveGuardVsInactiveGuard(response.activeAndInActive);
+
+            //}
+            //$('#count_hr_GenderGuard').html(response.genderReportCount);
+            //if (response.genderReportCount != 0) {
+            //    drawPieChartUsingChartJsGenderGuard(response.genderReport);
+
+            //}
+            //$('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+            //if (response.yearOfOnBoardingcount != 0) {
+            //    drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
+            //}
+
         }).fail(function () {
         }).always(function () {
             $('#loader-p').hide();
         });
     });
+    $('#btnPatrolReportSumbit').on('click', function () {
+
+        $('#count_by_numberofduressperweek').html(0);
+        $('#count_by_numberofduresspermonth').html(0);
+        $('#count_by_numberofduressperyear').html(0);
+        $('#count_by_numberoftimesrcpushedbycro').html(0);
+        $('#count_by_numberofguardswnenttoprealarm').html(0);
+        $('#count_by_numberofguardswnentfromprealarmorangetored').html(0);
+        $('#count_by_site').html(0);
+        $('#count_by_area_ward').html(0);
+        $('#count_color_code').html(0);
+        $('#count_by_ir').html(0);
+        $('#count_by_ir3').html(0);
+        $('#count_by_site3').html(0);
+        $('#count_by_site1').html(0);
+        $('#count_by_area_ward1').html(0);
+        $('#count_by_area_ward3').html(0);
+        $('#count_color_code1').html(0);
+        $('#count_color_code3').html(0);
+        $('#count_hr_numberofYearofOnboarding').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_activeGuardVsInactiveGuard').html(0);
+        $('#count_hr_GenderGuard').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+
+        $('#btnExportExcel').attr('href', '#');
+        const fromDate = $('#date_from').val();
+        const toDate = $('#date_to').val();
+        if (fromDate === '' || toDate === '') {
+            alert('From date and to date is required');
+            return false;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 12) {
+            alert('Date Range is  greater than 12 months');
+            return false;
+        }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+        //calculate month difference-end
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateReport',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            patrolReport.clear().rows.add(response.results).draw();
+            $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+          /// Show Grpah data start
+            console.log('graph started ');
+            if (window.myChart1 != undefined)
+                window.myChart1.destroy();
+            if (window.myChart2 != undefined)
+                window.myChart2.destroy();
+            if (window.myChart3 != undefined)
+                window.myChart3.destroy();
+            if (window.myChart4 != undefined)
+                window.myChart4.destroy();
+            if (window.myChart5 != undefined)
+                window.myChart5.destroy();
+            if (window.myChart6 != undefined)
+                window.myChart6.destroy();
+            if (window.myChart7 != undefined)
+                window.myChart7.destroy();
+            if (window.myChart8 != undefined)
+                window.myChart8.destroy();
+            if (window.myChart9 != undefined)
+                window.myChart9.destroy();
+            if (window.myChart10 != undefined)
+                window.myChart10.destroy();
+            if (window.myChart11 != undefined)
+                window.myChart11.destroy();
+            if (window.myChart12 != undefined)
+                window.myChart12.destroy();
+            if (window.myChart13 != undefined)
+                window.myChart13.destroy();
+            if (window.myChart14 != undefined)
+                window.myChart14.destroy();
+            if (window.myChart15 != undefined)
+                window.myChart15.destroy();
+            if (window.myChart16 != undefined)
+                window.myChart16.destroy();
+            if (window.myChart17 != undefined)
+                window.myChart17.destroy();
+            if (window.myChart18 != undefined)
+                window.myChart18.destroy();
+
+            if (window.myChart20 != undefined)
+                window.myChart20.destroy();
+            if (window.myChart21 != undefined)
+                window.myChart21.destroy();
+            if (window.myChart22 != undefined)
+                window.myChart22.destroy();
+            if (window.myChart23 != undefined)
+                window.myChart23.destroy();
+
+            if (window.myChart24 != undefined)
+                window.myChart24.destroy();
+            if (window.myChart25 != undefined)
+                window.myChart25.destroy();
+
+            if (window.myChart26 != undefined)
+                window.myChart26.destroy();
+            if (window.myChart27 != undefined)
+                window.myChart27.destroy();
+
+           // $('#btnExportExcel').attr('href', '#');
+            const fromDate = $('#date_from').val();
+            const toDate = $('#date_to').val();
+            if (fromDate === '' || toDate === '') {
+                alert('From date and to date is required');
+                return false;
+            }
+            //calculate month difference-start
+            var date1 = new Date($('#ReportRequest_FromDate').val());
+            var date2 = new Date($('#ReportRequest_ToDate').val());
+
+            var monthdiff = monthDiff(date1, date2);
+            if (monthdiff > 12) {
+                alert('Date Range is  greater than 12 months');
+                return false;
+            }
+            $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+            $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+            //calculate month difference-end
+            $('#loader-p').show();
+            $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFirstTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+
+                console.log('graph response successs Charts and HR charts ');
+                drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
+                drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
+                drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
+                $('#count_by_site').html(response.chartData.sitePercentage.length);
+                $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
+                $('#count_color_code').html(response.chartData.colorCodePercentage.length);
+                $('#count_by_ir').html(response.recordCount);
+                $('#count_by_ir3').html(response.recordCount);
+                drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+                drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
+                $('#count_by_site3').html(response.chartData.sitePercentage.length);
+                drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
+                drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf");
+                drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
+                drawPieChartLargeSizeForPdf2(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity3");
+                drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity3");
+                $('#count_by_site1').html(response.chartData.sitePercentage.length);
+                $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
+                $('#count_by_area_ward3').html(response.chartData.areaWardPercentage.length);
+                $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
+                $('#count_color_code3').html(response.chartData.colorCodePercentage.length);
+                $('#txtDownloadfilename').val(response.fileName2);
+                drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
+                drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
+
+                $('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
+                $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+                if (response.yearOfOnBoardingcount != 0) {
+                    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
+                }
+
+
+                $('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
+                if (response.activeAndInActiveCount != 0) {
+                    drawPieChartUsingChartJsActiveGuardVsInactiveGuard(response.activeAndInActive);
+
+                }
+                $('#count_hr_GenderGuard').html(response.genderReportCount);
+                if (response.genderReportCount != 0) {
+                    drawPieChartUsingChartJsGenderGuard(response.genderReport);
+
+                }
+                $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+                if (response.yearOfOnBoardingcount != 0) {
+                    drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
+                }
+
+
+                $.ajax({
+                    url: '/Reports/PatrolData?handler=GenerateReportGraphSecondTab',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: $('#frm_patrol_report_request').serialize(),
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (response) {
+
+                    console.log('graph response2 successs rc charts ');
+                    /* expanding grapph - start*/
+
+
+                    $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+                    if (response.rcChartTypesForWeekNewCount != 0) {
+                        drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                    }
+
+
+                    $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+                    if (response.rcChartTypesForMonthNewCount != 0) {
+                        drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+                    }
+
+                    $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+                    if (response.rcChartTypesForYearNewCount != 0) {
+                        drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+                    }
+
+                    $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
+                    if (response.rcChartTypesCROCountnew != 0) {
+                        drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+                    }
+
+                    $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
+                    if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
+                        drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+                    }
+                    $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
+                    if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
+                        drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+                    }
+
+                   
+
+                }).fail(function () {
+                }).always(function () {
+                    $('#loader-p').hide();
+                });
+               
+
+            }).fail(function () {
+            }).always(function () {
+                //$('#loader-p').hide();
+            });
+          ///show graph data end 
+        }).fail(function () {
+        }).always(function () {
+            //$('#loader-p').hide();
+        });
+    });
 
 
 
+
+
+
+  
 
 
     /************Chart in popup 13/12/2024 large Size Start ***************** */
