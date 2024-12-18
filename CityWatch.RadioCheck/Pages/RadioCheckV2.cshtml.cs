@@ -533,8 +533,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public JsonResult OnGetGuardData(int id)
         {
             //return new JsonResult(_guardLogDataProvider.GetGuards(id));
-            return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
+            //return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
             
+            return new JsonResult(ViewDataService.GetGuards().Where(x => x.Id == id).FirstOrDefault());
+
+
         }
         public JsonResult OnGetCrmSupplierData(string name)
         {
