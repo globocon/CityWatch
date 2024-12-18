@@ -1858,6 +1858,7 @@ function displayGuardValidationSummaryNew(divId, message, isSuccess) {
 
 $('#forgotpassword').click(function (e) {
     e.preventDefault(); // Prevent the default anchor behavior
+    $('#spinner').removeClass('d-none').addClass('d-inline-block'); // Show spinner
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
     // AJAX request example
@@ -1877,6 +1878,8 @@ $('#forgotpassword').click(function (e) {
         else {
             displayGuardValidationSummaryNew('GuardLoginValidationSummaryHR', result.message, false);
         }
+        // Hide spinner after action is complete
+        $('#spinner').addClass('d-none').removeClass('d-inline-block');
     });
 });
 
