@@ -342,8 +342,10 @@ namespace CityWatch.Data.Providers
                     {
                         guardLogins.AddRange(temp);
 
+
                     }
                 }
+
 
             }
 

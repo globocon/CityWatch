@@ -13,6 +13,7 @@ namespace CityWatch.Data.Models
         public string SmartWandId { get; set; }
 
         public string PhoneNumber { get; set; }
+        public string SIMProvider { get; set; }
 
         [NotMapped]
         public bool IsInUse { get; set; }

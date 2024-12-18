@@ -24,7 +24,9 @@ $(function () {
         columns: [
             { width: 250, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
             { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
+            { width: 250, field: 'simProvider', title: 'SIM Provider', editor: true },
         ],
+        
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
