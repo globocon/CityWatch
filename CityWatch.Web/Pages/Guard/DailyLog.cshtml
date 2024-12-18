@@ -43,10 +43,10 @@
         <div class="float-right">
             @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
             <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
-           
-            
-            
-          
+
+
+
+
 
             @if (clientSiteSOp.Count != 0)
             {
@@ -83,13 +83,13 @@
 
                                         }
 
-                                </tbody>
-                            </table>
-                        </div>
+                                    </tbody>
+                                </table>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
             }
             else
             {
@@ -301,7 +301,7 @@
 </div>
 @{
 
-    if (IsDOSDONTList==true)
+    if (IsDOSDONTList == true)
     {
         <div class="row mt-2">
             <div class="col-md-12">
@@ -573,7 +573,7 @@
 
                                     <div class="tab-pane fade show py-3" id="lote" role="tabpanel" aria-labelledby="lote-tab">
                                         <div class="container-fluid">
-                                        <div class="form-row">
+                                            <div class="form-row">
                                                 <div class="col-md-6">
                                                     <form id="frm_add_personal">
                                                         <input type="hidden" id="Guard_Id1" name="Guard.Id" value="@Model.GuardLog.GuardLogin.Guard.Id" />
@@ -641,7 +641,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                   
+
                                 </div>
 
                             </div>
@@ -875,8 +875,8 @@
                         <div class="form-group col-md-4">
                             <button type="button" class="btn btn-outline-danger w-100" style="height:60px" id="delete_complianceandlicense_file"><i class="fa fa-trash fa-lg mr-2"></i>Delete</button>
                         </div>
-                        <div class="form-group col-md-12">                            
-                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />                            
+                        <div class="form-group col-md-12">
+                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
                             <div class="container  pl-0" style="display:flex;font-size:11px;color:black">
                                 <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
                                 <p class="right-text">
@@ -897,7 +897,7 @@
                                 </p>
                             </div>
                         </div>
-                    </div>                    
+                    </div>
                     <div class="form-row pl-5">
                         <div class="form-group col-md-12 m-0">
                             <div asp-validation-summary="All" id="compliancelicanseValidationSummary1"></div>
@@ -932,13 +932,14 @@
                                     <label class="mt-2 mr-2">Enter your PIN</label><br />
                                     <input class="form-control" type="password" id="txt_guardKey" />
                                 </div>
-                                <div>
-                                    
-                                    <div class="mt-2" style="padding-left:77px">
-                                        <button type="button" class="btn btn-primary" id="btnGuardHrUpdate" title="Get guard details">
-                                            <i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span>
-                                        </button>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div class="text-start" style="flex-grow: 1;">
+                                        <a href="#" id="forgotpassword" style="text-align: left; display: inline-block;">Forgot password?</a>
                                     </div>
+                                    <button type="button" class="btn btn-primary" id="btnGuardHrUpdate" title="Get Access to HR documents">
+                                        <i class="fa fa-sign-in mr-2"></i>
+                                        <span class="d-none d-md-inline-flex"></span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -974,8 +975,12 @@
                                     <input class="form-control" type="password" id="txt_guardKeyNewPIN" />
                                 </div>
                                 <div>
-                                    <div class="mt-2" style="padding-left:167px">
-                                        <button type="button" class="btn btn-primary" id="btnGuardHrUpdateNewPIN" title="Get guard details">
+                                    <div class="mt-2 d-flex align-items-start">
+                                        <div style="font-size: 11px; width: 170px;">
+                                            First-time users are required to enter a custom 4 to 6-digit PIN code to protect their personal information.
+                                            Please do not share your PIN.
+                                        </div>
+                                        <button type="button" class="btn btn-primary ms-3" id="btnGuardHrUpdateNewPIN" title="Get guard details">
                                             <i class="fa fa-save mr-1"></i><span class="d-none d-md-inline-flex">Save PIN</span>
                                         </button>
                                     </div>
@@ -1013,11 +1018,11 @@
                 var dglAttachmentRootPath = ViewData["DailyGuardLog_FilesPathRoot"] as string;
             }
             <div class="modal-body pb-0">
-                
+
                 <div class="form-row">
                     <div class="col-md-12">
                         <input type="hidden" id="GuardimagedataId" />
-                        <input type="checkbox" id="chbIsAttachmentToRear"  />
+                        <input type="checkbox" id="chbIsAttachmentToRear" />
                         <label for="chbIsAttachmentToRear"> Add as attachment to rear (Full Page)</label>
                         <input type="hidden" id="IsAttachmentToRear" />
                     </div>
@@ -1029,7 +1034,7 @@
                         <input type="hidden" id="IsTwentyfivePercentOfPage" />
                     </div>
                 </div>
-               <div class="row mt-2">
+                <div class="row mt-2">
                     <div class="col-md-12">
 
                         <ul id="dgl-attachment-list" class="list-group d-block w-auto pt-2">
@@ -1051,10 +1056,10 @@
                 <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
                     <span class="sr-only">Loading...</span>
                 </div>
-                 <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif, .heic,.png" multiple hidden>
+                <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif, .heic,.png" multiple hidden>
                 @*<input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif" multiple hidden>*@
                 <button class="btn btn-success ml-2 " id="btnIsRearOrTwentyfivePercentSaveAndClose">Save and Close</button>
-             </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1165,7 +1170,7 @@
             console.log('Longitude:', longitude);
             var geocoder = new google.maps.Geocoder();
             geocoder.geocode({ 'latLng': latlng }, function (results, status) {
-                if (status === google.maps.GeocoderStatus.OK) {                   
+                if (status === google.maps.GeocoderStatus.OK) {
                     if (results[0]) {
                         var address = results[0].formatted_address;
                         $("#hid_duressEnabledAddress").val(address);

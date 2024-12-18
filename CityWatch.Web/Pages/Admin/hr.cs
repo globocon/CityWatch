@@ -18,16 +18,20 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using Org.BouncyCastle.Crypto.Macs;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using MailKit.Net.Smtp;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
+using System.Text;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -43,7 +47,9 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
-        private readonly string _reportRootDir;
+        private readonly string _reportRootDir; 
+        private readonly EmailOptions _EmailOptions;
+
 
         public GuardSettingsModel(IViewDataService viewDataService,
              IClientSiteWandDataProvider clientSiteWandDataProvider,
@@ -54,7 +60,11 @@ namespace CityWatch.Web.Pages.Admin
              IGuardSettingsDataProvider guardSettingsDataProvider,
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
-             IOptions<Settings> settings)
+             IOptions<Settings> settings,
+             IOptions<EmailOptions> emailOptions
+
+
+             )
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
@@ -67,6 +77,7 @@ namespace CityWatch.Web.Pages.Admin
             _dropboxUploadService = dropboxUploadService;
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
+            _EmailOptions = emailOptions.Value;
         }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
@@ -1980,7 +1991,184 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { data = _guardLogDataProvider.GetLanguageDetails(guardId) });
         }
 
+        
+        public JsonResult OnPostResetGaurdHrPin(int guardId)
+        {
+            var message = string.Empty;
+            var success = false;
+            // Fetch guard details only once to avoid redundant queries
+            var guard = _guardDataProvider.GetGuards().FirstOrDefault(z => z.Id == guardId);
+
+            if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
+            {
+                // Generate email body and send email
+                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin);
+                SendEmailNew(emailBody, guard.Email);
+
+                // Update message
+                message = $"PIN sent to the email ID: {guard.Email}";
+                success = true;
+            }
+            else
+            {
+                // Handle missing data
+                message = "Invalid guard details or missing email/PIN.";
+                success = false;
+            }
+
+            return new JsonResult(new { message, success });
+        }
+
+
+
+
+        private void SendEmailNew(string mailBodyHtml, string ToAddress)
+        {
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+
+
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+            if (ToAddress != null && ToAddress != "")
+            {
+                var toAddressNew = ToAddress.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+
+                    if (!message.To.Contains(address))
+                    {
+                        message.To.Add(address);
+                    }
+
+            }
+
+            message.Subject = "HR Document PIN Reset";
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = mailBodyHtml
+            };
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                //client.Send(message);
+                client.Disconnect(true);
+            }
+
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
+        }
+
+
+
+        public string GetPasswordResetEmail(string userName, string temporaryPassword)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("<!DOCTYPE html>");
+            sb.AppendLine("<html>");
+            sb.AppendLine("<head>");
+            sb.AppendLine("<style>");
+            sb.AppendLine("body {");
+            sb.AppendLine("    font-family: Arial, sans-serif;");
+            sb.AppendLine("    line-height: 1.6;");
+            sb.AppendLine("    color: #333;");
+            sb.AppendLine("    background-color: #f9f9f9;");
+            sb.AppendLine("    margin: 0;");
+            sb.AppendLine("    padding: 0;");
+            sb.AppendLine("}");
+            sb.AppendLine(".email-container {");
+            sb.AppendLine("    width: 100%;");
+            sb.AppendLine("    max-width: 600px;");
+            sb.AppendLine("    margin: 20px auto;");
+            sb.AppendLine("    background-color: #ffffff;");
+            sb.AppendLine("    border: 1px solid #ddd;");
+            sb.AppendLine("    padding: 20px;");
+            sb.AppendLine("    border-radius: 8px;");
+            sb.AppendLine("    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);");
+            sb.AppendLine("}");
+            sb.AppendLine(".email-header {");
+            sb.AppendLine("    text-align: center;");
+            sb.AppendLine("    font-size: 18px;");
+            sb.AppendLine("    font-weight: bold;");
+            sb.AppendLine("    margin-bottom: 20px;");
+            sb.AppendLine("}");
+            sb.AppendLine(".temporary-password {");
+            sb.AppendLine("    font-weight: bold;");
+            sb.AppendLine("    background-color: #f2f2f2;");
+            sb.AppendLine("    padding: 10px;");
+            sb.AppendLine("    border-radius: 5px;");
+            sb.AppendLine("    display: inline-block;");
+            sb.AppendLine("    margin: 10px 0;");
+            sb.AppendLine("}");
+            sb.AppendLine(".reset-link {");
+            sb.AppendLine("    display: inline-block;");
+            sb.AppendLine("    background-color: #007bff;");
+            sb.AppendLine("    color: #ffffff;");
+            sb.AppendLine("    text-decoration: none;");
+            sb.AppendLine("    padding: 10px 20px;");
+            sb.AppendLine("    border-radius: 5px;");
+            sb.AppendLine("    margin-top: 20px;");
+            sb.AppendLine("    font-weight: bold;");
+            sb.AppendLine("}");
+            sb.AppendLine(".reset-link:hover {");
+            sb.AppendLine("    background-color: #0056b3;");
+            sb.AppendLine("}");
+            sb.AppendLine(".footer {");
+            sb.AppendLine("    margin-top: 20px;");
+            sb.AppendLine("    font-size: 12px;");
+            sb.AppendLine("    color: #666;");
+            sb.AppendLine("    text-align: center;");
+            sb.AppendLine("}");
+            sb.AppendLine("</style>");
+            sb.AppendLine("</head>");
+            sb.AppendLine("<body>");
+            sb.AppendLine("<div class=\"email-container\">");
+            sb.AppendLine("    <div class=\"email-header\">");
+            sb.AppendLine("        Password Reset Request");
+            sb.AppendLine("    </div>");
+            sb.AppendLine($"    <p>Hi {userName},</p>");
+            sb.AppendLine("    <p>Here is your password:</p>");
+            sb.AppendLine("    <p style=\"text-align: center;\"><span class=\\\"temporary-password\\\">{temporaryPassword}</span>\"");
+            sb.AppendLine("    </p>");
+            sb.AppendLine("    <div class=\"footer\">");
+            sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
+            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year.ToString()} {"CityWatch"}. All rights reserved.</p>");
+            sb.AppendLine("    </div>");
+            sb.AppendLine("</div>");
+            sb.AppendLine("</body>");
+            sb.AppendLine("</html>");
+            return sb.ToString();
+        }
+
+
     }
+
+
+
+
+
+  
+
 
 
 }
