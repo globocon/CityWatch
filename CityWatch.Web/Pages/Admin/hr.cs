@@ -2063,7 +2063,7 @@ namespace CityWatch.Web.Pages.Admin
                 if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
                     !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
                     client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
-                //client.Send(message);
+                client.Send(message);
                 client.Disconnect(true);
             }
 
@@ -2144,12 +2144,10 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine("<body>");
             sb.AppendLine("<div class=\"email-container\">");
             sb.AppendLine("    <div class=\"email-header\">");
-            sb.AppendLine("        Password Reset Request");
+            sb.AppendLine("        HR PIN Reset Request");
             sb.AppendLine("    </div>");
             sb.AppendLine($"    <p>Hi {userName},</p>");
-            sb.AppendLine("    <p>Here is your password:</p>");
-            sb.AppendLine("    <p style=\"text-align: center;\"><span class=\\\"temporary-password\\\">{temporaryPassword}</span>\"");
-            sb.AppendLine("    </p>");
+            sb.AppendLine("    <p>Here is your HR PIN:</p><span class=\"temporary-password\">{temporaryPassword}</span>") ;           
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
             sb.AppendLine($"        <p>&copy; {DateTime.Today.Year.ToString()} {"CityWatch"}. All rights reserved.</p>");
