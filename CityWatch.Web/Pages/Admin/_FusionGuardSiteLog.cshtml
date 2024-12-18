@@ -1,6 +1,8 @@
 ﻿@using CityWatch.Web.Helpers;
 @using CityWatch.Web.Services;
+@using CityWatch.Data.Providers;
 @inject IViewDataService viewDataService
+@inject IClientDataProvider clientDataProvider
 @model CityWatch.Web.Pages.Admin.AuditSiteLogModel
 <div class="row">
     <div class="col-md-12">
@@ -43,8 +45,27 @@
                 </div>
                 <div class="form-group col-md-3">
                     <label class="mx-1" for="fusionClientSiteId">Client Site</label>
-                    <select class="form-control mx-1" id="fusionClientSiteId"></select>
-               @*     <div class="form-check mt-1">
+                                        @if (Model.ClientTypeId == 0)
+                    {
+                        <select class="form-control mx-1" id="fusionClientSiteId"></select>
+                    }
+                    @if (Model.ClientTypeId != 0)
+                    {
+                        <select class="form-control mx-1" id="fusionClientSiteId">
+                            <option value="">Select</option>
+
+                            @{
+                                var userClientSites = clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == Model.ClientTypeId);
+                                foreach (var clientSite in userClientSites)
+                                {
+
+                                    <option value="@clientSite.ClientSite.Id">@clientSite.ClientSite.Name </option>
+                                }
+                            }
+
+                        </select>
+                    }
+                    @*     <div class="form-check mt-1">
                         <input type="checkbox" id="excludeSystemLog" class="form-check-input" />
                         <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
                     </div>*@

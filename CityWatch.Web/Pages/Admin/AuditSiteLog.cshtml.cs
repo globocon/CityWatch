@@ -25,14 +25,14 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
-
+        public readonly IClientDataProvider _clientDataProvider;
 
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService,
-            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider)
+            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider,IClientDataProvider clientDataProvider)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -41,6 +41,7 @@ namespace CityWatch.Web.Pages.Admin
             _clientViewDataService = clientViewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
             _configDataProvider = configDataProvider;
+            _clientDataProvider = clientDataProvider;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
@@ -302,9 +303,26 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         //to check with bdm-start
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
+        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi,int clientTypeId)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            if (clientTypeId == 0)
+            {
+
+                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            }
+            else
+            {
+                var userClientSiteIds = _clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == clientTypeId).Select(x => x.ClientSiteId).Distinct().ToList();
+                var value = _viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x=>!string.IsNullOrEmpty(x.ClientSite));
+                List<KeyVehicleLogProfileViewModel> newdata = new List<KeyVehicleLogProfileViewModel>();
+                foreach(var item in userClientSiteIds)
+                {
+                    newdata.AddRange(value.Where(x => x.ClientSiteId == item));
+                }
+                // var newdata = value.Where(x => userClientSiteIds.Contains((int)x.ClientSiteId));
+                return new JsonResult(newdata);
+            }
+           
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
