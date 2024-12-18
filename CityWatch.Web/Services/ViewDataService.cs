@@ -22,6 +22,7 @@ using System.Linq;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
@@ -153,6 +154,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
         List<SelectListItem> GetLanguages(bool withoutSelect = true);
+        public List<ClientSiteWithWands> GetUserClientSitesExcel(int? typeId, int? userId);
 
     }
 
@@ -1651,6 +1653,42 @@ namespace CityWatch.Web.Services
             return results;
         }
         //p2-192 client email search-end
+        public List<ClientSiteWithWands> GetUserClientSitesExcel(int? typeId, int? userId)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = _clientDataProvider.GetClientSites(typeId);
+
+            if (userId == null)
+            {
+                results = clientSites;
+            }
+            else
+            {
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            var clientSiteSmartWands = _clientDataProvider.GetClientSmartWand();
+
+            // Join ClientSite with ClientSiteSmartWands using ClientSiteId
+            var finalResults = results
+                .Select(clientSite => new ClientSiteWithWands
+                {
+                    ClientSite = clientSite,
+                    SmartWands = clientSiteSmartWands
+                        .Where(smartWand => smartWand.ClientSiteId == clientSite.Id)
+                        .ToList()
+                })
+                .ToList();
+
+            return finalResults;
+        }
+        public class ClientSiteWithWands
+        {
+            public ClientSite ClientSite { get; set; }
+            public List<ClientSiteSmartWand> SmartWands { get; set; }
+        }
         //p1-191 HR Files Task 3-start
 
         public List<SelectListItem> GetHRGroups(bool withoutSelect = true)

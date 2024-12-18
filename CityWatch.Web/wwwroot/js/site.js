@@ -5419,6 +5419,142 @@ $('#HrState').multiselect({
 
 
 
-//p1-213 document step L end 
+//p1-213 document step L end
+
+$("#btnDownloadClientSiteExcel").click(async function () {
+   
+    const currentDateTime = new Date().toISOString().split('T')[0];
+    const fileName = `ClientSites - ${currentDateTime}.xlsx`;
+
+
+
+    $('#loader').show(); // Show loader
+
+
+    try {
+        // Fetch data from the server
+        const response = await $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesExcel',
+            type: 'GET',
+            dataType: "json",
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: {
+                typeId: null,
+            }
+        });
+
+        $('#loader').hide(); // Hide loader
+        console.log(response.data);
+
+        //const filteredData = response.data.filter(item => guardIds.includes(item.id));
+        // Ensure response contains data
+        const rawData = Array.isArray(response) ? response : [];
+        if (rawData.length === 0) {
+            console.error("No data available to export.");
+            alert("No data available to export.");
+            return;
+        }
+
+        // Define headers and column widths
+
+        let maxSmartWands = 0;
+
+        rawData.forEach(item => {
+            const smartWands = Array.isArray(item.smartWands) ? item.smartWands : [];
+            if (smartWands.length > maxSmartWands) {
+                maxSmartWands = smartWands.length;
+            }
+        });
+
+        // Step 2: Define base headers and dynamic SmartWand headers
+        const baseHeaders = [
+            'Client Type',
+            'Client Site',
+            'Emails',
+            'Address',
+            'State',
+            'GPS',
+            'Billing',
+            'Status'
+        ];
+
+        // Dynamically add SmartWand and SIMProvider headers
+        const smartWandHeaders = [];
+        for (let i = 1; i <= maxSmartWands; i++) {
+            smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`);
+        }
+
+        const headers = [...baseHeaders, ...smartWandHeaders];
+        const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25,25]; // Example widths
+
+
+
+
+        const ws = XLSX.utils.aoa_to_sheet([[]]);
+
+
+
+        // Create the data rows
+        //const dataRows = [headers, ...rawData.map(item => [
+        //    item.clientType,
+        //    item.name,
+        //    item.emails,
+        //    item.address,
+        //    item.state,
+        //    item.gps,
+        //    item.billing,
+        //    item.status,
+
+        //])];
+        const dataRows = [
+            headers, // Add headers as the first row
+            ...rawData.map(item => {
+                const clientSite = item.clientSite || {};
+                const clientType = clientSite.clientType?.name || '';
+                const smartWands = Array.isArray(item.smartWands) ? item.smartWands : [];
+
+                // Base data for the row
+                const rowData = [
+                    clientType,
+                    clientSite.name || '',
+                    clientSite.emails || '',
+                    clientSite.address || '',
+                    clientSite.state || '',
+                    clientSite.gps || '',
+                    clientSite.billing || '',
+                    clientSite.status === 0 ? 'Ongoing' :
+                        clientSite.status === 1 ? 'Expiring' :
+                            clientSite.status === 2 ? 'Expired' : ''
+                ];
+
+                // Add SmartWand and SIMProvider data dynamically
+                for (let i = 0; i < maxSmartWands; i++) {
+                    const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
+                    rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '');
+                }
+
+                return rowData;
+            })
+        ];
+
+
+        // Update the worksheet with headers and data
+        XLSX.utils.sheet_add_aoa(ws, dataRows);
+
+        // Set column widths
+        ws['!cols'] = columnWidths.map(width => ({ wch: width }));
+
+        // Create a new workbook and append the worksheet
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'ClientSites');
+
+        // Write the file
+        XLSX.writeFile(wb, fileName);
+    } catch (error) {
+        $('#loader').hide(); // Hide loader in case of error
+        console.error('Error fetching or processing data:', error); // Log error
+        alert("An error occurred while exporting data.");
+    }
+});
 
 

@@ -171,7 +171,10 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm, searchTermtwo));
         }
-
+        public JsonResult OnGetClientSitesExcel(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
+        {
+            return new JsonResult(_viewDataService.GetUserClientSitesExcel(typeId, AuthUserHelper.LoggedInUserId));
+        }
         public JsonResult OnGetClientStates()
         {
             return new JsonResult(_configDataProvider.GetStates());

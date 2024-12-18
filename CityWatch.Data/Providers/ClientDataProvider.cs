@@ -241,6 +241,7 @@ namespace CityWatch.Data.Providers
         //p1-287 A to E-start
          List<LanguageMaster> GetLanguages();
         //p1-287 A to E-end
+        public List<ClientSiteSmartWand> GetClientSmartWand();
 
     }
 
@@ -331,6 +332,13 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
+        public List<ClientSiteSmartWand> GetClientSmartWand()
+        {
+
+            return _context.ClientSiteSmartWands
+        .ToList();
+        }
+
         public IncidentReportPosition GetClientSitePosition(string Name)
         {
             return _context.IncidentReportPositions.Where(x => x.Name == Name).FirstOrDefault();
