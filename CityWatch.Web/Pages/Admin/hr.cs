@@ -2115,23 +2115,10 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine(".temporary-password {");
             sb.AppendLine("    font-weight: bold;");
             sb.AppendLine("    background-color: #f2f2f2;");
-            sb.AppendLine("    padding: 10px;");
+            sb.AppendLine("    padding: 5px 10px;");
             sb.AppendLine("    border-radius: 5px;");
             sb.AppendLine("    display: inline-block;");
-            sb.AppendLine("    margin: 10px 0;");
-            sb.AppendLine("}");
-            sb.AppendLine(".reset-link {");
-            sb.AppendLine("    display: inline-block;");
-            sb.AppendLine("    background-color: #007bff;");
-            sb.AppendLine("    color: #ffffff;");
-            sb.AppendLine("    text-decoration: none;");
-            sb.AppendLine("    padding: 10px 20px;");
-            sb.AppendLine("    border-radius: 5px;");
-            sb.AppendLine("    margin-top: 20px;");
-            sb.AppendLine("    font-weight: bold;");
-            sb.AppendLine("}");
-            sb.AppendLine(".reset-link:hover {");
-            sb.AppendLine("    background-color: #0056b3;");
+            sb.AppendLine("    margin-left: 5px;"); // Slight spacing after the label
             sb.AppendLine("}");
             sb.AppendLine(".footer {");
             sb.AppendLine("    margin-top: 20px;");
@@ -2147,15 +2134,16 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine("        HR PIN Reset Request");
             sb.AppendLine("    </div>");
             sb.AppendLine($"    <p>Hi {userName},</p>");
-            sb.AppendLine("    <p>Here is your HR PIN:</p><span class=\"temporary-password\">{temporaryPassword}</span>") ;           
+            sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
-            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year.ToString()} {"CityWatch"}. All rights reserved.</p>");
+            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} CityWatch. All rights reserved.</p>");
             sb.AppendLine("    </div>");
             sb.AppendLine("</div>");
             sb.AppendLine("</body>");
             sb.AppendLine("</html>");
             return sb.ToString();
+
         }
 
 
