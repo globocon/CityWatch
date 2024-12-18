@@ -1255,7 +1255,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_provider').html('');
     $('#lbl_guard_provider_no').html('');
     $('#lbl_guard_gender').html('');
-
+    $('#lbl_guard_lotes').html('');
 
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -1286,6 +1286,8 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         var guardDetailsHtml = '<a href = "/GuardDetails?gId=' + result.id +'" target="_blank"><i class="fa fa-file-text fa-lg pl-5"></i></a>';
 
         $('#lbl_GuardDetailedDetails').html(guardDetailsHtml)
+        $('#lbl_guard_lotes').html('&nbsp;&nbsp;&nbsp;' + result.languages);
+        
 
         /*p4-105 new button-end*/
     }).fail(function () {
