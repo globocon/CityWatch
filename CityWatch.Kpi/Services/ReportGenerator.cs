@@ -1183,44 +1183,49 @@ namespace CityWatch.Kpi.Services
 
             if (HTList.Count > 0)
             {
-                foreach (var item in HTList.Take(9))
+                var filteredList = new List<HrSettings>();
+
+                foreach (var item in HTList)
                 {
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
+
                     if (SiteConditions.Count != 0 || StateConditions.Count != 0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+
                         if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
                         {
-                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                            filteredList.Add(item);
                         }
                         else if (SelctedSiteExist.Count != 0)
                         {
                             if (SelctedStateExist.Count != 0)
                             {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-
+                                filteredList.Add(item);
                             }
                             else
                             {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                                filteredList.Add(item);
                             }
-
                         }
                     }
                     else
                     {
-                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        filteredList.Add(item);
                     }
-
                 }
 
+                // Take only the first 9 relevant items
+                foreach (var item in filteredList.Take(9))
+                {
+                    kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                    kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                }
             }
+
+
 
 
             return kpiGuardTable1;
@@ -1234,59 +1239,26 @@ namespace CityWatch.Kpi.Services
 
             CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
 
-            var HTList = new List<HrSettings>();
-            if (IsDownselect == true)
-            {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
-            }
-            else
-            {
-                HTList = _viewDataService.GetHRSettings(Id);
-            }
+            var HTList = IsDownselect
+                ? _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID)
+                : _viewDataService.GetHRSettings(Id);
 
             if (HTList.Count > 0)
             {
-                foreach (var item in HTList.Skip(9).Take(9))
+                var filteredList = FilterHRSettings(HTList, clientSiteId, ClientSiteState);
+
+                // Skip the first 9 items already used in the first table and take the next 9
+                foreach (var item in filteredList.Skip(9).Take(9))
                 {
-                    var SiteConditions = item.hrSettingsClientSites;
-                    var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
-                    {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
-                        {
-                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                        }
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-
-                            }
-                            else
-                            {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                    }
-
+                    kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                    kpiGuardTable1.AddCell(CreateDataCell(item.Description));
                 }
-
             }
 
             return kpiGuardTable1;
+
         }
+       
         private Table CreateGuardDetailsLicenseAndComplianceHRTbl3(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
 
@@ -1308,46 +1280,56 @@ namespace CityWatch.Kpi.Services
 
             if (HTList.Count > 0)
             {
-                foreach (var item in HTList.Skip(18).Take(9))
+                var filteredList = FilterHRSettings(HTList, clientSiteId, ClientSiteState);
+
+                // Skip the first 9 items already used in the first table and take the next 9
+                foreach (var item in filteredList.Skip(18).Take(9))
                 {
-                    var SiteConditions = item.hrSettingsClientSites;
-                    var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
-                    {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
-                        {
-                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                        }
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-
-                            }
-                            else
-                            {
-                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
-                    }
-
+                    kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                    kpiGuardTable1.AddCell(CreateDataCell(item.Description));
                 }
-
             }
 
             return kpiGuardTable1;
+        }
+        private List<HrSettings> FilterHRSettings(List<HrSettings> HTList, int clientSiteId, string ClientSiteState)
+        {
+            var filteredList = new List<HrSettings>();
+
+            foreach (var item in HTList)
+            {
+                var SiteConditions = item.hrSettingsClientSites;
+                var StateConditions = item.hrSettingsClientStates;
+
+                if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                {
+                    var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                    var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+
+                    if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                    {
+                        filteredList.Add(item);
+                    }
+                    else if (SelctedSiteExist.Count != 0)
+                    {
+                        if (SelctedStateExist.Count != 0)
+                        {
+                            filteredList.Add(item);
+                        }
+                        else
+                        {
+                            filteredList.Add(item);
+                        }
+                    }
+                }
+                else
+                {
+                    filteredList.Add(item);
+                }
+            }
+
+
+            return filteredList;
         }
         private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect, int CriticalDocumentID)
         {
