@@ -5742,7 +5742,7 @@ $(function () {
                 laguages = laguages + '|' + value;
             }
         })
-        guardSettings.column('languages:name').search(laguages, true, false)
+        guardSettings.column('languages:name').search(laguages, true, false).draw();
         guardSettings.ajax.reload();
     
          
