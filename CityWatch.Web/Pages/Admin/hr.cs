@@ -2137,7 +2137,7 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
-            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} CityWatch. All rights reserved.</p>");
+            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} C4i System. All rights reserved.</p>");
             sb.AppendLine("    </div>");
             sb.AppendLine("</div>");
             sb.AppendLine("</body>");
