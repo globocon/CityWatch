@@ -459,7 +459,7 @@ $(function () {
 
 
         $('#loader').show();
-
+        //checkGuardLoginExpiry();
         $.ajax({
             url: '/Guard/Login?handler=GuardDetails&securityNumber=' + $(this).val(),
             type: 'GET',
@@ -471,6 +471,7 @@ $(function () {
                 else if (!result.guard.isActive) {
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
+               // els if (result.guard.lastLogin.loginDate)
                 //else if (result.guardLockStatusBasedOnRedDoc) {
                   //  showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
                 //}
@@ -559,7 +560,8 @@ $(function () {
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
                 $('#client_status_2').css('color', result.hR3);
-                
+
+
 
             },
             complete: function () {
@@ -890,12 +892,51 @@ $(function () {
                 }
             }).done(function (result) {
                 if (result.success) {
+                    confirmDialog(result.strResult, function () {
+
+                   
                     //alert(result.strResult);
-                    new MessageModal({
-                        message: result.strResult
-                    }).showWarning();
-                    return;
-                } else {
+                    //new MessageModal({
+                    //    message: result.strResult
+                    //}).showWarning();
+                                        if (!result.hrdocLockforThisGurad) {
+                        $.ajax({
+                            url: '/Guard/Login?handler=LoginGuard',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                        }).done(function (result) {
+                            if (result.success) {
+                                if (result.initalsChangedMessage !== '')
+                                    alert(result.initalsChangedMessage);
+
+                                let toUrl = getTargetUrl(result.logBookType);
+                                if (toUrl === '') alert('Invalid logbook type');
+                                else {
+                                    window.location.replace(toUrl);
+                                    $('#btnGuardLogin').prop('disabled', true);
+                                }
+                            } else {
+                                if (result.errors)
+                                    displayGuardValidationSummary('glValidationSummary', result.errors)
+                                else
+                                    alert(result.message)
+                            }
+                        }).always(function () {
+                            $('#loader').hide();
+                        });
+                    }
+                    else {
+                        $('#loader').hide();
+                        new MessageModal({
+                            message: 'A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate'
+                        }).showWarning();
+                        }
+                    });
+                }
+                else {
                     // if guard is active then submit guard login
                     if (!result.hrdocLockforThisGurad) {
                         $.ajax({
