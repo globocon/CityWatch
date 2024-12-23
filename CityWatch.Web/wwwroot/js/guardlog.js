@@ -759,6 +759,16 @@ $(function () {
         $("#confirmOk").unbind().one('click', onConfirm).one('click', fClose);
         $("#confirmCancel").unbind().one("click", fClose);
     }
+    function confirmDialogLogin(message, onConfirm) {
+        var fClose = function () {
+            modal.modal("hide");
+        };
+        var modal = $("#confirmModalLogin");
+        modal.modal("show");
+        $("#confirmMessageLogin").empty().append(message);
+        $("#confirmOkLogin").unbind().one('click', onConfirm).one('click', fClose);
+       
+    }
 
     $('#btnGuardLogin').on('click', function () {
 
@@ -892,7 +902,7 @@ $(function () {
                 }
             }).done(function (result) {
                 if (result.success) {
-                    confirmDialog(result.strResult, function () {
+                    confirmDialogLogin(result.strResult, function () {
 
                    
                     //alert(result.strResult);

@@ -751,14 +751,14 @@ namespace CityWatch.Web.Pages.Guard
             var sb = new StringBuilder();
 
             var messageBody = string.Empty;
-            messageBody = $" <tr><td style=\"width:10% ;border: 1px solid #000000;\">Name of Guard</td><td style=\"width:20% ;border: 1px solid #000000;\">{guardname}</td>";
-            messageBody= messageBody + $" <tr><td style=\"width:10% ;border: 1px solid #000000;\">License</td><td style=\"width:20% ;border: 1px solid #000000;\">{licenseNo}</td>";
-            messageBody = messageBody + $" <tr><td style=\"width:10% ;border: 1px solid #000000;\">Site</td><td style=\"width:20% ;border: 1px solid #000000;\">{clientSite}</td>";
-            messageBody = messageBody + $" <tr><td style=\"width:10% ;border: 1px solid #000000;\">Provider</td><td style=\"width:20% ;border: 1px solid #000000;\">{Provider}</td>";
+            messageBody = $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Name of Guard</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardname}</td>";
+            messageBody= messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{licenseNo}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{Provider}</td>";
 
-            sb.Append("Hi, <br/><br/>Following guard is trying to login after "+ daysbetween +". <br/><br/>");
-            sb.Append(" <table width=\"100%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
-            sb.Append(" <tr><td style=\"width:10% ;border: 1px solid #000000; \"><b>Guard Name</b></td><td style=\"width:20% ;border: 1px solid #000000;\">{doc.Guard.Name}</td></tr>");
+            sb.Append("Hi , <br/><br/>Following guard is trying to login after "+ daysbetween + " days. <br/><br/>");
+            sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
+            sb.Append(" <tr><td style=\"width:2% ;border: 1px solid #000000;text-align:center \" colspan=\"2\"><b>Guard Details</b></td></tr>");
             sb.Append(messageBody);
             sb.Append("");
             
@@ -784,7 +784,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             
 
-            message.Subject = "Guard login after " + daysbetween +".";
+            message.Subject = "Guard login after " + daysbetween +" days.";
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
             var builder = new BodyBuilder()
             {
