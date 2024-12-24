@@ -207,7 +207,7 @@ namespace CityWatch.RadioCheck.Services
             
             Process2();
             Process3();
-
+            Process4();
         }
 
         public void Process2()
@@ -224,6 +224,14 @@ namespace CityWatch.RadioCheck.Services
         {
             /* remove the repeated login for a guard in different sites keep the latest one ,i.e. show a guard only one site */
             _guardLogDataProvider.RemoveGuardLoginFromdifferentSites();
+        }
+
+
+
+        public void Process4()
+        {
+            /* Give Notfication to logbook if there is no activity in two hours  */
+            _guardLogDataProvider.TwoHourNoActivityNotificationForGuard();
         }
 
     }

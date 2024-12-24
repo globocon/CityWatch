@@ -25,6 +25,7 @@ using System.Net.NetworkInformation;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml.Linq;
 using static Dropbox.Api.Files.WriteMode;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
@@ -312,8 +313,8 @@ namespace CityWatch.Data.Providers
 
         List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory);
         List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId);
-        
-        List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin( int guardId);
+
+        List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin(int guardId);
 
 
         public int GetDosandDontsFieldsCount(int type);
@@ -323,6 +324,10 @@ namespace CityWatch.Data.Providers
         public List<LanguageDetails> GetLanguageDetails(int GuardID);
 
         public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater();
+
+        List<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History(int clientSiteId, DateTime date);
+
+        public void TwoHourNoActivityNotificationForGuard();
 
     }
 
@@ -350,6 +355,24 @@ namespace CityWatch.Data.Providers
 
 
 
+        }
+
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History(int clientSiteId, DateTime date)
+        {
+            // Fetch the records
+            var result = _context.ClientSiteRadioChecksActivityStatus_History
+                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime >= date && z.EventDateTime < date.AddDays(1))
+                .ToList();
+
+            // Update EventDateTime based on the available Last*CreatedTime
+            foreach (var item in result)
+            {
+                item.EventDateTime = item.LastIRCreatedTime ?? item.LastKVCreatedTime ?? item.LastLBCreatedTime ?? item.LastSWCreatedTime ?? item.EventDateTime;
+            }
+
+            return result;
         }
 
 
@@ -2527,11 +2550,11 @@ namespace CityWatch.Data.Providers
 
                             //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
 
-                            if(siteLocalTime>= dateTime && siteLocalTime <= dateendTime)
-                            { 
+                            if (siteLocalTime >= dateTime && siteLocalTime <= dateendTime)
+                            {
                                 //Commneted for fix the time zone issue
-                            //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
-                            //{
+                                //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                                //{
                                 /* Check if anylogbook entery exits in that timing */
                                 var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                                 bool iflogbookentryexist = false;
@@ -2667,7 +2690,7 @@ namespace CityWatch.Data.Providers
         /* if cro maid any commnents no need to show */
         public bool checkIfStatusUpdatedByCROforNoGaurdOnDuty(int ClientSiteId)
         {
-            var numberofRcStatusExistForThisSite= _context.ClientSiteRadioChecks.Where(x => x.ClientSiteId == ClientSiteId && x.GuardId == 4).ToList();
+            var numberofRcStatusExistForThisSite = _context.ClientSiteRadioChecks.Where(x => x.ClientSiteId == ClientSiteId && x.GuardId == 4).ToList();
             if (numberofRcStatusExistForThisSite.Count != 0)
             {
                 return true;
@@ -4588,7 +4611,7 @@ namespace CityWatch.Data.Providers
                     else
                     {
 
-                        notifications = "Control Room Alert for "+ clientsitename + ": " + notifications;
+                        notifications = "Control Room Alert for " + clientsitename + ": " + notifications;
                     }
                 }
 
@@ -5039,13 +5062,13 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-        public void UpdateHRLockSettings(int id,bool status)
+        public void UpdateHRLockSettings(int id, bool status)
         {
             var updateHRLockSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
             if (updateHRLockSettings != null)
             {
-               
-               updateHRLockSettings.HRLock = status;
+
+                updateHRLockSettings.HRLock = status;
                 _context.SaveChanges();
             }
         }
@@ -5215,10 +5238,10 @@ namespace CityWatch.Data.Providers
 
             }
 
-                //notificationCreatedTime
+            //notificationCreatedTime
 
-                var returnData = data.OrderBy(z => z.EventDateTime)
-                .ToList();
+            var returnData = data.OrderBy(z => z.EventDateTime)
+            .ToList();
 
             return returnData;
         }
@@ -5318,8 +5341,8 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in IncidentReportHistory)
             {
-                newirh.Add(_context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == item.GuardId && x.IRId == item.Id).Include(x=>x.ClientSite).
-                    Include(x=>x.IncidentReport).OrderByDescending(x => x.LastIRCreatedTime).FirstOrDefault());
+                newirh.Add(_context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == item.GuardId && x.IRId == item.Id).Include(x => x.ClientSite).
+                    Include(x => x.IncidentReport).OrderByDescending(x => x.LastIRCreatedTime).FirstOrDefault());
 
             }
 
@@ -5329,7 +5352,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId)
         {
             List<ClientSiteRadioChecksActivityStatus_History> newrl = new List<ClientSiteRadioChecksActivityStatus_History>();
-            if ((clientSiteId == 0 ) || (guardId == 0))
+            if ((clientSiteId == 0) || (guardId == 0))
             {
                 return newrl;
             }
@@ -5340,7 +5363,7 @@ namespace CityWatch.Data.Providers
                         .OrderByDescending(x => x.LastIRCreatedTime)
                         .Take(1)
                     .ToList();
-            
+
 
             return newirh;
         }
@@ -5353,7 +5376,7 @@ namespace CityWatch.Data.Providers
             }
 
             var irh = _context.IncidentReports.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
-                .Include(x=>x.ClientSite)
+                .Include(x => x.ClientSite)
                 .OrderByDescending(x => x.CreatedOn)
                 .Take(1).ToList();
             return irh;
@@ -5367,7 +5390,7 @@ namespace CityWatch.Data.Providers
         public List<LanguageDetails> GetLanguageDetails(int GuardID)
         {
             return _context.LanguageDetails
-                .Include(x=>x.LanguageMaster)
+                .Include(x => x.LanguageMaster)
                 .Where(x => x.GuardId == GuardID)
                 .OrderBy(x => x.Id).ToList();
         }
@@ -5408,6 +5431,236 @@ namespace CityWatch.Data.Providers
             return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
 
         }
-    }
 
+
+
+        public void TwoHourNoActivityNotificationForGuard()
+        {
+            try
+            {
+                // Find all active logins
+                var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
+                    .Where(a => a.GuardLoginTime != null
+                        && a.GuardLogoutTime == null
+                        && a.ClientSiteId != null && a.NotificationType == null
+                        && !_context.RCActionList
+                              .Where(rc => rc.IsRCBypass)
+                              .Select(rc => rc.ClientSiteID)
+                              .Contains(a.ClientSiteId))
+                    .ToList();
+
+                foreach (var login in allActiveLogins)
+                {
+                    try
+                    {
+                        // Fetch all activities for the same GuardId and ClientSite
+                        var activities = _context.ClientSiteRadioChecksActivityStatus
+                            .Where(a => a.ClientSite == login.ClientSite
+                                && a.GuardId == login.GuardId
+                                && a.GuardLoginTime != null
+                                && a.NotificationType == null)
+                            .ToList();
+
+                        if (activities.Any())
+                        {
+                            foreach (var activity in activities)
+                            {
+                                activity.NotificationCreatedTime = GetLatestNotificationTime(activity);
+                            }
+
+                            var lastActivity = activities
+                                .OrderByDescending(a => a.NotificationCreatedTime)
+                                .FirstOrDefault();
+
+                            if (lastActivity != null &&
+                                lastActivity.NotificationCreatedTime.HasValue &&
+                                (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
+                                !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId))
+                            {
+                                // Send notification
+                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId);
+
+                                // Log the notification
+                                LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId);
+                            }
+                        }
+                        else
+                        {
+                            if (login.GuardLoginTime.HasValue &&
+                                (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2 &&
+                                !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId))
+                            {
+                                // Send notification
+                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId);
+
+                                // Log the notification
+                                LogNotification(login.GuardId, login.ClientSiteId);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing login for GuardId {login.GuardId} at ClientSite {login.ClientSite}: {ex.Message}");
+                    }
+                }
+
+                // Save changes to the database
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Critical error in TwoHourNoActivityNotificationForGuard: {ex.Message}");
+            }
+        }
+
+        // Helper method to get the latest NotificationCreatedTime from activity fields
+        private DateTime? GetLatestNotificationTime(ClientSiteRadioChecksActivityStatus activity)
+        {
+            return new[]
+            {
+        activity.LastIRCreatedTime,
+        activity.LastKVCreatedTime,
+        activity.LastLBCreatedTime,
+        activity.LastSWCreatedTime
+    }.Where(t => t.HasValue).Max();
+        }
+
+        // Helper method to check if a notification has been sent recently
+        private bool HasNotificationBeenSentRecently(int guardId, int clientSiteId)
+        {
+            var cutoffTime = DateTime.Now.AddMinutes(-120); // Change the time window as needed
+            return _context.GuardTwoHourNoActivityNotificationLog
+                .Any(log => log.GuardId == guardId &&
+                            log.ClientSiteId == clientSiteId &&
+                            log.NotificationTime > cutoffTime);
+        }
+
+        // Helper method to log a notification
+        private void LogNotification(int guardId, int clientSiteId)
+        {
+            _context.GuardTwoHourNoActivityNotificationLog.Add(new GuardTwoHourNoActivityNotificationLog
+            {
+                GuardId = guardId,
+                ClientSiteId = clientSiteId,
+                NotificationTime = DateTime.Now
+            });
+            _context.SaveChanges();
+        }
+
+
+       
+
+
+
+
+        //public void TwoHourNoActivityNotificationForGaurd()
+        //{
+
+
+        //    // Find all active logins
+        //    var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
+        //        .Where(a => a.GuardLoginTime != null
+        //            && a.GuardLogoutTime == null
+        //            && a.ClientSiteId != null
+        //            && !_context.RCActionList
+        //                  .Where(rc => rc.IsRCBypass)
+        //                  .Select(rc => rc.ClientSiteID)
+        //                  .Contains(a.ClientSiteId))
+        //        .ToList();
+
+        //    foreach (var login in allActiveLogins)
+        //    {
+        //        // Fetch all activities for the same GuardId and ClientSite
+        //        var activities = _context.ClientSiteRadioChecksActivityStatus
+        //            .Where(a => a.ClientSite == login.ClientSite
+        //                && a.GuardId == login.GuardId
+        //                && a.GuardLoginTime != null
+        //                && a.NotificationType == null)
+        //            .ToList();
+
+
+        //        if (activities.Any())
+        //        {
+        //            // Update NotificationCreatedTime based on available fields
+        //            foreach (var activity in activities)
+        //            {
+        //                if (activity.LastIRCreatedTime != null)
+        //                    activity.NotificationCreatedTime = activity.LastIRCreatedTime;
+        //                if (activity.LastKVCreatedTime != null)
+        //                    activity.NotificationCreatedTime = activity.LastKVCreatedTime;
+        //                if (activity.LastLBCreatedTime != null)
+        //                    activity.NotificationCreatedTime = activity.LastLBCreatedTime;
+        //                if (activity.LastSWCreatedTime != null)
+        //                    activity.NotificationCreatedTime = activity.LastSWCreatedTime;
+        //            }
+
+        //            // Find the last activity based on NotificationCreatedTime
+        //            var lastActivity = activities
+        //                .OrderByDescending(a => a.NotificationCreatedTime)
+        //                .FirstOrDefault();
+
+        //            if (lastActivity != null)
+        //            {
+        //                // Check if the last activity is more than two hours old
+        //                if (lastActivity.NotificationCreatedTime.HasValue &&
+        //                    (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2)
+        //                {
+        //                    // Send a notification to the guard
+        //                    CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId);
+        //                }
+        //            }
+
+
+        //        }
+        //        else
+        //        {
+        //            /* only login exist then check if no actvity after login with in 2hours*/
+        //            if (login.GuardLoginTime.HasValue &&
+        //                   (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2)
+        //            {
+        //                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId);
+        //            }
+
+        //        }
+
+        //    }
+        //}
+
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId)
+        {
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
+            // Check if Logbook id exists for the date create new logbookid
+            var logbookdate = DateTime.Today;
+            var logbooktype = LogBookType.DailyGuardLog;
+            //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);
+            var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(ClientSiteID, logbooktype);
+            var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name;
+            var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
+
+            var guardName = GetGuards(GuardId).Name;
+            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance";
+            if (checklogbookEntry.Count < 1)
+            {
+                var guardLog = new GuardLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    EventDateTime = DateTime.Now,
+                    Notes = subject,
+                    EventType = (int)GuardLogEventType.NoGuardLogin,
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    PlayNotificationSound = false,
+                    IrEntryType = IrEntryType.Notification
+                };
+                SaveGuardLog(guardLog);
+                LogBookEntryFromRcControlRoomMessages(0, 0, subject, ClientSiteName, IrEntryType.Notification, 1, 0, guardLog);
+            }
+        }
+
+
+    }
 }
