@@ -732,12 +732,12 @@ namespace CityWatch.Web.Pages.Guard
                             success = true;
                             if (incidentreport != null)
                             {
-                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), incidentreport.ReportDateTime.ToString());
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(),lastLogin.ClientSite.Name, incidentreport.ReportDateTime.ToString());
                                 SendEmailNew(emailBody, daysBetween);
                             }
                             else
                             {
-                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), null);
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), lastLogin.ClientSite.Name, null);
                                 SendEmailNew(emailBody, daysBetween);
                             }
                             
@@ -756,7 +756,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
         }
-        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween,string lastLoginDate, string incidentReportDate)
+        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween,string lastLoginDate,string lastloginclientsite, string incidentReportDate)
         {
             var sb = new StringBuilder();
 
@@ -766,7 +766,7 @@ namespace CityWatch.Web.Pages.Guard
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{Provider}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known sign in date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastLoginDate}</td>";
-            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastloginclientsite}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known IR date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{incidentReportDate}</td>";
 
             sb.Append("Hi , <br/><br/>Following guard is trying to login after "+ daysbetween + " days. <br/><br/>");
