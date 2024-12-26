@@ -727,10 +727,20 @@ namespace CityWatch.Web.Pages.Guard
                         }
                             else
                             {
+                            var incidentreport = _clientDataProvider.GetLastIncidentReportsByGuardId(guard.Id);
                             strResult = "You have'nt logged in for a while. Please wait for 5 minutes as we re-activate your profile.";
                             success = true;
-                            var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo,clientSiteName,guard.Provider, daysBetween);
-                            SendEmailNew(emailBody, daysBetween);
+                            if (incidentreport != null)
+                            {
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), incidentreport.ReportDateTime.ToString());
+                                SendEmailNew(emailBody, daysBetween);
+                            }
+                            else
+                            {
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), null);
+                                SendEmailNew(emailBody, daysBetween);
+                            }
+                            
                         }
 
                     }
@@ -746,7 +756,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
         }
-        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween)
+        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween,string lastLoginDate, string incidentReportDate)
         {
             var sb = new StringBuilder();
 
@@ -755,6 +765,9 @@ namespace CityWatch.Web.Pages.Guard
             messageBody= messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{licenseNo}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{Provider}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known sign in date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastLoginDate}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known IR date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{incidentReportDate}</td>";
 
             sb.Append("Hi , <br/><br/>Following guard is trying to login after "+ daysbetween + " days. <br/><br/>");
             sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
