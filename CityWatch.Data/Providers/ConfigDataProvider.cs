@@ -106,6 +106,8 @@ namespace CityWatch.Data.Providers
         string GetClientTypeNameById(int id);
 
         List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo);
+        List<Courses> GetCourseDocsUsingSettingsId(int type);
+        List<TQNumbers> GetTQNumbers();
 
     }
 
@@ -1102,5 +1104,20 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<Courses> GetCourseDocsUsingSettingsId(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.Courses
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+            
+
+            return courseDocList;
+        }
+        public List<TQNumbers> GetTQNumbers()
+        {
+            return _context.TQNumbers.OrderBy(x => x.Id).ToList();
+        }
+
     }
 }
