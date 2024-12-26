@@ -144,7 +144,9 @@ namespace CityWatch.Data
 
         public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
 
-    
+        public DbSet<GuardTwoHourNoActivityNotificationLog> GuardTwoHourNoActivityNotificationLog { get; set; }
+
+        
 
 
 
