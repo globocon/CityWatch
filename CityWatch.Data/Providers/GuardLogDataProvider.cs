@@ -5638,7 +5638,7 @@ namespace CityWatch.Data.Providers
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
 
             var guardName = GetGuards(GuardId).Name;
-            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance.Last Activity time: "+ LastActvity.ToString() ;
+            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance.Last Activity time: "+ LastActvity?.ToString("dd/MM/yy HH:mm");
             if (checklogbookEntry.Count < 1)
             {
                 var guardLog = new GuardLog()
