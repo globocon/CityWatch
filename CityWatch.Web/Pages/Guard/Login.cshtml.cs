@@ -728,7 +728,7 @@ namespace CityWatch.Web.Pages.Guard
                             else
                             {
                             var incidentreport = _clientDataProvider.GetLastIncidentReportsByGuardId(guard.Id);
-                            strResult = "You have'nt logged in for a while. Please wait for 5 minutes as we re-activate your profile.";
+                            strResult = "It’s been a while since you logged in! Your account is now reactivated. You can log in now";
                             success = true;
                             if (incidentreport != null)
                             {
