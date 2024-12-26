@@ -5457,7 +5457,7 @@ namespace CityWatch.Data.Providers
                         var activities = _context.ClientSiteRadioChecksActivityStatus
                             .Where(a => a.ClientSite == login.ClientSite
                                 && a.GuardId == login.GuardId
-                                && a.GuardLoginTime != null
+                                && a.GuardLoginTime != null && a.ActivityType !=null
                                 && a.NotificationType == null)
                             .ToList();
 
