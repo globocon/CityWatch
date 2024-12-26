@@ -6,15 +6,20 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Web.Pages.Guard
@@ -27,13 +32,14 @@ namespace CityWatch.Web.Pages.Guard
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
-
+        private readonly EmailOptions _EmailOptions;
         public LoginModel(IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
             IClientSiteWandDataProvider clientSiteWandDataProvider,
-            IConfigDataProvider configDataProvider)
+            IConfigDataProvider configDataProvider,
+             IOptions<EmailOptions> emailOptions)
         {
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
@@ -41,6 +47,7 @@ namespace CityWatch.Web.Pages.Guard
             _guardLogDataProvider = guardLogDataProvider;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _configDataProvider = configDataProvider;
+            _EmailOptions = emailOptions.Value;
         }
 
         [BindProperty]
@@ -626,72 +633,197 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(isSmartwandbypass);
         }
 
-        public JsonResult OnGetIsGuardLoginActive(string guardLicNo,string clientSiteName)
+        //public JsonResult OnGetIsGuardLoginActive(string guardLicNo,string clientSiteName)
+        //{
+
+        //    var thresholdDate = DateTime.Now.AddDays(-120);
+        //    var success = false;
+        //    var hrdocLockforThisGurad = false;
+        //    var initalsUsed = string.Empty;
+        //    var strResult = string.Empty;
+        //    if (!string.IsNullOrEmpty(guardLicNo))
+        //    {
+        //        var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
+        //        if (guard != null)
+        //        {
+        //            var lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
+        //            if (guard.IsActive)
+        //            {
+        //                if (lastLogin != null)
+        //                {
+
+        //                    if (lastLogin.LoginDate < thresholdDate && lastLogin.Guard.IsActive)
+        //                    {
+        //                        if (guard.IsReActive)
+        //                        {
+        //                            lastLogin.Guard.IsReActive = false;
+        //                            _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
+        //                            success = false;
+        //                        }
+        //                        else
+        //                        {
+        //                            lastLogin.Guard.IsActive = false;
+        //                            _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
+        //                            strResult = "You have'nt logged in for a while. Contact your administrator!.";
+        //                            success = true;
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+
+        //                        success = false;
+
+        //                    }
+
+        //                }
+        //                else
+        //                { success = false; }
+        //            }
+        //            else
+        //            {
+        //                strResult = "You have'nt logged in for a while. Contact your administrator!.";
+        //                success = true;
+        //            }
+        //          hrdocLockforThisGurad= CheckIfGuardNeedToBlockForHRDocumnetLock(guard.Id, clientSiteName);
+        //        }
+        //    }
+
+
+        //    return new JsonResult(new { success, strResult , hrdocLockforThisGurad });
+
+
+
+        //}
+
+        public JsonResult OnGetIsGuardLoginActive(string guardLicNo, string clientSiteName)
         {
 
-            var thresholdDate = DateTime.Now.AddDays(-120);
+            var thresholdDate = DateTime.Now.AddDays(-60);
             var success = false;
             var hrdocLockforThisGurad = false;
             var initalsUsed = string.Empty;
             var strResult = string.Empty;
+           
             if (!string.IsNullOrEmpty(guardLicNo))
             {
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
                 if (guard != null)
                 {
                     var lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
-                    if (guard.IsActive)
-                    {
-                        if (lastLogin != null)
-                        {
 
-                            if (lastLogin.LoginDate < thresholdDate && lastLogin.Guard.IsActive)
+                    if (lastLogin != null)
+                    {
+                        DateTime date1 = lastLogin.LoginDate; // Example: December 1, 2024
+                        DateTime date2 = DateTime.Now;             // Current date
+
+                        // Calculate the difference
+                        TimeSpan difference = date2 - date1;
+
+                        // Get the number of days
+                        int daysBetween = Math.Abs(difference.Days);
+                        if (daysBetween < 60 )
                             {
-                                if (guard.IsReActive)
-                                {
-                                    lastLogin.Guard.IsReActive = false;
-                                    _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
-                                    success = false;
-                                }
-                                else
-                                {
-                                    lastLogin.Guard.IsActive = false;
-                                    _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
-                                    strResult = "You have'nt logged in for a while. Contact your administrator!.";
-                                    success = true;
-                                }
+                            success = false;
+                        }
+                            else
+                            {
+                            var incidentreport = _clientDataProvider.GetLastIncidentReportsByGuardId(guard.Id);
+                            strResult = "You have'nt logged in for a while. Please wait for 5 minutes as we re-activate your profile.";
+                            success = true;
+                            if (incidentreport != null)
+                            {
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), incidentreport.ReportDateTime.ToString());
+                                SendEmailNew(emailBody, daysBetween);
                             }
                             else
                             {
-
-                                success = false;
-
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), null);
+                                SendEmailNew(emailBody, daysBetween);
                             }
-
+                            
                         }
-                        else
-                        { success = false; }
+
                     }
                     else
-                    {
-                        strResult = "You have'nt logged in for a while. Contact your administrator!.";
-                        success = true;
-                    }
-                  hrdocLockforThisGurad= CheckIfGuardNeedToBlockForHRDocumnetLock(guard.Id, clientSiteName);
+                    { success = false; }
+                    
                 }
             }
 
-            
-            return new JsonResult(new { success, strResult , hrdocLockforThisGurad });
+
+            return new JsonResult(new { success, strResult, hrdocLockforThisGurad });
 
 
 
         }
+        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween,string lastLoginDate, string incidentReportDate)
+        {
+            var sb = new StringBuilder();
+
+            var messageBody = string.Empty;
+            messageBody = $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Name of Guard</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardname}</td>";
+            messageBody= messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{licenseNo}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{Provider}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known sign in date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastLoginDate}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known IR date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{incidentReportDate}</td>";
+
+            sb.Append("Hi , <br/><br/>Following guard is trying to login after "+ daysbetween + " days. <br/><br/>");
+            sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
+            sb.Append(" <tr><td style=\"width:2% ;border: 1px solid #000000;text-align:center \" colspan=\"2\"><b>Guard Details</b></td></tr>");
+            sb.Append(messageBody);
+            sb.Append("");
+            
+            
+            //mailBodyHtml.Append("");
+            return sb.ToString();
+        }
+        private void SendEmailNew(string mailBodyHtml,int daysbetween)
+        {
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
 
 
 
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+            
 
+            message.Subject = "Guard login after " + daysbetween +" days.";
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = mailBodyHtml
+            };
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
 
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
+        }
         public bool CheckIfGuardNeedToBlockForHRDocumnetLock(int guardId,string ClientSiteName)
         {
             var HR1 = "Grey";

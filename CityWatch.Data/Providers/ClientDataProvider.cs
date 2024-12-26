@@ -242,6 +242,7 @@ namespace CityWatch.Data.Providers
          List<LanguageMaster> GetLanguages();
         //p1-287 A to E-end
         public List<ClientSiteSmartWand> GetClientSmartWand();
+        public IncidentReport GetLastIncidentReportsByGuardId( int guardId);
 
     }
 
@@ -2855,6 +2856,12 @@ namespace CityWatch.Data.Providers
             return _context.LanguageMaster.Where(x=>x.IsDeleted==false).OrderBy(x => x.Language).ToList();
         }
         //p1-287 A to E-end
+        public IncidentReport GetLastIncidentReportsByGuardId(int guardId)
+        {
+            return _context.IncidentReports
+                .Where(x => x.GuardId == guardId ).OrderByDescending(z => z.CreatedOn)
+                .FirstOrDefault();
+        }
     }
 
 
