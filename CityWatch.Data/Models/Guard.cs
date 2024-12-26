@@ -54,9 +54,7 @@ namespace CityWatch.Data.Models
         {
             var errors = new List<ValidationResult>();
 
-            if (Pin.Length < 4 || Pin.Length > 6)
-                errors.Add(new ValidationResult("PIN Number must be between 4 and 6 characters."));
-
+            
 
             if (string.IsNullOrEmpty(SecurityNo))
                 errors.Add(new ValidationResult("Guard Security License Number is required"));

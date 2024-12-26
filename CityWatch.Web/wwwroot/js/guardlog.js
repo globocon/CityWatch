@@ -5859,6 +5859,15 @@ $(function () {
         $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
         //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+        const pinNumber = $('#Guard_Pin').val(); 
+        if (pinNumber!='') {
+            if (pinNumber.length < 4 || pinNumber.length > 6) {
+                displayGuardValidationSummary('glValidationSummary', 'PIN Number must be between 4 and 6 characters');
+
+                return; // Stop execution if validation fails
+            }
+        }
+        
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),
