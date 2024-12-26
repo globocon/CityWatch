@@ -5455,9 +5455,9 @@ namespace CityWatch.Data.Providers
                     {
                         // Fetch all activities for the same GuardId and ClientSite
                         var activities = _context.ClientSiteRadioChecksActivityStatus
-                            .Where(a => a.ClientSite == login.ClientSite
+                            .Where(a => a.ClientSiteId == login.ClientSiteId
                                 && a.GuardId == login.GuardId
-                                && a.GuardLoginTime != null && a.ActivityType !=null
+                                && a.GuardLoginTime == null && a.ActivityType !=null
                                 && a.NotificationType == null)
                             .ToList();
 
@@ -5478,7 +5478,7 @@ namespace CityWatch.Data.Providers
                                 !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId))
                             {
                                 // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId);
+                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId, lastActivity.NotificationCreatedTime);
 
                                 // Log the notification
                                 LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId);
@@ -5491,7 +5491,7 @@ namespace CityWatch.Data.Providers
                                 !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId))
                             {
                                 // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId);
+                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId, login.GuardLoginTime);
 
                                 // Log the notification
                                 LogNotification(login.GuardId, login.ClientSiteId);
@@ -5626,7 +5626,7 @@ namespace CityWatch.Data.Providers
         //    }
         //}
 
-        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId)
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId,DateTime? LastActvity)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
@@ -5638,7 +5638,7 @@ namespace CityWatch.Data.Providers
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
 
             var guardName = GetGuards(GuardId).Name;
-            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance";
+            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance.Last Activity time: "+ LastActvity.ToString() ;
             if (checklogbookEntry.Count < 1)
             {
                 var guardLog = new GuardLog()
