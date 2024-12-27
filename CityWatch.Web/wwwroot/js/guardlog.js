@@ -881,7 +881,32 @@ $(function () {
         var formData = new FormData(form);
         fillRefreshLocalTimeZoneDetails(formData, "GuardLogin", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
-
+        var clientsitename = $('#GuardLogin_ClientSiteName').val();
+        var smrtwandorposition = $('#GuardLogin_SmartWandOrPosition').val();
+        var guardonduty = $('#GuardLogin_OnDuty_Time').val();
+        var guardoffduty = $('#GuardLogin_OffDuty_Time').val();
+        var errornewmessage=[];
+        if (clientsitename == '') {
+            // displayGuardValidationSummary('glValidationSummary', 'Client Site is required');
+            errornewmessage.push('Client Site is required');
+            
+        }
+        if (smrtwandorposition == '') {
+            //displayGuardValidationSummary('glValidationSummary', 'Smart Wand or Position is required');
+            errornewmessage.push('Smart Wand or Position is required');
+               
+        }
+        if (guardonduty == '') {
+            errornewmessage.push('On Duty is required');
+        }
+        if (guardoffduty == '') {
+            errornewmessage.push('Off Duty is required');
+        }
+        if (errornewmessage.length>0) {
+            displayGuardValidationSummary('glValidationSummary', errornewmessage);
+            $('#loader').hide();
+            return false;
+        }
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: " <p class=\"font-weight-bold\">The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.</p> <p class=\"font-weight-bold\"> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p>" }).showWarning();
             console.log('after msg modal')
@@ -902,9 +927,9 @@ $(function () {
                 }
             }).done(function (result) {
                 if (result.success) {
-                    confirmDialogLogin(result.strResult, function () {
+                    
 
-                   
+                    var message = result.strResult;
                     //alert(result.strResult);
                     //new MessageModal({
                     //    message: result.strResult
@@ -921,13 +946,14 @@ $(function () {
                             if (result.success) {
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
-
-                                let toUrl = getTargetUrl(result.logBookType);
-                                if (toUrl === '') alert('Invalid logbook type');
-                                else {
-                                    window.location.replace(toUrl);
-                                    $('#btnGuardLogin').prop('disabled', true);
-                                }
+                                confirmDialogLogin(message, function () {
+                                    let toUrl = getTargetUrl(result.logBookType);
+                                    if (toUrl === '') alert('Invalid logbook type');
+                                    else {
+                                        window.location.replace(toUrl);
+                                        $('#btnGuardLogin').prop('disabled', true);
+                                    }
+                                });
                             } else {
                                 if (result.errors)
                                     displayGuardValidationSummary('glValidationSummary', result.errors)
@@ -944,7 +970,7 @@ $(function () {
                             message: 'A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate'
                         }).showWarning();
                         }
-                    });
+                   
                 }
                 else {
                     // if guard is active then submit guard login
