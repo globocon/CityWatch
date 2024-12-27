@@ -94,3 +94,61 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
 }
+
+
+
+
+let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
+    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId&&type=' + $('#HrSettings_Id').val(),
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'fileName', title: 'File Name', width: 390 },
+        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
+        // { width: 200, renderer: staffDocsButtonRendererCompanySop },
+
+        { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+var editTrainingCertificatesDocsButtonRendererSop;
+editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, $displayEl, id, $grid) {
+    var data = $grid.data(),
+        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '</form></label>').attr('data-key', id),
+        $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+        $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+        $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+        $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+    $edit.on('click', function (e) {
+        $grid.edit($(this).data('key'));
+        $edit.hide();
+        $delete.hide();
+        $update.show();
+        $cancel.show();
+    });
+    $delete.on('click', function (e) {
+        $grid.removeRow($(this).data('key'));
+    });
+    $update.on('click', function (e) {
+        $grid.update($(this).data('key'));
+        $edit.show();
+        $delete.show();
+        $update.hide();
+        $cancel.hide();
+    });
+    $cancel.on('click', function (e) {
+        $grid.cancel($(this).data('key'));
+        $edit.show();
+        $delete.show();
+        $update.hide();
+        $cancel.hide();
+    });
+    $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+}
