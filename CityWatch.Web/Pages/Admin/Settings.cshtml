@@ -4328,12 +4328,65 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <label >Test Duration ETA:</label>
+                                                <select id="ddlTestDurationETA" class="form-control"></select> 
                                             </div>
                                             <div class="col-md-4">
-                                                <label >Pass Mark %:</label>
+                                                
+                                                <div class="d-flex flex-row justify-content-between">
+                                                <label >Certificate with Q&A Dump:</label>
+                                                <div class="custom-control custom-switch duty-day-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingCertificateWithQ&ADump">
+                                                    <label class="custom-control-label" for="cbIsTrainingCertificateWithQ"></label>
+
+
+
+                                                    <input hidden="" type="hidden"  id="IsTrainingCertificateWithQ" name="IsTrainingCertificateWithQ" value="true">
+                                                </div>
+                                                </div>
+                                                
+                                            </div>
+                                           
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label>Pass Mark %:</label>
+                                                <select id="ddlTestPassMark" class="form-control"></select>
+                                            </div>
+                                             <div class="col-md-4">
+                                                
+                                                <div class="d-flex flex-row justify-content-between">
+                                                <label >Certificate hold until practical undertaken:</label>
+                                                <div class="custom-control custom-switch duty-day-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingCertificateHold">
+                                                    <label class="custom-control-label" for="cbIsTrainingCertificateHold"></label>
+
+
+
+                                                    <input hidden="" type="hidden"  id="IsTrainingCertificateHold" name="IsTrainingCertificateHold" value="true">
+                                                </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label>Attempts:</label>
+                                                <select id="ddlTestAttempts" class="form-control"></select>
                                             </div>
                                             <div class="col-md-4">
-                                                <label >Attempts:</label>
+                                                
+                                                <div class="d-flex flex-row justify-content-between">
+                                                <label >Anonymus FeedBack:</label>
+                                                <div class="custom-control custom-switch duty-day-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingAnonymusFeedBack">
+                                                    <label class="custom-control-label" for="cbIsTrainingAnonymusFeedBack"></label>
+
+
+
+                                                    <input hidden="" type="hidden"  id="IsTrainingAnonymusFeedBack" name="IsTrainingAnonymusFeedBack" value="true">
+                                                </div>
+                                                </div>
+                                                
                                             </div>
                                         </div>
 
@@ -4341,7 +4394,11 @@
                                 </div>
                                 <div class="tab-pane" id="TrainingTestQuestionsAnswers" role="tabpanel" aria-labelledby="TrainingTestQuestionsAnswersTab">
                                     <div class="form-group col-md-12">
+                                        <div class="form-group col-md-12">
+                                            <div class="col-md-2">
 
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 @*for toggle areas-start*@
