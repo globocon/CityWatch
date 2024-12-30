@@ -1,5 +1,6 @@
 ﻿$(function () {
 });
+//p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
     $('#trainingandAssessmentmodal').show();
@@ -290,4 +291,46 @@ $('#cbIsOption6').on('change', function () {
     $('#IsOption5').val(false);
 
 });
+//p5-Issue3-End
+
+
+//p5-Issue1-Start
+let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataTable({
+    autoWidth: false,
+    ordering: false,
+    searching: false,
+    paging: false,
+    info: false,
+    ajax: {
+        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
+        data: function (d) {
+            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'hrGroupText', width: "12%" },
+        { data: 'description', width: "27%" },
+        { data: 'newNullColumn', width: '15%'},
+        
+        {
+            targets: -1,
+            data: null,
+            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
+                '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>',
+            width: '15%'
+        }],
+    columnDefs: [{
+        targets: 3,
+        data: 'fileName',
+        render: function (data, type, row, meta) {
+            if (data)
+                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+            return '-';
+        }
+    }
+    ]
+});
+
+//p5-Issue1-End
 

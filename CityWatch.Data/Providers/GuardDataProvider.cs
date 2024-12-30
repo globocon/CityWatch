@@ -88,6 +88,7 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId);
 
 
     }
@@ -979,6 +980,38 @@ namespace CityWatch.Data.Providers
                 _context.Remove(item);
                 _context.SaveChanges();
             }
+        }
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                 .Where(x => x.GuardId == guardId)
+                 .Include(z => z.Guard).ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+
+
+            result = _context.GuardTrainingAndAssessment
+            .Where(x => x.GuardId == guardId)
+            .Include(z => z.Guard)
+            .Select(x => new GuardTrainingAndAssessment
+            {
+                Id = x.Id,
+                
+                GuardId = x.GuardId,
+                Description = x.Description,
+                HrGroup = x.HrGroup,
+                NewNullColumn=string.Empty,
+                LicenseNo = x.Guard.SecurityNo,
+                
+            }).OrderBy(x => x.Id)
+            .ToList();
+
+
+            return result;
+
+
+
         }
 
     }

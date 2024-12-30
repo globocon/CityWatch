@@ -32,6 +32,7 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Text;
+using Org.BouncyCastle.Crypto.Generators;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -2145,7 +2146,12 @@ namespace CityWatch.Web.Pages.Admin
             return sb.ToString();
 
         }
-
+        //p5-Issue-1-start
+        public JsonResult OnGetGuardTrainingAndAssessmentTab(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
+        }
+        //p5-Issue1-end
 
     }
 
