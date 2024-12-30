@@ -19,4 +19,13 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-
+insert into TQNumbers(Name) values('01')
+insert into TQNumbers(Name) values('02')
+insert into TQNumbers(Name) values('03')
+insert into TQNumbers(Name) values('04')
+insert into TQNumbers(Name) values('05')
+insert into TQNumbers(Name) values('06')
+insert into TQNumbers(Name) values('07')
+insert into TQNumbers(Name) values('08')
+insert into TQNumbers(Name) values('09')
+insert into TQNumbers(Name) values('10')
