@@ -6,14 +6,16 @@
 @{
 
     Layout = "_LayoutSinglePage";
+
+    var clientSiteId = Request.Query["id"];
+
 }
 
 
-
+<input type="hidden" id="singlepageclientSiteId" name="singlepageclientSiteId" value="@clientSiteId" />
 <div class="row">
     <div class="col-md-12">
         <div class="text-right">
-
             <button class="btn btn-success mb-3" id="add_criticalDocuments"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
         </div>
     </div>
