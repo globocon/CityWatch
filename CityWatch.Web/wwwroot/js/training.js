@@ -152,3 +152,142 @@ editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, 
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
 }
+$('#cbIsTrainingTestQuestionsDOE').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+   
+    $('#IsTrainingTestQuestionsDOE').val(isChecked);
+
+});
+$('#cbIsTrainingCertificateWithQandADump').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsTrainingCertificateWithQandADump').val(isChecked);
+
+});
+
+$('#cbIsTrainingCertificateHold').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsTrainingCertificateHold').val(isChecked);
+
+});
+
+$('#cbIsTrainingAnonymusFeedBack').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsTrainingAnonymusFeedBack').val(isChecked);
+
+});
+$('#cbIsOption1').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption1').val(isChecked);
+
+    $('#cbIsOption2').prop("checked", false);
+    $('#IsOption2').val(false);
+    $('#cbIsOption3').prop("checked", false);
+    $('#IsOption3').val(false);
+    $('#cbIsOption4').prop("checked", false);
+    $('#IsOption4').val(false);
+    $('#cbIsOption5').prop("checked", false);
+    $('#IsOption5').val(false);
+    $('#cbIsOption6').prop("checked", false);
+    $('#IsOption6').val(false);
+
+});
+$('#cbIsOption2').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption2').val(isChecked);
+
+    $('#cbIsOption1').prop("checked", false);
+    $('#IsOption1').val(false);
+    $('#cbIsOption3').prop("checked", false);
+    $('#IsOption3').val(false);
+    $('#cbIsOption4').prop("checked", false);
+    $('#IsOption4').val(false);
+    $('#cbIsOption5').prop("checked", false);
+    $('#IsOption5').val(false);
+    $('#cbIsOption6').prop("checked", false);
+    $('#IsOption6').val(false);
+
+});
+$('#cbIsOption3').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption3').val(isChecked);
+
+    $('#cbIsOption1').prop("checked", false);
+    $('#IsOption1').val(false);
+    $('#cbIsOption2').prop("checked", false);
+    $('#IsOption2').val(false);
+    $('#cbIsOption4').prop("checked", false);
+    $('#IsOption4').val(false);
+    $('#cbIsOption5').prop("checked", false);
+    $('#IsOption5').val(false);
+    $('#cbIsOption6').prop("checked", false);
+    $('#IsOption6').val(false);
+
+});
+$('#cbIsOption4').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption4').val(isChecked);
+
+    $('#cbIsOption1').prop("checked", false);
+    $('#IsOption1').val(false);
+    $('#cbIsOption2').prop("checked", false);
+    $('#IsOption2').val(false);
+    $('#cbIsOption3').prop("checked", false);
+    $('#IsOption3').val(false);
+    $('#cbIsOption5').prop("checked", false);
+    $('#IsOption5').val(false);
+    $('#cbIsOption6').prop("checked", false);
+    $('#IsOption6').val(false);
+
+});
+$('#cbIsOption5').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption5').val(isChecked);
+
+    $('#cbIsOption1').prop("checked", false);
+    $('#IsOption1').val(false);
+    $('#cbIsOption2').prop("checked", false);
+    $('#IsOption2').val(false);
+    $('#cbIsOption3').prop("checked", false);
+    $('#IsOption3').val(false);
+    $('#cbIsOption4').prop("checked", false);
+    $('#IsOption4').val(false);
+    $('#cbIsOption6').prop("checked", false);
+    $('#IsOption6').val(false);
+
+});
+$('#cbIsOption6').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    $('#IsOption6').val(isChecked);
+
+    $('#cbIsOption1').prop("checked", false);
+    $('#IsOption1').val(false);
+    $('#cbIsOption2').prop("checked", false);
+    $('#IsOption2').val(false);
+    $('#cbIsOption3').prop("checked", false);
+    $('#IsOption3').val(false);
+    $('#cbIsOption4').prop("checked", false);
+    $('#IsOption4').val(false);
+    $('#cbIsOption5').prop("checked", false);
+    $('#IsOption5').val(false);
+
+});
+
