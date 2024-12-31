@@ -29,3 +29,5 @@ insert into TQNumbers(Name) values('07')
 insert into TQNumbers(Name) values('08')
 insert into TQNumbers(Name) values('09')
 insert into TQNumbers(Name) values('10')
+
+update TQNumbers set IsDeleted=0

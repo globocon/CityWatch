@@ -4308,7 +4308,7 @@
                                         <div class="row mt-3">
                                             <div class="col-md-4">
                                                 <label >Course Duration ETA:</label>
-                                                <select id="ddlCourseDurationETA" class="form-control"></select>
+                                                <select id="ddlCourseDurationETA" class="form-control" asp-items="@viewDataServiceNew.GetCourseDuration(true)"></select>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="d-flex flex-row justify-content-between">
@@ -4322,13 +4322,13 @@
                                                     <input hidden="" type="hidden"  id="IsTrainingTestQuestionsDOE" name="IsTrainingTestQuestionsDOE" >
                                                 </div>
                                                 </div>
-                                                <select id="ddlTestQuestionsDOE" class="form-control"></select>
+                                                <select class="form-control" id="TrainingTestQuestionCertificateExpiryYears" asp-items="@viewDataServiceNew.GetTrainingCertificateExpiryYears(true)" disabled></select>
                                             </div>
                                         </div>
                                         <div class="row mt-3">
                                             <div class="col-md-4">
                                                 <label >Test Duration ETA:</label>
-                                                <select id="ddlTestDurationETA" class="form-control"></select> 
+                                                <select id="ddlTestDurationETA" class="form-control" asp-items="@viewDataServiceNew.GetTestDuration(true)"></select> 
                                             </div>
                                             <div class="col-md-4">
                                                 
@@ -4350,7 +4350,7 @@
                                         <div class="row mt-3">
                                             <div class="col-md-4">
                                                 <label>Pass Mark %:</label>
-                                                <select id="ddlTestPassMark" class="form-control"></select>
+                                                <select id="ddlTestPassMark" class="form-control" asp-items="@viewDataServiceNew.GetPassMark(true)"></select>
                                             </div>
                                              <div class="col-md-4">
                                                 
@@ -4371,7 +4371,7 @@
                                         <div class="row mt-3">
                                             <div class="col-md-4">
                                                 <label>Attempts:</label>
-                                                <select id="ddlTestAttempts" class="form-control"></select>
+                                                <select id="ddlTestAttempts" class="form-control" asp-items="@viewDataServiceNew.GetTestAttempts(true)"></select>
                                             </div>
                                             <div class="col-md-4">
                                                 
@@ -4398,7 +4398,7 @@
                                             <div class="row mt-3">
                                                 <div class="col-md-2">
                                                     <label>Question No</label>
-                                                    <select id="ddlTestQuestionNo" class="form-control"></select>
+                                                    <select id="ddlTestQuestionNo" class="form-control"asp-items="@viewDataServiceNew.GetTestQuestionNumbers(true)"></select>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label>Counter:</label>
@@ -4406,7 +4406,7 @@
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label>TQ Group</label>
-                                                    <select id="ddlTQNo" class="form-control"></select>
+                                                    <select id="ddlTQNo" class="form-control"asp-items="@viewDataServiceNew.GetTestTQNumbers(true)"></select>
                                                 </div>
                                             </div>
                                             <div class="row mt-3">

@@ -9,12 +9,16 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-insert into CourseDuration(Name) values('0')
-insert into CourseDuration(Name) values('15')
-insert into CourseDuration(Name) values('30')
-insert into CourseDuration(Name) values('45')
-insert into CourseDuration(Name) values('60')
-insert into CourseDuration(Name) values('90')
-insert into CourseDuration(Name) values('120')
-insert into CourseDuration(Name) values('150')
-insert into CourseDuration(Name) values('240')
+insert into CourseDuration(Name) values('0 minutes')
+insert into CourseDuration(Name) values('15 minutes')
+insert into CourseDuration(Name) values('30 minutes')
+insert into CourseDuration(Name) values('45 minutes')
+insert into CourseDuration(Name) values('60 minutes')
+insert into CourseDuration(Name) values('90 minutes')
+insert into CourseDuration(Name) values('120 minutes')
+insert into CourseDuration(Name) values('150 minutes')
+insert into CourseDuration(Name) values('240 minutes')
+
+update CourseDuration set IsDeleted=0
+
+

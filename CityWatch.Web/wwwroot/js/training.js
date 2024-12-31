@@ -157,6 +157,12 @@ $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
     const isChecked = $(this).is(':checked');
    
     $('#IsTrainingTestQuestionsDOE').val(isChecked);
+    if (isChecked == true) {
+        $('#TrainingTestQuestionCertificateExpiryYears').attr('disabled', false)
+    }
+    else {
+        $('#TrainingTestQuestionCertificateExpiryYears').attr('disabled', 'disabled')
+    }
 
 });
 $('#cbIsTrainingCertificateWithQandADump').on('change', function () {

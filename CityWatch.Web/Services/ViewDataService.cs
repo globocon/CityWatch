@@ -155,6 +155,13 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
         List<SelectListItem> GetLanguages(bool withoutSelect = true);
         public List<ClientSiteWithWands> GetUserClientSitesExcel(int? typeId, int? userId);
+        List<SelectListItem> GetCourseDuration(bool withoutSelect = true);
+        List<SelectListItem> GetTestDuration(bool withoutSelect = true);
+        List<SelectListItem> GetPassMark(bool withoutSelect = true);
+        List<SelectListItem> GetTestAttempts(bool withoutSelect = true);
+        List<SelectListItem> GetTrainingCertificateExpiryYears(bool withoutSelect = true);
+        List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
+        List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
 
     }
 
@@ -1893,8 +1900,172 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        public List<SelectListItem> GetCourseDuration(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetCourseDuration();
+            var items = new List<SelectListItem>();
 
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
 
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 3)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetTestDuration(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetTestDuration();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 3)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetPassMark(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetPassMark();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 3)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetTestAttempts(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetTestAttempts();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetTrainingCertificateExpiryYears(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetTrainingCertificateExpiryYears();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "",true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetTestQuestionNumbers();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+        
+        public List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetTestTQNumbers();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", ""));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString(), true));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+            }
+
+            return items;
+        }
+
+        
 
     }
     public class HRGroupStatusNew

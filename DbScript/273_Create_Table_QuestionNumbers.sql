@@ -19,3 +19,4 @@ insert into QuestionNumbers(Name) values('07')
 insert into QuestionNumbers(Name) values('08')
 insert into QuestionNumbers(Name) values('09')
 insert into QuestionNumbers(Name) values('10')
+update QuestionNumbers set IsDeleted=0

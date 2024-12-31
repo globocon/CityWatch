@@ -9,12 +9,15 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-insert into TestDuration(Name) values('0')
-insert into TestDuration(Name) values('15')
-insert into TestDuration(Name) values('30')
-insert into TestDuration(Name) values('45')
-insert into TestDuration(Name) values('60')
-insert into TestDuration(Name) values('90')
-insert into TestDuration(Name) values('120')
-insert into TestDuration(Name) values('150')
-insert into TestDuration(Name) values('240')
+insert into TestDuration(Name) values('0 minutes')
+insert into TestDuration(Name) values('15 minutes')
+insert into TestDuration(Name) values('30 minutes')
+insert into TestDuration(Name) values('45 minutes')
+insert into TestDuration(Name) values('60 minutes')
+insert into TestDuration(Name) values('90 minutes')
+insert into TestDuration(Name) values('120 minutes')
+insert into TestDuration(Name) values('150 minutes')
+insert into TestDuration(Name) values('240 minutes')
+
+
+update TestDuration set IsDeleted=0
