@@ -583,8 +583,12 @@ namespace CityWatch.Web.Services
                     company.HyperlinkColour,
                     company.LogoHyperlink,
                     company.ApiProvider,
-                    company.ApiSecretkey
+                    company.ApiSecretkey,
                     //p1-225 Core Settings-end
+                    company.IRMail,
+                    company.KPIMail,
+                    company.FusionMail,
+                    company.TimesheetsMail
 
 
                 });

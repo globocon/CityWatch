@@ -50,6 +50,7 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
+         void SaveCompanyMailDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report, int Count);
@@ -183,7 +184,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers);
         //p1-191 hr files task 8-end
         public void DeafultMailBox(string Email);
-        List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
+        List<CompanyDetails> GetKPIScheduleDeafultMailbox();
         List<ClientSite> GetClientSitesWithTypeId(int[] typeId);
         public List<RCLinkedDuressMaster> GetAllRCLinkedDuress();
         public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId);
@@ -777,9 +778,13 @@ namespace CityWatch.Data.Providers
         {
             return _context.GlobalComplianceAlertEmail.ToList();
         }
-        public List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox()
+        //public List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox()
+        //{
+        //    return _context.KPIScheduleDeafultMailbox.ToList();
+        //}
+        public List<CompanyDetails> GetKPIScheduleDeafultMailbox()
         {
-            return _context.KPIScheduleDeafultMailbox.ToList();
+            return _context.CompanyDetails.ToList();
         }
         public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
         {
@@ -883,6 +888,24 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+            _context.SaveChanges();
+        }
+
+        public void SaveCompanyMailDetails(CompanyDetails companyDetails)
+        {
+            if (companyDetails.Id != 0)
+            {
+                var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
+                if (templateToUpdate != null)
+                {
+                    templateToUpdate.IRMail = companyDetails.IRMail;
+                    templateToUpdate.KPIMail = companyDetails.KPIMail;
+                    templateToUpdate.FusionMail = companyDetails.FusionMail;
+                    templateToUpdate.TimesheetsMail = companyDetails.TimesheetsMail;
+
+                }
+            }
+           
             _context.SaveChanges();
         }
 
@@ -1961,25 +1984,24 @@ namespace CityWatch.Data.Providers
             {
 
                 string[] emailIds = Email.Split(',');
-                var EmailUpdate = _context.KPIScheduleDeafultMailbox.Where(x => x.Id != 0).ToList();
+                var EmailUpdate = _context.CompanyDetails.Where(x => x.Id != 0).FirstOrDefault();
                 if (EmailUpdate != null)
                 {
-                    if (EmailUpdate.Count != 0)
-                    {
-                        _context.KPIScheduleDeafultMailbox.RemoveRange(EmailUpdate);
+
+                    EmailUpdate.KPIMail = Email;
                         _context.SaveChanges();
-                    }
+                    
                 }
                 /*Remove all the rows */
 
                 foreach (string part in emailIds)
                 {
-                    var Emailnew = new KPIScheduleDeafultMailbox()
+                    var Emailnew = new CompanyDetails()
                     {
-                        Email = part
+                        KPIMail = part
                     };
-                    _context.KPIScheduleDeafultMailbox.Add(Emailnew);
 
+                    EmailUpdate.KPIMail = Emailnew.KPIMail;
                 }
                 _context.SaveChanges();
 
@@ -2197,7 +2219,8 @@ namespace CityWatch.Data.Providers
         //To Get the Default Email Address start
         public string GetDefaultEmailAddress()
         {
-            return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
+            return _context.CompanyDetails.Select(x => x.IRMail).FirstOrDefault();
+            //return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
         }
         //To Get the Default Email Address stop
 
