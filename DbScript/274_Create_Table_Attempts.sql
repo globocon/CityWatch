@@ -12,3 +12,5 @@ GO
 insert into Attempts(Name) values('1')
 insert into Attempts(Name) values('2')
 insert into Attempts(Name) values('3')
+
+update Attempts set IsDeleted=0

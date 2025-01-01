@@ -11,3 +11,5 @@ GO
 
 insert into PassMark(Name) values('100%')
 insert into PassMark(Name) values('75%')
+
+update PassMark set IsDeleted=0
