@@ -1,5 +1,6 @@
-CREATE TABLE [dbo].[TestQuestionSettings](
+CREATE TABLE [dbo].[TrainingTestQuestionSettings](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[HRSettingsId] [int] null,
 	[CourseDurationId] [int] NULL,
 	[TestDurationId] [int] NULL,
 	[PassMarkId] [int] NULL,
@@ -17,7 +18,21 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] 
 GO
 
-alter table TestQuestionSettings add HRSettingsId int NULL
 
-ALTER TABLE [dbo].[TestQuestionSettings]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
+
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
 REFERENCES [dbo].[HrSettings] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY([CourseDurationId])
+REFERENCES [dbo].[TrainingCourseDuration] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY([TestDurationId])
+REFERENCES [dbo].[TrainingTestDuration] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY([CourseDurationId])
+REFERENCES [dbo].[TrainingCourseDuration] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY(PassMarkId)
+REFERENCES [dbo].[TrainingTestPassMark] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY(AttemptsId)
+REFERENCES [dbo].[TrainingTestAttempts] ([Id])
+ALTER TABLE [dbo].[TrainingTestQuestionSettings]  WITH CHECK ADD FOREIGN KEY(CertificateExpiryId)
+REFERENCES [dbo].[TrainingCertificateExpiryYears] ([Id])
+	
+

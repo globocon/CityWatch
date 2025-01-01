@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[PassMark](
+CREATE TABLE [dbo].[TrainingTestAttempts](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](max) NULL,
 	[IsDeleted] [bit] NULL,
@@ -9,7 +9,9 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-insert into PassMark(Name) values('100%')
-insert into PassMark(Name) values('75%')
+insert into TrainingTestAttempts(Name) values('1')
+insert into TrainingTestAttempts(Name) values('2')
+insert into TrainingTestAttempts(Name) values('3')
 
-update PassMark set IsDeleted=0
+update TrainingTestAttempts set IsDeleted=0
+

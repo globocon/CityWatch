@@ -1,8 +1,7 @@
-CREATE TABLE [dbo].[TrainingTestQuestions](
+CREATE TABLE [dbo].[TrainingTestFeedbackQuestions](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[HRSettingsId] [int] NULL,
 	[QuestionNoId] [int] NULL,
-	[TQNumberId] [int] NULL,
 	[Question] [nvarchar](max) null,
 	[IsDeleted] [bit] not NULL default 0,
 PRIMARY KEY CLUSTERED 
@@ -13,11 +12,9 @@ PRIMARY KEY CLUSTERED
 GO
 
 
-ALTER TABLE [dbo].[TrainingTestQuestions]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
+ALTER TABLE [dbo].[TrainingTestFeedbackQuestions]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
 REFERENCES [dbo].[HrSettings] ([Id])
-ALTER TABLE [dbo].[TrainingTestQuestions]  WITH CHECK ADD FOREIGN KEY([QuestionNoId])
+ALTER TABLE [dbo].[TrainingTestFeedbackQuestions]  WITH CHECK ADD FOREIGN KEY([QuestionNoId])
 REFERENCES [dbo].[TrainingTestQuestionNumbers] ([Id])
-ALTER TABLE [dbo].[TrainingTestQuestions]  WITH CHECK ADD FOREIGN KEY([TQNumberId])
-REFERENCES [dbo].[TrainingTQNumbers] ([Id])
 
 
