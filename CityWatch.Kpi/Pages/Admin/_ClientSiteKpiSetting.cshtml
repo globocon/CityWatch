@@ -67,7 +67,48 @@
 
     }
     
-    
+    if (Model.ClientSiteManningPatrolCarKpiSettings != null && Model.ClientSiteManningPatrolCarKpiSettings.Any())
+    {
+        if (TimeSheet != null)
+        {
+            string weekName = TimeSheet.weekName;
+            DayOfWeek startDay; // Declare startDay without initial value
+
+            // Try to convert the string to the corresponding DayOfWeek enum value
+            if (Enum.TryParse(weekName, true, out startDay))
+            {
+                // If conversion is successful, startDay will contain the corresponding DayOfWeek value
+                // Example: if weekName is "Monday", startDay will be DayOfWeek.Monday
+            }
+            else
+            {
+                // Handle the case when the conversion fails (invalid weekName string)
+                // You can set a default value or log an error here
+                startDay = DayOfWeek.Sunday; // Default to Sunday if invalid
+            }
+
+            // Group by OrderId, then sort each group by WeekDay (shifted by startDay)
+            var sortedSettings = Model.ClientSiteManningPatrolCarKpiSettings
+                .GroupBy(setting => setting.OrderId)
+                .OrderBy(group => group.Key) // Sort groups by OrderId
+                .SelectMany(group =>
+                    group.OrderBy(setting =>
+                        ((int)setting.WeekDay - (int)startDay + 7) % 7)) // Primary sort: Shifted WeekDay
+                .ToList();
+
+            // Now sort the entire list by OrderId first, then by IsPHO (treat null as 0)
+            sortedSettings = sortedSettings
+                .OrderBy(setting => setting.OrderId) // Sort by OrderId
+                .ThenBy(setting => setting.IsPHO.HasValue ? setting.IsPHO.Value : 0) // Then sort by IsPHO, treating null as 0
+                .ToList();
+
+            // Update the model with the sorted list
+            Model.ClientSiteManningPatrolCarKpiSettings = sortedSettings;
+
+
+        }
+
+    }
     
 
 }
