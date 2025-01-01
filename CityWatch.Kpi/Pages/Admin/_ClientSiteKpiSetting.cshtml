@@ -66,8 +66,136 @@
         }
 
     }
+
+    if(Model.ClientSiteManningPatrolCarKpiSettings!=null && Model.ClientSiteManningPatrolCarKpiSettings.Any())
+    {
+        if (TimeSheet != null)
+        {
+            string weekName = TimeSheet.weekName;
+            DayOfWeek startDay; // Declare startDay without initial value
+
+            // Try to convert the string to the corresponding DayOfWeek enum value
+            if (Enum.TryParse(weekName, true, out startDay))
+            {
+                // If conversion is successful, startDay will contain the corresponding DayOfWeek value
+                // Example: if weekName is "Monday", startDay will be DayOfWeek.Monday
+            }
+            else
+            {
+                // Handle the case when the conversion fails (invalid weekName string)
+                // You can set a default value or log an error here
+                startDay = DayOfWeek.Sunday; // Default to Sunday if invalid
+            }
+
+            // Group by OrderId, then sort each group by WeekDay (shifted by startDay)
+            var sortedSettings = Model.ClientSiteManningPatrolCarKpiSettings
+                .GroupBy(setting => setting.OrderId)
+                .OrderBy(group => group.Key) // Sort groups by OrderId
+                .SelectMany(group =>
+                    group.OrderBy(setting =>
+                        ((int)setting.WeekDay - (int)startDay + 7) % 7)) // Primary sort: Shifted WeekDay
+                .ToList();
+
+            // Now sort the entire list by OrderId first, then by IsPHO (treat null as 0)
+            sortedSettings = sortedSettings
+                .OrderBy(setting => setting.OrderId) // Sort by OrderId
+                .ThenBy(setting => setting.IsPHO.HasValue ? setting.IsPHO.Value : 0) // Then sort by IsPHO, treating null as 0
+                .ToList();
+
+            // Update the model with the sorted list
+            Model.ClientSiteManningPatrolCarKpiSettings = sortedSettings;
+
+
+        }
+
+    }
+
+
+     if (Model.ClientSiteManningGuardKpiSettingsADHOC != null && Model.ClientSiteManningGuardKpiSettingsADHOC.Any())
+    {
+        if (TimeSheet != null )
+        {
+            string weekName = TimeSheet.weekName;
+            DayOfWeek startDay; // Declare startDay without initial value
+
+            // Try to convert the string to the corresponding DayOfWeek enum value
+            if (Enum.TryParse(weekName, true, out startDay))
+            {
+                // If conversion is successful, startDay will contain the corresponding DayOfWeek value
+                // Example: if weekName is "Monday", startDay will be DayOfWeek.Monday
+            }
+            else
+            {
+                // Handle the case when the conversion fails (invalid weekName string)
+                // You can set a default value or log an error here
+                startDay = DayOfWeek.Sunday; // Default to Sunday if invalid
+            }
+
+            // Group by OrderId, then sort each group by WeekDay (shifted by startDay)
+            var sortedSettings = Model.ClientSiteManningGuardKpiSettingsADHOC
+                .GroupBy(setting => setting.OrderId)
+                .OrderBy(group => group.Key) // Sort groups by OrderId
+                .SelectMany(group =>
+                    group.OrderBy(setting =>
+                        ((int)setting.WeekDay - (int)startDay + 7) % 7)) // Primary sort: Shifted WeekDay
+                .ToList();
+
+            // Now sort the entire list by OrderId first, then by IsPHO (treat null as 0)
+            sortedSettings = sortedSettings
+                .OrderBy(setting => setting.OrderId) // Sort by OrderId
+                .ThenBy(setting => setting.IsPHO.HasValue ? setting.IsPHO.Value : 0) // Then sort by IsPHO, treating null as 0
+                .ToList();
+
+            // Update the model with the sorted list
+            Model.ClientSiteManningGuardKpiSettingsADHOC = sortedSettings;
+
+
+        }
+
+    }
     
-    
+    if(Model.ClientSiteManningPatrolCarKpiSettingsADHOC!=null && Model.ClientSiteManningPatrolCarKpiSettingsADHOC.Any())
+    {
+        if (TimeSheet != null)
+        {
+            string weekName = TimeSheet.weekName;
+            DayOfWeek startDay; // Declare startDay without initial value
+
+            // Try to convert the string to the corresponding DayOfWeek enum value
+            if (Enum.TryParse(weekName, true, out startDay))
+            {
+                // If conversion is successful, startDay will contain the corresponding DayOfWeek value
+                // Example: if weekName is "Monday", startDay will be DayOfWeek.Monday
+            }
+            else
+            {
+                // Handle the case when the conversion fails (invalid weekName string)
+                // You can set a default value or log an error here
+                startDay = DayOfWeek.Sunday; // Default to Sunday if invalid
+            }
+
+            // Group by OrderId, then sort each group by WeekDay (shifted by startDay)
+            var sortedSettings = Model.ClientSiteManningPatrolCarKpiSettingsADHOC
+                .GroupBy(setting => setting.OrderId)
+                .OrderBy(group => group.Key) // Sort groups by OrderId
+                .SelectMany(group =>
+                    group.OrderBy(setting =>
+                        ((int)setting.WeekDay - (int)startDay + 7) % 7)) // Primary sort: Shifted WeekDay
+                .ToList();
+
+            // Now sort the entire list by OrderId first, then by IsPHO (treat null as 0)
+            sortedSettings = sortedSettings
+                .OrderBy(setting => setting.OrderId) // Sort by OrderId
+                .ThenBy(setting => setting.IsPHO.HasValue ? setting.IsPHO.Value : 0) // Then sort by IsPHO, treating null as 0
+                .ToList();
+
+            // Update the model with the sorted list
+            Model.ClientSiteManningPatrolCarKpiSettingsADHOC = sortedSettings;
+
+
+        }
+
+    }
     
 
 }
@@ -499,6 +627,9 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="contracted-manning-tabadhoc" data-toggle="tab" href="#contractedmanningSettingsAdhoc" role="tab" aria-controls="contractedmanningSettingsAdhoc">ADHOC Manning</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
@@ -1099,6 +1230,461 @@
 
                     </div>
                 </div>
+                 @*New Tab for contracted-manning end*@
+
+                 @*New Tab for Adhoc contracted-manning start*@
+                <div class="tab-pane" id="contractedmanningSettingsAdhoc" role="tabpanel" aria-labelledby="contracted-manning-tabadhoc">
+                    <div class="container pt-3">
+                        <div class="d-flex justify-content-end align-items-center  mb-3">
+                            <button id="printDivButtonAdhoc" class="btn btn-primary no-print mr-2">
+                                <i class="fa fa-print" aria-hidden="true"></i>
+                            </button>
+                            @if (Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() != 0 &&
+                            Model.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() != 0)
+                            {
+                                <!-- Disabled Add Worker Button -->
+                                <button id="showDivButtonAdhoc" class="btn btn-success no-print" disabled>
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                            else
+                            {
+                                <!-- Enabled Add Worker Button -->
+                                <button id="showDivButtonAdhoc" class="btn btn-success no-print">
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                        </div>
+
+
+
+
+                        <form id="frm_site_manning_settingsAdhoc">
+                            <input type="hidden" asp-for="@Model.Id" />
+                            <input type="hidden" asp-for="@Model.ClientSiteId" />
+                            <input type="hidden" id="hidCount" value="@count" />
+                            @*display Already Existing Mannings*@
+
+                            @*Scheduler is Active Start15072024*@
+                            <div class="form-row ml-2 ">
+                                <div class="col-md-2 pt-2">
+                                    <div class="d-flex flex-row">
+                                        <label class="form-label pr-2" style="white-space: nowrap;">Schedule is Active</label>
+                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
+                                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActiveADHOC" id="scheduleisActiveADHOC" name="scheduleisActiveADHOC">
+                                            <label class="custom-control-label" for="scheduleisActiveADHOC"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*<div class="col-md-5">
+                                    <div class="d-flex flex-row">
+                                        <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Time  Zone</label>
+                                        <select class="form-control dd-client-status" asp-for="@Model.TimezoneString">
+                                            <option value="0">-Select-</option>
+                                            <option value="UTC">(UTC+00:00) Coordinated Universal Time</option>
+                                            <option value="GMT Standard Time">(UTC+00:00) Greenwich Mean Time</option>
+                                            <option value="Eastern Standard Time">(UTC-05:00) Eastern Standard Time (US & Canada)</option>
+                                            <option value="Central Standard Time">(UTC-06:00) Central Standard Time (US & Canada)</option>
+                                            <option value="Pacific Standard Time">(UTC-08:00) Pacific Standard Time (US & Canada)</option>
+                                            <option value="Morocco Standard Time">(UTC+00:00) Morocco Standard Time</option>
+                                            <option value="South Africa Standard Time">(UTC+02:00) South Africa Standard Time</option>
+                                            <option value="Egypt Standard Time">(UTC+02:00) Egypt Standard Time</option>
+                                            <option value="Singapore Standard Time">(UTC+08:00) Singapore Standard Time</option>
+                                            <option value="China Standard Time">(UTC+08:00) China Standard Time</option>
+                                            <option value="India Standard Time">(UTC+05:30) India Standard Time</option>
+                                            <option value="Japan Standard Time">(UTC+09:00) Japan Standard Time</option>
+                                            <option value="E. Australia Standard Time">(UTC+10:00) AUS Eastern Standard Time (Brisbane)</option>
+                                            <option value="AUS Eastern Standard Time">(UTC+11:00) AUS Eastern Daylight Time (Melbourne, Sydney)</option>
+                                            <option value="AUS Central Standard Time">(UTC+09:30) AUS Central Standard Time (Adelaide)</option>
+                                            <option value="W. Australia Standard Time">(UTC+08:00) Western Australia Standard Time (Perth)</option>
+                                            <option value="Central Europe Standard Time">(UTC+01:00) Central European Standard Time</option>
+                                            <option value="Eastern Europe Standard Time">(UTC+02:00) Eastern European Standard Time</option>
+                                            <option value="Western Europe Standard Time">(UTC+00:00) Western European Standard Time</option>
+                                            <option value="Mountain Standard Time">(UTC-07:00) Mountain Standard Time (US & Canada)</option>
+                                            <option value="Alaskan Standard Time">(UTC-09:00) Alaskan Standard Time</option>
+                                            <option value="Hawaiian Standard Time">(UTC-10:00) Hawaiian Standard Time</option>
+                                            <option value="SA Eastern Standard Time">(UTC-03:00) SA Eastern Standard Time (Buenos Aires)</option>
+                                            <option value="SA Pacific Standard Time">(UTC-05:00) SA Pacific Standard Time (Bogota)</option>
+                                            <option value="Pacific SA Standard Time">(UTC-04:00) Pacific SA Standard Time (Santiago)</option>
+                                        </select>
+                                    </div>
+
+                                </div>*@
+                                <div class="col-md-3">
+                                </div>
+                              @*  <div class="col-md-2">
+                                    <div class="d-flex flex-row">
+                                        <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Status</label>
+                                        <select class="form-control dd-client-status" asp-for="@Model.ClientSite.Status">
+                                            <option value="0">Ongoing</option>
+                                            <option value="1">Expiring</option>
+                                            <option value="2">Expired</option>
+                                        </select>
+                                    </div>
+                                    <p class="pl-5 ml-2">
+
+                                        <input type="date" class="form-control" asp-for="@Model.ClientSite.StatusDate" style="display: @(isStatusOngoing ? "block" : "none");">
+
+
+                                    </p>
+                                </div>*@
+                            </div>
+                            @*Scheduler is Active end15072024*@
+                            @*Check if default value or orginal data exist*@
+                            @if (Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.DefaultValue == true).Count() == 0)
+                            {
+
+
+
+
+                                @*Get All Distinct order Id *@
+                                var distinctOrderIds = Model.ClientSiteManningGuardKpiSettingsADHOC.Select(order => order.OrderId).Distinct();
+                                @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettingsADHOC.Count(); rowIndexFirst = rowIndexFirst + 8)
+                                {
+
+                                    var rowIndextemp = 0;
+                                    var idForDelete = @Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndexFirst].SettingsId + "_" + @Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndexFirst].OrderId + "_" + @Model.ClientSiteId;
+
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col-md-12">
+
+
+                                            <button type="button" class="btn btn-danger no-print" value="@idForDelete" id="delete_workerAdhoc"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
+
+                                            <div class="form-group row pt-2">
+                                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                                <div class="col-md-3">
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndexFirst].CrmSupplier))
+                                                {
+                                                    <div class="col-md-2 mt-2 pl-0 ml-0">
+                                                        <i class="fa fa-vcard-o text-info" style="font-size:18px" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndexFirst].CrmSupplier"></i>
+                                                    </div>
+
+                                                }
+                                                else
+                                                {
+                                                    <div class="col-md-2 mt-2 pl-0 ml-0">
+                                                        <i class="fa fa-vcard-o text-info" style="color: gray !important;opacity: 0.6;cursor: not-allowed;font-size:18px"></i>
+                                                    </div>
+                                                }
+                                            </div>
+
+
+
+
+
+                                            @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
+                                            {
+
+
+
+                                                /*Monthly Hours Start*/
+                                                var monthilyHours = 0.0;
+                                                @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                {
+
+                                                    var totalMin = @Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
+                                                    var guardQty = @Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                                    if (totalMin != null && guardQty != null)
+                                                        monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+
+                                                }
+                                                else
+                                                {
+                                                    var guardQty = @Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).Sum();
+                                                    monthilyHours = guardQty;
+                                                }
+
+                                                /*Monthly Hours End*/
+
+
+                                                <div class="form-row">
+                                                    <div class="col-md-3">
+                                                        @if (rowIndextemp == 0)
+                                                        {
+
+
+
+
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label">Position</label>
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                    {
+                                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuardAdhoc_@rowIndexFirst" disabled name="positionfilterGuardAdhoc">
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuardAdhoc_@rowIndexFirst" disabled checked name="positionfilterGuardAdhoc">
+
+                                                                    }
+                                                                    <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @if (rowIndextemp == 1)
+                                                        {
+                                                            <div class="form-group p-0">
+
+                                                                @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                {
+                                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+
+                                                                }
+                                                                else
+                                                                {
+                                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        @*New Code for Monthly Hours Start*@
+
+                                                        @if (rowIndextemp == 3)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                {
+                                                                    <label class="form-label" id="lbl_MonthlyHrsAdhoc">Monthly Hrs :</label>
+
+                                                                }
+                                                                else
+                                                                {
+                                                                    <label class="form-label" id="lbl_MonthlyHrsAdhoc">Total Patrols :</label>
+                                                                }
+                                                                <div class="custom-control custom-switch custom-control-inline pl-0" title="Switch between Patrol Car and Guards">
+                                                                    <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrsAdhoc_@rowIndexFirst" name="monthlyHrsAdhoc" style="width:120px" readonly />
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @*New Code for Monthly Hours end*@
+                                                    </div>
+                                                    <div class="col-md-1 p-0">
+                                                        @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                        {
+                                                            <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
+
+                                                        }
+                                                    </div>
+                                                    @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
+                                                    {
+
+
+                                                        @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex] != null)
+                                                        {
+                                                            var headerLabel = string.Empty;
+                                                            @if (@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].IsPHO == 1)
+                                                            {
+                                                                headerLabel = "PHO";
+                                                            }
+                                                            else
+                                                            {
+                                                                headerLabel = @Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].WeekDay.ToString().Substring(0, 3);
+                                                            }
+
+                                                            <div class="col-md-1" id="divGuardInnerAdhoc_+@rowIndex+_+@colIndex">
+
+                                                                @switch (rowIndextemp)
+                                                                {
+                                                                    case 0:
+
+                                                                        //<label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                                        <label class="form-label">@headerLabel</label>
+                                                                        break;
+                                                                    case 1:
+
+                                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].EmpHoursStart">
+                                                                        break;
+
+                                                                    case 2:
+
+                                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].EmpHoursEnd">
+                                                                        break;
+                                                                    case 3:
+                                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                                        break;
+
+                                                                }
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].WeekDay" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].Id" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].OrderId" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].Type" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].SettingsId" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettingsADHOC[colIndex].IsPHO" />
+
+                                                            </div>
+
+                                                        }
+
+
+                                                    }
+
+
+
+                                                </div>
+                                                rowIndextemp++;
+                                            }
+                                        </div>
+                                    </div>
+
+                                }
+
+
+                            }
+                            @*Add New Mannings*@
+                            @if (Model.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.DefaultValue == true).Count() != 0)
+                            {
+
+                                <div id="divPatrolCarAdhoc" style="display: none;">
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col-md-12">
+
+
+
+
+                                            <div class="form-group row pt-1">
+                                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                                <div class="col-md-3">
+                                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[0].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                </div>
+                                                <div class="col-md-2 mt-2 pl-0 ml-0">
+                                                    <i class="fa fa-vcard-o text-info" style="color: gray !important;opacity: 0.6;cursor: not-allowed;font-size:18px"></i>
+                                                </div>
+
+                                            </div>
+
+
+
+
+
+
+
+                                            @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
+                                            {
+                                                <div class="form-row">
+                                                    <div class="col-md-3">
+
+
+
+                                                        @if (rowIndex2 == 0)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label">Position</label>
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarAdhoc" name="positionfilterPatrolCarAdhoc">
+                                                                    <label class="custom-control-label" for="positionfilterPatrolCarAdhoc">Patrol Car</label>
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @if (rowIndex2 == 1)
+                                                        {
+                                                            <div class="form-group p-0">
+                                                                <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+                                                            </div>
+                                                        }
+                                                        @*New Code for Monthly Hours Start*@
+
+                                                        @if (rowIndex2 == 3)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label" id="monthlyHrsTxtAddNewAdhoc">Monthly Hrs :</label>
+                                                                <div class="custom-control custom-switch custom-control-inline pl-0" title="Switch between Patrol Car and Guards">
+                                                                    <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsAddNewAdhoc" name="monthlyHrsAddNewAdhoc" style="width:120px" readonly />
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @*New Code for Monthly Hours end*@
+
+
+                                                    </div>
+                                                    <div class="col-md-1 p-0">
+                                                        <label class="form-label" id="lbl_ManningPatrolCarAdhoc_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
+                                                    </div>
+
+                                                    @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
+                                                    {
+                                                        var headerLabel2 = string.Empty;
+                                                        @if (@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].IsPHO == 1)
+                                                        {
+                                                            headerLabel2 = "PHO";
+                                                        }
+                                                        else
+                                                        {
+                                                            headerLabel2 = @Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].WeekDay.ToString().Substring(0, 3);
+                                                        }
+                                                        <div class="col-md-1">
+                                                            @switch (rowIndex2)
+                                                            {
+                                                                case 0:
+                                                                    <label class="form-label">@headerLabel2</label>
+                                                                    break;
+                                                                case 1:
+                                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].EmpHoursStart">
+                                                                    break;
+                                                                case 2:
+                                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].EmpHoursEnd">
+                                                                    break;
+                                                                case 3:
+                                                                    <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].NoOfPatrols" data-index="@colIndex2">
+                                                                    break;
+
+                                                            }
+                                                            <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].Type" value="2" style="display: none;">
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].WeekDay" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].Id" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].OrderId" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].SettingsId" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettingsADHOC[colIndex2].IsPHO" />
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+
+                            }
+
+
+
+                            @*Old Code*@
+
+                            @if (Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.DefaultValue == true).Count() == 0)
+                            {
+                                <button type="button" class="btn btn-success no-print" id="save_site_manning_settings_adhoc"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
+
+                            }
+                            else
+                            {
+                                <div id="divbtnAdhoc" style="display: none;">
+                                    <button type="button" class="btn btn-success no-print" id="save_site_manning_settings_adhoc"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
+                                </div>
+                            }
+
+                        </form>
+
+                    </div>
+                </div>
+                  @*New Tab for Adhoc contracted-manning end*@
 
                 <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
                     <div class="container pt-3">
