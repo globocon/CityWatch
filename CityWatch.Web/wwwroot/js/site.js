@@ -3315,13 +3315,13 @@
     $("#btn_CompanyMailSave").on("click", function () {
         var companyId = parseInt($("#txt_CompanyId").val());
         const token = $('input[name="__RequestVerificationToken"]').val();
-
+        var ss = $("#txt_Timesheet").val();
         var obj = {
             Id: companyId,
             IRMail: $("#txt_IR").val(),
             KPIMail: $("#txt_KPI").val(),
             FusionMail: $("#txt_Fusion").val(),
-            TimesheetMail: $("#txt_Timesheet").val(),
+            TimesheetsMail: $("#txt_Timesheet").val(),
         };
 
         $.ajax({
