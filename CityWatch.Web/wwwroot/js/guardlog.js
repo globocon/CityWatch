@@ -271,18 +271,35 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
-                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-                data.map(function (result) {
-                    if (isPosition) {
-                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+                if (data.length == 1) {
+                    smart_Wand_Or_Position.append('<option value="">Select</option>');
+
+                    data.map(function (result) {
+                        if (isPosition) {
+                            smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>').attr("selected", "selected");
+
+                            smartWandOrPositionId = result.value;
+                        }
+                        else {
+                            smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>').attr("selected", "selected");
+                            smartWandOrPositionId = result.smartWandId;
+                        }
+                    });
+                }
+                else {
+                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+
+                    data.map(function (result) {
+                        if (isPosition) {
+                            smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
 
 
-                    }
-                    else {
-                        smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
-                    }
-                });
-
+                        }
+                        else {
+                            smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
+                        }
+                    });
+                }
 
 
 
@@ -604,8 +621,21 @@ $(function () {
                     });
                     smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
                 }
+
+            }
+                /*p1-292 login isseue-start*/
+            //if there is no contrcatedmanning details for the site then automatically load the smartwand assigned to the site or load the position if no smartwand assinged
+            else {
+                $('#GuardLogin_IsPosition').prop('checked', false);
+                const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+               
+
+                getsmartwandcount(isPosition, clientSiteName);
+                
+               
             }
 
+            /*p1-292 login isseue-end*/
         }).fail(function () {
 
         }).always(function () {
@@ -613,9 +643,31 @@ $(function () {
         });
 
         /* new Code for select deafult postion if manning deatils exist end*/
+        /*p1-292 login isseue-start*/
+        function getsmartwandcount(isPosition, clientSiteName) {
+        const url = isPosition ?
+            '/Guard/Login?handler=OfficerPositions' :
+            '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
+            '&guardId=' + $('#GuardLogin_Guard_Id').val();
 
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data.length > 0) {
+                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                }
+                else {
+                    $('#GuardLogin_IsPosition').prop('checked', true);
+                    isPosition = $('#GuardLogin_IsPosition').is(':checked');
+                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                }
+            }
+            })
 
-
+        }
+        /*p1-292 login isseue-end*/
 
         ////To Get the Critical Documents start
         //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
