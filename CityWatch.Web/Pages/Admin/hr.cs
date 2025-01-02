@@ -346,37 +346,41 @@ namespace CityWatch.Web.Pages.Admin
                     }
                     else if (val == 5)
                     {
-                        guard.IsRCAccess = true;
+                        guard.IsRCLiteAccess = true;
                     }
                     else if (val == 6)
                     {
-                        guard.IsRCHRAccess = true;
+                        guard.IsRCAccess = true;
                     }
                     else if (val == 7)
                     {
-                        guard.IsRCFusionAccess = true;
+                        guard.IsRCHRAccess = true;
                     }
                     else if (val == 8)
                     {
-                        guard.IsAdminPowerUser = true;
+                        guard.IsRCFusionAccess = true;
                     }
                     else if (val == 9)
                     {
-                        guard.IsAdminSOPToolsAccess = true;
+                        guard.IsAdminPowerUser = true;
                     }
                     else if (val == 10)
                     {
-                        guard.IsAdminAuditorAccess = true;
+                        guard.IsAdminSOPToolsAccess = true;
                     }
                     else if (val == 11)
                     {
-                        guard.IsAdminInvestigatorAccess = true;
+                        guard.IsAdminAuditorAccess = true;
                     }
                     else if (val == 12)
                     {
-                        guard.IsAdminThirdPartyAccess = true;
+                        guard.IsAdminInvestigatorAccess = true;
                     }
                     else if (val == 13)
+                    {
+                        guard.IsAdminThirdPartyAccess = true;
+                    }
+                    else if (val == 14)
                     {
                         guard.IsAdminGlobal = true;
                     }
@@ -1364,7 +1368,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (guard.IsActive)
                         {
-                            if (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess)
+                            if (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;

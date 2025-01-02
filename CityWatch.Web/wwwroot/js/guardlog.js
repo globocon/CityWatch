@@ -110,15 +110,15 @@ $(function () {
     $('#Guard_Access').on('change', function () {
         var newval = $(this).val();
         
-        if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('7') && newval.includes('5'))) {
+        if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
                 //yourElement in yourArray
-            alert('Please select only one option among RC + HR or RC-Fusion or RC');
+            alert('Please select only one option among RC + HR or RC-Fusion or RC or RC (Lite)');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
                         var isChecked1 = $(this).is(':checked');
                         if (isChecked1 == true) {
                             var new1 = $(this).val();
 
-                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7) {
+                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7 || parseInt(new1) == 8) {
                                 $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                                 newval = newval.filter(function (value) {
                                     return value !== new1;
@@ -151,7 +151,7 @@ $(function () {
 
         }
 
-        if ((newval.includes('8') && newval.includes('9')) || (newval.includes('8') && newval.includes('10')) || (newval.includes('8') && newval.includes('11')) || (newval.includes('9') && newval.includes('10')) || (newval.includes('9') && newval.includes('11')) || (newval.includes('10') && newval.includes('11'))) {
+        if ((newval.includes('9') && newval.includes('10')) || (newval.includes('9') && newval.includes('11')) || (newval.includes('9') && newval.includes('12')) || (newval.includes('10') && newval.includes('11')) || (newval.includes('10') && newval.includes('12')) || (newval.includes('11') && newval.includes('12'))) {
             //yourElement in yourArray
             alert('Please select only one option among Admin-PowerUser or SOP or Auditor or Investigator');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
@@ -159,7 +159,7 @@ $(function () {
                 if (isChecked1 == true) {
                     var new1 = $(this).val();
 
-                    if (parseInt(new1) == 8 || parseInt(new1) == 9 || parseInt(new1) == 10 || parseInt(new1) == 11) {
+                    if (parseInt(new1) == 9 || parseInt(new1) == 10 || parseInt(new1) == 11 || parseInt(new1) == 12) {
                         $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                         newval = newval.filter(function (value) {
                             return value !== new1;
@@ -5080,14 +5080,18 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(13);
+            selectedValues.push(14);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(8);
+            selectedValues.push(9);
         }
-        if (data.isRCAccess) {
+        if (data.isRCLiteAccess) {
             selectedValues.push(5);
         }
+        if (data.isRCAccess) {
+            selectedValues.push(6);
+        }
+        
         if (data.isKPIAccess) {
             selectedValues.push(4);
         }
@@ -5101,22 +5105,22 @@ $(function () {
             selectedValues.push(3);
         }
         if (data.isRCHRAccess) {
-            selectedValues.push(6);
-        }
-        if (data.isRCFusionAccess) {
             selectedValues.push(7);
         }
-        if (data.isAdminSOPToolsAccess) {
-            selectedValues.push(9);
+        if (data.isRCFusionAccess) {
+            selectedValues.push(8);
         }
-        if (data.isAdminAuditorAccess) {
+        if (data.isAdminSOPToolsAccess) {
             selectedValues.push(10);
         }
-        if (data.isAdminInvestigatorAccess) {
+        if (data.isAdminAuditorAccess) {
             selectedValues.push(11);
         }
-        if (data.isAdminThirdPartyAccess) {
+        if (data.isAdminInvestigatorAccess) {
             selectedValues.push(12);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(13);
         }
         selectedValues.forEach(function (value) {
 

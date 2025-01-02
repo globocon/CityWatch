@@ -4715,7 +4715,9 @@ $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
     }).fail(function () { });
 });
 
-
+if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
+    $('#ActiveGuardsDivision').hide();
+}
 $('#div_site_settings').on('change', '#ClientSite_Status', function () {
     // Get the selected value
     var selectedStatus = $(this).val();

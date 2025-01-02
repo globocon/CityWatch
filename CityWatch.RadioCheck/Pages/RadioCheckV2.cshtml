@@ -33,6 +33,7 @@
 <input type="hidden" asp-for="@loginUserId" id="loginUserId" />
 <input type="hidden" id="txtguardGuardRCAccess" asp-for="@Model.Guard.IsRCAccess" />
 <input type="hidden" id="txtguardGuardRCHRAccess" asp-for="@Model.Guard.IsRCHRAccess" />
+<input type="hidden" id="txtguardGuardRCLiteAccess" asp-for="@Model.Guard.IsRCLiteAccess" />
 <!-----------------In Acive List -------------------->
 
 <div class="card">
@@ -99,7 +100,7 @@
 </div>
 
 <!----------------- Acive List -------------------->
-<div class="card">
+<div class="card" id="ActiveGuardsDivision">
     <div class="card-header container-fluid">
         <div class="row">
             <div class="col-md-11 mr-5">

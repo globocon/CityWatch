@@ -234,6 +234,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsAdminInvestigatorAccess = guard.IsAdminInvestigatorAccess;
                 updateGuard.IsAdminThirdPartyAccess = guard.IsAdminThirdPartyAccess;
                 updateGuard.IsRCHRAccess = guard.IsRCHRAccess;
+                updateGuard.IsRCLiteAccess = guard.IsRCLiteAccess;
             }
 
             _context.SaveChanges();
