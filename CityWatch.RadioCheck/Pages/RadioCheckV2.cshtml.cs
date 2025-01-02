@@ -2012,6 +2012,34 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { status, message, clientSiteId });
         }
 
+
+        public JsonResult OnPostDeleteWorkerADHOC(string settingsId)
+        {
+            var status = true;
+            var message = "Success";
+            var clientSiteId = 0;
+            try
+            {
+                if (settingsId != string.Empty)
+                {
+                    var split = settingsId.Split('_');
+                    if (split.Length > 0)
+                    {
+                        var settId = int.Parse(split[0]);
+                        var orderId = int.Parse(split[1]);
+                        clientSiteId = int.Parse(split[2]);
+                        _clientDataProvider.RemoveWorkerADHOC(settId, orderId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message, clientSiteId });
+        }
+
         public IActionResult OnGetOfficerPositions(OfficerPositionFilterManning filter)
         {
             return new JsonResult(ViewDataService.GetOfficerPositions((OfficerPositionFilterManning)filter));
