@@ -395,7 +395,7 @@ namespace CityWatch.Kpi.Services
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             /*Default to adresss for kpi Schedule Start*/
             var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
-            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            var emailAddresses = string.Join(",", Emails.Select(email => email.KPIMail));
             if (emailAddresses != null && emailAddresses != "")
             {
                 var toAddressNew = emailAddresses.Split(',');
@@ -456,16 +456,16 @@ namespace CityWatch.Kpi.Services
             var subject = "Monthly TimeSheet Report";
             var messageHtml = "Dear Citywatch Security Client; <br><br>Please find attached Timesheet Records.</a>";
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            //message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             /*Default to adresss for kpi Schedule Start*/
-            //var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
-            //var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
-            //if (emailAddresses != null && emailAddresses != "")
-            //{
-            //    var toAddressNew = emailAddresses.Split(',');
-            //    foreach (var address in GetToEmailAddressList(toAddressNew))
-            //        message.To.Add(address);
-            //}
+            var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.TimesheetsMail));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.From.Add(address);
+            }
             /*Default to adresss for kpi Schedule end*/
             /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
 

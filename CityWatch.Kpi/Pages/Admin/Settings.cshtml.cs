@@ -1222,7 +1222,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKPIScheduleDeafultMailbox()
         {
             var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox();
-            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            var emailAddresses = string.Join(",", Emails.Select(email => email.KPIMail));
             return new JsonResult(new { Emails = emailAddresses });
         }
         public JsonResult OnPostSaveDeafultMailBox(string Email)
