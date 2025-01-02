@@ -107,6 +107,8 @@ namespace CityWatch.Data.Providers
 
         List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo);
 
+        List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -150,7 +152,7 @@ namespace CityWatch.Data.Providers
                     BackgroundColour = template.BackgroundColour,
                     TextColor = template.TextColor,
                     DeleteStatus = 0,
-                    SendtoRC= template.SendtoRC
+                    SendtoRC = template.SendtoRC
                 });
             }
             else
@@ -761,7 +763,7 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
         }
-        public List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId,string searchKeyNo)
+        public List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId, string searchKeyNo)
         {
 
 
@@ -1102,5 +1104,49 @@ namespace CityWatch.Data.Providers
 
 
         }
+
+
+        public List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId)
+        {
+            var sortedDocuments = _context.CriticalDocuments
+                .Include(d => d.CriticalDocumentsClientSites)
+                    .ThenInclude(cs => cs.ClientSite)
+                        .ThenInclude(ct => ct.ClientType)
+                .Include(d => d.CriticalDocumentDescriptions)
+                    .ThenInclude(desc => desc.HRSettings)
+                        .ThenInclude(hr => hr.HRGroups)
+                .Include(d => d.CriticalDocumentDescriptions)
+                    .ThenInclude(desc => desc.HRSettings)
+                        .ThenInclude(hr => hr.ReferenceNoNumbers)
+                .Include(d => d.CriticalDocumentDescriptions)
+                    .ThenInclude(desc => desc.HRSettings)
+                        .ThenInclude(hr => hr.ReferenceNoAlphabets)
+                .Where(d => d.CriticalDocumentsClientSites.Any(cs => cs.ClientSiteId == clientSiteId)) // Filter by ClientSiteId
+                .Select(d => new
+                {
+                    CriticalDocument = d,
+                    SortedDescriptions = d.CriticalDocumentDescriptions
+                        .Where(desc => desc.HRSettings != null
+                                    && desc.HRSettings.ReferenceNoNumbers != null
+                                    && desc.HRSettings.ReferenceNoAlphabets != null)
+                        .OrderBy(desc => desc.HRSettings.ReferenceNoNumbers)
+                        .ThenBy(desc => desc.HRSettings.ReferenceNoAlphabets)
+                        .ToList(),
+                    FilteredClientSites = d.CriticalDocumentsClientSites
+                        .Where(cs => cs.ClientSiteId == clientSiteId) // Select only relevant ClientSites
+                        .ToList()
+                })
+                .AsEnumerable() // Switch to client-side processing for modifications
+                .Select(doc =>
+                {
+                    doc.CriticalDocument.CriticalDocumentDescriptions = doc.SortedDescriptions;
+                    doc.CriticalDocument.CriticalDocumentsClientSites = doc.FilteredClientSites;
+                    return doc.CriticalDocument;
+                })
+                .ToList();
+
+            return sortedDocuments;
+        }
+
     }
 }

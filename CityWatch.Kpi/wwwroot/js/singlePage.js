@@ -1376,8 +1376,12 @@ $(function () {
     //crtical doc
 
     let gridCriticalDocument;
+
+    function getClientSiteId() {
+        return $('#gl_client_site_id').val(); // Get the client site ID from the hidden field or input
+    }
     gridCriticalDocument = $('#tbl_CriticalDocument').grid({
-        dataSource: '/Admin/Settings?handler=CriticalDocumentList',
+        dataSource: '/Admin/Settings?handler=CriticalDocumentList&&clientSiteId=' + $('#singlepageclientSiteId').val(),
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
