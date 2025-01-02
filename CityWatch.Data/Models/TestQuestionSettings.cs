@@ -24,16 +24,16 @@ namespace CityWatch.Data.Models
         public bool IsDeleted { get; set; }
 
         [ForeignKey("CourseDurationId")]
-        public CourseDuration CourseDuration { get; set; }
+        public TrainingCourseDuration CourseDuration { get; set; }
 
         [ForeignKey("TestDurationId")]
-        public TestDuration TestDuration { get; set; }
+        public TrainingTestDuration TestDuration { get; set; }
         [ForeignKey("PassMarkId")]
-        public PassMark PassMark { get; set; }
+        public TrainingTestPassMark PassMark { get; set; }
         [ForeignKey("AttemptsId")]
-        public Attempts Attempts { get; set; }
+        public TrainingTestAttempts Attempts { get; set; }
         [ForeignKey("CertificateExpiryId")]
-        public CertificateExpiryYears CertificateExpiryYears { get; set; }
+        public TrainingCertificateExpiryYears CertificateExpiryYears { get; set; }
         [ForeignKey("HRSettingsId")]
         public HrSettings HrSettings { get; set; }
 

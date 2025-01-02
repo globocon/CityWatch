@@ -18,9 +18,9 @@ namespace CityWatch.Data.Models
         [ForeignKey("HRSettingsId")]
         public HrSettings HrSettings { get; set; }
         [ForeignKey("QuestionNoId")]
-        public QuestionNumbers QuestionNumbers { get; set; }
+        public TrainingTestQuestionNumbers QuestionNumbers { get; set; }
         [ForeignKey("TQNumberId")]
-        public TQNumbers TQNumbers { get; set; }
+        public TrainingTQNumbers TQNumbers { get; set; }
        
 	
     }

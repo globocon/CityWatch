@@ -88,14 +88,14 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
-        List<CourseDuration> GetCourseDuration();
-        List<TestDuration> GetTestDuration();
-        List<PassMark> GetPassMark();
+        List<TrainingCourseDuration> GetCourseDuration();
+        List<TrainingTestDuration> GetTestDuration();
+        List<TrainingTestPassMark> GetPassMark();
 
-        List<Attempts> GetTestAttempts();
-        List<CertificateExpiryYears> GetTrainingCertificateExpiryYears();
-        List<TQNumbers> GetTestTQNumbers();
-        List<QuestionNumbers> GetTestQuestionNumbers();
+        List<TrainingTestAttempts> GetTestAttempts();
+        List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
+        List<TrainingTQNumbers> GetTestTQNumbers();
+        List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -986,34 +986,34 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
-        public List<CourseDuration> GetCourseDuration()
+        public List<TrainingCourseDuration> GetCourseDuration()
         {
-            return _context.CourseDuration.ToList();
+            return _context.TrainingCourseDuration.ToList();
         }
-        public List<TestDuration> GetTestDuration()
+        public List<TrainingTestDuration> GetTestDuration()
         {
-            return _context.TestDuration.ToList();
+            return _context.TrainingTestDuration.ToList();
         }
-        public List<PassMark> GetPassMark()
+        public List<TrainingTestPassMark> GetPassMark()
         {
-            return _context.PassMark.ToList();
+            return _context.TrainingTestPassMark.ToList();
         }
-        public List<Attempts> GetTestAttempts()
+        public List<TrainingTestAttempts> GetTestAttempts()
         {
-            return _context.Attempts.ToList();
+            return _context.TrainingTestAttempts.ToList();
         }
-        public List<QuestionNumbers> GetTestQuestionNumbers()
+        public List<TrainingTestQuestionNumbers> GetTestQuestionNumbers()
         {
-            return _context.QuestionNumbers.ToList();
+            return _context.TrainingTestQuestionNumbers.ToList();
         }
-        public List<TQNumbers> GetTestTQNumbers()
+        public List<TrainingTQNumbers> GetTestTQNumbers()
         {
-            return _context.TQNumbers.ToList();
+            return _context.TrainingTQNumbers.ToList();
         }
         
-        public List<CertificateExpiryYears> GetTrainingCertificateExpiryYears()
+        public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
         {
-            return _context.CertificateExpiryYears.ToList();
+            return _context.TrainingCertificateExpiryYears.ToList();
         }
     }
 }

@@ -2,14 +2,15 @@
 });
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+   
+    $('#trainingandAssessmentmodal').modal('show');
     gridCourseDocumentFiles.clear();
     gridCourseDocumentFiles.reload();
 });
 
 $('#btnTestQuestions').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+    $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingTestQuestionstab').addClass('active');
     $('#TrainingCourse').removeClass('active');
@@ -19,7 +20,7 @@ $('#btnTestQuestions').on('click', function (e) {
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+    $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingCertificateTab').addClass('active');
     $('#TrainingCourse').removeClass('active');
