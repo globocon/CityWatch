@@ -1348,7 +1348,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKPIScheduleDeafultMailbox()
         {
             var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox();
-            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            var emailAddresses = string.Join(",", Emails.Select(email => email.KPIMail));
             return new JsonResult(new { Emails = emailAddresses });
         }
         public JsonResult OnPostSaveDeafultMailBox(string Email)
@@ -1481,21 +1481,22 @@ namespace CityWatch.Kpi.Pages.Admin
         /*Dropbox settings-end*/
 
 
-        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        public JsonResult OnGetCriticalDocumentList(int clientSiteId)
         {
+          
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
-                var ddd = _configDataProvider.GetCriticalDocs()
-                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
-                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                //var ddd = _configDataProvider.GetCriticalDocs()
+                //    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
+                return new JsonResult(_configDataProvider.GetCriticalDocsByClientSiteId(clientSiteId)
                     .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
 
 
             }
             else
             {
-                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                return new JsonResult(_configDataProvider.GetCriticalDocsByClientSiteId(clientSiteId)
                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
                 //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
                 //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
