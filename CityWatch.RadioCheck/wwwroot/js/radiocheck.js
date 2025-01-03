@@ -3641,6 +3641,25 @@ if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess')
     
 
 }
+if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
+
+
+ 
+
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+
+
+
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+
+
+}
 
 $('#clientSiteInActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
 
