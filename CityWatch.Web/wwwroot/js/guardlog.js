@@ -593,54 +593,60 @@ $(function () {
     });
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
-        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        
         //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
         var clientSiteName = $(this).val();
+        $('#GuardLogin_IsPosition').prop('checked', false);
+        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        //isPosition = $('#GuardLogin_IsPosition').is(':checked');
+
+
+        getsmartwandcount(isPosition, clientSiteName);
         /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
-        $.ajax({
-            url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
-            type: 'GET',
-            dataType: 'json',
+        //$.ajax({
+        //    url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+        //    type: 'GET',
+        //    dataType: 'json',
 
-        }).done(function (result) {
-            if (result.success) {
-                if (result.positionIdDefault != '') {
+        //}).done(function (result) {
+        //    if (result.success) {
+        //        if (result.positionIdDefault != '') {
 
-                    $('#GuardLogin_IsPosition').prop('checked', true);
-                    getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
-                    /*smart_Wand_Or_Position.html('');
-                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-                    data.map(function (result) {
+        //            $('#GuardLogin_IsPosition').prop('checked', true);
+        //            getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+        //            /*smart_Wand_Or_Position.html('');
+        //            smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+        //            data.map(function (result) {
 
-                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
-
-
+        //                smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
 
 
-                    });
-                    smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
-                }
 
-            }
-                /*p1-292 login isseue-start*/
-            //if there is no contrcatedmanning details for the site then automatically load the smartwand assigned to the site or load the position if no smartwand assinged
-            else {
-                $('#GuardLogin_IsPosition').prop('checked', false);
-                const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+
+        //            });
+        //            smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+        //        }
+
+        //    }
+        //        /*p1-292 login isseue-start*/
+        //    //if there is no contrcatedmanning details for the site then automatically load the smartwand assigned to the site or load the position if no smartwand assinged
+        //    else {
+        //        $('#GuardLogin_IsPosition').prop('checked', false);
+        //        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
                
 
-                getsmartwandcount(isPosition, clientSiteName);
+        //        getsmartwandcount(isPosition, clientSiteName);
                 
                
-            }
+        //    }
 
-            /*p1-292 login isseue-end*/
-        }).fail(function () {
+        //    /*p1-292 login isseue-end*/
+        //}).fail(function () {
 
-        }).always(function () {
+        //}).always(function () {
 
-        });
+        //});
 
         /* new Code for select deafult postion if manning deatils exist end*/
         /*p1-292 login isseue-start*/
