@@ -4,6 +4,9 @@ $('#btnCourse').on('click', function (e) {
     e.preventDefault();
    
     $('#trainingandAssessmentmodal').modal('show');
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var courseDescription = $('#txtHrSettingsDescription').val();
+    $('#training_course_Name').val('HR' + ' ' + referenceNumber + ' ' + courseDescription)
     gridCourseDocumentFiles.clear();
     gridCourseDocumentFiles.reload();
 });
