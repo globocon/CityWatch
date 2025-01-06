@@ -3591,6 +3591,23 @@
     }
     /*to add do's and donts -start*/
 
+    let gridTAFields;
+    let isTAFieldAdding = false;
+    gridTAFields = $('#tbl_ta_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=InstructorNameandPositionFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            
+            { field: 'name', title: 'Instructor Name', width: 100, editor: true },
+            { field: 'position', title: 'Position', width: 400, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
     let gridDosAndDontsFields;
     let isDosandDontsFieldAdding = false;
     gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
@@ -3600,7 +3617,7 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            
+
             { field: 'referenceNo', title: 'REF NO', width: 100, editor: true },
             { field: 'name', title: 'Name', width: 400, editor: true },
         ],
@@ -3728,6 +3745,7 @@
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
         gridAreaReportFields.hide();
+        gridTAFields.hide();
     }
 
     $('#report_module_types').on('change', function () {
@@ -3744,7 +3762,7 @@
             $('#add_dosanddonts_fields').show();
             $('#add_kvl_fields').hide();
             $('#irNotes').hide();
-
+           
             gridReportFields.hide();
             gridKvlFields.hide();
             gridAreaReportFields.hide();
@@ -3752,6 +3770,9 @@
 
             $('#doanddontfields_types').val('');
             gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            gridTAFields.hide();
         }
         else if ($('#report_module_types').val() == 2) {
             $('#fieldSettings').show();
@@ -3773,6 +3794,9 @@
             gridAreaReportFields.hide();
             gridKvlFields.show();
             gridDosAndDontsFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            gridTAFields.hide();
         }
         else if ($('#report_module_types').val() == 3) {
             $('#fieldSettings').hide();
@@ -3793,8 +3817,34 @@
 
             $('#report_field_types').val('');
             gridReportFields.reload({ typeId: $('#report_field_types').val() });
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            gridTAFields.hide();
         }
+        else if ($('#report_module_types').val() == 4) {
+            $('#fieldSettings').hide();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
 
+            $('#lblFieldType').show();
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+
+            $('#report_field_types').val('');
+            $('#ta_field_types').show();
+            $('#add_ta_fields').show();
+           gridTAFields.show();
+            gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+            
+        }
         else {
 
             $('#doanddontfields_types').hide();
@@ -3811,6 +3861,9 @@
             gridReportFields.hide();
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            gridTAFields.hide();
         }
     });
     /*p1 - 196 Rationalization Of Menu Changes - end*/
