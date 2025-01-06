@@ -1113,7 +1113,7 @@ namespace CityWatch.Data.Providers
             var courseDocList = _context.TrainingCourses
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
-            
+
 
             return courseDocList;
         }
@@ -1165,6 +1165,6 @@ namespace CityWatch.Data.Providers
             return sortedDocuments;
 
         }
-
+    }
   
 }
