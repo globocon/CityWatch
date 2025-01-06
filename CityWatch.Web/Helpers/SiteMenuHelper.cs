@@ -158,6 +158,7 @@ namespace CityWatch.Web.Helpers
 
             if (pageName == PageNameHelper.ControlRoom)
             {
+                var rcWebUrl = IsDevEnv ? string.Empty : "//rc.cws-ir.com";
                 menuHtml.AppendLine("<div>");
                 if (!AuthUserHelper.IsAdminUserLoggedIn )
                 {   /* Check the guard Login Conformation*/
@@ -165,7 +166,8 @@ namespace CityWatch.Web.Helpers
                 }
                 else
                 {
-                    menuHtml.AppendLine(@"<a href=""http://rc.cws-ir.com/RadioCheckV2"" class=""nav-link py-0"" target=""_blank"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                    // menuHtml.AppendLine(@"<a href=""http://rc.cws-ir.com/RadioCheckV2"" class=""nav-link py-0"" target=""_blank"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Radio Checklist (RC)</a>", "//rc.cws-ir.com").AppendLine();
                 }
                 menuHtml.AppendLine("</div>");
             }
