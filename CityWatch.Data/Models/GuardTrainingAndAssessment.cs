@@ -35,7 +35,7 @@ namespace CityWatch.Data.Models
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
         [ForeignKey("CourseId")]
-        public Courses Courses { get; set; }
+        public TrainingCourses Courses { get; set; }
         [NotMapped]
         public string NewNullColumn { get; set; }
 
