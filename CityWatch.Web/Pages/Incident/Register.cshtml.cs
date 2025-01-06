@@ -613,7 +613,11 @@ namespace CityWatch.Web.Pages.Incident
         private bool SendEmailWithAzureBlob(string fileName)
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
-            var toAddress = _EmailOptions.ToAddress.Split('|');
+            var ToAddreddAppset = _EmailOptions.ToAddress.Split('|');
+            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+            var toAddress = toAddressData.Split('|');
+
+            //var toAddress = _EmailOptions.ToAddress.Split('|');
             // var ccAddress = _EmailOptions.CcAddress.Split('|');
             List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
             string emailAddress = null;

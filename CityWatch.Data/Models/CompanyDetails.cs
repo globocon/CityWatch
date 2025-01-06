@@ -45,5 +45,9 @@ namespace CityWatch.Data.Models
         public string FormattedBannerMessageUploaded { get { return BannerMessageUploadedOn.ToString("dd MMM yyyy @ HH:mm"); } }
         [NotMapped]
         public string FormattedEmailMessageUploaded { get { return BannerMessageUploadedOn.ToString("dd MMM yyyy @ HH:mm"); } }
+        public string IRMail { get; set; }
+        public string KPIMail { get; set; }
+        public string FusionMail { get; set; }
+        public string TimesheetsMail { get; set; }
     }
 }

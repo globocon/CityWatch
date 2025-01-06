@@ -110,15 +110,15 @@ $(function () {
     $('#Guard_Access').on('change', function () {
         var newval = $(this).val();
         
-        if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('7') && newval.includes('5'))) {
+        if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
                 //yourElement in yourArray
-            alert('Please select only one option among RC + HR or RC-Fusion or RC');
+            alert('Please select only one option among RC + HR or RC-Fusion or RC or RC (Lite)');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
                         var isChecked1 = $(this).is(':checked');
                         if (isChecked1 == true) {
                             var new1 = $(this).val();
 
-                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7) {
+                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7 || parseInt(new1) == 8) {
                                 $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                                 newval = newval.filter(function (value) {
                                     return value !== new1;
@@ -151,7 +151,7 @@ $(function () {
 
         }
 
-        if ((newval.includes('8') && newval.includes('9')) || (newval.includes('8') && newval.includes('10')) || (newval.includes('8') && newval.includes('11')) || (newval.includes('9') && newval.includes('10')) || (newval.includes('9') && newval.includes('11')) || (newval.includes('10') && newval.includes('11'))) {
+        if ((newval.includes('9') && newval.includes('10')) || (newval.includes('9') && newval.includes('11')) || (newval.includes('9') && newval.includes('12')) || (newval.includes('10') && newval.includes('11')) || (newval.includes('10') && newval.includes('12')) || (newval.includes('11') && newval.includes('12'))) {
             //yourElement in yourArray
             alert('Please select only one option among Admin-PowerUser or SOP or Auditor or Investigator');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
@@ -159,7 +159,7 @@ $(function () {
                 if (isChecked1 == true) {
                     var new1 = $(this).val();
 
-                    if (parseInt(new1) == 8 || parseInt(new1) == 9 || parseInt(new1) == 10 || parseInt(new1) == 11) {
+                    if (parseInt(new1) == 9 || parseInt(new1) == 10 || parseInt(new1) == 11 || parseInt(new1) == 12) {
                         $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                         newval = newval.filter(function (value) {
                             return value !== new1;
@@ -271,18 +271,35 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
-                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-                data.map(function (result) {
-                    if (isPosition) {
-                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+                if (data.length == 1) {
+                    smart_Wand_Or_Position.append('<option value="">Select</option>');
+
+                    data.map(function (result) {
+                        if (isPosition) {
+                            smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>').attr("selected", "selected");
+
+                            smartWandOrPositionId = result.value;
+                        }
+                        else {
+                            smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>').attr("selected", "selected");
+                            smartWandOrPositionId = result.smartWandId;
+                        }
+                    });
+                }
+                else {
+                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+
+                    data.map(function (result) {
+                        if (isPosition) {
+                            smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
 
 
-                    }
-                    else {
-                        smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
-                    }
-                });
-
+                        }
+                        else {
+                            smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
+                        }
+                    });
+                }
 
 
 
@@ -459,7 +476,7 @@ $(function () {
 
 
         $('#loader').show();
-
+        //checkGuardLoginExpiry();
         $.ajax({
             url: '/Guard/Login?handler=GuardDetails&securityNumber=' + $(this).val(),
             type: 'GET',
@@ -471,6 +488,7 @@ $(function () {
                 else if (!result.guard.isActive) {
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
+               // els if (result.guard.lastLogin.loginDate)
                 //else if (result.guardLockStatusBasedOnRedDoc) {
                   //  showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
                 //}
@@ -559,7 +577,8 @@ $(function () {
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
                 $('#client_status_2').css('color', result.hR3);
-                
+
+
 
             },
             complete: function () {
@@ -574,46 +593,87 @@ $(function () {
     });
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
-        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        
         //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
         var clientSiteName = $(this).val();
+        $('#GuardLogin_IsPosition').prop('checked', false);
+        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        //isPosition = $('#GuardLogin_IsPosition').is(':checked');
+
+
+        getsmartwandcount(isPosition, clientSiteName);
         /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
-        $.ajax({
-            url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
-            type: 'GET',
-            dataType: 'json',
+        //$.ajax({
+        //    url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+        //    type: 'GET',
+        //    dataType: 'json',
 
-        }).done(function (result) {
-            if (result.success) {
-                if (result.positionIdDefault != '') {
+        //}).done(function (result) {
+        //    if (result.success) {
+        //        if (result.positionIdDefault != '') {
 
-                    $('#GuardLogin_IsPosition').prop('checked', true);
-                    getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
-                    /*smart_Wand_Or_Position.html('');
-                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-                    data.map(function (result) {
+        //            $('#GuardLogin_IsPosition').prop('checked', true);
+        //            getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+        //            /*smart_Wand_Or_Position.html('');
+        //            smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+        //            data.map(function (result) {
 
-                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
-
-
+        //                smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
 
 
-                    });
-                    smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
-                }
-            }
 
-        }).fail(function () {
 
-        }).always(function () {
+        //            });
+        //            smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+        //        }
 
-        });
+        //    }
+        //        /*p1-292 login isseue-start*/
+        //    //if there is no contrcatedmanning details for the site then automatically load the smartwand assigned to the site or load the position if no smartwand assinged
+        //    else {
+        //        $('#GuardLogin_IsPosition').prop('checked', false);
+        //        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+               
+
+        //        getsmartwandcount(isPosition, clientSiteName);
+                
+               
+        //    }
+
+        //    /*p1-292 login isseue-end*/
+        //}).fail(function () {
+
+        //}).always(function () {
+
+        //});
 
         /* new Code for select deafult postion if manning deatils exist end*/
+        /*p1-292 login isseue-start*/
+        function getsmartwandcount(isPosition, clientSiteName) {
+        const url = isPosition ?
+            '/Guard/Login?handler=OfficerPositions' :
+            '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
+            '&guardId=' + $('#GuardLogin_Guard_Id').val();
 
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data.length > 0) {
+                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                }
+                else {
+                    $('#GuardLogin_IsPosition').prop('checked', true);
+                    isPosition = $('#GuardLogin_IsPosition').is(':checked');
+                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                }
+            }
+            })
 
-
+        }
+        /*p1-292 login isseue-end*/
 
         ////To Get the Critical Documents start
         //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
@@ -757,6 +817,16 @@ $(function () {
         $("#confirmOk").unbind().one('click', onConfirm).one('click', fClose);
         $("#confirmCancel").unbind().one("click", fClose);
     }
+    function confirmDialogLogin(message, onConfirm) {
+        var fClose = function () {
+            modal.modal("hide");
+        };
+        var modal = $("#confirmModalLogin");
+        modal.modal("show");
+        $("#confirmMessageLogin").empty().append(message);
+        $("#confirmOkLogin").unbind().one('click', onConfirm).one('click', fClose);
+       
+    }
 
     $('#btnGuardLogin').on('click', function () {
 
@@ -869,7 +939,32 @@ $(function () {
         var formData = new FormData(form);
         fillRefreshLocalTimeZoneDetails(formData, "GuardLogin", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
-
+        var clientsitename = $('#GuardLogin_ClientSiteName').val();
+        var smrtwandorposition = $('#GuardLogin_SmartWandOrPosition').val();
+        var guardonduty = $('#GuardLogin_OnDuty_Time').val();
+        var guardoffduty = $('#GuardLogin_OffDuty_Time').val();
+        var errornewmessage=[];
+        if (clientsitename == '') {
+            // displayGuardValidationSummary('glValidationSummary', 'Client Site is required');
+            errornewmessage.push('Client Site is required');
+            
+        }
+        if (smrtwandorposition == '') {
+            //displayGuardValidationSummary('glValidationSummary', 'Smart Wand or Position is required');
+            errornewmessage.push('Smart Wand or Position is required');
+               
+        }
+        if (guardonduty == '') {
+            errornewmessage.push('On Duty is required');
+        }
+        if (guardoffduty == '') {
+            errornewmessage.push('Off Duty is required');
+        }
+        if (errornewmessage.length>0) {
+            displayGuardValidationSummary('glValidationSummary', errornewmessage);
+            $('#loader').hide();
+            return false;
+        }
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: " <p class=\"font-weight-bold\">The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.</p> <p class=\"font-weight-bold\"> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p>" }).showWarning();
             console.log('after msg modal')
@@ -890,12 +985,52 @@ $(function () {
                 }
             }).done(function (result) {
                 if (result.success) {
+                    
+
+                    var message = result.strResult;
                     //alert(result.strResult);
-                    new MessageModal({
-                        message: result.strResult
-                    }).showWarning();
-                    return;
-                } else {
+                    //new MessageModal({
+                    //    message: result.strResult
+                    //}).showWarning();
+                                        if (!result.hrdocLockforThisGurad) {
+                        $.ajax({
+                            url: '/Guard/Login?handler=LoginGuard',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                        }).done(function (result) {
+                            if (result.success) {
+                                if (result.initalsChangedMessage !== '')
+                                    alert(result.initalsChangedMessage);
+                                confirmDialogLogin(message, function () {
+                                    let toUrl = getTargetUrl(result.logBookType);
+                                    if (toUrl === '') alert('Invalid logbook type');
+                                    else {
+                                        window.location.replace(toUrl);
+                                        $('#btnGuardLogin').prop('disabled', true);
+                                    }
+                                });
+                            } else {
+                                if (result.errors)
+                                    displayGuardValidationSummary('glValidationSummary', result.errors)
+                                else
+                                    alert(result.message)
+                            }
+                        }).always(function () {
+                            $('#loader').hide();
+                        });
+                    }
+                    else {
+                        $('#loader').hide();
+                        new MessageModal({
+                            message: 'A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate'
+                        }).showWarning();
+                        }
+                   
+                }
+                else {
                     // if guard is active then submit guard login
                     if (!result.hrdocLockforThisGurad) {
                         $.ajax({
@@ -4951,14 +5086,18 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(13);
+            selectedValues.push(14);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(8);
+            selectedValues.push(9);
         }
-        if (data.isRCAccess) {
+        if (data.isRCLiteAccess) {
             selectedValues.push(5);
         }
+        if (data.isRCAccess) {
+            selectedValues.push(6);
+        }
+        
         if (data.isKPIAccess) {
             selectedValues.push(4);
         }
@@ -4972,22 +5111,22 @@ $(function () {
             selectedValues.push(3);
         }
         if (data.isRCHRAccess) {
-            selectedValues.push(6);
-        }
-        if (data.isRCFusionAccess) {
             selectedValues.push(7);
         }
-        if (data.isAdminSOPToolsAccess) {
-            selectedValues.push(9);
+        if (data.isRCFusionAccess) {
+            selectedValues.push(8);
         }
-        if (data.isAdminAuditorAccess) {
+        if (data.isAdminSOPToolsAccess) {
             selectedValues.push(10);
         }
-        if (data.isAdminInvestigatorAccess) {
+        if (data.isAdminAuditorAccess) {
             selectedValues.push(11);
         }
-        if (data.isAdminThirdPartyAccess) {
+        if (data.isAdminInvestigatorAccess) {
             selectedValues.push(12);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(13);
         }
         selectedValues.forEach(function (value) {
 
@@ -5808,6 +5947,15 @@ $(function () {
         $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
         //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+        const pinNumber = $('#Guard_Pin').val(); 
+        if (pinNumber!='') {
+            if (pinNumber.length < 4 || pinNumber.length > 6) {
+                displayGuardValidationSummary('glValidationSummary', 'PIN Number must be between 4 and 6 characters');
+
+                return; // Stop execution if validation fails
+            }
+        }
+        
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),

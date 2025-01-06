@@ -20,6 +20,8 @@ using CityWatch.RadioCheck.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using CityWatch.Data.Services;
+using CityWatch.Web.Models;
+using CityWatch.RadioCheck.Services;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -32,14 +34,18 @@ namespace CityWatch.Web.Pages.Radio
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
         private readonly ILogbookDataService _logbookDataService;
+        private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IViewDataService _viewDataService;
         public InActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, ILogbookDataService logbookDataService)
+            IConfiguration configuration, ILogbookDataService logbookDataService, IGuardDataProvider guardDataProvider, IViewDataService viewDataService)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
             _logbookDataService = logbookDataService;
+            _guardDataProvider = guardDataProvider;
+            _viewDataService = viewDataService;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -48,6 +54,7 @@ namespace CityWatch.Web.Pages.Radio
 
         public int ActiveGuardCount { get; set; }
         public string DisplayItem { get; set; }
+        public GuardViewModel Guard { get; set; }
         public IActionResult OnGet(string displayItem)
         {
             /* API call Start*/
@@ -109,6 +116,7 @@ namespace CityWatch.Web.Pages.Radio
             {
 
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
                 return Page();
             }
             else

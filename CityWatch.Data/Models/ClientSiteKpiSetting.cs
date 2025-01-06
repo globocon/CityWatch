@@ -145,6 +145,8 @@ namespace CityWatch.Data.Models
         public string PositionPatrolCar { get; set; }
         private List<ClientSiteManningKpiSetting> _clientSiteManningKpiSettings;
         private List<ClientSiteManningKpiSetting> _clientSiteManningPatrolCarKpiSettings;
+        private List<ClientSiteManningKpiSettingADHOC> _clientSiteManningKpiSettingsADHOC;
+        private List<ClientSiteManningKpiSettingADHOC> _clientSiteManningPatrolCarKpiSettingsADHOC;
         [NotMapped]
         public List<ClientSiteManningKpiSetting> ClientSiteManningGuardKpiSettings
         {
@@ -176,6 +178,41 @@ namespace CityWatch.Data.Models
             {
                
                     _clientSiteManningPatrolCarKpiSettings = value;
+            }
+        }
+
+
+        [NotMapped]
+        public List<ClientSiteManningKpiSettingADHOC> ClientSiteManningGuardKpiSettingsADHOC
+        {
+            get
+            {
+                if (_clientSiteManningKpiSettingsADHOC == null || !_clientSiteManningKpiSettingsADHOC.Any())
+                    _clientSiteManningKpiSettingsADHOC = GetDefaultClientManningDayKpiSettingsADHOC();
+                return _clientSiteManningKpiSettingsADHOC;
+            }
+
+            set
+            {
+
+                _clientSiteManningKpiSettingsADHOC = value;
+
+            }
+        }
+        [NotMapped]
+        public List<ClientSiteManningKpiSettingADHOC> ClientSiteManningPatrolCarKpiSettingsADHOC
+        {
+            get
+            {
+                if (_clientSiteManningPatrolCarKpiSettingsADHOC == null || !_clientSiteManningPatrolCarKpiSettingsADHOC.Any())
+                    _clientSiteManningPatrolCarKpiSettingsADHOC = GetDefaultClientManningDayKpiSettingsADHOC();
+                return _clientSiteManningPatrolCarKpiSettingsADHOC;
+            }
+
+            set
+            {
+
+                _clientSiteManningPatrolCarKpiSettingsADHOC = value;
             }
         }
 
@@ -269,7 +306,27 @@ namespace CityWatch.Data.Models
             };
         }
 
+        private List<ClientSiteManningKpiSettingADHOC> GetDefaultClientManningDayKpiSettingsADHOC()
+        {
+            return new List<ClientSiteManningKpiSettingADHOC>
+            {
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Sunday, DefaultValue = true},
+                /* New Field for PHO*/
+                 new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Sunday, DefaultValue = true,IsPHO=1}
+
+
+            };
+        }
+
         public bool ScheduleisActive { get; set; }
+
+        public bool ScheduleisActiveADHOC { get; set; }
 
         public string TimezoneString { get; set; }
 

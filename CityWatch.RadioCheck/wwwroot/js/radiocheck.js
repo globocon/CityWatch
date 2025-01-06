@@ -3641,6 +3641,25 @@ if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess')
     
 
 }
+if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
+
+
+ 
+
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+
+
+
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+
+
+}
 
 $('#clientSiteInActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
 
@@ -4715,7 +4734,9 @@ $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
     }).fail(function () { });
 });
 
-
+if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
+    $('#ActiveGuardsDivision').hide();
+}
 $('#div_site_settings').on('change', '#ClientSite_Status', function () {
     // Get the selected value
     var selectedStatus = $(this).val();
