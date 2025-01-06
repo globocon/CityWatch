@@ -88,6 +88,11 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId);
+
+
+
         List<TrainingCourseDuration> GetCourseDuration();
         List<TrainingTestDuration> GetTestDuration();
         List<TrainingTestPassMark> GetPassMark();
@@ -96,6 +101,7 @@ namespace CityWatch.Data.Providers
         List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
         List<TrainingTQNumbers> GetTestTQNumbers();
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
+
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -987,6 +993,41 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
+
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                 .Where(x => x.GuardId == guardId)
+                 .Include(z => z.Guard).ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+
+
+            result = _context.GuardTrainingAndAssessment
+            .Where(x => x.GuardId == guardId)
+            .Include(z => z.Guard)
+            .Select(x => new GuardTrainingAndAssessment
+            {
+                Id = x.Id,
+                
+                GuardId = x.GuardId,
+                Description = x.Description,
+                HrGroup = x.HrGroup,
+                NewNullColumn=string.Empty,
+                LicenseNo = x.Guard.SecurityNo,
+                
+            }).OrderBy(x => x.Id)
+            .ToList();
+
+
+            return result;
+
+
+
+        }
+
+
         public List<TrainingCourseDuration> GetCourseDuration()
         {
             return _context.TrainingCourseDuration.ToList();
@@ -1016,5 +1057,6 @@ namespace CityWatch.Data.Providers
         {
             return _context.TrainingCertificateExpiryYears.ToList();
         }
+
     }
 }
