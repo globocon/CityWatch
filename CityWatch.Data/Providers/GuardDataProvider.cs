@@ -88,8 +88,14 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+        List<TrainingCourseDuration> GetCourseDuration();
+        List<TrainingTestDuration> GetTestDuration();
+        List<TrainingTestPassMark> GetPassMark();
 
-
+        List<TrainingTestAttempts> GetTestAttempts();
+        List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
+        List<TrainingTQNumbers> GetTestTQNumbers();
+        List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -981,6 +987,34 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
-
+        public List<TrainingCourseDuration> GetCourseDuration()
+        {
+            return _context.TrainingCourseDuration.ToList();
+        }
+        public List<TrainingTestDuration> GetTestDuration()
+        {
+            return _context.TrainingTestDuration.ToList();
+        }
+        public List<TrainingTestPassMark> GetPassMark()
+        {
+            return _context.TrainingTestPassMark.ToList();
+        }
+        public List<TrainingTestAttempts> GetTestAttempts()
+        {
+            return _context.TrainingTestAttempts.ToList();
+        }
+        public List<TrainingTestQuestionNumbers> GetTestQuestionNumbers()
+        {
+            return _context.TrainingTestQuestionNumbers.ToList();
+        }
+        public List<TrainingTQNumbers> GetTestTQNumbers()
+        {
+            return _context.TrainingTQNumbers.ToList();
+        }
+        
+        public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
+        {
+            return _context.TrainingCertificateExpiryYears.ToList();
+        }
     }
 }

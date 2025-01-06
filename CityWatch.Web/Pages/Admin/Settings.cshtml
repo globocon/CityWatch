@@ -3973,7 +3973,34 @@
                                 </select>
 
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Training & Assessment</label>
 
+                                <table class="table table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            
+                                            <th>Course</th>
+
+                                            <th class="text-center"><button class="btn btn-outline-primary ml-2" id="btnCourse"><i class="gj-icon pencil" style="font-size:15px"></i></button></th>
+                                        </tr>
+                                        
+                                        <tr>
+                                            
+                                            <th>Test Questions</th>
+
+                                            <th class="text-center"><button class="btn btn-outline-primary ml-2" id="btnTestQuestions"><i class="gj-icon pencil" style="font-size:15px"></i></button></th>
+                                        </tr>
+                                        <tr>
+                                            
+                                            <th>Certificates</th>
+
+                                            <th class="text-center"><button class="btn btn-outline-primary ml-2" id="btnCourseCertificates"><i class="gj-icon pencil" style="font-size:15px"></i></button></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+
+                            </div>
                         </div>
 
 
@@ -4258,6 +4285,7 @@
         </div>
     </div>
 </div>
+
 @*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -4369,6 +4397,7 @@
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
 <partial name="_irSettingsPopup" />
+<partial name="_TrainingAndAssessmentSettings" />
 @*/*<partial name="_LinkedDuressPopup" />*/*@
 
 @section scripts {
