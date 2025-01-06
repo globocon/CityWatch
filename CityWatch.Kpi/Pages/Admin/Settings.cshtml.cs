@@ -374,6 +374,99 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, clientSiteId, erorrMessage });
         }
 
+
+
+
+        public JsonResult OnPostClientSiteManningKpiSettingsADHOC(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            var erorrMessage = string.Empty;
+            try
+            {
+
+
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+
+
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
+
+                        var InvalidTimes = _clientDataProvider.ValidDateTimeADHOC(clientSiteKpiSetting);
+
+                        if (InvalidTimes.Trim() == string.Empty)
+                        {
+
+                            if (positionIdGuard != null || positionIdPatrolCar != null)
+                            {
+                                var rulenumberOne = _clientDataProvider.CheckRulesOneinKpiManningInputADHOC(clientSiteKpiSetting);
+
+                                if (rulenumberOne.Trim() == string.Empty)
+                                {
+                                    var rulenumberTwo = _clientDataProvider.CheckRulesTwoinKpiManningInputADHOC(clientSiteKpiSetting);
+                                    if (rulenumberTwo.Trim() == string.Empty)
+                                    {
+                                        success = _clientDataProvider.SaveClientSiteManningKpiSettingADHOC(clientSiteKpiSetting);
+                                        /* If change in the status update start */
+                                        //_clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id);
+                                        /* If change in the status update end */
+                                    }
+                                    else
+                                    {
+                                        erorrMessage = rulenumberTwo;
+                                        success = 7;
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    erorrMessage = rulenumberOne;
+                                    success = 6;
+
+                                }
+
+
+
+                            }
+                            else
+                            {
+                                success = 3;
+                            }
+
+                        }
+                        else
+                        {
+                            erorrMessage = InvalidTimes;
+                            success = 5;
+
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+
+                }
+                else
+                {
+                    success = 4;
+
+                }
+
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
+        }
+
         public JsonResult OnPostUploadSiteImage()
         {
             var success = true;
@@ -698,6 +791,39 @@ namespace CityWatch.Kpi.Pages.Admin
                         var orderId = int.Parse(split[1]);
                         clientSiteId = int.Parse(split[2]);
                         _clientDataProvider.RemoveWorker(settId, orderId);
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message, clientSiteId });
+        }
+
+
+        public JsonResult OnPostDeleteWorkerADHOC(string settingsId)
+        {
+            var status = true;
+            var message = "Success";
+            var clientSiteId = 0;
+            try
+            {
+                if (settingsId != string.Empty)
+                {
+                    var split = settingsId.Split('_');
+
+                    if (split.Length > 0)
+                    {
+                        var settId = int.Parse(split[0]);
+                        var orderId = int.Parse(split[1]);
+                        clientSiteId = int.Parse(split[2]);
+                        _clientDataProvider.RemoveWorkerADHOC(settId, orderId);
 
                     }
 
@@ -1222,7 +1348,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKPIScheduleDeafultMailbox()
         {
             var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox();
-            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            var emailAddresses = string.Join(",", Emails.Select(email => email.KPIMail));
             return new JsonResult(new { Emails = emailAddresses });
         }
         public JsonResult OnPostSaveDeafultMailBox(string Email)
@@ -1355,21 +1481,22 @@ namespace CityWatch.Kpi.Pages.Admin
         /*Dropbox settings-end*/
 
 
-        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        public JsonResult OnGetCriticalDocumentList(int clientSiteId)
         {
+          
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
-                var ddd = _configDataProvider.GetCriticalDocs()
-                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
-                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                //var ddd = _configDataProvider.GetCriticalDocs()
+                //    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
+                return new JsonResult(_configDataProvider.GetCriticalDocsByClientSiteId(clientSiteId)
                     .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
 
 
             }
             else
             {
-                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                return new JsonResult(_configDataProvider.GetCriticalDocsByClientSiteId(clientSiteId)
                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
                 //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
                 //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))

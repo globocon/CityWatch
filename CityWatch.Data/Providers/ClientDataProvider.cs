@@ -50,6 +50,7 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
+         void SaveCompanyMailDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report, int Count);
@@ -145,6 +146,7 @@ namespace CityWatch.Data.Providers
         public string GetDefaultEmailAddress();
 
         void RemoveWorker(int settingsId, int OrderId);
+        void RemoveWorkerADHOC(int settingsId, int OrderId);
 
         List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date);
         //for checking whther user has any access to the client site ie to be deleted-start
@@ -183,7 +185,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers);
         //p1-191 hr files task 8-end
         public void DeafultMailBox(string Email);
-        List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
+        List<CompanyDetails> GetKPIScheduleDeafultMailbox();
         List<ClientSite> GetClientSitesWithTypeId(int[] typeId);
         public List<RCLinkedDuressMaster> GetAllRCLinkedDuress();
         public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId);
@@ -242,6 +244,13 @@ namespace CityWatch.Data.Providers
          List<LanguageMaster> GetLanguages();
         //p1-287 A to E-end
         public List<ClientSiteSmartWand> GetClientSmartWand();
+        public IncidentReport GetLastIncidentReportsByGuardId( int guardId);
+
+        public string ValidDateTimeADHOC(ClientSiteKpiSetting setting);
+
+        public string CheckRulesOneinKpiManningInputADHOC(ClientSiteKpiSetting settings);
+        public string CheckRulesTwoinKpiManningInputADHOC(ClientSiteKpiSetting settings);
+        public int SaveClientSiteManningKpiSettingADHOC(ClientSiteKpiSetting setting);
 
     }
 
@@ -490,6 +499,7 @@ namespace CityWatch.Data.Providers
 
 
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettingsADHOC = _context.ClientSiteManningKpiSettingsADHOC.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
 
             }
             return clientSiteKpiSetting;
@@ -735,6 +745,26 @@ namespace CityWatch.Data.Providers
 
         }
 
+
+        public void RemoveWorkerADHOC(int settingsId, int OrderId)
+        {
+
+            var ManningWorker = _context.ClientSiteManningKpiSettingsADHOC.Where(z => z.SettingsId == settingsId && z.OrderId == OrderId).ToList();
+            if (ManningWorker != null)
+            {
+
+                if (ManningWorker.Count > 0)
+                {
+                    _context.RemoveRange(ManningWorker);
+                    _context.SaveChanges();
+
+                }
+            }
+
+
+
+        }
+
         public List<ClientSiteLogBook> GetClientSiteLogBooks()
         {
             return _context.ClientSiteLogBooks
@@ -776,9 +806,13 @@ namespace CityWatch.Data.Providers
         {
             return _context.GlobalComplianceAlertEmail.ToList();
         }
-        public List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox()
+        //public List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox()
+        //{
+        //    return _context.KPIScheduleDeafultMailbox.ToList();
+        //}
+        public List<CompanyDetails> GetKPIScheduleDeafultMailbox()
         {
-            return _context.KPIScheduleDeafultMailbox.ToList();
+            return _context.CompanyDetails.ToList();
         }
         public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
         {
@@ -882,6 +916,24 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+            _context.SaveChanges();
+        }
+
+        public void SaveCompanyMailDetails(CompanyDetails companyDetails)
+        {
+            if (companyDetails.Id != 0)
+            {
+                var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
+                if (templateToUpdate != null)
+                {
+                    templateToUpdate.IRMail = companyDetails.IRMail;
+                    templateToUpdate.KPIMail = companyDetails.KPIMail;
+                    templateToUpdate.FusionMail = companyDetails.FusionMail;
+                    templateToUpdate.TimesheetsMail = companyDetails.TimesheetsMail;
+
+                }
+            }
+           
             _context.SaveChanges();
         }
 
@@ -1006,6 +1058,142 @@ namespace CityWatch.Data.Providers
 
                         }
                     }
+
+
+                   
+                }
+
+            }
+            catch
+            {
+                return success;
+            }
+            return success;
+        }
+
+
+
+        public int SaveClientSiteManningKpiSettingADHOC(ClientSiteKpiSetting setting)
+        {
+            var success = 0;
+            try
+            {
+
+                if (setting != null)
+                {
+
+                    //update the value of the ScheduleisActive Start
+
+                    try
+                    {
+                        _context.ClientSiteKpiSettings
+                        .Where(u => u.Id == setting.Id)
+                         .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActiveADHOC, setting.ScheduleisActiveADHOC)
+                         );
+
+                     //   _context.ClientSiteKpiSettings
+                     // .Where(u => u.Id == setting.Id)
+                     //  .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
+                     //  );
+
+                     //   TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
+                     //   string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+                     //   string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
+                     //   string utcOffset = $"{sign}{offset}";
+                     //   _context.ClientSiteKpiSettings
+                     //.Where(u => u.Id == setting.Id)
+                     // .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
+                     // );
+
+                    }
+                    catch
+                    {
+
+
+                    }
+                    //update the value of the ScheduleisActive end
+
+                    //update the values of ADHOC 01012025
+
+                    if (setting.ClientSiteManningGuardKpiSettingsADHOC.Any() || setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Any())
+                    {
+
+                        if (setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Count > 0)
+                        {
+                            if (setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() > 0)
+                            {
+                                var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
+                                var CrmSupplier = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.CrmSupplier != null).FirstOrDefault();
+                                //set the values for SettingsId and PositionId                       
+                                if (positionIdPatrolCar != null)
+                                {
+                                    int? maxId = _context.ClientSiteManningKpiSettingsADHOC.Where(x => x.SettingsId == setting.Id).Any() ? _context.ClientSiteManningKpiSettingsADHOC.Where(x => x.SettingsId == setting.Id).Max(item => item.OrderId) : 0;
+
+                                    setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; x.OrderId = maxId + 1; });
+                                    if (CrmSupplier != null)
+                                    {
+                                        setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                    }
+                                    if (setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Any())
+                                    {
+                                        _context.ClientSiteManningKpiSettingsADHOC.AddRange(setting.ClientSiteManningPatrolCarKpiSettingsADHOC);
+                                        _context.SaveChanges();
+                                        success = 1;
+                                    }
+
+                                }
+
+
+                            }
+
+                        }
+
+                        if (setting.ClientSiteManningGuardKpiSettingsADHOC.Count > 0)
+                        {
+                            if (setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() > 0)
+                            {
+                                var positionIdGuard = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.PositionId != 0).ToList();
+
+                                if (positionIdGuard != null)
+                                {
+                                    foreach (var poId in positionIdGuard)
+                                    {
+                                        if (poId != null)
+                                        {
+                                            var CrmSupplier = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.CrmSupplier != null && x.OrderId == poId.OrderId).FirstOrDefault();
+                                            if (CrmSupplier != null)
+                                            {
+                                                setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                            }
+
+                                            setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id; x.PositionId = poId.PositionId; });
+                                        }
+
+                                    }
+
+                                    if (setting.ClientSiteManningGuardKpiSettingsADHOC.Any() && setting.ClientSiteManningGuardKpiSettingsADHOC != null)
+                                    {
+                                        _context.ClientSiteManningKpiSettingsADHOC.UpdateRange(setting.ClientSiteManningGuardKpiSettingsADHOC);
+                                        _context.SaveChanges();
+                                        success = 1;
+                                    }
+                                }
+                                else
+                                {
+
+                                    return 3;
+                                }
+
+                            }
+
+
+                        }
+                    }
+
+
+
                 }
 
             }
@@ -1047,6 +1235,71 @@ namespace CityWatch.Data.Providers
                 }
 
                 foreach (var listItem2 in setting.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (listItem2.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem2.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                        if (!IsValidTimeFormat(listItem2.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+                }
+
+            }
+            return InvalidInputs.TrimEnd(',');
+        }
+
+
+
+        public string ValidDateTimeADHOC(ClientSiteKpiSetting setting)
+        {
+            var InvalidInputs = string.Empty;
+            if (setting != null)
+            {
+                foreach (var listItem in setting.ClientSiteManningGuardKpiSettingsADHOC)
+                {
+                    if (listItem.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+
+
+                }
+
+                foreach (var listItem2 in setting.ClientSiteManningPatrolCarKpiSettingsADHOC)
                 {
                     if (listItem2.EmpHoursStart != null)
                     {
@@ -1132,6 +1385,41 @@ namespace CityWatch.Data.Providers
             return invalidInputs.TrimEnd(',');
         }
 
+
+        public string CheckRulesOneinKpiManningInputADHOC(ClientSiteKpiSetting settings)
+        {
+            var invalidInputs = string.Empty;
+            if (settings != null)
+            {
+                foreach (var listItem in settings.ClientSiteManningGuardKpiSettingsADHOC)
+                {
+                    if (!IsValidTime(listItem.EmpHoursStart))
+                    {
+                        invalidInputs += listItem.EmpHoursStart + ",";
+                    }
+
+                    if (!IsValidTime(listItem.EmpHoursEnd))
+                    {
+                        invalidInputs += listItem.EmpHoursEnd + ",";
+                    }
+                }
+
+                foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettingsADHOC)
+                {
+                    if (!IsValidTime(listItem2.EmpHoursStart))
+                    {
+                        invalidInputs += listItem2.EmpHoursStart + ",";
+                    }
+
+                    if (!IsValidTime(listItem2.EmpHoursEnd))
+                    {
+                        invalidInputs += listItem2.EmpHoursEnd + ",";
+                    }
+                }
+            }
+            return invalidInputs.TrimEnd(',');
+        }
+
         static bool IsValidTime(string time)
         {
             if (string.IsNullOrEmpty(time)) return true; // Assuming null or empty is valid
@@ -1199,6 +1487,74 @@ namespace CityWatch.Data.Providers
                     }
                 }
                 foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (!IsWorkerValid(listItem2.EmpHoursStart, listItem2.EmpHoursEnd, listItem2.NoOfPatrols))
+                    {
+                        invalidInputs += $"Invalid worker entry for times {listItem2.EmpHoursStart} - {listItem2.EmpHoursEnd},";
+                    }
+                    if (!AreAllValuesPresent(listItem2.EmpHoursStart, listItem2.EmpHoursEnd, listItem2.NoOfPatrols))
+                    {
+                        invalidInputs += $"Incomplete entry for times' {listItem2.EmpHoursStart}' - ' {listItem2.EmpHoursEnd} with worker '{listItem2.NoOfPatrols}', ";
+                    }
+                }
+
+
+
+
+            }
+            return invalidInputs.TrimEnd(',');
+        }
+
+
+
+        public string CheckRulesTwoinKpiManningInputADHOC(ClientSiteKpiSetting settings)
+        {
+            var invalidInputs = string.Empty;
+            if (settings != null)
+            {
+                foreach (var listItem in settings.ClientSiteManningGuardKpiSettingsADHOC)
+                {
+                    //if (!IsWorkerValid(listItem.EmpHoursStart, listItem.EmpHoursEnd, listItem.NoOfPatrols))
+                    //{
+                    //    invalidInputs += $"Invalid worker entry for times {listItem.EmpHoursStart} - {listItem.EmpHoursEnd},";
+                    //}
+
+                    if (!AreAllValuesPresent(listItem.EmpHoursStart, listItem.EmpHoursEnd, listItem.NoOfPatrols))
+                    {
+                        string notnullVlaue = string.Empty;
+                        string nullVlaue = string.Empty;
+                        invalidInputs += "Incomplete entry for ";
+                        if (string.IsNullOrEmpty(listItem.EmpHoursStart))
+                        {
+                            nullVlaue += " Start : __:__ ";
+                        }
+                        else
+                        {
+                            notnullVlaue += " Start :" + listItem.EmpHoursStart;
+
+                        }
+                        if (string.IsNullOrEmpty(listItem.EmpHoursEnd))
+                        {
+                            nullVlaue += " End : __:__ ";
+                        }
+                        else
+                        {
+                            notnullVlaue += " End :" + listItem.EmpHoursEnd;
+                        }
+                        if (listItem.NoOfPatrols == 0 || listItem.NoOfPatrols == null)
+                        {
+                            nullVlaue += " Worker : _ ";
+                        }
+                        else
+                        {
+                            notnullVlaue += " Worker : " + listItem.NoOfPatrols.ToString();
+                        }
+
+
+                        invalidInputs += notnullVlaue + nullVlaue + ", ";
+                    }
+                }
+                foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettingsADHOC)
                 {
                     if (!IsWorkerValid(listItem2.EmpHoursStart, listItem2.EmpHoursEnd, listItem2.NoOfPatrols))
                     {
@@ -1960,25 +2316,24 @@ namespace CityWatch.Data.Providers
             {
 
                 string[] emailIds = Email.Split(',');
-                var EmailUpdate = _context.KPIScheduleDeafultMailbox.Where(x => x.Id != 0).ToList();
+                var EmailUpdate = _context.CompanyDetails.Where(x => x.Id != 0).FirstOrDefault();
                 if (EmailUpdate != null)
                 {
-                    if (EmailUpdate.Count != 0)
-                    {
-                        _context.KPIScheduleDeafultMailbox.RemoveRange(EmailUpdate);
+
+                    EmailUpdate.KPIMail = Email;
                         _context.SaveChanges();
-                    }
+                    
                 }
                 /*Remove all the rows */
 
                 foreach (string part in emailIds)
                 {
-                    var Emailnew = new KPIScheduleDeafultMailbox()
+                    var Emailnew = new CompanyDetails()
                     {
-                        Email = part
+                        KPIMail = part
                     };
-                    _context.KPIScheduleDeafultMailbox.Add(Emailnew);
 
+                    EmailUpdate.KPIMail = Emailnew.KPIMail;
                 }
                 _context.SaveChanges();
 
@@ -2196,7 +2551,8 @@ namespace CityWatch.Data.Providers
         //To Get the Default Email Address start
         public string GetDefaultEmailAddress()
         {
-            return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
+            return _context.CompanyDetails.Select(x => x.IRMail).FirstOrDefault();
+            //return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
         }
         //To Get the Default Email Address stop
 
@@ -2855,6 +3211,12 @@ namespace CityWatch.Data.Providers
             return _context.LanguageMaster.Where(x=>x.IsDeleted==false).OrderBy(x => x.Language).ToList();
         }
         //p1-287 A to E-end
+        public IncidentReport GetLastIncidentReportsByGuardId(int guardId)
+        {
+            return _context.IncidentReports
+                .Where(x => x.GuardId == guardId ).OrderByDescending(z => z.CreatedOn)
+                .FirstOrDefault();
+        }
     }
 
 

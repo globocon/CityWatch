@@ -3,14 +3,18 @@
 //p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+   
+    $('#trainingandAssessmentmodal').modal('show');
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var courseDescription = $('#txtHrSettingsDescription').val();
+    $('#training_course_Name').val('HR' + ' ' + referenceNumber + ' ' + courseDescription)
     gridCourseDocumentFiles.clear();
     gridCourseDocumentFiles.reload();
 });
 
 $('#btnTestQuestions').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+    $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingTestQuestionstab').addClass('active');
     $('#TrainingCourse').removeClass('active');
@@ -20,7 +24,7 @@ $('#btnTestQuestions').on('click', function (e) {
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
-    $('#trainingandAssessmentmodal').show();
+    $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingCertificateTab').addClass('active');
     $('#TrainingCourse').removeClass('active');
@@ -158,6 +162,12 @@ $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
     const isChecked = $(this).is(':checked');
    
     $('#IsTrainingTestQuestionsDOE').val(isChecked);
+    if (isChecked == true) {
+        $('#TrainingTestQuestionCertificateExpiryYears').attr('disabled', false)
+    }
+    else {
+        $('#TrainingTestQuestionCertificateExpiryYears').attr('disabled', 'disabled')
+    }
 
 });
 $('#cbIsTrainingCertificateWithQandADump').on('change', function () {

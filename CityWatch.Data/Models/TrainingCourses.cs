@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class Courses
+    public class TrainingCourses
     {
         [Key]
         public int Id { get; set; }
@@ -17,7 +17,7 @@ namespace CityWatch.Data.Models
         [ForeignKey("HRSettingsId")]
         public HrSettings HrSetting { get; set; }
         [ForeignKey("TQNumberId")]
-        public TQNumbers TQNumber { get; set; }
+        public TrainingTQNumbers TQNumber { get; set; }
         [NotMapped]
         public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } }
 

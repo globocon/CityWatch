@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Providers;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -52,6 +53,8 @@ namespace CityWatch.Data.Models
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
+
+            
 
             if (string.IsNullOrEmpty(SecurityNo))
                 errors.Add(new ValidationResult("Guard Security License Number is required"));
@@ -134,5 +137,6 @@ namespace CityWatch.Data.Models
         public bool IsAdminThirdPartyAccess { get; set; }
         //p1-273 access level- end
         public bool IsRCHRAccess { get; set; }
+        public bool IsRCLiteAccess { get; set; }
     }
 }

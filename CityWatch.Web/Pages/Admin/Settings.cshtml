@@ -248,10 +248,13 @@
                     <div class="col-md-2 text-right" @hideTabStyle>
                         <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
                     </div>
-                    <div class="col-md-2 text-right" @hideTabStyle>
+                    
+                    <div class="col-md-2 text-right">
                         <a href="#" class="btn btn-primary mb-3" id="btnDownloadClientSiteExcel">Download zip</a>
 
                     </div>
+                    
+
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -697,173 +700,224 @@
                 </div>
             </div>
             <div class="tab-pane fade py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" @hideTabStyle>
-                <form id="form_CompanyDetails">
-                    <div class="form-group row">
-
-                        <div class="col-md-4">
-                            <input type="hidden" id="txt_CompanyId" class="form-control" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Company Name</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
-                        </div>
-                        <label class="col-form-label col-md-2">Domain</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Primary Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_PrimaryLogo" height="60px" src="" />
-                            </a>
+                <ul class="nav nav-tabs" id="coreSettingsTab" role="tablist">
 
 
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
+                    <li class="nav-item">
+                        <a class="nav-link active" id="settings_tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="true">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="DefaultMail-tab" data-toggle="tab" href="#defaultMailbox" role="tab" aria-controls="defaultMailbox" aria-selected="false">Default Mailbox</a>
+                    </li>
+
+                </ul>
+                <div class="tab-content" id="coreSettingsTabContent">
+                    <div class="tab-pane fade show active py-3" id="settings" role="tabpanel" aria-labelledby="settings_tab">
+                        <form id="form_CompanyDetails">
+                            <div class="form-group row">
+
+                                <div class="col-md-4">
+                                    <input type="hidden" id="txt_CompanyId" class="form-control" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Company Name</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
+                                </div>
+                                <label class="col-form-label col-md-2">Domain</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Primary Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_PrimaryLogo" height="60px" src="" />
+                                    </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
 
 
 
-                        <label class="col-form-label col-md-2">Banner Logo</label>
-                        <div style="padding-left: 8px;">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
-                                <img id="img_BannerLogo" height="60px" src="" />
-                            </a>
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
-                                </form>
-                            </label>
-                        </div>
-                    </div>
+                                <label class="col-form-label col-md-2">Banner Logo</label>
+                                <div style="padding-left: 8px;">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
+                                        <img id="img_BannerLogo" height="60px" src="" />
+                                    </a>
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+                            </div>
 
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Logo Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_LogoHyplerLink" class="form-control" />
-                        </div>
-                        <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIProvider" class="form-control" />
-                        </div>
-                    </div>
-
-
-                    @*for logo in report-start*@
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Report Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
-                            </a>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Logo Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_LogoHyplerLink" class="form-control" />
+                                </div>
+                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIProvider" class="form-control" />
+                                </div>
+                            </div>
 
 
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_reportlogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
+                            @*for logo in report-start*@
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Report Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                                    </a>
 
-                        <label class="col-form-label col-md-2">API secret key</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIsecretkey" class="form-control" />
-                        </div>
-                    </div>
-                    @*for logo in report-end*@
-                    <div class="form-group row">
-                        @*  <label class="col-form-label col-md-2">Home Page Message</label>
-                    <div class="col-md-4">
-                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                    </div>*@
-                        <label class="col-form-label col-md-2">Home Page Message1</label>
-                        <div class="col-md-4">
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_reportlogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+
+                                <label class="col-form-label col-md-2">API secret key</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
+                                </div>
+                            </div>
+                            @*for logo in report-end*@
+                            <div class="form-group row">
+                                @*  <label class="col-form-label col-md-2">Home Page Message</label>
+                            <div class="col-md-4">
                             <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
-                        </div>
+                            </div>*@
+                                <label class="col-form-label col-md-2">Home Page Message1</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
+                                </div>
 
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_BannerMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLink" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_color" />
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_HyperlinkColor" />
-                        </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLink" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_color" />
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_HyperlinkColor" />
+                                </div>
 
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Home Page Message2</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Email Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_EmailMessage" class=" form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Software License</label>
-                        <div class="col-md-2">
-                            <select id="drp_swlicense" disabled="disabled">
-                                <option value="1">Gold</option>
-                                <option value="2">Silver</option>
-                                <option value="3">Bronze</option>
-                            </select>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Home Page Message2</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Email Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Software License</label>
+                                <div class="col-md-2">
+                                    <select id="drp_swlicense" disabled="disabled">
+                                        <option value="1">Gold</option>
+                                        <option value="2">Silver</option>
+                                        <option value="3">Bronze</option>
+                                    </select>
 
-                        </div>
-                        <label class="col-form-label col-md-2">Type</label>
-                        <div class="col-md-2">
-                            <select id="drp_type" disabled="disabled">
-                                <option value="1">Annual</option>
-                                <option value="2">Monthly</option>
-                                <option value="3">Perpectual</option>
-                            </select>
+                                </div>
+                                <label class="col-form-label col-md-2">Type</label>
+                                <div class="col-md-2">
+                                    <select id="drp_type" disabled="disabled">
+                                        <option value="1">Annual</option>
+                                        <option value="2">Monthly</option>
+                                        <option value="3">Perpectual</option>
+                                    </select>
 
-                        </div>
-                        <label class="col-form-label col-md-2">Expires</label>
-                        <div class="col-md-2">
-                            <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+                                </div>
+                                <label class="col-form-label col-md-2">Expires</label>
+                                <div class="col-md-2">
+                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
 
-                        </div>
+                                </div>
 
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-md-10">
-                            <button class="btn btn-success" id="btn_CompanySave">Save</button>
-                        </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-10">
+                                    <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                                </div>
 
-                    </div>
-                </form>
+                            </div>
+                        </form>
+             </div>
+                    <div class="tab-pane fade py-3" id="defaultMailbox" role="tabpanel" aria-labelledby="DefaultMail-tab">
+                        <form>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">IR</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_IR" class="form-control" name="CompanyDetails.KPIMail" />
+                                </div>
+                            </div>
+                             <div class="form-group row">
+                                  <label class="col-form-label col-md-2">KPI</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_KPI" class="form-control" name="CompanyDetails.KPIMail" />
+                                </div>
+                                </div>
+                                 <div class="form-group row">
+                                <label class="col-form-label col-md-2">Fusion(LB/KV/SW)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_Fusion" class="form-control" name="CompanyDetails.FusionMail" />
+                                </div>
+                            </div>
+                             <div class="form-group row">
+                                <label class="col-form-label col-md-2">TIMESHEETS</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_Timesheet" class="form-control" name="CompanyDetails.TimesheetsMail" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-10">
+                                    <button class="btn btn-success" id="btn_CompanyMailSave">Save</button>
+                                </div>
+
+                            </div>
+                        </form>
+                 </div>
+             </div>
+
+               
             </div>
             <div class="tab-pane fade py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" @hideTabStyle>
                 <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
@@ -1460,6 +1514,11 @@
                     <div class="col-md-2 text-right" @hideTabStyle>
                         <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
                     </div>
+                      @*   <div class="col-md-2 text-right">
+                            <a href="#" class="btn btn-primary mb-3" id="btnDownloadClientSiteExcel">Download zip</a>
+
+                        </div> *@
+
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -3625,7 +3684,7 @@
                                         {
                                             @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
                                             {
-                                                if ( @AccessType.Value != "9" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12" && @AccessType.Value != "2" && @AccessType.Value != "3" && @AccessType.Value != "4" && @AccessType.Value != "5" && @AccessType.Value != "6" && @AccessType.Value != "13")
+                                                if ( @AccessType.Value != "14" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12" && @AccessType.Value != "2" && @AccessType.Value != "3" && @AccessType.Value != "4" && @AccessType.Value != "8" && @AccessType.Value != "6" && @AccessType.Value != "13" && @AccessType.Value != "7")
                                                 {
                                                     <option value="@AccessType.Value">@AccessType.Text</option>
                                                 }
@@ -3654,7 +3713,7 @@
                                     </select>
                                 </div>
                                 <label class="form-check-label pl-3 pr-5">LOTE</label>
-                                <div style="width: 274px;padding-left: 19px;" class="guardlote pl-5">
+                                <div style="width: 267px;padding-left: 34px;" class="guardlote">
                                     <select class="form-control" multiple="multiple" id="Guard_Lote" name="Guard.LanguageDetails">
                                        
                                             @foreach (var AccessType in viewDataServiceNew.GetLanguages(true))
@@ -4226,425 +4285,7 @@
         </div>
     </div>
 </div>
-<div class="modal" tabindex="-1" role="dialog" id="trainingandAssessmentmodal" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-gear" aria-hidden="true"></i> Edit Settings for <span id="client_site_name"></span></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnTrainingAssesmentModalClose">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="div_trainingassessment_settings">
-                    <ul class="nav nav-tabs" id="trainingAssesmentTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="trainingCourseTab" data-toggle="tab" href="#TrainingCourse" role="tab" aria-controls="TrainingCourse" aria-selected="true">Course</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="trainingTestQuestionstab" data-toggle="tab" href="#TrainingTestQuestions" role="tab" aria-controls="TrainingTestQuestions">Test Questions</a>
 
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="trainingCertificateTab" data-toggle="tab" href="#TrainingCertificate" role="tab" aria-controls="TrainingCertificate" >Certificate</a>
-
-                        </li>
-        
-
-                    </ul>
-                    <div class="tab-content p-2">
-                        <div class="tab-pane active" id="TrainingCourse" role="tabpanel" aria-labelledby="TrainingCourseTab">
-                            <ul class="nav nav-tabs" id="TrainingCourseSettings" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link active" id="trainingCourseUploadtab" data-toggle="tab" href="#TrainingCourseUpload" role="tab" aria-controls="TrainingCourseUploadTab" aria-selected="true">Upload</a>
-                                </li>
-                               
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="TrainingCourseUpload" role="tabpanel" aria-labelledby="TrainingCourseUploadTab">
-                                    <div class="row mb-2" id="TrainingCourseFiles">
-                                        
-                                        <div class="col-md-12 text-right mt-3">
-                                            <label class="btn btn-success mb-3">
-                                                <form id="form_add_course_document_files" method="post">
-                                                    <i class="fa fa-upload mr-2"></i>Add File
-                                                    <input type="file" id="add_course_document_files" accept=".pdf, .pptx,.ppt" hidden>
-                                                </form>
-                                            </label>
-                                        </div>
-
-                                        <div class="row mb-4">
-                                            <div class="col-md-12">
-                                                <table class="table" id="tbl_courseDocumentFiles"></table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                             
-                               
-                            </div>
-                        </div>
-                        <div class="tab-pane " id="TrainingTestQuestions" role="tabpanel" aria-labelledby="TrainingTestQuestionsTab">
-                            <ul class="nav nav-tabs" id="TrainingTestQuestionsDetailsTab" role="tablist">
-
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link active" id="TrainingTestQuestionsSettingsTab" data-toggle="tab" href="#TrainingTestQuestionsSettings" role="tab" aria-controls="TrainingTestQuestionsSettings" aria-selected="false">Settings</a>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="TrainingTestQuestionsAnswersTab" data-toggle="tab" href="#TrainingTestQuestionsAnswers" role="tab" aria-controls="TrainingTestQuestionsAnswers" aria-selected="false">Questions</a>
-                                </li>
-                                @*for toggle areas-start*@
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="TrainingTestQuestionsFeedbackTab" data-toggle="tab" href="#TrainingTestQuestionsFeedback" role="tab" aria-controls="TrainingTestQuestionsFeedback" aria-selected="false">Feedback</a>
-                                </li>
-                                
-                                @*for toggle areas-end*@
-                               
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="TrainingTestQuestionsSettings" role="tabpanel" aria-labelledby="TrainingTestQuestionsSettingsTab">
-                                    <div class="form-group col-md-12">
-                                        <div class="row mt-3">
-                                            <div class="col-md-4">
-                                                <label >Course Duration ETA:</label>
-                                                <select id="ddlCourseDurationETA" class="form-control"></select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="d-flex flex-row justify-content-between">
-                                                <label >DOE:</label>
-                                                    <div class="custom-control custom-switch custom-control-inline">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingTestQuestionsDOE">
-                                                    <label class="custom-control-label" for="cbIsTrainingTestQuestionsDOE"></label>
-                                                       
-
-
-                                                    <input hidden="" type="hidden"  id="IsTrainingTestQuestionsDOE" name="IsTrainingTestQuestionsDOE" >
-                                                </div>
-                                                </div>
-                                                <select id="ddlTestQuestionsDOE" class="form-control"></select>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-4">
-                                                <label >Test Duration ETA:</label>
-                                                <select id="ddlTestDurationETA" class="form-control"></select> 
-                                            </div>
-                                            <div class="col-md-4">
-                                                
-                                                <div class="d-flex flex-row justify-content-between">
-                                                <label >Certificate with Q&A Dump:</label>
-                                                <div class="custom-control custom-switch custom-control-inline">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingCertificateWithQandADump">
-                                                        <label class="custom-control-label" for="cbIsTrainingCertificateWithQandADump"></label>
-
-
-
-                                                        <input hidden="" type="hidden" id="IsTrainingCertificateWithQandADump" name="IsTrainingCertificateWithQandADump">
-                                                </div>
-                                                </div>
-                                                
-                                            </div>
-                                           
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-4">
-                                                <label>Pass Mark %:</label>
-                                                <select id="ddlTestPassMark" class="form-control"></select>
-                                            </div>
-                                             <div class="col-md-4">
-                                                
-                                                <div class="d-flex flex-row justify-content-between">
-                                                <label >Certificate hold until practical undertaken:</label>
-                                                    <div class="custom-control custom-switch custom-control-inline">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingCertificateHold">
-                                                    <label class="custom-control-label" for="cbIsTrainingCertificateHold"></label>
-
-
-
-                                                    <input hidden="" type="hidden"  id="IsTrainingCertificateHold" name="IsTrainingCertificateHold" >
-                                                </div>
-                                                </div>
-                                                
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-4">
-                                                <label>Attempts:</label>
-                                                <select id="ddlTestAttempts" class="form-control"></select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                
-                                                <div class="d-flex flex-row justify-content-between">
-                                                <label >Anonymus FeedBack:</label>
-                                                <div class="custom-control custom-switch custom-control-inline">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsTrainingAnonymusFeedBack">
-                                                    <label class="custom-control-label" for="cbIsTrainingAnonymusFeedBack"></label>
-
-
-
-                                                    <input hidden="" type="hidden"  id="IsTrainingAnonymusFeedBack" name="IsTrainingAnonymusFeedBack" >
-                                                </div>
-                                                </div>
-                                                
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                <div class="tab-pane" id="TrainingTestQuestionsAnswers" role="tabpanel" aria-labelledby="TrainingTestQuestionsAnswersTab">
-                                    <div class="form-group col-md-12">
-                                        
-                                            <div class="row mt-3">
-                                                <div class="col-md-2">
-                                                    <label>Question No</label>
-                                                    <select id="ddlTestQuestionNo" class="form-control"></select>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label>Counter:</label>
-                                                    <label id="lblCounterNo"></label>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label>TQ Group</label>
-                                                    <select id="ddlTQNo" class="form-control"></select>
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-12">
-                                                    <textarea id="txtQuestion" class="form-control"></textarea>
-                                                    
-                                                </div>
-                                               
-                                            </div>
-                                        <div >
-                                            <label>Multiple Choice Answers</label>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A1</label>
-                                                 </div>
-                                                 <div class="col-md-8">
-                                                    <input type="text" id="txt_Option1" class="form-control" />
-                                                 </div>
-                                                <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption1">
-                                                    <label class="custom-control-label" for="cbIsOption1"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption1" name="IsOption1" >
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A2</label>
-                                                 </div>
-                                                 <div class="col-md-8">
-                                                    <input type="text" id="txt_Option2" class="form-control"/>
-                                                 </div>
-                                                 <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption2">
-                                                    <label class="custom-control-label" for="cbIsOption2"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption2" name="IsOption2" >
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A3</label>
-                                                 </div>
-                                                 <div class="col-md-8">
-                                                    <input type="text" id="txt_Option3" class="form-control" />
-                                                 </div>
-                                                <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption3">
-                                                    <label class="custom-control-label" for="cbIsOption3"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption3" name="IsOption3" >
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A4</label>
-                                                 </div>
-                                                 <div class="col-md-8">
-                                                    <input type="text" id="txt_Option4" class="form-control" />
-                                                 </div>
-                                                <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption4">
-                                                    <label class="custom-control-label" for="cbIsOption4"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption4" name="IsOption4" >
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A5</label>
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <input type="text" id="txt_Option5" class="form-control" />
-                                                </div>
-                                                <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption5">
-                                                    <label class="custom-control-label" for="cbIsOption5"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption5" name="IsOption5" >
-                                                </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col-md-1">
-                                                    <label>A6</label>
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <input type="text" id="txt_Option6" class="form-control"/>
-                                                </div>
-                                                <div class="custom-control custom-switch custom-control-inline col-md-2">
-                                                    <input type="checkbox" class="custom-control-input" id="cbIsOption6">
-                                                    <label class="custom-control-label" for="cbIsOption6"></label>
-
-
-
-                                                    <input hidden="" type="hidden" id="IsOption6" name="IsOption6" >
-                                                </div>
-                                            </div>
-                                        </div>
-                                        </div>
-                                    </div>
-                                
-                                @*for toggle areas-start*@
-                                <div class="tab-pane" id="TrainingTestQuestionsFeedback" role="tabpanel" aria-labelledby="TrainingTestQuestionsFeedbackTab">
-
-                                <div class="form-group col-md-12">
-
-                                    <div class="row mt-3">
-                                        <div class="col-md-2">
-                                            <label>Question No</label>
-                                            <select id="ddlFeedbackQuestionNo" class="form-control"></select>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label>Counter:</label>
-                                            <label id="lblFeedbackCounterNo"></label>
-                                        </div>
-                                       
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-12">
-                                            <textarea id="txtFeedbackQuestion" class="form-control" placeholder="Did you enjoy the course?"></textarea>
-
-                                        </div>
-
-                                    </div>
-                                    <div>
-                                        <label>Multiple Choice Answers</label>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A1</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption1" class="form-control" />
-                                            </div>
-                                           
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A2</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption2" class="form-control" />
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A3</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption3" class="form-control" />
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A4</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption4" class="form-control" />
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A5</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption5" class="form-control" />
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="row mt-3">
-                                            <div class="col-md-1">
-                                                <label>A6</label>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <input type="text" id="txt_FeedbackOption6" class="form-control" />
-                                            </div>
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
-                                
-                            </div>
-                            </div>
-                        <div class="tab-pane " id="TrainingCertificate" role="tabpanel" aria-labelledby="TrainingCourseTab">
-                            <ul class="nav nav-tabs" id="TrainingCertificateSettings" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link active" id="trainingCertificateUploadtab" data-toggle="tab" href="#TrainingCertificateUpload" role="tab" aria-controls="TrainingCertificatedUploadTab" aria-selected="true">Upload</a>
-                                </li>
-
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="TrainingCertificateUpload" role="tabpanel" aria-labelledby="TrainingCertificateUploadTab">
-                                    <div class="row mb-2" id="TrainingCertificateFiles">
-
-                                        <div class="col-md-12 text-right mt-3">
-                                            <label class="btn btn-success mb-3">
-                                                <form id="form_add_certificate_document_files" method="post">
-                                                    <i class="fa fa-upload mr-2"></i>Add File
-                                                    <input type="file" id="add_certificate_document_files" accept=".pdf, .pptx,.ppt" hidden>
-                                                </form>
-                                            </label>
-                                        </div>
-
-                                        <div class="row mb-4">
-                                            <div class="col-md-12">
-                                                <table class="table" id="tbl_certificateDocumentFiles"></table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-
-                            </div>
-                        </div>
-                    
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer justify-content-start">
-                <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_settings">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
 @*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -4756,6 +4397,7 @@
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
 <partial name="_irSettingsPopup" />
+<partial name="_TrainingAndAssessmentSettings" />
 @*/*<partial name="_LinkedDuressPopup" />*/*@
 
 @section scripts {

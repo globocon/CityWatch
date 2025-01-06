@@ -8,7 +8,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[Courses](
+CREATE TABLE [dbo].[TrainingCourses](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[FileName] [varchar](1024) NOT NULL,
 	[LastUpdated] [datetime] NOT NULL,
@@ -21,7 +21,8 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY] 
 GO
 
-ALTER TABLE [dbo].[Courses]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
+ALTER TABLE [dbo].[TrainingCourses]  WITH CHECK ADD FOREIGN KEY([HRSettingsId])
 REFERENCES [dbo].[HrSettings] ([Id])
-ALTER TABLE [dbo].[Courses]  WITH CHECK ADD FOREIGN KEY([TQNumberId])
-REFERENCES [dbo].[TQNumbers] ([Id])
+ALTER TABLE [dbo].[TrainingCourses]  WITH CHECK ADD FOREIGN KEY([TQNumberId])
+REFERENCES [dbo].[TrainingTQNumbers] ([Id])
+

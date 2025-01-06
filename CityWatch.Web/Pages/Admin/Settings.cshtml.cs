@@ -1128,7 +1128,22 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        public JsonResult OnPostCompanyMailDetails(Data.Models.CompanyDetails company)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.SaveCompanyMailDetails(company);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
 
+            return new JsonResult(new { status = status, message = message });
+        }
         //for adding a report logo-start
         public JsonResult OnPostCrReportLogoUpload()
         {

@@ -3151,6 +3151,11 @@
                 $("#txt_APIsecretkey").val(data[i].apiSecretkey)
 
                 //p1-225 Core Settings-end
+                $("#txt_KPI").val(data[i].kpiMail);
+                $("#txt_IR").val(data[i].irMail);
+                $("#txt_Fusion").val(data[i].fusionMail);
+                $("#txt_Timesheet").val(data[i].timesheetsMail);
+
             }
 
 
@@ -3307,7 +3312,39 @@
     }
 
 
+    $("#btn_CompanyMailSave").on("click", function () {
+        var companyId = parseInt($("#txt_CompanyId").val());
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        var ss = $("#txt_Timesheet").val();
+        var obj = {
+            Id: companyId,
+            IRMail: $("#txt_IR").val(),
+            KPIMail: $("#txt_KPI").val(),
+            FusionMail: $("#txt_Fusion").val(),
+            TimesheetsMail: $("#txt_Timesheet").val(),
+        };
 
+        $.ajax({
+            url: '/Admin/Settings?handler=CompanyMailDetails',
+            data: { 'company': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                    getC4Settings();
+                    showStatusNotification(true, 'Mail details modified successfully');
+                }
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        }).fail(function () {
+            alert("An error occurred while saving Mail details.");
+        });
+
+        // Prevent any default action (like a form submission) that might reload the page
+        return false;
+    });
 
     /* Block Print Screen start 27092023 */
     function copyToClipboard() {
