@@ -970,15 +970,28 @@ namespace CityWatch.Data.Providers
                 DeleteGuardLotes(guard.Id);
             }
             LanguageDetails languageDetails = new LanguageDetails();
-            foreach (var item in guard.LanguageDetails)
+            if (guard.LanguageDetails == null)
             {
                 languageDetails.Id = 0;
-                languageDetails.LanguageID = Convert.ToInt32(item);
+                languageDetails.LanguageID = 4;
                 languageDetails.CreatedDate = DateTime.Now;
                 languageDetails.GuardId = guard.Id;
                 languageDetails.IsDeleted = false;
                 _context.LanguageDetails.Add(languageDetails);
                 _context.SaveChanges();
+            }
+            else
+            {
+                foreach (var item in guard.LanguageDetails)
+                {
+                    languageDetails.Id = 0;
+                    languageDetails.LanguageID = Convert.ToInt32(item);
+                    languageDetails.CreatedDate = DateTime.Now;
+                    languageDetails.GuardId = guard.Id;
+                    languageDetails.IsDeleted = false;
+                    _context.LanguageDetails.Add(languageDetails);
+                    _context.SaveChanges();
+                }
             }
 
         }

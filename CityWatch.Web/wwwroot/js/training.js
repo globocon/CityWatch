@@ -330,17 +330,69 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
                 '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>',
             width: '15%'
         }],
-    columnDefs: [{
-        targets: 3,
-        data: 'fileName',
-        render: function (data, type, row, meta) {
-            if (data)
-                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
-            return '-';
-        }
-    }
-    ]
+    
 });
+gridGuardTrainingAndAssessment.on('draw.dt', function () {
+    var tbody = $('#tbl_guard_trainingAndAssessment tbody');
+    var rows = tbody.find('tr');
+    var lastGroupValue = null;
 
+    rows.each(function (index, row) {
+        var currentGroupValue = $(row).find('td:eq(0)').text();
+
+        if (currentGroupValue !== lastGroupValue) {
+            lastGroupValue = currentGroupValue;
+
+            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
+            headerRow.css('background-color', '#CCCCCC');
+            $(row).before(headerRow);
+        }
+    });
+});
 //p5-Issue1-End
+//p5-Issue2-Start
+let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_by_Admin').DataTable({
+    autoWidth: false,
+    ordering: false,
+    searching: false,
+    paging: false,
+    info: false,
+    ajax: {
+        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
+        data: function (d) {
+            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'hrGroupText', width: "12%" },
+        { data: 'description', width: "27%" },
+        { data: 'newNullColumn', width: '15%' },
+
+        {
+            targets: -1,
+            data: null,
+            defaultContent: '',
+            width: '15%'
+        }],
+   
+});
+gridGuardTrainingAndAssessmentByAdmin.on('draw.dt', function () {
+    var tbody = $('#tbl_guard_trainingAndAssessment_by_Admin tbody');
+    var rows = tbody.find('tr');
+    var lastGroupValue = null;
+
+    rows.each(function (index, row) {
+        var currentGroupValue = $(row).find('td:eq(0)').text();
+
+        if (currentGroupValue !== lastGroupValue) {
+            lastGroupValue = currentGroupValue;
+
+            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
+            headerRow.css('background-color', '#CCCCCC');
+            $(row).before(headerRow);
+        }
+    });
+});
+//p5-Issue2-End
 
