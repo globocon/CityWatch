@@ -328,6 +328,11 @@ namespace CityWatch.Data.Providers
         List<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History(int clientSiteId, DateTime date);
 
         public void TwoHourNoActivityNotificationForGuard();
+        //p5-Issue-20-Instructor-start
+        List<TrainingInstructor> GetTrainingInstructorNameandPositionFields();
+        public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor);
+        public void DeleteTrainingInstructorNameandPositionFields(int id);
+        //p5-Issue-20-Instructor-end
 
     }
 
@@ -5661,6 +5666,44 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        //p5-Issue-20-Instructor-start
+        public List<TrainingInstructor> GetTrainingInstructorNameandPositionFields()
+        {
+            return _context.TrainingInstructor.Where(x => x.IsDeleted == false)
+                .OrderBy(x => x.Name)
+                .ToList();
+        }
+        public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor)
+        {
+            if (trainingInstructor.Id == -1)
+            {
+                trainingInstructor.Id = 0;
+                _context.TrainingInstructor.Add(trainingInstructor);
+            }
+            else
+            {
+                var trainingInstructorFieldUpdate = _context.TrainingInstructor.SingleOrDefault(x => x.Id == trainingInstructor.Id);
+                if (trainingInstructorFieldUpdate != null)
+                {
+                    trainingInstructorFieldUpdate.Name = trainingInstructor.Name;
+                    trainingInstructorFieldUpdate.Position = trainingInstructor.Position;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteTrainingInstructorNameandPositionFields(int id)
+        {
+            var TrainingInstructorFieldToDelete = _context.TrainingInstructor.SingleOrDefault(x => x.Id == id);
+            //if (TrainingInstructorFieldToDelete == null)
+            //    throw new InvalidOperationException();
 
+            //_context.Remove(TrainingInstructorFieldToDelete);
+            if (TrainingInstructorFieldToDelete != null)
+            {
+                TrainingInstructorFieldToDelete.IsDeleted = true;
+            }
+            _context.SaveChanges();
+        }
+        //p5-Issue-20-Instructor-end
     }
 }
