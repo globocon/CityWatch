@@ -482,6 +482,7 @@
                             <option value="1">LB</option>
                             <option value="2">KV</option>
                             <option value="3">IR</option>
+                            <option value="4">TA</option>
                         </select>
                     </div>
                 </div>
@@ -531,6 +532,7 @@
                         <table class="table" id="field_settings_Area" hidden></table>
                         <table class="table" id="tbl_kvl_fields"></table>
                         <table class="table" id="tbl_dosanddonts_fields"></table>
+                        <table class="table" id="tbl_ta_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -2849,6 +2851,7 @@
                             <option value="1">LB</option>
                             <option value="2">KV</option>
                             <option value="3">IR</option>
+                            <option value="4">TA</option>
                         </select>
                     </div>
                 </div>
@@ -2885,6 +2888,13 @@
                             <option value="">None</option>
                         </select>
                         @*p1-196 Rationalization Of Menu Changes-end*@
+                                <select class="form-control" id="ta_field_types">
+                                    <option value="">None</option>
+                                    
+                                    <option value="1">Instructor & Position</option>
+                                    
+
+                                </select>
                     </div>
                 </div>
                 <div class="row" id="fieldSettings">
@@ -2893,11 +2903,13 @@
                             <button class="btn btn-success mb-3" id="add_field_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_dosanddonts_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                         </div>
                         <table class="table" id="field_settings"></table>
                         <table class="table" id="field_settings_Area" hidden></table>
                         <table class="table" id="tbl_kvl_fields"></table>
                         <table class="table" id="tbl_dosanddonts_fields"></table>
+                        <table class="table" id="tbl_ta_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
