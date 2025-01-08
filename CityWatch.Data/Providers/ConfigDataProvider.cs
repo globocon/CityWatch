@@ -108,6 +108,8 @@ namespace CityWatch.Data.Providers
         List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo);
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
+        public List<KPITelematicsField> GetTelematicsList();
+        public KPITelematicsField GetTelematicsMobileNo(int Id);
 
     }
 
@@ -1146,6 +1148,15 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return sortedDocuments;
+        }
+
+        public List<KPITelematicsField> GetTelematicsList()
+        {
+            return _context.KPITelematicsField.ToList();
+        }
+        public KPITelematicsField GetTelematicsMobileNo(int Id)
+        {
+            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
         }
 
     }

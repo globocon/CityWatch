@@ -155,6 +155,7 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
         List<SelectListItem> GetLanguages(bool withoutSelect = true);
         public List<ClientSiteWithWands> GetUserClientSitesExcel(int? typeId, int? userId);
+        
 
     }
 
@@ -1898,7 +1899,7 @@ namespace CityWatch.Web.Services
             return items;
         }
 
-
+        
 
     }
     public class HRGroupStatusNew

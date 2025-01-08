@@ -23,6 +23,7 @@
     bool isStatusOngoing = @Model.ClientSite.Status != 0;
 
     var TimeSheet= clientDataProvider.GetTimesheetDetails();
+    var KPITelematicsDetails = clientDataProvider.GetKPITelematicsDetails(Model.KPITelematicsFieldID);
 
     if (Model.ClientSiteManningGuardKpiSettings != null && Model.ClientSiteManningGuardKpiSettings.Any())
     {
@@ -691,7 +692,64 @@
                 @*New Tab for contracted-manning start*@
                 <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
                     <div class="container pt-3">
-                        <div class="d-flex justify-content-end align-items-center  mb-3">
+                        
+                        <div class="form-row ml-2 ">
+                            <div class="col-md-2 pt-2">
+                                
+                                    <label class="form-label pr-2" style="white-space: nowrap;">Contract Manager</label>
+                               
+                            </div>
+                             <div class="col-md-4" style="padding-left:82px;">
+                                <select id="dgKPITelamaticsName" asp-for="@Model.KPITelematicsFieldID" asp-items="@ViewDataService.KPITelematicsList()" class="form-control"></select>
+                                 </div>
+                                 <div class="col-md-2">
+                                @if (KPITelematicsDetails!=null)
+                                {
+                                    <input type="text" class="form-control" value="@KPITelematicsDetails.Mobile" id="KPITelematicsMobileNo" readonly />
+                                }
+                                else
+                                {
+                                    <input type="text" class="form-control"  id="KPITelematicsMobileNo" readonly />
+                                }
+
+                                 </div>
+                                 <div class="col-md-2">
+                                @if (KPITelematicsDetails != null)
+                                {
+                                    <a id="emailLink" href="mailto:@KPITelematicsDetails.Email" title="Send Email">
+                                        <i class="fa fa-envelope" style="font-size:31px;color:black"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a id="emailLink" href="mailto:" title="Send Email">
+                                        <i class="fa fa-envelope" style="font-size:31px;color:black"></i>
+                                    </a>
+                                }
+                               
+                                     </div>
+                            <button id="printDivButton" class="btn btn-primary no-print mr-2">
+                                <i class="fa fa-print" aria-hidden="true"></i>
+                            </button>
+                            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 &&
+                            Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0)
+                            {
+                                <!-- Disabled Add Worker Button -->
+                                <button id="showDivButton" class="btn btn-success no-print" disabled>
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                            else
+                            {
+                                <!-- Enabled Add Worker Button -->
+                                <button id="showDivButton" class="btn btn-success no-print">
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                        </div><br/>
+                       @*  <div class="d-flex justify-content-end align-items-center  mb-3">
+                            <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Contract Manager</label>
+                            <select asp-items="@ViewDataService.KPITelematicsList()" class="form-control"></select>
                             <button id="printDivButton" class="btn btn-primary no-print mr-2">
                                 <i class="fa fa-print" aria-hidden="true"></i>
                             </button>
@@ -711,11 +769,12 @@
                                 </button>
                             }
                         </div>
-
+ *@
 
 
 
                         <form id="frm_site_manning_settings">
+                            <input type="hidden" asp-for="@Model.KPITelematicsFieldID" />
                             <input type="hidden" asp-for="@Model.Id" />
                             <input type="hidden" asp-for="@Model.ClientSiteId" />
                             <input type="hidden" id="hidCount" value="@count" />

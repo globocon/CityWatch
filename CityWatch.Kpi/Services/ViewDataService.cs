@@ -56,6 +56,8 @@ namespace CityWatch.Kpi.Services
         public List<SelectListItem> GetClientSitesUsingLoginUserIdNew(int userId, string type = "");
         public List<SelectListItem> ClientTypesUsingLoginMainUserIdWithClientTypeId(int userId, int ClientTypeId);
         public string ClientSitesUsingId(int ClientSiteId);
+        public List<SelectListItem> KPITelematicsList();
+        public KPITelematicsField GetMobileNo(int Id);
     }
 
     public class ViewDataService : IViewDataService
@@ -622,6 +624,30 @@ namespace CityWatch.Kpi.Services
         {
             var distinctType = _clientDataProvider.GetClientSiteDetailsWithId(ClientSiteId).FirstOrDefault().Name;
             return distinctType;
+        }
+        public List<SelectListItem> KPITelematicsList()
+        {
+
+            var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+            var NamesList = _configDataProvider.GetTelematicsList();
+            
+            foreach (var item in NamesList)
+            {
+                
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                
+
+            }
+            return items;
+
+        }
+
+        public KPITelematicsField GetMobileNo(int Id)
+        {
+            return _configDataProvider.GetTelematicsMobileNo(Id);
         }
     }
 }

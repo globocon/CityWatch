@@ -1932,6 +1932,8 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+
+        
     }
     public class helpDocttype
     {
