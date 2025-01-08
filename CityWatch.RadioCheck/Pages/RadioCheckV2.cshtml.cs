@@ -136,6 +136,20 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
                 if (guard != null)
                 {
+                    if((guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Page();
+                    }
+                    if ((guard.IsAdminSOPToolsAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+
+                        AuthUserHelper.IsAdminPowerUser = true;
+                        return Page();
+                    }
                     if (guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                     {
                         if (guard.IsAdminPowerUser)
@@ -182,6 +196,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             {
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Redirect(Url.Page("/Account/Login"));
+
             }
 
           
