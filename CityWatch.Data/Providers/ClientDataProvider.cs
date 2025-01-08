@@ -3253,7 +3253,13 @@ namespace CityWatch.Data.Providers
         }
         public KPITelematicsField GetKPITelematicsDetails(int? Id)
         {
-            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
+            if (Id == null)
+            {
+                // Handle null case explicitly, e.g., return null or throw an exception
+                return null;
+            }
+
+            return _context.KPITelematicsField.FirstOrDefault(x => x.Id == Id);
         }
     }
 
