@@ -2482,7 +2482,13 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeCompanySop = $('#staff_document_files_type_CompanySop').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -2569,7 +2575,14 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTraining = $('#staff_document_files_type_Training').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
+
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         inlineEditing: { mode: 'command', managementColumn: false },
@@ -2656,7 +2669,12 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         inlineEditing: { mode: 'command', managementColumn: false },
@@ -2702,6 +2720,8 @@
         });
 
     }
+
+    
 
     function staffDocsButtonRenderer(value, record) {
         return '<label class="btn btn-success mb-0">' +
@@ -4052,7 +4072,13 @@
 
 
     gridSchedules = $('#staff_document_siteSOP').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -4068,6 +4094,17 @@
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
+    });
+
+    // Search functionality
+    $('#searchBoxTempAndForms').on('input', function () {
+        const query = $(this).val(); // Get the search query
+        gridStaffDocsTypeTemplatesAndForms.reload({ query: query }); // Pass the updated query to reload
+        gridSchedules.reload({ query: query });
+        gridStaffDocsTypeCompanySop.reload({ query: query });
+        gridStaffDocsTypeTraining.reload({ query: query });
+       
+
     });
     //if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
 
@@ -4964,6 +5001,10 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#clientSOP').hide();
 
 }
+
+$('#searchBoxTempAndForms').hide();
+$('#btnGroupAddon2').hide();
+
 $('#report_module_types_irtemplate').on('change', function () {
     const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
     if ($('#report_module_types_irtemplate').val() == 1) {
@@ -4973,6 +5014,9 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').hide();
+        $('#btnGroupAddon2').hide();
+
     }
 
     else if ($('#report_module_types_irtemplate').val() == 2) {
@@ -4981,6 +5025,9 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
+
     }
     else if ($('#report_module_types_irtemplate').val() == 3) {
         $('#incident_report_pdf_template').hide();
@@ -4988,6 +5035,8 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').show();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
     }
     else if ($('#report_module_types_irtemplate').val() == 4) {
         $('#incident_report_pdf_template').hide();
@@ -4995,6 +5044,8 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').show();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
 
     }
 
@@ -5004,12 +5055,15 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').show();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
 
 
     }
 
     else {
-
+        $('#searchBoxTempAndForms').hide();
+        $('#btnGroupAddon2').hide();
     }
 });
 $('#clientTypeNameDoc').multiselect({
