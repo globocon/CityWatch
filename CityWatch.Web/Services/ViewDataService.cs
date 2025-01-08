@@ -155,6 +155,7 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
         List<SelectListItem> GetLanguages(bool withoutSelect = true);
         public List<ClientSiteWithWands> GetUserClientSitesExcel(int? typeId, int? userId);
+
         List<SelectListItem> GetCourseDuration(bool withoutSelect = true);
         List<SelectListItem> GetTestDuration(bool withoutSelect = true);
         List<SelectListItem> GetPassMark(bool withoutSelect = true);
@@ -162,6 +163,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTrainingCertificateExpiryYears(bool withoutSelect = true);
         List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
+
 
     }
 
@@ -1986,6 +1988,7 @@ namespace CityWatch.Web.Services
             items.Add(new SelectListItem("Select", ""));
             //}
 
+
             foreach (var item in hrGroups)
             {
                 if (item.Id == 1)
@@ -2068,6 +2071,7 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+
 
         
 

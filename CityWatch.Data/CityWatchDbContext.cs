@@ -148,7 +148,7 @@ namespace CityWatch.Data
 
         public DbSet<GuardTwoHourNoActivityNotificationLog> GuardTwoHourNoActivityNotificationLog { get; set; }
 
-        
+        public DbSet<KPITelematicsField> KPITelematicsField { get; set; }
 
 
 

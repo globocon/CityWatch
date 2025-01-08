@@ -1950,7 +1950,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                     {
                                         success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
                                         /* If change in the status update start */
-                                        _clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id);
+                                        _clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id, clientSiteKpiSetting.KPITelematicsFieldID);
                                         /* If change in the status update end */
                                     }
                                     else

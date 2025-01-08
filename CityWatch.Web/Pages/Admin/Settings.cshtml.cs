@@ -1932,6 +1932,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+
         public JsonResult OnGetCourseDocsUsingSettingsId(int type)
         {
             return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type));
@@ -1940,6 +1941,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetTQNumbers());
         }
+
     }
     public class helpDocttype
     {

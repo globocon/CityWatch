@@ -233,7 +233,7 @@ namespace CityWatch.Data.Providers
 
         public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory);
 
-        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid, int? KPITelematicsFieldID);
         public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId);
         public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds, string startdate, string endDate);
         public GuardLogin GetGuardDetailsAllTimesheet(int clientSiteIds, string startdate, string endDate);
@@ -245,6 +245,7 @@ namespace CityWatch.Data.Providers
         //p1-287 A to E-end
         public List<ClientSiteSmartWand> GetClientSmartWand();
         public IncidentReport GetLastIncidentReportsByGuardId( int guardId);
+        public KPITelematicsField GetKPITelematicsDetails(int? Id);
 
         public string ValidDateTimeADHOC(ClientSiteKpiSetting setting);
 
@@ -400,7 +401,7 @@ namespace CityWatch.Data.Providers
 
             if (kpiSettings != null)
             {
-                UpdateClientSiteStatus(clientSite.Id, clientSite.StatusDate, clientSite.Status, kpiSettings.Id);
+                UpdateClientSiteStatus(clientSite.Id, clientSite.StatusDate, clientSite.Status, kpiSettings.Id, kpiSettings.KPITelematicsFieldID);
             }
             /*update the status and kpi settings value end */
             if (clientSite.Id == -1)
@@ -959,7 +960,10 @@ namespace CityWatch.Data.Providers
                         .Where(u => u.Id == setting.Id)
                          .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
                          );
-
+                        _context.ClientSiteKpiSettings
+                      .Where(u => u.Id == setting.Id)
+                       .ExecuteUpdate(b => b.SetProperty(u => u.KPITelematicsFieldID, setting.KPITelematicsFieldID)
+                       );
                         _context.ClientSiteKpiSettings
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
@@ -3164,7 +3168,7 @@ namespace CityWatch.Data.Providers
 
         }
         /* update Status for a site */
-        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid)
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid,int? KPITelematicsFieldID)
         {
             // Fetch the client site to update
             var updateClientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
@@ -3200,6 +3204,7 @@ namespace CityWatch.Data.Providers
                         {
                             kpiSettingsToUpdate.ScheduleisActive = false;
                             kpiSettingsToUpdate.DropboxScheduleisActive = false;
+                            kpiSettingsToUpdate.KPITelematicsFieldID = KPITelematicsFieldID;
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
@@ -3219,6 +3224,7 @@ namespace CityWatch.Data.Providers
                         {
                             kpiSettingsToUpdate.ScheduleisActive = true;
                             kpiSettingsToUpdate.DropboxScheduleisActive = true;
+                            kpiSettingsToUpdate.KPITelematicsFieldID = KPITelematicsFieldID;
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
@@ -3244,6 +3250,10 @@ namespace CityWatch.Data.Providers
             return _context.IncidentReports
                 .Where(x => x.GuardId == guardId ).OrderByDescending(z => z.CreatedOn)
                 .FirstOrDefault();
+        }
+        public KPITelematicsField GetKPITelematicsDetails(int? Id)
+        {
+            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
         }
     }
 

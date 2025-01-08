@@ -26,6 +26,7 @@ namespace CityWatch.RadioCheck.Services
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
         List<SelectListItem> ProviderList();
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
+        public List<SelectListItem> KPITelematicsList();
     }
 
     public class ViewDataService : IViewDataService
@@ -297,6 +298,25 @@ namespace CityWatch.RadioCheck.Services
 
             }
             return items;
+        }
+        public List<SelectListItem> KPITelematicsList()
+        {
+
+            var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+            var NamesList = _configDataProvider.GetTelematicsList();
+
+            foreach (var item in NamesList)
+            {
+
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+
+
+            }
+            return items;
+
         }
     }
 }

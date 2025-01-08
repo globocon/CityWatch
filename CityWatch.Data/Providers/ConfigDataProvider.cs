@@ -110,6 +110,8 @@ namespace CityWatch.Data.Providers
         List<TrainingTQNumbers> GetTQNumbers();
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
+        public List<KPITelematicsField> GetTelematicsList();
+        public KPITelematicsField GetTelematicsMobileNo(int Id);
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
 
@@ -1215,6 +1217,18 @@ namespace CityWatch.Data.Providers
             return sortedDocuments;
 
         }
-    }
+        public List<KPITelematicsField> GetTelematicsList()
+        {
+            return _context.KPITelematicsField.ToList();
+        }
+        public KPITelematicsField GetTelematicsMobileNo(int Id)
+        {
+            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
+        }
+
+
+        }
+
+
   
 }

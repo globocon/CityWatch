@@ -328,11 +328,18 @@ namespace CityWatch.Data.Providers
         List<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History(int clientSiteId, DateTime date);
 
         public void TwoHourNoActivityNotificationForGuard();
+
+        public List<KPITelematicsField> GetKPITelemarics(int type);
+        public void SaveKPITelematics(KPITelematicsField kpitelematics);
+        public void DeleteKPITelematics(int id);
+
+
         //p5-Issue-20-Instructor-start
         List<TrainingInstructor> GetTrainingInstructorNameandPositionFields();
         public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor);
         public void DeleteTrainingInstructorNameandPositionFields(int id);
         //p5-Issue-20-Instructor-end
+
 
     }
 
@@ -4780,7 +4787,45 @@ namespace CityWatch.Data.Providers
         }
 
         //do's and donts-end
+        //KPI Telematics-start
+        public List<KPITelematicsField> GetKPITelemarics(int type)
+        {
+            return _context.KPITelematicsField
+                 .Where(x => x.TypeId == type)
+                .ToList();
+        }
+        
+        public void SaveKPITelematics(KPITelematicsField kpitelematics)
+        {
+            if (kpitelematics.Id == -1)
+            {
+                kpitelematics.Id = 0;
+                _context.KPITelematicsField.Add(kpitelematics);
+            }
+            else
+            {
+                var KpiTelematicsUpdate = _context.KPITelematicsField.SingleOrDefault(x => x.Id == kpitelematics.Id);
+                if (KpiTelematicsUpdate != null)
+                {
+                    KpiTelematicsUpdate.Name = kpitelematics.Name;
+                    
+                    KpiTelematicsUpdate.Mobile = kpitelematics.Mobile;
+                    KpiTelematicsUpdate.Email = kpitelematics.Email;
+                    KpiTelematicsUpdate.TypeId = 1;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteKPITelematics(int id)
+        {
+            var KPITelematicsToDelete = _context.KPITelematicsField.SingleOrDefault(x => x.Id == id);
+            if (KPITelematicsToDelete == null)
+                throw new InvalidOperationException();
 
+            _context.Remove(KPITelematicsToDelete);
+            _context.SaveChanges();
+        }
+        //KPI Telematics End
         public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
         {
             _context.RadioCheckPushMessages.Add(radioCheckPushMessages);
