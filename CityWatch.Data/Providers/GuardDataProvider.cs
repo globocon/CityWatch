@@ -89,6 +89,18 @@ namespace CityWatch.Data.Providers
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
 
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId);
+
+
+
+        List<TrainingCourseDuration> GetCourseDuration();
+        List<TrainingTestDuration> GetTestDuration();
+        List<TrainingTestPassMark> GetPassMark();
+
+        List<TrainingTestAttempts> GetTestAttempts();
+        List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
+        List<TrainingTQNumbers> GetTestTQNumbers();
+        List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
 
     }
 
@@ -980,6 +992,70 @@ namespace CityWatch.Data.Providers
                 _context.Remove(item);
                 _context.SaveChanges();
             }
+        }
+
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                 .Where(x => x.GuardId == guardId)
+                 .Include(z => z.Guard).ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+
+
+            result = _context.GuardTrainingAndAssessment
+            .Where(x => x.GuardId == guardId)
+            .Include(z => z.Guard)
+            .Select(x => new GuardTrainingAndAssessment
+            {
+                Id = x.Id,
+                
+                GuardId = x.GuardId,
+                Description = x.Description,
+                HrGroup = x.HrGroup,
+                NewNullColumn=string.Empty,
+                LicenseNo = x.Guard.SecurityNo,
+                
+            }).OrderBy(x => x.Id)
+            .ToList();
+
+
+            return result;
+
+
+
+        }
+
+
+        public List<TrainingCourseDuration> GetCourseDuration()
+        {
+            return _context.TrainingCourseDuration.ToList();
+        }
+        public List<TrainingTestDuration> GetTestDuration()
+        {
+            return _context.TrainingTestDuration.ToList();
+        }
+        public List<TrainingTestPassMark> GetPassMark()
+        {
+            return _context.TrainingTestPassMark.ToList();
+        }
+        public List<TrainingTestAttempts> GetTestAttempts()
+        {
+            return _context.TrainingTestAttempts.ToList();
+        }
+        public List<TrainingTestQuestionNumbers> GetTestQuestionNumbers()
+        {
+            return _context.TrainingTestQuestionNumbers.ToList();
+        }
+        public List<TrainingTQNumbers> GetTestTQNumbers()
+        {
+            return _context.TrainingTQNumbers.ToList();
+        }
+        
+        public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
+        {
+            return _context.TrainingCertificateExpiryYears.ToList();
         }
 
     }

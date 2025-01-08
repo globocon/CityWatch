@@ -106,10 +106,14 @@ namespace CityWatch.Data.Providers
         string GetClientTypeNameById(int id);
 
         List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo);
+        List<TrainingCourses> GetCourseDocsUsingSettingsId(int type);
+        List<TrainingTQNumbers> GetTQNumbers();
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
         public List<KPITelematicsField> GetTelematicsList();
         public KPITelematicsField GetTelematicsMobileNo(int Id);
+
+        public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
 
     }
 
@@ -262,6 +266,54 @@ namespace CityWatch.Data.Providers
                 }
 
                 // Sort the staff document list by ClientSite and then by ClientTypeName
+                staffDocList = staffDocList
+                    .OrderBy(x => x.ClientTypeName)
+                    .ThenBy(x => x.ClientSiteName)
+                    .ToList();
+            }
+            else
+            {
+                // If no ClientSite, just order by FileName
+                staffDocList = staffDocList.OrderBy(x => x.FileName).ToList();
+            }
+
+            return staffDocList;
+        }
+
+
+        public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query)
+        {
+            // Retrieve documents of the specified type and optionally filter by query
+            var staffDocList = _context.StaffDocuments
+                .Where(x => x.DocumentType == type &&
+                            (string.IsNullOrEmpty(query) || x.FileName.Contains(query)))
+                .ToList();
+
+            // Check if any of the documents have a ClientSite assigned
+            bool hasClientSite = staffDocList.Any(doc => doc.ClientSite.HasValue);
+
+            if (hasClientSite)
+            {
+                foreach (var doc in staffDocList)
+                {
+                    if (doc.ClientSite.HasValue)
+                    {
+                        // Fetch the ClientSite along with ClientType using Include
+                        var clientSite = _context.ClientSites
+                            .Where(x => x.Id == doc.ClientSite)
+                            .Include(x => x.ClientType)
+                            .FirstOrDefault();
+
+                        // Set the properties if ClientSite is found
+                        if (clientSite != null)
+                        {
+                            doc.ClientSiteName = clientSite.Name ?? "Unknown";
+                            doc.ClientTypeName = clientSite.ClientType?.Name ?? "Unknown";
+                        }
+                    }
+                }
+
+                // Sort the staff document list by ClientTypeName and ClientSiteName
                 staffDocList = staffDocList
                     .OrderBy(x => x.ClientTypeName)
                     .ThenBy(x => x.ClientSiteName)
@@ -1107,6 +1159,21 @@ namespace CityWatch.Data.Providers
 
         }
 
+        public List<TrainingCourses> GetCourseDocsUsingSettingsId(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourses
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+
+
+            return courseDocList;
+        }
+        public List<TrainingTQNumbers> GetTQNumbers()
+        {
+            return _context.TrainingTQNumbers.OrderBy(x => x.Id).ToList();
+
+        }
 
         public List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId)
         {
@@ -1148,8 +1215,8 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return sortedDocuments;
-        }
 
+        }
         public List<KPITelematicsField> GetTelematicsList()
         {
             return _context.KPITelematicsField.ToList();
@@ -1159,5 +1226,9 @@ namespace CityWatch.Data.Providers
             return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
         }
 
-    }
+
+        }
+
+
+  
 }

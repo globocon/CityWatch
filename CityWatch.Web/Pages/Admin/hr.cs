@@ -32,6 +32,7 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Text;
+using Org.BouncyCastle.Crypto.Generators;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -2191,15 +2192,59 @@ namespace CityWatch.Web.Pages.Admin
             return sb.ToString();
 
         }
+        //p5-Issue-1-start
+        public JsonResult OnGetGuardTrainingAndAssessmentTab(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
+        }
+        //p5-Issue1-end
+        //p5-Issue-20-Instructor-start
+        public JsonResult OnGetTrainingInstructorNameandPositionFields()
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
+        }
+        public JsonResult OnPostSaveTrainingInstructorNameandPositionFields(TrainingInstructor record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
 
 
+                _guardLogDataProvider.SaveTrainingInstructorNameandPositionFields(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteTrainingInstructorNameandPositionFields(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteTrainingInstructorNameandPositionFields(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //p5-Issue-20-Instructor-end
     }
 
 
 
 
 
-  
+
 
 
 

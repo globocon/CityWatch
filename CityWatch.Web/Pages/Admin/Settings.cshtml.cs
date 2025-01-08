@@ -432,9 +432,9 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
         }
-        public JsonResult OnGetStaffDocsUsingType(int type)
+        public JsonResult OnGetStaffDocsUsingType(int type, string query)
         {
-            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type));
+            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
         }
 
         public JsonResult OnPostUploadStaffDoc()
@@ -1933,7 +1933,15 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        
+        public JsonResult OnGetCourseDocsUsingSettingsId(int type)
+        {
+            return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type));
+        }
+        public JsonResult OnGetTQNumbers()
+        {
+            return new JsonResult(_configDataProvider.GetTQNumbers());
+        }
+
     }
     public class helpDocttype
     {
