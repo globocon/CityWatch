@@ -193,6 +193,7 @@ namespace CityWatch.Data
         public DbSet<TrainingTestPassMark> TrainingTestPassMark { get; set; }
         public DbSet<TrainingTestAttempts> TrainingTestAttempts { get; set; }
         public DbSet<TrainingCertificateExpiryYears> TrainingCertificateExpiryYears { get; set; }
+        public DbSet<TrainingInstructor> TrainingInstructor { get; set; }
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
      issue save changes because the target table has database triggers

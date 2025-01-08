@@ -3611,6 +3611,23 @@
     }
     /*to add do's and donts -start*/
 
+    let gridTAFields;
+    let isTAFieldAdding = false;
+    gridTAFields = $('#tbl_ta_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=InstructorNameandPositionFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            
+            { field: 'name', title: 'Instructor Name', width: 100, editor: true },
+            { field: 'position', title: 'Position', width: 400, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
     let gridDosAndDontsFields;
     let isDosandDontsFieldAdding = false;
     gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
@@ -3620,7 +3637,7 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            
+
             { field: 'referenceNo', title: 'REF NO', width: 100, editor: true },
             { field: 'name', title: 'Name', width: 400, editor: true },
         ],
@@ -3633,6 +3650,25 @@
         gridDosAndDontsFields.clear();
         gridDosAndDontsFields.reload({ typeId: selKvlFieldTypeId });
     });
+    //p5 - Issue - 20 - Instructor - start
+    let gridTAFields;
+    let isTAFieldAdding = false;
+    gridTAFields = $('#tbl_ta_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=TrainingInstructorNameandPositionFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+
+            { field: 'name', title: 'Instructor Name', width: '100%', editor: true },
+            { field: 'position', title: 'Instructor Position', width: '100%', editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    //p5 - Issue - 20 - Instructor - end
     $('#add_dosanddonts_fields').on('click', function () {
         const selFieldTypeId = $('#doanddontfields_types').val();
         if (!selFieldTypeId) {
@@ -3653,6 +3689,28 @@
             }).edit(-1);
         }
     });
+    //p5 - Issue - 20 - Instructor - start
+    $('#add_ta_fields').on('click', function () {
+        const selFieldTypeId = $('#ta_field_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_ta_fields tr').length;
+
+
+        if (isTAFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isTAFieldAdding = true;
+            gridTAFields.addRow({
+                'id': -1,
+                'name': '',
+                'position': '',
+            }).edit(-1);
+        }
+    });
+    //p5 - Issue - 20 - Instructor - end
     if (gridDosAndDontsFields) {
         gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -3733,6 +3791,83 @@
         });
     }
     /*to add do's and donts -end*/
+    //p5 - Issue - 20 - Instructor - start
+    if (gridTAFields) {
+        gridTAFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            if (data.name == '' || data.name == null) {
+                $.notify('Instructor Name should not be empty. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridTAFields.edit(id);
+                return;
+            }
+            if (data.position == '' || data.position == null) {
+                $.notify('Instructor Position should not be empty. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridTAFields.edit(id);
+                return;
+            }
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveTrainingInstructorNameandPositionFields',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+
+                    gridTAFields.clear();
+                    gridTAFields.reload();
+                }
+                else {
+                    alert(result.message);
+
+                    gridTAFields.edit(id);
+
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isTAFieldAdding)
+                    isTAFieldAdding = false;
+            });
+        });
+
+        gridTAFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteTrainingInstructorNameandPositionFields',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) { gridTAFields.clear(); gridTAFields.reload(); }
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isTAFieldAdding)
+                        isTAFieldAdding = false;
+                });
+            }
+        });
+    }
+    //p5 - Issue - 20 - Instructor - end
     if ($('#report_module_types').val() == '') {
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
@@ -3748,6 +3883,14 @@
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
         gridAreaReportFields.hide();
+
+        /*p5-Issue-20-Instructor-start*/
+        gridTAFields.hide();
+        $('#ta_field_types').hide();
+        $('#add_ta_fields').hide();
+
+        //p5 - Issue - 20 - Instructor - end
+
     }
 
     $('#report_module_types').on('change', function () {
@@ -3764,7 +3907,7 @@
             $('#add_dosanddonts_fields').show();
             $('#add_kvl_fields').hide();
             $('#irNotes').hide();
-
+           
             gridReportFields.hide();
             gridKvlFields.hide();
             gridAreaReportFields.hide();
@@ -3772,6 +3915,13 @@
 
             $('#doanddontfields_types').val('');
             gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
         else if ($('#report_module_types').val() == 2) {
             $('#fieldSettings').show();
@@ -3793,6 +3943,13 @@
             gridAreaReportFields.hide();
             gridKvlFields.show();
             gridDosAndDontsFields.hide();
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
         else if ($('#report_module_types').val() == 3) {
             $('#fieldSettings').hide();
@@ -3813,6 +3970,45 @@
 
             $('#report_field_types').val('');
             gridReportFields.reload({ typeId: $('#report_field_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+        }       
+        else if ($('#report_module_types').val() == 4) {
+            $('#fieldSettings').hide();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+
+
+          
+            gridTAFields.hide();
+            $('#ta_field_types').show();
+            $('#add_ta_fields').show();
+            $('#ta_field_types').val('');
+            // gridTAFields.reload();
+   
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+
+            $('#report_field_types').val('');
+            $('#ta_field_types').show();
+            $('#add_ta_fields').show();
+           gridTAFields.show();
+            gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+            
         }
 
         else {
@@ -3831,10 +4027,42 @@
             gridReportFields.hide();
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
     });
     /*p1 - 196 Rationalization Of Menu Changes - end*/
+    //p5 - Issue - 20 - Instructor - start
+    $('#ta_field_types').on('change', function () {
+        const selFieldTypeId = $(this).val();
 
+        if (!selFieldTypeId) { // None
+            $('#fieldSettings').hide();
+            $('#positionSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
+            $('#irNotes').hide();
+
+            gridTAFields.clear();
+
+            gridTAFields.hide();
+
+        } else { // Instructor name and Position
+            $('#fieldSettings').show();
+
+
+            gridTAFields.clear();
+            gridTAFields.show();
+            gridTAFields.reload();
+        }
+
+
+    });
+    //p5 - Issue - 20 - Instructor - end
 
 
 
