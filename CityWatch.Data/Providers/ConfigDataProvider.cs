@@ -110,7 +110,8 @@ namespace CityWatch.Data.Providers
         List<TrainingTQNumbers> GetTQNumbers();
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
-
+        public void SaveTrainingCourses(TrainingCourses trainingCourses);
+        int GetLastTQNumber(int hrsettingsid);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1111,6 +1112,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourses
+                .Include(x=>x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
 
@@ -1163,6 +1165,42 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return sortedDocuments;
+
+        }
+        public void SaveTrainingCourses(TrainingCourses trainingCourses)
+        {
+            if (trainingCourses.Id == 0)
+            {
+                _context.TrainingCourses.Add(trainingCourses);
+            }
+            else
+            {
+                var documentToUpdate = _context.TrainingCourses.SingleOrDefault(x => x.Id == trainingCourses.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.FileName = trainingCourses.FileName;
+                    documentToUpdate.LastUpdated = trainingCourses.LastUpdated;
+                    documentToUpdate.TQNumberId = trainingCourses.TQNumberId;
+                    documentToUpdate.HRSettingsId = trainingCourses.HRSettingsId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public int GetLastTQNumber(int hrsettingsid)
+        {
+            int LastTQNumber = 0;
+            
+            var result=_context.TrainingCourses.Where(x=>x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+           if(result.Count==0)
+            {
+                LastTQNumber = _context.TrainingTQNumbers.FirstOrDefault().Id;
+            }
+            if (result.Count > 0)
+            {
+                int[] tqnumbers = result.Select(x => x.TQNumberId).ToArray();
+                LastTQNumber=_context.TrainingTQNumbers.Where(x=>!tqnumbers.Contains(x.Id)).FirstOrDefault().Id;
+            }
+            return LastTQNumber;
 
         }
     }

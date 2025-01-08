@@ -7,9 +7,10 @@ $('#btnCourse').on('click', function (e) {
     $('#trainingandAssessmentmodal').modal('show');
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var courseDescription = $('#txtHrSettingsDescription').val();
-    $('#training_course_Name').val('HR' + ' ' + referenceNumber + ' ' + courseDescription)
+    $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
+  
     gridCourseDocumentFiles.clear();
-    gridCourseDocumentFiles.reload();
+    gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 
 $('#btnTestQuestions').on('click', function (e) {
@@ -19,8 +20,11 @@ $('#btnTestQuestions').on('click', function (e) {
     $('#trainingTestQuestionstab').addClass('active');
     $('#TrainingCourse').removeClass('active');
     $('#TrainingTestQuestions').addClass('active');
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var courseDescription = $('#txtHrSettingsDescription').val();
+    $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
     gridCourseDocumentFiles.clear();
-    gridCourseDocumentFiles.reload();
+    gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
@@ -29,8 +33,11 @@ $('#btnCourseCertificates').on('click', function (e) {
     $('#trainingCertificateTab').addClass('active');
     $('#TrainingCourse').removeClass('active');
     $('#TrainingCertificate').addClass('active');
-    gridCourseDocumentFiles.clear();
-    gridCourseDocumentFiles.reload();
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var courseDescription = $('#txtHrSettingsDescription').val();
+    $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
+    gridCertificatesDocumentFiles.clear();
+    gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnTrainingAssesmentModalClose').on('click', function (e) {
     e.preventDefault();
@@ -45,7 +52,7 @@ $('#btnTrainingAssesmentModalClose').on('click', function (e) {
 
 });
 let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
-    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId&&type=' + $('#HrSettings_Id').val(),
+    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
@@ -53,7 +60,7 @@ let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
     columns: [
         { field: 'fileName', title: 'File Name', width: 390 },
         { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        { width: 75, field: 'tQNumber', title: 'TQ', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'id', textField: 'name' } },
+        { width: 75, field: 'tQNumberName', title: 'TQ', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'id', textField: 'name' } },
         // { width: 200, renderer: staffDocsButtonRendererCompanySop },
        
         { width: 270, renderer: editTrainingCourseDocsButtonRendererSop },
@@ -343,4 +350,60 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
 });
 
 //p5-Issue1-End
+//p5-Issue3-CourseDocumentUpload-start
+$('#add_course_document_files').on('change', function () {
+    uploadCourseDocUsingHR($(this), false, 3);
+});
+function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
+    var hrSettingsId = $('#HrSettings_Id').val();
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
+    const file = uploadCtrl.get(0).files.item(0);
+    const fileExtn = file.name.split('.').pop();
+    if (!fileExtn || '.pdf,.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) < 0) {
+        showModal('Unsupported file type. Please upload a .pdf, .ppt or .pptx file');
+        return false;
+    }
+
+    const fileForm = new FormData();
+    fileForm.append('file', file);
+    fileForm.append('hrsettingsid', hrSettingsId);
+    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+    
+    if (edit)
+        fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+    $.ajax({
+        url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
+        type: 'POST',
+        data: fileForm,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (data.success) {
+            gridCourseDocumentFiles.reload();
+
+            showStatusNotification(data.success, data.message);
+        }
+        else {
+            gridCourseDocumentFiles.reload();
+
+            showStatusNotification(data.success, data.message);
+        }
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    });
+}
+const showStatusNotification = function (success, message) {
+    if (success) {
+        $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
+    } else {
+        $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
+    }
+    $('.toast .toast-body').html(message);
+    $('.toast').toast('show');
+}
+
+//p5-Issue3-CourseDocumentUpload-end
 

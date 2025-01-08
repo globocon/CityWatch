@@ -1940,6 +1940,58 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetTQNumbers());
         }
+        public JsonResult OnPostUploadCourseDocUsingHR()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+                        var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
+                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA","Course", hrreferenceNumber);
+                        if (!Directory.Exists(CourseDocsFolder))
+                            Directory.CreateDirectory(CourseDocsFolder);
+                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+                            throw new ArgumentException("File Already Exists");
+                        using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
+                        if(TQNumber==0)
+                        {
+                            throw new ArgumentException("TQ Number only contains from 01 to 10");
+                        }
+                        _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                        {
+                            Id = documentId,
+                            FileName = file.FileName,
+                            LastUpdated = DateTime.Now,
+                            HRSettingsId= hrsettingsid,
+                            TQNumberId= TQNumber
+
+                        });
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {

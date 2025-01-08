@@ -20,6 +20,8 @@ namespace CityWatch.Data.Models
         public TrainingTQNumbers TQNumber { get; set; }
         [NotMapped]
         public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } }
+        [NotMapped]
+        public string TQNumberName { get { return TQNumber.Name; } }
 
     }
 }
