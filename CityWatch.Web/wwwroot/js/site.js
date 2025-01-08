@@ -3611,23 +3611,7 @@
     }
     /*to add do's and donts -start*/
 
-    let gridTAFields;
-    let isTAFieldAdding = false;
-    gridTAFields = $('#tbl_ta_fields').grid({
-        dataSource: '/Admin/GuardSettings?handler=InstructorNameandPositionFields',
-        uiLibrary: 'bootstrap4',
-        iconsLibrary: 'fontawesome',
-        primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
-        columns: [
-            
-            { field: 'name', title: 'Instructor Name', width: 100, editor: true },
-            { field: 'position', title: 'Position', width: 400, editor: true },
-        ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
-    });
+   
     let gridDosAndDontsFields;
     let isDosandDontsFieldAdding = false;
     gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
