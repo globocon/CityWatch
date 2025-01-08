@@ -40,6 +40,8 @@ $(document).ready(function () {
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
 
+    localStorage.removeItem('activeTab');
+
 });
 function startClock() {
     let timer = duration, minutes, seconds;
@@ -4676,7 +4678,7 @@ $('#btncontractedmanning').on('click', function (event) {
         alert('Please select a site to edit.');
         return;
     }
-
+    localStorage.removeItem('activeTab');
     $('#modelchoice').val('CONTRACTEDMANNING');
     $('#kpi-settings-modal').modal('show');
 
@@ -4689,7 +4691,7 @@ $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
 
 $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
 
-
+    localStorage.removeItem('activeTab');
     $.ajax({
         url: '/RadioCheckV2?handler=ClientSiteManningKpiSettings',
         type: 'POST',
@@ -4961,7 +4963,262 @@ function calculateSumOfTextBoxValues4() {
 }
 
 
+$('#div_site_settings').on('click', '#save_site_manning_settings_adhoc', function () {
+
+   
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSiteManningKpiSettingsADHOC',
+        type: 'POST',
+        data: $('#frm_site_manning_settingsAdhoc').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success == 1) {
+            alert('Saved site manning details successfully');
+            $('#kpi-settings-modal').modal('hide');
+            $('#modelchoice').val('CONTRACTEDMANNING');
+            $('#kpi-settings-modal').modal('show');
+           // $('#kpi-tab').tab('show');
+            $('#contracted-manning-tabadhoc').tab('show');
+            // Store the tab ID in local storage
+            localStorage.setItem('activeTab', 'contracted-manning-tabadhoc');
+        }
+        else if (data.success == 2) {
+            $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+            $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+            $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+            alert('Please add the site settings from site settings tab');
+        }
+        else if (data.success == 3) {
+            alert('Please select position');
+        }
+        else if (data.success == 4) {
+            alert('Error! Please try again');
+            $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+            $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+        }
+        else if (data.success == 5) {
+            alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage + ' .');
+
+        }
+
+        else if (data.success == 6) {
+            alert('The clocks must be in the range of 00:01-23:59, and ' + data.erorrMessage + ' is an invalid input.');
+
+        }
+        else if (data.success == 7) {
+            alert('Please make sure you fill out the three boxes (start, end, and workers) for a day or make them blank. Please ensure workers have a value and cannot be blank when a clock is set.');
+
+        }
+
+    }).fail(function () { });
+});
+
+
+
+$('#div_site_settings').on('click', '#showDivButtonAdhoc', function () {
+
+    $('#divPatrolCarAdhoc').show();
+    $('#divbtnAdhoc').show();
+});
+
+
+$('#div_site_settings').on('change', '#positionfilterPatrolCarAdhoc', function () {
+
+    const isChecked = $(this).is(':checked');
+    const filter = isChecked ? 1 : 2;
+
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_0__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_1__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_2__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_3__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_4__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_5__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_6__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettingsADHOC_7__Type").val(filter);
+
+
+    calculateSumOfTextBoxValuesAdhoc();
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=OfficerPositions=' + filter,
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        $('#ClientSiteManningPatrolCarKpiSettingsADHOC_1__PositionId').html('');
+        data.map(function (position) {
+            $('#ClientSiteManningPatrolCarKpiSettingsADHOC_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
+        });
+    });
+
+});
+
+$('#div_site_settings').on('click', '#delete_workerAdhoc', function () {
+    if (confirm('Are you sure want to delete worker ?')) {
+        var buttonValue = $(this).val();
+        $.ajax({
+            url: '/RadioCheckV2?handler=DeleteWorkerADHOC',
+            type: 'POST',
+            data: { settingsId: buttonValue },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.clientSiteId !== 0) {
+                    $('#kpi-settings-modal').modal('hide');
+                    $('#modelchoice').val('CONTRACTEDMANNING');
+                    $('#contracted-manning-tabadhoc').tab('show');
+                    $('#kpi-settings-modal').modal('show');
+                   
+                   
+                }
+            }
+            else
+                alert(result.message);
+        }).fail(function () { });
+    }
+});
+
+
+
+
+
+
+$('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettingsADHOC_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettingsADHOC_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettingsADHOC_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettingsADHOC_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettingsADHOC_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettingsADHOC_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettingsADHOC_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettingsADHOC_7__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValuesAdhoc();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettingsADHOC_0__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_1__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_2__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_3__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_4__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_5__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_6__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_7__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues2Adhoc();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettingsADHOC_8__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_9__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_10__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_11__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_12__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_13__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_14__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_15__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues3Adhoc();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettingsADHOC_16__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_17__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_18__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_19__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_20__NoOfPatrols, #ClientSiteManningGuardKpiSettingsADHOC_21__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_22__NoOfPatrols,#ClientSiteManningGuardKpiSettingsADHOC_23__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues4Adhoc();
+
+});
+
+
+
+
+function calculateSumOfTextBoxValuesAdhoc() {
+
+    if ($("#positionfilterPatrolCarAdhoc").prop('checked') == true) {
+
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_0__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_1__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_2__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_3__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_4__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_5__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_6__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningPatrolCarKpiSettingsADHOC_7__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        if (sum !== 0) { $('#monthlyHrsAddNewAdhoc').val(sum); }
+        $('#monthlyHrsTxtAddNewAdhoc').text('Total Patrols :');
+        $('#lbl_ManningPatrolCarAdhoc_3').text('No of Patrols');
+    }
+    else {
+        $('#monthlyHrsTxtAddNewAdhoc').text('Monthly Hrs :');
+        $('#lbl_ManningPatrolCarAdhoc_3').text('Workers');
+        $('#monthlyHrsAddNewAdhoc').val('');
+    }
+
+}
+
+function calculateSumOfTextBoxValues2Adhoc() {
+
+    var check = $("#positionfilterGuardAdhoc_0").prop('checked');
+    if ($("#positionfilterGuardAdhoc_0").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_0__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_1__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_2__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_3__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_4__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_5__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_6__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_7__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrsAdhoc_0').val(sum);
+
+
+    }
+
+}
+
+function calculateSumOfTextBoxValues3Adhoc() {
+
+    var check = $("#positionfilterGuardAdhoc_8").prop('checked');
+    if ($("#positionfilterGuardAdhoc_8").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_8__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_9__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_10__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_11__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_12__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_13__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_14__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_15__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrsAdhoc_8').val(sum);
+
+
+    }
+
+}
+
+function calculateSumOfTextBoxValues4Adhoc() {
+
+    var check = $("#positionfilterGuardAdhoc_16").prop('checked');
+    if ($("#positionfilterGuardAdhoc_16").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_16__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_17__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_18__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_19__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_20__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_21__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_22__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettingsAdhoc_23__NoOfPatrols').val()) || 0;
+
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrsAdhoc_16').val(sum);
+
+
+    }
+
+}
+
+    //Adhoc end
+
+
+
+
 // ################## Contracted Manning Edit End ###################
+
 
 
 function ShowKpiModelChoice() {
@@ -4976,7 +5233,14 @@ function ShowKpiModelChoice() {
         // window.sharedVariable = button.data('cs-id');
         // console.log('Load operation completed!');
         // You can add your additional code or actions here
-        // console.log(csnme);    
+        // console.log(csnme);  
+        const activeTab = localStorage.getItem('activeTab');
+        if (activeTab == 'contracted-manning-tabadhoc') {
+            $('#contracted-manning-tabadhoc').tab('show');
+        }
+        else {
+            $('#contracted-manning-tab').tab('show');
+        }
         if (choice == 'RCACTIONLIST')
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
