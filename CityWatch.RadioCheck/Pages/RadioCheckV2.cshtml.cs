@@ -2303,5 +2303,95 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
 
 
+
+        public JsonResult OnPostClientSiteManningKpiSettingsADHOC(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            var erorrMessage = string.Empty;
+            try
+            {
+
+
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+
+
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
+
+                        var InvalidTimes = _clientDataProvider.ValidDateTimeADHOC(clientSiteKpiSetting);
+
+                        if (InvalidTimes.Trim() == string.Empty)
+                        {
+
+                            if (positionIdGuard != null || positionIdPatrolCar != null)
+                            {
+                                var rulenumberOne = _clientDataProvider.CheckRulesOneinKpiManningInputADHOC(clientSiteKpiSetting);
+
+                                if (rulenumberOne.Trim() == string.Empty)
+                                {
+                                    var rulenumberTwo = _clientDataProvider.CheckRulesTwoinKpiManningInputADHOC(clientSiteKpiSetting);
+                                    if (rulenumberTwo.Trim() == string.Empty)
+                                    {
+                                        success = _clientDataProvider.SaveClientSiteManningKpiSettingADHOC(clientSiteKpiSetting);
+                                        /* If change in the status update start */
+                                        //_clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id);
+                                        /* If change in the status update end */
+                                    }
+                                    else
+                                    {
+                                        erorrMessage = rulenumberTwo;
+                                        success = 7;
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    erorrMessage = rulenumberOne;
+                                    success = 6;
+
+                                }
+
+
+
+                            }
+                            else
+                            {
+                                success = 3;
+                            }
+
+                        }
+                        else
+                        {
+                            erorrMessage = InvalidTimes;
+                            success = 5;
+
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+
+                }
+                else
+                {
+                    success = 4;
+
+                }
+
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
+        }
     }
 }

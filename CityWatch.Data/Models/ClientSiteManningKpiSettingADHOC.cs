@@ -63,6 +63,9 @@ namespace CityWatch.Data.Models
         public int? IsPHO { get; set; }
 
         public string CrmSupplier { get; set; }
+
+        public DateTime? WeekAdhocToBeValid { get; set; }
+        public bool IsExtraShiftEnabled { get; set; }
     }
 
 }

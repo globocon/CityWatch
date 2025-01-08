@@ -1124,6 +1124,9 @@ namespace CityWatch.Data.Providers
                             {
                                 var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
                                 var CrmSupplier = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.CrmSupplier != null).FirstOrDefault();
+                                var WeekAdhocToBeValid = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.WeekAdhocToBeValid != null).FirstOrDefault();
+                                var IsExtraShiftEnabled = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.IsExtraShiftEnabled != false).FirstOrDefault();
+
                                 //set the values for SettingsId and PositionId                       
                                 if (positionIdPatrolCar != null)
                                 {
@@ -1133,6 +1136,17 @@ namespace CityWatch.Data.Providers
                                     if (CrmSupplier != null)
                                     {
                                         setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                    }
+                                    if (WeekAdhocToBeValid != null)
+                                    {
+                                        setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.WeekAdhocToBeValid = WeekAdhocToBeValid.WeekAdhocToBeValid; });
+
+                                    }
+
+                                    if (IsExtraShiftEnabled != null)
+                                    {
+                                        setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.IsExtraShiftEnabled = IsExtraShiftEnabled.IsExtraShiftEnabled; });
 
                                     }
                                     if (setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Any())
@@ -1162,9 +1176,23 @@ namespace CityWatch.Data.Providers
                                         if (poId != null)
                                         {
                                             var CrmSupplier = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.CrmSupplier != null && x.OrderId == poId.OrderId).FirstOrDefault();
+                                            var WeekAdhocToBeValid = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.WeekAdhocToBeValid != null && x.OrderId == poId.OrderId).FirstOrDefault();
+                                            var IsExtraShiftEnabled = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.IsExtraShiftEnabled != false && x.OrderId == poId.OrderId).FirstOrDefault();
+
                                             if (CrmSupplier != null)
                                             {
                                                 setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                            }
+                                            if (WeekAdhocToBeValid != null)
+                                            {
+                                                setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.WeekAdhocToBeValid = WeekAdhocToBeValid.WeekAdhocToBeValid; });
+
+                                            }
+
+                                            if (IsExtraShiftEnabled != null)
+                                            {
+                                                setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.IsExtraShiftEnabled = IsExtraShiftEnabled.IsExtraShiftEnabled; });
 
                                             }
 
