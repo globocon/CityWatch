@@ -824,7 +824,15 @@
             @*New Tab for Adhoc contracted-manning start*@
             <div class="tab-pane" id="contractedmanningSettingsAdhoc" role="tabpanel" aria-labelledby="contracted-manning-tabadhoc">
                 <div class="container pt-3">
+
+                      @if (Model.ClientSiteManningGuardKpiSettings != null && Model.ClientSiteManningGuardKpiSettings.Any())
+                        {
+                            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0)
+
+                            {
                     <div class="d-flex justify-content-end align-items-center  mb-3">
+
+
                         <button id="printDivButtonAdhoc" class="btn btn-primary no-print mr-2">
                             <i class="fa fa-print" aria-hidden="true"></i>
                         </button>
@@ -1318,6 +1326,19 @@
                         }
 
                     </form>
+
+
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                This section requires Contracted Manning to be completed first
+                            </div>
+
+                        }
+
+
+                    }
 
                 </div>
             </div>
