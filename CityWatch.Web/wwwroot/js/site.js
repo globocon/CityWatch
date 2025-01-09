@@ -3801,26 +3801,26 @@
         gridKPITelematicsFields.reload({ typeId: selKvlFieldTypeId });
     });
 
-    $('#add_KPI_Telematics_fields').on('click', function () {
-        const selFieldTypeId = $('#KPITelematicsfields_types').val();
-        if (!selFieldTypeId) {
-            alert('Please select a field type to update');
-            return;
-        }
-        var rowCount = $('#tbl_kpitelematics_fields tr').length;
+    //$('#add_KPI_Telematics_fields').on('click', function () {
+    //    const selFieldTypeId = $('#KPITelematicsfields_types').val();
+    //    if (!selFieldTypeId) {
+    //        alert('Please select a field type to update');
+    //        return;
+    //    }
+    //    var rowCount = $('#tbl_kpitelematics_fields tr').length;
 
 
-        if (isKPITelematicsFieldAdding) {
-            alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isKvlFieldAdding = true;
-            gridKPITelematicsFields.addRow({
-                'id': -1,
-                'typeId': selFieldTypeId,
-                'name': '',
-            }).edit(-1);
-        }
-    });
+    //    if (isKPITelematicsFieldAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isKvlFieldAdding = true;
+    //        gridKPITelematicsFields.addRow({
+    //            'id': -1,
+    //            'typeId': selFieldTypeId,
+    //            'name': '',
+    //        }).edit(-1);
+    //    }
+    //});
 
     $('#add_KPI_Telematics_fields').on('click', function () {
         const selFieldTypeId = $('#KPITelematicsfields_types').val();
@@ -4121,8 +4121,8 @@
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
         }
-        else if ($('#report_module_types').val() == 4) {
-            $('#fieldSettings').hide();
+        else if ($('#report_module_types').val() == 5) {
+            $('#fieldSettings').show();
             $('#doanddontfields_types').hide();
             $('#report_field_types').hide();
             $('#kvl_fields_types').hide();
@@ -4130,6 +4130,35 @@
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').show();
             $('#add_KPI_Telematics_fields').show();
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+            gridKPITelematicsFields.show();
+
+
+            $('#report_field_types').val('');
+            gridReportFields.reload({ typeId: $('#report_field_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+        }
+        else if ($('#report_module_types').val() == 4) {
+            $('#fieldSettings').hide();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+            $('#KPITelematicsfields_types').hide();
+            $('#add_KPI_Telematics_fields').hide();
 
 
             gridTAFields.hide();
@@ -4147,7 +4176,7 @@
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
             gridAreaReportFields.hide();
-            gridKPITelematicsFields.show();           
+            gridKPITelematicsFields.hide();           
             $('#report_field_types').val('');
             $('#ta_field_types').show();
             $('#add_ta_fields').show();
