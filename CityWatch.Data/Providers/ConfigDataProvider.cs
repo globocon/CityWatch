@@ -281,13 +281,31 @@ namespace CityWatch.Data.Providers
         }
 
 
+
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query)
         {
-            // Retrieve documents of the specified type and optionally filter by query
+            // Retrieve documents of the specified type
             var staffDocList = _context.StaffDocuments
-                .Where(x => x.DocumentType == type &&
-                            (string.IsNullOrEmpty(query) || x.FileName.Contains(query)))
+                .Where(x => x.DocumentType == type)
                 .ToList();
+
+            // For type 4, filter by ClientSiteName or FileName
+            if (type == 4 && !string.IsNullOrEmpty(query))
+            {
+                staffDocList = staffDocList
+                    .Where(x => x.FileName.Contains(query) ||
+                                (x.ClientSite.HasValue && _context.ClientSites
+                                    .Where(cs => cs.Id == x.ClientSite)
+                                    .Any(cs => cs.Name.Contains(query))))
+                    .ToList();
+            }
+            else if (!string.IsNullOrEmpty(query))
+            {
+                // For other types, filter by FileName only
+                staffDocList = staffDocList
+                    .Where(x => x.FileName.Contains(query))
+                    .ToList();
+            }
 
             // Check if any of the documents have a ClientSite assigned
             bool hasClientSite = staffDocList.Any(doc => doc.ClientSite.HasValue);
@@ -327,6 +345,8 @@ namespace CityWatch.Data.Providers
 
             return staffDocList;
         }
+
+        
 
         public void SaveStaffDocument(StaffDocument staffdocument)
         {
