@@ -4791,7 +4791,7 @@ namespace CityWatch.Data.Providers
         public List<KPITelematicsField> GetKPITelemarics(int type)
         {
             return _context.KPITelematicsField
-                 .Where(x => x.TypeId == type)
+                 .Where(x => x.TypeId == type).OrderBy(x=>x.Name)
                 .ToList();
         }
         

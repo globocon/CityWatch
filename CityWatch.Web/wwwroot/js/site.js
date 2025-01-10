@@ -3787,8 +3787,8 @@
         columns: [
 
             { field: 'name', title: 'Name', width: 300, editor: true },
-            { field: 'mobile', title: 'Mobile', width: 300, editor: true },
-            { field: 'email', title: 'Email', width: 300, editor: true },
+            { field: 'mobile', title: 'Mobile', width: 210, editor: true },
+            { field: 'email', title: 'Email', width: 280, editor: true },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
