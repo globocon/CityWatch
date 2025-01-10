@@ -3787,11 +3787,12 @@
         columns: [
 
             { field: 'name', title: 'Name', width: 300, editor: true },
-            { field: 'mobile', title: 'Mobile', width: 210, editor: true },
-            { field: 'email', title: 'Email', width: 280, editor: true },
+            { field: 'mobile', title: 'Mobile', width: 150, editor: true },
+            { field: 'email', title: 'Email', width: 310, editor: true },
         ],
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '200px');
+           // $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
