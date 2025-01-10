@@ -438,7 +438,15 @@
 
 
                                 </div>
-
+                                 @if (KPITelematicsDetails != null)
+                                {
+                                    <input type="hidden" asp-for="@Model.KPITelematicsFieldID" value="@KPITelematicsDetails.Id" />
+                                }
+                                else
+                                {
+                                    <input type="hidden" asp-for="@Model.KPITelematicsFieldID" />
+                                }
+                               
                                 <input type="hidden" asp-for="@Model.Id" />
                                 <input type="hidden" asp-for="@Model.ClientSiteId" />
                                 <input type="hidden" id="hidCount" value="@count" />
