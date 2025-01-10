@@ -51,29 +51,11 @@ $('#btnTrainingAssesmentModalClose').on('click', function (e) {
     
 
 });
-let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
-    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
-    columns: [
-        { field: 'fileName', title: 'File Name', width: 390 },
-        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        { width: 75, field: 'tQNumberName', title: 'TQ', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'id', textField: 'name' } },
-        // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-       
-        { width: 270, renderer: editTrainingCourseDocsButtonRendererSop },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
-});
 var editTrainingCourseDocsButtonRendererSop;
 editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displayEl, id, $grid) {
     var data = $grid.data(),
-        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_course_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_course_file_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
             '</form></label>').attr('data-key', id),
         $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
         $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
@@ -106,7 +88,59 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
 }
+var editCourseTQNumber;
+editCourseTQNumber = function (value, record) {
+    // var select = $('<button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>');
+    var select = $('<select class="form-control mx-1 "  id="CourseTQNumber"></select>');
+    $.ajax({
+        url: '/Admin/Settings?handler=TQNumbers',
+        // data: { id: record },
+        //type: 'POST',
+        //headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        for (var i = 0; i < result.length; i++) {
+            //select.valueField = result[i].name;
+            //select.textField = result[i].name;
+            var newoption = '<option value= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
+            select.append(newoption);
+        }
+        
+        
+        $('#CourseTQNumber option[value="' + record.tqNumberId + '"]').prop('selected', true);
 
+       
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+    
+    return select;
+
+
+}
+
+let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
+    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'fileName', title: 'File Name', width: 390 },
+        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
+       /* { width: 75, field: 'tqNumberName', title: 'TQ', align: 'center', type: 'dropdown', renderer: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'id', textField: 'name' } },*/
+        { width: 75, field: 'tqNumberName', title: 'TQ', align: 'center',renderer :editCourseTQNumber},
+        // { width: 200, renderer: staffDocsButtonRendererCompanySop },
+       
+        { width: 270, renderer: editTrainingCourseDocsButtonRendererSop },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 
 
 
@@ -404,6 +438,10 @@ const showStatusNotification = function (success, message) {
     $('.toast .toast-body').html(message);
     $('.toast').toast('show');
 }
+$('#form_file_downloads_course_sop').on('change', 'input[name="upload_course_file_sop"]', function () {
+    uploadCourseDocUsingHR($(this), true, 1);
+   
+});
 
 //p5-Issue3-CourseDocumentUpload-end
 
