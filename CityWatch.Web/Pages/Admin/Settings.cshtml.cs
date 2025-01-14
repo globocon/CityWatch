@@ -1956,7 +1956,7 @@ namespace CityWatch.Web.Pages.Admin
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
                         int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
-                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA","Course", hrreferenceNumber);
+                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
                         if (!Directory.Exists(CourseDocsFolder))
                             Directory.CreateDirectory(CourseDocsFolder);
                         if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
@@ -1967,20 +1967,36 @@ namespace CityWatch.Web.Pages.Admin
                         }
 
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                        int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
-                        if(TQNumber==0)
+                        int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
+                        if (TQNumbernew == 0)
                         {
-                            throw new ArgumentException("TQ Number only contains from 01 to 10");
-                        }
-                        _configDataProvider.SaveTrainingCourses(new TrainingCourses()
-                        {
-                            Id = documentId,
-                            FileName = file.FileName,
-                            LastUpdated = DateTime.Now,
-                            HRSettingsId= hrsettingsid,
-                            TQNumberId= TQNumber
+                            int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
+                            if (TQNumber == 0)
+                            {
+                                throw new ArgumentException("TQ Number only contains from 01 to 10");
+                            }
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = documentId,
+                                FileName = file.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+                                TQNumberId = TQNumber
 
-                        });
+                            });
+                        }
+                        else
+                        {
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = documentId,
+                                FileName = file.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+                                TQNumberId = TQNumbernew
+
+                            });
+                        }
 
                         success = true;
                     }
@@ -1991,6 +2007,151 @@ namespace CityWatch.Web.Pages.Admin
                 }
             }
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteCourseDocUsingHR(int id,string hrreferenceNumber)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var document = _configDataProvider.GetCourseDocuments().SingleOrDefault(x => x.Id == id);
+                if (document != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber,"Course", document.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    _configDataProvider.DeleteCourseDocument(id);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostSaveTQSettings(TrainingTestQuestionSettings record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if(record.CertificateExpiryId==0)
+                {
+                    record.CertificateExpiryId = null;
+                }
+                _guardLogDataProvider.SaveTestQuestionSettings(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetTQSettings(int hrSettingsid)
+        {
+            return new JsonResult(_configDataProvider.GetTQSettings(hrSettingsid));
+        }
+        public JsonResult OnPostSaveTQAnswers(TrainingTestQuestions testquestions, List<TrainingTestQuestionsAnswers> testquestionanswers)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                
+               int id= _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if(id!=0)
+                {
+                    foreach(var item in testquestionanswers)
+                    {
+                        item.TrainingTestQuestionsId = id;
+                    }
+                    _guardLogDataProvider.SaveTestQuestionsAnswers(id, testquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId,int tqNumberId)
+        {
+            return new JsonResult(_configDataProvider.GetNextQuestionWithinSameTQNumber(hrSettingsId, tqNumberId));
+        }
+        public JsonResult OnGetQuestionsCount(int hrSettingsId, int tqNumberId)
+        {
+            return new JsonResult(_configDataProvider.GetQuestionsCount(hrSettingsId, tqNumberId));
+        }
+        public JsonResult OnGetLastTQNumber(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetLastTQNumberFromQuestions(hrSettingsId));
+        }
+        public IActionResult OnGetQuestionWithQuestionNumber(int hrSettingsId, int tqNumberId, int questionumberId)
+        {
+            var Questions = _configDataProvider.GetTrainingQuestions(hrSettingsId, tqNumberId, questionumberId);
+
+
+            return new JsonResult(Questions);
+        }
+        public IActionResult OnGetQuestionAndAnswersWithQuestionNumber(int questionId)
+        {
+            var Answers = _configDataProvider.GetTrainingQuestionsAnswers(questionId);
+            
+            return new JsonResult(Answers);
+        }
+
+        public JsonResult OnGetLastFeedbackQNumber(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetLastFeedbackQNumbers(hrSettingsId));
+        }
+        public JsonResult OnGetFeedbackQuestionsCount(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetFeedbackQuestionsCount(hrSettingsId));
+        }
+        public JsonResult OnPostSaveFeedbackQAnswers(TrainingTestFeedbackQuestions feedbackquestions, List<TrainingTestFeedbackQuestionsAnswers> feedbackquestionanswers)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                int id = _guardLogDataProvider.SaveFeedbackQuestions(feedbackquestions);
+                if (id != 0)
+                {
+                    foreach (var item in feedbackquestionanswers)
+                    {
+                        item.TrainingTestFeedbackQuestionsId = id;
+                    }
+                    _guardLogDataProvider.SaveFeedbackQuestionsAnswers(id, feedbackquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public IActionResult OnGetFeedbackQuestionWithQuestionNumber(int hrSettingsId, int questionumberId)
+        {
+            var Questions = _configDataProvider.GetFeedbackQuestions(hrSettingsId, questionumberId);
+
+
+            return new JsonResult(Questions);
+        }
+        public IActionResult OnGetFeedbackQuestionAndAnswersWithQuestionNumber(int questionId)
+        {
+            var Answers = _configDataProvider.GetTrainingFeedbackQuestionsAnswers(questionId);
+
+            return new JsonResult(Answers);
         }
     }
     public class helpDocttype
