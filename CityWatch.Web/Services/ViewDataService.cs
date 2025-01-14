@@ -1671,6 +1671,33 @@ namespace CityWatch.Web.Services
             var results = new List<ClientSite>();
             var clientSites = _clientDataProvider.GetClientSites(typeId);
 
+            // Fetch all KPI settings and details in bulk
+            var siteIds = clientSites.Select(cs => cs.Id).ToList();
+            var allClientSiteSettings = _clientDataProvider.GetClientSiteKpiSettings(siteIds).ToList();
+            var kpiFieldIds = allClientSiteSettings
+                .Where(s => s.KPITelematicsFieldID.HasValue)
+                .Select(s => s.KPITelematicsFieldID.Value)
+                .Distinct()
+                .ToList();
+            var allKpiFields = _clientDataProvider.GetKPITelematicsDetailsNew(kpiFieldIds).ToList();
+
+            var kpiFieldLookup = allKpiFields.ToDictionary(k => k.Id, k => k.Name); // Assuming Id is the unique key
+
+            foreach (var site in clientSites)
+            {
+                // Get the first matching KPI setting for the site
+                var siteSetting = allClientSiteSettings.FirstOrDefault(s => s.ClientSiteId == site.Id);
+
+                if (siteSetting != null &&
+                    siteSetting.KPITelematicsFieldID.HasValue &&
+                    kpiFieldLookup.TryGetValue(siteSetting.KPITelematicsFieldID.Value, out var accountManager))
+                {
+                    site.AccountManager = accountManager; // Assign the AccountManager
+                }
+
+                results.Add(site);
+            }
+
             if (userId == null)
             {
                 results = clientSites;

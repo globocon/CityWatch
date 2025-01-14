@@ -48,5 +48,7 @@ namespace CityWatch.Data.Models
         public bool DataCollectionEnabled { get; set; }
         public bool IsActive { get; set; }
         public bool IsDosDontList { get; set; }
+        [NotMapped]
+        public string AccountManager { get; set; }
     }
 }
