@@ -16,23 +16,24 @@ namespace CityWatch.RadioCheck.Pages
 {
     public class FusionModel : PageModel
     {
-       
-        
+
+
         private readonly IGuardLogZipGenerator _guardLogZipGenerator;
         private readonly IAuditLogViewDataService _auditLogViewDataService;
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly IGuardDataProvider _guardDataProvider;
+
         public int GuardId { get; set; }
         [BindProperty]
         public string GuardIdCheck { get; set; }
         public FusionModel(
-           
+
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService, IGuardDataProvider guardDataProvider)
         {
-           
-            
+
+
             _guardLogZipGenerator = guardLogZipGenerator;
             _auditLogViewDataService = auditLogViewDataService;
             _clientViewDataService = clientViewDataService;
@@ -58,40 +59,62 @@ namespace CityWatch.RadioCheck.Pages
                 {
                     return Redirect(Url.Page("/Account/Unauthorized"));
                 }
-                
+
             }
-                return Page();
+            return Page();
         }
 
-      
-       
 
-       
-       
-      
 
-     
-       
+
+
+
+
+
+
+
         public JsonResult OnGetClientSites(string types)
         {
             return new JsonResult(_clientViewDataService.GetUserClientSitesWithId(types).OrderBy(z => z.Text));
         }
 
-       
 
-    
-      
-        
 
-        //fusion Start
-        public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, int clientSiteId,
-                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+
+
+
+
+        //fusion Start Old with single site 
+        //public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, int clientSiteId,
+        //                                            DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        //{
+        //    var start = (pageNo - 1) * limit;
+        //    var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+        //    var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
+        //    return new JsonResult(new { records, total = dailyGuardLogs.Count });
+        //}
+        //fusion Start  New with Mulitiple Sites
+        public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, string clientSiteIds,
+                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
+            if (string.IsNullOrWhiteSpace(clientSiteIds))
+            {
+                // Handle the case where clientSiteIds is null or empty
+                return new JsonResult(new { records = new List<object>(), total = 0 });
+            }
+            var arClientSiteIds = clientSiteIds
+                .Split(";")
+                .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
+                .Select(z => int.Parse(z))
+                .ToArray();
+
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs);
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
             return new JsonResult(new { records, total = dailyGuardLogs.Count });
         }
+
+
         public JsonResult OnGetGenerateRCGraphs(int clientSiteId,
                                                     DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
@@ -104,7 +127,7 @@ namespace CityWatch.RadioCheck.Pages
             //var rcChartTypes = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By ")));
             //var rcChartTypes1 = rcChartTypes.GroupBy(z => z.EventDateTime.DayOfWeek).ToDictionary(z => z.Key, z => (double)z.Count());
             int rcChartTypesForWeekNewCountnew = 0;
-            TimeSpan ts =logToDate.Subtract(today);
+            TimeSpan ts = logToDate.Subtract(today);
             int dateDiff = ts.Days;
             int totalWeeks = (int)dateDiff / 7;
             for (int i = 1; i <= totalWeeks; i++)
@@ -121,7 +144,7 @@ namespace CityWatch.RadioCheck.Pages
                 {
                     thisWeekEnd = logToDate;
                 }
-                var rcChartTypesForWeek = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, thisWeekStart, thisWeekEnd,excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By ")));
+                var rcChartTypesForWeek = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, thisWeekStart, thisWeekEnd, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By ")));
                 string newdaterange = thisWeekStart.ToString("dd-MM-yyy") + " to " + thisWeekEnd.ToString("dd-MM-yyy");
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 obj.DateRange = newdaterange;
@@ -166,7 +189,7 @@ namespace CityWatch.RadioCheck.Pages
                 //{
                 //    thisMonthEnd = ReportRequest.ToDate;
                 //}
-                var rcChartTypesForMonth = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, thisMonthStart, thisMonthEnd,excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
+                var rcChartTypesForMonth = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, thisMonthStart, thisMonthEnd, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
                 string newdaterange = thisMonthStart.ToString("MMM");
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 obj.DateRange = newdaterange;
@@ -240,20 +263,20 @@ namespace CityWatch.RadioCheck.Pages
             var rcChartTypesGuardsPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             var rcChartTypesGuardsPrealarmNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsPrealarmCountnew = 0;
-            var rcChartTypesGuardsPrealarm = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => z.NotificationType==1).GroupBy(z => z.ClientSiteId); ;
+            var rcChartTypesGuardsPrealarm = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => z.NotificationType == 1).GroupBy(z => z.ClientSiteId); ;
             foreach (var item in rcChartTypesGuardsPrealarm)
             {
 
                 string newdaterange = item.FirstOrDefault().SiteName;
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
-                
-                    obj.DateRange = newdaterange;
-                    obj.RecordCount = item.Count();
+
+                obj.DateRange = newdaterange;
+                obj.RecordCount = item.Count();
 
                 rcChartTypesGuardsPrealarmNewPercent.Add(obj);
 
-                    rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
-                
+                rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
+
 
             }
 
@@ -279,14 +302,14 @@ namespace CityWatch.RadioCheck.Pages
 
                 string newdaterange = item.FirstOrDefault().SiteName;
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
-                
-                    obj.DateRange = newdaterange;
-                obj.RecordCount = item.Count() ;
+
+                obj.DateRange = newdaterange;
+                obj.RecordCount = item.Count();
 
                 rcChartTypesGuardsFromPrealarmNewPercent.Add(obj);
 
-                    rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
-                
+                rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
+
 
             }
 
@@ -333,11 +356,11 @@ namespace CityWatch.RadioCheck.Pages
 
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
-            return new JsonResult(new { chartData = new {  rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
+            return new JsonResult(new { chartData = new { rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
 
         }
 
-        public JsonResult OnPostDownloadDailyFusionGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyFusionGuardLogZip(string clientSiteId, DateTime logFromDate, DateTime logToDate)
         {
             var success = true;
             var message = string.Empty;
@@ -345,7 +368,20 @@ namespace CityWatch.RadioCheck.Pages
 
             try
             {
-                zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(new int[] { clientSiteId }, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+                if (string.IsNullOrWhiteSpace(clientSiteId))
+                {
+                    success = false;
+                    message = "error";
+                }
+                else
+                {
+                    var arClientSiteIds = clientSiteId
+               .Split(";")
+               .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
+               .Select(z => int.Parse(z))
+               .ToArray();
+                    zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+                }
             }
             catch (Exception ex)
             {

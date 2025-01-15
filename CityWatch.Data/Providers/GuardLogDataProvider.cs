@@ -30,6 +30,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
 
+
 namespace CityWatch.Data.Providers
 {
     public interface IGuardLogDataProvider
@@ -340,7 +341,7 @@ namespace CityWatch.Data.Providers
         public void DeleteTrainingInstructorNameandPositionFields(int id);
         //p5-Issue-20-Instructor-end
 
-
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5295,6 +5296,37 @@ namespace CityWatch.Data.Providers
 
             return returnData;
         }
+
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+            .Where(z => z.ClientSiteId.HasValue && clientSiteIds.Contains(z.ClientSiteId.Value) &&
+                 z.EventDateTime >= logFromDate &&
+                 z.EventDateTime <= logToDate)
+                .ToList();
+
+            var checkGMT = data
+                .Where(x => x.ActivityType != "SW" && !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+                .Select(x => x.EventDateTimeZoneShort)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(checkGMT))
+            {
+                foreach (var item in data.Where(x => string.IsNullOrEmpty(x.EventDateTimeZoneShort)))
+                {
+                    item.EventDateTimeZoneShort = checkGMT;
+                    item.EventDateTime = item.LastSWCreatedTime ?? item.EventDateTime;
+                    item.EventDateTimeLocal = item.LastSWCreatedTime ?? item.EventDateTime;
+                }
+            }
+
+            var returnData = data.OrderBy(z => z.EventDateTime).ToList();
+
+            return returnData;
+        }
+
         //p6-102 Add Photo -start
         public void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages)
         {
