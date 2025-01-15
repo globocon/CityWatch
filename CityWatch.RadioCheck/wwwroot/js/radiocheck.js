@@ -5980,6 +5980,7 @@ gridsitefusionLog = $('#fusion_site_log').grid({
             }
         },
         { field: 'activityType', title: 'Source', width: 50 },
+        { field: 'siteName', title: 'Client Site', width: 150 },
         { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
     ],
     paramNames: { page: 'pageNo' },
@@ -5987,9 +5988,17 @@ gridsitefusionLog = $('#fusion_site_log').grid({
 });
 
 
-$('#fusionClientSiteId').select({
-    placeholder: 'Select',
-    theme: 'bootstrap4'
+//$('#fusionClientSiteId').select({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+$('#fusionClientSiteId').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
 });
 
 $('#fusionClientSiteId').on('change', function () {
@@ -6007,10 +6016,10 @@ $('#fusionClientType').on('change', function () {
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
             data.map(function (site) {
-                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
             });
+            clientSiteControl.multiselect('rebuild');
 
 
         }
@@ -6071,14 +6080,17 @@ if (gridsitefusionLog) {
 
 
 $('#btnGeneratefusionAuditReport').on('click', function () {
-
-    if ($('#fusionClientSiteId').val() === '') {
+    if ($('#fusionClientSiteId').val().length === 0) {
         alert('Please select a client site');
         return;
     }
+    //if ($('#fusionClientSiteId').val() === '') {
+    //    alert('Please select a client site');
+    //    return;
+    //}
     gridsitefusionLog.clear();
     gridsitefusionLog.reload({
-        clientSiteId: $('#fusionClientSiteId').val(),
+        clientSiteIds: $('#fusionClientSiteId').val().join(';'),
         logFromDate: $('#fusionAudtitFromDate').val(),
         logToDate: $('#fusionAudtitToDate').val(),
         excludeSystemLogs: 0
@@ -8561,7 +8573,7 @@ function downloadDailyGuardfusionLogZipFile() {
         type: 'POST',
         dataType: 'json',
         data: {
-            clientSiteId: $('#fusionClientSiteId').val(),
+            clientSiteId: $('#fusionClientSiteId').val().join(';'), 
             logFromDate: $('#fusionAudtitFromDate').val(),
             logToDate: $('#fusionAudtitToDate').val()
         },
