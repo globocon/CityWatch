@@ -253,6 +253,10 @@ namespace CityWatch.Data.Providers
         public string CheckRulesTwoinKpiManningInputADHOC(ClientSiteKpiSetting settings);
         public int SaveClientSiteManningKpiSettingADHOC(ClientSiteKpiSetting setting);
 
+        List<ClientSiteKpiSetting> GetClientSiteKpiSettings(List<int> clientSiteIds);
+
+        List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -337,7 +341,7 @@ namespace CityWatch.Data.Providers
 
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
-                .Include(x => x.ClientType)
+                .Include(x => x.ClientType)                
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
@@ -483,6 +487,12 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<ClientSiteKpiSetting> GetClientSiteKpiSettings(List<int> clientSiteIds)
+        {
+            return _context.ClientSiteKpiSettings
+                .Where(x => x.ClientSite.IsActive && clientSiteIds.Contains(x.ClientSiteId))
+                .ToList();
+        }
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
@@ -3260,6 +3270,19 @@ namespace CityWatch.Data.Providers
             }
 
             return _context.KPITelematicsField.FirstOrDefault(x => x.Id == Id);
+        }
+
+        public List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids)
+        {
+            if (ids == null || !ids.Any())
+            {
+                // Return an empty list if ids is null or empty to avoid processing
+                return new List<KPITelematicsField>();
+            }
+
+            return _context.KPITelematicsField
+                .Where(x => ids.Contains(x.Id))
+                .ToList();
         }
     }
 
