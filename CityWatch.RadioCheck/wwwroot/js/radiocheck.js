@@ -2498,6 +2498,7 @@ $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
         }
     }
 });
+let gridSiteStaffDocAlarm;
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
@@ -2509,6 +2510,14 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     const button = $(event.relatedTarget);
     const id = button.data('id');
+
+   
+        $('#StaffDocumentsAlarm').grid('destroy', true, true); // Destroy existing grid
+        $('#StaffDocumentsAlarm').empty(); // Clear DOM elements
+    
+
+   
+    
 
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
@@ -2588,7 +2597,36 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     /*p4-79 menu corrections-start*/
     $('#chkPersonalEmail').prop('checked', false);
     /*p4-79 menu corrections-end*/
+    gridSiteStaffDocAlarm = $('#StaffDocumentsAlarm').grid({
 
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        dataSource: {
+            url: '/RadioCheckV2?handler=StaffDocsUsingTypeNew&&type=6&&ClientSiteId=' + id,
+
+        },
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+
+
+            {
+                field: 'fileName', title: 'File Name', width: 240,
+                
+            },
+            //{ field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
+            { width: 98, renderer: schButtonRendererNew },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    function schButtonRendererNew(value, record) {
+        let buttonHtml = '';
+        buttonHtml += '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
+
+        return buttonHtml;
+    }
 });
 
 
@@ -2885,13 +2923,26 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
             $('#btncontractedmanning').prop('disabled', false);
-            if (data.imagepath != null) {
-                const myArray = data.imagepath.split(":-:");
-                $('#download_imageRCList').attr('href', myArray[1]);
-                $('#download_imageRCList').attr('download', myArray[0]);
-            } else {
+            //if (data.imagepath != null) {
+            //    const myArray = data.imagepath.split(":-:");
+            //    $('#download_imageRCList').attr('href', myArray[1]);
+            //    $('#download_imageRCList').attr('download', myArray[0]);
+            //} else {
+            //    $('#download_imageRCList').removeAttr('href');
+            //    $('#download_imageRCList').removeAttr('download');
+            //}
+            if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length < 1) {
+
+                // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
+                $('#download_imageRCList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopAlarmFileNme);
+            } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
+                $('#download_imageRCList')
+                    .attr('data-toggle', 'modal')
+                    .attr('data-target', '.bd-example-modal-lgAlarm');
+                //$('.bd-example-modal-lg').show();
+            }
+            else {
                 $('#download_imageRCList').removeAttr('href');
-                $('#download_imageRCList').removeAttr('download');
             }
             if (data.sopFileNme != null) {
                 

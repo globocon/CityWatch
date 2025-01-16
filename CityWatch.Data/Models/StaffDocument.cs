@@ -19,6 +19,7 @@ namespace CityWatch.Data.Models
         public string SOP { get; set; }
 
         public int? ClientSite { get; set; }
+        public string FilePath { get; set; }
 
         [NotMapped]
         public List<SelectListItem> ClientSites { get; set; }

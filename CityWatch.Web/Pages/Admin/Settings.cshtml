@@ -336,6 +336,7 @@
                         <select class="form-control" id="report_module_types_irtemplate">
                             @*  <option value="">None</option> *@
                             <option value="1" selected>Details of Incident Report Pdf Template</option>
+                            <option value="6">Client(Alarm) SOP</option>
                             <option value="5">Client(Site) SOP</option>
                             <option value="2">Company SOP</option>
                             <option value="3">Training</option>
@@ -481,6 +482,21 @@
 
 
                 @*///Client Site SOP end//*@
+
+                <div class="row mb-2" id="ClientSOPAlarm">
+                    <div class="col-md-9 position-relative">
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                    </div>
+                    <div class="col-md-3 text-right">
+                        <button class="btn btn-success mb-3" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modalAlarm"><i class="fa fa-plus mr-2"></i>Add File</button>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_siteSOPAlarm"></table>
+                        </div>
+                    </div>
+                </div>
 
 
             </div>
@@ -4241,6 +4257,75 @@
                     <span class="sr-only">Loading...</span>
                 </div>
                 <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Site) SOP</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="schedule-modalAlarm" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client(Alarm) SOP</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_kpi_schedule" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="scheduleId1" name="id" value="0">
+                    <input type="hidden" id="filenameAlarm" name="filenameAlarm" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="clientTypeNamesiteSOPAlarm">Client Type</label>
+                                <select class="form-control" id="clientTypeNamesiteSOPAlarm" name="clientTypeNamesiteSOP">
+
+                                    <option value="">Select</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
+                                    {
+                                        <option value="@item.Name">@item.Name</option>
+                                    }
+
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+                                <label for="clientSitessiteSOP">Client Site</label>
+                                <select class="form-control" id="clientSitessiteSOPAlarm" name="clientSitessiteSOP">
+                                    <option>Select</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+                                <label for="clientSitessiteSOP">SOP</label>
+                                <select class="form-control" id="SOPAlarm" name="SOPAlarm">
+                                    <option></option>
+                                    <option value="RC">RC</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" name="add_staff_document_file_SlientSite_sopAlarm" id="add_staff_document_file_SlientSite_sopAlarm" class="form-control-file" />
+                                <label id="dynamicLabelAlarm" class="pt-1"></label>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveSiteSOPAlarm" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Alarm) SOP</button>
             </div>
         </div>
     </div>

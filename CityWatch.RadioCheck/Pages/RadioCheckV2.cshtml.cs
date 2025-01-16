@@ -1861,7 +1861,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
                 }
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                var sopAlarmfileType= _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
+                if (sopAlarmfileType.Count() != 0)
+                {
+                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
+                }
+                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
                 {
                     rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
@@ -1875,7 +1880,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
             {
                 //if null assign the value of the SOPFileNme
                 rtn = new RCActionList();
-              var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
+                if (sopAlarmfileType.Count() != 0)
+                {
+                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
+                }
+                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
                 {
                     rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
@@ -2408,5 +2418,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             return new JsonResult(new { success, clientSiteId, erorrMessage });
         }
+
+        public JsonResult OnGetStaffDocsUsingTypeNew(int type, int ClientSiteId)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId)));
+        }
+
+
     }
 }
