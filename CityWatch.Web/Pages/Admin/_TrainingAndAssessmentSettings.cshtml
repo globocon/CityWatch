@@ -92,6 +92,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="TrainingTestQuestionsSettings" role="tabpanel" aria-labelledby="TrainingTestQuestionsSettingsTab">
                                     <div class="form-group col-md-12">
+                                        <input type="hidden" id="txt_TestQuestionSettingsId" />
                                         <div class="row mt-3">
                                             <div class="col-md-4">
                                                 <label>Course Duration ETA:</label>
@@ -181,7 +182,7 @@
                                 </div>
                                 <div class="tab-pane" id="TrainingTestQuestionsAnswers" role="tabpanel" aria-labelledby="TrainingTestQuestionsAnswersTab">
                                     <div class="form-group col-md-12">
-
+                                        <input type="hidden" id="txt_TestQuestionAnswersId" />
                                         <div class="row mt-3">
                                             <div class="col-md-2">
                                                 <label>Question No</label>
@@ -198,7 +199,8 @@
                                         </div>
                                         <div class="row mt-3">
                                             <div class="col-md-12">
-                                                <textarea id="txtQuestion" class="form-control"></textarea>
+                                                <textarea id="txtQuestion" class="form-control"  maxlength="2048"></textarea>
+                                                <span id="lblRemainingCount" class="mt-2 d-block small"></span>
 
                                             </div>
 
@@ -309,11 +311,12 @@
                                 <div class="tab-pane" id="TrainingTestQuestionsFeedback" role="tabpanel" aria-labelledby="TrainingTestQuestionsFeedbackTab">
 
                                     <div class="form-group col-md-12">
-
+                                        <input type="hidden" id="txt_FeedbackQuestionAnswersId" />
                                         <div class="row mt-3">
                                             <div class="col-md-2">
                                                 <label>Question No</label>
-                                                <select id="ddlFeedbackQuestionNo" class="form-control"></select>
+                                                <select id="ddlFeedbackQuestionNo" class="form-control" asp-items="@viewDataServiceNew.GetTestQuestionNumbers(true)"></select>
+                                                
                                             </div>
                                             <div class="col-md-2">
                                                 <label>Counter:</label>
@@ -323,7 +326,8 @@
                                         </div>
                                         <div class="row mt-3">
                                             <div class="col-md-12">
-                                                <textarea id="txtFeedbackQuestion" class="form-control" placeholder="Did you enjoy the course?"></textarea>
+                                                <textarea id="txtFeedbackQuestion" class="form-control" placeholder="Did you enjoy the course?"  maxlength="2048"></textarea>
+                                                <span id="lblFeedbackQuestionRemainingCount" class="mt-2 d-block small"></span>
 
                                             </div>
 
@@ -428,6 +432,26 @@
             </div>
             <div class="modal-footer justify-content-start">
                 <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_settings">Save</button>
+                <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_testquestions">Save</button>
+                <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_feedbackquestions">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="msg-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Submit failed. Please fill all required fields</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
             </div>
         </div>
     </div>

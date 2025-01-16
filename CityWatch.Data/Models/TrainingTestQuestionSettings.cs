@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class TestQuestionSettings
+    public class TrainingTestQuestionSettings
     {
         [Key]
         public int Id { get; set; }
@@ -14,7 +14,7 @@ namespace CityWatch.Data.Models
         public int TestDurationId { get; set; }
         public int PassMarkId { get; set; }
         public int AttemptsId { get; set; }
-        public int CertificateExpiryId { get; set; }
+        public int? CertificateExpiryId { get; set; }
         public int HRSettingsId { get; set; }
         public bool IsCertificateExpiry { get; set; }
 

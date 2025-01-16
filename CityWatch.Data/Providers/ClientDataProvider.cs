@@ -233,7 +233,7 @@ namespace CityWatch.Data.Providers
 
         public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory);
 
-        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid, int? KPITelematicsFieldID);
         public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId);
         public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds, string startdate, string endDate);
         public GuardLogin GetGuardDetailsAllTimesheet(int clientSiteIds, string startdate, string endDate);
@@ -245,12 +245,17 @@ namespace CityWatch.Data.Providers
         //p1-287 A to E-end
         public List<ClientSiteSmartWand> GetClientSmartWand();
         public IncidentReport GetLastIncidentReportsByGuardId( int guardId);
+        public KPITelematicsField GetKPITelematicsDetails(int? Id);
 
         public string ValidDateTimeADHOC(ClientSiteKpiSetting setting);
 
         public string CheckRulesOneinKpiManningInputADHOC(ClientSiteKpiSetting settings);
         public string CheckRulesTwoinKpiManningInputADHOC(ClientSiteKpiSetting settings);
         public int SaveClientSiteManningKpiSettingADHOC(ClientSiteKpiSetting setting);
+
+        List<ClientSiteKpiSetting> GetClientSiteKpiSettings(List<int> clientSiteIds);
+
+        List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids);
 
     }
 
@@ -336,7 +341,7 @@ namespace CityWatch.Data.Providers
 
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
-                .Include(x => x.ClientType)
+                .Include(x => x.ClientType)                
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
@@ -400,7 +405,7 @@ namespace CityWatch.Data.Providers
 
             if (kpiSettings != null)
             {
-                UpdateClientSiteStatus(clientSite.Id, clientSite.StatusDate, clientSite.Status, kpiSettings.Id);
+                UpdateClientSiteStatus(clientSite.Id, clientSite.StatusDate, clientSite.Status, kpiSettings.Id, kpiSettings.KPITelematicsFieldID);
             }
             /*update the status and kpi settings value end */
             if (clientSite.Id == -1)
@@ -482,6 +487,12 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<ClientSiteKpiSetting> GetClientSiteKpiSettings(List<int> clientSiteIds)
+        {
+            return _context.ClientSiteKpiSettings
+                .Where(x => x.ClientSite.IsActive && clientSiteIds.Contains(x.ClientSiteId))
+                .ToList();
+        }
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
@@ -959,7 +970,10 @@ namespace CityWatch.Data.Providers
                         .Where(u => u.Id == setting.Id)
                          .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
                          );
-
+                        _context.ClientSiteKpiSettings
+                      .Where(u => u.Id == setting.Id)
+                       .ExecuteUpdate(b => b.SetProperty(u => u.KPITelematicsFieldID, setting.KPITelematicsFieldID)
+                       );
                         _context.ClientSiteKpiSettings
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
@@ -1124,6 +1138,9 @@ namespace CityWatch.Data.Providers
                             {
                                 var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.PositionId != 0).FirstOrDefault();
                                 var CrmSupplier = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.CrmSupplier != null).FirstOrDefault();
+                                var WeekAdhocToBeValid = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.WeekAdhocToBeValid != null).FirstOrDefault();
+                                var IsExtraShiftEnabled = setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.IsExtraShiftEnabled != false).FirstOrDefault();
+
                                 //set the values for SettingsId and PositionId                       
                                 if (positionIdPatrolCar != null)
                                 {
@@ -1133,6 +1150,17 @@ namespace CityWatch.Data.Providers
                                     if (CrmSupplier != null)
                                     {
                                         setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                    }
+                                    if (WeekAdhocToBeValid != null)
+                                    {
+                                        setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.WeekAdhocToBeValid = WeekAdhocToBeValid.WeekAdhocToBeValid; });
+
+                                    }
+
+                                    if (IsExtraShiftEnabled != null)
+                                    {
+                                        setting.ClientSiteManningPatrolCarKpiSettingsADHOC.ForEach(x => { x.IsExtraShiftEnabled = IsExtraShiftEnabled.IsExtraShiftEnabled; });
 
                                     }
                                     if (setting.ClientSiteManningPatrolCarKpiSettingsADHOC.Any())
@@ -1162,9 +1190,23 @@ namespace CityWatch.Data.Providers
                                         if (poId != null)
                                         {
                                             var CrmSupplier = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.CrmSupplier != null && x.OrderId == poId.OrderId).FirstOrDefault();
+                                            var WeekAdhocToBeValid = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.WeekAdhocToBeValid != null && x.OrderId == poId.OrderId).FirstOrDefault();
+                                            var IsExtraShiftEnabled = setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.IsExtraShiftEnabled != false && x.OrderId == poId.OrderId).FirstOrDefault();
+
                                             if (CrmSupplier != null)
                                             {
                                                 setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
+
+                                            }
+                                            if (WeekAdhocToBeValid != null)
+                                            {
+                                                setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.WeekAdhocToBeValid = WeekAdhocToBeValid.WeekAdhocToBeValid; });
+
+                                            }
+
+                                            if (IsExtraShiftEnabled != null)
+                                            {
+                                                setting.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.IsExtraShiftEnabled = IsExtraShiftEnabled.IsExtraShiftEnabled; });
 
                                             }
 
@@ -3136,7 +3178,7 @@ namespace CityWatch.Data.Providers
 
         }
         /* update Status for a site */
-        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid)
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid,int? KPITelematicsFieldID)
         {
             // Fetch the client site to update
             var updateClientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
@@ -3172,6 +3214,7 @@ namespace CityWatch.Data.Providers
                         {
                             kpiSettingsToUpdate.ScheduleisActive = false;
                             kpiSettingsToUpdate.DropboxScheduleisActive = false;
+                            kpiSettingsToUpdate.KPITelematicsFieldID = KPITelematicsFieldID;
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
@@ -3191,6 +3234,7 @@ namespace CityWatch.Data.Providers
                         {
                             kpiSettingsToUpdate.ScheduleisActive = true;
                             kpiSettingsToUpdate.DropboxScheduleisActive = true;
+                            kpiSettingsToUpdate.KPITelematicsFieldID = KPITelematicsFieldID;
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
@@ -3216,6 +3260,29 @@ namespace CityWatch.Data.Providers
             return _context.IncidentReports
                 .Where(x => x.GuardId == guardId ).OrderByDescending(z => z.CreatedOn)
                 .FirstOrDefault();
+        }
+        public KPITelematicsField GetKPITelematicsDetails(int? Id)
+        {
+            if (Id == null)
+            {
+                // Handle null case explicitly, e.g., return null or throw an exception
+                return null;
+            }
+
+            return _context.KPITelematicsField.FirstOrDefault(x => x.Id == Id);
+        }
+
+        public List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids)
+        {
+            if (ids == null || !ids.Any())
+            {
+                // Return an empty list if ids is null or empty to avoid processing
+                return new List<KPITelematicsField>();
+            }
+
+            return _context.KPITelematicsField
+                .Where(x => ids.Contains(x.Id))
+                .ToList();
         }
     }
 

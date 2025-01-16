@@ -2621,6 +2621,37 @@ $('#btnScheduleDownload1').on('click', function () {
         $('#schRunStatus').html(messageHtml);
     });
 });
+$('#div_site_settings').on('change', '#dgKPITelamaticsName', function () {
+    const NameId = $(this).val();
+    $('#KPITelematicsFieldID').val(NameId);
+
+    $.ajax({
+        url: '/Admin/Settings?handler=MobileNo&Id=' + NameId,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            if (data != null) {
+                $('#KPITelematicsMobileNo').val(data.mobile);
+                $('#emailLink').attr('href', 'mailto:' + data.email);
+            } else {
+                $('#KPITelematicsMobileNo').val('');
+                $('#emailLink').attr('href', 'mailto:');
+            }
+            
+            $('#KPITelematicsFieldID').val(data.id);
+            //$('#KPITelematicsMobileNo').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                //$('#KPITelematicsMobileNo').append(new Option(site.name, site.id, false, false));
+            });
+            /* vkl multiselect */
+            data.map(function (site) {
+                //clientSiteControlvkl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+            //clientSiteControlvkl.multiselect('rebuild');
+        }
+    });
+
+});
 //Code to handle timesheet schedule stop
 
 //$('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () {
