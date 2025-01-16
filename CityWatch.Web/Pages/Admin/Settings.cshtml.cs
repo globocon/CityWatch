@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -2152,6 +2153,41 @@ namespace CityWatch.Web.Pages.Admin
             var Answers = _configDataProvider.GetTrainingFeedbackQuestionsAnswers(questionId);
 
             return new JsonResult(Answers);
+        }
+        public JsonResult OnPostUpdateDocumentTQNumber(int id,string name,TrainingCourses record)
+        {
+            var success = false;
+            var message = "Updated successfully";
+            
+                    try
+                    {
+
+                int TQNumbernew = _configDataProvider.GetTQNumbers().Where(x => x.Name == name).FirstOrDefault().Id;
+                        if (TQNumbernew != 0)
+                        {
+                            
+                            
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = record.Id,
+                                FileName = record.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = record.HRSettingsId,
+                                TQNumberId = TQNumbernew
+
+                            });
+                    success = true;
+                         }
+                       
+
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                
+            return new JsonResult(new { success, message });
         }
     }
     public class helpDocttype

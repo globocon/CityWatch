@@ -163,17 +163,48 @@ let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
     columns: [
         { field: 'fileName', title: 'File Name', width: 390 },
         { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-       // { width: 75, field: 'tqNumberName', title: 'TQ', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'name', textField: 'name' } },
-        { width: 75, field: 'tqNumberId', title: 'TQ', align: 'center', renderer: editCourseTQNumber },
+       { width: 75, field: 'tqNumberName', title: 'TQ', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TQNumbers', valueField: 'name', textField: 'name' } },
+       // { width: 75, field: 'tqNumberId', title: 'TQ', align: 'center', renderer: editCourseTQNumber },
         // { width: 200, renderer: staffDocsButtonRendererCompanySop },
 
         { width: 270, renderer: editTrainingCourseDocsButtonRendererSop },
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        
     }
 });
 
+
+if (gridCourseDocumentFiles) {
+    gridCourseDocumentFiles.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=UpdateDocumentTQNumber',
+            data: { id: data.id, name: data.tqNumberName, record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+
+            if (result.success) {
+                showStatusNotification(true, 'Updated Successfully');
+                gridCourseDocumentFiles.clear();
+                gridCourseDocumentFiles.reload();
+            } else {
+
+                showStatusNotification(false, 'Please try again');
+                gridCourseDocumentFiles.edit(id);
+            }
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+
+        });
+    });
+
+}
 
 $('#tbl_courseDocumentFiles').on('change', 'input[name="upload_course_file_sop"]', function () {
     uploadCourseDocUsingHR($(this), true, 1);
