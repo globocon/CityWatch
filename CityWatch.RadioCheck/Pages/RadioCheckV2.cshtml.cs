@@ -1857,6 +1857,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             if (rtn != null)
             {
+                var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
+                rtn.Landline = LandLine.LandLine;
+                var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
+                rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
                 if (rtn.Imagepath != null)
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
@@ -1873,9 +1877,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
             else
             {
+                var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
+               
                 //if null assign the value of the SOPFileNme
                 rtn = new RCActionList();
-              var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                rtn.Landline = LandLine.LandLine;
+                var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
+                rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
+                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
                 {
                     rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
