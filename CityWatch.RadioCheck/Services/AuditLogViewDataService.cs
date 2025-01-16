@@ -14,6 +14,7 @@ namespace CityWatch.RadioCheck.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid, DateTime FromDate, DateTime ToDate);
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
@@ -92,6 +93,13 @@ namespace CityWatch.RadioCheck.Services
 
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+            return dailyGuardLogGroups.ToList();
+        }
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
             var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
             return dailyGuardLogGroups.ToList();

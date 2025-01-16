@@ -110,6 +110,7 @@ namespace CityWatch.Data.Providers
         List<TrainingTQNumbers> GetTQNumbers();
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
+
         public void SaveTrainingCourses(TrainingCourses trainingCourses);
         int GetLastTQNumber(int hrsettingsid);
         List<TrainingTestQuestionSettings> GetTQSettings(int hrSettingsId);
@@ -124,6 +125,13 @@ namespace CityWatch.Data.Providers
         List<TrainingTestFeedbackQuestionsAnswers> GetTrainingFeedbackQuestionsAnswers(int id);
         List<TrainingCourses> GetCourseDocuments();
         void DeleteCourseDocument(int id);
+
+        public List<KPITelematicsField> GetTelematicsList();
+        public KPITelematicsField GetTelematicsMobileNo(int Id);
+
+        public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
+
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -288,6 +296,74 @@ namespace CityWatch.Data.Providers
 
             return staffDocList;
         }
+
+
+
+        public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query)
+        {
+            // Retrieve documents of the specified type
+            var staffDocList = _context.StaffDocuments
+                .Where(x => x.DocumentType == type)
+                .ToList();
+
+            // For type 4, filter by ClientSiteName or FileName
+            if (type == 4 && !string.IsNullOrEmpty(query))
+            {
+                staffDocList = staffDocList
+                    .Where(x => x.FileName.Contains(query) ||
+                                (x.ClientSite.HasValue && _context.ClientSites
+                                    .Where(cs => cs.Id == x.ClientSite)
+                                    .Any(cs => cs.Name.Contains(query))))
+                    .ToList();
+            }
+            else if (!string.IsNullOrEmpty(query))
+            {
+                // For other types, filter by FileName only
+                staffDocList = staffDocList
+                    .Where(x => x.FileName.Contains(query))
+                    .ToList();
+            }
+
+            // Check if any of the documents have a ClientSite assigned
+            bool hasClientSite = staffDocList.Any(doc => doc.ClientSite.HasValue);
+
+            if (hasClientSite)
+            {
+                foreach (var doc in staffDocList)
+                {
+                    if (doc.ClientSite.HasValue)
+                    {
+                        // Fetch the ClientSite along with ClientType using Include
+                        var clientSite = _context.ClientSites
+                            .Where(x => x.Id == doc.ClientSite)
+                            .Include(x => x.ClientType)
+                            .FirstOrDefault();
+
+                        // Set the properties if ClientSite is found
+                        if (clientSite != null)
+                        {
+                            doc.ClientSiteName = clientSite.Name ?? "Unknown";
+                            doc.ClientTypeName = clientSite.ClientType?.Name ?? "Unknown";
+                        }
+                    }
+                }
+
+                // Sort the staff document list by ClientTypeName and ClientSiteName
+                staffDocList = staffDocList
+                    .OrderBy(x => x.ClientTypeName)
+                    .ThenBy(x => x.ClientSiteName)
+                    .ToList();
+            }
+            else
+            {
+                // If no ClientSite, just order by FileName
+                staffDocList = staffDocList.OrderBy(x => x.FileName).ToList();
+            }
+
+            return staffDocList;
+        }
+
+        
 
         public void SaveStaffDocument(StaffDocument staffdocument)
         {
@@ -1179,6 +1255,7 @@ namespace CityWatch.Data.Providers
             return sortedDocuments;
 
         }
+
         public void SaveTrainingCourses(TrainingCourses trainingCourses)
         {
             if (trainingCourses.Id == 0)
@@ -1352,5 +1429,20 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
     }
+
+        public List<KPITelematicsField> GetTelematicsList()
+        {
+            return _context.KPITelematicsField.ToList();
+        }
+        public KPITelematicsField GetTelematicsMobileNo(int Id)
+        {
+            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
+        }
+
+
+        }
+
+
+
   
 }

@@ -55,7 +55,7 @@
                     $('#liveGpsWrapper').html(ahrefElem);
                     $('#Report_DateLocation_ClientSiteLiveGps').val(data.clientSite.gps);
                     toggleClientGpsLink(true, data.clientSite.gps);
-                    
+
                     //p1 - 226 gps ir map issue - end
                     //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
                     //ulClients.html('');
@@ -266,7 +266,7 @@
         });
     });
 
-   
+
     $('#Report_DateLocation_ClientTypePosition').on('change', function () {
         $('#Report_DateLocation_ClientSitePosition').val('');
         //$('#Report_DateLocation_ClientAddress').val('');
@@ -318,7 +318,7 @@
     });
 
 
-   
+
 
     function domainSettings(value, record) {
 
@@ -363,7 +363,7 @@
     }
 
     function fetchUDomainDeatils(typeId) {
-       
+
         $.ajax({
             url: '/Admin/Settings?handler=DomainDetails',
             method: 'GET',
@@ -387,8 +387,8 @@
             }
         });
     }
-    
-   
+
+
     if (gridType) {
         gridType.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -474,8 +474,8 @@
             isClientTypeAdding = true;
             gridType.addRow({ 'id': -1, 'name': '' }).edit(-1);
 
-           
-           
+
+
         }
     });
 
@@ -560,11 +560,10 @@
             /*p1-245 jump button-end*/
         }
     });
-    if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined)
-        {
+    if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
 
-    gridSite.clear();
-    gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+        gridSite.clear();
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
     }
     function renderSiteTelematicsview(value, record, $cell, $displayEl) {
         //let $editBtn = $('<button id="btnEditClientSiteTelematicslink" class="btn btn-outline-primary mr-2" data-cs-typeid="' + record.typeId + '" data-cs-siteid="' + record.id + '" ><i class="fa fa-pencil">Edit</i></button>'
@@ -615,12 +614,12 @@
                 headers: { 'RequestVerificationToken': token },
             }).done(function (result) {
                 if (result.status == false) {
-                   alert(result.message);
+                    alert(result.message);
                 }
-                
-                    gridSite.clear();
-                    gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-                
+
+                gridSite.clear();
+                gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+
             }).fail(function () {
                 console.log('error');
             }).always(function () {
@@ -2213,7 +2212,7 @@
     });
 
 
-     /****** Feedback Template Settings *******/
+    /****** Feedback Template Settings *******/
     $('#sel_fbktpl').on('change', function () {
         const selfeedback = $(this).val();
         if (selfeedback === '') {
@@ -2228,7 +2227,7 @@
             $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
             $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
             $('#FeedbackTemplate_TextColor').val('#000000');
-            $('#FeedbackTemplate_SendtoRC').prop('checked',false);
+            $('#FeedbackTemplate_SendtoRC').prop('checked', false);
             $.ajax({
                 url: '/Admin/Settings?handler=FeedbackTemplate',
                 type: 'GET',
@@ -2238,7 +2237,7 @@
                 $('#FeedbackTemplate_Text').val(data.text);
                 $('#FeedbackTemplate_Type').val(data.type);
                 $('#FeedbackTemplate_BackgroundColour').val(data.backgroundColour);
-                $('#FeedbackTemplate_TextColor').val(data.textColor);             
+                $('#FeedbackTemplate_TextColor').val(data.textColor);
                 $('#FeedbackTemplate_SendtoRC').prop('checked', data.sendtoRC);
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
@@ -2482,7 +2481,13 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeCompanySop = $('#staff_document_files_type_CompanySop').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -2569,7 +2574,14 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTraining = $('#staff_document_files_type_Training').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
+
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         inlineEditing: { mode: 'command', managementColumn: false },
@@ -2656,7 +2668,12 @@
         $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         inlineEditing: { mode: 'command', managementColumn: false },
@@ -2702,6 +2719,8 @@
         });
 
     }
+
+
 
     function staffDocsButtonRenderer(value, record) {
         return '<label class="btn btn-success mb-0">' +
@@ -3591,6 +3610,7 @@
     }
     /*to add do's and donts -start*/
 
+
     let gridDosAndDontsFields;
     let isDosandDontsFieldAdding = false;
     gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
@@ -3600,7 +3620,7 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            
+
             { field: 'referenceNo', title: 'REF NO', width: 100, editor: true },
             { field: 'name', title: 'Name', width: 400, editor: true },
         ],
@@ -3613,6 +3633,25 @@
         gridDosAndDontsFields.clear();
         gridDosAndDontsFields.reload({ typeId: selKvlFieldTypeId });
     });
+    //p5 - Issue - 20 - Instructor - start
+    let gridTAFields;
+    let isTAFieldAdding = false;
+    gridTAFields = $('#tbl_ta_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=TrainingInstructorNameandPositionFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+
+            { field: 'name', title: 'Instructor Name', width: '100%', editor: true },
+            { field: 'position', title: 'Instructor Position', width: '100%', editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    //p5 - Issue - 20 - Instructor - end
     $('#add_dosanddonts_fields').on('click', function () {
         const selFieldTypeId = $('#doanddontfields_types').val();
         if (!selFieldTypeId) {
@@ -3633,6 +3672,28 @@
             }).edit(-1);
         }
     });
+    //p5 - Issue - 20 - Instructor - start
+    $('#add_ta_fields').on('click', function () {
+        const selFieldTypeId = $('#ta_field_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_ta_fields tr').length;
+
+
+        if (isTAFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isTAFieldAdding = true;
+            gridTAFields.addRow({
+                'id': -1,
+                'name': '',
+                'position': '',
+            }).edit(-1);
+        }
+    });
+    //p5 - Issue - 20 - Instructor - end
     if (gridDosAndDontsFields) {
         gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -3667,9 +3728,9 @@
                     //        delay: 0
                     //    }
                     //);
-                    
+
                     gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
-                    }
+                }
                 else {
                     alert(result.message);
                     //$.notify(result.message,
@@ -3683,7 +3744,7 @@
                     //    }
                     //);
                     gridDosAndDontsFields.edit(id);
-                
+
                 }
             }).fail(function () {
                 console.log('error');
@@ -3713,13 +3774,248 @@
         });
     }
     /*to add do's and donts -end*/
+    /*to add KPI Telematics -start*/
+
+    let gridKPITelematicsFields;
+    let isKPITelematicsFieldAdding = false;
+    gridKPITelematicsFields = $('#tbl_kpitelematics_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=KPITelematics',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+
+            { field: 'name', title: 'Name', width: 300, editor: true },
+            { field: 'mobile', title: 'Mobile', width: 150, editor: true },
+            { field: 'email', title: 'Email', width: 310, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '200px');
+           // $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    $('#KPITelematicsfields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#KPITelematicsfields_types').val();
+        gridKPITelematicsFields.clear();
+        gridKPITelematicsFields.reload({ typeId: selKvlFieldTypeId });
+    });
+
+    //$('#add_KPI_Telematics_fields').on('click', function () {
+    //    const selFieldTypeId = $('#KPITelematicsfields_types').val();
+    //    if (!selFieldTypeId) {
+    //        alert('Please select a field type to update');
+    //        return;
+    //    }
+    //    var rowCount = $('#tbl_kpitelematics_fields tr').length;
+
+
+    //    if (isKPITelematicsFieldAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isKvlFieldAdding = true;
+    //        gridKPITelematicsFields.addRow({
+    //            'id': -1,
+    //            'typeId': selFieldTypeId,
+    //            'name': '',
+    //        }).edit(-1);
+    //    }
+    //});
+
+    $('#add_KPI_Telematics_fields').on('click', function () {
+        const selFieldTypeId = $('#KPITelematicsfields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_kpitelematics_fields tr').length;
+
+
+        if (isKPITelematicsFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridKPITelematicsFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+    if (gridKPITelematicsFields) {
+        gridKPITelematicsFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const mobileRegex = /^\d{10}$/; // Example for a 10-digit number
+
+            let isValid = true;
+            let errorMessage = "";
+
+            if (!emailRegex.test(data.email)) {
+                isValid = false;
+                errorMessage += "Invalid email format.\n";
+            }
+
+
+            if (!isValid) {
+                alert(errorMessage);
+                return; // Stop further execution
+            }
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveKPITelematics',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+
+                    gridKPITelematicsFields.reload({ typeId: $('#KPITelematicsfields_types').val() });
+                }
+                else {
+                    alert(result.message);
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+                    gridKPITelematicsFields.edit(id);
+
+
+                }
+
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isKPITelematicsFieldAdding)
+                    isKPITelematicsFieldAdding = false;
+            });
+        });
+
+        gridKPITelematicsFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteKPITelematics',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridKPITelematicsFields.reload({ typeId: $('#KPITelematicsfields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKPITelematicsFieldAdding)
+                        isKPITelematicsFieldAdding = false;
+                });
+            }
+        });
+
+    }
+
+    //p5 - Issue - 20 - Instructor - start
+    if (gridTAFields) {
+        gridTAFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            if (data.name == '' || data.name == null) {
+                $.notify('Instructor Name should not be empty. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridTAFields.edit(id);
+                return;
+            }
+            if (data.position == '' || data.position == null) {
+                $.notify('Instructor Position should not be empty. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridTAFields.edit(id);
+                return;
+            }
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveTrainingInstructorNameandPositionFields',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+
+                    gridTAFields.clear();
+                    gridTAFields.reload();
+                }
+                else {
+                    alert(result.message);
+
+                    gridTAFields.edit(id);
+
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isTAFieldAdding)
+                    isTAFieldAdding = false;
+            });
+        });
+
+        gridTAFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteTrainingInstructorNameandPositionFields',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) { gridTAFields.clear(); gridTAFields.reload(); }
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isTAFieldAdding)
+                        isTAFieldAdding = false;
+                });
+            }
+        });
+    }
+    //p5 - Issue - 20 - Instructor - end
     if ($('#report_module_types').val() == '') {
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
         $('#kvl_fields_types').hide();
 
         $('#lblFieldType').hide();
+        $('#KPITelematicsfields_types').hide();
 
+        $('#add_KPI_Telematics_fields').hide();
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
@@ -3728,6 +4024,14 @@
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
         gridAreaReportFields.hide();
+        gridKPITelematicsFields.hide();
+        /*p5-Issue-20-Instructor-start*/
+        gridTAFields.hide();
+        $('#ta_field_types').hide();
+        $('#add_ta_fields').hide();
+
+        //p5 - Issue - 20 - Instructor - end
+
     }
 
     $('#report_module_types').on('change', function () {
@@ -3737,9 +4041,9 @@
             $('#doanddontfields_types').show();
             $('#report_field_types').hide();
             $('#kvl_fields_types').hide();
-
+            $('#KPITelematicsfields_types').hide();
             $('#lblFieldType').show();
-
+            $('#add_KPI_Telematics_fields').hide();
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').show();
             $('#add_kvl_fields').hide();
@@ -3749,9 +4053,16 @@
             gridKvlFields.hide();
             gridAreaReportFields.hide();
             gridDosAndDontsFields.show();
-
+            gridKPITelematicsFields.hide();
             $('#doanddontfields_types').val('');
             gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
         else if ($('#report_module_types').val() == 2) {
             $('#fieldSettings').show();
@@ -3761,7 +4072,8 @@
             $('#kvl_fields_types').show();
 
             $('#lblFieldType').show();
-
+            $('#KPITelematicsfields_types').hide();
+            $('#add_KPI_Telematics_fields').hide();
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();
             $('#add_kvl_fields').show();
@@ -3773,6 +4085,13 @@
             gridAreaReportFields.hide();
             gridKvlFields.show();
             gridDosAndDontsFields.hide();
+            gridKPITelematicsFields.hide();
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
         else if ($('#report_module_types').val() == 3) {
             $('#fieldSettings').hide();
@@ -3781,7 +4100,8 @@
             $('#kvl_fields_types').hide();
 
             $('#lblFieldType').show();
-
+            $('#KPITelematicsfields_types').hide();
+            $('#add_KPI_Telematics_fields').hide();
             $('#add_field_settings').show();
             $('#add_dosanddonts_fields').hide();
             $('#add_kvl_fields').hide();
@@ -3790,9 +4110,80 @@
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
             gridAreaReportFields.hide();
+            gridKPITelematicsFields.hide();
+            
 
             $('#report_field_types').val('');
             gridReportFields.reload({ typeId: $('#report_field_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+        }
+        else if ($('#report_module_types').val() == 5) {
+            $('#fieldSettings').show();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+            $('#KPITelematicsfields_types').show();
+            $('#add_KPI_Telematics_fields').show();
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+            gridKPITelematicsFields.show();
+
+
+            $('#report_field_types').val('');
+            gridReportFields.reload({ typeId: $('#report_field_types').val() });
+
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+        }
+        else if ($('#report_module_types').val() == 4) {
+            $('#fieldSettings').hide();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+            $('#KPITelematicsfields_types').hide();
+            $('#add_KPI_Telematics_fields').hide();
+
+
+            gridTAFields.hide();
+            $('#ta_field_types').show();
+            $('#add_ta_fields').show();
+            $('#ta_field_types').val('');
+            // gridTAFields.reload();
+
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+            gridKPITelematicsFields.hide();           
+            $('#report_field_types').val('');
+            $('#ta_field_types').show();
+            $('#add_ta_fields').show();
+            gridTAFields.show();
+            gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+
         }
 
         else {
@@ -3800,7 +4191,7 @@
             $('#doanddontfields_types').hide();
             $('#report_field_types').hide();
             $('#kvl_fields_types').hide();
-
+            $('#KPITelematicsfields_types').hide();
             $('#lblFieldType').hide();
 
             $('#add_field_settings').hide();
@@ -3811,10 +4202,42 @@
             gridReportFields.hide();
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
+            gridKPITelematicsFields.hide();         
+            /*p5-Issue-20-Instructor-start*/
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            /*p5-Issue-20-Instructor-end*/
+
         }
     });
     /*p1 - 196 Rationalization Of Menu Changes - end*/
+    //p5 - Issue - 20 - Instructor - start
+    $('#ta_field_types').on('change', function () {
+        const selFieldTypeId = $(this).val();
 
+        if (!selFieldTypeId) { // None
+            $('#fieldSettings').hide();
+            $('#positionSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
+            $('#irNotes').hide();
+
+            gridTAFields.clear();
+
+            gridTAFields.hide();
+
+        } else { // Instructor name and Position
+            $('#fieldSettings').show();
+
+
+            gridTAFields.clear();
+            gridTAFields.show();
+            gridTAFields.reload();
+        }
+
+
+    });
+    //p5 - Issue - 20 - Instructor - end
 
 
 
@@ -3824,7 +4247,13 @@
 
 
     gridSchedules = $('#staff_document_siteSOP').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+            data: function () {
+                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -3841,6 +4270,17 @@
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+
+    // Search functionality
+    $('#searchBoxTempAndForms').on('input', function () {
+        const query = $(this).val(); // Get the search query
+        gridStaffDocsTypeTemplatesAndForms.reload({ query: query }); // Pass the updated query to reload
+        gridSchedules.reload({ query: query });
+        gridStaffDocsTypeCompanySop.reload({ query: query });
+        gridStaffDocsTypeTraining.reload({ query: query });
+
+
+    });
     //if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
 
     //    //keyVehicleLog.search(item).draw();
@@ -3851,7 +4291,7 @@
     //    $("#staff_document_siteSOP tbody tr").filter(function () {
     //        $(this).toggle(value)
     //    });
-        //gridSchedules.reload({ clientTypeName: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+    //gridSchedules.reload({ clientTypeName: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
     //}
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
@@ -4300,16 +4740,16 @@ gridHrSettings = $('#tbl_hr_settings').grid({
 
 function hrgroupLockButtonRenderer(value, record) {
     if (record.hrlock) {
-       // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
+        // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
         return '<div class="text-center">' +
             '<a id="btnLock"    data-doc-id="' + record.id + '" data-lock-status=1 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
-        '</div>'
+            '</div>'
     }
     else {
 
         //return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></button>'
-       return '<div class="text-center">' +
-           '<a id="btnLock"   data-doc-id="' + record.id + '" data-lock-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
+        return '<div class="text-center">' +
+            '<a id="btnLock"   data-doc-id="' + record.id + '" data-lock-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
             '</div>'
     }
 }
@@ -4327,7 +4767,7 @@ let isLoteAdding = false
 //        toggleUserStatus($(this).attr('data-user-id'), true);
 //    }
 //});
-let  ucaTreeLock;
+let ucaTreeLock;
 $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
     $('#lockHRRcord').prop('checked', false);
     const userId = $(this).attr('data-doc-id');
@@ -4339,7 +4779,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
     else {
         $('#lockHRRcord').prop('checked', false);
     }
-    
+
     if (ucaTreeLock === undefined) {
 
 
@@ -4373,7 +4813,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
             checkedField: 'checked'
         });
     }
-   
+
     ucaTreeLock.uncheckAll();
     ucaTreeLock.reload({ hrSttingsId: userId });
     $('#loader').show();
@@ -4455,9 +4895,9 @@ $('#btnSaveUserAccesslock').on('click', function () {
         const userId = $('#user-access-for-idlock').val();
         if ($('#lockHRRcord').is(':checked')) {
             enableStatus = 1;
-           
+
         }
-       
+
         let selectedSites = ucaTreeLock.getCheckedNodes().filter(function (item) {
             return item !== 'undefined';
         });
@@ -4711,7 +5151,7 @@ $('#hr_settings_fields_types').on('change', function () {
         });
     }
     else if ($('#hr_settings_fields_types').val() == 6) {
-       
+
         gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
@@ -4736,6 +5176,10 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#clientSOP').hide();
 
 }
+
+$('#searchBoxTempAndForms').hide();
+$('#btnGroupAddon2').hide();
+
 $('#report_module_types_irtemplate').on('change', function () {
     const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
     if ($('#report_module_types_irtemplate').val() == 1) {
@@ -4745,6 +5189,9 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').hide();
+        $('#btnGroupAddon2').hide();
+
     }
 
     else if ($('#report_module_types_irtemplate').val() == 2) {
@@ -4753,6 +5200,9 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
+
     }
     else if ($('#report_module_types_irtemplate').val() == 3) {
         $('#incident_report_pdf_template').hide();
@@ -4760,6 +5210,8 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').show();
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
     }
     else if ($('#report_module_types_irtemplate').val() == 4) {
         $('#incident_report_pdf_template').hide();
@@ -4767,6 +5219,8 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').show();
         $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
 
     }
 
@@ -4776,12 +5230,15 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#training').hide();
         $('#templatesandforms').hide();
         $('#clientSOP').show();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
 
 
     }
 
     else {
-
+        $('#searchBoxTempAndForms').hide();
+        $('#btnGroupAddon2').hide();
     }
 });
 $('#clientTypeNameDoc').multiselect({
@@ -5459,7 +5916,7 @@ $('#HrState').multiselect({
 //p1-213 document step L end
 
 $("#btnDownloadClientSiteExcel").click(async function () {
-   
+
     const currentDateTime = new Date().toISOString().split('T')[0];
     const fileName = `ClientSites - ${currentDateTime}.xlsx`;
 
@@ -5512,7 +5969,8 @@ $("#btnDownloadClientSiteExcel").click(async function () {
             'State',
             'GPS',
             'Billing',
-            'Status'
+            'Status',
+            'Account Manager'
         ];
 
         // Dynamically add SmartWand and SIMProvider headers
@@ -5522,7 +5980,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         }
 
         const headers = [...baseHeaders, ...smartWandHeaders];
-        const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25,25]; // Example widths
+        const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 25]; // Example widths
 
 
 
@@ -5561,7 +6019,8 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                     clientSite.billing || '',
                     clientSite.status === 0 ? 'Ongoing' :
                         clientSite.status === 1 ? 'Expiring' :
-                            clientSite.status === 2 ? 'Expired' : ''
+                            clientSite.status === 2 ? 'Expired' : '',
+                    clientSite.accountManager
                 ];
 
                 // Add SmartWand and SIMProvider data dynamically

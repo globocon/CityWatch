@@ -32,12 +32,14 @@ namespace CityWatch.Web.Services
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly Settings _settings;
         private readonly string _downloadsFolderPath;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
 
         public GuardLogZipGenerator(IClientDataProvider clientDataProvider,
             IGuardLogReportGenerator guardLogReportGenerator,
             IKeyVehicleLogReportGenerator keyVehicleLogReportGenerator,
             IDropboxService dropboxService,
             IWebHostEnvironment webHostEnvironment,
+             IGuardLogDataProvider guardLogDataProvider,
             IOptions<Settings> settings)
         {
             _clientDataProvider = clientDataProvider;
@@ -45,6 +47,7 @@ namespace CityWatch.Web.Services
             _keyVehicleLogReportGenerator = keyVehicleLogReportGenerator;
             _dropboxService = dropboxService;
             _webHostEnvironment = webHostEnvironment;
+            _guardLogDataProvider = guardLogDataProvider;
             _settings = settings.Value;
             _downloadsFolderPath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
         }
@@ -238,41 +241,47 @@ namespace CityWatch.Web.Services
             var zipFolderPath = GetZipFolderPath();
             var fileNamePart = string.Empty;
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds).Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
-            if (!clientSiteKpiSettings.Any())
-            {
-                //return string.Empty;
-                /* No DropboxImagesDir set for these sites 06102023*/
-                var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
-                fileNamePart = clientSiteDetails[0].Name;
-                foreach (var clientSiteDetail in clientSiteDetails)
-                {
-                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteDetail.Id, logBookType, logFromDate, logToDate);
-                    //if (!clientSiteLogBooks.Any())
-                    //    continue;
-                    //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
-                }
-            }
-            else
-            {
-                /* DropboxImagesDir set for these sites*/
-                fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
-                foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
-                {
-                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
-                    //if (!clientSiteLogBooks.Any())
-                    //    continue;
-                    //if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
-                    //{
-                    //    await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
-                    //}
+            //Old Code Start
+            //if (!clientSiteKpiSettings.Any())
+            //{
+            //    //return string.Empty;
+            //    /* No DropboxImagesDir set for these sites 06102023*/
+            //    var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
+            //    fileNamePart = clientSiteDetails[0].Name;
+            //    foreach (var clientSiteDetail in clientSiteDetails)
+            //    {
+            //        var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteDetail.Id, logBookType, logFromDate, logToDate);
+            //        //if (!clientSiteLogBooks.Any())
+            //        //    continue;
+            //        //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
+            //        CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
+            //    }
+            //}
+            //else
+            //{
+            //    /* DropboxImagesDir set for these sites*/
+            //    fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
+            //    foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+            //    {
+            //        var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
+            //        //if (!clientSiteLogBooks.Any())
+            //        //    continue;
+            //        //if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
+            //        //{
+            //        //    await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
+            //        //}
 
-                    //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
-                }
+            //        //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
+            //        CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
+            //    }
 
-            }
-
+            //}
+            //Old Code end
+            var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
+            fileNamePart = clientSiteDetails[0].Name;
+            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false);
+            CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
+           
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);
         }
 
