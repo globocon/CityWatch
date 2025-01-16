@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -1940,6 +1941,255 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetTQNumbers()
         {
             return new JsonResult(_configDataProvider.GetTQNumbers());
+        }
+
+        public JsonResult OnPostUploadCourseDocUsingHR()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+                        var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
+                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
+                        if (!Directory.Exists(CourseDocsFolder))
+                            Directory.CreateDirectory(CourseDocsFolder);
+                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+                            throw new ArgumentException("File Already Exists");
+                        using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
+                        if (TQNumbernew == 0)
+                        {
+                            int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
+                            if (TQNumber == 0)
+                            {
+                                throw new ArgumentException("TQ Number only contains from 01 to 10");
+                            }
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = documentId,
+                                FileName = file.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+                                TQNumberId = TQNumber
+
+                            });
+                        }
+                        else
+                        {
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = documentId,
+                                FileName = file.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+                                TQNumberId = TQNumbernew
+
+                            });
+                        }
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteCourseDocUsingHR(int id,string hrreferenceNumber)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var document = _configDataProvider.GetCourseDocuments().SingleOrDefault(x => x.Id == id);
+                if (document != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber,"Course", document.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    _configDataProvider.DeleteCourseDocument(id);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostSaveTQSettings(TrainingTestQuestionSettings record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if(record.CertificateExpiryId==0)
+                {
+                    record.CertificateExpiryId = null;
+                }
+                _guardLogDataProvider.SaveTestQuestionSettings(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetTQSettings(int hrSettingsid)
+        {
+            return new JsonResult(_configDataProvider.GetTQSettings(hrSettingsid));
+        }
+        public JsonResult OnPostSaveTQAnswers(TrainingTestQuestions testquestions, List<TrainingTestQuestionsAnswers> testquestionanswers)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                
+               int id= _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if(id!=0)
+                {
+                    foreach(var item in testquestionanswers)
+                    {
+                        item.TrainingTestQuestionsId = id;
+                    }
+                    _guardLogDataProvider.SaveTestQuestionsAnswers(id, testquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId,int tqNumberId)
+        {
+            return new JsonResult(_configDataProvider.GetNextQuestionWithinSameTQNumber(hrSettingsId, tqNumberId));
+        }
+        public JsonResult OnGetQuestionsCount(int hrSettingsId, int tqNumberId)
+        {
+            return new JsonResult(_configDataProvider.GetQuestionsCount(hrSettingsId, tqNumberId));
+        }
+        public JsonResult OnGetLastTQNumber(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetLastTQNumberFromQuestions(hrSettingsId));
+        }
+        public IActionResult OnGetQuestionWithQuestionNumber(int hrSettingsId, int tqNumberId, int questionumberId)
+        {
+            var Questions = _configDataProvider.GetTrainingQuestions(hrSettingsId, tqNumberId, questionumberId);
+
+
+            return new JsonResult(Questions);
+        }
+        public IActionResult OnGetQuestionAndAnswersWithQuestionNumber(int questionId)
+        {
+            var Answers = _configDataProvider.GetTrainingQuestionsAnswers(questionId);
+            
+            return new JsonResult(Answers);
+        }
+
+        public JsonResult OnGetLastFeedbackQNumber(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetLastFeedbackQNumbers(hrSettingsId));
+        }
+        public JsonResult OnGetFeedbackQuestionsCount(int hrSettingsId)
+        {
+            return new JsonResult(_configDataProvider.GetFeedbackQuestionsCount(hrSettingsId));
+        }
+        public JsonResult OnPostSaveFeedbackQAnswers(TrainingTestFeedbackQuestions feedbackquestions, List<TrainingTestFeedbackQuestionsAnswers> feedbackquestionanswers)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                int id = _guardLogDataProvider.SaveFeedbackQuestions(feedbackquestions);
+                if (id != 0)
+                {
+                    foreach (var item in feedbackquestionanswers)
+                    {
+                        item.TrainingTestFeedbackQuestionsId = id;
+                    }
+                    _guardLogDataProvider.SaveFeedbackQuestionsAnswers(id, feedbackquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public IActionResult OnGetFeedbackQuestionWithQuestionNumber(int hrSettingsId, int questionumberId)
+        {
+            var Questions = _configDataProvider.GetFeedbackQuestions(hrSettingsId, questionumberId);
+
+
+            return new JsonResult(Questions);
+        }
+        public IActionResult OnGetFeedbackQuestionAndAnswersWithQuestionNumber(int questionId)
+        {
+            var Answers = _configDataProvider.GetTrainingFeedbackQuestionsAnswers(questionId);
+
+            return new JsonResult(Answers);
+        }
+        public JsonResult OnPostUpdateDocumentTQNumber(int id,string name,TrainingCourses record)
+        {
+            var success = false;
+            var message = "Updated successfully";
+            
+                    try
+                    {
+
+                int TQNumbernew = _configDataProvider.GetTQNumbers().Where(x => x.Name == name).FirstOrDefault().Id;
+                        if (TQNumbernew != 0)
+                        {
+                            
+                            
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = record.Id,
+                                FileName = record.FileName,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = record.HRSettingsId,
+                                TQNumberId = TQNumbernew
+
+                            });
+                    success = true;
+                         }
+                       
+
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                
+            return new JsonResult(new { success, message });
         }
 
     }

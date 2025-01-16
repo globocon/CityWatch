@@ -110,10 +110,27 @@ namespace CityWatch.Data.Providers
         List<TrainingTQNumbers> GetTQNumbers();
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
+
+        public void SaveTrainingCourses(TrainingCourses trainingCourses);
+        int GetLastTQNumber(int hrsettingsid);
+        List<TrainingTestQuestionSettings> GetTQSettings(int hrSettingsId);
+        int GetNextQuestionWithinSameTQNumber(int hrsettingsid, int tqNumberId);
+        int GetQuestionsCount(int hrsettingsid, int tqNumberId);
+        int GetLastTQNumberFromQuestions(int hrsettingsid);
+        TrainingTestQuestions GetTrainingQuestions(int hrsettingsid, int tqNumberId, int questionumberId);
+        List<TrainingTestQuestionsAnswers> GetTrainingQuestionsAnswers(int id);
+        int GetLastFeedbackQNumbers(int hrsettingsid);
+        TrainingTestFeedbackQuestions GetFeedbackQuestions(int hrsettingsid, int questionumberId);
+        int GetFeedbackQuestionsCount(int hrsettingsid);
+        List<TrainingTestFeedbackQuestionsAnswers> GetTrainingFeedbackQuestionsAnswers(int id);
+        List<TrainingCourses> GetCourseDocuments();
+        void DeleteCourseDocument(int id);
+
         public List<KPITelematicsField> GetTelematicsList();
         public KPITelematicsField GetTelematicsMobileNo(int Id);
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
+
 
     }
 
@@ -1183,6 +1200,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourses
+                .Include(x=>x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
 
@@ -1237,6 +1255,181 @@ namespace CityWatch.Data.Providers
             return sortedDocuments;
 
         }
+
+        public void SaveTrainingCourses(TrainingCourses trainingCourses)
+        {
+            if (trainingCourses.Id == 0)
+            {
+                _context.TrainingCourses.Add(trainingCourses);
+            }
+            else
+            {
+                var documentToUpdate = _context.TrainingCourses.SingleOrDefault(x => x.Id == trainingCourses.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.FileName = trainingCourses.FileName;
+                    documentToUpdate.LastUpdated = trainingCourses.LastUpdated;
+                    documentToUpdate.TQNumberId = trainingCourses.TQNumberId;
+                    documentToUpdate.HRSettingsId = trainingCourses.HRSettingsId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public int GetLastTQNumber(int hrsettingsid)
+        {
+            int LastTQNumber = 0;
+            
+            var result=_context.TrainingCourses.Where(x=>x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+           if(result.Count==0)
+            {
+                LastTQNumber = _context.TrainingTQNumbers.FirstOrDefault().Id;
+            }
+            if (result.Count > 0)
+            {
+                int[] tqnumbers = result.Select(x => x.TQNumberId).ToArray();
+                LastTQNumber=_context.TrainingTQNumbers.Where(x=>!tqnumbers.Contains(x.Id)).FirstOrDefault().Id;
+            }
+            return LastTQNumber;
+
+        }
+        public List<TrainingTestQuestionSettings> GetTQSettings(int hrSettingsId)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingTestQuestionSettings
+                .Include(x => x.CourseDuration)
+                .Include(x=>x.TestDuration)
+                .Include(x => x.PassMark)
+                .Include(x => x.Attempts)
+                .Include(x => x.CertificateExpiryYears)
+                
+                .Where(x => x.HRSettingsId == hrSettingsId)
+                .ToList();
+
+
+            return courseDocList;
+        }
+        public int GetNextQuestionWithinSameTQNumber(int hrsettingsid,int tqNumberId)
+        {
+            int LastTQuestionNumber = 0;
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId==tqNumberId).OrderBy(x => x.Id).ToList();
+            if (result.Count == 0)
+            {
+                LastTQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
+            }
+            if (result.Count > 0)
+            {
+                int[] questionnumbers = result.Select(x => x.QuestionNoId).ToArray();
+                LastTQuestionNumber = _context.TrainingTestQuestionNumbers.Where(x => !questionnumbers.Contains(x.Id)).FirstOrDefault().Id;
+            }
+            return LastTQuestionNumber;
+
+        }
+        public int GetQuestionsCount(int hrsettingsid, int tqNumberId)
+        {
+           
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            
+            
+            return result.Count;
+
+        }
+        public int GetLastTQNumberFromQuestions(int hrsettingsid)
+        {
+
+
+            int LastTQNumber = 0;
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            LastTQNumber = result.LastOrDefault().TQNumberId;
+            return LastTQNumber;
+
+        }
+        public TrainingTestQuestions GetTrainingQuestions(int hrsettingsid,int tqNumberId,int questionumberId)
+        {
+
+
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId==tqNumberId && x.QuestionNoId==questionumberId).OrderBy(x => x.Id).FirstOrDefault();
+            
+            return result;
+
+        }
+        public List<TrainingTestQuestionsAnswers> GetTrainingQuestionsAnswers(int id)
+        {
+
+
+
+            var result = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == id).OrderBy(x => x.Id).ToList();
+
+            return result;
+
+        }
+        public int GetLastFeedbackQNumbers(int hrsettingsid)
+        {
+
+            int LastFeedbackQuestionNumber = 0;
+
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+            if (result.Count == 0)
+            {
+                LastFeedbackQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
+            }
+            if (result.Count > 0)
+            {
+                int[] questionnumbers = result.Select(x => x.QuestionNoId).ToArray();
+                LastFeedbackQuestionNumber = _context.TrainingTestQuestionNumbers.Where(x => !questionnumbers.Contains(x.Id)).FirstOrDefault().Id;
+            }
+            return LastFeedbackQuestionNumber;
+
+
+        }
+        public int GetFeedbackQuestionsCount(int hrsettingsid)
+        {
+
+
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+
+
+            return result.Count;
+
+        }
+        public TrainingTestFeedbackQuestions GetFeedbackQuestions(int hrsettingsid, int questionumberId)
+        {
+
+
+
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.QuestionNoId == questionumberId).OrderBy(x => x.Id).FirstOrDefault();
+
+            return result;
+
+        }
+        public List<TrainingTestFeedbackQuestionsAnswers> GetTrainingFeedbackQuestionsAnswers(int id)
+        {
+
+
+
+            var result = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == id).OrderBy(x => x.Id).ToList();
+
+            return result;
+
+        }
+        public List<TrainingCourses> GetCourseDocuments()
+        {
+            return _context.TrainingCourses.OrderBy(x => x.FileName).ToList();
+        }
+        public void DeleteCourseDocument(int id)
+        {
+            var docToDelete = _context.TrainingCourses.SingleOrDefault(x => x.Id == id);
+            if (docToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.TrainingCourses.Remove(docToDelete);
+            _context.SaveChanges();
+        }
+    }
+
         public List<KPITelematicsField> GetTelematicsList()
         {
             return _context.KPITelematicsField.ToList();
@@ -1248,6 +1441,7 @@ namespace CityWatch.Data.Providers
 
 
         }
+
 
 
   

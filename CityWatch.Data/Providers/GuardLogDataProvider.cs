@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml.Linq;
+using static Dropbox.Api.Files.SearchMatchType;
 using static Dropbox.Api.Files.WriteMode;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
@@ -329,6 +330,13 @@ namespace CityWatch.Data.Providers
         List<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History(int clientSiteId, DateTime date);
 
         public void TwoHourNoActivityNotificationForGuard();
+        void SaveTestQuestionSettings(TrainingTestQuestionSettings testQuestionSettings);
+        int SaveTestQuestions(TrainingTestQuestions trainingQuestions);
+        void SaveTestQuestionsAnswers(int testQuestionId, List<TrainingTestQuestionsAnswers> trainingAnswers);
+        void DeleteTestQuestionAnswers(int questionId);
+        int SaveFeedbackQuestions(TrainingTestFeedbackQuestions feedbackQuestions);
+        void SaveFeedbackQuestionsAnswers(int feedbackQuestionId, List<TrainingTestFeedbackQuestionsAnswers> feedbackAnswers);
+        void DeleteFeedbackQuestionAnswers(int questionId);
 
         public List<KPITelematicsField> GetKPITelemarics(int type);
         public void SaveKPITelematics(KPITelematicsField kpitelematics);
@@ -5922,6 +5930,29 @@ namespace CityWatch.Data.Providers
                 LogBookEntryFromRcControlRoomMessages(0, 0, subject, ClientSiteName, IrEntryType.Notification, 1, 0, guardLog);
             }
         }
+        public void SaveTestQuestionSettings(TrainingTestQuestionSettings testQuestionSettings)
+        {
+            if (testQuestionSettings.Id == -1)
+            {
+                testQuestionSettings.Id = 0;
+                _context.TrainingTestQuestionSettings.Add(testQuestionSettings);
+            }
+            else
+            {
+                var testQuestionSettingsToUpdate = _context.TrainingTestQuestionSettings.SingleOrDefault(x => x.Id == testQuestionSettings.Id);
+                if (testQuestionSettingsToUpdate != null)
+                {
+                    testQuestionSettingsToUpdate.Id = testQuestionSettings.Id;
+                    testQuestionSettingsToUpdate.IsDeleted = testQuestionSettings.IsDeleted;
+                    testQuestionSettingsToUpdate.TestDurationId = testQuestionSettings.TestDurationId;
+                    testQuestionSettingsToUpdate.PassMarkId = testQuestionSettings.PassMarkId;
+                    testQuestionSettingsToUpdate.AttemptsId = testQuestionSettings.AttemptsId;
+                    testQuestionSettingsToUpdate.CertificateExpiryId = testQuestionSettings.CertificateExpiryId;
+                    testQuestionSettingsToUpdate.HRSettingsId = testQuestionSettings.HRSettingsId;
+                    testQuestionSettingsToUpdate.IsCertificateExpiry = testQuestionSettings.IsCertificateExpiry;
+                    testQuestionSettingsToUpdate.IsCertificateWithQAndADump = testQuestionSettings.IsCertificateWithQAndADump;
+                    testQuestionSettingsToUpdate.IsCertificateHoldUntilPracticalTaken = testQuestionSettings.IsCertificateHoldUntilPracticalTaken;
+                    testQuestionSettingsToUpdate.IsAnonymousFeedback = testQuestionSettings.IsAnonymousFeedback;
 
         //p5-Issue-20-Instructor-start
         public List<TrainingInstructor> GetTrainingInstructorNameandPositionFields()
@@ -5963,4 +5994,125 @@ namespace CityWatch.Data.Providers
         }
         //p5-Issue-20-Instructor-end
     }
+            }
+            _context.SaveChanges();
+        }
+        public int SaveTestQuestions(TrainingTestQuestions trainingQuestions)
+        {
+           
+            if (trainingQuestions.Id==-1)
+            {
+                trainingQuestions.Id = 0;
+               
+                _context.TrainingTestQuestions.Add(trainingQuestions);
+            }
+            else
+            {
+                var updateTestQuestion = _context.TrainingTestQuestions.SingleOrDefault(x => x.Id == trainingQuestions.Id);
+                updateTestQuestion.QuestionNoId = trainingQuestions.QuestionNoId;
+                updateTestQuestion.TQNumberId = trainingQuestions.TQNumberId;
+                updateTestQuestion.Question = trainingQuestions.Question;
+                updateTestQuestion.IsDeleted = trainingQuestions.IsDeleted;
+                
+            }
+
+            _context.SaveChanges();
+
+           
+
+
+            return trainingQuestions.Id;
+        }
+        public void SaveTestQuestionsAnswers(int testQuestionId,List<TrainingTestQuestionsAnswers> trainingAnswers)
+        {
+
+            var getTestQuestionAnsweres = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == testQuestionId).ToList();
+            if (getTestQuestionAnsweres.Count() > 0)
+            {
+                DeleteTestQuestionAnswers(testQuestionId);
+            }
+            TrainingTestQuestionsAnswers trainingAnswersDetails = new TrainingTestQuestionsAnswers();
+            foreach (var item in trainingAnswers)
+            {
+                trainingAnswersDetails.Id = 0;
+                trainingAnswersDetails.TrainingTestQuestionsId = item.TrainingTestQuestionsId;
+                trainingAnswersDetails.IsAnswer = item.IsAnswer;
+                trainingAnswersDetails.Options = item.Options;
+                trainingAnswersDetails.IsDeleted = false;
+                _context.TrainingTestQuestionsAnswers.Add(trainingAnswersDetails);
+                _context.SaveChanges();
+            }
+
+        }
+        public void DeleteTestQuestionAnswers(int questionId)
+        {
+            var guardLotesToDelete = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId).ToList();
+            if (guardLotesToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in guardLotesToDelete)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
+        }
+         
+        
+        public int SaveFeedbackQuestions(TrainingTestFeedbackQuestions feedbackQuestions)
+        {
+
+            if (feedbackQuestions.Id == -1)
+            {
+                feedbackQuestions.Id = 0;
+
+                _context.TrainingTestFeedbackQuestions.Add(feedbackQuestions);
+            }
+            else
+            {
+                var updateFeedbackQuestion = _context.TrainingTestFeedbackQuestions.SingleOrDefault(x => x.Id == feedbackQuestions.Id);
+                updateFeedbackQuestion.QuestionNoId = feedbackQuestions.QuestionNoId;
+                updateFeedbackQuestion.Question = feedbackQuestions.Question;
+                updateFeedbackQuestion.IsDeleted = feedbackQuestions.IsDeleted;
+
+            }
+
+            _context.SaveChanges();
+
+
+
+
+            return feedbackQuestions.Id;
+        }
+        public void SaveFeedbackQuestionsAnswers(int feedbackQuestionId, List<TrainingTestFeedbackQuestionsAnswers> feedbackAnswers)
+        {
+
+            var getFeedbackQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId).ToList();
+            if (getFeedbackQuestionAnsweres.Count() > 0)
+            {
+                DeleteFeedbackQuestionAnswers(feedbackQuestionId);
+            }
+            TrainingTestFeedbackQuestionsAnswers feedbackAnswersDetails = new TrainingTestFeedbackQuestionsAnswers();
+            foreach (var item in feedbackAnswers)
+            {
+                feedbackAnswersDetails.Id = 0;
+                feedbackAnswersDetails.TrainingTestFeedbackQuestionsId = item.TrainingTestFeedbackQuestionsId;
+                feedbackAnswersDetails.Options = item.Options;
+                feedbackAnswersDetails.IsDeleted = false;
+                _context.TrainingTestFeedbackQuestionsAnswers.Add(feedbackAnswersDetails);
+                _context.SaveChanges();
+            }
+
+        }
+        public void DeleteFeedbackQuestionAnswers(int questionId)
+        {
+            var guardLotesToDelete = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == questionId).ToList();
+            if (guardLotesToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in guardLotesToDelete)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
+        }
+    }
+   
 }
