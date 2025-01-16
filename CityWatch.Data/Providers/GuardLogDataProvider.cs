@@ -5954,6 +5954,11 @@ namespace CityWatch.Data.Providers
                     testQuestionSettingsToUpdate.IsCertificateHoldUntilPracticalTaken = testQuestionSettings.IsCertificateHoldUntilPracticalTaken;
                     testQuestionSettingsToUpdate.IsAnonymousFeedback = testQuestionSettings.IsAnonymousFeedback;
 
+        
+    }
+            }
+            _context.SaveChanges();
+        }
         //p5-Issue-20-Instructor-start
         public List<TrainingInstructor> GetTrainingInstructorNameandPositionFields()
         {
@@ -5993,10 +5998,6 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //p5-Issue-20-Instructor-end
-    }
-            }
-            _context.SaveChanges();
-        }
         public int SaveTestQuestions(TrainingTestQuestions trainingQuestions)
         {
            

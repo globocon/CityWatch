@@ -1428,7 +1428,7 @@ namespace CityWatch.Data.Providers
             _context.TrainingCourses.Remove(docToDelete);
             _context.SaveChanges();
         }
-    }
+   
 
         public List<KPITelematicsField> GetTelematicsList()
         {
