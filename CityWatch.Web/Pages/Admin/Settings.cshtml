@@ -3861,6 +3861,12 @@
                             <li class="nav-item">
                                 <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
                             </li>
+                             @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" id="trainingAndAssessment-tab" data-toggle="tab" href="#guardTrainingAndAssessment" role="tab" aria-controls="guardTrainingAndAssessment" aria-selected="true">Training & Assessment</a>
+                                </li>
+                            }
                             @* <li class="nav-item">
                             <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
                             </li>
@@ -3892,6 +3898,31 @@
                                     </div>
                                 </div>
                             </div>
+                            @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+                            {
+                                <div class="tab-pane fade show py-3" id="guardTrainingAndAssessment" role="tabpanel" aria-labelledby="trainingAndAssessment-tab">
+                                <div class="form-row mb-2 btn-add-guard-addl-details">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success" id="btnAddGuardCourse"><i class="fa fa-plus mr-2"></i>Add Course</button>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <table id="tbl_guard_trainingAndAssessment_by_Admin" class="table table-bordered table-sm" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>HR Group</th>
+                                                    <th>Description</th>
+                                                    <th></th>
+                                                    
+                                                    <th class="text-center">Course</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            }
                             @*    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
                             <div class="form-row mb-2 btn-add-guard-addl-details">
                             <div class="col-md-2 offset-md-10 text-right">
