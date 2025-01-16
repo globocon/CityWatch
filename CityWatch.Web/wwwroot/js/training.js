@@ -171,7 +171,6 @@ let gridCourseDocumentFiles = $('#tbl_courseDocumentFiles').grid({
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         
     }
 });
