@@ -1676,6 +1676,48 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //Dos and Donts-end
+
+        //KPI Telematics-start
+        public JsonResult OnGetKPITelematics(int typeId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetKPITelemarics(typeId));
+        }
+
+        public JsonResult OnPostSaveKPITelematics(KPITelematicsField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                record.TypeId = 1;
+                _guardLogDataProvider.SaveKPITelematics(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteKPITelematics(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteKPITelematics(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //Dos and Donts-end
         public IActionResult OnGetGuardLicenseAndCompliancForGuardse(int guardId)
         {
             //ViewData["Guard_Id"] = guardId;
@@ -2156,14 +2198,53 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
         }
         //p5-Issue1-end
+        //p5-Issue-20-Instructor-start
+        public JsonResult OnGetTrainingInstructorNameandPositionFields()
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
+        }
+        public JsonResult OnPostSaveTrainingInstructorNameandPositionFields(TrainingInstructor record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
 
+
+                _guardLogDataProvider.SaveTrainingInstructorNameandPositionFields(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteTrainingInstructorNameandPositionFields(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteTrainingInstructorNameandPositionFields(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //p5-Issue-20-Instructor-end
     }
 
 
 
 
 
-  
+
 
 
 

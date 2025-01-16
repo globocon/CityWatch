@@ -31,6 +31,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
 
+
 namespace CityWatch.Data.Providers
 {
     public interface IGuardLogDataProvider
@@ -337,6 +338,18 @@ namespace CityWatch.Data.Providers
         void SaveFeedbackQuestionsAnswers(int feedbackQuestionId, List<TrainingTestFeedbackQuestionsAnswers> feedbackAnswers);
         void DeleteFeedbackQuestionAnswers(int questionId);
 
+        public List<KPITelematicsField> GetKPITelemarics(int type);
+        public void SaveKPITelematics(KPITelematicsField kpitelematics);
+        public void DeleteKPITelematics(int id);
+
+
+        //p5-Issue-20-Instructor-start
+        List<TrainingInstructor> GetTrainingInstructorNameandPositionFields();
+        public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor);
+        public void DeleteTrainingInstructorNameandPositionFields(int id);
+        //p5-Issue-20-Instructor-end
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -2642,6 +2655,186 @@ namespace CityWatch.Data.Providers
             }
         }
 
+
+        public void AdhocShiftMessage(DayOfWeek currentDay)
+        {
+            var currentDate = DateTime.Today; // Get the current date
+            /* remove all the manning notification end */
+
+            /* get the manning details corresponding to the currentDay*/
+            /* type 2 for avoid petrol car*/
+            /*IsPHO check if its a public holyday */
+            /*ScheduleisActive activate for particular  Site*/
+            var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettingsADHOC
+            .Include(x => x.ClientSiteKpiSetting)
+            .Where(x =>
+                x.WeekDay == currentDay &&
+                x.Type == "2" &&
+                x.IsPHO != 1 &&
+                x.IsExtraShiftEnabled == true &&
+                x.WeekAdhocToBeValid.HasValue && // Check if WeekAdhocToBeValid has a value
+                currentDate >= x.WeekAdhocToBeValid.Value && // Check start of week
+                currentDate <= x.WeekAdhocToBeValid.Value.AddDays(6)) // Check end of week
+            .ToList();
+            foreach (var manning in clientSiteManningKpiSettings)
+            {
+                if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
+                {
+                    /* Check the number of logins */
+                    var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
+                    if (numberOfLogin)
+                    {    /* No login found */
+                        /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
+                        var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
+                        var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
+
+                        // Get the current server time (UTC)
+                        DateTime serverTimeUtc = DateTime.UtcNow;
+                        // Find the site's time zone (for example, W. Australia Standard Time)
+                        TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
+
+                        TimeSpan offset = siteTimeZone.GetUtcOffset(serverTimeUtc);
+
+                        // Format the offset to display as +HH:mm or -HH:mm
+                        string offsetString = (offset >= TimeSpan.Zero ? "+" : "-") + offset.ToString(@"hh\:mm");
+
+                        // Convert UTC time to site's local time using the offset
+                        DateTime siteLocalTime2 = serverTimeUtc.Add(offset);
+
+                        // Convert server time (UTC) to site's local time
+                        DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
+
+
+
+                        //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
+
+                        if (siteLocalTime >= dateTime && siteLocalTime <= dateendTime)
+                        {
+                            //Commneted for fix the time zone issue
+                            //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                            //{
+                            /* Check if anylogbook entery exits in that timing */
+                            var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
+                            bool iflogbookentryexist = false;
+                            foreach (var log in checkSiteLogBook)
+                            {
+                                var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                if (checklogbookEntryInSpecificTiming.Count != 0)
+                                {
+                                    iflogbookentryexist = true;
+                                }
+                            }
+
+                            if (!iflogbookentryexist)
+                            {
+                                var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
+                                  .ToList();
+                                if (radioChecklist.Count == 0)
+                                {
+                                    /* Check if any off duty status checked for this row */
+                                    var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
+                                  .ToList();
+                                    if (rcOffDutyStatus.Count == 0)
+                                    {
+                                        if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
+                                        {
+                                            /* check if any RC status from CRO for this No Gaurd on duty if exist no need to show 04/12/2024 dileep */
+                                            if (!checkIfStatusUpdatedByCROforNoGaurdOnDuty(manning.ClientSiteKpiSetting.ClientSiteId))
+                                            {
+                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                {
+                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                /* New Field Added for NotificationType only for manning notification*/
+                                                    NotificationType = 1,
+                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                    CRMSupplier = manning.CrmSupplier,
+                                                    UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
+                                                    GuardLoginTimeZoneShort = offsetString.ToString(),
+                                                };
+                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                _context.SaveChanges();
+
+                                                CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
+                                            }
+
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        /* if login  found  remove the notification*/
+                        var notificationCountIsZero = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).Count() == 0;
+                        if (!notificationCountIsZero)
+                        {
+                            /* Remove notification because login found */
+                            var notificationDetails = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1);
+                            _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetails);
+                            _context.SaveChanges();
+                        }
+                    }
+
+                }
+            }
+
+
+
+
+
+        }
+        // check a stting have a valid adhoc shift
+        public bool CheckAdhocShift(int settingsId, DateTime dateToCheck)
+        {
+            bool IsAdhocShiftIsEnable = false;
+
+            // Check if there are ad-hoc settings for the given settings ID
+            if (HasAdHocSetting(settingsId))
+            {
+                var adhocShiftsForSettings = _context.ClientSiteManningKpiSettingsADHOC
+                    .Where(setting =>
+                        setting.SettingsId == settingsId && setting.IsExtraShiftEnabled == true)
+                    .ToList();
+
+                foreach (var shift in adhocShiftsForSettings)
+                {
+                    if (shift.WeekAdhocToBeValid.HasValue) // Check if nullable DateTime has a value
+                    {
+                        if (IsDateInAdHocWeek(shift.WeekAdhocToBeValid.Value, dateToCheck))
+                        {
+                            IsAdhocShiftIsEnable = true;
+                            break; // No need to check further; one match is sufficient
+                        }
+                    }
+                }
+            }
+
+            return IsAdhocShiftIsEnable;
+        }
+
+        static bool IsDateInAdHocWeek(DateTime startOfWeek, DateTime dateToCheck)
+        {
+            // End of the week is 6 days after the start
+            DateTime endOfWeek = startOfWeek.AddDays(6);
+            // Check if the date is within the range
+            return dateToCheck >= startOfWeek && dateToCheck <= endOfWeek;
+        }
+
+        public bool HasAdHocSetting(int settingsId)
+        {
+            // Query the database for matching ad-hoc settings
+            return _context.ClientSiteManningKpiSettingsADHOC
+                .Any(setting =>
+                    setting.SettingsId == settingsId && setting.IsExtraShiftEnabled == true);
+        }
+
+
         public void CreateLogBookStampForNoGuard(int ClientSiteID, DateTime dateTime, DateTime dateendTime)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
@@ -4783,7 +4976,45 @@ namespace CityWatch.Data.Providers
         }
 
         //do's and donts-end
+        //KPI Telematics-start
+        public List<KPITelematicsField> GetKPITelemarics(int type)
+        {
+            return _context.KPITelematicsField
+                 .Where(x => x.TypeId == type).OrderBy(x=>x.Name)
+                .ToList();
+        }
 
+        public void SaveKPITelematics(KPITelematicsField kpitelematics)
+        {
+            if (kpitelematics.Id == -1)
+            {
+                kpitelematics.Id = 0;
+                _context.KPITelematicsField.Add(kpitelematics);
+            }
+            else
+            {
+                var KpiTelematicsUpdate = _context.KPITelematicsField.SingleOrDefault(x => x.Id == kpitelematics.Id);
+                if (KpiTelematicsUpdate != null)
+                {
+                    KpiTelematicsUpdate.Name = kpitelematics.Name;
+
+                    KpiTelematicsUpdate.Mobile = kpitelematics.Mobile;
+                    KpiTelematicsUpdate.Email = kpitelematics.Email;
+                    KpiTelematicsUpdate.TypeId = 1;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteKPITelematics(int id)
+        {
+            var KPITelematicsToDelete = _context.KPITelematicsField.SingleOrDefault(x => x.Id == id);
+            if (KPITelematicsToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.Remove(KPITelematicsToDelete);
+            _context.SaveChanges();
+        }
+        //KPI Telematics End
         public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
         {
             _context.RadioCheckPushMessages.Add(radioCheckPushMessages);
@@ -5253,6 +5484,37 @@ namespace CityWatch.Data.Providers
 
             return returnData;
         }
+
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+            .Where(z => z.ClientSiteId.HasValue && clientSiteIds.Contains(z.ClientSiteId.Value) &&
+                 z.EventDateTime >= logFromDate &&
+                 z.EventDateTime <= logToDate)
+                .ToList();
+
+            var checkGMT = data
+                .Where(x => x.ActivityType != "SW" && !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+                .Select(x => x.EventDateTimeZoneShort)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(checkGMT))
+            {
+                foreach (var item in data.Where(x => string.IsNullOrEmpty(x.EventDateTimeZoneShort)))
+                {
+                    item.EventDateTimeZoneShort = checkGMT;
+                    item.EventDateTime = item.LastSWCreatedTime ?? item.EventDateTime;
+                    item.EventDateTimeLocal = item.LastSWCreatedTime ?? item.EventDateTime;
+                }
+            }
+
+            var returnData = data.OrderBy(z => z.EventDateTime).ToList();
+
+            return returnData;
+        }
+
         //p6-102 Add Photo -start
         public void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages)
         {
@@ -5465,7 +5727,7 @@ namespace CityWatch.Data.Providers
                         var activities = _context.ClientSiteRadioChecksActivityStatus
                             .Where(a => a.ClientSiteId == login.ClientSiteId
                                 && a.GuardId == login.GuardId
-                                && a.GuardLoginTime == null && a.ActivityType !=null
+                                && a.GuardLoginTime == null && a.ActivityType != null
                                 && a.NotificationType == null)
                             .ToList();
 
@@ -5556,7 +5818,7 @@ namespace CityWatch.Data.Providers
         }
 
 
-       
+
 
 
 
@@ -5634,7 +5896,7 @@ namespace CityWatch.Data.Providers
         //    }
         //}
 
-        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId,DateTime? LastActvity)
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
@@ -5646,7 +5908,7 @@ namespace CityWatch.Data.Providers
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
 
             var guardName = GetGuards(GuardId).Name;
-            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance.Last Activity time: "+ LastActvity?.ToString("dd/MM/yy HH:mm");
+            var subject = "Caution Alarm: There has been '0' activity in KV & LB and SW for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance.Last Activity time: " + LastActvity?.ToString("dd/MM/yy HH:mm");
             if (checklogbookEntry.Count < 1)
             {
                 var guardLog = new GuardLog()
@@ -5692,7 +5954,45 @@ namespace CityWatch.Data.Providers
                     testQuestionSettingsToUpdate.IsCertificateHoldUntilPracticalTaken = testQuestionSettings.IsCertificateHoldUntilPracticalTaken;
                     testQuestionSettingsToUpdate.IsAnonymousFeedback = testQuestionSettings.IsAnonymousFeedback;
 
+        //p5-Issue-20-Instructor-start
+        public List<TrainingInstructor> GetTrainingInstructorNameandPositionFields()
+        {
+            return _context.TrainingInstructor.Where(x => x.IsDeleted == false)
+                .OrderBy(x => x.Name)
+                .ToList();
+        }
+        public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor)
+        {
+            if (trainingInstructor.Id == -1)
+            {
+                trainingInstructor.Id = 0;
+                _context.TrainingInstructor.Add(trainingInstructor);
+            }
+            else
+            {
+                var trainingInstructorFieldUpdate = _context.TrainingInstructor.SingleOrDefault(x => x.Id == trainingInstructor.Id);
+                if (trainingInstructorFieldUpdate != null)
+                {
+                    trainingInstructorFieldUpdate.Name = trainingInstructor.Name;
+                    trainingInstructorFieldUpdate.Position = trainingInstructor.Position;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteTrainingInstructorNameandPositionFields(int id)
+        {
+            var TrainingInstructorFieldToDelete = _context.TrainingInstructor.SingleOrDefault(x => x.Id == id);
+            //if (TrainingInstructorFieldToDelete == null)
+            //    throw new InvalidOperationException();
 
+            //_context.Remove(TrainingInstructorFieldToDelete);
+            if (TrainingInstructorFieldToDelete != null)
+            {
+                TrainingInstructorFieldToDelete.IsDeleted = true;
+            }
+            _context.SaveChanges();
+        }
+        //p5-Issue-20-Instructor-end
     }
             }
             _context.SaveChanges();
