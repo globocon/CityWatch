@@ -131,7 +131,8 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
 
-
+        public ClientSite GetClientSiteLandline(int ClientSiteID);
+        public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1439,8 +1440,17 @@ namespace CityWatch.Data.Providers
             return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
         }
 
-
+        public ClientSite GetClientSiteLandline(int ClientSiteID)
+        {
+            return _context.ClientSites.Where(x => x.Id == ClientSiteID).FirstOrDefault();
         }
+
+        public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID)
+        {
+            return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID).ToList();
+        }
+
+    }
 
 
 

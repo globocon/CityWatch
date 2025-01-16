@@ -2861,6 +2861,8 @@ $('#dglClientSiteIdActionList').on('change', function () {
     $('#Action3').val('');
     $('#Action4').val('');
     $('#Action5').val('');
+    $('#Smart_wand').val('');
+    $('#Landline').val('');
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
     var clientSiteId = $('#dglClientSiteIdActionList').val();
@@ -2882,6 +2884,8 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Action3').val(data.action3);
             $('#Action4').val(data.action4);
             $('#Action5').val(data.action5);
+            $('#Landline').val(data.landline);
+            $('#Smart_wand').val(data.smartWandID.join(','));
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
             $('#btncontractedmanning').prop('disabled', false);

@@ -33,5 +33,9 @@ namespace CityWatch.Data.Models
         public ClientSiteKpiSetting ClientSiteKpiSetting { get; set; }
         [NotMapped]
         public string SOPFileNme { get; set; }
+        [NotMapped]
+        public string Landline { get; set; }
+        [NotMapped]
+        public List<string> SmartWandID { get; set; }
     }
 }
