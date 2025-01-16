@@ -5245,7 +5245,7 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
-        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True') { 
+        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' || $('#txtguardGuardRCLiteAccess').val() == 'True') { 
             $('#div_kpi_rc_contractedmanning #showDivButton').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
