@@ -2885,7 +2885,7 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Action4').val(data.action4);
             $('#Action5').val(data.action5);
             $('#Landline').val(data.landline);
-            $('#Smart_wand').val(data.smartWandID.join(','));
+            $('#Smart_wand').val(data.smartWandID.join(',    '));
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
             $('#btncontractedmanning').prop('disabled', false);
