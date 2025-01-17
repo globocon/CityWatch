@@ -333,7 +333,11 @@ namespace CityWatch.Data.Models
         public string UTC { get; set; }
         public int? KPITelematicsFieldID { get; set; }
         
+        public string CrmSupplierForSettings { get; set; }
+
         [Display(Name = "")]
         public bool DropboxScheduleisActive { get; set; } = true;
+
+        
     }
 }

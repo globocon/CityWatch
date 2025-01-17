@@ -257,6 +257,8 @@ namespace CityWatch.Data.Providers
 
         List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids);
 
+        public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -979,6 +981,13 @@ namespace CityWatch.Data.Providers
                        .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
                        );
 
+                        _context.ClientSiteKpiSettings
+                        .Where(u => u.Id == setting.Id)
+                        .ExecuteUpdate(b => b.SetProperty(u => u.CrmSupplierForSettings, setting.CrmSupplierForSettings)
+                         );
+
+
+
                         TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
                         string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
                         string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
@@ -1086,6 +1095,64 @@ namespace CityWatch.Data.Providers
         }
 
 
+
+
+        public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting)
+        {
+            var success = 0;
+            try
+            {
+
+                if (setting != null)
+                {
+
+                    //update the value of the ScheduleisActive Start
+
+                    try
+                    {
+                        _context.ClientSiteKpiSettings
+                        .Where(u => u.Id == setting.Id)
+                         .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
+                         );
+                        _context.ClientSiteKpiSettings
+                      .Where(u => u.Id == setting.Id)
+                       .ExecuteUpdate(b => b.SetProperty(u => u.KPITelematicsFieldID, setting.KPITelematicsFieldID)
+                       );
+                        _context.ClientSiteKpiSettings
+                      .Where(u => u.Id == setting.Id)
+                       .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
+                       );
+
+                        _context.ClientSiteKpiSettings
+                   .Where(u => u.Id == setting.Id)
+                    .ExecuteUpdate(b => b.SetProperty(u => u.CrmSupplierForSettings, setting.CrmSupplierForSettings)
+                    );
+
+                        TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
+                        string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+                        string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
+                        string utcOffset = $"{sign}{offset}";
+                        _context.ClientSiteKpiSettings
+                     .Where(u => u.Id == setting.Id)
+                      .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
+                      );
+                        success = 1;
+                    }
+                    catch
+                    {
+
+                        return 2;
+                    }
+
+                }
+
+            }
+            catch
+            {
+                return success;
+            }
+            return success;
+        }
 
         public int SaveClientSiteManningKpiSettingADHOC(ClientSiteKpiSetting setting)
         {

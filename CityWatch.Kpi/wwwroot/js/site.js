@@ -1624,6 +1624,60 @@ $(function () {
 
 
 
+    // Save only master settings values without manning hours  start
+    $('#div_site_settings').on('click', '#save_site_manning_settings_WithoutValue', function () {
+        
+
+        $.ajax({
+            url: '/admin/settings?handler=ClientSiteManningKpiSettingsWithoutValue',
+            type: 'POST',
+            data: $('#frm_site_manning_settings').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == 1) {
+                alert('Saved site manning details successfully');
+                $('#div_site_settings').html('');
+                //$('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);  
+                $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId, function () {
+                    // This function will be executed after the content is loaded
+                    console.log('Load operation completed!');
+                    // You can add your additional code or actions here
+                    $('#kpi-tab').tab('show');
+                    $('#contracted-manning-tab').tab('show');
+                    window.sharedVariable = data.clientSiteId;
+                    console.log('Load operation completed!');
+                    // You can add your additional code or actions here
+                    console.log(data.clientSiteId);
+
+                    //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
+
+                });
+                //$('#kpi-settings-modal').modal('show');
+                //$("#kpi-settings-modal").appendTo("body");
+                currentDiv = 1;
+
+            }
+            else if (data.success == 2) {
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+                $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+                alert('Please add the site settings from site settings tab');
+
+            }
+            else if (data.success == 4) {
+                alert('Error! Please try again');
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+
+            }
+            
+
+        }).fail(function () { });
+    });
+
+    // Save only master settings values without manning hours  end 
+
     //Adhoc Start 
     $('#div_site_settings').on('click', '#save_site_manning_settings_adhoc', function () {
         $.ajax({
@@ -1988,6 +2042,8 @@ $(function () {
         
         $('#divPatrolCar').show();
         $('#divbtn').show();
+        $('#save_site_manning_settings_WithoutValue').hide();
+        
    });
     
    

@@ -843,6 +843,8 @@
                                 </button>
                             }
                         </div><br />
+                        
+
                         @*  <div class="d-flex justify-content-end align-items-center  mb-3">
                         <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Contract Manager</label>
                         <select asp-items="@ViewDataService.KPITelematicsList()" class="form-control"></select>
@@ -873,6 +875,7 @@
                             <input type="hidden" asp-for="@Model.KPITelematicsFieldID" />
                             <input type="hidden" asp-for="@Model.Id" />
                             <input type="hidden" asp-for="@Model.ClientSiteId" />
+                
                             <input type="hidden" id="hidCount" value="@count" />
                             @*display Already Existing Mannings*@
 
@@ -938,6 +941,26 @@
 
 
                                     </p>
+                                </div>
+
+                                <div class="row pt-2 ml-2 ">
+                                    <label class="form-label  mt-2">CRM (Supplier)</label>
+                                    <div class="col-md-7">
+                                        <select id="CrmSupplierForSettings" name="CrmSupplierForSettings" asp-for="@Model.CrmSupplierForSettings" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.CrmSupplierForSettings))
+                                    {
+                                        <div class="col-md-1 mt-2 pl-0 ml-0">
+                                            <i class="fa fa-vcard-o text-info" style="font-size:18px" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="@Model.CrmSupplierForSettings"></i>
+                                        </div>
+
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-1 mt-2 pl-0 ml-0">
+                                            <i class="fa fa-vcard-o text-info" style="color: gray !important;opacity: 0.6;cursor: not-allowed;font-size:18px"></i>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             @*Scheduler is Active end15072024*@
@@ -1282,13 +1305,17 @@
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                             {
                                 <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
-
+                               
                             }
                             else
                             {
+                                @*New button to update values *@
+                               <button type="button" class="btn btn-success no-print" id="save_site_manning_settings_WithoutValue"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
                                 <div id="divbtn" style="display: none;">
                                     <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
                                 </div>
+                                
+
                             }
 
                         </form>
