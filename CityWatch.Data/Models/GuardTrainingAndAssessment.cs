@@ -17,30 +17,38 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
 
         public int GuardId { get; set; }
-        public int CourseId { get; set; }
+        public int TrainingCourseId { get; set; }
+        public int HRGroupId { get; set; }
 
-        [Required]
+        
         public string Description { get; set; }
-        
 
-        
+        public int TrainingCourseStatusId { get; set; }
 
 
-        [Required]
-        public HrGroup? HrGroup { get; set; }
+
+
+
 
         [NotMapped]
-        public string HrGroupText { get { return HrGroup?.ToDisplayName(); } }
+        public string HrGroupText { get; set; }
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
-        [ForeignKey("CourseId")]
-        public TrainingCourses Courses { get; set; }
+        [ForeignKey("TrainingCourseId")]
+        public TrainingCourses TrainingCourses { get; set; }
+        [ForeignKey("TrainingCourseStatusId")]
+        public TrainingCourseStatus TrainingCourseStatus { get; set; }
+        [ForeignKey("HRGroupId")]
+        public HRGroups HRGroups { get; set; }
+        
         [NotMapped]
         public string NewNullColumn { get; set; }
 
         [NotMapped]
         public string LicenseNo { get; set; }
-        
+        [NotMapped]
+        public string statusColor { get; set; }
+
     }
 }

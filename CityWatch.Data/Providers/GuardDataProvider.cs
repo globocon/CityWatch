@@ -1012,26 +1012,21 @@ namespace CityWatch.Data.Providers
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardTrainingAndAssessment
                  .Where(x => x.GuardId == guardId)
-                 .Include(z => z.Guard).ToList();
+                 .Include(z => z.Guard)
+                 .Include(z=>z.HRGroups)
+                 .Include(z=>z.TrainingCourses)
+                 .Include(z=>z.TrainingCourseStatus)
+                 .ThenInclude(x=>x.TrainingCourseStatusColor)
+                 .ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;
-
-
-            result = _context.GuardTrainingAndAssessment
-            .Where(x => x.GuardId == guardId)
-            .Include(z => z.Guard)
-            .Select(x => new GuardTrainingAndAssessment
+            foreach(var item in result)
             {
-                Id = x.Id,
-                
-                GuardId = x.GuardId,
-                Description = x.Description,
-                HrGroup = x.HrGroup,
-                NewNullColumn=string.Empty,
-                LicenseNo = x.Guard.SecurityNo,
-                
-            }).OrderBy(x => x.Id)
-            .ToList();
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+            
 
 
             return result;

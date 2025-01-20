@@ -13,6 +13,7 @@
 @inject IClientDataProvider clientDataProvider
 @inject IClientSiteViewDataService clientViewDataService
 @inject IGuardDataProvider guarddataProvider
+@inject IConfigDataProvider configDataProvider
 <div class="modal" tabindex="-1" role="dialog" id="trainingandAssessmentmodal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -453,6 +454,127 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="selectCoursesForGuardByAdmin" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusActiveLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Course Details</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="hidden" id="trainingguardId" value="" />
+                    <ul id="courseList" class="list-group">
+                        @foreach(var itemnew in configDataProvider.GetHRGroupsDropDown())
+                        {
+                            
+                        if (@configDataProvider.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(@itemnew.Value)) != null)
+                        {
+                                <li class="list-group-item list-group-item-success" id="attach_@itemnew.Value" data-index="@itemnew.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+
+
+
+                                </li>
+                                foreach (var item in @configDataProvider.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(@itemnew.Value)))
+                            {
+                                
+                                if (!string.IsNullOrWhiteSpace(item.FileName))
+                                {
+                                    
+                                        <li class="list-group-item" id="attach_@item.Id" data-index="@item.Id" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                        @item.FileName
+                                            <i class="fa fa-check ml-2 text-success btn-select-course-status" title="Select" style="cursor: pointer;float:right"></i>
+
+                                        </li>
+
+                                    
+
+                                }
+                                else
+                                {
+                                    <li class="list-group-item list-group-item-success" id="attach_@item.Id" data-index="@item.Id" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+
+
+
+                                    </li>
+
+                                }
+
+
+                            }
+
+                        }
+                        }
+                    </ul>
+
+
+                    @*<table class="table gj-grid gj-grid-bootstrap gj-grid-bootstrap-4 table-bordered table-sm" id="tools_settings">
+                    <thead>
+                    <tr data-role="caption">
+                    <th data-field="title" width="80%" style="text-align: left;">
+                    <div data-role="title">Button</div>
+                    </th>
+                    <th data-field="" width="20%" style="text-align: center;">
+                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                    </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                    <td colspan="2" class="p-0 b-0">
+                    <ul id="itemList" class="list-group d-block w-auto">
+                    @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                    {
+
+                    foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                    {
+                    if (item.Text != string.Empty)
+                    {
+                    <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;">
+                    @item.Text
+                    <i class="fa fa-trash-o ml-2 text-danger btn-delete-tools-type" title="Delete" style="cursor: pointer;float:right"></i>
+
+                    </li>
+
+                    }
+                    else
+                    {
+
+                    <hr>
+                    }
+
+
+                    }
+                    }
+                    </ul>
+                    </td>
+                    </tr>
+
+                    </tbody>
+                    </table>*@
+
+                    @* <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>*@
+                    @* <select id="selectRadioStatusActive" class="form-control">
+                    <option value="" selected>Select</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="N/A Only W/E">N/A Only W/E</option>
+                    <option value="N/A Only Summer">N/A Only Summer</option>
+                    <option value="On Standby">On Standby</option>
+                    <option value="Incoming Call">Incoming Call</option>
+                    <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                    <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                    <option value="No Answer">No Answer</option>
+                    </select>*@
+
+                </div>
+            </div>
+            @* <div class="modal-footer justify-content-start">
+            <button type="button" id="btnSaveRadioStatusActive" class="btn btn-primary">Save Status</button>
+            </div>*@
         </div>
     </div>
 </div>
