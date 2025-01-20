@@ -334,10 +334,11 @@ namespace CityWatch.Data.Providers
         int SaveTestQuestions(TrainingTestQuestions trainingQuestions);
         void SaveTestQuestionsAnswers(int testQuestionId, List<TrainingTestQuestionsAnswers> trainingAnswers);
         void DeleteTestQuestionAnswers(int questionId);
+        void DeleteTestQuestions(int testQuestionId);
         int SaveFeedbackQuestions(TrainingTestFeedbackQuestions feedbackQuestions);
         void SaveFeedbackQuestionsAnswers(int feedbackQuestionId, List<TrainingTestFeedbackQuestionsAnswers> feedbackAnswers);
         void DeleteFeedbackQuestionAnswers(int questionId);
-
+        void DeleteFeedbanckQuestions(int feedbackQuestionId);
         public List<KPITelematicsField> GetKPITelemarics(int type);
         public void SaveKPITelematics(KPITelematicsField kpitelematics);
         public void DeleteKPITelematics(int id);
@@ -6056,8 +6057,23 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
-         
-        
+
+        public void DeleteTestQuestions(int testQuestionId)
+        {
+
+            var getTestQuestionAnsweres = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == testQuestionId).ToList();
+            if (getTestQuestionAnsweres.Count() > 0)
+            {
+                DeleteTestQuestionAnswers(testQuestionId);
+            }
+            var getTestQuestions = _context.TrainingTestQuestions.Where(x => x.Id == testQuestionId).ToList();
+            foreach (var item in getTestQuestions)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
+
+        }
         public int SaveFeedbackQuestions(TrainingTestFeedbackQuestions feedbackQuestions)
         {
 
@@ -6113,6 +6129,22 @@ namespace CityWatch.Data.Providers
                 _context.Remove(item);
                 _context.SaveChanges();
             }
+        }
+        public void DeleteFeedbanckQuestions(int feedbackQuestionId)
+        {
+
+            var getTestQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId).ToList();
+            if (getTestQuestionAnsweres.Count() > 0)
+            {
+                DeleteFeedbackQuestionAnswers(feedbackQuestionId);
+            }
+            var getTestQuestions = _context.TrainingTestFeedbackQuestions.Where(x => x.Id == feedbackQuestionId).ToList();
+            foreach (var item in getTestQuestions)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
+
         }
     }
    

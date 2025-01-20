@@ -2085,6 +2085,27 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostDeleteTQAnswers(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+                   
+                    _guardLogDataProvider.DeleteTestQuestions(Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId,int tqNumberId)
         {
             return new JsonResult(_configDataProvider.GetNextQuestionWithinSameTQNumber(hrSettingsId, tqNumberId));
@@ -2134,6 +2155,28 @@ namespace CityWatch.Web.Pages.Admin
                         item.TrainingTestFeedbackQuestionsId = id;
                     }
                     _guardLogDataProvider.SaveFeedbackQuestionsAnswers(id, feedbackquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteFeedbackQAnswers(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteFeedbanckQuestions(Id);
                 }
                 success = true;
             }

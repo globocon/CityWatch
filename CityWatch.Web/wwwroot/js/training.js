@@ -14,6 +14,8 @@ $('#btnCourse').on('click', function (e) {
     $('#btn_save_trainingassessment_settings').attr('hidden', true);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
@@ -36,6 +38,8 @@ $('#btnTestQuestions').on('click', function (e) {
     $('#btn_save_trainingassessment_settings').attr('hidden', false);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
@@ -57,6 +61,8 @@ $('#btnCourseCertificates').on('click', function (e) {
     $('#btn_save_trainingassessment_settings').attr('hidden', true);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
@@ -594,16 +600,31 @@ $('#TrainingTestQuestionsDetailsTab .nav-item .nav-link').on("click", function (
         $('#btn_save_trainingassessment_settings').attr('hidden', false);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     }
     if (tabId == '#TrainingTestQuestionsAnswers') {
         $('#btn_save_trainingassessment_testquestions').attr('hidden', false);
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', false);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
+       
+        if ($('#txt_TestQuestionAnswersId').val() != '') {
+            $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+        }
     }
     if (tabId == '#TrainingTestQuestionsFeedback') {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', false);
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', false);
+        
+        if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+            $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+        }
+
     }
 });
 $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
@@ -814,15 +835,41 @@ $('#ddlTestQuestionNo').on('change', function () {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result != null) {
+            $('#txtQuestion').val('');
+            $('#txt_Option1').val('');
+            $('#txt_Option2').val('');
+            $('#txt_Option3').val('');
+            $('#txt_Option4').val('');
+            $('#txt_Option5').val('');
+            $('#txt_Option6').val('');
+            $('#cbIsOption1').prop('checked', false);
+            $('#cbIsOption1').change();
+            $('#cbIsOption2').prop('checked', false);
+            $('#cbIsOption2').change();
+            $('#cbIsOption3').prop('checked', false);
+            $('#cbIsOption3').change();
+            $('#cbIsOption4').prop('checked', false);
+            $('#cbIsOption4').change();
+            $('#cbIsOption5').prop('checked', false);
+            $('#cbIsOption5').change();
+            $('#cbIsOption6').prop('checked', false);
+            $('#cbIsOption6').change();
         $("#txt_TestQuestionAnswersId").val(result.id);
         $("#txtQuestion").val(result.question);
         
             GetAnswers();
             GetNumberOfQuestionsNew();
+            if ($('#txt_TestQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            }
         }
         else {
             LoadNextTQQuestions();
             GetNumberOfQuestions();
+            $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
         }
 
 
@@ -923,7 +970,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             Id: 0,
             TrainingTestQuestionsId: testQuestionAnswersId,
             Options: $('#txt_Option5').val(),
-            IsAnswer: $('#IsOption5').val(),
+            c,
         }
         objAnswers.push(objAnswersnew);
     }
@@ -937,6 +984,11 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         objAnswers.push(objAnswersnew);
     }
     const token = $('input[name="__RequestVerificationToken"]').val();
+
+    if (($('#IsOption1').val() == 'false') && ($('#IsOption2').val() == 'false') && ($('#IsOption3').val() == 'false') && ($('#IsOption4').val() == 'false') && ($('#IsOption5').val() == 'false') && ($('#IsOption6').val() == 'false')) {
+        alert('Please use toggle to enable correct answer');
+        return;
+    }
     $.ajax({
         url: '/Admin/Settings?handler=SaveTQAnswers',
         data: {
@@ -948,8 +1000,16 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
-            LoadNextTQQuestions();
+            alert('Saved Successfully');
+            LoadCurrentTQQuestions();
+            //
             GetNumberOfQuestions();
+            if ($('#txt_TestQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            }
         }
         $('#loader').hide();
 
@@ -962,6 +1022,73 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         console.log('error');
     })
 });
+$('#btn_delete_trainingassessment_testquestions').on("click", function (e) {
+    e.preventDefault();
+    $('#loader').show();
+    
+    var testQuestionAnswersId = parseInt($("#txt_TestQuestionAnswersId").val());
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteTQAnswers',
+        data: {
+            'Id': testQuestionAnswersId
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            LoadNextTQQuestions();
+            //
+            GetNumberOfQuestions();
+           
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
+function LoadCurrentTQQuestions() {
+    var valueTQNo = $('#ddlTestQuestionNo').val();
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=QuestionWithQuestionNumber',
+        data: {
+            'hrSettingsId': $("#HrSettings_Id").val(),
+            'tqNumberId': $("#ddlTQNo").val(),
+            'questionumberId': valueTQNo,
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $("#txt_TestQuestionAnswersId").val(result.id);
+            $("#txtQuestion").val(result.question);
+
+            GetAnswers();
+            GetNumberOfQuestionsNew();
+        }
+        else {
+            LoadNextTQQuestions();
+            GetNumberOfQuestions();
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function LoadNextTQQuestions() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -1098,6 +1225,38 @@ function LoadLastFeedbackQNumbers() {
         console.log('error');
     })
 }
+function LoadCurrentFeedbackQNumbers() {
+    var valueFeedbackQNo = $('#ddlFeedbackQuestionNo').val();
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=FeedbackQuestionWithQuestionNumber',
+        data: {
+            'hrSettingsId': $("#HrSettings_Id").val(),
+            'questionumberId': valueFeedbackQNo,
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $("#txt_FeedbackQuestionAnswersId").val(result.id);
+            $("#txtFeedbackQuestion").val(result.question);
+
+            GetFeedbackAnswers();
+            GetNumberOfFeedbackQuestionsNew();
+        }
+        else {
+            LoadLastFeedbackQNumbers();
+            GetNumberOfFeedbackQuestions();
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function GetNumberOfFeedbackQuestions() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -1160,6 +1319,12 @@ $('#ddlFeedbackQuestionNo').on('change', function () {
 
             GetFeedbackAnswers();
             GetNumberOfFeedbackQuestionsNew();
+            if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            }
         }
         else {
             LoadLastFeedbackQNumbers();
@@ -1278,8 +1443,52 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
+            // LoadLastFeedbackQNumbers();
+            LoadCurrentFeedbackQNumbers();
+            GetNumberOfFeedbackQuestions();
+            if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            }
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
+$('#btn_delete_trainingassessment_feedbackquestions').on("click", function (e) {
+    e.preventDefault();
+    $('#loader').show();
+   
+    
+    var feedbackQuestionAnswersId = parseInt($("#txt_FeedbackQuestionAnswersId").val());
+ 
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteFeedbackQAnswers',
+        data: {
+            'Id': $("#txt_FeedbackQuestionAnswersId").val()
+
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            alert('Saved Successfully');
             LoadLastFeedbackQNumbers();
             GetNumberOfFeedbackQuestions();
+
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            
         }
         $('#loader').hide();
 
