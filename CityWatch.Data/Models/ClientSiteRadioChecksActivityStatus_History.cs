@@ -100,6 +100,10 @@ namespace CityWatch.Data.Models
         [ForeignKey("IRId")]
         public IncidentReport IncidentReport { get; set; }
 
+        [NotMapped]
+        public string gpsCoordinates { get; set; }
+            
+
     }
     public class ClientSiteRadioChecksActivityStatus_HistoryReport
     {
