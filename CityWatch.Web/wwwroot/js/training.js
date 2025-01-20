@@ -473,8 +473,8 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
     columns: [
         { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "27%" },
-        { data: 'newNullColumn', width: '15%' },
+        { data: 'description', width: "30%" },
+        { data: 'newNullColumn', width: '10%' },
         
 
         {
@@ -507,6 +507,39 @@ gridGuardTrainingAndAssessment.on('draw.dt', function () {
         }
     });
 });
+$('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_guard_TrainingAndAssessment]', function () {
+ 
+
+    var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var courseStatus=2
+    $.ajax({
+        url: '/Admin/Settings?handler=UpdateCoursesStatus',
+        data: {
+            'Id': data.id,
+            'TrainingCourseStatusId': courseStatus
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
 //p5-Issue1-End
 
 //p5-Issue2-Start
@@ -529,7 +562,7 @@ function renderGuardCouseStatusForadmin(value, type, data) {
         }
         }
        
-        cellValue += '<button  class="btn btn-outline-primary  mb-1" name = "btn_admin_RPL" > RPL</button >';
+        //cellValue += '<button  class="btn btn-outline-primary  mb-1" name = "btn_admin_RPL" > RPL</button >';
        
         return cellValue;
     }
@@ -1467,6 +1500,8 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
             $('#selectCoursesForGuardByAdmin').modal('hide');
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
         }
     });
 

@@ -101,6 +101,7 @@ namespace CityWatch.Data.Providers
         List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
         List<TrainingTQNumbers> GetTestTQNumbers();
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
 
     }
 
@@ -1064,6 +1065,33 @@ namespace CityWatch.Data.Providers
         public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
         {
             return _context.TrainingCertificateExpiryYears.ToList();
+        }
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                 .Where(x => x.Id == id)
+                 .Include(z => z.Guard)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+            foreach (var item in result)
+            {
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+
+
+
+            return result;
+
+
+
         }
 
     }

@@ -2237,6 +2237,36 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostUpdateCoursesStatus(int Id, int TrainingCourseStatusId)
+        {
+
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                
+                var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
+               
+                
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = Id,
+                    GuardId = result.GuardId,
+                    TrainingCourseId = result.TrainingCourseId,
+                    TrainingCourseStatusId = TrainingCourseStatusId,
+                    Description = result.Description,
+                    HRGroupId = result.HRGroupId
+
+                });
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {
