@@ -5531,7 +5531,9 @@ namespace CityWatch.Data.Providers
                 EventDateTime = log.EventDateTime,
                 EventDateTimeLocal = log.EventDateTimeLocal,
                 gpsCoordinates = log.GpsCoordinates,
-                GuardId = log.GuardLogin?.GuardId
+                GuardId = log.GuardLogin?.GuardId,
+                IrEntryType=log.IrEntryType,
+                IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
             }).ToList();
 

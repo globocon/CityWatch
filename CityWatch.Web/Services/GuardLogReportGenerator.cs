@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using static Dropbox.Api.Files.WriteMode;
 using static System.Net.WebRequestMethods;
@@ -929,12 +930,21 @@ namespace CityWatch.Web.Services
                     //var notes = entry.IrEntryType.HasValue ?
                     //                    entry.Notes :
                     //                    (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
-                    //var bgColor = entry.IrEntryType.HasValue ?
-                    //                ((entry.IrEntryType == IrEntryType.Normal) || (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
-                    //                COLOR_WHITE;
+                    var bgColor = entry.IrEntryType.HasValue ?
+                                    ((entry.IrEntryType == IrEntryType.Normal) || (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
+                                    COLOR_WHITE;
                     //Added To display GPS start
                     var notes = string.IsNullOrEmpty(entry.Notes) ? string.Empty : entry.Notes;
-                    var bgColor = COLOR_WHITE;
+                    // Determine the row background color based on conditions
+                    //var bgColor = COLOR_WHITE;
+                    //if (string.IsNullOrEmpty(entry.GuardName))
+                    //{
+                    //    bgColor = COLOR_PALE_YELLOW;
+                    //}
+                    //if (entry.Notes.Contains("Duress Alarm Activated"))
+                    //{
+                    //    bgColor = COLOR_PALE_RED;
+                    //}
                     //    var imagePath = "wwwroot/images/GPSImage.png";
                     //    var siteImage = new Image(ImageDataFactory.Create(imagePath))
                     //    .SetWidth(UnitValue.CreatePercentValue(27));
@@ -990,13 +1000,13 @@ namespace CityWatch.Web.Services
                     reportDataTable.AddCell(new Cell()
                         .SetKeepTogether(true)
                         .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                        .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                        .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
                         .Add(new Paragraph(siteName).SetFontSize(CELL_FONT_SIZE)));
 
                     reportDataTable.AddCell(new Cell()
                     .SetKeepTogether(true)
                     .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                    .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                    .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
                     .Add(new Paragraph(string.IsNullOrEmpty(entry.GuardName) ? "Admin" : entry.GuardName).SetFontSize(CELL_FONT_SIZE)));
 
                     if (!string.IsNullOrEmpty(entry.gpsCoordinates))
@@ -1020,7 +1030,7 @@ namespace CityWatch.Web.Services
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)
                             .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                            .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                            .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
                             .Add(paragraphGPS));
                     }
                     else
@@ -1028,7 +1038,7 @@ namespace CityWatch.Web.Services
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)
                             .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                            .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                            .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
                             .Add(new Paragraph(" ").SetFontSize(CELL_FONT_SIZE)));
                     }
 
