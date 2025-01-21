@@ -5496,8 +5496,9 @@ namespace CityWatch.Data.Providers
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate)
                 .Include(z => z.GuardLogin)
-                  .Include(z => z.GuardLogin.Guard)
+                .Include(z => z.GuardLogin.Guard)
                 .Include(z => z.GuardLogin.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
                 .ToList();
 
             // Fetch SW logs
