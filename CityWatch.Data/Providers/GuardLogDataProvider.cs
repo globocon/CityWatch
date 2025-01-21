@@ -349,8 +349,9 @@ namespace CityWatch.Data.Providers
         public void SaveTrainingInstructorNameandPositionFields(TrainingInstructor trainingInstructor);
         public void DeleteTrainingInstructorNameandPositionFields(int id);
         //p5-Issue-20-Instructor-end
-
+       
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+        void DeleteTrainingCourseInstructor(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6139,6 +6140,18 @@ namespace CityWatch.Data.Providers
                 DeleteFeedbackQuestionAnswers(feedbackQuestionId);
             }
             var getTestQuestions = _context.TrainingTestFeedbackQuestions.Where(x => x.Id == feedbackQuestionId).ToList();
+            foreach (var item in getTestQuestions)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
+
+        }
+        public void DeleteTrainingCourseInstructor(int id)
+        {
+
+            
+            var getTestQuestions = _context.TrainingCourseInstructor.Where(x => x.Id == id).ToList();
             foreach (var item in getTestQuestions)
             {
                 _context.Remove(item);

@@ -133,6 +133,8 @@ namespace CityWatch.Data.Providers
 
         public ClientSite GetClientSiteLandline(int ClientSiteID);
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID);
+        List<TrainingCourseInstructor> GetCourseInstructor(int type);
+        void SaveTrainingCourseInstructor(TrainingCourseInstructor trainingCourseInstructor);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1448,6 +1450,47 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID)
         {
             return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID).ToList();
+        }
+        public List<TrainingCourseInstructor> GetCourseInstructor(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseInstructor
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+
+            foreach(var item in courseDocList)
+            {
+                if (item.TrainingInstructorId == null)
+                {
+                    item.InstructorName = "";
+                    item.InstructorPosition = "";
+
+                }
+                else
+                {
+                    item.InstructorName = _context.TrainingInstructor.Where(x => x.Id == item.TrainingInstructorId).FirstOrDefault().Name;
+                    item.InstructorPosition = _context.TrainingInstructor.Where(x => x.Id == item.TrainingInstructorId).FirstOrDefault().Position;
+                }
+            }
+            return courseDocList;
+        }
+        public void SaveTrainingCourseInstructor(TrainingCourseInstructor trainingCourseInstructor)
+        {
+            if (trainingCourseInstructor.Id == 0)
+            {
+                _context.TrainingCourseInstructor.Add(trainingCourseInstructor);
+            }
+            else
+            {
+                var documentToUpdate = _context.TrainingCourseInstructor.SingleOrDefault(x => x.Id == trainingCourseInstructor.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.HRSettingsId = trainingCourseInstructor.HRSettingsId;
+                    documentToUpdate.TrainingInstructorId = trainingCourseInstructor.TrainingInstructorId;
+                    
+                }
+            }
+            _context.SaveChanges();
         }
 
     }

@@ -2234,7 +2234,79 @@ namespace CityWatch.Web.Pages.Admin
                 
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetInstructorAndPosition()
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
+        }
+        
+        public JsonResult OnGetCourseInstructor(int type)
+        {
+            return new JsonResult(_configDataProvider.GetCourseInstructor(type));
+        }
+        public JsonResult OnGetInstructorAndPositionWithName(string InstructorName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Name== InstructorName).FirstOrDefault());
+        }
+        public JsonResult OnPostSaveTrainingCourseInstructor(int id, string instructorName,int hrsettingsId)
+        {
+            var success = false;
+            var message = "Saved successfully";
 
+            try
+            {
+                int? instructorId = null;
+                if (instructorName != null)
+                {
+                    instructorId = _guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x => x.Name == instructorName).FirstOrDefault().Id;
+                }
+                if (id == -1)
+                {
+                    id = 0;
+                }
+
+                    _configDataProvider.SaveTrainingCourseInstructor(new TrainingCourseInstructor()
+                    {
+                        Id = id,
+                        TrainingInstructorId = instructorId,
+                        HRSettingsId = hrsettingsId
+
+                    });
+                    success = true;
+                
+
+
+
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteTrainingCourseInstructor(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if(Id==-1)
+                {
+                    Id = 0;
+                }
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {

@@ -21,6 +21,8 @@ $('#btnCourse').on('click', function (e) {
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
 });
 
 $('#btnTestQuestions').on('click', function (e) {
@@ -45,6 +47,8 @@ $('#btnTestQuestions').on('click', function (e) {
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
@@ -68,6 +72,8 @@ $('#btnCourseCertificates').on('click', function (e) {
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnTrainingAssesmentModalClose').on('click', function (e) {
     e.preventDefault();
@@ -1522,4 +1528,153 @@ $("textarea[id='txtFeedbackQuestion']").keyup(function () {
 
 function getFeedbackQuestionLength(note) {
     return 'Remaining characters: ' + getNoteRemainingCount(note, 'feedback_question');
+}
+const courseInstructorDetails =()=> {
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPosition',
+        //data: { record: data },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+       
+        result;
+        
+    });
+   
+}
+
+function courseInstructorEditor($editorContainer, value, record) {
+    if (isCourseInstructorAdding && value === undefined)
+        value = 0;
+    let selectHtml = $('<select class="form-control dd-course-instructor"></select>');
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPosition',
+        //data: { record: data },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        selectHtml.append('<option value=""></option>')
+        result.forEach(function (item) {
+            selectHtml.append('<option "value="' + item.name + '" >' + item.name + '</option>')
+        })
+        selectHtml.val(record.instructorName);
+
+    });
+   
+        
+   
+    $editorContainer.append(selectHtml);
+    
+}
+let isCourseInstructorAdding = false;
+let gridCourseInstructorDetails = $('#tbl_Course_Instructor').grid({
+    dataSource: '/Admin/Settings?handler=CourseInstructor',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', title: '', hidden: true },
+       // { field: 'instructorName', title: 'Instructor Name', width: 390, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=Instructor', valueField: 'name', textField: 'name' } }, 
+        { field: 'instructorName', title: 'Instructor Name', width: 390, type: 'dropdown', editor: courseInstructorEditor  },
+
+        
+        { field: 'instructorPosition', title: 'Position', width: 140 }
+       
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+
+    }
+});
+$('#add_course_Instructor').on('click', function () {
+  
+    var rowCount = $('#tbl_Course_Instructor tr').length;
+
+
+    if (isCourseInstructorAdding) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        isCourseInstructorAdding = true;
+        gridCourseInstructorDetails.addRow({
+            'id': -1,
+            'name': '',
+            'position': '',
+        }).edit(-1);
+    }
+});
+$('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
+
+    var control = $(this);
+    var id = $(this).val();
+    var position;
+    
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPositionWithName',
+        data: { InstructorName: id },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result != null) {
+            position = result.position;
+
+        }
+        else {
+            position = '';
+        }
+        control.closest('tr').find('td').eq(2).text(position);
+        control.closest('tr').find('td').eq(2).val(position);
+
+    });
+   
+   
+    
+});
+if (gridCourseInstructorDetails) {
+    gridCourseInstructorDetails.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+       
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveTrainingCourseInstructor',
+            data: { id: data.id, instructorName: data.instructorName, hrsettingsId: $('#HrSettings_Id').val() },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+
+                gridCourseInstructorDetails.clear();
+                gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });;
+            }
+            else {
+                alert(result.message);
+
+                gridCourseInstructorDetails.edit(id);
+
+            }
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isCourseInstructorAdding)
+                isCourseInstructorAdding = false;
+        });
+    });
+
+    gridCourseInstructorDetails.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteTrainingCourseInstructor',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) { gridCourseInstructorDetails.clear(); gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });; }
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isCourseInstructorAdding)
+                    isCourseInstructorAdding = false;
+            });
+        }
+    });
 }
