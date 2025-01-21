@@ -5522,7 +5522,7 @@ namespace CityWatch.Data.Providers
                 ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
                 NotificationCreatedTime = log.EventDateTime,
                 Notes = log.Notes,
-                ActivityType = "LB",
+                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
                 SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
                 GuardName = log.GuardLogin?.Guard != null
         ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
