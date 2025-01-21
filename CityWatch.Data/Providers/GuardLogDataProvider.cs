@@ -5496,8 +5496,9 @@ namespace CityWatch.Data.Providers
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate)
                 .Include(z => z.GuardLogin)
-                  .Include(z => z.GuardLogin.Guard)
+                .Include(z => z.GuardLogin.Guard)
                 .Include(z => z.GuardLogin.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
                 .ToList();
 
             // Fetch SW logs
@@ -5522,7 +5523,7 @@ namespace CityWatch.Data.Providers
                 ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
                 NotificationCreatedTime = log.EventDateTime,
                 Notes = log.Notes,
-                ActivityType = "LB",
+                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
                 SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
                 GuardName = log.GuardLogin?.Guard != null
         ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
@@ -5531,7 +5532,9 @@ namespace CityWatch.Data.Providers
                 EventDateTime = log.EventDateTime,
                 EventDateTimeLocal = log.EventDateTimeLocal,
                 gpsCoordinates = log.GpsCoordinates,
-                GuardId = log.GuardLogin?.GuardId
+                GuardId = log.GuardLogin?.GuardId,
+                IrEntryType=log.IrEntryType,
+                IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
             }).ToList();
 

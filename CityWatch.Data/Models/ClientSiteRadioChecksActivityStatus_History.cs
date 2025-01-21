@@ -102,7 +102,14 @@ namespace CityWatch.Data.Models
 
         [NotMapped]
         public string gpsCoordinates { get; set; }
-            
+
+        [NotMapped]
+        public IrEntryType? IrEntryType { get; set; }
+
+        [NotMapped]
+        public bool IsIRReportTypeEntry { get; set; }
+        
+
 
     }
     public class ClientSiteRadioChecksActivityStatus_HistoryReport
