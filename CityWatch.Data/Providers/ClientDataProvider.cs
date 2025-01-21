@@ -624,7 +624,8 @@ namespace CityWatch.Data.Providers
 
             if (entityState == EntityState.Modified)
             {
-                _context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);
+                //_context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);
+                _context.ClientSiteKpiSettings.Update(setting);
                 _context.SaveChanges();
             }
         }
