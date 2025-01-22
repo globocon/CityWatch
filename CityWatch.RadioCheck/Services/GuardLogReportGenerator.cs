@@ -677,13 +677,14 @@ namespace CityWatch.RadioCheck.Services
 
         private Table CreateReportDataForFusion(List<ClientSiteRadioChecksActivityStatus_History> guardLog)
         {
-            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 6,75,4, 15 })).UseAllAvailableWidth();
+            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 6,75,4, 15,15 })).UseAllAvailableWidth();
 
           
 
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Time").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Event / Notes").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Source").SetFontSize(CELL_FONT_SIZE)));
+            reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Client Site").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Guard").SetFontSize(CELL_FONT_SIZE)));
 
             foreach (var entry in guardLog)
@@ -753,6 +754,12 @@ namespace CityWatch.RadioCheck.Services
                     //Added To display GPS stop
 
                     reportDataTable.AddCell(cell);
+                    var siteName = entry.SiteName ?? "N/A"; // Replace with the actual property for site name
+                    reportDataTable.AddCell(new Cell()
+                        .SetKeepTogether(true)
+                        .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                        .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                        .Add(new Paragraph(siteName).SetFontSize(CELL_FONT_SIZE)));
                     //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.ActivityType).SetFontSize(CELL_FONT_SIZE)));
                     reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.GuardName).SetFontSize(CELL_FONT_SIZE)));
 

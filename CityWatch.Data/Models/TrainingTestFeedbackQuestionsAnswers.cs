@@ -6,18 +6,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class TrainingTestQuestionsAnswers
+    public class TrainingTestFeedbackQuestionsAnswers
     {
         [Key]
         public int Id { get; set; }
-        public int TrainingTestQuestionsId { get; set; }
-      
+        public int TrainingTestFeedbackQuestionsId { get; set; }
+
         public string Options { get; set; }
         public bool IsDeleted { get; set; }
-        public bool IsAnswer { get; set; }
 
-        [ForeignKey("TrainingTestQuestionsId")]
-        public TrainingTestQuestions TrainingTestQuestions { get; set; }
-        
+        [ForeignKey("TrainingTestFeedbackQuestionsId")]
+        public TrainingTestFeedbackQuestions TrainingTestFeedbackQuestions { get; set; }
     }
 }

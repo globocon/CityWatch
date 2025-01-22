@@ -2899,6 +2899,8 @@ $('#dglClientSiteIdActionList').on('change', function () {
     $('#Action3').val('');
     $('#Action4').val('');
     $('#Action5').val('');
+    $('#Smart_wand').val('');
+    $('#Landline').val('');
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
     var clientSiteId = $('#dglClientSiteIdActionList').val();
@@ -2920,6 +2922,8 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Action3').val(data.action3);
             $('#Action4').val(data.action4);
             $('#Action5').val(data.action5);
+            $('#Landline').val(data.landline);
+            $('#Smart_wand').val(data.smartWandID.join(',    '));
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
             $('#btncontractedmanning').prop('disabled', false);
@@ -5296,7 +5300,7 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
-        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True') { 
+        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' || $('#txtguardGuardRCLiteAccess').val() == 'True') { 
             $('#div_kpi_rc_contractedmanning #showDivButton').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
@@ -6031,6 +6035,7 @@ gridsitefusionLog = $('#fusion_site_log').grid({
             }
         },
         { field: 'activityType', title: 'Source', width: 50 },
+        { field: 'siteName', title: 'Client Site', width: 150 },
         { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
     ],
     paramNames: { page: 'pageNo' },
@@ -6038,9 +6043,17 @@ gridsitefusionLog = $('#fusion_site_log').grid({
 });
 
 
-$('#fusionClientSiteId').select({
-    placeholder: 'Select',
-    theme: 'bootstrap4'
+//$('#fusionClientSiteId').select({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+$('#fusionClientSiteId').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
 });
 
 $('#fusionClientSiteId').on('change', function () {
@@ -6058,10 +6071,10 @@ $('#fusionClientType').on('change', function () {
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
             data.map(function (site) {
-                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
             });
+            clientSiteControl.multiselect('rebuild');
 
 
         }
@@ -6122,14 +6135,17 @@ if (gridsitefusionLog) {
 
 
 $('#btnGeneratefusionAuditReport').on('click', function () {
-
-    if ($('#fusionClientSiteId').val() === '') {
+    if ($('#fusionClientSiteId').val().length === 0) {
         alert('Please select a client site');
         return;
     }
+    //if ($('#fusionClientSiteId').val() === '') {
+    //    alert('Please select a client site');
+    //    return;
+    //}
     gridsitefusionLog.clear();
     gridsitefusionLog.reload({
-        clientSiteId: $('#fusionClientSiteId').val(),
+        clientSiteIds: $('#fusionClientSiteId').val().join(';'),
         logFromDate: $('#fusionAudtitFromDate').val(),
         logToDate: $('#fusionAudtitToDate').val(),
         excludeSystemLogs: 0
@@ -8612,7 +8628,7 @@ function downloadDailyGuardfusionLogZipFile() {
         type: 'POST',
         dataType: 'json',
         data: {
-            clientSiteId: $('#fusionClientSiteId').val(),
+            clientSiteId: $('#fusionClientSiteId').val().join(';'), 
             logFromDate: $('#fusionAudtitFromDate').val(),
             logToDate: $('#fusionAudtitToDate').val()
         },

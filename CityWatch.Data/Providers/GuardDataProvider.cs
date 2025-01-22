@@ -101,6 +101,7 @@ namespace CityWatch.Data.Providers
         List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears();
         List<TrainingTQNumbers> GetTestTQNumbers();
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
 
     }
 
@@ -970,15 +971,28 @@ namespace CityWatch.Data.Providers
                 DeleteGuardLotes(guard.Id);
             }
             LanguageDetails languageDetails = new LanguageDetails();
-            foreach (var item in guard.LanguageDetails)
+            if (guard.LanguageDetails == null)
             {
                 languageDetails.Id = 0;
-                languageDetails.LanguageID = Convert.ToInt32(item);
+                languageDetails.LanguageID = 4;
                 languageDetails.CreatedDate = DateTime.Now;
                 languageDetails.GuardId = guard.Id;
                 languageDetails.IsDeleted = false;
                 _context.LanguageDetails.Add(languageDetails);
                 _context.SaveChanges();
+            }
+            else
+            {
+                foreach (var item in guard.LanguageDetails)
+                {
+                    languageDetails.Id = 0;
+                    languageDetails.LanguageID = Convert.ToInt32(item);
+                    languageDetails.CreatedDate = DateTime.Now;
+                    languageDetails.GuardId = guard.Id;
+                    languageDetails.IsDeleted = false;
+                    _context.LanguageDetails.Add(languageDetails);
+                    _context.SaveChanges();
+                }
             }
 
         }
@@ -999,26 +1013,21 @@ namespace CityWatch.Data.Providers
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardTrainingAndAssessment
                  .Where(x => x.GuardId == guardId)
-                 .Include(z => z.Guard).ToList();
+                 .Include(z => z.Guard)
+                 .Include(z=>z.HRGroups)
+                 .Include(z=>z.TrainingCourses)
+                 .Include(z=>z.TrainingCourseStatus)
+                 .ThenInclude(x=>x.TrainingCourseStatusColor)
+                 .ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;
-
-
-            result = _context.GuardTrainingAndAssessment
-            .Where(x => x.GuardId == guardId)
-            .Include(z => z.Guard)
-            .Select(x => new GuardTrainingAndAssessment
+            foreach(var item in result)
             {
-                Id = x.Id,
-                
-                GuardId = x.GuardId,
-                Description = x.Description,
-                HrGroup = x.HrGroup,
-                NewNullColumn=string.Empty,
-                LicenseNo = x.Guard.SecurityNo,
-                
-            }).OrderBy(x => x.Id)
-            .ToList();
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+            
 
 
             return result;
@@ -1056,6 +1065,33 @@ namespace CityWatch.Data.Providers
         public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
         {
             return _context.TrainingCertificateExpiryYears.ToList();
+        }
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                 .Where(x => x.Id == id)
+                 .Include(z => z.Guard)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+            foreach (var item in result)
+            {
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+
+
+
+            return result;
+
+
+
         }
 
     }

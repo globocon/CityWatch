@@ -377,6 +377,49 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
 
+        public JsonResult OnPostClientSiteManningKpiSettingsWithoutValue(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            var erorrMessage = string.Empty;
+            try
+            {
+
+
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        success = _clientDataProvider.SaveClientSiteManningKpiSettingOnlyNoHours(clientSiteKpiSetting);
+                        /* If change in the status update start */
+                        _clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id, clientSiteKpiSetting.KPITelematicsFieldID);
+                        /* If change in the status update end */
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+
+                }
+                else
+                {
+                    success = 4;
+
+                }
+
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
+        }
+
+
+
+
         public JsonResult OnPostClientSiteManningKpiSettingsADHOC(ClientSiteKpiSetting clientSiteKpiSetting)
         {
             var success = 0;

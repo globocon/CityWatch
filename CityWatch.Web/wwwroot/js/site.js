@@ -6193,7 +6193,8 @@ $("#btnDownloadClientSiteExcel").click(async function () {
             'State',
             'GPS',
             'Billing',
-            'Status'
+            'Status',
+            'Account Manager'
         ];
 
         // Dynamically add SmartWand and SIMProvider headers
@@ -6242,7 +6243,8 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                     clientSite.billing || '',
                     clientSite.status === 0 ? 'Ongoing' :
                         clientSite.status === 1 ? 'Expiring' :
-                            clientSite.status === 2 ? 'Expired' : ''
+                            clientSite.status === 2 ? 'Expired' : '',
+                    clientSite.accountManager
                 ];
 
                 // Add SmartWand and SIMProvider data dynamically

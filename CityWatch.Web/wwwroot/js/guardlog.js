@@ -5134,6 +5134,8 @@ $(function () {
         });
         gridGuardLicensesAndLicence.clear().draw();
         gridGuardLicensesAndLicence.ajax.reload();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
@@ -6370,6 +6372,7 @@ $(function () {
             }
         },
     });
+    
     gridGuardLicensesAndLicence.on('draw.dt', function () {
         var tbody = $('#tbl_guard_licensesAndCompliance tbody');
         var rows = tbody.find('tr');
@@ -8325,6 +8328,7 @@ $(function () {
                 }
             },
             { field: 'activityType', title: 'Source', width: 50 },
+            { field: 'siteName', title: 'Client Site', width: 150},
             { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },
@@ -8332,14 +8336,47 @@ $(function () {
     });
 
 
-    $('#fusionClientSiteId').select2({
-        placeholder: 'Select',
-        theme: 'bootstrap4'
-    });
+    //$('#fusionClientSiteId').select2({
+    //    placeholder: 'Select',
+    //    theme: 'bootstrap4'
+    //});
 
     $('#fusionClientSiteId').on('change', function () {
         gridsitefusionLog.clear();
     });
+
+    //$('#fusionClientType').on('change', function () {
+    //    gridsitefusionLog.clear();
+    //    const clientTypeId = $(this).val();
+    //    const clientSiteControl = $('#fusionClientSiteId');
+    //    clientSiteControl.html('');
+    //    $.ajax({
+    //        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+    //        type: 'GET',
+    //        dataType: 'json',
+    //        success: function (data) {
+    //            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
+    //            data.map(function (site) {
+    //                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+    //            });
+
+
+    //        }
+    //    });
+
+
+    //});
+
+
+    $('#fusionClientSiteId').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+
 
     $('#fusionClientType').on('change', function () {
         gridsitefusionLog.clear();
@@ -8351,16 +8388,12 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
-                $('#fusionClientSiteId').append(new Option('Select', '', true, true));
                 data.map(function (site) {
-                    $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
                 });
-
-
+                clientSiteControl.multiselect('rebuild');
             }
         });
-
-
     });
 
 
@@ -8415,14 +8448,18 @@ $(function () {
 
 
     $('#btnGeneratefusionAuditReport').on('click', function () {
-
-        if ($('#fusionClientSiteId').val() === '') {
+        var check = $('#fusionClientSiteId').val().join(';')
+        if ($('#fusionClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
         }
+        //if ($('#fusionClientSiteId').val() === '') {
+        //    alert('Please select a client site');
+        //    return;
+        //}
         gridsitefusionLog.clear();
         gridsitefusionLog.reload({
-            clientSiteId: $('#fusionClientSiteId').val(),
+            clientSiteIds: $('#fusionClientSiteId').val().join(';'),
             logFromDate: $('#fusionAudtitFromDate').val(),
             logToDate: $('#fusionAudtitToDate').val(),
             excludeSystemLogs: 0
@@ -8460,7 +8497,7 @@ $(function () {
             type: 'POST',
             dataType: 'json',
             data: {
-                clientSiteId: $('#fusionClientSiteId').val(),
+                clientSiteId: $('#fusionClientSiteId').val().join(';'),
                 logFromDate: $('#fusionAudtitFromDate').val(),
                 logToDate: $('#fusionAudtitToDate').val()
             },
