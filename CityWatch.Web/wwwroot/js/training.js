@@ -763,16 +763,22 @@ $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     }
     if (tabId == '#TrainingTestQuestions') {
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_save_trainingassessment_settings').attr('hidden', false);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     }
     if (tabId == '#TrainingCertificate') {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     }
 });
 $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
@@ -841,6 +847,9 @@ $('#btn_save_trainingassessment_settings').on("click", function (e) {
         type: 'POST',
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
+        if (result.success) {
+            alert("Saved Successfully");
+        }
         LoadTQSettings();
 
 
@@ -1573,6 +1582,7 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
+            alert("Saved Successfully");
             // LoadLastFeedbackQNumbers();
             LoadCurrentFeedbackQNumbers();
             GetNumberOfFeedbackQuestions();
@@ -1613,7 +1623,7 @@ $('#btn_delete_trainingassessment_feedbackquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
-            alert('Saved Successfully');
+          
             LoadLastFeedbackQNumbers();
             GetNumberOfFeedbackQuestions();
 
@@ -1892,8 +1902,10 @@ $('#btnAddGuardCourse').on('click', function (e) {
     //  ReloadHrGroupsforCourseList();
     var guardid = $('#Guard_Id').val();
     $('#trainingguardId').val(guardid);
-    $('#courseList').html();
+    //$('#courseList').html('');
+    
     $('#selectCoursesForGuardByAdmin').modal('show');
+    //$('#courseList').load();
     
 })
 function ReloadHrGroupsforCourseList() {
@@ -1972,7 +1984,7 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
         if (result.success) {
-            alert('saved successfully');
+           // alert('saved successfully');
             $('#selectCoursesForGuardByAdmin').modal('hide');
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
