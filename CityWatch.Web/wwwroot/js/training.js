@@ -23,6 +23,8 @@ $('#btnCourse').on('click', function (e) {
     GetNumberOfFeedbackQuestions();
     gridCourseInstructorDetails.clear();
     gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 
 $('#btnTestQuestions').on('click', function (e) {
@@ -49,6 +51,8 @@ $('#btnTestQuestions').on('click', function (e) {
     GetNumberOfFeedbackQuestions();
     gridCourseInstructorDetails.clear();
     gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
@@ -60,7 +64,7 @@ $('#btnCourseCertificates').on('click', function (e) {
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var courseDescription = $('#txtHrSettingsDescription').val();
     $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
-    gridCertificatesDocumentFiles.clear();
+    gridCourseDocumentFiles.clear();
     gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
     $('#btn_save_trainingassessment_settings').attr('hidden', true);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
@@ -74,6 +78,8 @@ $('#btnCourseCertificates').on('click', function (e) {
     GetNumberOfFeedbackQuestions();
     gridCourseInstructorDetails.clear();
     gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnTrainingAssesmentModalClose').on('click', function (e) {
     e.preventDefault();
@@ -240,33 +246,35 @@ $('#tbl_courseDocumentFiles').on('click', '.delete_course_file_sop', function ()
     }
 })
 
+function domainSettings(value, record) {
 
-let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
-    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId&&type=' + $('#HrSettings_Id').val(),
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
-    columns: [
-        { field: 'fileName', title: 'File Name', width: 390 },
-        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-
-        { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    // Check if the row is a newly added row by ID or another condition
+    if (record.id === -1) {
+        // Skip rendering the checkbox for new rows
+        return '';
     }
-});
+
+    if (record.isSubDomainEnabled) {
+
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" checked></a><input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.fileName + '">'
+
+    }
+    else {
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox"></a><input type="hidden" id="certificateId" value="' + record.id + '"> <input type="hidden" id="certificateName" value="' + record.fileName + '">'
+    }
+
+}
 var editTrainingCertificatesDocsButtonRendererSop;
 editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, $displayEl, id, $grid) {
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
     var data = $grid.data(),
-        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_certificate_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_certificate_file_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
             '</form></label>').attr('data-key', id),
-        $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+        $downlaod = $('<a href="/TA/' + hrreferenceNumber + '/Certificate/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
         $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
-        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_certificate_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
         $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
         $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
     $edit.on('click', function (e) {
@@ -295,6 +303,23 @@ editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, 
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
 }
+let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
+    dataSource: '/Admin/Settings?handler=CourseCertificateDocsUsingSettingsId',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'fileName', title: 'File Name', width: 390 },
+        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
+        { title: 'RPL', width: 50, renderer: domainSettings, cssClass: 'text-center' },
+        { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
 $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
 
     const isChecked = $(this).is(':checked');
@@ -1678,3 +1703,85 @@ if (gridCourseInstructorDetails) {
         }
     });
 }
+//p5-Issue3-CourseDocumentUpload-start
+$('#add_certificate_document_files').on('change', function (e) {
+    e.preventDefault();
+    uploadCourseCertificateDocUsingHR($(this), false, 3);
+});
+function uploadCourseCertificateDocUsingHR(uploadCtrl, edit = false) {
+    var hrSettingsId = $('#HrSettings_Id').val();
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
+    const file = uploadCtrl.get(0).files.item(0);
+    const fileExtn = file.name.split('.').pop();
+    if (!fileExtn || '.pdf,.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) < 0) {
+        showModal('Unsupported file type. Please upload a .pdf, .ppt or .pptx file');
+        return false;
+    }
+
+    const fileForm = new FormData();
+    fileForm.append('file', file);
+    fileForm.append('hrsettingsid', hrSettingsId);
+    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+    fileForm.append('filename', $('#txtHrSettingsDescription').val() + '_Certificate.pdf');
+
+
+    if (edit) {
+        fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+    }
+
+    $.ajax({
+        url: '/Admin/Settings?handler=UploadCourseCertificateDocUsingHR',
+        type: 'POST',
+        data: fileForm,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (data.success) {
+            
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+            showStatusNotification(data.success, data.message);
+        }
+        else {
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+            showStatusNotification(data.success, data.message);
+        }
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    });
+}
+
+$('#tbl_certificateDocumentFiles').on('change', 'input[name="upload_certificate_file_sop"]', function () {
+    uploadCourseCertificateDocUsingHR($(this), true, 1);
+
+});
+$('#tbl_certificateDocumentFiles').on('click', '.delete_certificate_file_sop', function () {
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
+    if (confirm('Are you sure want to delete this file?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteCourseCertificateDocUsingHR',
+            data: {
+                id: $(this).attr('data-doc-id'),
+                hrreferenceNumber: hrreferenceNumber
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                gridCertificatesDocumentFiles.clear();
+                gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+            }
+           
+        }).fail(function () {
+            console.log('error')
+        });
+    }
+})
+
+//p5-Issue3-CourseDocumentUpload-end

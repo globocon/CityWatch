@@ -2307,6 +2307,85 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetCourseCertificateDocsUsingSettingsId(int type)
+        {
+            return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(type));
+        }
+        public JsonResult OnPostUploadCourseCertificateDocUsingHR()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+                        var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
+                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        string filename = Request.Form["filename"].ToString();
+                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
+                        if (!Directory.Exists(CourseDocsFolder))
+                            Directory.CreateDirectory(CourseDocsFolder);
+                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+                            throw new ArgumentException("File Already Exists");
+                        using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, filename)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        
+                            _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
+                            {
+                                Id = documentId,
+                                FileName = filename,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+
+                            });
+                        
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteCourseCertificateDocUsingHR(int id, string hrreferenceNumber)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var document = _configDataProvider.GetCourseCertificateDocuments().SingleOrDefault(x => x.Id == id);
+                if (document != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate", document.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    _configDataProvider.DeleteCourseCertificateDocument(id);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
     }
     public class helpDocttype
     {

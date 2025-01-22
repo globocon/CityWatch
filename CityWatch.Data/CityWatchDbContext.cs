@@ -202,6 +202,7 @@ namespace CityWatch.Data
 
         public DbSet<TrainingInstructor> TrainingInstructor { get; set; }
         public DbSet<TrainingCourseInstructor> TrainingCourseInstructor { get; set; }
+        public DbSet<TrainingCourseCertificate> TrainingCourseCertificate { get; set; }
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
