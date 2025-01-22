@@ -135,12 +135,21 @@ namespace CityWatch.Data.Providers
 
         public ClientSite GetClientSiteLandline(int ClientSiteID);
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID);
+
+        List<TrainingCourseInstructor> GetCourseInstructor(int type);
+        void SaveTrainingCourseInstructor(TrainingCourseInstructor trainingCourseInstructor);
+        List<TrainingCourseCertificate> GetCourseCertificateDocsUsingSettingsId(int type);
+        void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate);
+        List<TrainingCourseCertificate> GetCourseCertificateDocuments();
+        void DeleteCourseCertificateDocument(int id);
+
         //p5-Issue-2-start
         List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
        
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1460,6 +1469,73 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID).ToList();
         }
+
+        public List<TrainingCourseInstructor> GetCourseInstructor(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseInstructor
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+
+            foreach(var item in courseDocList)
+            {
+                if (item.TrainingInstructorId == null)
+                {
+                    item.InstructorName = "";
+                    item.InstructorPosition = "";
+
+                }
+                else
+                {
+                    item.InstructorName = _context.TrainingInstructor.Where(x => x.Id == item.TrainingInstructorId).FirstOrDefault().Name;
+                    item.InstructorPosition = _context.TrainingInstructor.Where(x => x.Id == item.TrainingInstructorId).FirstOrDefault().Position;
+                }
+            }
+            return courseDocList;
+        }
+        public void SaveTrainingCourseInstructor(TrainingCourseInstructor trainingCourseInstructor)
+        {
+            if (trainingCourseInstructor.Id == 0)
+            {
+                _context.TrainingCourseInstructor.Add(trainingCourseInstructor);
+            }
+            else
+            {
+                var documentToUpdate = _context.TrainingCourseInstructor.SingleOrDefault(x => x.Id == trainingCourseInstructor.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.HRSettingsId = trainingCourseInstructor.HRSettingsId;
+                    documentToUpdate.TrainingInstructorId = trainingCourseInstructor.TrainingInstructorId;
+                    
+                }
+            }
+            _context.SaveChanges();
+        }
+        public List<TrainingCourseCertificate> GetCourseCertificateDocsUsingSettingsId(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseCertificate
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+
+
+            return courseDocList;
+        }
+        public void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate)
+        {
+            if (trainingCourseCertificate.Id == 0)
+            {
+                _context.TrainingCourseCertificate.Add(trainingCourseCertificate);
+            }
+            else
+            {
+                var documentToUpdate = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == trainingCourseCertificate.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.FileName = trainingCourseCertificate.FileName;
+                    documentToUpdate.LastUpdated = trainingCourseCertificate.LastUpdated;
+                    documentToUpdate.HRSettingsId = trainingCourseCertificate.HRSettingsId;
+
         //p5-Issue-2-start
         public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
         {
@@ -1505,15 +1581,33 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
+
                 }
             }
             _context.SaveChanges();
         }
+
+        public List<TrainingCourseCertificate> GetCourseCertificateDocuments()
+        {
+            return _context.TrainingCourseCertificate.OrderBy(x => x.FileName).ToList();
+        }
+        public void DeleteCourseCertificateDocument(int id)
+        {
+            var docToDelete = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == id);
+            if (docToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.TrainingCourseCertificate.Remove(docToDelete);
+            _context.SaveChanges();
+        }
+
+
         //p5-Issue-2-end
+
 
     }
 
 
 
-  
+
 }

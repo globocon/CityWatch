@@ -2087,6 +2087,27 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostDeleteTQAnswers(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+                   
+                    _guardLogDataProvider.DeleteTestQuestions(Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId,int tqNumberId)
         {
             return new JsonResult(_configDataProvider.GetNextQuestionWithinSameTQNumber(hrSettingsId, tqNumberId));
@@ -2145,6 +2166,28 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostDeleteFeedbackQAnswers(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteFeedbanckQuestions(Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
         public IActionResult OnGetFeedbackQuestionWithQuestionNumber(int hrSettingsId, int questionumberId)
         {
             var Questions = _configDataProvider.GetFeedbackQuestions(hrSettingsId, questionumberId);
@@ -2193,6 +2236,50 @@ namespace CityWatch.Web.Pages.Admin
                 
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnGetInstructorAndPosition()
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
+        }
+        
+        public JsonResult OnGetCourseInstructor(int type)
+        {
+            return new JsonResult(_configDataProvider.GetCourseInstructor(type));
+        }
+        public JsonResult OnGetInstructorAndPositionWithName(string InstructorName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Name== InstructorName).FirstOrDefault());
+        }
+        public JsonResult OnPostSaveTrainingCourseInstructor(int id, string instructorName,int hrsettingsId)
+        {
+            var success = false;
+            var message = "Saved successfully";
+
+            try
+            {
+                int? instructorId = null;
+                if (instructorName != null)
+                {
+                    instructorId = _guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x => x.Name == instructorName).FirstOrDefault().Id;
+                }
+                if (id == -1)
+                {
+                    id = 0;
+                }
+
+                    _configDataProvider.SaveTrainingCourseInstructor(new TrainingCourseInstructor()
+                    {
+                        Id = id,
+                        TrainingInstructorId = instructorId,
+                        HRSettingsId = hrsettingsId
+
+                    });
+                    success = true;
+                
+
+
+
+
         public JsonResult OnGetHrGroupsforCourseList()
         {
             return new JsonResult(_configDataProvider.GetHRGroupsDropDown());
@@ -2230,20 +2317,40 @@ namespace CityWatch.Web.Pages.Admin
                 });
 
                 success = true;
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
+
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteTrainingCourseInstructor(int Id)
+        {
+
             return new JsonResult(new { success, message });
         }
         public JsonResult OnPostUpdateCoursesStatus(int Id, int TrainingCourseStatusId)
         {
 
+
             var success = false;
             var message = string.Empty;
             try
             {
+
+                if(Id==-1)
+                {
+                    Id = 0;
+                }
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
+                }
+
                 
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
                
@@ -2259,6 +2366,7 @@ namespace CityWatch.Web.Pages.Admin
 
                 });
 
+
                 success = true;
             }
             catch (Exception ex)
@@ -2267,6 +2375,87 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnGetCourseCertificateDocsUsingSettingsId(int type)
+        {
+            return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(type));
+        }
+        public JsonResult OnPostUploadCourseCertificateDocUsingHR()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+                        var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
+                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        string filename = Request.Form["filename"].ToString();
+                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
+                        if (!Directory.Exists(CourseDocsFolder))
+                            Directory.CreateDirectory(CourseDocsFolder);
+                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+                            throw new ArgumentException("File Already Exists");
+                        using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, filename)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        
+                            _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
+                            {
+                                Id = documentId,
+                                FileName = filename,
+                                LastUpdated = DateTime.Now,
+                                HRSettingsId = hrsettingsid,
+
+                            });
+                        
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteCourseCertificateDocUsingHR(int id, string hrreferenceNumber)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var document = _configDataProvider.GetCourseCertificateDocuments().SingleOrDefault(x => x.Id == id);
+                if (document != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate", document.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    _configDataProvider.DeleteCourseCertificateDocument(id);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
     }
     public class helpDocttype
     {

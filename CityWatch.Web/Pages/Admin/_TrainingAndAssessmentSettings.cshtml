@@ -400,6 +400,9 @@
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="trainingCertificateUploadtab" data-toggle="tab" href="#TrainingCertificateUpload" role="tab" aria-controls="TrainingCertificatedUploadTab" aria-selected="true">Upload</a>
                                 </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link" id="trainingCourseInstructorUploadtab" data-toggle="tab" href="#TrainingCourseInstructorUpload" role="tab" aria-controls="trainingCourseInstructorUploadtab" aria-selected="true">Instructor</a>
+                                </li>
 
                             </ul>
                             <div class="tab-content">
@@ -422,7 +425,20 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-pane " id="TrainingCourseInstructorUpload" role="tabpanel" aria-labelledby="TrainingCourseInstructorUploadTab">
+                                    <div class="row mb-2" id="TrainingCertificateFiles">
 
+                                        <div class="col-md-12 text-right mt-3">
+                                            <button class="btn btn-success mb-3" id="add_course_Instructor"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <div class="col-md-12">
+                                                <table class="table" id="tbl_Course_Instructor"></table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
 
                             </div>
@@ -434,7 +450,9 @@
             <div class="modal-footer justify-content-start">
                 <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_settings">Save</button>
                 <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_testquestions">Save</button>
+                <button type="button" class="btn btn-success" id="btn_delete_trainingassessment_testquestions" disabled>Clear</button>
                 <button type="button" class="btn btn-primary" id="btn_save_trainingassessment_feedbackquestions">Save</button>
+                <button type="button" class="btn btn-success" id="btn_delete_trainingassessment_feedbackquestions" disabled>Clear</button>
             </div>
         </div>
     </div>

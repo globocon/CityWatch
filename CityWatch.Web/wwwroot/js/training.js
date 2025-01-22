@@ -14,11 +14,17 @@ $('#btnCourse').on('click', function (e) {
     $('#btn_save_trainingassessment_settings').attr('hidden', true);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 
 $('#btnTestQuestions').on('click', function (e) {
@@ -36,11 +42,17 @@ $('#btnTestQuestions').on('click', function (e) {
     $('#btn_save_trainingassessment_settings').attr('hidden', false);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
@@ -52,16 +64,22 @@ $('#btnCourseCertificates').on('click', function (e) {
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var courseDescription = $('#txtHrSettingsDescription').val();
     $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
-    gridCertificatesDocumentFiles.clear();
+    gridCourseDocumentFiles.clear();
     gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
     $('#btn_save_trainingassessment_settings').attr('hidden', true);
     $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
     $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+    $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     LoadTQSettings();
     LoadLastTQNumbers();
     GetNumberOfQuestions();
     LoadLastFeedbackQNumbers();
     GetNumberOfFeedbackQuestions();
+    gridCourseInstructorDetails.clear();
+    gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
 });
 $('#btnTrainingAssesmentModalClose').on('click', function (e) {
     e.preventDefault();
@@ -228,33 +246,35 @@ $('#tbl_courseDocumentFiles').on('click', '.delete_course_file_sop', function ()
     }
 })
 
+function domainSettings(value, record) {
 
-let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
-    dataSource: '/Admin/Settings?handler=CourseDocsUsingSettingsId&&type=' + $('#HrSettings_Id').val(),
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
-    columns: [
-        { field: 'fileName', title: 'File Name', width: 390 },
-        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-
-        { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    // Check if the row is a newly added row by ID or another condition
+    if (record.id === -1) {
+        // Skip rendering the checkbox for new rows
+        return '';
     }
-});
+
+    if (record.isSubDomainEnabled) {
+
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" checked></a><input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.fileName + '">'
+
+    }
+    else {
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox"></a><input type="hidden" id="certificateId" value="' + record.id + '"> <input type="hidden" id="certificateName" value="' + record.fileName + '">'
+    }
+
+}
 var editTrainingCertificatesDocsButtonRendererSop;
 editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, $displayEl, id, $grid) {
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
     var data = $grid.data(),
-        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_certificate_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_certificate_file_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
             '</form></label>').attr('data-key', id),
-        $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+        $downlaod = $('<a href="/TA/' + hrreferenceNumber + '/Certificate/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
         $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
-        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_certificate_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
         $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
         $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
     $edit.on('click', function (e) {
@@ -283,6 +303,23 @@ editTrainingCertificatesDocsButtonRendererSop = function (value, record, $cell, 
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
 }
+let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
+    dataSource: '/Admin/Settings?handler=CourseCertificateDocsUsingSettingsId',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'fileName', title: 'File Name', width: 390 },
+        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
+        { title: 'RPL', width: 50, renderer: domainSettings, cssClass: 'text-center' },
+        { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
 $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
 
     const isChecked = $(this).is(':checked');
@@ -690,16 +727,31 @@ $('#TrainingTestQuestionsDetailsTab .nav-item .nav-link').on("click", function (
         $('#btn_save_trainingassessment_settings').attr('hidden', false);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
     }
     if (tabId == '#TrainingTestQuestionsAnswers') {
         $('#btn_save_trainingassessment_testquestions').attr('hidden', false);
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', false);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
+       
+        if ($('#txt_TestQuestionAnswersId').val() != '') {
+            $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+        }
     }
     if (tabId == '#TrainingTestQuestionsFeedback') {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', false);
         $('#btn_save_trainingassessment_settings').attr('hidden', true);
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
+        $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', false);
+        
+        if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+            $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+        }
+
     }
 });
 $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
@@ -910,15 +962,41 @@ $('#ddlTestQuestionNo').on('change', function () {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result != null) {
+            $('#txtQuestion').val('');
+            $('#txt_Option1').val('');
+            $('#txt_Option2').val('');
+            $('#txt_Option3').val('');
+            $('#txt_Option4').val('');
+            $('#txt_Option5').val('');
+            $('#txt_Option6').val('');
+            $('#cbIsOption1').prop('checked', false);
+            $('#cbIsOption1').change();
+            $('#cbIsOption2').prop('checked', false);
+            $('#cbIsOption2').change();
+            $('#cbIsOption3').prop('checked', false);
+            $('#cbIsOption3').change();
+            $('#cbIsOption4').prop('checked', false);
+            $('#cbIsOption4').change();
+            $('#cbIsOption5').prop('checked', false);
+            $('#cbIsOption5').change();
+            $('#cbIsOption6').prop('checked', false);
+            $('#cbIsOption6').change();
         $("#txt_TestQuestionAnswersId").val(result.id);
         $("#txtQuestion").val(result.question);
         
             GetAnswers();
             GetNumberOfQuestionsNew();
+            if ($('#txt_TestQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            }
         }
         else {
             LoadNextTQQuestions();
             GetNumberOfQuestions();
+            $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
         }
 
 
@@ -1019,7 +1097,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             Id: 0,
             TrainingTestQuestionsId: testQuestionAnswersId,
             Options: $('#txt_Option5').val(),
-            IsAnswer: $('#IsOption5').val(),
+            c,
         }
         objAnswers.push(objAnswersnew);
     }
@@ -1033,6 +1111,11 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         objAnswers.push(objAnswersnew);
     }
     const token = $('input[name="__RequestVerificationToken"]').val();
+
+    if (($('#IsOption1').val() == 'false') && ($('#IsOption2').val() == 'false') && ($('#IsOption3').val() == 'false') && ($('#IsOption4').val() == 'false') && ($('#IsOption5').val() == 'false') && ($('#IsOption6').val() == 'false')) {
+        alert('Please use toggle to enable correct answer');
+        return;
+    }
     $.ajax({
         url: '/Admin/Settings?handler=SaveTQAnswers',
         data: {
@@ -1044,8 +1127,16 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
-            LoadNextTQQuestions();
+            alert('Saved Successfully');
+            LoadCurrentTQQuestions();
+            //
             GetNumberOfQuestions();
+            if ($('#txt_TestQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            }
         }
         $('#loader').hide();
 
@@ -1058,6 +1149,73 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
         console.log('error');
     })
 });
+$('#btn_delete_trainingassessment_testquestions').on("click", function (e) {
+    e.preventDefault();
+    $('#loader').show();
+    
+    var testQuestionAnswersId = parseInt($("#txt_TestQuestionAnswersId").val());
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteTQAnswers',
+        data: {
+            'Id': testQuestionAnswersId
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            LoadNextTQQuestions();
+            //
+            GetNumberOfQuestions();
+           
+                $('#btn_delete_trainingassessment_testquestions').attr('disabled', 'disabled');
+            
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
+function LoadCurrentTQQuestions() {
+    var valueTQNo = $('#ddlTestQuestionNo').val();
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=QuestionWithQuestionNumber',
+        data: {
+            'hrSettingsId': $("#HrSettings_Id").val(),
+            'tqNumberId': $("#ddlTQNo").val(),
+            'questionumberId': valueTQNo,
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $("#txt_TestQuestionAnswersId").val(result.id);
+            $("#txtQuestion").val(result.question);
+
+            GetAnswers();
+            GetNumberOfQuestionsNew();
+        }
+        else {
+            LoadNextTQQuestions();
+            GetNumberOfQuestions();
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function LoadNextTQQuestions() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -1194,6 +1352,38 @@ function LoadLastFeedbackQNumbers() {
         console.log('error');
     })
 }
+function LoadCurrentFeedbackQNumbers() {
+    var valueFeedbackQNo = $('#ddlFeedbackQuestionNo').val();
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=FeedbackQuestionWithQuestionNumber',
+        data: {
+            'hrSettingsId': $("#HrSettings_Id").val(),
+            'questionumberId': valueFeedbackQNo,
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $("#txt_FeedbackQuestionAnswersId").val(result.id);
+            $("#txtFeedbackQuestion").val(result.question);
+
+            GetFeedbackAnswers();
+            GetNumberOfFeedbackQuestionsNew();
+        }
+        else {
+            LoadLastFeedbackQNumbers();
+            GetNumberOfFeedbackQuestions();
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function GetNumberOfFeedbackQuestions() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -1256,6 +1446,12 @@ $('#ddlFeedbackQuestionNo').on('change', function () {
 
             GetFeedbackAnswers();
             GetNumberOfFeedbackQuestionsNew();
+            if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            }
         }
         else {
             LoadLastFeedbackQNumbers();
@@ -1374,8 +1570,52 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success == true) {
+            // LoadLastFeedbackQNumbers();
+            LoadCurrentFeedbackQNumbers();
+            GetNumberOfFeedbackQuestions();
+            if ($('#txt_FeedbackQuestionAnswersId').val() != '') {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', false);
+            }
+            else {
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            }
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
+$('#btn_delete_trainingassessment_feedbackquestions').on("click", function (e) {
+    e.preventDefault();
+    $('#loader').show();
+   
+    
+    var feedbackQuestionAnswersId = parseInt($("#txt_FeedbackQuestionAnswersId").val());
+ 
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteFeedbackQAnswers',
+        data: {
+            'Id': $("#txt_FeedbackQuestionAnswersId").val()
+
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            alert('Saved Successfully');
             LoadLastFeedbackQNumbers();
             GetNumberOfFeedbackQuestions();
+
+                $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
+            
         }
         $('#loader').hide();
 
@@ -1410,6 +1650,239 @@ $("textarea[id='txtFeedbackQuestion']").keyup(function () {
 function getFeedbackQuestionLength(note) {
     return 'Remaining characters: ' + getNoteRemainingCount(note, 'feedback_question');
 }
+
+const courseInstructorDetails =()=> {
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPosition',
+        //data: { record: data },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+       
+        result;
+        
+    });
+   
+}
+
+function courseInstructorEditor($editorContainer, value, record) {
+    if (isCourseInstructorAdding && value === undefined)
+        value = 0;
+    let selectHtml = $('<select class="form-control dd-course-instructor"></select>');
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPosition',
+        //data: { record: data },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        selectHtml.append('<option value=""></option>')
+        result.forEach(function (item) {
+            selectHtml.append('<option "value="' + item.name + '" >' + item.name + '</option>')
+        })
+        selectHtml.val(record.instructorName);
+
+    });
+   
+        
+   
+    $editorContainer.append(selectHtml);
+    
+}
+let isCourseInstructorAdding = false;
+let gridCourseInstructorDetails = $('#tbl_Course_Instructor').grid({
+    dataSource: '/Admin/Settings?handler=CourseInstructor',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', title: '', hidden: true },
+       // { field: 'instructorName', title: 'Instructor Name', width: 390, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=Instructor', valueField: 'name', textField: 'name' } }, 
+        { field: 'instructorName', title: 'Instructor Name', width: 390, type: 'dropdown', editor: courseInstructorEditor  },
+
+        
+        { field: 'instructorPosition', title: 'Position', width: 140 }
+       
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+
+    }
+});
+$('#add_course_Instructor').on('click', function () {
+  
+    var rowCount = $('#tbl_Course_Instructor tr').length;
+
+
+    if (isCourseInstructorAdding) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        isCourseInstructorAdding = true;
+        gridCourseInstructorDetails.addRow({
+            'id': -1,
+            'name': '',
+            'position': '',
+        }).edit(-1);
+    }
+});
+$('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
+
+    var control = $(this);
+    var id = $(this).val();
+    var position;
+    
+    $.ajax({
+        url: '/Admin/settings?handler=InstructorAndPositionWithName',
+        data: { InstructorName: id },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result != null) {
+            position = result.position;
+
+        }
+        else {
+            position = '';
+        }
+        control.closest('tr').find('td').eq(2).text(position);
+        control.closest('tr').find('td').eq(2).val(position);
+
+    });
+   
+   
+    
+});
+if (gridCourseInstructorDetails) {
+    gridCourseInstructorDetails.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+       
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveTrainingCourseInstructor',
+            data: { id: data.id, instructorName: data.instructorName, hrsettingsId: $('#HrSettings_Id').val() },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+
+                gridCourseInstructorDetails.clear();
+                gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });;
+            }
+            else {
+                alert(result.message);
+
+                gridCourseInstructorDetails.edit(id);
+
+            }
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isCourseInstructorAdding)
+                isCourseInstructorAdding = false;
+        });
+    });
+
+    gridCourseInstructorDetails.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteTrainingCourseInstructor',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) { gridCourseInstructorDetails.clear(); gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });; }
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isCourseInstructorAdding)
+                    isCourseInstructorAdding = false;
+            });
+        }
+    });
+}
+//p5-Issue3-CourseDocumentUpload-start
+$('#add_certificate_document_files').on('change', function (e) {
+    e.preventDefault();
+    uploadCourseCertificateDocUsingHR($(this), false, 3);
+});
+function uploadCourseCertificateDocUsingHR(uploadCtrl, edit = false) {
+    var hrSettingsId = $('#HrSettings_Id').val();
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
+    const file = uploadCtrl.get(0).files.item(0);
+    const fileExtn = file.name.split('.').pop();
+    if (!fileExtn || '.pdf,.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) < 0) {
+        showModal('Unsupported file type. Please upload a .pdf, .ppt or .pptx file');
+        return false;
+    }
+
+    const fileForm = new FormData();
+    fileForm.append('file', file);
+    fileForm.append('hrsettingsid', hrSettingsId);
+    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+    fileForm.append('filename', $('#txtHrSettingsDescription').val() + '_Certificate.pdf');
+
+
+    if (edit) {
+        fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+    }
+
+    $.ajax({
+        url: '/Admin/Settings?handler=UploadCourseCertificateDocUsingHR',
+        type: 'POST',
+        data: fileForm,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (data.success) {
+            
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+            showStatusNotification(data.success, data.message);
+        }
+        else {
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+            showStatusNotification(data.success, data.message);
+        }
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    });
+}
+
+$('#tbl_certificateDocumentFiles').on('change', 'input[name="upload_certificate_file_sop"]', function () {
+    uploadCourseCertificateDocUsingHR($(this), true, 1);
+
+});
+$('#tbl_certificateDocumentFiles').on('click', '.delete_certificate_file_sop', function () {
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
+    if (confirm('Are you sure want to delete this file?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteCourseCertificateDocUsingHR',
+            data: {
+                id: $(this).attr('data-doc-id'),
+                hrreferenceNumber: hrreferenceNumber
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                gridCertificatesDocumentFiles.clear();
+                gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+            }
+           
+        }).fail(function () {
+            console.log('error')
+        });
+    }
+})
+
+//p5-Issue3-CourseDocumentUpload-end
+
 //p5-Issue-2-start
 $('#btnAddGuardCourse').on('click', function (e) {
     e.preventDefault();
@@ -1507,3 +1980,4 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
 
 });
 //p5-Issue-2-end
+
