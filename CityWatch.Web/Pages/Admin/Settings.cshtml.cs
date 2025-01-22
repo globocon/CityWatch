@@ -439,7 +439,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
         }
-
+        
         public JsonResult OnPostUploadStaffDoc()
         {
             var success = false;
@@ -1770,6 +1770,77 @@ namespace CityWatch.Web.Pages.Admin
                     SOP = SOP,
                     ClientSite = ClientSite
 
+                });
+
+                success = true;
+            }
+            else
+            {
+                throw new ArgumentException("Select the site and SOP");
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostUploadStaffDocUsingTypeSix()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+
+                       
+
+                        // Generate URL to the StaffDocs folder
+                       
+
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var SOP = Request.Form["sop"];
+            var ClientSite = int.Parse(Request.Form["site"]);
+            var fileName = Request.Form["filename"];
+            if (ClientSite != 0)
+            {
+                var staffDocsUrl = $"{Request.Scheme}://{Request.Host}/StaffDocs/";
+                var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                var type = 6;
+
+                _configDataProvider.SaveStaffDocument(new StaffDocument()
+                {
+                    Id = documentId,
+                    FileName = fileName,
+                    LastUpdated = DateTime.Now,
+                    DocumentType = type,
+                    SOP = SOP,
+                    ClientSite = ClientSite,
+                    FilePath= staffDocsUrl
                 });
 
                 success = true;

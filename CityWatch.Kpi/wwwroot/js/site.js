@@ -111,6 +111,9 @@ $(function () {
         $('#is_thermal_site').val('N/A');
     }
 
+   
+   
+
     /***** KPI Report *****/
 
     var gridReport = $('#monthly_kpi_report').DataTable({
@@ -757,7 +760,9 @@ $(function () {
     /*Rc Action List Image Upload stop*/
 
     //RC Action List Save start
- 
+    
+
+   
     $('#div_site_settings').on('click', '#save_site_RC', function () {
         var List = $('#frm_ActionList').serialize();
         $.ajax({
@@ -1203,6 +1208,8 @@ $(function () {
         var searchitem = $("#search_sites_settings").val();
         gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem, userId: $('#hid_userIdSettings').val() });
     }
+
+   
     /*code added for search client stop */
     var currentDiv = 1;
     let gritdSmartWands;   
@@ -2708,6 +2715,9 @@ $('#div_site_settings').on('change', '#dgKPITelamaticsName', function () {
     });
 
 });
+
+
+
 //Code to handle timesheet schedule stop
 
 //$('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () {

@@ -345,7 +345,98 @@ $(function () {
             }
         });
     }
+
+    let gridSummaryImage;
+    gridSummaryImage = $('#tbl_summaryImage1').grid({
+        
+        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingTypeNew&&type=6&&ClientSiteId=' + $('#ClientSiteId').val(),
+            
+        },
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+
+
+            { field: 'fileName', title: 'File Name', width: 240 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
+            { width: 160, renderer: schButtonRenderer },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    function schButtonRenderer(value, record) {
+        let buttonHtml = '';
+        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
+        buttonHtml += '<label class="btn btn-success mb-0"><form id="form_file_downloads_companyNew" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_staff_file_companyNew" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '</form></label>'
+        //buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        //buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil"></i></button>';
+        buttonHtml += '<button type="button" style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-scheduleAlarm1 d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i>Delete</button>';
+        return buttonHtml;
+    }
+    $('#tbl_summaryImage1').on('click', '.del-scheduleAlarm1', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this linked Duress?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridSummaryImage.reload();
+            });
+        }
+
+    });
+    $('#tbl_summaryImage1').on('change', 'input[name="upload_staff_file_companyNew"]', function () {
+        uploadStafDocUsingType1($(this), true, 1);
+    });
     
+    $('#add_staff_document_file_Alarm').on('change', function () {
+        console.log('File selected:', this.files);
+        uploadStafDocUsingType1($(this), false, 2);
+    });
+    function uploadStafDocUsingType1(uploadCtrl, edit = false, type) {
+
+        const ClientSiteID = $('#ClientSiteId').val();
+        const file = uploadCtrl.get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+            return false;
+        }
+
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('type', type);
+        fileForm.append('ClientSiteID', ClientSiteID);
+        if (edit)
+            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+        $.ajax({
+            url: '/Admin/Settings?handler=UploadStaffDocUsingType',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                
+                gridSummaryImage.reload();
+                //showStatusNotification(data.success, data.message);
+            }
+        }).fail(function () {
+            //showStatusNotification(false, 'Something went wrong');
+        });
+    }
+
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
     });
@@ -1439,7 +1530,8 @@ $(function () {
         $('#Critical-modal').modal('show');
         clearCriticalModal();
     });
-
+   
+    
 
   
 
@@ -1706,5 +1798,7 @@ $('#AnprKey_Disabled, #AnprKey_SingleLane, #AnprKey_SeperateEntryAndExit').on('c
     // Uncheck all checkboxes except the one that was clicked
     $('#AnprKey_Disabled, #AnprKey_SingleLane, #AnprKey_SeperateEntryAndExit').not(this).prop('checked', false);
 });
+
+
 //ANPR Details stop
 

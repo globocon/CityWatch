@@ -4278,7 +4278,7 @@
         gridSchedules.reload({ query: query });
         gridStaffDocsTypeCompanySop.reload({ query: query });
         gridStaffDocsTypeTraining.reload({ query: query });
-
+        gridSchedulesAlarm.reload({ query: query });
 
     });
     //if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
@@ -4324,7 +4324,25 @@
         });
     });
 
+    $('#clientTypeNamesiteSOPAlarm').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSitessiteSOPAlarm').html('');
+            $('#clientSitessiteSOPAlarm').append('<option value="">Select</option>');
+        }
 
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesSOPClientSite&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSitessiteSOPAlarm').html('');
+            $('#clientSitessiteSOPAlarm').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSitessiteSOPAlarm').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
 
 
     $('#removeSelectedSites').on('click', function () {
@@ -4584,8 +4602,200 @@
 
 });
 
+//Client SOP(Alarm)
+const showStatusNotification = function (success, message) {
+    if (success) {
+        $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
+    } else {
+        $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
+    }
+    $('.toast .toast-body').html(message);
+    $('.toast').toast('show');
+}
+$('#btnSaveSiteSOPAlarm').on('click', function () {
+    $('#loadinDiv').show();
+    var fileName = $('#filenameAlarm').val();
+    var sop = $('#SOPAlarm').val();
+    var site = $('#clientSitessiteSOPAlarm').val();
+    var scheduleId = $('#scheduleId1').val();
+    const showModal = function (message) {
+
+        $('#msg-modal .modal-body p').html(message);
+        $('#msg-modal').modal();
+    }
+    if (site == '') {
+
+        $('#add_staff_document_file_SlientSite_sopAlarm').val('');
+        $('#msg-modal .modal-body p').html('Please select Site');
+        $('#msg-modal').modal();
+        return false;
+
+    }
+    var fileInput = $('#add_staff_document_file_SlientSite_sopAlarm')[0]; // Access the raw DOM element
+    const fileForm = new FormData();
+    // Check if a file has been selected
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0]; // Get the first file object
+        const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
+        fileName = file.name;
+        // Validate file extension
+        if (!fileExtn || ['pdf', 'docx', 'xlsx'].indexOf(fileExtn) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, or .xlsx file');
+            return false;
+        }
+        // Prepare the form data
+
+        fileForm.append('file', file);
 
 
+
+    }
+    else {
+
+        if (scheduleId == 0) {
+            showModal('Please select the file to upload');
+            return false;
+        }
+        fileForm.append('file', '');
+    }
+
+    fileForm.append('type', 6);
+    fileForm.append('sop', sop);
+    fileForm.append('site', site);
+    fileForm.append('doc-id', scheduleId);
+    fileForm.append('fileName', fileName);
+
+    //if (edit)
+    //    fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+    $.ajax({
+        url: '/Admin/Settings?handler=UploadStaffDocUsingTypeSix',
+        type: 'POST',
+        data: fileForm,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (data.success) {
+
+            gridSchedulesAlarm.reload();
+            $('#schedule-modalAlarm').modal('hide');
+            showStatusNotification(data.success, data.message);
+
+        }
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    }).always(function () {
+        $('#loadinDiv').hide();
+    });
+
+
+
+});
+let gridSchedulesAlarm;
+
+
+
+gridSchedulesAlarm = $('#staff_document_siteSOPAlarm').grid({
+    //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+    dataSource: {
+        url: '/Admin/Settings?handler=StaffDocsUsingType&&type=6',
+        data: function () {
+            return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+        }
+    },
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+
+        { field: 'clientTypeName', title: 'Client Type', width: 160 },
+        { field: 'clientSiteName', title: 'Client Site', width: 160 },
+        { field: 'fileName', title: 'File Name', width: 300 },
+        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+        { width: 55, field: 'sop', title: 'SOP' },
+        { width: 140, renderer: schButtonRenderer1 },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+function schButtonRenderer1(value, record) {
+    let buttonHtml = '';
+    buttonHtml = '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modalAlarm" data-sch-id="' + record.id + '" ';
+    buttonHtml += 'data-action="editScheduleAlarm"><i class="fa fa-pencil"></i></button>';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-scheduleAlarm d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
+    return buttonHtml;
+}
+$('#schedule-modalAlarm').on('shown.bs.modal', function (event) {
+    clearScheduleAlarmModal();
+    const button = $(event.relatedTarget);
+    const isEdit = button.data('action') !== undefined && button.data('action') === 'editScheduleAlarm';
+    if (isEdit) {
+        schId = button.data('sch-id');
+        SOPClientSiteModalOnEditAlarm(schId);
+    }
+
+
+});
+$('#staff_document_siteSOPAlarm').on('click', '.del-scheduleAlarm', function () {
+    const idToDelete = $(this).attr('data-sch-id');
+    if (confirm('Are you sure want to delete this linked Duress?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteStaffDoc',
+            type: 'POST',
+            data: { id: idToDelete },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridSchedulesAlarm.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        });
+    }
+
+});
+function clearScheduleAlarmModal() {
+    $('#dynamicLabelAlarm').html('');
+    $('#filenameAlarm').val('');
+    $('#add_staff_document_file_SlientSite_sopAlarm').val('');
+    $('#scheduleId1').val('0');
+    $('#clientTypeNamesiteSOPAlarm').val('');
+    $('#clientSitessiteSOPAlarm').html('<option value="">Select</option>');
+    $('#clientTypeNamesiteSOPAlarm option:eq(0)').attr('selected', true);
+    $('#GroupName').val('');
+    $('#sch-modal-validation').hide();
+    $('#SOPAlarm').prop('selectedIndex', 0);
+}
+
+
+function SOPClientSiteModalOnEditAlarm(scheduleId) {
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=SOPClientSitebyId&id=' + scheduleId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#scheduleId1').val(data.id);
+        $('#filenameAlarm').val(data.fileName);
+        $('#dynamicLabelAlarm').html('<a href="/StaffDocs/' + data.fileName + '" class="btn btn-outline-primary" target="_blank"><i class="fa fa-download"></i> Download</a>');
+
+        $('#clientSitessiteSOPAlarm').html(''); // Clear the existing options
+        $('#clientSitessiteSOPAlarm').append('<option value="">Select</option>'); // Add a default 'Select' option
+
+        // Populate the dropdown with new options
+        $.each(data.clientSites, function (index, item) {
+            $('#clientSitessiteSOPAlarm').append('<option value="' + item.value + '">' + item.text + '</option>');
+        });
+        $('#clientTypeNamesiteSOPAlarm').val(data.clientTypeName);
+        // Set the value of the dropdown and trigger the change event
+        $('#clientSitessiteSOPAlarm').val(data.clientSite);
+
+        // Set the value for another input field
+        $('#SOPAlarm').val(data.sop);
+
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
 
 /*for adding a reportlogo-start*/
 $('#cr_reportlogo_upload').on('change', function () {
@@ -5174,6 +5384,7 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#training').hide();
     $('#templatesandforms').hide();
     $('#clientSOP').hide();
+    $('#ClientSOPAlarm').hide();
 
 }
 
@@ -5191,6 +5402,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').hide();
         $('#btnGroupAddon2').hide();
+        $('#ClientSOPAlarm').hide();
 
     }
 
@@ -5202,6 +5414,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
         $('#btnGroupAddon2').show();
+        $('#ClientSOPAlarm').hide();
 
     }
     else if ($('#report_module_types_irtemplate').val() == 3) {
@@ -5212,6 +5425,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
         $('#btnGroupAddon2').show();
+        $('#ClientSOPAlarm').hide();
     }
     else if ($('#report_module_types_irtemplate').val() == 4) {
         $('#incident_report_pdf_template').hide();
@@ -5221,7 +5435,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
         $('#btnGroupAddon2').show();
-
+        $('#ClientSOPAlarm').hide();
     }
 
     else if ($('#report_module_types_irtemplate').val() == 5) {
@@ -5232,10 +5446,20 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#clientSOP').show();
         $('#searchBoxTempAndForms').show();
         $('#btnGroupAddon2').show();
-
+        $('#ClientSOPAlarm').hide();
 
     }
+    else if ($('#report_module_types_irtemplate').val() == 6) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').hide();
+        $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
+        $('#ClientSOPAlarm').show();
 
+    }
     else {
         $('#searchBoxTempAndForms').hide();
         $('#btnGroupAddon2').hide();
@@ -6052,5 +6276,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         alert("An error occurred while exporting data.");
     }
 });
+
+
 
 

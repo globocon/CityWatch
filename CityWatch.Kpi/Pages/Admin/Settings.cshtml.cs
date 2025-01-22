@@ -1975,6 +1975,88 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             return new JsonResult(_viewDataService.GetMobileNo(Id));
         }
+        public JsonResult OnGetStaffDocsUsingType(int type, string query)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
+        }
+        public JsonResult OnGetStaffDocsUsingTypeNew(int type, int ClientSiteId)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId)));
+        }
+        public JsonResult OnPostUploadStaffDocUsingType()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        var staffDocsUrl = $"{Request.Scheme}://{Request.Host}/StaffDocs/";
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        var type = Convert.ToInt32(Request.Form["type"]);
+                        var ClienSiteID = Convert.ToInt32(Request.Form["ClientSiteID"]);
+                        _configDataProvider.SaveStaffDocument(new StaffDocument()
+                        {
+                            Id = documentId,
+                            FileName = file.FileName,
+                            LastUpdated = DateTime.Now,
+                            DocumentType = type,
+                            ClientSite= ClienSiteID,
+                            FilePath = staffDocsUrl
+                        });
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteStaffDoc(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var document = _configDataProvider.GetStaffDocuments().SingleOrDefault(x => x.Id == id);
+                if (document != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs", document.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    _configDataProvider.DeleteStaffDocument(id);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
     }
 
 }

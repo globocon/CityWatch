@@ -133,6 +133,9 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
 
+
+        public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID);
+
         public ClientSite GetClientSiteLandline(int ClientSiteID);
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID);
 
@@ -149,6 +152,7 @@ namespace CityWatch.Data.Providers
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
+
 
     }
 
@@ -381,9 +385,15 @@ namespace CityWatch.Data.Providers
             return staffDocList;
         }
 
-        
+        public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID)
+        {
+            var staffDocList = _context.StaffDocuments
+               .Where(x => x.DocumentType == type && x.ClientSite== ClientSiteID)
+               .ToList();
+            return staffDocList;
+        }
 
-        public void SaveStaffDocument(StaffDocument staffdocument)
+            public void SaveStaffDocument(StaffDocument staffdocument)
         {
             if (staffdocument.Id == 0)
             {
@@ -398,6 +408,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.LastUpdated = staffdocument.LastUpdated;
                     documentToUpdate.SOP = staffdocument.SOP;
                     documentToUpdate.ClientSite = staffdocument.ClientSite;
+                    documentToUpdate.FilePath = staffdocument.FilePath;
                 }
             }
             _context.SaveChanges();
