@@ -348,11 +348,11 @@ $(function () {
 
     let gridSummaryImage;
     gridSummaryImage = $('#tbl_summaryImage1').grid({
-        
+
         //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingTypeNew&&type=6&&ClientSiteId=' + $('#ClientSiteId').val(),
-            
+
         },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
@@ -364,10 +364,38 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
             { width: 160, renderer: schButtonRenderer },
         ],
+        dataBound: function (e, records) {
+            if (!records || records.length === 0) {
+                // If no records, render the static HTML
+                const staticHtml = `
+            <thead>
+                <tr>
+                    <th style="width:370px">File Name</th>
+                    <th style="width:359px">Date & Time Uploaded</th>
+                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="align-middle" id="summary_imageRC"></td>
+                    <td class="align-middle" id="summary_image_updatedRC"></td>
+                    <td class="text-center">
+                    <input type="hidden" id="DocumentID"/>
+                       <a href="" class="btn btn-outline-primary m-1" id="download_summary_imageRCList" target="_blank"><i class="fa fa-download"></i>Download</a>
+                      <label class="btn btn-success mb-0"><form id="form_file_downloads_companyNew" method="post"><i class="fa fa-upload mr-2"></i>Replace <input type="file" id="upload_summary_imageRcList1" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden></form></label>
+                       <button type="button" style="display:inline-block!important;" class="btn btn-outline-danger m-1 d-block" id="delete_summary_image1"><i class="fa fa-trash" aria-hidden="true"></i>Delete</button>
+                    </td>
+                </tr>
+            </tbody>`;
+                $('#tbl_summaryImage1').html(staticHtml);
+            }
+        },
         initialized: function (e) {
+
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+
 
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
@@ -382,7 +410,7 @@ $(function () {
     }
     $('#tbl_summaryImage1').on('click', '.del-scheduleAlarm1', function () {
         const idToDelete = $(this).attr('data-sch-id');
-        if (confirm('Are you sure want to delete this linked Duress?')) {
+        if (confirm('Are you sure want to delete this file?')) {
             $.ajax({
                 url: '/Admin/Settings?handler=DeleteStaffDoc',
                 type: 'POST',
@@ -398,10 +426,7 @@ $(function () {
         uploadStafDocUsingType1($(this), true, 1);
     });
     
-    $('#add_staff_document_file_Alarm').on('change', function () {
-        console.log('File selected:', this.files);
-        uploadStafDocUsingType1($(this), false, 2);
-    });
+   
     function uploadStafDocUsingType1(uploadCtrl, edit = false, type) {
 
         const ClientSiteID = $('#ClientSiteId').val();

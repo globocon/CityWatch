@@ -1988,9 +1988,14 @@ namespace CityWatch.Kpi.Pages.Admin
             var success = false;
             var message = "Uploaded successfully";
             var files = Request.Form.Files;
+            var fileName = string.Empty;
+            int DocumentID = 0;
+            string Filepath = string.Empty;
+
             if (files.Count == 1)
             {
                 var file = files[0];
+                fileName = file.FileName;
                 if (file.Length > 0)
                 {
                     try
@@ -2021,6 +2026,10 @@ namespace CityWatch.Kpi.Pages.Admin
                         });
 
                         success = true;
+                        var Details = _configDataProvider.GetStaffDocumentsID(ClienSiteID);
+                        DocumentID = _configDataProvider.GetStaffDocumentsID(ClienSiteID).Id;
+                        Filepath = _configDataProvider.GetStaffDocumentsID(ClienSiteID).FilePath;
+
                     }
                     catch (Exception ex)
                     {
@@ -2028,7 +2037,8 @@ namespace CityWatch.Kpi.Pages.Admin
                     }
                 }
             }
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success, message, DocumentID, Filepath, fileName, LastUpdated = DateTime.Now });
+
         }
 
         public JsonResult OnPostDeleteStaffDoc(int id)
