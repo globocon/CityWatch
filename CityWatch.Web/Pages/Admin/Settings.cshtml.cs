@@ -2275,8 +2275,16 @@ namespace CityWatch.Web.Pages.Admin
 
                     });
                     success = true;
-                
 
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
 
 
 
@@ -2329,7 +2337,25 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnPostDeleteTrainingCourseInstructor(int Id)
         {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if (Id == -1)
+            {
+                Id = 0;
+            }
+            if (Id != 0)
+            {
 
+                _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
+            }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
             return new JsonResult(new { success, message });
         }
         public JsonResult OnPostUpdateCoursesStatus(int Id, int TrainingCourseStatusId)
@@ -2341,15 +2367,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
 
-                if(Id==-1)
-                {
-                    Id = 0;
-                }
-                if (Id != 0)
-                {
-
-                    _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
-                }
+               
 
                 
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
