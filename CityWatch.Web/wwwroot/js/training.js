@@ -431,6 +431,32 @@ $('#cbIsOption6').on('change', function () {
 
 
 //p5-Issue1-Start
+function renderGuardCouseStatusForGuard(value, type, data) {
+    if (type === 'display') {
+        let cellValue;
+
+        if (value) {
+            // Check if data.guardlogins.logindate is present
+            if (data.trainingCourseStatus.trainingCourseStatusColorId == 1) {
+                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
+                    '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
+            }  else if (data.trainingCourseStatus.trainingCourseStatusColorId == 2) {
+                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InProgress_guard_TrainingAndAssessment" disabled>In Progress</button>&nbsp;' +
+                    '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
+            }
+         else {
+            cellValue = 
+                '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
+            }
+            }
+
+
+            cellValue += '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>';
+
+        return cellValue;
+    }
+    return value;
+}
 let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataTable({
     autoWidth: false,
     ordering: false,
@@ -445,17 +471,23 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
         dataSrc: ''
     },
     columns: [
+        { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "27%" },
-        { data: 'newNullColumn', width: '15%' },
+        { data: 'description', width: "30%" },
+        { data: 'newNullColumn', width: '10%' },
+        
 
         {
             targets: -1,
             data: null,
-            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
-                '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>',
-            width: '15%'
-        }],
+            width: '15%',
+            'render': function (value, type, data) {
+                return renderGuardCouseStatusForGuard(value, type, data);
+            }
+            //defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
+            //    '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>',
+            
+        }]
     
 });
 gridGuardTrainingAndAssessment.on('draw.dt', function () {
@@ -475,9 +507,67 @@ gridGuardTrainingAndAssessment.on('draw.dt', function () {
         }
     });
 });
+$('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_guard_TrainingAndAssessment]', function () {
+ 
+
+    var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var courseStatus=2
+    $.ajax({
+        url: '/Admin/Settings?handler=UpdateCoursesStatus',
+        data: {
+            'Id': data.id,
+            'TrainingCourseStatusId': courseStatus
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+        }
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+});
 //p5-Issue1-End
 
 //p5-Issue2-Start
+function renderGuardCouseStatusForadmin(value, type, data) {
+    if (type === 'display') {
+        let cellValue;
+
+        if (value) {
+            // Check if data.guardlogins.logindate is present
+            if (data.trainingCourseStatus.trainingCourseStatusColorId==1) {
+                cellValue = '<i class="fa fa-check-circle text-muted mr-3"></i>' +
+                    '<input type="hidden" id="CourseId" value="' + data.id + '">';
+            } else if (data.trainingCourseStatus.trainingCourseStatusColorId == 2) {
+                cellValue = '<i class="fa fa-check-circle text-warning mr-3"></i>' +
+                    '<input type="hidden" id="CourseId" value="' + data.id + '">';
+            }
+        else {
+            cellValue = '<i class="fa fa-times-circle text-success mr-3"></i>' +
+                '<input type="hidden" id="CourseId" value="' + data.id + '">';
+        }
+        }
+       
+        //cellValue += '<button  class="btn btn-outline-primary  mb-1" name = "btn_admin_RPL" > RPL</button >';
+       
+        return cellValue;
+    }
+    return value;
+}
 let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_by_Admin').DataTable({
     autoWidth: false,
     ordering: false,
@@ -487,21 +577,27 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+            d.guardId = $('#GuardComplianceandlicense_GuardId').val();
         },
         dataSrc: ''
     },
     columns: [
+        { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "27%" },
-        { data: 'newNullColumn', width: '15%' },
+        { data: 'description', width: "30%" },
+        { data: 'newNullColumn', width: '10%' },
 
         {
+
             targets: -1,
             data: null,
             defaultContent: '',
-            width: '15%'
-        }],
+            width: '5%',
+            'render': function (value, type, data) {
+                return renderGuardCouseStatusForadmin(value, type, data);
+            }
+        }
+    ],
    
 });
 gridGuardTrainingAndAssessmentByAdmin.on('draw.dt', function () {
@@ -1314,3 +1410,100 @@ $("textarea[id='txtFeedbackQuestion']").keyup(function () {
 function getFeedbackQuestionLength(note) {
     return 'Remaining characters: ' + getNoteRemainingCount(note, 'feedback_question');
 }
+//p5-Issue-2-start
+$('#btnAddGuardCourse').on('click', function (e) {
+    e.preventDefault();
+    //  ReloadHrGroupsforCourseList();
+    var guardid = $('#Guard_Id').val();
+    $('#trainingguardId').val(guardid);
+    $('#courseList').html();
+    $('#selectCoursesForGuardByAdmin').modal('show');
+    
+})
+function ReloadHrGroupsforCourseList() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=HrGroupsforCourseList',
+        
+        // data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.length > 0) {
+            $('#courseList').empty()
+            result.forEach((item) => {
+                $('#courseList').append('<li class="list-group-item list-group-item-success" id="attach_' + item.value + '" data-index="' + item.value + '" style="border-left: 0;border-right: 0;font-size:12px;padding:3px"></li>');
+                ReloadCourseList(item.value);
+            });
+           
+        }
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function ReloadCourseList(id) 
+{
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=CourseList',
+
+         data: { groupid: id },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.length > 0) {
+            result.qaforEach((item) => {
+                $('#courseList').append('<li class="list-group-item" id="attach_' + item.id + '" data-index="' + item.id + '" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">' + item.fileName + '< i class= "fa fa-check ml-2 text-success btn-select-course-status" title = "Select" style = "cursor: pointer;float:right" ></i ></li > ');
+
+            });
+
+        }
+       
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    }).fail(function () {
+        console.log('error');
+    })
+}
+$('#courseList').on('click', '.btn-select-course-status', function (event) {
+
+    var target = event.target;
+    var parentId = target.parentNode.innerText.trim();
+    
+    const courseStatus = 1;
+    var courseId = target.parentNode.dataset.index;
+    var guardId = $('#trainingguardId').val();
+   
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveGuardTrainingAndAssessmentTab',
+        type: 'POST',
+        data: {
+            TrainingCourseId: courseId,
+            GuardId: guardId,
+            TrainingCourseStatusId: courseStatus
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            alert('saved successfully');
+            $('#selectCoursesForGuardByAdmin').modal('hide');
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+        }
+    });
+
+});
+//p5-Issue-2-end

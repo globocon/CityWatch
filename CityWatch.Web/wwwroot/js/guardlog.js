@@ -5134,6 +5134,8 @@ $(function () {
         });
         gridGuardLicensesAndLicence.clear().draw();
         gridGuardLicensesAndLicence.ajax.reload();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
@@ -6370,6 +6372,7 @@ $(function () {
             }
         },
     });
+    
     gridGuardLicensesAndLicence.on('draw.dt', function () {
         var tbody = $('#tbl_guard_licensesAndCompliance tbody');
         var rows = tbody.find('tr');

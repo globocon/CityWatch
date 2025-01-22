@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.BC;
+using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Data.Providers
@@ -133,6 +135,12 @@ namespace CityWatch.Data.Providers
 
         public ClientSite GetClientSiteLandline(int ClientSiteID);
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID);
+        //p5-Issue-2-start
+        List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
+       
+        List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
+        void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
+        //p5-Issue-2-end
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1204,7 +1212,10 @@ namespace CityWatch.Data.Providers
                 .Include(x=>x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
-
+            foreach(var item in courseDocList)
+            {
+                item.TQNumberName = item.TQNumber.Name;
+            }
 
             return courseDocList;
         }
@@ -1449,6 +1460,56 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID).ToList();
         }
+        //p5-Issue-2-start
+        public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
+        {
+            
+            var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
+            var trainigCourses = _context.TrainingCourses.Include(x=>x.TQNumber).Where(x=>hrsettingsid.Contains(x.HRSettingsId)).ToList();
+           
+            // return _context.RadioCheckStatus.ToList();
+            return trainigCourses.OrderBy(x => Convert.ToInt32(x.HRSettingsId)).ToList();
+        }
+
+        public List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true)
+        {
+            var hRGroups = _context.HRGroups.ToList();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in hRGroups)
+            {
+                //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment)
+        {
+            if (trainingAssessment.Id == 0)
+            {
+                _context.GuardTrainingAndAssessment.Add(trainingAssessment);
+            }
+            else
+            {
+                var documentToUpdate = _context.GuardTrainingAndAssessment.SingleOrDefault(x => x.Id == trainingAssessment.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.GuardId = trainingAssessment.GuardId;
+                    documentToUpdate.TrainingCourseId = trainingAssessment.TrainingCourseId;
+                    documentToUpdate.Description = trainingAssessment.Description;
+                    documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
+                    documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        //p5-Issue-2-end
 
     }
 
