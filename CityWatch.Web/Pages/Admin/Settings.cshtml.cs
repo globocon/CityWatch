@@ -40,13 +40,14 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IViewDataService _viewDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
+        private readonly IGuardDataProvider _guardDataProvider;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
-             ITimesheetReportGenerator TimesheetReportGenerator)
+             ITimesheetReportGenerator TimesheetReportGenerator,IGuardDataProvider guardDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -55,6 +56,7 @@ namespace CityWatch.Web.Pages.Admin
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
+            _guardDataProvider = guardDataProvider;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -2234,6 +2236,7 @@ namespace CityWatch.Web.Pages.Admin
                 
             return new JsonResult(new { success, message });
         }
+
         public JsonResult OnGetInstructorAndPosition()
         {
             return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
@@ -2276,20 +2279,68 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
+
+        public JsonResult OnGetHrGroupsforCourseList()
+        {
+            return new JsonResult(_configDataProvider.GetHRGroupsDropDown());
+
+        }
+        //public JsonResult OnGetCourseList(int groupid)
+        //{
+        //    return new JsonResult(_configDataProvider.GetTrainingCoursesStatusWithOutcome(groupid));
+        //}
+        public JsonResult OnPostSaveGuardTrainingAndAssessmentTab(int TrainingCourseId,int GuardId,int TrainingCourseStatusId)
+        {
+        
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                string description = _configDataProvider.GetCourseDocuments().Where(x=>x.Id == TrainingCourseId).FirstOrDefault().FileName;
+                int hrsettingid = _configDataProvider.GetCourseDocuments().Where(x => x.Id == TrainingCourseId).FirstOrDefault().HRSettingsId;
+                int hrgroupid = _configDataProvider.GetHrSettingById(hrsettingid).HRGroupId;
+                var result=_guardDataProvider.GetGuardTrainingAndAssessment(GuardId).Where(x => x.TrainingCourseId == TrainingCourseId).ToList();
+                int id = 0;
+                if(result.Count>0)
+                {
+                    id = result.FirstOrDefault().Id;
+                }
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = id,
+                    GuardId = GuardId,
+                    TrainingCourseId = TrainingCourseId,
+                    TrainingCourseStatusId = TrainingCourseStatusId,
+                    Description = description,
+                    HRGroupId= hrgroupid
+
+                });
+
+                success = true;
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
 
+
             return new JsonResult(new { success, message });
         }
         public JsonResult OnPostDeleteTrainingCourseInstructor(int Id)
         {
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostUpdateCoursesStatus(int Id, int TrainingCourseStatusId)
+        {
+
+
             var success = false;
             var message = string.Empty;
             try
             {
+
                 if(Id==-1)
                 {
                     Id = 0;
@@ -2299,6 +2350,23 @@ namespace CityWatch.Web.Pages.Admin
 
                     _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
                 }
+
+                
+                var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
+               
+                
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = Id,
+                    GuardId = result.GuardId,
+                    TrainingCourseId = result.TrainingCourseId,
+                    TrainingCourseStatusId = TrainingCourseStatusId,
+                    Description = result.Description,
+                    HRGroupId = result.HRGroupId
+
+                });
+
+
                 success = true;
             }
             catch (Exception ex)
@@ -2307,6 +2375,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+
         public JsonResult OnGetCourseCertificateDocsUsingSettingsId(int type)
         {
             return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(type));
@@ -2386,6 +2455,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+
     }
     public class helpDocttype
     {

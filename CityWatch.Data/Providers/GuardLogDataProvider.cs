@@ -5491,17 +5491,56 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
-            var data = _context.ClientSiteRadioChecksActivityStatus_History
-            .Where(z => z.ClientSiteId.HasValue && clientSiteIds.Contains(z.ClientSiteId.Value) &&
-                 z.EventDateTime >= logFromDate &&
-                 z.EventDateTime <= logToDate)
+            // Fetch GuardLogs
+            var GuardLogs = _context.GuardLogs
+                .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
+                            z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+                            z.ClientSiteLogBook.Date >= logFromDate &&
+                            z.ClientSiteLogBook.Date <= logToDate)
+                .Include(z => z.GuardLogin)
+                .Include(z => z.GuardLogin.Guard)
+                .Include(z => z.GuardLogin.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
                 .ToList();
 
-            var checkGMT = data
-                .Where(x => x.ActivityType != "SW" && !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+            // Fetch SW logs
+            var activityTypes = new[] { "SW", "KV" }; // Add the activity types you want to include
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+    .Where(z => z.ClientSiteId.HasValue &&
+                clientSiteIds.Contains(z.ClientSiteId.Value) &&
+                z.EventDateTime >= logFromDate &&
+                z.EventDateTime <= logToDate &&
+                activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
+    .ToList();
+
+            // Check for GMT timezone
+            var checkGMT = GuardLogs
+                .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
                 .Select(x => x.EventDateTimeZoneShort)
                 .FirstOrDefault();
 
+            // Convert GuardLogs to the same model
+            var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+            {
+                ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+                NotificationCreatedTime = log.EventDateTime,
+                Notes = log.Notes,
+                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+                SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+                GuardName = log.GuardLogin?.Guard != null
+        ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+        : null, // Null check for Guard
+                EventDateTimeZoneShort = log.EventDateTimeZoneShort,
+                EventDateTime = log.EventDateTime,
+                EventDateTimeLocal = log.EventDateTimeLocal,
+                gpsCoordinates = log.GpsCoordinates,
+                GuardId = log.GuardLogin?.GuardId,
+                IrEntryType=log.IrEntryType,
+                IsIRReportTypeEntry = log.IsIRReportTypeEntry
+
+            }).ToList();
+
+            // Update SW data with timezone and datetime adjustments
             if (!string.IsNullOrEmpty(checkGMT))
             {
                 foreach (var item in data.Where(x => string.IsNullOrEmpty(x.EventDateTimeZoneShort)))
@@ -5512,9 +5551,10 @@ namespace CityWatch.Data.Providers
                 }
             }
 
-            var returnData = data.OrderBy(z => z.EventDateTime).ToList();
+            // Combine LB and SW logs
+            var combinedData = unifiedGuardLogs.Concat(data).OrderBy(z => z.EventDateTime).ToList();
 
-            return returnData;
+            return combinedData;
         }
 
         //p6-102 Add Photo -start
