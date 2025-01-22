@@ -718,6 +718,46 @@ $(function () {
             });
         }
     });
+
+    $('#div_site_settings').on('change', '#upload_summary_imageRcList1', function () {
+
+        const ClientSiteID = $('#ClientSiteId').val();
+        const file = $('#upload_summary_imageRcList1').prop("files")[0];
+        const type = 6;
+        let DocumentID = $('#DocumentID').val();
+        if (DocumentID == '') {
+            DocumentID = 0;
+        }
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+            return false;
+        }
+
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('type', type);
+        fileForm.append('ClientSiteID', ClientSiteID);
+        fileForm.append('doc-id', DocumentID);
+
+
+        $.ajax({
+            url: '/Admin/Settings?handler=UploadStaffDocUsingType',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+
+                setSummaryImageRCList(data);
+            }
+        }).fail(function () {
+            //showStatusNotification(false, 'Something went wrong');
+        });
+    });
+
     function setSummaryImageRCList(summaryImage) {
         if (summaryImage) {
             $('#summary_imageRC').html(summaryImage.fileName);
@@ -726,12 +766,30 @@ $(function () {
             $('#summary_image_updatedRC').html(getFormattedDate(summaryImage.lastUpdated, true));
             var imagePathdate = $('#summary_image_updatedRC').text().trim();
             $('#RCImageDateandTime').val(imagePathdate);
-            $('#download_summary_imageRCList').attr('href', '/RCImage/' + summaryImage.fileName);
+            $('#download_summary_imageRCList').attr('href', summaryImage.filepath + summaryImage.fileName);
+
             $("#download_summary_imageRCList").attr("target", "_blank");
             $('#download_summary_imageRCList').show();
             $('#delete_summary_image').show();
+            $('#DocumentID').val(summaryImage.documentID)
+
         }
     }
+
+    $('#div_site_settings').on('click', '#delete_summary_image1', function () {
+        const idToDelete = $('#DocumentID').val();
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                clearSummaryImageRC();
+            });
+        }
+    });
+
     $('#div_site_settings').on('click', '#delete_summary_imageRC', function () {
         if (confirm('Are you sure want to delete this file?')) {
             var check = $('#RCImagepath').val();
@@ -756,6 +814,8 @@ $(function () {
         $("#download_summary_imageRCList").removeAttr("href");
         $('#download_summary_imageRCList').show();
         $('#delete_summary_image').hide();
+        $('#DocumentID').val('');
+
     }
     /*Rc Action List Image Upload stop*/
 

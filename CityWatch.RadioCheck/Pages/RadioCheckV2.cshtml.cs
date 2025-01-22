@@ -1869,11 +1869,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (sopAlarmfileType.Count() != 0)
                 {
                     rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
                 }
                     var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
                 {
                     rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
+                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+
                 }
                 else
                 {
@@ -1891,6 +1894,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (sopAlarmfileType.Count() != 0)
                 {
                     rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
                 }
 
                 rtn.Landline = LandLine.LandLine;

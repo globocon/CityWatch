@@ -145,6 +145,7 @@ namespace CityWatch.Data.Providers
         void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate);
         List<TrainingCourseCertificate> GetCourseCertificateDocuments();
         void DeleteCourseCertificateDocument(int id);
+         StaffDocument GetStaffDocumentsID(int ClientSiteID);
 
         //p5-Issue-2-start
         List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
@@ -1619,7 +1620,10 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-
+        public StaffDocument GetStaffDocumentsID(int ClientSiteID)
+        {
+            return _context.StaffDocuments.Where(x => x.ClientSite == ClientSiteID && x.DocumentType == 6).FirstOrDefault();
+        }
         //p5-Issue-2-end
 
 

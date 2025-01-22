@@ -38,6 +38,8 @@ namespace CityWatch.Data.Models
         public string Landline { get; set; }
         [NotMapped]
         public List<string> SmartWandID { get; set; }
+        [NotMapped]
+        public List<string> SOPAlarmFilePath { get; set; }
 
     }
 }

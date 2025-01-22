@@ -2623,9 +2623,10 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     });
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
+        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
 
         return buttonHtml;
+
     }
 });
 
@@ -2935,10 +2936,11 @@ $('#dglClientSiteIdActionList').on('change', function () {
             //    $('#download_imageRCList').removeAttr('href');
             //    $('#download_imageRCList').removeAttr('download');
             //}
-            if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length < 1) {
+            if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length <= 1) {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
-                $('#download_imageRCList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopAlarmFileNme);
+                $('#download_imageRCList').attr('href', data.sopAlarmFilePath + data.sopAlarmFileNme);
+
             } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
                 $('#download_imageRCList')
                     .attr('data-toggle', 'modal')
