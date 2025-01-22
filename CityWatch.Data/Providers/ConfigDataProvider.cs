@@ -1363,7 +1363,10 @@ namespace CityWatch.Data.Providers
             int LastTQNumber = 0;
 
             var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
-            LastTQNumber = result.LastOrDefault().TQNumberId;
+            if (result.Count > 0)
+            {
+                LastTQNumber = result.LastOrDefault().TQNumberId;
+            }
             return LastTQNumber;
 
         }
