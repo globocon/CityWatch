@@ -1535,9 +1535,13 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.FileName = trainingCourseCertificate.FileName;
                     documentToUpdate.LastUpdated = trainingCourseCertificate.LastUpdated;
                     documentToUpdate.HRSettingsId = trainingCourseCertificate.HRSettingsId;
+                }
+            }
+            _context.SaveChanges();
+        }
 
-        //p5-Issue-2-start
-        public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
+            //p5-Issue-2-start
+       public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
         {
             
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);

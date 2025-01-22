@@ -238,8 +238,11 @@ $('#tbl_courseDocumentFiles').on('click', '.delete_course_file_sop', function ()
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {
-            gridCourseDocumentFiles.reload();
+        }).done(function (result) {
+            if (result.status) {
+                gridCourseDocumentFiles.clear();
+                gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+            }
         }).fail(function () {
             console.log('error')
         });
