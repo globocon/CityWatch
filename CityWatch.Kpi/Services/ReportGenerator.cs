@@ -815,7 +815,7 @@ namespace CityWatch.Kpi.Services
             int[] countsArray = complianceDataCounts.ToArray();
             int largestNumber = referenceNoCount;
 
-
+            
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
             
@@ -827,7 +827,17 @@ namespace CityWatch.Kpi.Services
                 var tottblwidth = 523; // Total width of Table as per iText7 documentation
                  restcolwidth = ((tottblwidth - 130) / (totcols - 2));
             }
-             
+            if (Id == 1)
+            {
+                columnPercentages= new float[largestNumber + 3];
+                rc= UnitValue.CreatePercentArray(largestNumber + 3);
+                if (largestNumber > 0)
+                {
+                    var totcols = largestNumber + 3;
+                    var tottblwidth = 523; // Total width of Table as per iText7 documentation
+                    restcolwidth = ((tottblwidth - 130) / (totcols - 2));
+                }
+            }
 
             int j = 0;
             foreach (var r in rc)
@@ -882,6 +892,14 @@ namespace CityWatch.Kpi.Services
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
                 kpiGuardTable.AddCell(CreateDataCell(guard.Name.Length > 16 ? guard.Name[..16] : guard.Name));
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
+                if (Id == 1)
+                {
+                    string DOH = guard.DateEnrolled.HasValue
+                            ? guard.DateEnrolled.Value.ToString("dd/MM/yyyy")
+                            : string.Empty; 
+                    kpiGuardTable.AddCell(CreateDataCell(DOH));
+                }
+                   
 
                 var HTList1 = _viewDataService.GetHRSettings(Id);
 
@@ -1593,11 +1611,21 @@ namespace CityWatch.Kpi.Services
                 }
 
 
-
-                table.AddCell(new Cell(1, 2)
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                    .Add(new Paragraph().Add(new Text(hrGroupname))));
+                if (id == 1)
+                {
+                    table.AddCell(new Cell(1, 3)
+                   .SetFontSize(CELL_FONT_SIZE)
+                   .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                   .Add(new Paragraph().Add(new Text(hrGroupname))));
+                }
+                else
+                {
+                    table.AddCell(new Cell(1, 2)
+                                      .SetFontSize(CELL_FONT_SIZE)
+                                      .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                                      .Add(new Paragraph().Add(new Text(hrGroupname))));
+                }
+                   
                 char[] suffixes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
                 foreach (var item in HTList)
@@ -1658,6 +1686,11 @@ namespace CityWatch.Kpi.Services
 
                 table.AddCell(CreateHeaderCell($"Name\n"));
                 table.AddCell(CreateHeaderCell("License"));
+                if (id == 1)
+                {
+                    table.AddCell(CreateHeaderCell("DOH"));
+                }
+               
 
                 var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
                 List<GuardComplianceAndLicense> monthlyDataGuardComplianceData1 = null; // Declare and initialize HRGroupList
