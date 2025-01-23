@@ -708,15 +708,15 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         showStatusNotification(false, 'Something went wrong');
     });
 }
-const showStatusNotification = function (success, message) {
-    if (success) {
-        $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
-    } else {
-        $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
-    }
-    $('.toast .toast-body').html(message);
-    $('.toast').toast('show');
-}
+//const showStatusNotification = function (success, message) {
+//    if (success) {
+//        $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
+//    } else {
+//        $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
+//    }
+//    $('.toast .toast-body').html(message);
+//    $('.toast').toast('show');
+//}
 $('#form_file_downloads_course_sop').on('change', 'input[name="upload_course_file_sop"]', function () {
     uploadCourseDocUsingHR($(this), true, 1);
 
