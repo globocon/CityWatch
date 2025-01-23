@@ -2036,7 +2036,8 @@ namespace CityWatch.Web.Pages.Admin
                         if (!Directory.Exists(CourseDocsFolder))
                             Directory.CreateDirectory(CourseDocsFolder);
                         if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
-                            throw new ArgumentException("File Already Exists");
+                            //throw new ArgumentException("File Already Exists");
+                            System.IO.File.Delete(Path.Combine(CourseDocsFolder, file.FileName));
                         using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, file.FileName)))
                         {
                             file.CopyTo(stream);
@@ -2490,7 +2491,8 @@ namespace CityWatch.Web.Pages.Admin
                         if (!Directory.Exists(CourseDocsFolder))
                             Directory.CreateDirectory(CourseDocsFolder);
                         if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
-                            throw new ArgumentException("File Already Exists");
+                            //throw new ArgumentException("File Already Exists");
+                            System.IO.File.Delete(Path.Combine(CourseDocsFolder, file.FileName));
                         using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, filename)))
                         {
                             file.CopyTo(stream);
