@@ -35,6 +35,7 @@ namespace CityWatch.Data.Models
         public string SOPFileNme { get; set; }
         [NotMapped]
         public List<string> SOPAlarmFileNme { get; set; }
+        [NotMapped]
         public string Landline { get; set; }
         [NotMapped]
         public List<string> SmartWandID { get; set; }
