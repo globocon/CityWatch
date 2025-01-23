@@ -825,7 +825,7 @@ $('#btn_save_trainingassessment_settings').on("click", function (e) {
 
     var obj = {
         Id: testQuestionSettingsId,
-        QuestionNoId: $("#ddlCourseDurationETA").val(),
+       CourseDurationId: $("#ddlCourseDurationETA").val(),
         TestDurationId: $("#ddlTestDurationETA").val(),
         PassMarkId: $("#ddlTestPassMark").val(),
         AttemptsId: $("#ddlTestAttempts").val(),
