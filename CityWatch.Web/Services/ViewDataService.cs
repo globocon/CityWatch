@@ -2081,7 +2081,7 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-            items.Add(new SelectListItem("Select", ""));
+           // items.Add(new SelectListItem("Select", ""));
             //}
 
             foreach (var item in hrGroups)

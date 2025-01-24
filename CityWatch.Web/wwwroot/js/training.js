@@ -32,8 +32,17 @@ $('#btnTestQuestions').on('click', function (e) {
     $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingTestQuestionstab').addClass('active');
+    $('#trainingCertificateTab').removeClass('active');
+    $('#TrainingCertificate').removeClass('active');
     $('#TrainingCourse').removeClass('active');
     $('#TrainingTestQuestions').addClass('active');
+    $('#TrainingTestQuestionsSettingsTab').addClass('active');
+    $('#TrainingTestQuestionsAnswersTab').removeClass('active');
+    $('#TrainingTestQuestionsFeedbackTab').removeClass('active');
+    $('#TrainingTestQuestionsSettings').addClass('active');
+    $('#TrainingTestQuestionsAnswers').removeClass('active');
+    $('#TrainingTestQuestionsFeedback').removeClass('active');
+
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var courseDescription = $('#txtHrSettingsDescription').val();
     $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
@@ -61,6 +70,10 @@ $('#btnCourseCertificates').on('click', function (e) {
     $('#trainingCertificateTab').addClass('active');
     $('#TrainingCourse').removeClass('active');
     $('#TrainingCertificate').addClass('active');
+    $('#trainingCertificateUploadtab').addClass('active');
+    $('#TrainingCertificateUpload').addClass('active');
+    $('#trainingCourseInstructorUploadtab').removeClass('active');
+    $('#TrainingCourseInstructorUpload').removeClass('active');
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var courseDescription = $('#txtHrSettingsDescription').val();
     $('#training_course_Name').html('HR' + ' ' + referenceNumber + ' ' + courseDescription)
@@ -1325,8 +1338,10 @@ function LoadLastTQNumbers() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
 
-
-        $("#ddlTQNo").val(result);
+        if (result != 0) 
+         {
+            $("#ddlTQNo").val(result);
+        }
         LoadNextTQQuestions();
 
     }).fail(function () {
