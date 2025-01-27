@@ -163,6 +163,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTrainingCertificateExpiryYears(bool withoutSelect = true);
         List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
+        List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
 
 
     }
@@ -2101,6 +2102,26 @@ namespace CityWatch.Web.Services
 
 
         
+        public List<SelectListItem> GetPracticalLocation(bool withoutSelect = true)
+        {
+            var hrGroups = _guardLogDataProvider.GetTrainingLocation();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                
+               
+                    items.Add(new SelectListItem(item.Location, item.Id.ToString()));
+                
+            }
+
+            return items;
+        }
 
     }
     public class HRGroupStatusNew

@@ -352,6 +352,10 @@ namespace CityWatch.Data.Providers
        
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         void DeleteTrainingCourseInstructor(int id);
+        List<TrainingLocation> GetTrainingLocation();
+        void SaveTrainingLocation(TrainingLocation trainingLocation);
+        void DeleteTrainingLocation(int id);
+        void SaveTrainingCourseCertificateRPL(TrainingCourseCertificateRPL trainingCertificateRPL);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6198,6 +6202,59 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
 
+        }
+        public List<TrainingLocation> GetTrainingLocation()
+        {
+            return _context.TrainingLocation.Where(x => x.IsDeleted == false)
+                .OrderBy(x => x.Location).ToList();
+        }
+        public void SaveTrainingLocation(TrainingLocation trainingLocation)
+        {
+            if (trainingLocation.Id == -1)
+            {
+                trainingLocation.Id = 0;
+                _context.TrainingLocation.Add(trainingLocation);
+            }
+            else
+            {
+                var traininglocationToUpdate = _context.TrainingLocation.SingleOrDefault(x => x.Id == trainingLocation.Id);
+                if (traininglocationToUpdate != null)
+                {
+                    traininglocationToUpdate.Location = trainingLocation.Location;
+                    traininglocationToUpdate.IsDeleted = false;
+
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteTrainingLocation(int id)
+        {
+            var trainingLocationToDelete = _context.TrainingLocation.SingleOrDefault(x => x.Id == id);
+            if (trainingLocationToDelete != null)
+                trainingLocationToDelete.IsDeleted = true;
+            _context.SaveChanges();
+        }
+        public void SaveTrainingCourseCertificateRPL(TrainingCourseCertificateRPL trainingCertificateRPL)
+        {
+            if (trainingCertificateRPL.Id == -1)
+            {
+                trainingCertificateRPL.Id = 0;
+                _context.TrainingCourseCertificateRPL.Add(trainingCertificateRPL);
+            }
+            else
+            {
+                var traininglocationToUpdate = _context.TrainingCourseCertificateRPL.SingleOrDefault(x => x.Id == trainingCertificateRPL.Id);
+                if (traininglocationToUpdate != null)
+                {
+                    traininglocationToUpdate.TrainingCourseCertificateId = trainingCertificateRPL.TrainingCourseCertificateId;
+                    traininglocationToUpdate.TrainingPracticalLocationId = trainingCertificateRPL.TrainingPracticalLocationId;
+                    traininglocationToUpdate.AssessmentStartDate = trainingCertificateRPL.AssessmentStartDate;
+                    traininglocationToUpdate.AssessmentEndDate = trainingCertificateRPL.AssessmentEndDate;
+                    traininglocationToUpdate.TrainingInstructorId = trainingCertificateRPL.TrainingInstructorId;
+
+                }
+            }
+            _context.SaveChanges();
         }
     }
    
