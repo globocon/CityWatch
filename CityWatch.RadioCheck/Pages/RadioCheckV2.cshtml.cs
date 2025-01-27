@@ -131,7 +131,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 }
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 HttpContext.Session.SetInt32("loginUserId", UserId);
-                
+                ViewData["GuardId"] = GuardId;
+
+
                 var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
 
                 if (guard != null)
@@ -2438,6 +2440,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public JsonResult OnGetStaffDocsUsingTypeNew(int type, int ClientSiteId)
         {
             return new JsonResult(_configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId)));
+        }
+        public JsonResult OnGetGuardDetails(int GuardID)
+        {
+            
+            return new JsonResult(ViewDataService.GetGuardsDetails(GuardID));
+
+
         }
 
 

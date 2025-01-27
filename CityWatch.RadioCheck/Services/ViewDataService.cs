@@ -27,6 +27,7 @@ namespace CityWatch.RadioCheck.Services
         List<SelectListItem> ProviderList();
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
         public List<SelectListItem> KPITelematicsList();
+        public Guard GetGuardsDetails(int GuardID);
     }
 
     public class ViewDataService : IViewDataService
@@ -59,7 +60,11 @@ namespace CityWatch.RadioCheck.Services
 
             return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id), guardLanuages.Where(y => y.GuardId == z.Id).ToList())).ToList();
         }
-
+        public Guard GetGuardsDetails(int GuardID)
+        {
+            var guards = _guardDataProvider.GetGuards();
+            return guards.Where(x=>x.Id==GuardID).FirstOrDefault();
+        }
         public List<SelectListItem> ClientTypes
         {
             get
