@@ -2322,18 +2322,14 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Id== Convert.ToInt32(Id)).FirstOrDefault());
         }
-        public JsonResult OnPostSaveTrainingCourseInstructor(int id, string instructorName,int hrsettingsId)
+        public JsonResult OnPostSaveTrainingCourseInstructor(int id, int? instructorId, int hrsettingsId)
         {
             var success = false;
             var message = "Saved successfully";
 
             try
             {
-                int? instructorId = null;
-                if (instructorName != null)
-                {
-                    instructorId = _guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x => x.Name == instructorName).FirstOrDefault().Id;
-                }
+               
                 if (id == -1)
                 {
                     id = 0;

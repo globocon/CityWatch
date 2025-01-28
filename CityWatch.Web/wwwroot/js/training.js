@@ -778,6 +778,9 @@ $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#TrainingTestQuestions').removeClass('active');
+        $('#TrainingCourse').addClass('active');
+        $('#TrainingCertificate').removeClass('active');
     }
     if (tabId == '#TrainingTestQuestions') {
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
@@ -785,6 +788,15 @@ $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#TrainingTestQuestions').addClass('active');
+        $('#TrainingCourse').removeClass('active');
+        $('#TrainingCertificate').removeClass('active');
+        $('#TrainingTestQuestionsSettingsTab').addClass('active');
+        $('#TrainingTestQuestionsAnswersTab').removeClass('active');
+        $('#TrainingTestQuestionsFeedbackTab').removeClass('active');
+        $('#TrainingTestQuestionsSettings').addClass('active');
+        $('#TrainingTestQuestionsAnswers').removeClass('active');
+        $('#TrainingTestQuestionsFeedback').removeClass('active');
     }
     if (tabId == '#TrainingCertificate') {
         $('#btn_save_trainingassessment_feedbackquestions').attr('hidden', true);
@@ -792,6 +804,16 @@ $('#trainingAssesmentTab .nav-item .nav-link').on("click", function (e) {
         $('#btn_save_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_testquestions').attr('hidden', true);
         $('#btn_delete_trainingassessment_feedbackquestions').attr('hidden', true);
+        $('#TrainingTestQuestions').removeClass('active');
+        $('#TrainingCourse').removeClass('active');
+        $('#TrainingCertificate').addClass('active');
+        $('#trainingCertificateUploadtab').addClass('active');
+        $('#trainingCourseInstructorUploadtab').removeClass('active');
+        
+        $('#TrainingCertificateUpload').addClass('active');
+        $('#TrainingCourseInstructorUpload').removeClass('active');
+
+        
     }
 });
 $('#cbIsTrainingTestQuestionsDOE').on('change', function () {
@@ -1705,9 +1727,14 @@ function courseInstructorEditor($editorContainer, value, record) {
     }).done(function (result) {
         selectHtml.append('<option value=""></option>')
         result.forEach(function (item) {
-            selectHtml.append('<option value="' + item.id + '" >' + item.name + '</option>')
+            selectHtml.append('<option value="' + item.id + '" >' + item.name + ' (' + item.position + ') </option>')
         })
-        //selectHtml.val(record.instructorName);
+        if (record.trainingInstructorId != 'undefined') {
+
+
+            selectHtml.val(record.trainingInstructorId);
+            InstructorGlobalId = record.trainingInstructorId;
+        }
 
     });
    
@@ -1729,7 +1756,7 @@ let gridCourseInstructorDetails = $('#tbl_Course_Instructor').grid({
         { field: 'instructorName', title: 'Instructor Name', width: 390, type: 'dropdown', editor: courseInstructorEditor  },
 
         
-        { field: 'instructorPosition', title: 'Position', width: 140 }
+        { field: 'instructorPosition', title: 'Position', width: 140}
        
     ],
     initialized: function (e) {
@@ -1737,6 +1764,7 @@ let gridCourseInstructorDetails = $('#tbl_Course_Instructor').grid({
 
     }
 });
+
 $('#add_course_Instructor').on('click', function () {
   
     var rowCount = $('#tbl_Course_Instructor tr').length;
@@ -1748,16 +1776,18 @@ $('#add_course_Instructor').on('click', function () {
         isCourseInstructorAdding = true;
         gridCourseInstructorDetails.addRow({
             'id': -1,
-            'name': '',
-            'position': '',
+            'instructorName': '',
+            'instructorPosition': '',
         }).edit(-1);
     }
 });
+var InstructorGlobalId;
 $('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
 
     var control = $(this);
     var id = $(this).val();
     var position;
+    
     
     $.ajax({
         url: '/Admin/settings?handler=InstructorAndPositionWithId',
@@ -1767,11 +1797,14 @@ $('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
     }).done(function (result) {
         if (result != null) {
             position = result.position;
-
+           
         }
         else {
             position = '';
+            name = '';
         }
+        InstructorGlobalId = id;
+    
         control.closest('tr').find('td').eq(2).text(position);
         control.closest('tr').find('td').eq(2).val(position);
 
@@ -1783,10 +1816,13 @@ $('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
 if (gridCourseInstructorDetails) {
     gridCourseInstructorDetails.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
-       
+        if (record.instructorName == '') {
+            InstructorGlobalId = null;
+        }
+        InstructorGlobalId;
         $.ajax({
             url: '/Admin/Settings?handler=SaveTrainingCourseInstructor',
-            data: { id: data.id, instructorName: data.instructorName, hrsettingsId: $('#HrSettings_Id').val() },
+            data: { id: data.id, instructorId: InstructorGlobalId, hrsettingsId: $('#HrSettings_Id').val() },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -2154,6 +2190,7 @@ function getPracticalLocation(selectedLocation) {
     });
 }
 function getRPLInstructorSignOff(seletedInstructor) {
+   
     const practicalInstructorControl = $('#ddlRPLInstructorsignOff');
     practicalInstructorControl.html('');
     $.ajax({
