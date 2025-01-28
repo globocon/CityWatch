@@ -2109,7 +2109,7 @@ function fetchURPLDeatils(Id) {
         
                 //ClearModelControls();
                 //$.each(data, function (i,item) {
-
+            if (data != null) {
 
                     $('#rplDetailsModal').find('#rplCertificateId').val(Id)
                     $('#rplDetailsModal').find('#rplId').val(data.id)
@@ -2118,7 +2118,8 @@ function fetchURPLDeatils(Id) {
             $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
             $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
             // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
-            getRPLInstructorSignOff(data.trainingInstructorId)
+                getRPLInstructorSignOff(data.trainingInstructorId)
+            }
                 //});
                
 
