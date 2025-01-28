@@ -18,6 +18,8 @@ namespace CityWatch.Data.Models
         Timesheets = 5,
         [Display(Name = "LOTE")]
         Lote = 6,
+        [Display(Name = "ClassRoom Location")]
+        ClassroomLocation = 7,
     }
     public enum HrCriticalType
     {

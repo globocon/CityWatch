@@ -207,6 +207,8 @@ namespace CityWatch.Data
 
         public DbSet<TrainingCourseStatusColor> TrainingCourseStatusColor { get; set; }
         public DbSet<TrainingCourseStatus> TrainingCourseStatus { get; set; }
+        public DbSet<TrainingLocation> TrainingLocation { get; set; }
+        public DbSet<TrainingCourseCertificateRPL> TrainingCourseCertificateRPL { get; set; }
 
 
     }

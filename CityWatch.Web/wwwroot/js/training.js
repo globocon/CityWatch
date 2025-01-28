@@ -262,7 +262,7 @@ $('#tbl_courseDocumentFiles').on('click', '.delete_course_file_sop', function ()
     }
 })
 
-function domainSettings(value, record) {
+function domainRPLSettings(value, record) {
 
     // Check if the row is a newly added row by ID or another condition
     if (record.id === -1) {
@@ -270,13 +270,13 @@ function domainSettings(value, record) {
         return '';
     }
 
-    if (record.isSubDomainEnabled) {
+    if (record.isRPLEnabled) {
 
-        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" checked></a><input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.fileName + '">'
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" checked></a><input type="hidden" id="certificateId" value="' + record.id + '">'
 
     }
     else {
-        return '<a href="#" id="btnRPLCertificate"><input type="checkbox"></a><input type="hidden" id="certificateId" value="' + record.id + '"> <input type="hidden" id="certificateName" value="' + record.fileName + '">'
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox"></a><input type="hidden" id="certificateId" value="' + record.id + '">'
     }
 
 }
@@ -328,7 +328,7 @@ let gridCertificatesDocumentFiles = $('#tbl_certificateDocumentFiles').grid({
     columns: [
         { field: 'fileName', title: 'File Name', width: 390 },
         { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        { title: 'RPL', width: 50, renderer: domainSettings, cssClass: 'text-center' },
+        { title: 'RPL', width: 50, renderer: domainRPLSettings, cssClass: 'text-center' },
         { width: 270, renderer: editTrainingCertificatesDocsButtonRendererSop },
     ],
     initialized: function (e) {
@@ -1705,9 +1705,9 @@ function courseInstructorEditor($editorContainer, value, record) {
     }).done(function (result) {
         selectHtml.append('<option value=""></option>')
         result.forEach(function (item) {
-            selectHtml.append('<option "value="' + item.name + '" >' + item.name + '</option>')
+            selectHtml.append('<option value="' + item.id + '" >' + item.name + '</option>')
         })
-        selectHtml.val(record.instructorName);
+        //selectHtml.val(record.instructorName);
 
     });
    
@@ -1760,8 +1760,8 @@ $('#tbl_Course_Instructor').on('change', '.dd-course-instructor', function () {
     var position;
     
     $.ajax({
-        url: '/Admin/settings?handler=InstructorAndPositionWithName',
-        data: { InstructorName: id },
+        url: '/Admin/settings?handler=InstructorAndPositionWithId',
+        data: { Id: id },
         type: 'GET',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -2011,3 +2011,220 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
 });
 //p5-Issue-2-end
 
+let isLocationAdding = false
+let gridClassroomLocation
+gridClassroomLocation = $('#tbl_classroomLocation').grid({
+    dataSource: '/Admin/Settings?handler=TrainingLocation',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'location', title: 'Location', width: '100%', editor: true },
+
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+if (gridClassroomLocation) {
+    gridClassroomLocation.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveTrainingLocation',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) gridClassroomLocation.reload();
+            else alert(result.message);
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isLoteAdding)
+                isLoteAdding = false;
+        });
+    });
+
+    gridClassroomLocation.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteTrainingLocation',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridClassroomLocation.reload();
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isLoteAdding)
+                    isLoteAdding = false;
+            });
+        }
+    });
+}
+if ($('#hr_settings_fields_types').val() == '') {
+  
+    gridClassroomLocation.hide();
+}
+
+
+$('#add_location').on('click', function () {
+    if ($('#hr_settings_fields_types').val() == 7) {
+        if (isLocationAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isLocationAdding = true;
+            gridClassroomLocation.addRow({
+                'id': -1,
+                'location': '',
+            }).edit(-1);
+        }
+    }
+});
+$('#tbl_certificateDocumentFiles tbody').on('click', '#btnRPLCertificate', function () {
+   // ClearModelControls();
+    $('#rplDetailsModal').modal('show');
+    var id = $(this).closest("td").find('#certificateId').val();
+    getPracticalLocation('');
+    getRPLInstructorSignOff('');
+    //var userName = $(this).closest("td").find('#userName').val();
+    //$('#siteTypeDomainDeatils').find('#userName1').text(typeName)
+    //$('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
+    $('#rplCertificateId').val(id);
+    fetchURPLDeatils(id);
+});
+function fetchURPLDeatils(Id) {
+    $.ajax({
+        url: '/Admin/Settings?handler=RPLDetails',
+        method: 'GET',
+        data: { id: Id },
+        success: function (data) {
+        
+                //ClearModelControls();
+                //$.each(data, function (i,item) {
+            if (data != null) {
+
+                    $('#rplDetailsModal').find('#rplCertificateId').val(Id)
+                    $('#rplDetailsModal').find('#rplId').val(data.id)
+            //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
+            getPracticalLocation(data.trainingPracticalLocationId);
+            $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
+            $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
+            // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
+                getRPLInstructorSignOff(data.trainingInstructorId)
+            }
+                //});
+               
+
+               
+
+            
+        },
+        error: function (xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+}
+function getPracticalLocation(selectedLocation) {
+    const practicalLocationControl = $('#ddlPracticalAssessmentLocation');
+    practicalLocationControl.html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingLocation',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            practicalLocationControl.append('<option value="" selected>Select</option>')
+            data.map(function (site) {
+                practicalLocationControl.append('<option value="' + site.id + '">' + site.location + '</option>');
+            });
+
+            if (selectedLocation) {
+                $('#ddlPracticalAssessmentLocation').val(selectedLocation);
+            } else {
+                $('#ddlPracticalAssessmentLocation').val('');
+            }
+        }
+    });
+}
+function getRPLInstructorSignOff(seletedInstructor) {
+    const practicalInstructorControl = $('#ddlRPLInstructorsignOff');
+    practicalInstructorControl.html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=InstructorAndPosition',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            practicalInstructorControl.append('<option value="" selected>Select</option>')
+            data.map(function (site) {
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+
+            if (seletedInstructor) {
+                $('#ddlRPLInstructorsignOff').val(seletedInstructor);
+            } else {
+                $('#ddlRPLInstructorsignOff').val('');
+            }
+        }
+    });
+}
+$('#btnSaveRPLDetails').on('click', function () {
+
+    clearGuardValidationSummary('rplValidationSummary');
+    var Id = $('#rplId').val();
+    if (Id == 0) {
+        $('#rplId').val(-1);
+    }
+    var obj = {
+        Id: $('#rplId').val(),
+        TrainingPracticalLocationId: $('#ddlPracticalAssessmentLocation').val(),
+        AssessmentStartDate: $('#RPL_DateAssessment_started').val(),
+        AssessmentEndDate: $('#RPL_DateAssessment_ended').val(),
+        TrainingCourseCertificateId: $('#rplCertificateId').val(),
+        TrainingInstructorId: $('#ddlRPLInstructorsignOff').val()
+        }
+   
+
+   
+            
+            $('#loader').show();
+            $.ajax({
+                url: '/Admin/Settings?handler=SaveRPLDetails',
+                data:{record:obj},
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+                    $('#rplDetailsModal').modal('hide');
+                    gridCertificatesDocumentFiles.clear();
+                    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+                    
+                } else {
+                   
+                    displayGuardValidationSummary('rplValidationSummary', result.message);
+                }
+            }).always(function () {
+                $('#loader').hide();
+            });
+
+        
+    
+
+
+
+
+});
+$('#rplDetailsModal').on('hidden.bs.modal', function (e) {
+    // Code to run when the modal is closed
+    gridCertificatesDocumentFiles.clear();
+    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+
+});

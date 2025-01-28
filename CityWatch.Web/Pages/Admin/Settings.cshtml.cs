@@ -2318,9 +2318,9 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetCourseInstructor(type));
         }
-        public JsonResult OnGetInstructorAndPositionWithName(string InstructorName)
+        public JsonResult OnGetInstructorAndPositionWithId(string Id)
         {
-            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Name== InstructorName).FirstOrDefault());
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Id== Convert.ToInt32(Id)).FirstOrDefault());
         }
         public JsonResult OnPostSaveTrainingCourseInstructor(int id, string instructorName,int hrsettingsId)
         {
@@ -2468,7 +2468,20 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetCourseCertificateDocsUsingSettingsId(int type)
         {
-            return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(type));
+            var result = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(type);
+            foreach(var item in result)
+            {
+                var getRPL = _configDataProvider.GetCourseCertificateRPLUsingId(item.Id);
+                if(getRPL.Count>0)
+                {
+                    item.isRPLEnabled = true;
+                }
+                else
+                {
+                    item.isRPLEnabled = false;
+                }
+            }
+            return new JsonResult(result);
         }
         public JsonResult OnPostUploadCourseCertificateDocUsingHR()
         {
@@ -2546,6 +2559,65 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        public JsonResult OnGetTrainingLocation()
+        {
+            return new JsonResult(_guardLogDataProvider.GetTrainingLocation());
+        }
+        public JsonResult OnPostSaveTrainingLocation(TrainingLocation record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                _guardLogDataProvider.SaveTrainingLocation(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteTrainingLocation(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteTrainingLocation(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetRPLDetails(int id)
+        {
+            var success = false;
+                        return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).FirstOrDefault());
+        }
+        public JsonResult OnPostSaveRPLDetails(TrainingCourseCertificateRPL record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                _guardLogDataProvider.SaveTrainingCourseCertificateRPL(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
 
     }
     public class helpDocttype

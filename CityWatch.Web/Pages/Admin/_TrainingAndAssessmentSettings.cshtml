@@ -479,7 +479,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Course Details</h4>
+                <h4 class="modal-title">Course Library</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -593,6 +593,85 @@
             @* <div class="modal-footer justify-content-start">
             <button type="button" id="btnSaveRadioStatusActive" class="btn btn-primary">Save Status</button>
             </div>*@
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="rplDetailsModal">
+    <div class="modal-dialog modal-dialog-centered modal-ml" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+                <h5 class="modal-title">RPL</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_RPLSettings" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="rplId" name="rplId" value="0">
+                    <input type="hidden" id="rplCertificateId">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Left side with form fields (taking 6 columns) -->
+                            <div class="col-md-12">
+                                
+                                <div class="form-group mb-1">
+                                    <label >Location of Practical Assessment</label>
+                                    @* <select id="ddlPracticalAssessmentLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select> *@
+                                    <select id="ddlPracticalAssessmentLocation" class="form-control" ></select>
+                                </div>
+                               
+                            </div>
+                            <div class="col-md-12">
+                                
+                                <div class="form-group mb-1">
+                                    <label >Date Assessment Started</label>
+                                    <div class="pr-3"><input type="date" class="form-control" id="RPL_DateAssessment_started"  min="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
+                                
+                                </div>
+                               
+                            </div>
+                            <div class="col-md-12">
+                                
+                                <div class="form-group mb-1">
+                                    <label >Date Assessment Ended</label>
+                                    <div class="pr-3"><input type="date" class="form-control" id="RPL_DateAssessment_ended"  min="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
+                                
+                                </div>
+                               
+                            </div>
+
+
+                           <div class="col-md-12">
+                                
+                                <div class="form-group mb-1">
+                                    <label >Instructor Sign Off</label>
+                                    @* <select id="ddlRPLInstructorsignOff" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select> *@
+                                    <select id="ddlRPLInstructorsignOff" class="form-control"></select>
+                                </div>
+                               
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="row">
+                    <div class="col-md-12">
+                    <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                    </div>
+                    </div>*@
+                </form>
+            </div>
+             <div class="form-row pl-5">
+                        <div class="form-group col-md-12">
+                            <div asp-validation-summary="All" id="rplValidationSummary"></div>
+                        </div>
+                    </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveRPLDetails" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save</button>
+            </div>
+
         </div>
     </div>
 </div>

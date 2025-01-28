@@ -5287,6 +5287,8 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
         $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -5301,6 +5303,8 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
         $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -5314,6 +5318,8 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
         $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -5325,6 +5331,8 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_hr_settings').hide();
         $('#SettingsDiv').show();
         $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -5348,6 +5356,8 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
             type: 'GET',
@@ -5371,11 +5381,28 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').show();
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 7) {
+
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        $('#add_lote').hide();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+        gridClassroomLocation.show();
+        $('#add_location').show();
     }
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
         gridLanguage.hide();
+        gridClassroomLocation.hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -5753,6 +5780,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridLicenseTypes.hide();
     gridCriticalDocument.hide();
     gridLanguage.hide();
+   
 }
 
 $('#Critical-modal').on('shown.bs.modal', function (event) {

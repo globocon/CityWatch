@@ -153,6 +153,7 @@ namespace CityWatch.Data.Providers
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
+        List<TrainingCourseCertificateRPL> GetCourseCertificateRPLUsingId(int id);
 
 
     }
@@ -1625,6 +1626,16 @@ namespace CityWatch.Data.Providers
             return _context.StaffDocuments.Where(x => x.ClientSite == ClientSiteID && x.DocumentType == 6).FirstOrDefault();
         }
         //p5-Issue-2-end
+        public List<TrainingCourseCertificateRPL> GetCourseCertificateRPLUsingId(int id)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseCertificateRPL
+                .Where(x => x.TrainingCourseCertificateId == id)
+                .ToList();
+
+
+            return courseDocList;
+        }
 
 
     }
