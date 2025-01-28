@@ -2499,9 +2499,9 @@ namespace CityWatch.Web.Pages.Admin
                         var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
                         if (!Directory.Exists(CourseDocsFolder))
                             Directory.CreateDirectory(CourseDocsFolder);
-                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, filename)))
                             //throw new ArgumentException("File Already Exists");
-                            System.IO.File.Delete(Path.Combine(CourseDocsFolder, file.FileName));
+                            System.IO.File.Delete(Path.Combine(CourseDocsFolder, filename));
                         using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, filename)))
                         {
                             file.CopyTo(stream);
