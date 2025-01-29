@@ -29,6 +29,7 @@ namespace CityWatch.Web.Models
         public string ClientSitesSummary { get; set; }
 
         public bool hrlock { get; set; }
+        public bool hrbanedit { get; set; }
 
 
 
@@ -48,7 +49,8 @@ namespace CityWatch.Web.Models
                 referenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId,
                 hrGroupId = hrSettings.HRGroupId,
                 ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty,
-                hrlock= hrSettings.HRLock
+                hrlock= hrSettings.HRLock,
+                hrbanedit=hrSettings.HRBanEdit
             };
         }
 

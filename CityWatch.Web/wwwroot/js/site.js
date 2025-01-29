@@ -4916,6 +4916,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         { field: 'states' },
         { field: 'clientSitesSummary' },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
+        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
 
         { width: '10%', renderer: hrgroupButtonRenderer },
     ],
@@ -4932,7 +4933,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
 
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 8).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 9).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -4941,9 +4942,15 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     initialized: function (e) {
         // Optionally, you can modify the appearance or behavior after the grid is initialized
         $('#tbl_hr_settings thead tr th:last')
-            .prev() // Select the column before the last
+            .prev()
+            .prev()// Select the column before the last
             .addClass('text-center')
             .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+        $('#tbl_hr_settings thead tr th:last')
+            .prev() 
+           
+            .addClass('text-center')
+            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
         $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
@@ -4960,6 +4967,22 @@ function hrgroupLockButtonRenderer(value, record) {
         //return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></button>'
         return '<div class="text-center">' +
             '<a id="btnLock"   data-doc-id="' + record.id + '" data-lock-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
+            '</div>'
+    }
+}
+
+function hrgroupEditBanButtonRenderer(value, record) {
+    if (record.hrbanedit) {
+        // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
+        return '<div class="text-center">' +
+            '<a id="btnBan"    data-doc-id="' + record.id + '" data-ban-status=1 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
+            '</div>'
+    }
+    else {
+
+        //return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></button>'
+        return '<div class="text-center">' +
+            '<a id="btnBan"   data-doc-id="' + record.id + '" data-ban-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
             '</div>'
     }
 }
@@ -5030,6 +5053,35 @@ $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
     $('#user-client-access-modal-lock').modal('show');
 });
 
+$('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
+    const userId = $(this).attr('data-doc-id');
+    let enableStatus = 0;
+    let Status = $(this).attr('data-ban-status');
+    if (Status == 1) {
+        enableStatus = 0
+    }
+    else {
+        enableStatus = 1;
+    }
+
+    
+    $.ajax({
+        url: '/Admin/Settings?handler=HrSettingsBanEdit',
+        data: {
+            hrSttingsId: userId,
+            enableStatus: enableStatus
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        gridHrSettings.reload();
+        //showStatusNotification(true, 'Saved successfully');
+    }).fail(function () {
+        console.log('error');
+    });
+
+   
+});
 
 
 $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {

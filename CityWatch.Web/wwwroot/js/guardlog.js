@@ -6314,11 +6314,24 @@ $(function () {
             {
                 targets: -1,
                 data: null,
+                render: function (data, type, row, meta) {
+                    
+                    if (data.hrBanEdit) {
+                       
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                    } else {
+                        
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                    }
+                },
                 defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                    '<button  class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
+                    '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
                 width: '13%'
             }],
         columnDefs: [{
+          
             targets: 3,
             data: 'fileName',
             render: function (data, type, row, meta) {

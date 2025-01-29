@@ -312,6 +312,7 @@ namespace CityWatch.Data.Providers
 
         List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
         void UpdateHRLockSettings(int id, bool status);
+        void UpdateHRBanSettings(int id, bool status);
 
         List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory);
         List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId);
@@ -5314,6 +5315,16 @@ namespace CityWatch.Data.Providers
             {
 
                 updateHRLockSettings.HRLock = status;
+                _context.SaveChanges();
+            }
+        }
+        public void UpdateHRBanSettings(int id, bool status)
+        {
+            var updateHRBanSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
+            if (updateHRBanSettings != null)
+            {
+
+                updateHRBanSettings.HRBanEdit = status;
                 _context.SaveChanges();
             }
         }
