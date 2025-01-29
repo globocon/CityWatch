@@ -631,11 +631,33 @@ namespace CityWatch.Data.Providers
                 CurrentDateTime = x.CurrentDateTime,
                 LicenseNo = x.Guard.SecurityNo,
                 DateType = x.DateType,
+                HRBanEdit=x.HRBanEdit
             }).OrderBy(x => x.FileName)
             .ToList();
 
+           
+            var filteredDescriptions = result
+    .Select(g => g.Description.Substring(3).Trim().ToLower()) // Remove first 3 letters
+    .Distinct()
+    .ToList();
 
+           
+
+            var hrSettingsDict = _context.HrSettings
+   .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()))
+    .ToDictionary(h => h.Description, h => h.HRBanEdit);
+
+            foreach (var item in result)
+            {
+                string normalizedDescription = item.Description.Substring(3).Trim();
+
+                if (hrSettingsDict.TryGetValue(normalizedDescription, out var hrBanEditValue))
+                {
+                    item.HRBanEdit = hrBanEditValue;
+                }
+            }
             return result;
+            
 
 
 

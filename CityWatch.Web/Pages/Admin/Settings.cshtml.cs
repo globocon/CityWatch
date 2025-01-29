@@ -846,6 +846,24 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
+        public JsonResult OnPostHrSettingsBanEdit(int hrSttingsId, int enableStatus)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.UpdateHRBanSettings(hrSttingsId, Convert.ToBoolean(enableStatus));
+               
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
         public JsonResult OnGetReportFields(int typeId)
         {
             var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
