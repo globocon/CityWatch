@@ -429,7 +429,8 @@ namespace CityWatch.Data.Providers
                     LandLine = "+61 (3)",
                     DataCollectionEnabled = true,
                     IsActive = true,
-                    IsDosDontList= clientSite.IsDosDontList
+                    IsDosDontList= clientSite.IsDosDontList,
+                    UploadFusionLog= clientSite.UploadFusionLog,
                 });
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -453,6 +454,7 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.DuressSms = clientSite.DuressSms;
                 clientSiteToUpdate.DuressEmail = clientSite.DuressEmail;
                 clientSiteToUpdate.IsDosDontList = clientSite.IsDosDontList;
+                clientSiteToUpdate.UploadFusionLog = clientSite.UploadFusionLog;
             }
             _context.SaveChanges();
 
@@ -3238,10 +3240,18 @@ namespace CityWatch.Data.Providers
         {
             if (siteLogUploadHistory.Id == 0)
             {
+                try
+                {
+                    siteLogUploadHistory.Date = DateTime.Now;
+                    _context.SiteLogUploadHistory.Add(siteLogUploadHistory);
+                    _context.SaveChanges();
 
-                siteLogUploadHistory.Date = DateTime.Now;
-                _context.SiteLogUploadHistory.Add(siteLogUploadHistory);
-                _context.SaveChanges();
+                }
+                catch
+                {
+
+
+                }
             }
 
         }
