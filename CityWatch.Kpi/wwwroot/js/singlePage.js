@@ -97,11 +97,15 @@ $(function () {
 
     });
     $('#btnSaveGuardSiteSettings').on('click', function () {
-        var isUpdateDailyLog = false;        
+        var isUpdateDailyLog = false;  
+        var isUpdateDailyLogFusion = false;
         var test = $('#IsDosDontListEnabledHidden').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
         if ($('#enableLogDump').is(":checked")) {
             isUpdateDailyLog = true;
+        }
+        if ($('#enableFusionDump').is(":checked")) {
+            isUpdateDailyLogFusion = true;
         }
         $.ajax({
             url: '/admin/settings?handler=SaveSiteEmail',
@@ -110,6 +114,7 @@ $(function () {
                 siteId: $('#gl_client_site_id').val(),
                 siteEmail: $('#gs_site_email').val(),
                 enableLogDump: isUpdateDailyLog,
+                uploadFusionLog: isUpdateDailyLogFusion,
                 landLine: $('#gs_land_line').val(),
                 guardEmailTo: $('#gs_email_recipients').val(),
                 duressEmail: $('#gs_duress_email').val(),
@@ -1367,22 +1372,38 @@ $(function () {
                
                 const guardLogEmailTo = result[0].guardLogEmailTo;
                 const isUpdateDailyLog = result[0].uploadGuardLog;
+                const isUpdateDailyFusionLog = result[0].uploadFusionLog;
                 $('#gs_site_email').val(SiteEmail);
                 $('#gs_duress_email').val(duressEmail);
                 $('#gs_duress_sms').val(duressSms);
                 $('#gs_land_line').val(landLine);
                 $('#gs_email_recipients').val(guardLogEmailTo);
                 $('#enableLogDump').prop('checked', false);
+                $('#enableFusionDump').prop('checked', false);
                 $('#IsDosDontListEnabledHidden').val(IsDosDontListEnabledHidden);
                 $('#IsDosDontList').prop('checked', IsDosDontListEnabledHidden);
 
                 $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
                 if (isUpdateDailyLog)
                     $('#enableLogDump').prop('checked', true);
+                if (isUpdateDailyFusionLog)
+                    $('#enableFusionDump').prop('checked', true);
+
             }
         }).fail(function () { });
     }
+    $('#enableLogDump').on('change', function () {
+        if (this.checked) {
+            $('#enableFusionDump').prop('checked', false);  // Uncheck the other box
+        }
+    });
 
+    // When #enableFusionDump is checked/unchecked
+    $('#enableFusionDump').on('change', function () {
+        if (this.checked) {
+            $('#enableLogDump').prop('checked', false);  // Uncheck the other box
+        }
+    });
     
     /*Dropbox settings-start*/        
     gridSiteDropboxSettings = $('#grid_Drpbx_Custom').grid({
