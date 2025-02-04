@@ -581,6 +581,9 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
             gridGuardTrainingAndAssessment.clear().draw();
             gridGuardTrainingAndAssessment.ajax.reload();
+            GetClassroomLocation(1);
+            window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+            
         }
         $('#loader').hide();
 
@@ -2265,3 +2268,110 @@ $('#rplDetailsModal').on('hidden.bs.modal', function (e) {
 
 
 });
+
+function GetClassroomLocation(selectedLocation) {
+    const practicalLocationControl = $('#ddlTestClassroomLocation');
+    $('#ddl_TestClassroomLocation').html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingLocation',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            
+            data.map(function (site) {
+                $('#ddl_TestClassroomLocation').append('<option value="' + site.id + '">' + site.location + '</option>');
+            });
+
+            if (selectedLocation) {
+                $('#ddl_TestClassroomLocation').val(selectedLocation);
+            } else {
+                $('#ddl_TestClassroomLocation').val('');
+            }
+        }
+    });
+}
+//p5-Issue6-start
+$('#btnStartCourse').on('click', function (e) {
+    e.preventDefault();
+    $('#cardFrontPage').hide();
+    $('#cardCoursePdf').attr('hidden', false);
+    RunCourses();
+});
+var pdfUrl;
+var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
+function RunCourses() {
+    canvas = document.getElementById("canvasCousePdf");
+     ctx = canvas.getContext('2d')
+    pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val()  ;
+    pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
+        pdfDoc = pdf;
+        renderPage(pageNum);
+    });
+}
+
+
+function renderPage(num) {
+    pdfDoc.getPage(num).then(function (page) {
+        var fixedWidth = 800;  
+        var fixedHeight = 600; 
+        var viewport = page.getViewport({ scale: scale });
+        canvas.width = fixedWidth;
+        canvas.height = fixedHeight;
+        page.render({ canvasContext: ctx, viewport: viewport });
+    });
+}
+
+$("#coursePdfNext").on('click', function (e) {
+    if (pageNum < pdfDoc.numPages) {
+        pageNum++;
+        renderPage(pageNum);
+    }
+});
+
+$("#coursePdfPrev").on('click', function (e) {
+    if (pageNum > 1) {
+        pageNum--;
+        renderPage(pageNum);
+    }
+});
+document.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft") {
+        if (pageNum > 1) {
+            pageNum--;
+            renderPage(pageNum);
+        }
+    } else if (event.key === "ArrowRight") {
+        if (pageNum < pdfDoc.numPages) {
+            pageNum++;
+            renderPage(pageNum);
+        }
+
+    }
+    else if (event.key === "PrintScreen") {
+    
+       // setInterval(detectScreenRecording, 1000);
+        alert('Screenshots are disabled!');
+    }
+    if (event.ctrlKey == true && event.key === 'c') {
+        event.preventDefault();  // Disable Ctrl+C
+        alert('Copying is disabled!');
+    }
+    
+});
+//async function detectScreenRecording() {
+//    try {
+//        const stream = await navigator.mediaDevices.getDisplayMedia({ video: false });
+//        stream.getTracks().forEach(track => track.stop()); // Stop the screen capture
+//        alert("Screen recording is not allowed!");
+//    } catch (err) {
+//        console.log("Screen recording not detected.");
+//    }
+//}
+
+//// Run this check every 5 seconds
+//setInterval(detectScreenRecording, 5000);
+
+$(document).on('contextmenu', function (e) {
+    e.preventDefault();  // Prevent right-click
+});
+//p5-Issue6-end

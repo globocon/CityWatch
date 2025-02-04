@@ -356,6 +356,8 @@ namespace CityWatch.Data.Providers
         void SaveTrainingLocation(TrainingLocation trainingLocation);
         void DeleteTrainingLocation(int id);
         void SaveTrainingCourseCertificateRPL(TrainingCourseCertificateRPL trainingCertificateRPL);
+        public List<SelectListItem> GetClassRommLocation(bool withoutSelect = true);
+        
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6256,6 +6258,22 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
         }
+        public List<SelectListItem> GetClassRommLocation(bool withoutSelect = true)
+        {
+            var items = new List<SelectListItem>();
+               
+            var trainingList = GetTrainingLocation();
+            foreach (var item in trainingList)
+            {
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Id.ToString(), item.Location));
+                }
+
+            }
+            return items;
+        }
     }
+
    
 }

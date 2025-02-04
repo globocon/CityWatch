@@ -1,0 +1,100 @@
+﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using CityWatch.Data.Helpers;
+@using CityWatch.Data.Services;
+@using CityWatch.Web.Services
+@model CityWatch.Web.Pages.Guard.GuardStartTestModel
+@inject IGuardDataProvider _guardDataProvider;
+@inject IGuardLogDataProvider _guardlogDataProvider;
+@inject IViewDataService viewDataServiceNew;
+@{
+    Layout = "_LayoutTraining";
+}
+<input type="hidden" id="txtguardIdForTest" asp-for="@Model.GuardId" />
+<input type="hidden" id="txtguardCourseStatusId" asp-for="@Model.GuardTrainingAssessmentId" />
+<input type="hidden" id="txtguardTestCourseId" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourseId" />
+<input type="hidden" id="txtCourseDocsPath" asp-for="@Model.CourseDocsPath" />
+<input type="hidden" id="txthrreferencenumber" asp-for="@Model.hrreferencenumber" />
+<input type="hidden" id="txtCoursefilename" asp-for="@Model.Coursefilename" />
+
+
+<div class="card" id="cardFrontPage">
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5 text-center">
+                <h3>ONLINE EXAM </h3>
+                <h5>@_guardDataProvider.GetCourseNameUsingCourseId(@Model.GuardTrainingAndAssessment.TrainingCourseId)</h5>
+            </div>
+            
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            @* <div class="row mt-2">
+                <div class="col-md-6">
+                    <label >Classroom Location</label>
+                    <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+                </div>
+            </div> *@
+            <div class="form-row">
+                <div class="col-md-8">
+                    <form id="frm_training_frontpage">
+                      
+                        <div class="form-group row m-0 mb-3">
+                            <label for="ddlTestClassroomLocation" class="col-sm-3 col-form-label">Classroom Location</label>
+                            <div class="col-sm-6">
+                                <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            
+                            <div class="col-sm-10">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 18px; color: red;">
+                                        Please concentrate and respect the course. Turn your phone and TV off. You should be taking notes as you progress through the course. There will be a multiple choice test at the end of the course.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <label for="estimatedCourseDuration" class="col-sm-7 col-form-label">Estimated time for the material @Model.TrainingTestQuestionSettings.CourseDuration.Name</label>
+                            
+                        </div>
+                        
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <form id="frm_training_frontpage_for_startAssessment_button">
+                        <div class="form-group row m-0 mb-3">
+                           <img src="~/images/GuardTest.jpg" alt="cws logo" height="150px"/>
+
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <button class="btn btn-success col-md-7" id="btnStartCourse">Start</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" id="cardCoursePdf" hidden>
+    <div class="card-body">
+        <canvas id="canvasCousePdf"></canvas>
+        <button class="btn" id="coursePdfPrev">Prev</button>
+        <button class="btn" id="coursePdfNext">Next</button>
+    </div>
+</div>
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center" style="color:white;">TRAINING & ASSESSMENT</h3>
+}
+
+ 
