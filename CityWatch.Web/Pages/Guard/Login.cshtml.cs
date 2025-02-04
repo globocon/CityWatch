@@ -625,12 +625,27 @@ namespace CityWatch.Web.Pages.Guard
             var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().SingleOrDefault(z => z.ClientSite.Name == clientSiteName & z.SmartWandId == smartWandNo);
             return new JsonResult(_viewDataService.CheckWandIsInUse(smartWand.Id, guardId));
         }
+        public JsonResult OnGetCheckIsWandAvailableNew(string clientSiteName, string smartWandNo, int? guardId,int ClientSiteID)
+        {
+            var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().SingleOrDefault(z => z.ClientSite.Name == clientSiteName & z.SmartWandId == smartWandNo);
+            var smartwantinuse = _viewDataService.CheckWandIsInUse(smartWand.Id, guardId);
+            var SmartWands = _configDataProvider.GetSmartWandsDetails(ClientSiteID);
+            return new JsonResult(new { smartwantinuse, SmartWands });
+        }
 
         public JsonResult OnGetCheckIfSmartwandMsgBypass(string clientSiteName, string positionName, int? guardId)
         {
             var position = _configDataProvider.GetPositions().SingleOrDefault(x => x.Name == positionName);
             bool isSmartwandbypass = position?.IsSmartwandbypass ?? false; // Use false if null
             return new JsonResult(isSmartwandbypass);
+        }
+        public JsonResult OnGetCheckIfSmartwandMsgBypassNew(string clientSiteName, string positionName, int? guardId)
+        {
+            var position = _configDataProvider.GetPositions().SingleOrDefault(x => x.Name == positionName);
+            bool isSmartwandbypass = position?.IsSmartwandbypass ?? false; // Use false if null
+            var SmartWands = _configDataProvider.GetSmartWandsDetails(Convert.ToInt32(clientSiteName));
+
+            return new JsonResult(new { isSmartwandbypass, SmartWands });
         }
 
         //public JsonResult OnGetIsGuardLoginActive(string guardLicNo,string clientSiteName)
