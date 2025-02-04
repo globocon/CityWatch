@@ -272,11 +272,11 @@ function domainRPLSettings(value, record) {
 
     if (record.isRPLEnabled) {
 
-        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" checked></a><input type="hidden" id="certificateId" value="' + record.id + '">'
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" id="chkIsRPL" checked></a><input type="hidden" id="certificateId" value="' + record.id + '">'
 
     }
     else {
-        return '<a href="#" id="btnRPLCertificate"><input type="checkbox"></a><input type="hidden" id="certificateId" value="' + record.id + '">'
+        return '<a href="#" id="btnRPLCertificate"><input type="checkbox" id="chkIsRPL"></a><input type="hidden" id="certificateId" value="' + record.id + '">'
     }
 
 }
@@ -2125,16 +2125,25 @@ $('#add_location').on('click', function () {
     }
 });
 $('#tbl_certificateDocumentFiles tbody').on('click', '#btnRPLCertificate', function () {
-   // ClearModelControls();
-    $('#rplDetailsModal').modal('show');
+    // ClearModelControls();
+    
+    var isChecked = $(this).closest("td").find('#chkIsRPL').is(':checked');
+    
+       
     var id = $(this).closest("td").find('#certificateId').val();
-    getPracticalLocation('');
-    getRPLInstructorSignOff('');
-    //var userName = $(this).closest("td").find('#userName').val();
-    //$('#siteTypeDomainDeatils').find('#userName1').text(typeName)
-    //$('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
-    $('#rplCertificateId').val(id);
-    fetchURPLDeatils(id);
+    if (isChecked == true) {
+        $('#rplDetailsModal').modal('show');
+        getPracticalLocation('');
+        getRPLInstructorSignOff('');
+        //var userName = $(this).closest("td").find('#userName').val();
+        //$('#siteTypeDomainDeatils').find('#userName1').text(typeName)
+        //$('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
+        $('#rplCertificateId').val(id);
+        fetchURPLDeatils(id);
+    }
+    else {
+        disableRPLDetails(id)
+    }
 });
 function fetchURPLDeatils(Id) {
     $.ajax({
@@ -2166,6 +2175,27 @@ function fetchURPLDeatils(Id) {
         error: function (xhr, status, error) {
             console.error('Error fetching data:', error);
         }
+    });
+}
+function disableRPLDetails(Id) {
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteRPLDetails',
+        data: { id: Id },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            $('#rplDetailsModal').modal('hide');
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+
+        } else {
+
+            displayGuardValidationSummary('rplValidationSummary', result.message);
+        }
+    }).always(function () {
+        $('#loader').hide();
     });
 }
 function getPracticalLocation(selectedLocation) {
@@ -2224,7 +2254,8 @@ $('#btnSaveRPLDetails').on('click', function () {
         AssessmentStartDate: $('#RPL_DateAssessment_started').val(),
         AssessmentEndDate: $('#RPL_DateAssessment_ended').val(),
         TrainingCourseCertificateId: $('#rplCertificateId').val(),
-        TrainingInstructorId: $('#ddlRPLInstructorsignOff').val()
+        TrainingInstructorId: $('#ddlRPLInstructorsignOff').val(),
+        isDeleted: false
         }
    
 
