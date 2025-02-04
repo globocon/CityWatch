@@ -1775,48 +1775,220 @@ namespace CityWatch.Data.Providers
         }
         public List<RadioCheckListGuardData> GetActiveGuardDetails()
         {
+            //Old Code repplaced due to performance issue
+            ////var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
+            //List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
+            //foreach (var item in allvalues)
+            //{
+            //    var phoneNumbers = allphoneNumbers
+            //   .Where(x => x.ClientSiteId == item.ClientSiteId)
+            //   .Select(x => x.PhoneNumber)
+            //   .ToList();
+            //    var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+            //    if (phoneNumbers.Count != 0)
+            //    {
+            //        item.hasmartwand = 1;
 
-            var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
-            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
-            foreach (var item in allvalues)
+            //    }
+
+            //    item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
+            //    item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+            //}
+            //return allvalues;
+
+            int retryCount = 5; // Number of retry attempts
+            List<RadioCheckListGuardData> allValues = new List<RadioCheckListGuardData>();
+
+            try
             {
-                var phoneNumbers = allphoneNumbers
-               .Where(x => x.ClientSiteId == item.ClientSiteId)
-               .Select(x => x.PhoneNumber)
-               .ToList();
-                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                if (phoneNumbers.Count != 0)
+                for (int attempt = 1; attempt <= retryCount; attempt++)
                 {
-                    item.hasmartwand = 1;
+                    try
+                    {
+                        // Attempt to execute the stored procedure
+                        allValues = _context.RadioCheckListGuardData
+                            .FromSqlRaw("EXEC sp_GetActiveGuardDetailsForRC")
+                            .AsEnumerable()
+                            .ToList();
 
+                        if (allValues.Any())
+                        {
+                            break; // Exit loop if data is retrieved successfully
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Attempt {attempt}: No data returned. Retrying...");
+                        }
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Database error - {sqlEx.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Unexpected error - {ex.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
                 }
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
-                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+                // If no data retrieved after retries, return an empty list
+                if (!allValues.Any())
+                {
+                    Console.WriteLine("No data retrieved after retries. Returning an empty list.");
+                    return new List<RadioCheckListGuardData>();
+                }
+
+                // Fetch ClientSiteSmartWands for processing
+                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
+
+                foreach (var item in allValues)
+                {
+                    try
+                    {
+                        if (item == null) continue;
+
+                        var phoneNumbers = smartWandLookup[item.ClientSiteId]
+                            .Select(wand => wand.PhoneNumber)
+                            .ToList();
+
+                        if (phoneNumbers.Any())
+                        {
+                            item.hasmartwand = 1;
+                        }
+
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
+                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+                        item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
+                                       $"<i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a> {item.Address}" +
+                                       $"<input type=\"hidden\" class=\"form-control\" value=\"{item.GPS}\" id=\"txtGPSActiveguards\" />";
+                    }
+                    catch (Exception itemEx)
+                    {
+                        Console.WriteLine($"Error processing item with ClientSiteId: {item?.ClientSiteId}, Error: {itemEx.Message}");
+                        continue;
+                    }
+                }
+
+                return allValues;
             }
-            return allvalues;
+            catch (Exception finalEx)
+            {
+                Console.WriteLine($"Critical error after retries: {finalEx.Message}");
+                return new List<RadioCheckListGuardData>(); // Return empty list on failure
+            }
         }
+
+        //public List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails()
+        //{
+
+        //    var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
+        //    List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
+        //    foreach (var item in allvalues)
+        //    {
+        //        var phoneNumbers = allphoneNumbers
+        //        .Where(x => x.ClientSiteId == item.ClientSiteId)
+        //        .Select(x => x.PhoneNumber)
+        //        .ToList();
+        //        var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+
+        //        item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+
+
+        //        item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+        //    }
+        //    return allvalues;
+        //}
+
 
         public List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails()
         {
+            int retryCount = 5; // Number of retry attempts
+            List<RadioCheckListInActiveGuardData> allValues = new List<RadioCheckListInActiveGuardData>();
 
-            var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
-            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
-            foreach (var item in allvalues)
+            try
             {
-                var phoneNumbers = allphoneNumbers
-                .Where(x => x.ClientSiteId == item.ClientSiteId)
-                .Select(x => x.PhoneNumber)
-                .ToList();
-                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                for (int attempt = 1; attempt <= retryCount; attempt++)
+                {
+                    try
+                    {
+                        // Attempt to execute the stored procedure
+                        allValues = _context.RadioCheckListInActiveGuardData
+                            .FromSqlRaw("EXEC sp_GetInActiveGuardDetailsForRC")
+                            .AsEnumerable()
+                            .ToList();
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+                        if (allValues.Any())
+                        {
+                            break; // Exit loop if data is retrieved successfully
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Attempt {attempt}: No data returned. Retrying...");
+                        }
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Database error - {sqlEx.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Unexpected error - {ex.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                }
 
+                // If no data retrieved after retries, return an empty list
+                if (!allValues.Any())
+                {
+                    Console.WriteLine("No data retrieved after retries. Returning an empty list.");
+                    return new List<RadioCheckListInActiveGuardData>();
+                }
 
+                // Fetch ClientSiteSmartWands for processing
+                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
 
-                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+                foreach (var item in allValues)
+                {
+                    try
+                    {
+                        if (item == null) continue;
+
+                        // Get phone numbers associated with the current site
+                        var phoneNumbers = smartWandLookup[item.ClientSiteId]
+                            .Select(wand => wand.PhoneNumber)
+                            .ToList();
+
+                        // Format phone numbers and site name
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
+                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+                        // Format address with map link
+                        item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
+                                       $"<i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a> {item.Address}" +
+                                       $"<input type=\"hidden\" class=\"form-control\" value=\"{item.GPS}\" id=\"txtGPSActiveguards\" />";
+                    }
+                    catch (Exception itemEx)
+                    {
+                        Console.WriteLine($"Error processing item with ClientSiteId: {item?.ClientSiteId}, Error: {itemEx.Message}");
+                        continue; // Continue processing other items even if one fails
+                    }
+                }
+
+                return allValues;
             }
-            return allvalues;
+            catch (Exception finalEx)
+            {
+                Console.WriteLine($"Critical error after retries: {finalEx.Message}");
+                return new List<RadioCheckListInActiveGuardData>(); // Return empty list on failure
+            }
         }
 
 
