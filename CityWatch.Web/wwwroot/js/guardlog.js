@@ -6314,18 +6314,18 @@ $(function () {
             {
                 targets: -1,
                 data: null,
-                render: function (data, type, row, meta) {
+                //render: function (data, type, row, meta) {
                     
-                    if (data.hrBanEdit) {
+                //    if (data.hrBanEdit) {
                        
-                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
-                    } else {
+                //        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                //            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                //    } else {
                         
-                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
-                    }
-                },
+                //        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                //            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                //    }
+                //},
                 defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                     '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
                 width: '13%'
@@ -6409,7 +6409,7 @@ $(function () {
         //filter: false,
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
-        var check = '';
+       var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
@@ -6418,6 +6418,7 @@ $(function () {
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+       
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -6451,7 +6452,7 @@ $(function () {
                         //mark = '❌';
                         mark = '<i class="fa fa-close" style="font-size:24px;color:red"></i>'
                         //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
                             '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
                             '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
                             mark +
@@ -6461,7 +6462,7 @@ $(function () {
                         mark = '<i class="fa fa-check" style="font-size:24px;color:green"></i>'
                         //mark = '<span style="color: green !important;">✔️</span>';
                         // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
                             '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
                             '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
                             mark +
@@ -6479,12 +6480,37 @@ $(function () {
 
     var trig = 'mousedown';
     $('#Description').on("change", function () {
+        let selectedItem = $('.es-visible.selected').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
         var display = sel.clone();
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This can't be selected")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+       
+        
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -6492,6 +6518,46 @@ $(function () {
         sel.replaceWith($('#Description').data('cur_val'));
         $(this).prop('selectedIndex', 0);
     });
+    $(document).on("click", "#Description + ul.es-list li.es-visible", function () {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        let selectedItem = $('.es-visible').val();
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This can't be selected")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+    });
+    //$('#Description').on("change", function () {
+    //    var sel = $('#Description option:selected');
+    //    $(this).data('cur_val', sel);
+    //    var display = sel.clone();
+    //    display.text($.trim(display.text()));
+    //    sel.replaceWith(display);
+    //    $(this).prop('selectedIndex', display.index());
+    //}).on(trig, function () {
+    //    if ($(this).prop('selectedIndex') == 0)
+    //        return;
+    //    var sel = $('#Description option:selected');
+    //    sel.replaceWith($('#Description').data('cur_val'));
+    //    $(this).prop('selectedIndex', 0);
+    //});
+
+
+
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
 
