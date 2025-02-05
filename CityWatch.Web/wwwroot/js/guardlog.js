@@ -55,6 +55,8 @@ $(function () {
     //*************** Guard Login  *************** //
 
     function populateClientSites(selectedSiteName) {
+
+       
         $('#GuardLogin_SmartWandOrPosition').html('<option value="">Select</option>');
 
         const option = $('#GuardLogin_ClientType').val();
@@ -68,6 +70,7 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
+                clientSiteControl.html('');
                 clientSiteControl.append('<option value="">Select</option>')
                 data.map(function (site) {
                     clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
