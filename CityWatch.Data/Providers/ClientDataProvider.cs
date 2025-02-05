@@ -258,6 +258,8 @@ namespace CityWatch.Data.Providers
         List<KPITelematicsField> GetKPITelematicsDetailsNew(IEnumerable<int> ids);
 
         public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting);
+        public void AddHyperLinks(string Email, string TvNews, string wether);
+        public List<HyperLinks> GetHyperLinksDetails();
 
     }
 
@@ -2335,7 +2337,31 @@ namespace CityWatch.Data.Providers
 
 
         }
-
+        public void AddHyperLinks(string Email,string TvNews,string wether)
+        {
+            var HyperLinkUpdate = _context.HyperLinks.Where(x => x.Id != 0).FirstOrDefault();
+            if (HyperLinkUpdate != null)
+            {
+                HyperLinkUpdate.Webmail = Email;
+                HyperLinkUpdate.TVNewsFeed = TvNews;
+                HyperLinkUpdate.WeatherFeed = wether;
+            }
+            else
+            {
+                var HyperlinksList = new HyperLinks()
+                {
+                    Webmail = Email,
+                    TVNewsFeed = TvNews,
+                    WeatherFeed = wether,
+                };
+                _context.HyperLinks.Add(HyperlinksList);
+            }
+            _context.SaveChanges();
+        }
+        public List<HyperLinks> GetHyperLinksDetails()
+        {
+            return _context.HyperLinks.ToList();
+        }
         public void GlobalComplianceAlertEmail(string Email)
         {
             if (!string.IsNullOrEmpty(Email))

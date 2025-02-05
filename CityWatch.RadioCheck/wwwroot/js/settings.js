@@ -18,9 +18,20 @@
     });
 
     //To get the Duress Emails in pageload stop
-
+    HyperLinks();
 };
 
+function HyperLinks() {
+    $.ajax({
+        url: '/Admin/Settings?handler=HyperLinks',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (result) {
+        $('#link_webmail').val(result.webmail);
+        $('#link_tvnews').val(result.tvNewsFeed);
+        $('#link_weather').val(result.wetherFeed);
+    });
+}
 
 let gridRadioCheckStatusTypeSettings;
 gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
@@ -1289,3 +1300,21 @@ $('.btn-delete-dgl-attachment1').on('click', function (event) {
     });
 
 });
+
+$('#add_HyperLinks').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#link_webmail').val();
+    var TvNews = $('#link_tvnews').val();
+    var wether = $('#link_weather').val();
+    
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveHyperLinks',
+            data: { Email: Email, TvNews: TvNews, wether: wether },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("HyperLinks saved successfully");
+        })
+    
+    
+})
