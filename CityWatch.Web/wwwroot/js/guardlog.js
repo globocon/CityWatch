@@ -6556,7 +6556,7 @@ $(function () {
         sel.replaceWith($('#Description').data('cur_val'));
         $(this).prop('selectedIndex', 0);
     });
-    $(document).on("click", "#Description + ul.es-list li.es-visible", function () {
+    $(document).on("click", "#Description + ul.es-list", function () {
         const token = $('input[name="__RequestVerificationToken"]').val();
         let selectedItem = $('.es-visible').val();
         let LoginVal = $('#hdnIsAdminLoggedIn1').val();
