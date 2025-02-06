@@ -5,6 +5,7 @@
 @using CityWatch.Data.Helpers
 @using Microsoft.Extensions.Configuration
 @using CityWatch.Data.Providers;
+@using CityWatch.Web.Helpers;
 @model CityWatch.Web.Pages.Guard.KeyVehicleLogModel
 @inject IViewDataService viewDataService
 @inject IConfiguration Configuration
@@ -21,6 +22,14 @@
     <input type="hidden" id="hid_duressEnabledAddress">
     var clientSiteSOp = new List<StaffDocument>();
     clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId);
+}
+@if (AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="AdminGlobal" />
+}
+else
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
 <input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
