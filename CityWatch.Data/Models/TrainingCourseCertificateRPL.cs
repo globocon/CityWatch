@@ -21,6 +21,7 @@ namespace CityWatch.Data.Models
         public TrainingCourseCertificate TrainingCourseCertificate { get; set; }
         [ForeignKey("TrainingInstructorId")]
         public TrainingInstructor TrainingInstructor { get; set; }
+        public bool isDeleted { get; set; }
 
 
     }

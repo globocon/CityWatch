@@ -357,6 +357,7 @@ namespace CityWatch.Data.Providers
         void SaveTrainingLocation(TrainingLocation trainingLocation);
         void DeleteTrainingLocation(int id);
         void SaveTrainingCourseCertificateRPL(TrainingCourseCertificateRPL trainingCertificateRPL);
+        void DeleteTrainingCourseCertificateRPL(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6434,9 +6435,23 @@ namespace CityWatch.Data.Providers
                     traininglocationToUpdate.AssessmentStartDate = trainingCertificateRPL.AssessmentStartDate;
                     traininglocationToUpdate.AssessmentEndDate = trainingCertificateRPL.AssessmentEndDate;
                     traininglocationToUpdate.TrainingInstructorId = trainingCertificateRPL.TrainingInstructorId;
+                    traininglocationToUpdate.isDeleted = false;
 
                 }
             }
+            _context.SaveChanges();
+        }
+        public void DeleteTrainingCourseCertificateRPL(int id)
+        {
+           
+                var traininglocationToUpdate = _context.TrainingCourseCertificateRPL.SingleOrDefault(x => x.TrainingCourseCertificateId == id);
+                if (traininglocationToUpdate != null)
+                {
+                    
+                    traininglocationToUpdate.isDeleted = true;
+
+                }
+            
             _context.SaveChanges();
         }
     }
