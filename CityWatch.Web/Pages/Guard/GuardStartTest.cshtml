@@ -86,10 +86,140 @@
 </div>
 
 <div class="card" id="cardCoursePdf" hidden>
+    <input type="hidden" id="txtCourseTimerStart" asp-for="@Model.TrainingTestQuestionSettings.CourseDuration.Name" />
+    <span id="courseTimerStart"></span>
     <div class="card-body">
         <canvas id="canvasCousePdf"></canvas>
         <button class="btn" id="coursePdfPrev">Prev</button>
         <button class="btn" id="coursePdfNext">Next</button>
+    </div>
+</div>
+<div class="card" id="cardTestFrontPage" hidden>
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5 text-center">
+                <h3>ONLINE EXAM </h3>
+                <h5>@_guardDataProvider.GetCourseNameUsingCourseId(@Model.GuardTrainingAndAssessment.TrainingCourseId)</h5>
+            </div>
+
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            @* <div class="row mt-2">
+            <div class="col-md-6">
+            <label >Classroom Location</label>
+            <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+            </div>
+            </div> *@
+            <div class="form-row">
+                <div class="col-md-8">
+                    <form id="frm_training_test_frontpage">
+
+                       
+                        <div class="form-group row m-0 mb-3">
+
+                            <div class="col-sm-10">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 18px; color: red;">
+                                        The test is about to begin. Do not take this test for anyone else.Please concentrate and turn your phone and TV off. You can refere to the notes taken during the course. Answers are all multiple choice.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <label for="estimatedTestDuration" class="col-sm-7 col-form-label">Estimated time for the test @Model.TrainingTestQuestionSettings.TestDuration.Name</label>
+
+                        </div>
+
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <form id="frm_training_test_frontpage_for_startAssessment_button">
+                        <div class="form-group row m-0 mb-3">
+                            <img src="~/images/GuardTest.jpg" alt="cws logo" height="150px" />
+
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <button class="btn btn-success col-md-7" id="btnStartTest">Start</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card" id="cardTestPage" hidden>
+
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            <div class="form-row">
+                <div class="col-md-12">
+                    <form id="frm_training_test_frontpage">
+
+
+                        <div class="form-group row m-0 mb-3">
+
+                            <div class="col-sm-12">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 20px;" id="GuardTestQuestions">
+                                        
+                                    </p>
+                                    <input type="hidden" id="txtGuardTestQuestionId" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" id="GuardAnswersdivision">
+                            
+                            @* <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer1" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer1" hidden />
+                                    <input type="hidden" id="txtGuardAnswer1" />
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer3" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer3" hidden />
+                                    <input type="hidden" id="txtGuardAnswer3" />
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer5" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer5" hidden />
+                                    <input type="hidden" id="txtGuardAnswer5" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer2" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer2" hidden />
+                                    <input type="hidden" id="txtGuardAnswer2" />
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer4" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer4" hidden />
+                                    <input type="hidden" id="txtGuardAnswer4" />
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-control" id="lblGuardAnswer6" hidden></label>
+                                    <input type="checkbox" id="chkGuardAnswer1" hidden />
+                                    <input type="hidden" id="txtGuardAnswer1" />
+                                </div>
+                            </div> *@
+
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
     </div>
 </div>
 @Html.AntiForgeryToken()

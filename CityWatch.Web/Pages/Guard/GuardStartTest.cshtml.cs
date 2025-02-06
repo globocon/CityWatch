@@ -43,6 +43,8 @@ namespace CityWatch.Web.Pages.Guard
         public string CourseDocsPath;
         public string Coursefilename;
         public string hrreferencenumber;
+       
+
         public GuardStartTestModel(IViewDataService viewDataService,
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,

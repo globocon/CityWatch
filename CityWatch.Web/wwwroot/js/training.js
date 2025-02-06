@@ -2296,6 +2296,8 @@ $('#btnStartCourse').on('click', function (e) {
     $('#cardFrontPage').hide();
     $('#cardCoursePdf').attr('hidden', false);
     RunCourses();
+    isPausedForCourseDuration = false;
+    startCourseDurationClock();
 });
 var pdfUrl;
 var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
@@ -2323,13 +2325,30 @@ function renderPage(num) {
 
 $("#coursePdfNext").on('click', function (e) {
     if (pageNum < pdfDoc.numPages) {
-        pageNum++;
+        if (isPausedForCourseDuration) {
+            pageNum = pageNum + 2;
+            isPausedForCourseDuration = false;
+        }
+        else {
+            //setTimeout(() => {
+                pageNum++;
+            //}, 30000);
+
+        }
         renderPage(pageNum);
+    }
+    else {
+        isPausedForCourseDuration = true;
+        /* getGuardCourseSpentTimeDetails();*/
+        $('#cardFrontPage').hide();
+        $('#cardCoursePdf').hide();
+        $('#cardTestFrontPage').attr('hidden', false);
     }
 });
 
 $("#coursePdfPrev").on('click', function (e) {
     if (pageNum > 1) {
+        isPausedForCourseDuration = true;
         pageNum--;
         renderPage(pageNum);
     }
@@ -2337,13 +2356,29 @@ $("#coursePdfPrev").on('click', function (e) {
 document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowLeft") {
         if (pageNum > 1) {
+            isPausedForCourseDuration = true;
             pageNum--;
             renderPage(pageNum);
         }
     } else if (event.key === "ArrowRight") {
         if (pageNum < pdfDoc.numPages) {
-            pageNum++;
+            if (isPausedForCourseDuration) {
+                pageNum = pageNum + 2;
+                isPausedForCourseDuration = false;
+            }
+            else {
+                //setTimeout(() => {
+                    pageNum++;
+                //}, 30000);
+            }
             renderPage(pageNum);
+        }
+        else {
+            isPausedForCourseDuration = true;
+            /* getGuardCourseSpentTimeDetails();*/
+            $('#cardFrontPage').hide();
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').attr('hidden', false);
         }
 
     }
@@ -2358,6 +2393,8 @@ document.addEventListener("keydown", function (event) {
     }
     
 });
+
+
 //async function detectScreenRecording() {
 //    try {
 //        const stream = await navigator.mediaDevices.getDisplayMedia({ video: false });
@@ -2371,7 +2408,92 @@ document.addEventListener("keydown", function (event) {
 //// Run this check every 5 seconds
 //setInterval(detectScreenRecording, 5000);
 
-$(document).on('contextmenu', function (e) {
-    e.preventDefault();  // Prevent right-click
+////$(document).on('contextmenu', function (e) {
+////    e.preventDefault();  // Prevent right-click
+////});
+var isPausedForCourseDuration = false
+let nIntervCourseDurationId;
+let DuressAlarmNotificationPending = false;
+var valnew; 
+if ($('#txtCourseTimerStart').val() != undefined) {
+    valnew = $('#txtCourseTimerStart').val();
+}
+else {
+    valnew = '0 minutes';
+}
+var minutesnew =valnew.split("minutes"); 
+let courseduration = 60 * parseInt(minutesnew[0],10);
+function startCourseDurationClock() {
+   
+    
+    let timer = courseduration, minutes, seconds;
+    display = document.querySelector('#courseTimerStart');
+    if (!nIntervCourseDurationId) {
+        nIntervCourseDurationId = setInterval(function () {
+
+            if (!isPausedForCourseDuration) {
+                
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    ClearTimerAndReload();
+                }
+                else if ((timer > 5) && DuressAlarmNotificationPending) {
+                    ClearTimerAndReload();
+                }
+            }
+        }, 1000);
+    }
+}
+function ClearTimerAndReload() {
+    clearInterval(nIntervCourseDurationId);
+    DuressAlarmNotificationPending = false;
+    nIntervCourseDurationId = null;
+    location.reload();
+}
+//function getGuardCourseSpentTimeDetails() {
+//    var obj =
+//    {
+//        Id: 0,
+//        GuardtrainingAndAssementId: $('#txtguardCourseStatusId').val(),
+//        TimeSpentOnCourse: $('#courseTimerStart').html()
+
+//    }
+//    $('#loader').show();
+//    $.ajax({
+//        url: '/Admin/Settings?handler=SaveGuardCourseTime',
+//        data: { record: obj },
+//        type: 'POST',
+//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+//    }).done(function (result) {
+//        if (result.success) {
+//            $('#rplDetailsModal').modal('hide');
+//            gridCertificatesDocumentFiles.clear();
+//            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+
+//        } else {
+
+//            displayGuardValidationSummary('rplValidationSummary', result.message);
+//        }
+//    }).always(function () {
+//        $('#loader').hide();
+//    });
+//}
+$('#btnStartTest').on('click', function (e) {
+    e.preventDefault();
+    $('#cardFrontPage').hide();
+    
+        $('#cardCoursePdf').hide();
+    $('#cardTestFrontPage').hide();
+    $('#cardTestPage').attr('hidden', false);
+    
+   
 });
 //p5-Issue6-end
