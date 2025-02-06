@@ -361,7 +361,10 @@ namespace CityWatch.Web.Pages.Incident
         {
             return new JsonResult(_ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, type));
         }
-
+        public IActionResult OnGetClientSitesNew(string type)
+        {
+            return new JsonResult(_ViewDataService.GetUserClientSitesNew(AuthUserHelper.LoggedInUserId, type));
+        }
         public IActionResult OnGetClientSiteByName(string name)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).Single(x => x.Name == name);

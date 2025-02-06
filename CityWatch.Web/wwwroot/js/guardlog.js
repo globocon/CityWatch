@@ -62,6 +62,16 @@ $(function () {
         const option = $('#GuardLogin_ClientType').val();
         if (option == '')
             return false;
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSitesNew&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+     
+                $('#GuardLogin_ClientSiteID').val(data);
+                }
+        });
+
 
         const clientSiteControl = $('#GuardLogin_ClientSiteName');
         clientSiteControl.html('');
@@ -842,28 +852,43 @@ $(function () {
             // New change start bypass the message 
             if ($('#GuardLogin_SmartWandOrPosition').val() !== '') {
                 $.ajax({
-                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypass',
+                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypassNew',
                     type: 'GET',
                     data: {
-                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        clientSiteName: $('#GuardLogin_ClientSiteID').val(),
                         positionName: $('#GuardLogin_SmartWandOrPosition').val(),
                         guardId: $('#GuardLogin_Guard_Id').val()
                     }
                 }).done(function (result) {
-                    if (result) {
+                    if (result.isSmartwandbypass) {
+
                         $('#loader').show();
                         submitGuardLogin();
                     }
                     else {
 
-                        confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                        if (result.smartWands.length > 0) {
+                            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                                const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+                                if (!validateSmartWand) {
+                                    $('#loader').show();
+                                    submitGuardLogin();
+                                }
+                            });
+                        }
+                        else {
+
                             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
                             if (!validateSmartWand) {
                                 $('#loader').show();
                                 submitGuardLogin();
                             }
-                        });
+
+                        }
+
+
                     }
                 }).always(function () {
                     $('#loader').hide();
@@ -887,16 +912,26 @@ $(function () {
             if (validateSmartWand) {
                 $('#loader').show();
                 $.ajax({
-                    url: '/Guard/Login?handler=CheckIsWandAvailable',
+                    url: '/Guard/Login?handler=CheckIsWandAvailableNew',
                     type: 'GET',
                     data: {
                         clientSiteName: $('#GuardLogin_ClientSiteName').val(),
                         smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
-                        guardId: $('#GuardLogin_Guard_Id').val()
+                        guardId: $('#GuardLogin_Guard_Id').val(),
+                        clientSiteID: $('#GuardLogin_ClientSiteID').val(),
                     }
                 }).done(function (result) {
-                    if (result) $('#alert-wand-in-use-modal').modal('show');
-                    else submitGuardLogin();
+                    if (result.smartwantinuse) $('#alert-wand-in-use-modal').modal('show');
+                    else
+                        if (result.smartWands.length > 0) {
+                            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                                submitGuardLogin();
+                            });
+
+
+                        }
+
+                        
                 }).always(function () {
                     $('#loader').hide();
                 });
