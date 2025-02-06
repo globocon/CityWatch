@@ -924,12 +924,13 @@ $(function () {
                     if (result.smartwantinuse) $('#alert-wand-in-use-modal').modal('show');
                     else
                         if (result.smartWands.length > 0) {
-                            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
                                 submitGuardLogin();
-                            });
-
-
                         }
+                        else {
+
+                            submitGuardLogin();
+                        }
+
 
                         
                 }).always(function () {
