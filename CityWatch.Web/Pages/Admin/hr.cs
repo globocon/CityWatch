@@ -790,8 +790,12 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
-
-        public JsonResult OnGetHRDescription(int HRid, int GuardID)
+        public JsonResult OnGetHRDescriptionBanDetails(int DescriptionID)
+        {
+            var DescVal = _guardDataProvider.GetHRDescEditBan(DescriptionID);
+            return new JsonResult(DescVal);
+        }
+            public JsonResult OnGetHRDescription(int HRid, int GuardID)
         {
             var DescVal = _guardDataProvider.GetHRDesc(HRid);
             var combinedDataList = new List<CombinedData>();
@@ -809,6 +813,7 @@ namespace CityWatch.Web.Pages.Admin
                         Description = item.Description,
                         UsedDescription = UsedDesc?.Description,
                         ReferenceNo = item.ReferenceNo,
+                        ID=item.Id,
                     };
                     combinedDataList.Add(combinedData);
                 }
@@ -834,6 +839,7 @@ namespace CityWatch.Web.Pages.Admin
             public string Description { get; set; }
             public string UsedDescription { get; set; }
             public string ReferenceNo { get; set; }
+            public int ID { get; set; }
         }
         //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         //{

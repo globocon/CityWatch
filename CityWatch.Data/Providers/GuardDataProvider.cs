@@ -36,6 +36,7 @@ namespace CityWatch.Data.Providers
         List<GuardCompliance> GetGuardCompliances(int guardId);
         HrSettings GetHRRefernceNo(int HRid, string Description);
         List<HrSettings> GetHRDesc(int HRid);
+        HrSettings GetHRDescEditBan(int DescriptionID);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
@@ -789,6 +790,17 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ReferenceNoAlphabets)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid).ToList();
+            return descriptions;
+        }
+
+        public HrSettings GetHRDescEditBan(int DescriptionID)
+        {
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+                 .Include(z => z.ReferenceNoNumbers)
+                 .Include(z => z.ReferenceNoAlphabets)
+                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(x=>x.Id== DescriptionID).FirstOrDefault();
+
             return descriptions;
         }
         public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID)
