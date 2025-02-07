@@ -2375,6 +2375,21 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
         {
             targets: -1,
             data: null,
+            render: function (data, type, row, meta) {
+                if (data.isLogin == 'Guard') {
+                    if (data.hrBanEdit) {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                    } else {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                    }
+                }
+
+
+            },
             defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                 '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
             width: '15%'
@@ -2503,6 +2518,27 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     var FileVa = $('#guardComplianceandlicense_fileName1').html();
     const messageHtml = '';
     $('#schRunStatusNew').html(messageHtml);
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+    let selectedItem = $('.es-visible.selected').val();
+    if (LoginVal == 'GuardLogin') {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+            type: 'GET',
+            data: {
+                DescriptionID: selectedItem
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (DescVal) {
+            if (DescVal.hrBanEdit == true) {
+                
+                displayGuardValidationSummary('compliancelicanseValidationSummary1', 'This Description cant be selected');
+            }
+
+        });
+    }
+
 
     if (HrVal != '' && DescVal != '' && FileVa != 'None') {
       

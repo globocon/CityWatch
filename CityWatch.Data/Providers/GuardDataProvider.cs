@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CityWatch.Data.Helpers;
 using System.Security.Cryptography;
 using System.Threading;
 
@@ -632,7 +633,8 @@ namespace CityWatch.Data.Providers
                 CurrentDateTime = x.CurrentDateTime,
                 LicenseNo = x.Guard.SecurityNo,
                 DateType = x.DateType,
-                HRBanEdit=x.HRBanEdit
+                HRBanEdit=x.HRBanEdit,
+                IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
             }).OrderBy(x => x.FileName)
             .ToList();
 
