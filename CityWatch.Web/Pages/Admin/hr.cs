@@ -1302,6 +1302,26 @@ namespace CityWatch.Web.Pages.Admin
                     }
 
 
+                    if (guard.IsAdminAuditorAccess)
+                    {
+                        AuthUserHelper.IsAdminAuditor = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminAuditor = false;
+                    }
+
+                    if(guard.IsAdminInvestigatorAccess)
+                    {
+                        AuthUserHelper.IsAdminInvestigator = true;
+
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminInvestigator = false;
+                    }
+
+
                     //code to check the SecurityNo of Type Patrols&Alarm Statics
                     if (type == "Patrols")
                     {
@@ -1480,6 +1500,10 @@ namespace CityWatch.Web.Pages.Admin
                         }
 
 
+
+
+
+
                         //if (AuthUserHelper.LoggedInUserId != null)
                         //{
                         //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
@@ -1489,6 +1513,39 @@ namespace CityWatch.Web.Pages.Admin
                     //p1-203 Admin User Profile-end
                     /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
 
+
+                    if (type == "Auditlog")
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsAdminGlobal ||guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+
+
+
+
+
+                    }
                 }
                 else
                 {
