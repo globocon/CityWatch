@@ -135,143 +135,45 @@
         }
     </script>
 </head>
-<body class="d-flex flex-column">
+<body class="d-flex flex-column" style="background-color:grey;">
 
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
-            <div class="container">
+    <header style="background-color:black;">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm text-left" style="background-color:black;">
+            <div class="container" style="background-color:black;">
                 <input type="hidden" id="pageName" name="pageName" value="@pageName" />
                 <input type="hidden" id="ClientName" name="pageName" value="@clientName" />
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <div style="width:12px">
-                        <a href="@Url.Page("/Index")" class="" nav-link py-0""><i class=" fa fa-home mb-4"></i></a><br>
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            if (alldocWithModeleName != null)
-                            {
-                                if (alldocWithModeleName.Count == 0)
-                                {
-                                    <a title="No documents found">
-                                        <span style="color:darkgray">
-                                            <i class="fa fa-question-circle" aria-hidden="true"></i>
-                                        </span>
-                                    </a>
-
-                                }
-                                else if (alldocWithModeleName.Count == 1)
-                                {
-                                    var singleDoc = alldocWithModeleName.FirstOrDefault();
-                                    @* <input type="hidden" id="fileNametoDownload" name="fileNametoDownload" value="@singleDoc.FileName" />
-                    <button id="downloadButton"><i class="fa fa-question-circle" aria-hidden="true"></i></button>*@
-
-
-                                    <ul style="list-style-type:none;padding-left:0;">
-                                        <li>
-                                            <i class="fa fa-question-circle text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@singleDoc.FileName" title="@singleDoc.FileName" aria-hidden="true"></i>
-                                        </li>
-                                    </ul>
-
-                                    //<a id="downloadLink" href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
-                                }
-                                else if (alldocWithModeleName.Count > 1)
-                                {
-                                    <a href="#" data-toggle="modal" data-target=".bd-example-modal-lg" title="Click here"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
-                                    <!-- Modal -->
-                                    <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLabel">Download Help Documents</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <table class="table table-hover">
-                                                        <thead>
-                                                            <tr>
-                                                                <th scope="col" style="width:80%">File Name</th>
-                                                                <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
-
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach (var file in alldocWithModeleName)
-                                                            {
-                                                                <tr>
-                                                                    <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
-                                                                    <td>
-
-                                                                        <ul style="list-style-type:none;padding-left:0;">
-                                                                            <li>
-                                                                                <a href="#" class="btn btn-outline-success ml-2">
-                                                                                    <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
-                                                                                </a>
-                                                                            </li>
-                                                                        </ul>
-                                                                        @*<a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
-                                                                    </td>
-                                                                </tr>
-
-                                                            }
-
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                }
-
-                            }
-                        }
-
-                    </div>
-                }
+              
                 @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
-                <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                    @if (clientLogo == string.Empty)
-                    {
-                        <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
-
-                    }
-                    else
-                    {
-                        <img src="@clientLogo" alt="cws logo" height="60px" />
-
-                    }
+                
+               
                 </a>
 
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex">
+                @* <div class="navbar-collapse collapse d-sm-inline-flex">
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item"></li>
                     </ul>
-                </div>
+                </div> *@
                 @if (IsSectionDefined("PageHeader"))
                 {
                     @RenderSection("PageHeader")
                     ;
                 }
-                @if (User.Identity.IsAuthenticated)
+              @*   @if (User.Identity.IsAuthenticated)
                 {
                     <p class="mx-auto ml-md-3">
                         <span class="d-block">Hello @User.Identity.Name</span>
                         <a href="@Url.Page("/Account/Logout")" class="btn btn-sm btn-primary"><i class="fa fa-sign-out mr-2"></i>Log Out</a>
                     </p>
-                }
+                } *@
             </div>
         </nav>
     </header>
 
-    <div class="container flex-fill">
+    <div class="container flex-fill mt-5">
         <main role="main" class="pb-1">
             @RenderBody()
         </main>
@@ -293,7 +195,7 @@
                 @RenderSection("CalendarLogo", false)
             }
             @*<img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>*@
-            <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" />
+           @* <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" /> *@
         </div>
     }
     else
@@ -309,46 +211,36 @@
     }
 
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted" style="background-color:white;">
         <div class="container">
             <div class="row">
-                <div class="col-md-12 d-flex flex-wrap justify-content-center">
+                <div class="col-md-6 d-flex flex-wrap justify-content-start">
 
-                    @if (clientLogo == string.Empty)
-                    {
-                        @Html.Raw(CityWatch.Web.Helpers.SiteMenuHelper.GetMenuHtml(ViewBag.PageName))
-
-                    }
-                    else
-                    {
-                        if (ViewBag.PageName != PageNameHelper.Login)
+                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                        @if (clientLogo == string.Empty)
                         {
-                            <div><a href="/Guard/Login?t=gl" class="nav-link py-0"><i class="fa fa-list-alt mr-2"></i>Daily Log Book (LB)</a></div>
-                            <div><a href="/Incident/ToolSelecter" class="nav-link py-0"><i class="fa fa-wrench mr-2"></i>Tools</a></div>
-                            <div><a href="" id="LoginConformationBtnC4iSettingsThirdParty" class="nav-link py-0" hidden><i class="fa fa-cog mr-2"></i>C4i System Settings</a></div>
-                            <div>
-                                <a href="/Admin/AuditSiteLog" id="OtherAdminsAudtiLogAccessButton" class="nav-link py-0" hidden><i class="fa fa-list-alt mr-2"></i>Audit Site Logs</a>
-                            </div>
+                            <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
+
                         }
-                    }
+                        else
+                        {
+                            <img src="@clientLogo" alt="cws logo" height="60px" />
+
+                        }
+                    </a>
+                    
+
+                </div>
+                <div class="col-md-6 d-flex flex-wrap justify-content-end">
+
+                   
+                    <a href="https://www.c4isystem.com/" target="_blank" class="text-center text-md-left">
+                        <img src="/images/c4ilogo.jpg" alt="c4i logo">
+                    </a>
 
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12 text-center">
-
-
-
-                    &copy; @DateTime.Today.Year - <a href="https://@companydetail.Hyperlink" target="_blank" class="cws-footer-link" style="color:@companydetail.HyperlinkColour;">@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
-                    @*&copy; @DateTime.Today.Year - <a href="https://citywatchsecurity.com.au" target="_blank" class="cws-footer-link">@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version*@
-                    | <i class="fa fa-adjust" aria-hidden="true"></i>
-                    <div class="custom-control custom-switch custom-control-inline ml-1" style="padding-top:0.4em" title="Toggle Dark Mode">
-                        <input type="checkbox" class="custom-control-input" id="toggleDarkMode" name="toggleDarkMode">
-                        <label class="custom-control-label" for="toggleDarkMode"></label>
-                    </div>
-
-                </div>
-            </div>
+           
         </div>
     </footer>
 
@@ -390,7 +282,7 @@
     <script src="~/lib/timezone_abbreviation/timezone_abbreviation.js" asp-append-version="true"></script>
     <script src="~/lib/custom-drag-drop-file-upload/fileupload.js" asp-append-version="true"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @* <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
 
 
 

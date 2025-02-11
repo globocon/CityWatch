@@ -2314,7 +2314,7 @@ function RunCourses() {
 
 function renderPage(num) {
     pdfDoc.getPage(num).then(function (page) {
-        var fixedWidth = 800;  
+        var fixedWidth = 1110;  
         var fixedHeight = 600; 
         var viewport = page.getViewport({ scale: scale });
         canvas.width = fixedWidth;
@@ -2494,6 +2494,477 @@ $('#btnStartTest').on('click', function (e) {
     $('#cardTestFrontPage').hide();
     $('#cardTestPage').attr('hidden', false);
     
+    $('#divTestDurationTimer').attr('hidden', false);
+    isPausedForTestDuration = false;
+    startTestDurationClock();
+    GetQuestionsForGuard();
    
 });
+
+var isPausedForTestDuration = true
+let nIntervCourseDurationTestId;
+let DuressAlarmNotificationPendingForTest = false;
+var valnewfortest;
+if ($('#txtTestTimerStart').val() != undefined) {
+    valnewfortest = $('#txtTestTimerStart').val();
+}
+else {
+    valnewfortest = '0 minutes';
+}
+var minutesnewfortest = valnewfortest.split("minutes");
+let testduration = 60 * parseInt(minutesnewfortest[0], 10);
+function startTestDurationClock() {
+
+
+    let timer = testduration, minutes, seconds;
+    display = document.querySelector('#testTimerStart');
+    if (!nIntervCourseDurationTestId) {
+        nIntervCourseDurationTestId = setInterval(function () {
+
+            if (!isPausedForTestDuration) {
+
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    ClearTimerAndReloadForTest();
+                }
+                else if ((timer > 5) && DuressAlarmNotificationPendingForTest) {
+                    ClearTimerAndReloadForTest();
+                }
+            }
+        }, 1000);
+    }
+}
+function ClearTimerAndReloadForTest() {
+    clearInterval(nIntervCourseDurationTestId);
+    DuressAlarmNotificationPendingForTest = false;
+    nIntervCourseDurationTestId = null;
+    location.reload();
+}
+function GetQuestionsForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardQuestions',
+        data: {
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#GuardTestQuestions').html(result.question);
+            $('#txtGuardTestQuestionId').val(result.id);
+            GetOptionsForGuard();
+            GetQuestionCountForGuard();
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+            PostGuardMarks();
+          
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+
+function GetOptionsForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardOptions',
+        data: {
+            'questionId': $("#txtGuardTestQuestionId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.length > 0) {
+            j = 1;
+            $.each(result, function (i, d) {
+
+                var txtoptions = 'txtGuardAnswer' + j;
+                var label = 'lblGuardAnswer' + j
+                var chkbox = 'chkGuardAnswer' + j
+                j++;
+                $('#' + txtoptions).val(d.id);
+                $('#' + label).html(d.options);
+                $('#' + label).attr('hidden', false);
+                $('#' + chkbox).attr('hidden', false);
+                $('#' + chkbox).prop('checked', false);
+
+            });
+           
+        }
+        else {
+            alert('Something Wrong')
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function GetQuestionCountForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardQuestionCount',
+        data: {
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions );
+            $('#QuestionNo').html('Q.' + result.qno);
+            
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function PostGuardMarks() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardMarks',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val(),
+            'duration':''
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            GetGuardMarks();
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function GetGuardMarks() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardMarks',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#cardFrontPage').hide();
+
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').attr('hidden', false);
+
+            $('#divTestDurationTimer').hide();
+            $('#QuestionCounts').html('');
+            $('#lblTotalQuestionscount').html(result.totalQuestions);
+            $('#lblCorrectQuestionscount').html(result.guardCorrectQuestionsCount);
+            $('#lblTotalScore').html(result.guardScore);
+            $('#lblAttempts').html(1);
+            $('#lblDuration').html('02:33');
+            
+            var message;
+            
+            if (result.isPass == true) {
+                $('#resultHeading').html('Congratulations !');
+                $('#ResultIconTrophy').attr('hidden', false);
+                $('#ResultIconCross').hide();
+                message = 'You have successfully passed the test.Please press Continue for your results to be submitted.'
+                $('#btnContinueTest').attr('hidden', false);
+                $('#btnRetryTest').hide();
+                $('#btnExitTest').hide();
+                /*$('#ResultMessage').html('You have successfully passed the test.Please press Continue for your results to be submitted')*/
+            }
+            else {
+                $('#resultHeading').html('Requirement not met');
+                $('#ResultIconCross').attr('hidden', false);
+                $('#ResultIconTrophy').hide();
+                message = 'You have not passed the test.Please press Retry to try again or Exit to try again in a later date.'
+                $('#btnContinueTest').hide();
+                $('#btnRetryTest').attr('hidden', false);
+                $('#btnExitTest').attr('hidden', false);
+            }
+            $('#ResultMessage').html(message)
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+$('#chkGuardAnswer1').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer2').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer3').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer4').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer5').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer6').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+
+});
+$('#btnSubmitTest').on('click', function (e) {
+    e.preventDefault();
+    var answerid;
+    if ($('#chkGuardAnswer1').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer1').val();
+    }
+    if ($('#chkGuardAnswer2').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer2').val();
+    }
+    if ($('#chkGuardAnswer3').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer3').val();
+    }
+    if ($('#chkGuardAnswer4').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer4').val();
+    }
+    if ($('#chkGuardAnswer5').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer5').val();
+    }
+    if ($('#chkGuardAnswer6').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer6').val();
+    }
+    var obj = {
+        Id: 0,
+        GuardId: $('#txtguardIdForTest').val(),
+        TrainingCourseId: $('#txtguardTestCourseId').val(),
+        TrainingTestQuestionsId: $('#txtGuardTestQuestionId').val(),
+        TrainingTestQuestionsAnswersId: answerid,
+        IsCorrect: false
+    }
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=SaveGuardAnswers',
+        data: { record: obj },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+
+        if (result.success) {
+            GetQuestionsForGuard();
+        } 
+    }).fail(function () {
+        console.log('error');
+    }).always(function () {
+
+    });
+});
+
+$('#btnRetryTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(1);
+    
+    location.reload();
+    
+});
+$('#btnExitTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(2);
+
+   
+
+});
+function deleteGuardAttendedQuestions(buttonmode) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=DeleteGuardAttendedQuestions',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            deleteGuardScores(buttonmode);
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function deleteGuardScores(buttonmode) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=DeleteGuardScores',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            if (buttonmode == 1) {
+                return;
+            }
+            else {
+
+                returnCoursetestStatustostart(); 
+            }
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function returnCoursetestStatustostart() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=ReturnCourseTestStatusTostart',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            window.close();
+            return;
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+
 //p5-Issue6-end
