@@ -111,6 +111,7 @@ namespace CityWatch.Web.Models
         public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
         public bool IsRCHRAccess { get { return _guard.IsRCHRAccess; } }
         public bool IsRCLiteAccess { get { return _guard.IsRCLiteAccess; } }
+        public bool IsTerminated { get { return _guard.IsTerminated; } }
         public List<LanguageDetails> languageDetails1 { get { return _languageDetails.Where(x => x.GuardId == _guard.Id).ToList(); } }
         public string languages
         {

@@ -3849,36 +3849,48 @@
                                     @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
                                 </div>
 
-
                                 <label class="form-check-label pl-3 pr-3">Is Active</label>
                                 <div class="pl-3 pr-3 mt-1">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                                <label class="form-check-label pl-3 ">RC Bypass</label>
-                                <div style="padding-left: 18px;" class="mt-1">
+                                
+                                <div style="padding-left: 0px;width: 233px;" class="mt-1">
+                                     <select class="form-control" id="Guard_Terminated" name="Guard.IsTerminated" disabled>
+                                        <option selected="selected" value="false">Select</option>
+                                        <option value="true">Guard Terminated (Banned)</option>
+                                       </select>
+                                   
+                                </div>
+
+
+                            
+                            </div>
+
+                         
+                         
+
+                            <div class="form-group row">
+
+                                <label class="col-md-2 col-form-label"></label>
+                                <div class="col-md-3">
+                                </div>
+                                <label class="col-md-1 col-form-label"></label>
+                                <div class="col-md-2">
+                                </div>
+                                <div>
+                                </div>
+                                <label class="form-check-label pl-3 pr-3">RC Bypass</label>
+                                <div class="">
                                     <input type="checkbox" class="form-check" id="cbIsRCBypass">
-                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
+                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass" >
                                 </div>
-                                <div class="pl-3">
-                                    <input type="hidden" id="Guard_DOE">
-                                    <button type="button" class="btn p-0 mb-3" style="margin-left:80px" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
+
+                                <div style="padding-left: 0px;width: 233px;" class="">
+                                    <input type="hidden" id="Guard_DOE" >
+                                    <button type="button" class="btn" style="margin-left: 209px;text-align: right;" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                                 </div>
-                                @*<label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>*@
-                                @*<div class="col-md-3">*@
-                                @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
-                                @*<select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>*@
-                                @*</div>*@
                             </div>
-
-
-                            @*    <div class="form-group row">
-                            <label class="col-md-2 form-check-label">Is Active</label>
-                            <div class="col-md-3">
-                            <input type="checkbox" class="form-check" id="cbIsActive">
-                            <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
-                            </div>
-                            </div> *@
                             <div class="form-row">
                                 <div class="col-md-12">
                                     <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status">

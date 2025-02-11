@@ -4757,6 +4757,7 @@ $(function () {
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
             { data: 'loginDate', visible: false },
+            { data: 'isTerminated', visible: false },
            
         { data: 'gender', width: "5%" },
         {
@@ -4790,7 +4791,7 @@ $(function () {
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
             { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-
+           
 
         {
             targets: -1,
@@ -5092,6 +5093,10 @@ $(function () {
     //    });
     //});
 
+    $('#cbIsActive').on('change', function () {
+        $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
+    });
+
     $('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
         resetGuardDetailsModal();
         $('.btn-add-guard-addl-details').show();
@@ -5121,6 +5126,11 @@ $(function () {
         $('#Guard_IsRCBypass').val(data.isRCBypass);
         $('#cbIsRCBypass').prop('checked', data.isRCBypass);
         $('#Guard_Gender').val(data.gender);
+        /*$('#Guard_Terminated').val(data.isTerminated);*/
+        let isTerminated = data.isTerminated ? "true" : "false"; // Convert boolean to string
+        $('#Guard_Terminated').val(isTerminated); //
+
+        $('#Guard_Terminated').prop('disabled', data.isActive);
         //p1-224 RC Bypass For HR -end
         // ;
         var selectedValues = [];
@@ -5979,6 +5989,7 @@ $(function () {
         $('#Guard_Gender').val('');
         //p1-224 RC Bypass For HR -end
         $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $('#Guard_Terminated').val('');
     }
 
     $('#btn_save_guard').on('click', function () {
