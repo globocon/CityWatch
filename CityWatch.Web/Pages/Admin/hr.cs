@@ -2102,7 +2102,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         
-        public JsonResult OnPostResetGaurdHrPin(int guardId)
+        public JsonResult OnPostResetGaurdHrPin(int guardId,string siteName )
         {
             var message = string.Empty;
             var success = false;
@@ -2112,7 +2112,7 @@ namespace CityWatch.Web.Pages.Admin
             if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
             {
                 // Generate email body and send email
-                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin);
+                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin, siteName);
                 SendEmailNew(emailBody, guard.Email);
 
                 // Update message
@@ -2190,7 +2190,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-        public string GetPasswordResetEmail(string userName, string temporaryPassword)
+        public string GetPasswordResetEmail(string userName, string temporaryPassword,string siteName)
         {
             var sb = new StringBuilder();
 
@@ -2245,6 +2245,7 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine("    </div>");
             sb.AppendLine($"    <p>Hi {userName},</p>");
             sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
+            sb.AppendLine($"    <p>Logged in Site: <span class=\"temporary-password\">{siteName}</span></p>");
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
             sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} C4i System. All rights reserved.</p>");

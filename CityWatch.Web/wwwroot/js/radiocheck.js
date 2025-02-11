@@ -1861,12 +1861,15 @@ $('#forgotpassword').click(function (e) {
     $('#spinner').removeClass('d-none').addClass('d-inline-block'); // Show spinner
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    
+   
     // AJAX request example
     $.ajax({
         url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
         type: 'POST',
         data: {
-            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            siteName: $('#hidden_guardKey').val()
             
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
