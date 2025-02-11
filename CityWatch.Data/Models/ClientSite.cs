@@ -43,6 +43,8 @@ namespace CityWatch.Data.Models
 
         public bool UploadGuardLog { get; set; }
 
+        public bool UploadFusionLog { get; set; }
+
         public string GuardLogEmailTo { get; set; }
 
         public bool DataCollectionEnabled { get; set; }

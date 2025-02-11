@@ -100,12 +100,17 @@ namespace CityWatch.Web.Pages.Admin
             }
             /* Normal admin,PowerAdmin and AdminGlobal can access this page */
 
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser && !AuthUserHelper.IsAdminThirdParty && !AuthUserHelper.IsAdminInvestigator)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminInvestigator && !AuthUserHelper.IsAdminAuditor)
+            {
 
-    
                 return Redirect(Url.Page("/Account/Unauthorized"));
 
-            return Page();
+            }
+            else
+            {
+
+                return Page();
+            }
         }
 
         public IActionResult OnGetKeyVehicleLogProfile(int id)

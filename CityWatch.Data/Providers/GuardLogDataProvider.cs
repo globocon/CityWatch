@@ -312,6 +312,7 @@ namespace CityWatch.Data.Providers
 
         List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
         void UpdateHRLockSettings(int id, bool status);
+        void UpdateHRBanSettings(int id, bool status);
 
         List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory);
         List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId);
@@ -356,8 +357,12 @@ namespace CityWatch.Data.Providers
         void SaveTrainingLocation(TrainingLocation trainingLocation);
         void DeleteTrainingLocation(int id);
         void SaveTrainingCourseCertificateRPL(TrainingCourseCertificateRPL trainingCertificateRPL);
+
         public List<SelectListItem> GetClassRommLocation(bool withoutSelect = true);
         
+
+        void DeleteTrainingCourseCertificateRPL(int id);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1776,48 +1781,220 @@ namespace CityWatch.Data.Providers
         }
         public List<RadioCheckListGuardData> GetActiveGuardDetails()
         {
+            //Old Code repplaced due to performance issue
+            ////var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
+            //List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
+            //foreach (var item in allvalues)
+            //{
+            //    var phoneNumbers = allphoneNumbers
+            //   .Where(x => x.ClientSiteId == item.ClientSiteId)
+            //   .Select(x => x.PhoneNumber)
+            //   .ToList();
+            //    var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+            //    if (phoneNumbers.Count != 0)
+            //    {
+            //        item.hasmartwand = 1;
 
-            var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
-            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
-            foreach (var item in allvalues)
+            //    }
+
+            //    item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
+            //    item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+            //}
+            //return allvalues;
+
+            int retryCount = 5; // Number of retry attempts
+            List<RadioCheckListGuardData> allValues = new List<RadioCheckListGuardData>();
+
+            try
             {
-                var phoneNumbers = allphoneNumbers
-               .Where(x => x.ClientSiteId == item.ClientSiteId)
-               .Select(x => x.PhoneNumber)
-               .ToList();
-                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                if (phoneNumbers.Count != 0)
+                for (int attempt = 1; attempt <= retryCount; attempt++)
                 {
-                    item.hasmartwand = 1;
+                    try
+                    {
+                        // Attempt to execute the stored procedure
+                        allValues = _context.RadioCheckListGuardData
+                            .FromSqlRaw("EXEC sp_GetActiveGuardDetailsForRC")
+                            .AsEnumerable()
+                            .ToList();
 
+                        if (allValues.Any())
+                        {
+                            break; // Exit loop if data is retrieved successfully
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Attempt {attempt}: No data returned. Retrying...");
+                        }
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Database error - {sqlEx.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Unexpected error - {ex.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
                 }
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
-                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+                // If no data retrieved after retries, return an empty list
+                if (!allValues.Any())
+                {
+                    Console.WriteLine("No data retrieved after retries. Returning an empty list.");
+                    return new List<RadioCheckListGuardData>();
+                }
+
+                // Fetch ClientSiteSmartWands for processing
+                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
+
+                foreach (var item in allValues)
+                {
+                    try
+                    {
+                        if (item == null) continue;
+
+                        var phoneNumbers = smartWandLookup[item.ClientSiteId]
+                            .Select(wand => wand.PhoneNumber)
+                            .ToList();
+
+                        if (phoneNumbers.Any())
+                        {
+                            item.hasmartwand = 1;
+                        }
+
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
+                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+                        item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
+                                       $"<i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a> {item.Address}" +
+                                       $"<input type=\"hidden\" class=\"form-control\" value=\"{item.GPS}\" id=\"txtGPSActiveguards\" />";
+                    }
+                    catch (Exception itemEx)
+                    {
+                        Console.WriteLine($"Error processing item with ClientSiteId: {item?.ClientSiteId}, Error: {itemEx.Message}");
+                        continue;
+                    }
+                }
+
+                return allValues;
             }
-            return allvalues;
+            catch (Exception finalEx)
+            {
+                Console.WriteLine($"Critical error after retries: {finalEx.Message}");
+                return new List<RadioCheckListGuardData>(); // Return empty list on failure
+            }
         }
+
+        //public List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails()
+        //{
+
+        //    var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
+        //    List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
+        //    foreach (var item in allvalues)
+        //    {
+        //        var phoneNumbers = allphoneNumbers
+        //        .Where(x => x.ClientSiteId == item.ClientSiteId)
+        //        .Select(x => x.PhoneNumber)
+        //        .ToList();
+        //        var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+
+        //        item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+
+
+        //        item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+        //    }
+        //    return allvalues;
+        //}
+
 
         public List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails()
         {
+            int retryCount = 5; // Number of retry attempts
+            List<RadioCheckListInActiveGuardData> allValues = new List<RadioCheckListInActiveGuardData>();
 
-            var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
-            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
-            foreach (var item in allvalues)
+            try
             {
-                var phoneNumbers = allphoneNumbers
-                .Where(x => x.ClientSiteId == item.ClientSiteId)
-                .Select(x => x.PhoneNumber)
-                .ToList();
-                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                for (int attempt = 1; attempt <= retryCount; attempt++)
+                {
+                    try
+                    {
+                        // Attempt to execute the stored procedure
+                        allValues = _context.RadioCheckListInActiveGuardData
+                            .FromSqlRaw("EXEC sp_GetInActiveGuardDetailsForRC")
+                            .AsEnumerable()
+                            .ToList();
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+                        if (allValues.Any())
+                        {
+                            break; // Exit loop if data is retrieved successfully
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Attempt {attempt}: No data returned. Retrying...");
+                        }
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Database error - {sqlEx.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Unexpected error - {ex.Message}");
+                        if (attempt == retryCount) throw; // Rethrow if final attempt fails
+                    }
+                }
 
+                // If no data retrieved after retries, return an empty list
+                if (!allValues.Any())
+                {
+                    Console.WriteLine("No data retrieved after retries. Returning an empty list.");
+                    return new List<RadioCheckListInActiveGuardData>();
+                }
 
+                // Fetch ClientSiteSmartWands for processing
+                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
 
-                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
+                foreach (var item in allValues)
+                {
+                    try
+                    {
+                        if (item == null) continue;
+
+                        // Get phone numbers associated with the current site
+                        var phoneNumbers = smartWandLookup[item.ClientSiteId]
+                            .Select(wand => wand.PhoneNumber)
+                            .ToList();
+
+                        // Format phone numbers and site name
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
+                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+                        // Format address with map link
+                        item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
+                                       $"<i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a> {item.Address}" +
+                                       $"<input type=\"hidden\" class=\"form-control\" value=\"{item.GPS}\" id=\"txtGPSActiveguards\" />";
+                    }
+                    catch (Exception itemEx)
+                    {
+                        Console.WriteLine($"Error processing item with ClientSiteId: {item?.ClientSiteId}, Error: {itemEx.Message}");
+                        continue; // Continue processing other items even if one fails
+                    }
+                }
+
+                return allValues;
             }
-            return allvalues;
+            catch (Exception finalEx)
+            {
+                Console.WriteLine($"Critical error after retries: {finalEx.Message}");
+                return new List<RadioCheckListInActiveGuardData>(); // Return empty list on failure
+            }
         }
 
 
@@ -5319,6 +5496,16 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
+        public void UpdateHRBanSettings(int id, bool status)
+        {
+            var updateHRBanSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
+            if (updateHRBanSettings != null)
+            {
+
+                updateHRBanSettings.HRBanEdit = status;
+                _context.SaveChanges();
+            }
+        }
         public void SaveLicensesTypes(LicenseTypes licenseTypes)
         {
             if (licenseTypes.Id == -1)
@@ -5514,437 +5701,437 @@ namespace CityWatch.Data.Providers
             var data = _context.ClientSiteRadioChecksActivityStatus_History
     .Where(z => z.ClientSiteId.HasValue &&
                 clientSiteIds.Contains(z.ClientSiteId.Value) &&
-                z.EventDateTime >= logFromDate &&
-                z.EventDateTime <= logToDate &&
+                z.EventDateTime.Date >= logFromDate.Date &&
+                z.EventDateTime.Date <= logToDate.Date &&
                 activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
     .ToList();
 
-            // Check for GMT timezone
-            var checkGMT = GuardLogs
-                .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
-                .Select(x => x.EventDateTimeZoneShort)
-                .FirstOrDefault();
+          // Check for GMT timezone
+          var checkGMT = GuardLogs
+              .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+              .Select(x => x.EventDateTimeZoneShort)
+              .FirstOrDefault();
 
-            // Convert GuardLogs to the same model
-            var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
-            {
-                ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
-                NotificationCreatedTime = log.EventDateTime,
-                Notes = log.Notes,
-                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
-                SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
-                GuardName = log.GuardLogin?.Guard != null
-        ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
-        : null, // Null check for Guard
-                EventDateTimeZoneShort = log.EventDateTimeZoneShort,
-                EventDateTime = log.EventDateTime,
-                EventDateTimeLocal = log.EventDateTimeLocal,
-                gpsCoordinates = log.GpsCoordinates,
-                GuardId = log.GuardLogin?.GuardId,
-                IrEntryType=log.IrEntryType,
-                IsIRReportTypeEntry = log.IsIRReportTypeEntry
+          // Convert GuardLogs to the same model
+          var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+          {
+              ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+              NotificationCreatedTime = log.EventDateTime,
+              Notes = log.Notes,
+              ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+              SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+              GuardName = log.GuardLogin?.Guard != null
+      ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+      : null, // Null check for Guard
+              EventDateTimeZoneShort = log.EventDateTimeZoneShort,
+              EventDateTime = log.EventDateTime,
+              EventDateTimeLocal = log.EventDateTimeLocal,
+              gpsCoordinates = log.GpsCoordinates,
+              GuardId = log.GuardLogin?.GuardId,
+              IrEntryType=log.IrEntryType,
+              IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
-            }).ToList();
+          }).ToList();
 
-            // Update SW data with timezone and datetime adjustments
-            if (!string.IsNullOrEmpty(checkGMT))
-            {
-                foreach (var item in data.Where(x => string.IsNullOrEmpty(x.EventDateTimeZoneShort)))
-                {
-                    item.EventDateTimeZoneShort = checkGMT;
-                    item.EventDateTime = item.LastSWCreatedTime ?? item.EventDateTime;
-                    item.EventDateTimeLocal = item.LastSWCreatedTime ?? item.EventDateTime;
-                }
-            }
+          // Update SW data with timezone and datetime adjustments
+          if (!string.IsNullOrEmpty(checkGMT))
+          {
+              foreach (var item in data.Where(x => string.IsNullOrEmpty(x.EventDateTimeZoneShort)))
+              {
+                  item.EventDateTimeZoneShort = checkGMT;
+                  item.EventDateTime = item.LastSWCreatedTime ?? item.EventDateTime;
+                  item.EventDateTimeLocal = item.LastSWCreatedTime ?? item.EventDateTime;
+              }
+          }
 
-            // Combine LB and SW logs
-            var combinedData = unifiedGuardLogs.Concat(data).OrderBy(z => z.EventDateTime).ToList();
+          // Combine LB and SW logs
+          var combinedData = unifiedGuardLogs.Concat(data).OrderBy(z => z.EventDateTime).ToList();
 
-            return combinedData;
-        }
+          return combinedData;
+      }
 
-        //p6-102 Add Photo -start
-        public void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages)
-        {
-            if (guardLogDocumentImages.Id == 0)
-            {
-                _context.GuardLogsDocumentImages.Add(new GuardLogsDocumentImages()
-                {
-                    ImagePath = guardLogDocumentImages.ImagePath,
-                    IsRearfile = guardLogDocumentImages.IsRearfile,
-                    IsTwentyfivePercentfile = guardLogDocumentImages.IsTwentyfivePercentfile,
-                    GuardLogId = guardLogDocumentImages.GuardLogId
+      //p6-102 Add Photo -start
+      public void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages)
+      {
+          if (guardLogDocumentImages.Id == 0)
+          {
+              _context.GuardLogsDocumentImages.Add(new GuardLogsDocumentImages()
+              {
+                  ImagePath = guardLogDocumentImages.ImagePath,
+                  IsRearfile = guardLogDocumentImages.IsRearfile,
+                  IsTwentyfivePercentfile = guardLogDocumentImages.IsTwentyfivePercentfile,
+                  GuardLogId = guardLogDocumentImages.GuardLogId
 
-                });
-            }
-            //else
-            //{
-            //    var guardLogToUpdate = _context.GuardLogsDocumentImages.SingleOrDefault(x => x.Id == guardLogDocumentImages.Id);
-            //    if (guardLogToUpdate == null)
-            //        throw new InvalidOperationException();
+              });
+          }
+          //else
+          //{
+          //    var guardLogToUpdate = _context.GuardLogsDocumentImages.SingleOrDefault(x => x.Id == guardLogDocumentImages.Id);
+          //    if (guardLogToUpdate == null)
+          //        throw new InvalidOperationException();
 
-            //    guardLogToUpdate.Notes = guardLogDocumentImages.Notes;
+          //    guardLogToUpdate.Notes = guardLogDocumentImages.Notes;
+          //}
+          _context.SaveChanges();
+      }
+      public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
+      {
+          var result = new List<GuardLogsDocumentImages>();
+          result = _context.GuardLogsDocumentImages
+                         .Where(z => z.GuardLogId == LogId)
+                         .OrderBy(z => z.ImagePath)
+                         .ToList();
+
+
+          return result;
+      }
+
+
+      //p6-102 Add Photo -end
+      public List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id)
+      {
+          var result = new List<GuardLogsDocumentImages>();
+          result = _context.GuardLogsDocumentImages
+                         .Where(z => z.Id == Id)
+
+                         .ToList();
+
+
+          return result;
+      }
+      public void DeleteGuardLogDocumentImaes(int id)
+      {
+          var guardLogDocumentImaes = _context.GuardLogsDocumentImages.SingleOrDefault(i => i.Id == id);
+          if (guardLogDocumentImaes != null)
+          {
+              _context.Remove(guardLogDocumentImaes);
+              _context.SaveChanges();
+          }
+      }
+      public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate)
+      {
+          //var data = _context.ClientSiteRadioChecksActivityStatus_History
+          //.Where(z => z.ClientSiteId == clientSiteId )
+          //.ToList();
+
+          var data = _context.ClientSiteRadioChecksActivityStatus_History
+             .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
+             .ToList();
+
+          var returnData = data.OrderBy(z => z.EventDateTime)
+              .ToList();
+
+          return returnData;
+      }
+      public List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate)
+      {
+          return _context.ClientSiteRadioChecks.Where(z => z.CheckedAt >= FromDate && z.CheckedAt <= ToDate).ToList();
+      }
+
+
+      public void SaveUserLoginHistoryDetails(LoginUserHistory loginUserHistory)
+      {
+
+
+          _context.LoginUserHistory.Add(loginUserHistory);
+          _context.SaveChanges();
+
+
+
+
+      }
+      public List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory)
+      {
+          var newirh = new List<ClientSiteRadioChecksActivityStatus>();
+
+          foreach (var item in IncidentReportHistory)
+          {
+              newirh.Add(_context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == item.GuardId && x.IRId == item.Id).Include(x => x.ClientSite).
+                  Include(x => x.IncidentReport).OrderByDescending(x => x.LastIRCreatedTime).FirstOrDefault());
+
+          }
+
+
+          return newirh;
+      }
+      public List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId)
+      {
+          List<ClientSiteRadioChecksActivityStatus_History> newrl = new List<ClientSiteRadioChecksActivityStatus_History>();
+          if ((clientSiteId == 0) || (guardId == 0))
+          {
+              return newrl;
+          }
+
+          var newirh = _context.ClientSiteRadioChecksActivityStatus_History.Where(x => x.GuardId == guardId && !string.IsNullOrEmpty(x.IRId.ToString()))
+              .Include(x => x.ClientSite)
+                      .Include(x => x.IncidentReport)
+                      .OrderByDescending(x => x.LastIRCreatedTime)
+                      .Take(1)
+                  .ToList();
+
+
+          return newirh;
+      }
+      public List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin(int guardId)
+      {
+          List<IncidentReport> irl = new List<IncidentReport>();
+          if (guardId == 0)
+          {
+              return irl;
+          }
+
+          var irh = _context.IncidentReports.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
+              .Include(x => x.ClientSite)
+              .OrderByDescending(x => x.CreatedOn)
+              .Take(1).ToList();
+          return irh;
+      }
+
+      public List<LanguageMaster> GetLanguages()
+      {
+          return _context.LanguageMaster.Where(x => x.IsDeleted == false)
+              .OrderBy(x => x.Language).ToList();
+      }
+      public List<LanguageDetails> GetLanguageDetails(int GuardID)
+      {
+          return _context.LanguageDetails
+              .Include(x => x.LanguageMaster)
+              .Where(x => x.GuardId == GuardID)
+              .OrderBy(x => x.Id).ToList();
+      }
+      public void SaveLanguages(LanguageMaster languageMaster)
+      {
+          if (languageMaster.Id == -1)
+          {
+              languageMaster.Id = 0;
+              _context.LanguageMaster.Add(languageMaster);
+          }
+          else
+          {
+              var languageToUpdate = _context.LanguageMaster.SingleOrDefault(x => x.Id == languageMaster.Id);
+              if (languageToUpdate != null)
+              {
+                  languageToUpdate.Language = languageMaster.Language;
+                  languageToUpdate.IsDeleted = false;
+
+              }
+          }
+          _context.SaveChanges();
+      }
+      public void DeleteLanguage(int id)
+      {
+          var languageToDelete = _context.LanguageMaster.SingleOrDefault(x => x.Id == id);
+          if (languageToDelete != null)
+              languageToDelete.IsDeleted = true;
+          _context.SaveChanges();
+      }
+
+
+      public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater()
+      {
+          ////var param1 = new SqlParameter();
+          ////param1.ParameterName = "@pattern";
+          ////param1.SqlDbType = SqlDbType.VarChar;
+          ////param1.SqlValue = pattern;
+          return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
+
+      }
+
+
+
+      public void TwoHourNoActivityNotificationForGuard()
+      {
+          try
+          {
+              // Find all active logins
+              var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
+                  .Where(a => a.GuardLoginTime != null
+                      && a.GuardLogoutTime == null
+                      && a.ClientSiteId != null && a.NotificationType == null
+                      && !_context.RCActionList
+                            .Where(rc => rc.IsRCBypass)
+                            .Select(rc => rc.ClientSiteID)
+                            .Contains(a.ClientSiteId))
+                  .ToList();
+
+              foreach (var login in allActiveLogins)
+              {
+                  try
+                  {
+                      // Fetch all activities for the same GuardId and ClientSite
+                      var activities = _context.ClientSiteRadioChecksActivityStatus
+                          .Where(a => a.ClientSiteId == login.ClientSiteId
+                              && a.GuardId == login.GuardId
+                              && a.GuardLoginTime == null && a.ActivityType != null
+                              && a.NotificationType == null)
+                          .ToList();
+
+                      if (activities.Any())
+                      {
+                          foreach (var activity in activities)
+                          {
+                              activity.NotificationCreatedTime = GetLatestNotificationTime(activity);
+                          }
+
+                          var lastActivity = activities
+                              .OrderByDescending(a => a.NotificationCreatedTime)
+                              .FirstOrDefault();
+
+                          if (lastActivity != null &&
+                              lastActivity.NotificationCreatedTime.HasValue &&
+                              (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
+                              !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId))
+                          {
+                              // Send notification
+                              CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId, lastActivity.NotificationCreatedTime);
+
+                              // Log the notification
+                              LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId);
+                          }
+                      }
+                      else
+                      {
+                          if (login.GuardLoginTime.HasValue &&
+                              (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2 &&
+                              !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId))
+                          {
+                              // Send notification
+                              CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId, login.GuardLoginTime);
+
+                              // Log the notification
+                              LogNotification(login.GuardId, login.ClientSiteId);
+                          }
+                      }
+                  }
+                  catch (Exception ex)
+                  {
+                      Console.WriteLine($"Error processing login for GuardId {login.GuardId} at ClientSite {login.ClientSite}: {ex.Message}");
+                  }
+              }
+
+              // Save changes to the database
+              _context.SaveChanges();
+          }
+          catch (Exception ex)
+          {
+              Console.WriteLine($"Critical error in TwoHourNoActivityNotificationForGuard: {ex.Message}");
+          }
+      }
+
+      // Helper method to get the latest NotificationCreatedTime from activity fields
+      private DateTime? GetLatestNotificationTime(ClientSiteRadioChecksActivityStatus activity)
+      {
+          return new[]
+          {
+      activity.LastIRCreatedTime,
+      activity.LastKVCreatedTime,
+      activity.LastLBCreatedTime,
+      activity.LastSWCreatedTime
+  }.Where(t => t.HasValue).Max();
+      }
+
+      // Helper method to check if a notification has been sent recently
+      private bool HasNotificationBeenSentRecently(int guardId, int clientSiteId)
+      {
+          var cutoffTime = DateTime.Now.AddMinutes(-120); // Change the time window as needed
+          return _context.GuardTwoHourNoActivityNotificationLog
+              .Any(log => log.GuardId == guardId &&
+                          log.ClientSiteId == clientSiteId &&
+                          log.NotificationTime > cutoffTime);
+      }
+
+      // Helper method to log a notification
+      private void LogNotification(int guardId, int clientSiteId)
+      {
+          _context.GuardTwoHourNoActivityNotificationLog.Add(new GuardTwoHourNoActivityNotificationLog
+          {
+              GuardId = guardId,
+              ClientSiteId = clientSiteId,
+              NotificationTime = DateTime.Now
+          });
+          _context.SaveChanges();
+      }
+
+
+
+
+
+
+
+      //public void TwoHourNoActivityNotificationForGaurd()
+      //{
+
+
+      //    // Find all active logins
+      //    var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
+      //        .Where(a => a.GuardLoginTime != null
+      //            && a.GuardLogoutTime == null
+      //            && a.ClientSiteId != null
+      //            && !_context.RCActionList
+      //                  .Where(rc => rc.IsRCBypass)
+      //                  .Select(rc => rc.ClientSiteID)
+      //                  .Contains(a.ClientSiteId))
+      //        .ToList();
+
+      //    foreach (var login in allActiveLogins)
+      //    {
+      //        // Fetch all activities for the same GuardId and ClientSite
+      //        var activities = _context.ClientSiteRadioChecksActivityStatus
+      //            .Where(a => a.ClientSite == login.ClientSite
+      //                && a.GuardId == login.GuardId
+      //                && a.GuardLoginTime != null
+      //                && a.NotificationType == null)
+      //            .ToList();
+
+
+      //        if (activities.Any())
+      //        {
+      //            // Update NotificationCreatedTime based on available fields
+      //            foreach (var activity in activities)
+      //            {
+      //                if (activity.LastIRCreatedTime != null)
+      //                    activity.NotificationCreatedTime = activity.LastIRCreatedTime;
+      //                if (activity.LastKVCreatedTime != null)
+      //                    activity.NotificationCreatedTime = activity.LastKVCreatedTime;
+      //                if (activity.LastLBCreatedTime != null)
+      //                    activity.NotificationCreatedTime = activity.LastLBCreatedTime;
+      //                if (activity.LastSWCreatedTime != null)
+      //                    activity.NotificationCreatedTime = activity.LastSWCreatedTime;
+      //            }
+
+      //            // Find the last activity based on NotificationCreatedTime
+      //            var lastActivity = activities
+      //                .OrderByDescending(a => a.NotificationCreatedTime)
+      //                .FirstOrDefault();
+
+      //            if (lastActivity != null)
+      //            {
+      //                // Check if the last activity is more than two hours old
+      //                if (lastActivity.NotificationCreatedTime.HasValue &&
+      //                    (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2)
+      //                {
+      //                    // Send a notification to the guard
+      //                    CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId);
+      //                }
+      //            }
+
+
+      //        }
+      //        else
+      //        {
+      //            /* only login exist then check if no actvity after login with in 2hours*/
+            //            if (login.GuardLoginTime.HasValue &&
+            //                   (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2)
+            //            {
+            //                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId);
+            //            }
+
+            //        }
+
+            //    }
             //}
-            _context.SaveChanges();
-        }
-        public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
-        {
-            var result = new List<GuardLogsDocumentImages>();
-            result = _context.GuardLogsDocumentImages
-                           .Where(z => z.GuardLogId == LogId)
-                           .OrderBy(z => z.ImagePath)
-                           .ToList();
 
-
-            return result;
-        }
-
-
-        //p6-102 Add Photo -end
-        public List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id)
-        {
-            var result = new List<GuardLogsDocumentImages>();
-            result = _context.GuardLogsDocumentImages
-                           .Where(z => z.Id == Id)
-
-                           .ToList();
-
-
-            return result;
-        }
-        public void DeleteGuardLogDocumentImaes(int id)
-        {
-            var guardLogDocumentImaes = _context.GuardLogsDocumentImages.SingleOrDefault(i => i.Id == id);
-            if (guardLogDocumentImaes != null)
-            {
-                _context.Remove(guardLogDocumentImaes);
-                _context.SaveChanges();
-            }
-        }
-        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate)
-        {
-            //var data = _context.ClientSiteRadioChecksActivityStatus_History
-            //.Where(z => z.ClientSiteId == clientSiteId )
-            //.ToList();
-
-            var data = _context.ClientSiteRadioChecksActivityStatus_History
-               .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
-               .ToList();
-
-            var returnData = data.OrderBy(z => z.EventDateTime)
-                .ToList();
-
-            return returnData;
-        }
-        public List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate)
-        {
-            return _context.ClientSiteRadioChecks.Where(z => z.CheckedAt >= FromDate && z.CheckedAt <= ToDate).ToList();
-        }
-
-
-        public void SaveUserLoginHistoryDetails(LoginUserHistory loginUserHistory)
-        {
-
-
-            _context.LoginUserHistory.Add(loginUserHistory);
-            _context.SaveChanges();
-
-
-
-
-        }
-        public List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory)
-        {
-            var newirh = new List<ClientSiteRadioChecksActivityStatus>();
-
-            foreach (var item in IncidentReportHistory)
-            {
-                newirh.Add(_context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == item.GuardId && x.IRId == item.Id).Include(x => x.ClientSite).
-                    Include(x => x.IncidentReport).OrderByDescending(x => x.LastIRCreatedTime).FirstOrDefault());
-
-            }
-
-
-            return newirh;
-        }
-        public List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId)
-        {
-            List<ClientSiteRadioChecksActivityStatus_History> newrl = new List<ClientSiteRadioChecksActivityStatus_History>();
-            if ((clientSiteId == 0) || (guardId == 0))
-            {
-                return newrl;
-            }
-
-            var newirh = _context.ClientSiteRadioChecksActivityStatus_History.Where(x => x.GuardId == guardId && !string.IsNullOrEmpty(x.IRId.ToString()))
-                .Include(x => x.ClientSite)
-                        .Include(x => x.IncidentReport)
-                        .OrderByDescending(x => x.LastIRCreatedTime)
-                        .Take(1)
-                    .ToList();
-
-
-            return newirh;
-        }
-        public List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin(int guardId)
-        {
-            List<IncidentReport> irl = new List<IncidentReport>();
-            if (guardId == 0)
-            {
-                return irl;
-            }
-
-            var irh = _context.IncidentReports.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
-                .Include(x => x.ClientSite)
-                .OrderByDescending(x => x.CreatedOn)
-                .Take(1).ToList();
-            return irh;
-        }
-
-        public List<LanguageMaster> GetLanguages()
-        {
-            return _context.LanguageMaster.Where(x => x.IsDeleted == false)
-                .OrderBy(x => x.Language).ToList();
-        }
-        public List<LanguageDetails> GetLanguageDetails(int GuardID)
-        {
-            return _context.LanguageDetails
-                .Include(x => x.LanguageMaster)
-                .Where(x => x.GuardId == GuardID)
-                .OrderBy(x => x.Id).ToList();
-        }
-        public void SaveLanguages(LanguageMaster languageMaster)
-        {
-            if (languageMaster.Id == -1)
-            {
-                languageMaster.Id = 0;
-                _context.LanguageMaster.Add(languageMaster);
-            }
-            else
-            {
-                var languageToUpdate = _context.LanguageMaster.SingleOrDefault(x => x.Id == languageMaster.Id);
-                if (languageToUpdate != null)
-                {
-                    languageToUpdate.Language = languageMaster.Language;
-                    languageToUpdate.IsDeleted = false;
-
-                }
-            }
-            _context.SaveChanges();
-        }
-        public void DeleteLanguage(int id)
-        {
-            var languageToDelete = _context.LanguageMaster.SingleOrDefault(x => x.Id == id);
-            if (languageToDelete != null)
-                languageToDelete.IsDeleted = true;
-            _context.SaveChanges();
-        }
-
-
-        public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater()
-        {
-            ////var param1 = new SqlParameter();
-            ////param1.ParameterName = "@pattern";
-            ////param1.SqlDbType = SqlDbType.VarChar;
-            ////param1.SqlValue = pattern;
-            return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
-
-        }
-
-
-
-        public void TwoHourNoActivityNotificationForGuard()
-        {
-            try
-            {
-                // Find all active logins
-                var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
-                    .Where(a => a.GuardLoginTime != null
-                        && a.GuardLogoutTime == null
-                        && a.ClientSiteId != null && a.NotificationType == null
-                        && !_context.RCActionList
-                              .Where(rc => rc.IsRCBypass)
-                              .Select(rc => rc.ClientSiteID)
-                              .Contains(a.ClientSiteId))
-                    .ToList();
-
-                foreach (var login in allActiveLogins)
-                {
-                    try
-                    {
-                        // Fetch all activities for the same GuardId and ClientSite
-                        var activities = _context.ClientSiteRadioChecksActivityStatus
-                            .Where(a => a.ClientSiteId == login.ClientSiteId
-                                && a.GuardId == login.GuardId
-                                && a.GuardLoginTime == null && a.ActivityType != null
-                                && a.NotificationType == null)
-                            .ToList();
-
-                        if (activities.Any())
-                        {
-                            foreach (var activity in activities)
-                            {
-                                activity.NotificationCreatedTime = GetLatestNotificationTime(activity);
-                            }
-
-                            var lastActivity = activities
-                                .OrderByDescending(a => a.NotificationCreatedTime)
-                                .FirstOrDefault();
-
-                            if (lastActivity != null &&
-                                lastActivity.NotificationCreatedTime.HasValue &&
-                                (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
-                                !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId))
-                            {
-                                // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId, lastActivity.NotificationCreatedTime);
-
-                                // Log the notification
-                                LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId);
-                            }
-                        }
-                        else
-                        {
-                            if (login.GuardLoginTime.HasValue &&
-                                (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2 &&
-                                !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId))
-                            {
-                                // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId, login.GuardLoginTime);
-
-                                // Log the notification
-                                LogNotification(login.GuardId, login.ClientSiteId);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error processing login for GuardId {login.GuardId} at ClientSite {login.ClientSite}: {ex.Message}");
-                    }
-                }
-
-                // Save changes to the database
-                _context.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Critical error in TwoHourNoActivityNotificationForGuard: {ex.Message}");
-            }
-        }
-
-        // Helper method to get the latest NotificationCreatedTime from activity fields
-        private DateTime? GetLatestNotificationTime(ClientSiteRadioChecksActivityStatus activity)
-        {
-            return new[]
-            {
-        activity.LastIRCreatedTime,
-        activity.LastKVCreatedTime,
-        activity.LastLBCreatedTime,
-        activity.LastSWCreatedTime
-    }.Where(t => t.HasValue).Max();
-        }
-
-        // Helper method to check if a notification has been sent recently
-        private bool HasNotificationBeenSentRecently(int guardId, int clientSiteId)
-        {
-            var cutoffTime = DateTime.Now.AddMinutes(-120); // Change the time window as needed
-            return _context.GuardTwoHourNoActivityNotificationLog
-                .Any(log => log.GuardId == guardId &&
-                            log.ClientSiteId == clientSiteId &&
-                            log.NotificationTime > cutoffTime);
-        }
-
-        // Helper method to log a notification
-        private void LogNotification(int guardId, int clientSiteId)
-        {
-            _context.GuardTwoHourNoActivityNotificationLog.Add(new GuardTwoHourNoActivityNotificationLog
-            {
-                GuardId = guardId,
-                ClientSiteId = clientSiteId,
-                NotificationTime = DateTime.Now
-            });
-            _context.SaveChanges();
-        }
-
-
-
-
-
-
-
-        //public void TwoHourNoActivityNotificationForGaurd()
-        //{
-
-
-        //    // Find all active logins
-        //    var allActiveLogins = _context.ClientSiteRadioChecksActivityStatus
-        //        .Where(a => a.GuardLoginTime != null
-        //            && a.GuardLogoutTime == null
-        //            && a.ClientSiteId != null
-        //            && !_context.RCActionList
-        //                  .Where(rc => rc.IsRCBypass)
-        //                  .Select(rc => rc.ClientSiteID)
-        //                  .Contains(a.ClientSiteId))
-        //        .ToList();
-
-        //    foreach (var login in allActiveLogins)
-        //    {
-        //        // Fetch all activities for the same GuardId and ClientSite
-        //        var activities = _context.ClientSiteRadioChecksActivityStatus
-        //            .Where(a => a.ClientSite == login.ClientSite
-        //                && a.GuardId == login.GuardId
-        //                && a.GuardLoginTime != null
-        //                && a.NotificationType == null)
-        //            .ToList();
-
-
-        //        if (activities.Any())
-        //        {
-        //            // Update NotificationCreatedTime based on available fields
-        //            foreach (var activity in activities)
-        //            {
-        //                if (activity.LastIRCreatedTime != null)
-        //                    activity.NotificationCreatedTime = activity.LastIRCreatedTime;
-        //                if (activity.LastKVCreatedTime != null)
-        //                    activity.NotificationCreatedTime = activity.LastKVCreatedTime;
-        //                if (activity.LastLBCreatedTime != null)
-        //                    activity.NotificationCreatedTime = activity.LastLBCreatedTime;
-        //                if (activity.LastSWCreatedTime != null)
-        //                    activity.NotificationCreatedTime = activity.LastSWCreatedTime;
-        //            }
-
-        //            // Find the last activity based on NotificationCreatedTime
-        //            var lastActivity = activities
-        //                .OrderByDescending(a => a.NotificationCreatedTime)
-        //                .FirstOrDefault();
-
-        //            if (lastActivity != null)
-        //            {
-        //                // Check if the last activity is more than two hours old
-        //                if (lastActivity.NotificationCreatedTime.HasValue &&
-        //                    (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2)
-        //                {
-        //                    // Send a notification to the guard
-        //                    CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId);
-        //                }
-        //            }
-
-
-        //        }
-        //        else
-        //        {
-        //            /* only login exist then check if no actvity after login with in 2hours*/
-        //            if (login.GuardLoginTime.HasValue &&
-        //                   (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2)
-        //            {
-        //                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId);
-        //            }
-
-        //        }
-
-        //    }
-        //}
-
-        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
+            public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
@@ -6253,11 +6440,13 @@ namespace CityWatch.Data.Providers
                     traininglocationToUpdate.AssessmentStartDate = trainingCertificateRPL.AssessmentStartDate;
                     traininglocationToUpdate.AssessmentEndDate = trainingCertificateRPL.AssessmentEndDate;
                     traininglocationToUpdate.TrainingInstructorId = trainingCertificateRPL.TrainingInstructorId;
+                    traininglocationToUpdate.isDeleted = false;
 
                 }
             }
             _context.SaveChanges();
         }
+
         public List<SelectListItem> GetClassRommLocation(bool withoutSelect = true)
         {
             var items = new List<SelectListItem>();
@@ -6272,6 +6461,20 @@ namespace CityWatch.Data.Providers
 
             }
             return items;
+
+        public void DeleteTrainingCourseCertificateRPL(int id)
+        {
+           
+                var traininglocationToUpdate = _context.TrainingCourseCertificateRPL.SingleOrDefault(x => x.TrainingCourseCertificateId == id);
+                if (traininglocationToUpdate != null)
+                {
+                    
+                    traininglocationToUpdate.isDeleted = true;
+
+                }
+            
+            _context.SaveChanges();
+
         }
     }
 

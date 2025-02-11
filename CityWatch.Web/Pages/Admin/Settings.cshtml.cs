@@ -846,6 +846,24 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
+        public JsonResult OnPostHrSettingsBanEdit(int hrSttingsId, int enableStatus)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.UpdateHRBanSettings(hrSttingsId, Convert.ToBoolean(enableStatus));
+               
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
         public JsonResult OnGetReportFields(int typeId)
         {
             var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
@@ -2470,7 +2488,18 @@ namespace CityWatch.Web.Pages.Admin
                 var getRPL = _configDataProvider.GetCourseCertificateRPLUsingId(item.Id);
                 if(getRPL.Count>0)
                 {
-                    item.isRPLEnabled = true;
+                    foreach(var itemnew in getRPL)
+                    { 
+                        if(itemnew.isDeleted==false)
+                        {
+                            item.isRPLEnabled = true;
+                        }
+                        else
+                        {
+                            item.isRPLEnabled = false;
+                        }
+                    }
+                    
                 }
                 else
                 {
@@ -2594,7 +2623,7 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetRPLDetails(int id)
         {
             var success = false;
-                        return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).FirstOrDefault());
+             return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).FirstOrDefault());
         }
         public JsonResult OnPostSaveRPLDetails(TrainingCourseCertificateRPL record)
         {
@@ -2614,7 +2643,24 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+        
+        public JsonResult OnPostDeleteRPLDetails(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
 
+                _guardLogDataProvider.DeleteTrainingCourseCertificateRPL(id);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {

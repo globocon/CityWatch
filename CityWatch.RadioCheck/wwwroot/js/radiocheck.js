@@ -362,6 +362,78 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             }
         },
         {
+            extend: 'pdf',
+            text: '<img src="/images/mail.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Webmail Program',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.webmail;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+
+
+
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/tv.png" alt="Image" height="16" width="16">',
+            titleAttr: 'TV News Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.tvNewsFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/cloudy.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Weather Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.wetherFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
             text: '|',
             titleAttr: 'Space',
             className: 'btn-hidden',
@@ -916,6 +988,30 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             }
         },
         {
+            extend: 'pdf',
+            text: '<img src="/images/mail.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Webmail Program',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+               
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.webmail;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+                    
+                });
+                
+                
+               
+            }
+        },
+        {
             text: '|',
             titleAttr: 'Space',
             className: 'btn-hidden',
@@ -923,7 +1019,54 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             name: 'Space',
 
         },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/tv.png" alt="Image" height="16" width="16">',
+            titleAttr: 'TV News Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.tvNewsFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
 
+                });
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/cloudy.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Weather Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.wetherFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
@@ -3440,6 +3583,98 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
         },
         {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                // Redirect to the new page with query parameters
+                const clientSiteIds = 'test'; // Replace this with dynamic values if needed
+                const newPageUrl = '/GlobeMapNoActivity';
+                window.open(newPageUrl, '_blank');
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/mail.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Webmail Program',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.webmail;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+
+
+
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/tv.png" alt="Image" height="16" width="16">',
+            titleAttr: 'TV News Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.tvNewsFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/cloudy.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Weather Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.wetherFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
             className: 'btn btn-md mr-2 btn-custom',
@@ -3859,6 +4094,99 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             name: 'Space',
 
         },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                // Redirect to the new page with query parameters
+                const clientSiteIds = 'test'; // Replace this with dynamic values if needed
+                const newPageUrl = '/GlobeMapNoActivity';
+                window.open(newPageUrl, '_blank');
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/mail.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Webmail Program',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.webmail;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+
+
+
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/tv.png" alt="Image" height="16" width="16">',
+            titleAttr: 'TV News Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.tvNewsFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/cloudy.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Weather Feed',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=HyperLinks',
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    var newPageUrl = result.wetherFeed;
+                    if (!newPageUrl.startsWith("http://") && !newPageUrl.startsWith("https://")) {
+                        newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
+                    }
+                    window.open(newPageUrl, '_blank');
+
+                });
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',

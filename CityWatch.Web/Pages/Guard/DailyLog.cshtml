@@ -4,6 +4,7 @@
 @using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
 @using CityWatch.Data.Helpers
+@using CityWatch.Web.Helpers;
 @using Microsoft.Extensions.Configuration
 
 @inject IViewDataService viewDataService
@@ -26,6 +27,14 @@
     clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.GuardLog.ClientSiteLogBook.ClientSite.Id);
     var IsDOSDONTList = @Model.GuardLog.ClientSiteLogBook.ClientSite.IsDosDontList;
 
+}
+@if (AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="AdminGlobal" />
+}
+else
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
 <div id="loader"></div>
 <div class="row">

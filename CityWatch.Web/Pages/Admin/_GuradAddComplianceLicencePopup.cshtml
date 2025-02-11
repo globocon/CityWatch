@@ -1,8 +1,18 @@
 ﻿﻿@using CityWatch.Data.Models;
 @using CityWatch.Data.Enums;
 @using CityWatch.Web.Services;
+@using CityWatch.Web.Helpers;
 @inject IViewDataService viewDataServiceNew
 
+
+@if (AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="AdminGlobal" />
+}
+else
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
+}
 <div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -12,6 +22,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            
             <div class="modal-body pb-1 pt-1">
                 <form id="frm_add_complianceandlicense">
                     <input type="hidden" id="GuardComplianceandlicense_Id" name="GuardComplianceAndLicense.Id" />

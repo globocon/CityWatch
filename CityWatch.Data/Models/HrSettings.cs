@@ -71,6 +71,7 @@ namespace CityWatch.Data.Models
         public string GroupName { get { return HRGroups.Name ; } }
 
         public bool HRLock { get; set; }
+        public bool HRBanEdit { get; set; }
 
         public ICollection<HrSettingsClientSites> hrSettingsClientSites { get; set; }
 

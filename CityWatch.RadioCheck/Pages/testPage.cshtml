@@ -7,29 +7,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline Form with IndexedDB</title>
+    <title>Data from mobile App</title>
 </head>
 <body>
-    <h1>Offline Form with IndexedDB</h1>
-    <form id="dataForm">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <button type="submit">Save</button>
-    </form>
 
-    <h2>Stored Data:</h2>
-    <ul id="dataList"></ul>
+    <h2>User Inputs</h2>
 
-    <script src="~/jsJotform/script.js"></script>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/jsJotform/service-worker.js')
-                .then(() => console.log('Service Worker registered successfully.'))
-                .catch(err => console.error('Service Worker registration failed:', err));
-        }
-    </script>
+    @if (Model.UserInputs.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Text</th>
+                    <th>Updated Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var input in Model.UserInputs)
+                {
+                    <tr>
+                        <td>@input.Id</td>
+                        <td>@input.Text</td>
+                        <td>@input.UpdatedDate</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No data available.</p>
+    }
+   
 </body>
 </html>

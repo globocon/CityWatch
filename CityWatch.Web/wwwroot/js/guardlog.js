@@ -55,11 +55,23 @@ $(function () {
     //*************** Guard Login  *************** //
 
     function populateClientSites(selectedSiteName) {
+
+       
         $('#GuardLogin_SmartWandOrPosition').html('<option value="">Select</option>');
 
         const option = $('#GuardLogin_ClientType').val();
         if (option == '')
             return false;
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSitesNew&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+     
+                $('#GuardLogin_ClientSiteID').val(data);
+                }
+        });
+
 
         const clientSiteControl = $('#GuardLogin_ClientSiteName');
         clientSiteControl.html('');
@@ -68,6 +80,7 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
+                clientSiteControl.html('');
                 clientSiteControl.append('<option value="">Select</option>')
                 data.map(function (site) {
                     clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
@@ -565,10 +578,10 @@ $(function () {
                         $('#LoginConformationBtnC4iSettingsThirdParty').attr('hidden', false);
 
                     if (result.guard.isAdminGlobal || result.guard.isAdminInvestigatorAccess || result.guard.isAdminThirdPartyAccess) {
-                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
+                        //$('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
                     }
                     else {
-                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
+                        //$('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
                     }
 
                 }
@@ -839,28 +852,43 @@ $(function () {
             // New change start bypass the message 
             if ($('#GuardLogin_SmartWandOrPosition').val() !== '') {
                 $.ajax({
-                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypass',
+                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypassNew',
                     type: 'GET',
                     data: {
-                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        clientSiteName: $('#GuardLogin_ClientSiteID').val(),
                         positionName: $('#GuardLogin_SmartWandOrPosition').val(),
                         guardId: $('#GuardLogin_Guard_Id').val()
                     }
                 }).done(function (result) {
-                    if (result) {
+                    if (result.isSmartwandbypass) {
+
                         $('#loader').show();
                         submitGuardLogin();
                     }
                     else {
 
-                        confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                        if (result.smartWands.length > 0) {
+                            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                                const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+                                if (!validateSmartWand) {
+                                    $('#loader').show();
+                                    submitGuardLogin();
+                                }
+                            });
+                        }
+                        else {
+
                             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
                             if (!validateSmartWand) {
                                 $('#loader').show();
                                 submitGuardLogin();
                             }
-                        });
+
+                        }
+
+
                     }
                 }).always(function () {
                     $('#loader').hide();
@@ -884,16 +912,27 @@ $(function () {
             if (validateSmartWand) {
                 $('#loader').show();
                 $.ajax({
-                    url: '/Guard/Login?handler=CheckIsWandAvailable',
+                    url: '/Guard/Login?handler=CheckIsWandAvailableNew',
                     type: 'GET',
                     data: {
                         clientSiteName: $('#GuardLogin_ClientSiteName').val(),
                         smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
-                        guardId: $('#GuardLogin_Guard_Id').val()
+                        guardId: $('#GuardLogin_Guard_Id').val(),
+                        clientSiteID: $('#GuardLogin_ClientSiteID').val(),
                     }
                 }).done(function (result) {
-                    if (result) $('#alert-wand-in-use-modal').modal('show');
-                    else submitGuardLogin();
+                    if (result.smartwantinuse) $('#alert-wand-in-use-modal').modal('show');
+                    else
+                        if (result.smartWands.length > 0) {
+                                submitGuardLogin();
+                        }
+                        else {
+
+                            submitGuardLogin();
+                        }
+
+
+                        
                 }).always(function () {
                     $('#loader').hide();
                 });
@@ -6314,11 +6353,24 @@ $(function () {
             {
                 targets: -1,
                 data: null,
+                //render: function (data, type, row, meta) {
+                    
+                //    if (data.hrBanEdit) {
+                       
+                //        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                //            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                //    } else {
+                        
+                //        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                //            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                //    }
+                //},
                 defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                    '<button  class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
+                    '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
                 width: '13%'
             }],
         columnDefs: [{
+          
             targets: 3,
             data: 'fileName',
             render: function (data, type, row, meta) {
@@ -6396,7 +6448,7 @@ $(function () {
         //filter: false,
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
-        var check = '';
+       var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
@@ -6405,6 +6457,7 @@ $(function () {
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+       
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -6438,7 +6491,7 @@ $(function () {
                         //mark = '❌';
                         mark = '<i class="fa fa-close" style="font-size:24px;color:red"></i>'
                         //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
                             '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
                             '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
                             mark +
@@ -6448,7 +6501,7 @@ $(function () {
                         mark = '<i class="fa fa-check" style="font-size:24px;color:green"></i>'
                         //mark = '<span style="color: green !important;">✔️</span>';
                         // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
                             '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
                             '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
                             mark +
@@ -6466,12 +6519,37 @@ $(function () {
 
     var trig = 'mousedown';
     $('#Description').on("change", function () {
+        let selectedItem = $('.es-visible.selected').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
         var display = sel.clone();
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This can't be selected")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+       
+        
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -6479,6 +6557,46 @@ $(function () {
         sel.replaceWith($('#Description').data('cur_val'));
         $(this).prop('selectedIndex', 0);
     });
+    $(document).on("click", "#Description + ul.es-list", function () {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        let selectedItem = $('.es-visible').val();
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This can't be selected")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+    });
+    //$('#Description').on("change", function () {
+    //    var sel = $('#Description option:selected');
+    //    $(this).data('cur_val', sel);
+    //    var display = sel.clone();
+    //    display.text($.trim(display.text()));
+    //    sel.replaceWith(display);
+    //    $(this).prop('selectedIndex', display.index());
+    //}).on(trig, function () {
+    //    if ($(this).prop('selectedIndex') == 0)
+    //        return;
+    //    var sel = $('#Description option:selected');
+    //    sel.replaceWith($('#Description').data('cur_val'));
+    //    $(this).prop('selectedIndex', 0);
+    //});
+
+
+
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
 
@@ -7181,7 +7299,64 @@ $(function () {
         $("#modelGuardLoginAuditSite").modal("show");
         return false;
     });
-    
+
+    $("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+        $('#txt_securityLicenseNoAuditSiteLogs').val('');
+        $("#modelGuardLoginAditLog").modal("show");
+        return false;
+    });
+
+
+    $('#btnGuardLoginAuditSiteLogs').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLogs').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Auditlog'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', result.successMessage);
+                    }
+                }
+            });
+
+
+           
+
+
+
+        }
+    });
+
+
+
     /* p1-203 Admin User Profile -start */
     
     //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {

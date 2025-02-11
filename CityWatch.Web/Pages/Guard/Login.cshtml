@@ -22,6 +22,7 @@
         <form id="frmGuardLogin" style="margin-left: 5px; margin-right: 5px;">
             <input type="hidden" asp-for="@Model.GuardLogin.Id" />
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
+            <input type="hidden" id="GuardLogin_ClientSiteID" />
             
             
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.IsLB_KV_IR" value="@IsLB_KV_IR" />
@@ -342,6 +343,43 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="confirmOkLogin">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelGuardLoginAditLog" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for Audit Site Logs
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoAuditSiteLogs">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginAuditSiteLogs" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryAuditSiteLogs"></div>
+                </div>
             </div>
         </div>
     </div>

@@ -32,6 +32,7 @@ namespace CityWatch.Data.Providers
         void SaveReportField(IncidentReportField incidentReportField);
         void DeleteReportField(int id);
         List<IncidentReportPosition> GetPositions();
+        List<ClientSiteSmartWand> GetSmartWandsDetails(int ClientSiteID);
         List<IncidentReportPSPF> GetPSPF();
         int GetLastValue();
         int OnGetMaxIdIR();
@@ -629,6 +630,11 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportPositions.OrderBy(z => z.Name).ToList();
         }
+        public List<ClientSiteSmartWand> GetSmartWandsDetails(int ClientSiteID)
+        {
+            return _context.ClientSiteSmartWands.Where(z => z.ClientSiteId == ClientSiteID).ToList();
+        }
+
         //To get the Logbbok Data-p6-101 start
         public IncidentReportPosition GetIsLogbookData(string Name)
         {
@@ -1641,7 +1647,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificateRPL
-                .Where(x => x.TrainingCourseCertificateId == id)
+                .Where(x => x.TrainingCourseCertificateId == id )
                 .ToList();
 
 

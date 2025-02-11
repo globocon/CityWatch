@@ -4,6 +4,38 @@
 @model CityWatch.Data.Models.ClientSiteKpiSetting
 @inject IViewDataService ViewDataService;
 @inject IClientDataProvider clientDataProvider
+<script>
+    $(document).ready(function () {
+        
+        function getQueryStringValue(key) {
+            const query = window.location.search; 
+            const regex = new RegExp(`[?&]${key}=([^&]*)`, 'i'); 
+            const match = regex.exec(query); 
+            return match ? decodeURIComponent(match[1]) : null; 
+        }
+
+       
+        const guid = getQueryStringValue("guid");
+        $.ajax({
+            url: '/RadioCheckV2?handler=GuardDetails',
+            data: { GuardID: guid },
+            type: 'GET',
+        }).done(function (result) {
+            if (result.isRCAccess || result.isRCLiteAccess) {
+                $("#save_site_RC").hide();
+                $("#delete_site_RCList").hide();
+                
+           }
+           
+
+            
+        }).fail(function () {
+            alert("An error occurred while fetching guard details.");
+        });
+        
+
+    });
+</script>
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -17,7 +49,7 @@
     bool isStatusOngoing = @Model.ClientSite.Status != 0;
     var KPITelematicsDetails = clientDataProvider.GetKPITelematicsDetails(Model.KPITelematicsFieldID);
 
-
+   
     var TimeSheet = clientDataProvider.GetTimesheetDetails();
 
     if (Model.ClientSiteManningGuardKpiSettings != null && Model.ClientSiteManningGuardKpiSettings.Any())

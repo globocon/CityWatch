@@ -69,6 +69,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientTypes(int? userId);
         List<SelectListItem> GetUserClientSites(int? userId, string type = "");
         List<SelectListItem> GetUserClientSites(string types = "");
+        int GetUserClientSitesNew(int? userId, string type = "");
         List<object> GetAllUsersClientSiteAccess(string searchTerm);
         List<object> GetUserClientSiteAccess(int userId);
         List<object> GetAllCoreSettings(int companyId);
@@ -471,14 +472,25 @@ namespace CityWatch.Web.Services
         {
             var sites = new List<SelectListItem>();
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
-            var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type);
-            foreach (var item in mapping)
+            if (clientType != null)
             {
-                sites.Add(new SelectListItem(item.Name, item.Name));
+                var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type);
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.Name, item.Name));
+                }
+
             }
             return sites;
         }
-
+        public int GetUserClientSitesNew(int? userId, string type = "")
+        {
+           
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
+            var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type).FirstOrDefault();
+            
+            return mapping.Id;
+        }
         public List<SelectListItem> GetUserClientSites(string types = "")
         {
             var sites = new List<SelectListItem>();

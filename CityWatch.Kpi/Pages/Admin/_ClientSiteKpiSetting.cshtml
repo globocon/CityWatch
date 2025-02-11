@@ -266,9 +266,18 @@
                                         <input type="text" class="form-control" id="gs_land_line">
                                     </div>
                                 </div>
-                                <div class="form-check mb-1">
-                                    <input type="checkbox" id="enableLogDump" class="form-check-input" />
-                                    <label for="gs_site_log_dump" class="form-check-label">Enable Daily Log Dump</label>
+                                <div class="form-group row align-items-center">
+                                    <label class="col-md-3 col-form-label">Enable Daily Log Dump</label>
+                                    <div class="col-md-9 d-flex align-items-center">
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableLogDump" class="form-check-input">
+                                            <label for="enableLogDump" class="form-check-label">(LB+KV)</label>
+                                        </div>
+                                        <div class="form-check ms-3 ml-2">
+                                            <input type="checkbox" id="enableFusionDump" class="form-check-input">
+                                            <label for="enableFusionDump" class="form-check-label">(Fusion)</label>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="gs_email_recipients" class="col-md-3 col-form-label">Email Recipients</label>

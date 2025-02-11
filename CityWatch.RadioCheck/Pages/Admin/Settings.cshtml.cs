@@ -318,6 +318,28 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(new { status = Email, message = message });
         }
         //To save the Gloabl Duress Email Stop
+        public JsonResult OnPostSaveHyperLinks(string Email,string TvNews,string wether)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.AddHyperLinks(Email, TvNews, wether);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
+        public JsonResult OnGetHyperLinks()
+        {
+            var links = _clientDataProvider.GetHyperLinksDetails().FirstOrDefault();
+            
+            return new JsonResult(new { Webmail = links.Webmail,TVNewsFeed= links.TVNewsFeed,WetherFeed=links.WeatherFeed });
+        }
         public JsonResult OnGetGlobalComplianceAlertEmail()
         {
             var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail();
