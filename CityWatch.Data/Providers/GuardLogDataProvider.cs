@@ -6450,7 +6450,7 @@ namespace CityWatch.Data.Providers
         public List<SelectListItem> GetClassRommLocation(bool withoutSelect = true)
         {
             var items = new List<SelectListItem>();
-               
+
             var trainingList = GetTrainingLocation();
             foreach (var item in trainingList)
             {
@@ -6461,6 +6461,7 @@ namespace CityWatch.Data.Providers
 
             }
             return items;
+        }
 
         public void DeleteTrainingCourseCertificateRPL(int id)
         {
