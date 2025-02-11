@@ -581,6 +581,9 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
             gridGuardTrainingAndAssessment.clear().draw();
             gridGuardTrainingAndAssessment.ajax.reload();
+            GetClassroomLocation(1);
+            window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+            
         }
         $('#loader').hide();
 
@@ -2296,3 +2299,703 @@ $('#rplDetailsModal').on('hidden.bs.modal', function (e) {
 
 
 });
+
+function GetClassroomLocation(selectedLocation) {
+    const practicalLocationControl = $('#ddlTestClassroomLocation');
+    $('#ddl_TestClassroomLocation').html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingLocation',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            
+            data.map(function (site) {
+                $('#ddl_TestClassroomLocation').append('<option value="' + site.id + '">' + site.location + '</option>');
+            });
+
+            if (selectedLocation) {
+                $('#ddl_TestClassroomLocation').val(selectedLocation);
+            } else {
+                $('#ddl_TestClassroomLocation').val('');
+            }
+        }
+    });
+}
+//p5-Issue6-start
+$('#btnStartCourse').on('click', function (e) {
+    e.preventDefault();
+    $('#cardFrontPage').hide();
+    $('#cardCoursePdf').attr('hidden', false);
+    RunCourses();
+    isPausedForCourseDuration = false;
+    startCourseDurationClock();
+});
+var pdfUrl;
+var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
+function RunCourses() {
+    canvas = document.getElementById("canvasCousePdf");
+     ctx = canvas.getContext('2d')
+    pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val()  ;
+    pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
+        pdfDoc = pdf;
+        renderPage(pageNum);
+    });
+}
+
+
+function renderPage(num) {
+    pdfDoc.getPage(num).then(function (page) {
+        var fixedWidth = 1110;  
+        var fixedHeight = 600; 
+        var viewport = page.getViewport({ scale: scale });
+        canvas.width = fixedWidth;
+        canvas.height = fixedHeight;
+        page.render({ canvasContext: ctx, viewport: viewport });
+    });
+}
+
+$("#coursePdfNext").on('click', function (e) {
+    if (pageNum < pdfDoc.numPages) {
+        if (isPausedForCourseDuration) {
+            pageNum = pageNum + 2;
+            isPausedForCourseDuration = false;
+        }
+        else {
+            //setTimeout(() => {
+                pageNum++;
+            //}, 30000);
+
+        }
+        renderPage(pageNum);
+    }
+    else {
+        isPausedForCourseDuration = true;
+        /* getGuardCourseSpentTimeDetails();*/
+        $('#cardFrontPage').hide();
+        $('#cardCoursePdf').hide();
+        $('#cardTestFrontPage').attr('hidden', false);
+    }
+});
+
+$("#coursePdfPrev").on('click', function (e) {
+    if (pageNum > 1) {
+        isPausedForCourseDuration = true;
+        pageNum--;
+        renderPage(pageNum);
+    }
+});
+document.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft") {
+        if (pageNum > 1) {
+            isPausedForCourseDuration = true;
+            pageNum--;
+            renderPage(pageNum);
+        }
+    } else if (event.key === "ArrowRight") {
+        if (pageNum < pdfDoc.numPages) {
+            if (isPausedForCourseDuration) {
+                pageNum = pageNum + 2;
+                isPausedForCourseDuration = false;
+            }
+            else {
+                //setTimeout(() => {
+                    pageNum++;
+                //}, 30000);
+            }
+            renderPage(pageNum);
+        }
+        else {
+            isPausedForCourseDuration = true;
+            /* getGuardCourseSpentTimeDetails();*/
+            $('#cardFrontPage').hide();
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').attr('hidden', false);
+        }
+
+    }
+    else if (event.key === "PrintScreen") {
+    
+       // setInterval(detectScreenRecording, 1000);
+        alert('Screenshots are disabled!');
+    }
+    if (event.ctrlKey == true && event.key === 'c') {
+        event.preventDefault();  // Disable Ctrl+C
+        alert('Copying is disabled!');
+    }
+    
+});
+
+
+//async function detectScreenRecording() {
+//    try {
+//        const stream = await navigator.mediaDevices.getDisplayMedia({ video: false });
+//        stream.getTracks().forEach(track => track.stop()); // Stop the screen capture
+//        alert("Screen recording is not allowed!");
+//    } catch (err) {
+//        console.log("Screen recording not detected.");
+//    }
+//}
+
+//// Run this check every 5 seconds
+//setInterval(detectScreenRecording, 5000);
+
+////$(document).on('contextmenu', function (e) {
+////    e.preventDefault();  // Prevent right-click
+////});
+var isPausedForCourseDuration = false
+let nIntervCourseDurationId;
+let DuressAlarmNotificationPending = false;
+var valnew; 
+if ($('#txtCourseTimerStart').val() != undefined) {
+    valnew = $('#txtCourseTimerStart').val();
+}
+else {
+    valnew = '0 minutes';
+}
+var minutesnew =valnew.split("minutes"); 
+let courseduration = 60 * parseInt(minutesnew[0],10);
+function startCourseDurationClock() {
+   
+    
+    let timer = courseduration, minutes, seconds;
+    display = document.querySelector('#courseTimerStart');
+    if (!nIntervCourseDurationId) {
+        nIntervCourseDurationId = setInterval(function () {
+
+            if (!isPausedForCourseDuration) {
+                
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    ClearTimerAndReload();
+                }
+                else if ((timer > 5) && DuressAlarmNotificationPending) {
+                    ClearTimerAndReload();
+                }
+            }
+        }, 1000);
+    }
+}
+function ClearTimerAndReload() {
+    clearInterval(nIntervCourseDurationId);
+    DuressAlarmNotificationPending = false;
+    nIntervCourseDurationId = null;
+    location.reload();
+}
+//function getGuardCourseSpentTimeDetails() {
+//    var obj =
+//    {
+//        Id: 0,
+//        GuardtrainingAndAssementId: $('#txtguardCourseStatusId').val(),
+//        TimeSpentOnCourse: $('#courseTimerStart').html()
+
+//    }
+//    $('#loader').show();
+//    $.ajax({
+//        url: '/Admin/Settings?handler=SaveGuardCourseTime',
+//        data: { record: obj },
+//        type: 'POST',
+//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+//    }).done(function (result) {
+//        if (result.success) {
+//            $('#rplDetailsModal').modal('hide');
+//            gridCertificatesDocumentFiles.clear();
+//            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+
+//        } else {
+
+//            displayGuardValidationSummary('rplValidationSummary', result.message);
+//        }
+//    }).always(function () {
+//        $('#loader').hide();
+//    });
+//}
+$('#btnStartTest').on('click', function (e) {
+    e.preventDefault();
+    $('#cardFrontPage').hide();
+    
+        $('#cardCoursePdf').hide();
+    $('#cardTestFrontPage').hide();
+    $('#cardTestPage').attr('hidden', false);
+    
+    $('#divTestDurationTimer').attr('hidden', false);
+    isPausedForTestDuration = false;
+    startTestDurationClock();
+    GetQuestionsForGuard();
+   
+});
+
+var isPausedForTestDuration = true
+let nIntervCourseDurationTestId;
+let DuressAlarmNotificationPendingForTest = false;
+var valnewfortest;
+if ($('#txtTestTimerStart').val() != undefined) {
+    valnewfortest = $('#txtTestTimerStart').val();
+}
+else {
+    valnewfortest = '0 minutes';
+}
+var minutesnewfortest = valnewfortest.split("minutes");
+let testduration = 60 * parseInt(minutesnewfortest[0], 10);
+function startTestDurationClock() {
+
+
+    let timer = testduration, minutes, seconds;
+    display = document.querySelector('#testTimerStart');
+    if (!nIntervCourseDurationTestId) {
+        nIntervCourseDurationTestId = setInterval(function () {
+
+            if (!isPausedForTestDuration) {
+
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    ClearTimerAndReloadForTest();
+                }
+                else if ((timer > 5) && DuressAlarmNotificationPendingForTest) {
+                    ClearTimerAndReloadForTest();
+                }
+            }
+        }, 1000);
+    }
+}
+function ClearTimerAndReloadForTest() {
+    clearInterval(nIntervCourseDurationTestId);
+    DuressAlarmNotificationPendingForTest = false;
+    nIntervCourseDurationTestId = null;
+    location.reload();
+}
+function GetQuestionsForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardQuestions',
+        data: {
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#GuardTestQuestions').html(result.question);
+            $('#txtGuardTestQuestionId').val(result.id);
+            GetOptionsForGuard();
+            GetQuestionCountForGuard();
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+            PostGuardMarks();
+          
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+
+function GetOptionsForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardOptions',
+        data: {
+            'questionId': $("#txtGuardTestQuestionId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.length > 0) {
+            j = 1;
+            $.each(result, function (i, d) {
+
+                var txtoptions = 'txtGuardAnswer' + j;
+                var label = 'lblGuardAnswer' + j
+                var chkbox = 'chkGuardAnswer' + j
+                j++;
+                $('#' + txtoptions).val(d.id);
+                $('#' + label).html(d.options);
+                $('#' + label).attr('hidden', false);
+                $('#' + chkbox).attr('hidden', false);
+                $('#' + chkbox).prop('checked', false);
+
+            });
+           
+        }
+        else {
+            alert('Something Wrong')
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function GetQuestionCountForGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardQuestionCount',
+        data: {
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions );
+            $('#QuestionNo').html('Q.' + result.qno);
+            
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function PostGuardMarks() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardMarks',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val(),
+            'duration':''
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
+            GetGuardMarks();
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function GetGuardMarks() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardMarks',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#cardFrontPage').hide();
+
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').attr('hidden', false);
+
+            $('#divTestDurationTimer').hide();
+            $('#QuestionCounts').html('');
+            $('#lblTotalQuestionscount').html(result.totalQuestions);
+            $('#lblCorrectQuestionscount').html(result.guardCorrectQuestionsCount);
+            $('#lblTotalScore').html(result.guardScore);
+            $('#lblAttempts').html(1);
+            $('#lblDuration').html('02:33');
+            
+            var message;
+            
+            if (result.isPass == true) {
+                $('#resultHeading').html('Congratulations !');
+                $('#ResultIconTrophy').attr('hidden', false);
+                $('#ResultIconCross').hide();
+                message = 'You have successfully passed the test.Please press Continue for your results to be submitted.'
+                $('#btnContinueTest').attr('hidden', false);
+                $('#btnRetryTest').hide();
+                $('#btnExitTest').hide();
+                /*$('#ResultMessage').html('You have successfully passed the test.Please press Continue for your results to be submitted')*/
+            }
+            else {
+                $('#resultHeading').html('Requirement not met');
+                $('#ResultIconCross').attr('hidden', false);
+                $('#ResultIconTrophy').hide();
+                message = 'You have not passed the test.Please press Retry to try again or Exit to try again in a later date.'
+                $('#btnContinueTest').hide();
+                $('#btnRetryTest').attr('hidden', false);
+                $('#btnExitTest').attr('hidden', false);
+            }
+            $('#ResultMessage').html(message)
+
+        }
+        else {
+            //alert('Something Wrong')
+            isPausedForTestDuration = true;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+$('#chkGuardAnswer1').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+    
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer2').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer3').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer4').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer5').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+    $('#chkGuardAnswer6').prop("checked", false);
+
+});
+$('#chkGuardAnswer6').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+
+
+
+    $('#chkGuardAnswer2').prop("checked", false);
+    $('#chkGuardAnswer3').prop("checked", false);
+    $('#chkGuardAnswer4').prop("checked", false);
+    $('#chkGuardAnswer5').prop("checked", false);
+    $('#chkGuardAnswer1').prop("checked", false);
+
+});
+$('#btnSubmitTest').on('click', function (e) {
+    e.preventDefault();
+    var answerid;
+    if ($('#chkGuardAnswer1').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer1').val();
+    }
+    if ($('#chkGuardAnswer2').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer2').val();
+    }
+    if ($('#chkGuardAnswer3').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer3').val();
+    }
+    if ($('#chkGuardAnswer4').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer4').val();
+    }
+    if ($('#chkGuardAnswer5').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer5').val();
+    }
+    if ($('#chkGuardAnswer6').is(':checked') == true) {
+        answerid = $('#txtGuardAnswer6').val();
+    }
+    var obj = {
+        Id: 0,
+        GuardId: $('#txtguardIdForTest').val(),
+        TrainingCourseId: $('#txtguardTestCourseId').val(),
+        TrainingTestQuestionsId: $('#txtGuardTestQuestionId').val(),
+        TrainingTestQuestionsAnswersId: answerid,
+        IsCorrect: false
+    }
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=SaveGuardAnswers',
+        data: { record: obj },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+
+        if (result.success) {
+            GetQuestionsForGuard();
+        } 
+    }).fail(function () {
+        console.log('error');
+    }).always(function () {
+
+    });
+});
+
+$('#btnRetryTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(1);
+    
+    location.reload();
+    
+});
+$('#btnExitTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(2);
+
+   
+
+});
+function deleteGuardAttendedQuestions(buttonmode) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=DeleteGuardAttendedQuestions',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            deleteGuardScores(buttonmode);
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function deleteGuardScores(buttonmode) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=DeleteGuardScores',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            if (buttonmode == 1) {
+                return;
+            }
+            else {
+
+                returnCoursetestStatustostart(); 
+            }
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function returnCoursetestStatustostart() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=ReturnCourseTestStatusTostart',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            window.close();
+            return;
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+
+//p5-Issue6-end

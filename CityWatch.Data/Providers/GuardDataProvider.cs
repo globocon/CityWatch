@@ -103,6 +103,7 @@ namespace CityWatch.Data.Providers
         List<TrainingTQNumbers> GetTestTQNumbers();
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
+        string GetCourseNameUsingCourseId(int id);
 
     }
 
@@ -1128,6 +1129,17 @@ namespace CityWatch.Data.Providers
 
 
 
+        }
+        public string GetCourseNameUsingCourseId(int id)
+        {
+            // Retrieve documents of the specified type
+            var hrsettingsid = _context.TrainingCourses
+
+                .Where(x => x.Id == id)
+                .FirstOrDefault().HRSettingsId;
+            var coursename = _context.HrSettings.Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
+
+            return coursename;
         }
 
     }
