@@ -2111,6 +2111,7 @@ if (gridClassroomLocation) {
 if ($('#hr_settings_fields_types').val() == '') {
   
     gridClassroomLocation.hide();
+    gridHrSettingswithCourseLibrary.hide();
 }
 
 
