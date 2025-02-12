@@ -793,9 +793,24 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetClientAccessByUserId(int userId)
         {
+           
             return new JsonResult(_viewDataService.GetUserClientSiteAccess(userId));
         }
+        public JsonResult OnGetClientAccessByUserIdThirdParty(int userId)
+        {
+            var ClientType1 = _viewDataService.GetUserClientSiteAccessDetails(userId);
+            foreach (var item in ClientType1)
+            {
 
+                var result = _userDataProvider.GetDomainDeatils(item.TypeId);
+                if (result != null)
+                {
+                    item.IsSubDomainEnabled = result.Enabled;
+                }
+            }
+            var ThirdPartyClientTypes = ClientType1.Where(x => x.IsSubDomainEnabled == true);
+            return new JsonResult(ThirdPartyClientTypes);
+        }
         public JsonResult OnGetHrSettingsLockedClientSites(int hrSttingsId)
         {
             return new JsonResult(_viewDataService.GetHrSettingsClientSiteLockStatus(hrSttingsId));
@@ -813,6 +828,28 @@ namespace CityWatch.Web.Pages.Admin
                     UserId = userId
                 }).ToList();
                 _userDataProvider.SaveUserClientSiteAccess(userId, clientSiteAccess);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+        public JsonResult OnPostClientAccessByUserIdThirdParty(int userId, int[] selectedSites)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var clientSiteAccess = selectedSites.Select(x => new UserClientSiteAccessThirdparty()
+                {
+                    ClientSiteId = x,
+                    UserId = userId
+                }).ToList();
+                _userDataProvider.SaveUserClientSiteAccessThirdParty(userId, clientSiteAccess);
             }
             catch (Exception ex)
             {

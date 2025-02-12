@@ -155,6 +155,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
         List<TrainingCourseCertificateRPL> GetCourseCertificateRPLUsingId(int id);
+        List<UserClientSiteAccessThirdparty> GetThirdPartyDetails(int UserID);
 
 
     }
@@ -1219,6 +1220,14 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.SubDomain.Where(x => x.Domain.Trim() == domain.Trim()).FirstOrDefault();
+
+
+
+        }
+        public List<UserClientSiteAccessThirdparty> GetThirdPartyDetails(int UserID)
+        {
+
+            return _context.UserClientSiteAccessThirdparty.Where(x => x.UserId == UserID).ToList();
 
 
 

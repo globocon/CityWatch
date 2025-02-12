@@ -19,6 +19,8 @@ namespace CityWatch.Data.Providers
         public SubDomain GetDomainDeatils(int typeId);
         List<HrSettingsLockedClientSites> GetHrSettingsLockedClientSites(int? hrSettingsId);
         void SaveHrSettingsLockedClientSites(int hrSettingsId, List<HrSettingsLockedClientSites> hrSettingsLockedClientSites);
+         void SaveUserClientSiteAccessThirdParty(int userId, List<UserClientSiteAccessThirdparty> userClientSiteAccess);
+         List<UserClientSiteAccessThirdparty> GetUserClientSiteAccessThirdparty(int? userId);
     }
     public class UserDataProvider : IUserDataProvider
     {
@@ -151,6 +153,16 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.User)
                 .ToList();
         }
+        public List<UserClientSiteAccessThirdparty> GetUserClientSiteAccessThirdparty(int? userId)
+        {
+            return _context.UserClientSiteAccessThirdparty
+                .Where(x => (!userId.HasValue || userId.HasValue && x.UserId == userId) && x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.User)
+                .ToList();
+        }
+
 
         public List<HrSettingsLockedClientSites> GetHrSettingsLockedClientSites(int? hrSettingsId)
         {
@@ -169,7 +181,13 @@ namespace CityWatch.Data.Providers
             _context.AddRange(userClientSiteAccess);
             _context.SaveChanges();
         }
-
+        public void SaveUserClientSiteAccessThirdParty(int userId, List<UserClientSiteAccessThirdparty> userClientSiteAccess)
+        {
+            var currentAccess = _context.UserClientSiteAccessThirdparty.Where(x => x.UserId == userId).ToList();
+            _context.RemoveRange(currentAccess);
+            _context.AddRange(userClientSiteAccess);
+            _context.SaveChanges();
+        }
 
         public void SaveHrSettingsLockedClientSites(int hrSettingsId, List<HrSettingsLockedClientSites> hrSettingsLockedClientSites)
         {
