@@ -2301,6 +2301,20 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //p5-Issue-20-Instructor-end
+        public JsonResult OnGetHRSettingsWithCourseLibrary()
+        {
+            var jresult = _configDataProvider.GetHRSettings()
+            .Select(z => HrDoumentViewModel.FromDataModel(z))
+            .OrderBy(x => x.GroupName)
+            .ThenBy(x => x.referenceNo)
+            .ThenBy(x => x.referenceNoAlphabetsName);
+            
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
+            var newjResult = jresult.Where(x => hrSettingsIdWithCourses.Contains(x.Id)).ToList();
+            return new JsonResult(newjResult);
+
+            //return new JsonResult(_configDataProvider.GetHRSettings());
+        }
     }
 
 
