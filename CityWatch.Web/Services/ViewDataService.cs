@@ -165,6 +165,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
         List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
+        public List<ClientSiteAccess> GetUserClientSiteAccessDetails(int userId);
 
 
     }
@@ -543,15 +544,18 @@ namespace CityWatch.Web.Services
             var results = new List<object>();
             var users = _userDataProvider.GetUsers();
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
+            var UserThirdParty = _userDataProvider.GetUserClientSiteAccessThirdparty(null);
             foreach (var user in users)
             {
                 var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
+                var currUserAccessThirdParty = UserThirdParty.Where(x => x.UserId == user.Id).ToList();
                 results.Add(new
                 {
                     user.Id,
                     user.UserName,
                     ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
-                    ClientSiteCsv = GetFormattedClientSites(currUserAccess)
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = currUserAccessThirdParty.Count > 0 
                 });
             }
             var filteredResults = results;
@@ -622,7 +626,7 @@ namespace CityWatch.Web.Services
             var results = new List<object>();
             var userAccess = _userDataProvider.GetUserClientSiteAccess(userId);
             var clientSitesUserAccess = userAccess.Select(x => x.ClientSiteId);
-            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x => x.ClientType.Name);
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x =>x.ClientType.Name);
 
             foreach (var item in allClientSitesGrouped)
             {
@@ -640,8 +644,45 @@ namespace CityWatch.Web.Services
 
             return results;
         }
+        public List<ClientSiteAccess> GetUserClientSiteAccessDetails(int userId)
+        {
+            var results = new List<ClientSiteAccess>();
+            var userAccess = _userDataProvider.GetUserClientSiteAccessThirdparty(userId);
+            var clientSitesUserAccess = userAccess.Select(x => x.ClientSiteId);
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null)
+                .GroupBy(x => new { x.ClientType.Name, x.ClientType.Id });
 
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new ClientSiteAccess
+                {
+                    Name = item.Key.Name,
+                    TypeId = item.Key.Id,
+                    IsSubDomainEnabled = false,  // Default to false
+                    ClientSitesNew = item.Select(x => new ClientSiteNew
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Checked = clientSitesUserAccess.Contains(x.Id)
+                    }).ToList()
+                });
+            }
 
+            return results;
+        }
+        public class ClientSiteAccess
+        {
+            public string Name { get; set; }
+            public int TypeId { get; set; }
+            public bool IsSubDomainEnabled { get; set; } = false; // Default to false
+            public List<ClientSiteNew> ClientSitesNew { get; set; }
+        }
+        public class ClientSiteNew
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public bool Checked { get; set; }
+        }
         public List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId)
         {
             var results = new List<object>();
