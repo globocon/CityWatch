@@ -6554,7 +6554,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': token }
             }).done(function (DescVal) {
                 if (DescVal.hrBanEdit == true) {
-                    if (confirm("This can't be selected")) {
+                    if (confirm("This description is restricted and cannot be added.")) {
                         $('#Description').val('');
                     }
 
@@ -6585,7 +6585,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': token }
             }).done(function (DescVal) {
                 if (DescVal.hrBanEdit == true) {
-                    if (confirm("This can't be selected")) {
+                    if (confirm("This description is restricted and cannot be added.")) {
                         $('#Description').val('');
                     }
 
@@ -6918,7 +6918,7 @@ $(function () {
     $('#btn_save_guard_compliancelicense').on('click', function () {
 
         clearGuardValidationSummary('compliancelicanseValidationSummary');
-
+        let selectedItem = $('.es-visible').val();
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
         var HrVal = $('#HRGroup').val();
         var DescVal = $('#Description').val();
