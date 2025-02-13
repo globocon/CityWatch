@@ -4954,6 +4954,64 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
+let gridHrSettingswithCourseLibrary;
+gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettingsWithCourseLibrary',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+    showHiddenColumnsAsDetails: false,
+    primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'groupName', width: '10%' }, // Show the HR Group column
+        { field: 'referenceNo', width: '10%' },
+        { field: 'description', width: '30%' },
+        { field: 'states' },
+        { field: 'clientSitesSummary' },
+        { width: '5%', renderer: hrgroupLockButtonRenderer },
+        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
+
+        { width: '10%', renderer: hrgroupButtonRenderer },
+    ],
+    dataBound: function (e, records, totalRecords) {
+        var tbody = $(e.target).find('tbody');
+        var rows = tbody.find('tr');
+
+        var lastGroupValue = null;
+
+        rows.each(function (index, row) {
+            var expandbutton
+
+            var currentGroupValue = $(row).find('td:eq(2)').text();
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 9).text(currentGroupValue));
+                headerRow.css('background-color', '#CCCCCC');
+                $(row).before(headerRow);
+            }
+        });
+    },
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr_settings thead tr th:last')
+            .prev()
+            .prev()// Select the column before the last
+            .addClass('text-center')
+            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+        $('#tbl_hr_settings thead tr th:last')
+            .prev()
+
+            .addClass('text-center')
+            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
+        $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 
 function hrgroupLockButtonRenderer(value, record) {
     if (record.hrlock) {
@@ -5341,6 +5399,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -5357,6 +5416,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -5372,6 +5432,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -5385,6 +5446,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -5409,6 +5471,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
         gridClassroomLocation.hide();
+        gridHrSettingswithCourseLibrary.hide();
         $('#add_location').hide();
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
@@ -5435,6 +5498,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
 
@@ -5449,12 +5513,33 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.show();
         $('#add_location').show();
+        gridHrSettingswithCourseLibrary.hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 8) {
+        
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
+        
+        gridHrSettingswithCourseLibrary.show();
+        gridHrSettingswithCourseLibrary.clear();
+        gridHrSettingswithCourseLibrary.reload();
+        
     }
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
         gridLanguage.hide();
         gridClassroomLocation.hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -5564,7 +5649,7 @@ $('#add_hr_settings').on('click', function () {
         alert('Please select a field type to update');
         return;
     }
-    if (selFieldTypeId == 1) {
+    if (selFieldTypeId == 1 || selFieldTypeId==8) {
         $('#list_hrGroups').val('');
         $('#list_ReferenceNoNumber').val('');
         $('#list_ReferenceNoAlphabet').val('');
@@ -5832,6 +5917,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridLicenseTypes.hide();
     gridCriticalDocument.hide();
     gridLanguage.hide();
+    gridHrSettingswithCourseLibrary.hide();
    
 }
 
@@ -6113,6 +6199,8 @@ $('#btn_save_hr_settings').on('click', function () {
                 $('#hrSettingsModal').modal('hide');
                 gridHrSettings.clear();
                 gridHrSettings.reload();
+                gridHrSettingswithCourseLibrary.clear();
+                gridHrSettingswithCourseLibrary.reload();
             } else {
                 displayValidationSummaryHrSettings(result.errors);
             }

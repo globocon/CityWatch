@@ -241,7 +241,7 @@ namespace CityWatch.Web.Helpers
                 else
                 {
                     menuHtml.AppendLine("<div>");
-                    menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" id=""OtherAdminsAudtiLogAccessButton"" class=""nav-link py-0""  hidden><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
+                    menuHtml.AppendLine(@"<a href=""#"" id=""OtherAdminsAudtiLogAccessButton"" class=""nav-link py-0"" ><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
                     menuHtml.AppendLine("</div>");
                 }
                 

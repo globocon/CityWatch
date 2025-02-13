@@ -9,12 +9,12 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.AuditSiteLogs;
 }
 
-@section PageHeader{
-    <style>
-        div.dataTables_length {
-            margin-right: 1em;
-        }
-    </style>
+@section PageHeader {
+            <style>
+                div.dataTables_length {
+                margin-right: 1em;
+                }
+            </style>
 }
 
 
@@ -22,79 +22,102 @@
 <div id="loader"></div>
 <div class="full-width">
     <ul class="nav nav-tabs" role="tablist">
-        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminThirdParty)
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminThirdParty)
         {
-            <li class="nav-item">
-                <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
-            </li>
-            <li class="nav-item">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
+                    </li>
+                    <li class="nav-item">
 
-                <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
-            </li>
-            <li class="nav-item">
+                        <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
+                    </li>
 
-                <a class="nav-link" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+                        <li class="nav-item">
 
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
-        </li>
+                        <a class="nav-link" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
+                         </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                </li>
         }
-        else
+        else if (AuthUserHelper.IsAdminAuditor)
         {
-            if(AuthUserHelper.IsAdminAuditor)
-            {
-                <li class="nav-item">
 
-                    <a class="nav-link active" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
-                </li>
-            }
-            
+                            <li class="nav-item">
+
+                                <a class="nav-link active" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                            </li>
+
+
+        }
+        else if (AuthUserHelper.IsAdminInvestigator)
+        {
+                 <li class="nav-item">
+                            <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
+                        </li>
+                        <li class="nav-item">
+
+                            <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+
+                        </li>
+                       @*  <li class="nav-item">
+                            <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                    </li> *@
+
         }
     </ul>
     <div class="tab-content">
         @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminThirdParty)
         {
-        <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
-            <partial name="_DailyGuardAuditSiteLog" model="Model"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
-            <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
-            <partial name="_FusionGuardSiteLog"></partial> 
-        </div>
-        <div class="tab-pane fade py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
-            <partial name="_TimesheetBulkAuditSiteLog"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="downloadLog" role="tabpanel" aria-labelledby="download-key-log-tab">
-            <partial name="_DownloadAuditSiteLog"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
-            <partial name="_VisitorProfileAuditSiteLog"></partial>
-            </div>
-        }
-        else
-        {
-            if(AuthUserHelper.IsAdminAuditor)
-            {
-                <div class="tab-pane fade show active py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
+                <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
+                    <partial name="_DailyGuardAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
+                    <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
+                    <partial name="_FusionGuardSiteLog"></partial> 
+                </div>
+                <div class="tab-pane fade py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
                     <partial name="_TimesheetBulkAuditSiteLog"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="downloadLog" role="tabpanel" aria-labelledby="download-key-log-tab">
+                    <partial name="_DownloadAuditSiteLog"></partial>
                 </div>
                 <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
                     <partial name="_VisitorProfileAuditSiteLog"></partial>
-                </div>
+                    </div>
+        }
+        else
+        {
+            if (AuthUserHelper.IsAdminAuditor)
+            {
+                                <div class="tab-pane fade show active py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
+                                    <partial name="_TimesheetBulkAuditSiteLog"></partial>
+                                </div>
+                                <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
+                                    <partial name="_VisitorProfileAuditSiteLog"></partial>
+                                </div>
             }
-            
+
         }
     </div>
 </div>
@@ -209,7 +232,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                
+
                 <div class="row m-0">
                     <div class="col-md-12">
                         <table class="table table-bordered table-sm" width="100%" id="vehicle_key_log_audit_history">

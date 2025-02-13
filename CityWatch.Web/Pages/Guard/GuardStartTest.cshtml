@@ -1,0 +1,350 @@
+﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using CityWatch.Data.Helpers;
+@using CityWatch.Data.Services;
+@using CityWatch.Web.Services
+@model CityWatch.Web.Pages.Guard.GuardStartTestModel
+@inject IGuardDataProvider _guardDataProvider;
+@inject IGuardLogDataProvider _guardlogDataProvider;
+@inject IViewDataService viewDataServiceNew;
+@{
+    Layout = "_LayoutTraining";
+}
+<input type="hidden" id="txtguardIdForTest" asp-for="@Model.GuardId" />
+<input type="hidden" id="txtguardCourseStatusId" asp-for="@Model.GuardTrainingAssessmentId" />
+<input type="hidden" id="txtguardTestCourseId" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourseId" />
+<input type="hidden" id="txtCourseDocsPath" asp-for="@Model.CourseDocsPath" />
+<input type="hidden" id="txthrreferencenumber" asp-for="@Model.hrreferencenumber" />
+<input type="hidden" id="txtCoursefilename" asp-for="@Model.Coursefilename" />
+<input type="hidden" id="txtGuardHRSettings" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.HRSettingsId" />
+<input type="hidden" id="txtGuardTQNumberId" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.TQNumberId" />
+
+
+<div class="card" id="cardFrontPage">
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5 text-center">
+                <h3>ONLINE EXAM </h3>
+                <h5>@_guardDataProvider.GetCourseNameUsingCourseId(@Model.GuardTrainingAndAssessment.TrainingCourseId)</h5>
+            </div>
+            
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            @* <div class="row mt-2">
+                <div class="col-md-6">
+                    <label >Classroom Location</label>
+                    <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+                </div>
+            </div> *@
+            <div class="form-row">
+                <div class="col-md-8">
+                    <form id="frm_training_frontpage">
+                      
+                        <div class="form-group row m-0 mb-3">
+                            <label for="ddlTestClassroomLocation" class="col-sm-3 col-form-label">Classroom Location</label>
+                            <div class="col-sm-6">
+                                <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            
+                            <div class="col-sm-10">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 18px; color: red;">
+                                        Please concentrate and respect the course. Turn your phone and TV off. You should be taking notes as you progress through the course. There will be a multiple choice test at the end of the course.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <label for="estimatedCourseDuration" class="col-sm-7 col-form-label">Estimated time for the material @Model.TrainingTestQuestionSettings.CourseDuration.Name</label>
+                            
+                        </div>
+                        
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <form id="frm_training_frontpage_for_startAssessment_button">
+                        <div class="form-group row m-0 mb-3">
+                           <img src="~/images/GuardTest.jpg" alt="cws logo" height="150px"/>
+
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <button class="btn btn-success col-md-7" id="btnStartCourse">Start</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" id="cardCoursePdf" hidden>
+    <input type="hidden" id="txtCourseTimerStart" asp-for="@Model.TrainingTestQuestionSettings.CourseDuration.Name" />
+    <span id="courseTimerStart" hidden></span>
+
+    <canvas id="canvasCousePdf" ></canvas>
+        <button class="btn" id="coursePdfPrev" hidden>Prev</button>
+        <button class="btn" id="coursePdfNext" hidden>Next</button>
+ 
+</div>
+<div class="card" id="cardTestFrontPage" hidden>
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5 text-center">
+                <h3>ONLINE EXAM </h3>
+                <h5>@_guardDataProvider.GetCourseNameUsingCourseId(@Model.GuardTrainingAndAssessment.TrainingCourseId)</h5>
+            </div>
+
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            @* <div class="row mt-2">
+            <div class="col-md-6">
+            <label >Classroom Location</label>
+            <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+            </div>
+            </div> *@
+            <div class="form-row">
+                <div class="col-md-8">
+                    <form id="frm_training_test_frontpage">
+
+                       
+                        <div class="form-group row m-0 mb-3">
+
+                            <div class="col-sm-10">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 18px; color: red;">
+                                        The test is about to begin. Do not take this test for anyone else.Please concentrate and turn your phone and TV off. You can refere to the notes taken during the course. Answers are all multiple choice.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <label for="estimatedTestDuration" class="col-sm-7 col-form-label">Estimated time for the test @Model.TrainingTestQuestionSettings.TestDuration.Name</label>
+
+                        </div>
+
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <form id="frm_training_test_frontpage_for_startAssessment_button">
+                        <div class="form-group row m-0 mb-3">
+                            <img src="~/images/GuardTest.jpg" alt="cws logo" height="150px" />
+
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+                            <button class="btn btn-success col-md-7" id="btnStartTest">Start</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-12 text-right" id="divTestDurationTimer" hidden>
+    <input type="hidden" id="txtTestTimerStart" asp-for="@Model.TrainingTestQuestionSettings.TestDuration.Name" />
+    <span id="testTimerStart" style="color:white;" ></span>
+</div>
+<div class="card" id="cardTestPage" hidden>
+
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            <div class="form-row">
+                <div class="col-md-12">
+                    <form id="frm_training_test_frontpage">
+
+
+                        <div class="form-group row m-0 mb-3">
+
+                            <div class="col-sm-12">
+                                <div class="container p-0 justify-content-center" style="display:flex;align-items: center;font-size:11px;color:black">
+
+                                    <label id="QuestionNo" class="col-form-label" style="font-size: 20px;font-weight:bold;margin:0; padding-right: 15px;"></label>
+                                    
+                                    <p style="font-size: 20px;font-weight:bold;margin:0;" id="GuardTestQuestions">
+                                        
+                                        
+                                    </p>
+                                    <input type="hidden" id="txtGuardTestQuestionId" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" id="GuardAnswersdivision">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-3">
+                                <div class="form-group row justify-content-center">
+                                    <input type="checkbox" id="chkGuardAnswer1" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label>
+                                    
+                                    <input type="hidden" id="txtGuardAnswer1" />
+                                </div>
+                                <div class="form-group row justify-content-center">
+                                    <input type="checkbox" id="chkGuardAnswer3" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer3" style="font-size: 18px;" hidden></label>
+                                    
+                                    <input type="hidden" id="txtGuardAnswer3" />
+                                </div>
+                                <div class="form-group row justify-content-center">
+                                    <input type="checkbox" id="chkGuardAnswer5" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer5" style="font-size: 18px;" hidden></label>
+                                    
+                                    <input type="hidden" id="txtGuardAnswer5" />
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group row justify-content-center">
+                                   
+                                    <input type="checkbox" id="chkGuardAnswer2" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer2" style="font-size: 18px;" hidden></label>
+                                    <input type="hidden" id="txtGuardAnswer2" />
+                                </div>
+                                <div class="form-group rowjustify-content-center">
+                                    
+                                    <input type="checkbox" id="chkGuardAnswer4" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer4" style="font-size: 18px;" hidden></label>
+                                    <input type="hidden" id="txtGuardAnswer4" />
+                                </div>
+                                <div class="form-group row justify-content-center">
+                                    
+                                    <input type="checkbox" id="chkGuardAnswer1" hidden />
+                                    <label class=" col-form-label ml-2" id="lblGuardAnswer6" style="font-size: 18px;" hidden></label>
+                                    <input type="hidden" id="txtGuardAnswer1" />
+                                </div>
+                            </div>
+                            <div class="col-sm-3"></div>
+
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-end">
+            <button class="btn btn-success" id="btnSubmitTest">Submit</button>
+        </div>
+    </div>
+</div>
+<div class="card" id="cardResultPage" hidden>
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5 text-center">
+                <h3>RESULTS </h3>
+                
+            </div>
+
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            @* <div class="row mt-2">
+            <div class="col-md-6">
+            <label >Classroom Location</label>
+            <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+            </div>
+            </div> *@
+            <div class="form-row">
+                <div class="col-md-6">
+                    <form id="frm_training_result_frontpage">
+
+
+                        <div class="form-group row m-0 mb-3" style="font-size:15px">
+
+                            <div class="col-sm-10">
+                                <label class="col-form-label col-sm-5">Total Questions:</label>
+                                <label class="col-form-label" id="lblTotalQuestionscount"></label>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" style="font-size:15px">
+
+                            <div class="col-sm-10">
+                                <label class="col-form-label col-sm-5">Correct Questions:</label>
+                                <label class="col-form-label" id="lblCorrectQuestionscount"></label>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" style="font-size:15px">
+
+                            <div class="col-sm-10">
+                                <label class="col-form-label col-sm-5">Score: </label>
+                                <label class="col-form-label" id="lblTotalScore"></label>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" style="font-size:15px">
+
+                            <div class="col-sm-10">
+                                <label class="col-form-label col-sm-5">Attempts</label>
+                                <label class="col-form-label" id="lblAttempts"></label>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3" style="font-size:13px">
+
+                            <div class="col-sm-10">
+                                <label class="col-form-label col-sm-5">Duration</label>
+                                <label class="col-form-label" id="lblDuration"></label>
+                            </div>
+                        </div>
+                   
+
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <form id="frm_result_message_button">
+                        <div class="form-group row m-0 mb-3 ">
+
+                            <div class="col-sm-10 d-flex justify-content-center">
+                                <div class="container p-0 d-flex align-items-center" style="font-size:11px; color:black; gap:10px;">
+                                    <p style="font-size: 20px; font-weight:bold; margin: 0;" id="resultHeading"></p>
+                                    <i class="fa fa-trophy" style="color: gold; font-size: 24px; display: none;" id="ResultIconTrophy" hidden></i>
+                                    <i class="fa fa-times-circle" style="color: red; font-size: 24px;" id="ResultIconCross" hidden></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row m-0 mb-3">
+
+                            <div class="col-sm-10">
+                                
+                                <div class="container p-0" style="display:flex;align-items: center;font-size:11px;color:black">
+
+
+
+                                    <p style="font-size: 18px; color: black;" id="ResultMessage">
+                                       
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                            <div class="form-group row m-0 mb-3">
+                                <button class="btn btn-success col-md-4" id="btnContinueTest" hidden>Continue</button>
+                            <button class="btn btn-warning col-md-2 mr-5" id="btnRetryTest" hidden>Retry</button>
+                            <button class="btn btn-primary col-md-2" id="btnExitTest" hidden>Exit</button>
+                            </div>
+
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center" style="color:white;">TRAINING & ASSESSMENT</h3>
+    <h3 class="text-center" style="color:white;"><label id="QuestionCounts" class="col-form-label"></label></h3>
+}
+
+ 

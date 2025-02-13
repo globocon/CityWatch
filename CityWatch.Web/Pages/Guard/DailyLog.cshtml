@@ -968,11 +968,12 @@ else
                                         <div class="spinner-border spinner-border-sm pl-2 d-none" id="spinner" role="status">
                                             <span class="sr-only">Loading...</span>
                                         </div>
-                                    </div>
+                                    </div>                                    
                                     <button type="button" class="btn btn-primary" id="btnGuardHrUpdate" title="Get Access to HR documents">
                                         <i class="fa fa-sign-in mr-2"></i>
                                         <span class="d-none d-md-inline-flex"></span>
                                     </button>
+                                    <input type="hidden" id="hidden_guardKey" value="@Model.GuardLog.ClientSiteLogBook.ClientSite.Name" />
                                 </div>
                             </div>
                         </div>

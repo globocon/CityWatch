@@ -1309,6 +1309,26 @@ namespace CityWatch.Web.Pages.Admin
                     }
 
 
+                    if (guard.IsAdminAuditorAccess)
+                    {
+                        AuthUserHelper.IsAdminAuditor = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminAuditor = false;
+                    }
+
+                    if(guard.IsAdminInvestigatorAccess)
+                    {
+                        AuthUserHelper.IsAdminInvestigator = true;
+
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminInvestigator = false;
+                    }
+
+
                     //code to check the SecurityNo of Type Patrols&Alarm Statics
                     if (type == "Patrols")
                     {
@@ -1487,6 +1507,10 @@ namespace CityWatch.Web.Pages.Admin
                         }
 
 
+
+
+
+
                         //if (AuthUserHelper.LoggedInUserId != null)
                         //{
                         //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
@@ -1496,6 +1520,39 @@ namespace CityWatch.Web.Pages.Admin
                     //p1-203 Admin User Profile-end
                     /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
 
+
+                    if (type == "Auditlog")
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsAdminGlobal ||guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+
+
+
+
+
+                    }
                 }
                 else
                 {
@@ -2052,7 +2109,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         
-        public JsonResult OnPostResetGaurdHrPin(int guardId)
+        public JsonResult OnPostResetGaurdHrPin(int guardId,string siteName )
         {
             var message = string.Empty;
             var success = false;
@@ -2062,7 +2119,7 @@ namespace CityWatch.Web.Pages.Admin
             if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
             {
                 // Generate email body and send email
-                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin);
+                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin, siteName);
                 SendEmailNew(emailBody, guard.Email);
 
                 // Update message
@@ -2140,7 +2197,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-        public string GetPasswordResetEmail(string userName, string temporaryPassword)
+        public string GetPasswordResetEmail(string userName, string temporaryPassword,string siteName)
         {
             var sb = new StringBuilder();
 
@@ -2195,6 +2252,7 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine("    </div>");
             sb.AppendLine($"    <p>Hi {userName},</p>");
             sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
+            sb.AppendLine($"    <p>Logged in Site: <span class=\"temporary-password\">{siteName}</span></p>");
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
             sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} C4i System. All rights reserved.</p>");
@@ -2251,6 +2309,20 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //p5-Issue-20-Instructor-end
+        public JsonResult OnGetHRSettingsWithCourseLibrary()
+        {
+            var jresult = _configDataProvider.GetHRSettings()
+            .Select(z => HrDoumentViewModel.FromDataModel(z))
+            .OrderBy(x => x.GroupName)
+            .ThenBy(x => x.referenceNo)
+            .ThenBy(x => x.referenceNoAlphabetsName);
+            
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
+            var newjResult = jresult.Where(x => hrSettingsIdWithCourses.Contains(x.Id)).ToList();
+            return new JsonResult(newjResult);
+
+            //return new JsonResult(_configDataProvider.GetHRSettings());
+        }
     }
 
 

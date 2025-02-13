@@ -20,6 +20,8 @@ namespace CityWatch.Data.Models
         Lote = 6,
         [Display(Name = "ClassRoom Location")]
         ClassroomLocation = 7,
+        [Display(Name = "HR Groups - Course Library Only")]
+        HRGroupsCourseLibrary = 8,
     }
     public enum HrCriticalType
     {

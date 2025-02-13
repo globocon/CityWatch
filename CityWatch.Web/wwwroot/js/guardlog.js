@@ -578,10 +578,10 @@ $(function () {
                         $('#LoginConformationBtnC4iSettingsThirdParty').attr('hidden', false);
 
                     if (result.guard.isAdminGlobal || result.guard.isAdminInvestigatorAccess || result.guard.isAdminThirdPartyAccess) {
-                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
+                        //$('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
                     }
                     else {
-                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
+                        //$('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
                     }
 
                 }
@@ -4757,6 +4757,7 @@ $(function () {
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
             { data: 'loginDate', visible: false },
+            { data: 'isTerminated', visible: false },
            
         { data: 'gender', width: "5%" },
         {
@@ -4790,7 +4791,7 @@ $(function () {
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
             { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-
+           
 
         {
             targets: -1,
@@ -5092,6 +5093,10 @@ $(function () {
     //    });
     //});
 
+    $('#cbIsActive').on('change', function () {
+        $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
+    });
+
     $('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
         resetGuardDetailsModal();
         $('.btn-add-guard-addl-details').show();
@@ -5121,6 +5126,11 @@ $(function () {
         $('#Guard_IsRCBypass').val(data.isRCBypass);
         $('#cbIsRCBypass').prop('checked', data.isRCBypass);
         $('#Guard_Gender').val(data.gender);
+        /*$('#Guard_Terminated').val(data.isTerminated);*/
+        let isTerminated = data.isTerminated ? "true" : "false"; // Convert boolean to string
+        $('#Guard_Terminated').val(isTerminated); //
+
+        $('#Guard_Terminated').prop('disabled', data.isActive);
         //p1-224 RC Bypass For HR -end
         // ;
         var selectedValues = [];
@@ -5979,6 +5989,7 @@ $(function () {
         $('#Guard_Gender').val('');
         //p1-224 RC Bypass For HR -end
         $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $('#Guard_Terminated').val('');
     }
 
     $('#btn_save_guard').on('click', function () {
@@ -7302,7 +7313,64 @@ $(function () {
         $("#modelGuardLoginAuditSite").modal("show");
         return false;
     });
-    
+
+    $("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+        $('#txt_securityLicenseNoAuditSiteLogs').val('');
+        $("#modelGuardLoginAditLog").modal("show");
+        return false;
+    });
+
+
+    $('#btnGuardLoginAuditSiteLogs').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLogs').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Auditlog'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', result.successMessage);
+                    }
+                }
+            });
+
+
+           
+
+
+
+        }
+    });
+
+
+
     /* p1-203 Admin User Profile -start */
     
     //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {

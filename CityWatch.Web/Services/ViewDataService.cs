@@ -2121,13 +2121,16 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-            items.Add(new SelectListItem("Select", "", true));
+            //items.Add(new SelectListItem("Select", "", true));
             //}
 
             foreach (var item in hrGroups)
             {
-                
-               
+
+                if (item.Id == 1) {
+                    items.Add(new SelectListItem(item.Location, item.Id.ToString(),true));
+                }
+                else
                     items.Add(new SelectListItem(item.Location, item.Id.ToString()));
                 
             }
