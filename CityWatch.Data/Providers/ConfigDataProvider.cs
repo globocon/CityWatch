@@ -168,6 +168,7 @@ namespace CityWatch.Data.Providers
         void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId);
         void DeleteGuardScores(int guardId, int trainingCourseId);
         GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId);
+        public SubDomain GetSubDomainID(int? TypeID);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1230,6 +1231,14 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.SubDomain.Where(x => x.Domain.Trim() == domain.Trim()).FirstOrDefault();
+
+
+
+        }
+        public SubDomain GetSubDomainID(int? TypeID)
+        {
+
+            return _context.SubDomain.Where(x => x.TypeId == TypeID).FirstOrDefault();
 
 
 

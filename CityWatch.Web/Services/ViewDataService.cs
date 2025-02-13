@@ -165,6 +165,10 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
         List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
+        List<ClientType> GetUserClientTypesHavingAccessThird(int? userId);
+        public UserClientSiteAccess GetUserClientSiteAccessNew(int userId);
+
+
 
 
     }
@@ -545,14 +549,16 @@ namespace CityWatch.Web.Services
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
             foreach (var user in users)
             {
+                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
                 var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
                 results.Add(new
                 {
                     user.Id,
                     user.UserName,
                     ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
-                    ClientSiteCsv = GetFormattedClientSites(currUserAccess)
-                });
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
+            });
             }
             var filteredResults = results;
 
@@ -640,7 +646,10 @@ namespace CityWatch.Web.Services
 
             return results;
         }
-
+        public UserClientSiteAccess GetUserClientSiteAccessNew(int userId)
+        {
+            return _userDataProvider.GetUserClientSiteAccessThirdParty(userId);
+        }
 
         public List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId)
         {
@@ -677,7 +686,27 @@ namespace CityWatch.Web.Services
             return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
         }
         //To get the count of ClientType start
-        public int GetClientTypeCount(int? typeId)
+        public List<ClientType> GetUserClientTypesHavingAccessThird(int? userId)
+        {
+            var results = new List<ClientType>();
+            
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null)
+                .GroupBy(x => new { x.ClientType.Name, x.ClientType.Id });
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new ClientType
+                {
+                    Name = item.Key.Name,
+                    Id = item.Key.Id,
+                    IsSubDomainEnabled = false,  // Default to false
+                    
+                });
+            }
+
+            return results;
+        }
+            public int GetClientTypeCount(int? typeId)
         {
             var result = _clientDataProvider.GetClientSite(typeId);
             return result;

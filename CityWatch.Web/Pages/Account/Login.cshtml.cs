@@ -52,7 +52,9 @@ namespace CityWatch.Web.Pages
             {
                 SignInUser(user);
                 _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-                var subDomainRedirect = GetClientDetailsUsingSubDomain();
+                var subDomainRedirect = GetClientDetailsUsingSubDomain(user.Id);
+                var IsthirdParty = IsThirdParty(user.Id);
+                
                 // Check if the subDomainRedirect has a value and update the returnUrl accordingly
                 if (!string.IsNullOrEmpty(subDomainRedirect))
                 {
@@ -60,7 +62,15 @@ namespace CityWatch.Web.Pages
                 }
                 else
                 {
-                    return Redirect(Url.Page(returnUrl));
+                    if (IsthirdParty == true)
+                    {
+                        return Redirect(Url.Page(returnUrl));
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+                    }
+                    
                 }
 
                 
@@ -92,7 +102,7 @@ namespace CityWatch.Web.Pages
             HttpContext.Session.Remove("GuardId");
         }
 
-        public string GetClientDetailsUsingSubDomain()
+        public string GetClientDetailsUsingSubDomain(int userid)
         {
             var host = HttpContext.Request.Host.Host;
             var clientName = string.Empty;
@@ -123,6 +133,15 @@ namespace CityWatch.Web.Pages
                     clientName.Trim().ToLower() != "localhost"
                 )
                 {
+                    var IsthirdParty = IsThirdParty(userid);
+                    if (IsthirdParty == true)
+                    {
+                        url = "/Guard/Login?t=gl";
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+                    }
                     var domain = _dataProvider.GetSubDomainDetails(clientName);
                     if (domain != null)
                     {
@@ -136,6 +155,25 @@ namespace CityWatch.Web.Pages
             }
 
             return url;
+        }
+
+        public bool IsThirdParty(int userid)
+        {
+            var IsThirtPartyCheck = false;
+            var IsThirdparty = _userAuthentication.GetUserClientSiteAccessThirdParty(userid);
+            if (IsThirdparty != null && IsThirdparty.ThirdPartyID != null && IsThirdparty.ThirdPartyID != 0)
+            {
+                var DomainThirdParty = _dataProvider.GetSubDomainID(IsThirdparty.ThirdPartyID);
+                if (DomainThirdParty != null)
+                {
+                    IsThirtPartyCheck = true;
+                }
+                else
+                {
+                    IsThirtPartyCheck = false;
+                }
+            }
+            return IsThirtPartyCheck;
         }
     }
 
