@@ -699,7 +699,14 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
         {
-            return new JsonResult(_guardDataProvider.GetGuardLicensesandcompliance(guardId));
+            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
+            if(AuthUserHelper.IsAdminUserLoggedIn){
+                foreach (var guard in GuardDetails)
+                {
+                    guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
+                }
+            }
+            return new JsonResult(GuardDetails);
         }
 
         public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
