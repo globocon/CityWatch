@@ -4999,17 +4999,17 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
     },
     initialized: function (e) {
         // Optionally, you can modify the appearance or behavior after the grid is initialized
-        $('#tbl_hr_settings thead tr th:last')
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last')
             .prev()
             .prev()// Select the column before the last
             .addClass('text-center')
             .html('<i class="fa fa-lock" aria-hidden="true"></i>');
-        $('#tbl_hr_settings thead tr th:last')
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last')
             .prev()
 
             .addClass('text-center')
             .html('<i class="fa fa-ban" aria-hidden="true"></i>');
-        $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
 
@@ -5133,6 +5133,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function () {
         gridHrSettings.reload();
+        gridHrSettingswithCourseLibrary.reload();
         //showStatusNotification(true, 'Saved successfully');
     }).fail(function () {
         console.log('error');
@@ -5199,12 +5200,155 @@ $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
             }
         }).done(function () {
             gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
         }).always(function () {
             $('#loader').hide();
         });
     }
 });
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnLock', function () {
+    $('#lockHRRcord').prop('checked', false);
+    const userId = $(this).attr('data-doc-id');
+    const lockStatus = $(this).attr('data-lock-status');
+    $('#user-access-for-idlock').val($(this).attr('data-doc-id'));
+    if (lockStatus === '1') {
+        $('#lockHRRcord').prop('checked', true);
+    }
+    else {
+        $('#lockHRRcord').prop('checked', false);
+    }
 
+    if (ucaTreeLock === undefined) {
+
+
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+    else {
+
+        ucaTreeLock.destroy(); // Destroys and removes the current tree
+
+        // Clear the container's inner HTML to remove any tree remnants
+        $('#ucaTreeViewlock').empty();
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+
+    ucaTreeLock.uncheckAll();
+    ucaTreeLock.reload({ hrSttingsId: userId });
+    $('#loader').show();
+    $('#user-client-access-modal-lock').modal('show');
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnBan', function () {
+    const userId = $(this).attr('data-doc-id');
+    let enableStatus = 0;
+    let Status = $(this).attr('data-ban-status');
+    if (Status == 1) {
+        enableStatus = 0
+    }
+    else {
+        enableStatus = 1;
+    }
+
+
+    $.ajax({
+        url: '/Admin/Settings?handler=HrSettingsBanEdit',
+        data: {
+            hrSttingsId: userId,
+            enableStatus: enableStatus
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        gridHrSettingswithCourseLibrary.reload();
+        //showStatusNotification(true, 'Saved successfully');
+    }).fail(function () {
+        console.log('error');
+    });
+
+
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', function () {
+
+
+    $('#loader').show();
+    $('#hrSettingsModal').modal('show');
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'));
+    $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+    $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+    $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+    $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        clearCriticalModalHrDoc();
+        var selectedValues = [];
+        $.each(data.hrSettingsClientStates, function (index, item2) {
+            selectedValues.push(item2.state);
+        });
+
+        $("#HrState").multiselect();
+        $("#HrState").val(selectedValues);
+        $("#HrState").multiselect("refresh");
+        $("#clientTypeNameDocHrDoc").multiselect("refresh");
+
+        $.each(data.hrSettingsClientSites, function (index, item) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCountHrDoc();
+
+        });
+        $("#clientSitesDocHrDoc").multiselect("refresh");
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+
+
+
+
+
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', function () {
+    // var data = keyVehicleLog.row($(this).parents('tr')).data();
+    if (confirm('Are you sure want to delete this  entry?')) {
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            data: { 'id': $(this).attr('data-doc-id') },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function () {
+            gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+});
 
 /*Lock Start*/
 
@@ -5232,6 +5376,7 @@ $('#btnSaveUserAccesslock').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
             gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
             //showStatusNotification(true, 'Saved successfully');
         }).fail(function () {
             console.log('error');
