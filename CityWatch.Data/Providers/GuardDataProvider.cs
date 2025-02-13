@@ -209,6 +209,7 @@ namespace CityWatch.Data.Providers
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
                 guard.DateEnrolled = DateTime.Today;
+                guard.IsTerminated = false;
                 _context.Guards.Add(guard);
             }
             else
@@ -250,6 +251,8 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsAdminThirdPartyAccess = guard.IsAdminThirdPartyAccess;
                 updateGuard.IsRCHRAccess = guard.IsRCHRAccess;
                 updateGuard.IsRCLiteAccess = guard.IsRCLiteAccess;
+                updateGuard.IsTerminated = guard.IsTerminated;
+
             }
 
             _context.SaveChanges();
@@ -353,7 +356,7 @@ namespace CityWatch.Data.Providers
             {
                 foreach (int guardId in guardIds)
                 {
-                    var temp = _context.LanguageDetails.Where(z => z.GuardId == guardId).Include(z=>z.LanguageMaster).ToList();
+                    var temp = _context.LanguageDetails.Where(z => z.GuardId == guardId).Include(z => z.LanguageMaster).ToList();
                     if (temp.Any())
                     {
                         guardLogins.AddRange(temp);
@@ -633,17 +636,17 @@ namespace CityWatch.Data.Providers
                 CurrentDateTime = x.CurrentDateTime,
                 LicenseNo = x.Guard.SecurityNo,
                 DateType = x.DateType,
-                HRBanEdit=x.HRBanEdit
+                HRBanEdit = x.HRBanEdit
             }).OrderBy(x => x.FileName)
             .ToList();
 
-           
+
             var filteredDescriptions = result
     .Select(g => g.Description.Substring(3).Trim().ToLower()) // Remove first 3 letters
     .Distinct()
     .ToList();
 
-           
+
 
             var hrSettingsDict = _context.HrSettings
    .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()))
@@ -659,7 +662,7 @@ namespace CityWatch.Data.Providers
                 }
             }
             return result;
-            
+
 
 
 
@@ -800,7 +803,7 @@ namespace CityWatch.Data.Providers
                  .Include(z => z.ReferenceNoNumbers)
                  .Include(z => z.ReferenceNoAlphabets)
                  .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(x=>x.Id== DescriptionID).FirstOrDefault();
+                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(x => x.Id == DescriptionID).FirstOrDefault();
 
             return descriptions;
         }
@@ -1049,22 +1052,22 @@ namespace CityWatch.Data.Providers
             var result = _context.GuardTrainingAndAssessment
                  .Where(x => x.GuardId == guardId)
                  .Include(z => z.Guard)
-                 .Include(z=>z.HRGroups)
-                 .Include(z=>z.TrainingCourses)
-                 .Include(z=>z.TrainingCourseStatus)
-                 .ThenInclude(x=>x.TrainingCourseStatusColor)
-                 .OrderBy(x=>x.HRGroupId)
-                 .ThenBy(x=>x.Id)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .OrderBy(x => x.HRGroupId)
+                 .ThenBy(x => x.Id)
                  .ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;
-            foreach(var item in result)
+            foreach (var item in result)
             {
                 item.HrGroupText = item.HRGroups.Name;
                 item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
             }
 
-            
+
 
 
             return result;
@@ -1098,7 +1101,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.TrainingTQNumbers.ToList();
         }
-        
+
         public List<TrainingCertificateExpiryYears> GetTrainingCertificateExpiryYears()
         {
             return _context.TrainingCertificateExpiryYears.ToList();
