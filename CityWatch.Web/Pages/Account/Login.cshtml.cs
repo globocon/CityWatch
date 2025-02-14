@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 
 namespace CityWatch.Web.Pages
@@ -41,19 +42,20 @@ namespace CityWatch.Web.Pages
                 returnUrl = Url.Page("/");
 
             var isValidLogin = _userAuthentication.TryGetLoginUser(LoginUser, out User user);
-
+            var IsthirdParty = IsThirdParty(user.Id);
             if (!isValidLogin)
                 ModelState.AddModelError("Username", "Incorrect User Name or Password");
             else if (!user.IsAdmin && returnUrl == Url.Page("/Admin/Settings"))
                 ModelState.AddModelError("Username", "Not authorized to access this page");
             else if (user.IsDeleted)
                 ModelState.AddModelError("Username", "User is not active");
+            
             else
             {
                 SignInUser(user);
                 _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
                 var subDomainRedirect = GetClientDetailsUsingSubDomain(user.Id);
-                var IsthirdParty = IsThirdParty(user.Id);
+                
                 
                 // Check if the subDomainRedirect has a value and update the returnUrl accordingly
                 if (!string.IsNullOrEmpty(subDomainRedirect))
@@ -62,14 +64,18 @@ namespace CityWatch.Web.Pages
                 }
                 else
                 {
-                    if (IsthirdParty == true)
+                    if (IsthirdParty)
                     {
-                        return Redirect(Url.Page(returnUrl));
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+
+
                     }
                     else
                     {
-                        ModelState.AddModelError("Username", "Not authorized to access this page");
+                        return Redirect(Url.Page(returnUrl));
                     }
+                        
+                    
                     
                 }
 
@@ -134,7 +140,7 @@ namespace CityWatch.Web.Pages
                 )
                 {
                     var IsthirdParty = IsThirdParty(userid);
-                    if (IsthirdParty == true)
+                    if (IsthirdParty)
                     {
                         url = "/Guard/Login?t=gl";
                     }
