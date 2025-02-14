@@ -213,7 +213,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-
+       
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {
             var success = false;
