@@ -168,6 +168,8 @@ namespace CityWatch.Data.Providers
         void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId);
         void DeleteGuardScores(int guardId, int trainingCourseId);
         GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId);
+        public List<DuressAppField> GetDuressAppFields();
+        List<DuressAppField> GetDuressAppByType(int type);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -495,6 +497,10 @@ namespace CityWatch.Data.Providers
         public List<IncidentReportField> GetReportFields()
         {
             return _context.IncidentReportFields.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
+        }
+        public List<DuressAppField> GetDuressAppFields()
+        {
+            return _context.DuressAppField.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
         }
         public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
         {
@@ -1792,6 +1798,11 @@ namespace CityWatch.Data.Providers
 
             var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).FirstOrDefault();
             return report;
+        }
+
+        public List<DuressAppField> GetDuressAppByType(int type)
+        {
+            return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Name).ToList();
         }
 
     }

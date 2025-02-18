@@ -260,6 +260,7 @@ namespace CityWatch.Data.Providers
         public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting);
         public void AddHyperLinks(string Email, string TvNews, string wether);
         public List<HyperLinks> GetHyperLinksDetails();
+        public DuressAppField GetAudioByID(int documentId);
 
     }
 
@@ -2972,8 +2973,13 @@ namespace CityWatch.Data.Providers
             }
             return staffDoc;
         }
-
-        public void DeleteRCLinkedDuress(int id)
+        public DuressAppField GetAudioByID(int documentId)
+        {
+            var AudioDoc = _context.DuressAppField
+              .SingleOrDefault(x => x.Id == documentId);
+            return AudioDoc;
+        }
+            public void DeleteRCLinkedDuress(int id)
         {
             var recordToDelete = _context.RCLinkedDuressMaster.SingleOrDefault(x => x.Id == id);
             if (recordToDelete == null)
