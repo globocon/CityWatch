@@ -218,14 +218,15 @@
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="kv-tab" data-toggle="tab" href="#KVSettings" role="tab" aria-controls="KVSettings">KV</a>
-
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="kpi-tab" data-toggle="tab" href="#KPISettings" role="tab" aria-controls="KPISettings" style="cursor: default;">KPI</a>
-
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="DuressApp-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Duress App</a>
         </li>
 
     </ul>
@@ -852,7 +853,7 @@
                                 </button>
                             }
                         </div><br />
-                        
+
 
                         @*  <div class="d-flex justify-content-end align-items-center  mb-3">
                         <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Contract Manager</label>
@@ -884,7 +885,7 @@
                             <input type="hidden" asp-for="@Model.KPITelematicsFieldID" />
                             <input type="hidden" asp-for="@Model.Id" />
                             <input type="hidden" asp-for="@Model.ClientSiteId" />
-                
+
                             <input type="hidden" id="hidCount" value="@count" />
                             @*display Already Existing Mannings*@
 
@@ -1314,16 +1315,16 @@
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                             {
                                 <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
-                               
+
                             }
                             else
                             {
                                 @*New button to update values *@
-                               <button type="button" class="btn btn-success no-print" id="save_site_manning_settings_WithoutValue"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
+                                <button type="button" class="btn btn-success no-print" id="save_site_manning_settings_WithoutValue"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
                                 <div id="divbtn" style="display: none;">
                                     <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
                                 </div>
-                                
+
 
                             }
 
@@ -1347,7 +1348,7 @@
                                         <i class="fa fa-print" aria-hidden="true"></i>
                                     </button>
                                     @if (Model.ClientSiteManningGuardKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() != 0 &&
-                   Model.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() != 0)
+                                   Model.ClientSiteManningPatrolCarKpiSettingsADHOC.Where(x => x.DefaultValue == false).Count() != 0)
                                     {
                                         <!-- Disabled Add Worker Button -->
                                         <button id="showDivButtonAdhoc" class="btn btn-success no-print" disabled>
@@ -2024,16 +2025,16 @@
             <div class="tab-content">
                 @*New Tab for Rc List start*@
                 <div class="tab-pane active" id="RcActionListSettings" role="tabpanel" aria-labelledby="RcActionListSettings">
-                   
-                       
-                   
+
+
+
                     <form id="frm_ActionList">
                         <br />
                         <input type="hidden" name="RCActionList.ClientSiteID" asp-for="@Model.ClientSiteId" />
-                       
+
                         <h6>Site Alarm SOP's:</h6>
                         <table class="table table-bordered tbl-settings" id="tbl_summaryImage1">
-                           @*  <thead>
+                            @*  <thead>
                                 <tr>
 
                                     <th style="width:370px">File Name</th>
@@ -2041,7 +2042,7 @@
                                     <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 </tr>
                             </thead> *@
-                          @*   <tbody>
+                            @*   <tbody>
                                 <tr>
                                     @{
                                         if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
@@ -2084,7 +2085,7 @@
                                     </td>
                                 </tr>
                             </tbody> *@
-                        </table><br/>
+                        </table><br />
 
 
 
@@ -2198,6 +2199,77 @@
             </div>
         </div>
 
+
+
+        <div class="tab-pane" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
+            <ul class="nav nav-tabs" id="RcActionList" role="tablist">
+                <li class="nav-item " role="presentation">
+                    <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Duress App Settings</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-content">
+                    <div id="messagesContainer"></div>
+                    <div class="tab-pane active pt-2" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
+                        <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
+                        <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
+                        <!-- First Row: Site Duress Number -->
+                        <div class="form-row pt-3">
+                            <!-- Added pt-3 for top padding -->
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label class="col-md-4 form-label text-left pl-4">Site Duress Number</label>
+                                    <div class="col-md-8">
+                                        <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
+                                            <option value="">Select Site Duress Number</option>
+                                            <option value="1">01</option>
+                                            <option value="2">02</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Second Row: Position & QR Code -->
+                        <div class="form-row pt-3">
+                            <!-- Added pt-3 for top padding -->
+                            <!-- Left Side: Position Selection -->
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <div class="d-flex flex-row justify-content-between">
+                                        <label class="form-label">Position</label>
+                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
+                                            <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group p-0">
+                                        <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: QR Code -->
+                            <div class="col-md-6 d-flex justify-content-end align-items-center">
+                                <img src="https://chart.googleapis.com/chart?chs=200x200&amp;cht=qr&amp;chl=1234" alt="QR Code" class="img-fluid">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="pt-3">
+                        <!-- Added pt-3 for spacing before buttons -->
+                        <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
+                            <i class="fa fa-trash mr-2"></i>Delete
+                        </button>
+                        <button type="button" class="btn btn-success" id="save_DuressApp">
+                            <i class="fa fa-save mr-2"></i>Save RC Action List
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
     </div>
 </div>

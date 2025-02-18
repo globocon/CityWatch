@@ -151,7 +151,7 @@ namespace CityWatch.Data
         public DbSet<KPITelematicsField> KPITelematicsField { get; set; }
         public DbSet<HyperLinks> HyperLinks { get; set; }
 
-
+        public DbSet<DuressSetting> DuressSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

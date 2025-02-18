@@ -1299,6 +1299,8 @@ $(function () {
             console.log(button.data('cs-id'));
             console.log(button.data('cs-address'));
             $('#_dropboxStatusDisplay').html('');
+
+            populateDuressApp(button.data('cs-id'),1);
             //p1-139 change pop up start
             if (type == 'KPI') {
                 $('#kpi-LB-Menu-tab').removeClass('active');
@@ -2775,6 +2777,243 @@ $('#div_site_settings').on('change', '#dgKPITelamaticsName', function () {
     });
 
 });
+
+
+$('#div_site_settings').on('change', '#positionfilterPatrolCarDuressApp', function () {
+
+    const isChecked = $(this).is(':checked');
+    const filter = isChecked ? 1 : 2;
+    $.ajax({
+        url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+        data.map(function (position) {
+            $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+        });
+    });
+
+});
+
+
+$('#div_site_settings').on('click', '#save_DuressApp', function () {
+    var positionFilter = $('#positionfilterPatrolCarDuressApp').is(':checked') ? 'Patrol Car' : 'Guard';
+    var selectedPosition = $('#positionfilterPatrolCarDuressApp_Pertrol').val();
+    var siteDuressNumber = $('#siteDuressNumber').val();
+    var clientSiteIdDuress = $('#clientSiteIdDuress').val(); // Get value from hidden input
+
+
+    // ✅ Clear previous error messages
+    $('.error-message').remove();
+
+    // ✅ Validation check
+    var isValid = true;
+
+    if (!selectedPosition) {
+        $('#positionfilterPatrolCarDuressApp_Pertrol').after('<span class="text-danger error-message">Please select a position.</span>');
+        isValid = false;
+    }
+
+    if (!siteDuressNumber) {
+        $('#siteDuressNumber').after('<span class="text-danger error-message">Please select a site duress number.</span>');
+        isValid = false;
+    }
+
+    if (!clientSiteIdDuress) {
+        $('#clientSiteIdDuress').after('<span class="text-danger error-message">Client site ID is missing.</span>');
+        isValid = false;
+    }
+
+    // ❌ Stop AJAX call if validation fails
+    if (!isValid) return;
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveDuressApp',
+        type: 'POST',
+        data: {
+            positionFilter: positionFilter,
+            selectedPosition: selectedPosition,
+            siteDuressNumber: siteDuressNumber,
+            clientSiteIdDuress: clientSiteIdDuress,
+            duressAppId: $('#duressAppId').val()
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        
+        if (result.success) {
+            var successMessage = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                '<strong>Success!</strong> Duress settings saved successfully.' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>';
+            $('#messagesContainer').html(successMessage);  // Assuming you have a div with id 'messagesContainer'
+        }
+    });
+
+
+});
+
+
+$('#div_site_settings').on('change', '#siteDuressNumber', function () {
+    var siteDuressNumber = $(this).val();
+    var clientSiteIdDuress = $('#clientSiteIdDuress').val(); // Get client site ID
+
+    if (!siteDuressNumber || !clientSiteIdDuress) {
+        clearDuressFields();
+        return;
+    }
+
+    $.ajax({
+        url: '/admin/settings?handler=GetDuressApp',
+        type: 'GET',
+        data: {
+            clientSiteIdDuress: clientSiteIdDuress,
+            siteDuressNumber: siteDuressNumber
+        },
+        success: function (result) {
+            if (result.success === false) {
+                /*clearDuressAppForm();*/
+                $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
+                $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
+                const filter = 2;
+                $.ajax({
+                    url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (data) {
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+                    data.map(function (position) {
+                        $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+
+                    });
+                    
+                });
+                return;
+            }
+
+
+            $('#siteDuressNumber').val(result.data.siteDuressNumber);
+            $('#duressAppId').val(result.data.id);
+            $('#clientSiteIdDuress').val(clientSiteIdDuress);
+
+
+            if (result.data.positionFilter === 'Patrol Car') {
+                // If position filter is "Patrol Car", check the checkbox
+                $('#positionfilterPatrolCarDuressApp').prop('checked', true);
+                const filter = 1;
+                $.ajax({
+                    url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (data) {
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+                    data.map(function (position) {
+                        $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+                    });
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
+                });
+            } else {
+                $('#positionfilterPatrolCarDuressApp').prop('checked', false);
+                const filter = 2;
+                $.ajax({
+                    url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (data) {
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+                    data.map(function (position) {
+                        $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+
+                    });
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
+                });
+            }
+            
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Error: " + status + " " + error);
+            clearDuressFields();
+        }
+    });
+});
+
+
+function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
+    $.ajax({
+        url: '/admin/settings?handler=GetDuressApp',
+        type: 'GET',
+        data: {
+            clientSiteIdDuress: clientSiteIdDuress,
+            siteDuressNumber: siteDuressNumber
+        },
+        success: function (result) {
+            if (result.success === false) {
+                // Handle error or no data (e.g., show a message or log it)
+                console.log(result.message); // Log or show the error message
+                // Clear the form if no data is found
+                clearDuressAppForm();
+                return;
+            }
+
+            // Populate the form fields with the retrieved data
+           
+            $('#siteDuressNumber').val(result.data.siteDuressNumber);
+            $('#duressAppId').val(result.data.id);
+            $('#clientSiteIdDuress').val(clientSiteIdDuress);
+            
+
+            if (result.data.positionFilter === 'Patrol Car') {
+                // If position filter is "Patrol Car", check the checkbox
+                $('#positionfilterPatrolCarDuressApp').prop('checked', true);
+                const filter = 1;
+                $.ajax({
+                    url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (data) {
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+                    data.map(function (position) {
+                        $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+                    });
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
+                });
+            } else {
+                $('#positionfilterPatrolCarDuressApp').prop('checked', false);
+                const filter = 2;
+                $.ajax({
+                    url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (data) {
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').html('');
+                    data.map(function (position) {
+                        $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
+
+                    });
+                    $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
+                });
+            }
+          
+
+           
+        },
+        error: function (xhr, status, error) {
+            // Handle AJAX request failure
+            console.error("AJAX Error: " + status + " " + error);
+            // Clear the form in case of an error
+            clearDuressAppForm();
+        }
+    });
+}
+
+
+function clearDuressAppForm() {
+    $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
+    $('#siteDuressNumber').val(''); // Clear dropdown
+    $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
+}
+
 
 
 
