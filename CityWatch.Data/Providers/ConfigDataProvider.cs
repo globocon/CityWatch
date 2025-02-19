@@ -174,6 +174,7 @@ namespace CityWatch.Data.Providers
         DuressSetting GetDuressSetting(int clientSiteId, int siteDuressNumber);
         public DuressSetting GetDuressSettingById(int duressAppId);
         public bool UpdateDuressSetting(DuressSetting setting);
+        public bool DeleteDuressSettingById(int duressAppId);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1822,6 +1823,18 @@ namespace CityWatch.Data.Providers
         {
             _context.DuressSettings.Update(setting);
             return _context.SaveChanges() > 0;
+        }
+
+        public bool DeleteDuressSettingById(int duressAppId)
+        {
+            var duressSetting = _context.DuressSettings.FirstOrDefault(d => d.Id == duressAppId);
+            if (duressSetting != null)
+            {
+                _context.DuressSettings.Remove(duressSetting);
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
 
 

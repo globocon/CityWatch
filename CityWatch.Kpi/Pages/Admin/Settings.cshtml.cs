@@ -2099,14 +2099,32 @@ namespace CityWatch.Kpi.Pages.Admin
                     var existingSetting = _configDataProvider.GetDuressSettingById(duressAppId);
                     if (existingSetting != null)
                     {
-                        existingSetting.PositionFilter = positionFilter;
-                        existingSetting.SelectedPosition = selectedPosition;
-                        existingSetting.SiteDuressNumber = siteDuressNumber;
-                        success = _configDataProvider.UpdateDuressSetting(existingSetting);
-                        if (success)
-                            message = "Duress settings updated successfully.";
+
+                        if (existingSetting.SiteDuressNumber == siteDuressNumber)
+                        {
+                            existingSetting.PositionFilter = positionFilter;
+                            existingSetting.SelectedPosition = selectedPosition;
+                            existingSetting.SiteDuressNumber = siteDuressNumber;
+                            success = _configDataProvider.UpdateDuressSetting(existingSetting);
+                            if (success)
+                                message = "Duress settings updated successfully.";
+                            else
+                                message = "Failed to update Duress settings.";
+
+                        }
                         else
-                            message = "Failed to update Duress settings.";
+                        {
+                            var setting = new DuressSetting
+                            {
+                                ClientSiteId = clientSiteIdDuress,
+                                PositionFilter = positionFilter,
+                                SelectedPosition = selectedPosition,
+                                SiteDuressNumber = siteDuressNumber
+                            };
+                            success = _configDataProvider.AddDuressSetting(setting);
+                            if (success)
+                                message = "Duress settings saved successfully.";
+                        }
                     }
                     else
                     {
@@ -2148,6 +2166,34 @@ namespace CityWatch.Kpi.Pages.Admin
                 return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
             }
         }
+
+
+        public JsonResult OnPostDeleteDuressApp(int duressAppId)
+        {
+            try
+            {
+                // Attempt to delete the duress setting
+                bool isDeleted = _configDataProvider.DeleteDuressSettingById(duressAppId);
+
+                if (!isDeleted)
+                {
+                    // Return a custom error message if no record is found
+                    return new JsonResult(new { success = false, message = "No duress setting found with the specified ID." });
+                }
+
+                // Return the successful result
+                return new JsonResult(new { success = true, message = "Duress setting deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (optional)
+                _logger.LogError(ex, "An error occurred while deleting the duress setting.");
+
+                // Return an error message
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
     }
 
 

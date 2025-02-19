@@ -2842,12 +2842,13 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
         
         if (result.success) {
             var successMessage = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                '<strong>Success!</strong> Duress settings saved successfully.' +
+                '<strong>Success!</strong> Duress APP settings saved successfully.' +
                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                 '<span aria-hidden="true">&times;</span>' +
                 '</button>' +
                 '</div>';
             $('#messagesContainer').html(successMessage);  // Assuming you have a div with id 'messagesContainer'
+            populateDuressApp(clientSiteIdDuress, siteDuressNumber);
         }
     });
 
@@ -2860,7 +2861,7 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
     var clientSiteIdDuress = $('#clientSiteIdDuress').val(); // Get client site ID
 
     if (!siteDuressNumber || !clientSiteIdDuress) {
-        clearDuressFields();
+        clearDuressAppForm();
         return;
     }
 
@@ -2874,6 +2875,8 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
         success: function (result) {
             if (result.success === false) {
                 /*clearDuressAppForm();*/
+                $("#QrCode").attr("src", "");
+                $("#QrCode").attr("src", qrImagePath).hide(); 
                 $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
                 $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
                 const filter = 2;
@@ -2896,7 +2899,11 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
             $('#siteDuressNumber').val(result.data.siteDuressNumber);
             $('#duressAppId').val(result.data.id);
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
+            var qrText = result.data.id; // Change this to any text or URL
+            var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+qrText;
 
+            $("#QrCode").attr("src", qrImagePath)
+            $("#QrCode").attr("src", qrImagePath).show(); 
 
             if (result.data.positionFilter === 'Patrol Car') {
                 // If position filter is "Patrol Car", check the checkbox
@@ -2961,7 +2968,9 @@ function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
             $('#siteDuressNumber').val(result.data.siteDuressNumber);
             $('#duressAppId').val(result.data.id);
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
-            
+            var qrText = result.data.id; // Change this to any text or URL
+            var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + qrText;
+            $("#QrCode").attr("src", qrImagePath).show(); // Hide initially
 
             if (result.data.positionFilter === 'Patrol Car') {
                 // If position filter is "Patrol Car", check the checkbox
@@ -3012,7 +3021,41 @@ function clearDuressAppForm() {
     $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
     $('#siteDuressNumber').val(''); // Clear dropdown
     $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
+    $("#QrCode").attr("src", "").hide(); // Hide initially
 }
+
+
+$('#div_site_settings').on('click', '#delete_DuressApp', function () {
+    var duressAppId = parseInt($('#duressAppId').val(), 10);
+
+    if (!duressAppId || duressAppId === 0) {
+        alert("No item found for deletion.");
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Settings?handler=DeleteDuressApp',
+        type: 'POST',
+        data: { duressAppId: duressAppId },  // Using parsed integer value
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (result) {
+        if (result.success) {
+            var successMessage = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Success!</strong> Duress APP settings removed successfully.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>`;
+            $('#messagesContainer').html(successMessage);
+            populateDuressApp($('#clientSiteIdDuress').val(), 1);
+        } else {
+            alert(result.message || "Failed to delete DuressApp.");
+        }
+    }).fail(function () {
+        alert("Error occurred while deleting DuressApp.");
+    });
+});
 
 
 

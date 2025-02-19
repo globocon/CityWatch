@@ -2208,6 +2208,63 @@
                 </li>
             </ul>
             <div class="tab-content">
+                  <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
+                  <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
+                <div id="messagesContainer"></div>
+
+                <div class="row pt-3">
+                    <!-- Left 50%: Form Controls -->
+                    <div class="col-md-6">
+                        <!-- Site Duress Number -->
+                        <div class="form-group">
+                            <label class="form-label">Site Duress Number</label>
+                            <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
+                                <option value="">Select Site Duress Number</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                            </select>
+                        </div>
+
+                        <!-- Position Selection -->
+                        <div class="form-group">
+                            <div class="d-flex flex-row justify-content-between">
+                                <label class="form-label">Position</label>
+                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
+                                    <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
+                                </div>
+                            </div>
+                            <div class="form-group p-0">
+                                <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right 50%: QR Code -->
+                    <div class="col-md-6 d-flex justify-content-center align-items-center">
+                        <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="pt-3">
+                    <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
+                        <i class="fa fa-trash mr-2"></i>Delete
+                    </button>
+                    <button type="button" class="btn btn-success" id="save_DuressApp">
+                        <i class="fa fa-save mr-2"></i>Save RC Action List
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @* <div class="tab-pane" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
+            <ul class="nav nav-tabs" id="RcActionList" role="tablist">
+                <li class="nav-item " role="presentation">
+                    <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Duress App Settings</a>
+                </li>
+            </ul>
+            <div class="tab-content">
                 <div class="tab-content">
                     <div id="messagesContainer"></div>
                     <div class="tab-pane active pt-2" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
@@ -2251,7 +2308,7 @@
 
                             <!-- Right Side: QR Code -->
                             <div class="col-md-6 d-flex justify-content-end align-items-center">
-                                <img src="https://chart.googleapis.com/chart?chs=200x200&amp;cht=qr&amp;chl=1234" alt="QR Code" class="img-fluid">
+                                <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
                             </div>
                         </div>
                     </div>
@@ -2269,7 +2326,13 @@
                 </div>
 
             </div>
-        </div>
+        </div>  *@
+
+        
+
+
+        
+
 
     </div>
 </div>
