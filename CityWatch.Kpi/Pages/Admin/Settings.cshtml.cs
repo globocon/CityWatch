@@ -2128,7 +2128,16 @@ namespace CityWatch.Kpi.Pages.Admin
                     }
                     else
                     {
-                        message = "Duress app not found.";
+                        var setting = new DuressSetting
+                        {
+                            ClientSiteId = clientSiteIdDuress,
+                            PositionFilter = positionFilter,
+                            SelectedPosition = selectedPosition,
+                            SiteDuressNumber = siteDuressNumber
+                        };
+                        success = _configDataProvider.AddDuressSetting(setting);
+                        if (success)
+                            message = "Duress settings saved successfully.";
                     }
                 }
             }

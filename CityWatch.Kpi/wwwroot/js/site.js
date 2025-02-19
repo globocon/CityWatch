@@ -2859,7 +2859,7 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
 $('#div_site_settings').on('change', '#siteDuressNumber', function () {
     var siteDuressNumber = $(this).val();
     var clientSiteIdDuress = $('#clientSiteIdDuress').val(); // Get client site ID
-
+    $('#messagesContainer').html('');
     if (!siteDuressNumber || !clientSiteIdDuress) {
         clearDuressAppForm();
         return;
@@ -3018,6 +3018,7 @@ function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
 
 
 function clearDuressAppForm() {
+    $('#messagesContainer').html('');
     $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
     $('#siteDuressNumber').val(''); // Clear dropdown
     $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
