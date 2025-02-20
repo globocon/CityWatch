@@ -819,8 +819,8 @@
         //inlineEditing: { mode: 'command' },
 
         columns: [
-            { field: 'label', title: 'Label', width: '100%', editor: true },
-            { field: 'name', title: 'File Name', width: '100%', editor: true },
+            { field: 'label', title: 'Label', width: '100%', editor: false },
+            { field: 'name', title: 'File Name', width: '100%', editor: false },
             { width: 166, renderer: schButtonRendererAudio },
 
 
@@ -831,7 +831,7 @@
     });
     function schButtonRendererAudio(value, record) {
         let buttonHtml = '';
-        buttonHtml = '<a href="/DuressAppAudio/' + record.name + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-microphone"></i></a>';
+        buttonHtml = '<a href="/DuressAppAudio/' + record.name + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-play"></i></a>';
         buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#DuressAppAudio-modal" data-au-id="' + record.id + '" ';
         buttonHtml += 'data-action="editAudio"><i class="fa fa-pencil"></i></button>';
         buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-duressAudio d-block" data-aud-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
@@ -864,7 +864,7 @@
     function clearAudioModal() {
 
         $('#filenameaudio').val('');
-        $('#add_Label').val('');
+        $('#add_label').val('');
         $('#add_filenameduress').val('');
         $('#dynamicAudio').html('');
         $('#audioId').val('-1');
@@ -876,10 +876,11 @@
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
-            $('#add_Label').val(data.label);
+           
+            $('#add_label').val(data.label);
             $('#audioId').val(data.id);
             $('#filenameaudio').val(data.name);
-            $('#dynamicAudio').html('<a href="/DuressAppAudio/' + data.name + '" class="btn btn-outline-primary" target="_blank"><i class="fa fa-microphone"></i></a>');
+            $('#dynamicAudio').html('<a href="/DuressAppAudio/' + data.name + '" class="btn btn-outline-primary" target="_blank"><i class="fa fa-play"></i></a>');
 
 
         }).always(function () {
