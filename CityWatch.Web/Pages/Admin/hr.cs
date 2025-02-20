@@ -213,7 +213,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-
+       
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {
             var success = false;
@@ -699,7 +699,14 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
         {
-            return new JsonResult(_guardDataProvider.GetGuardLicensesandcompliance(guardId));
+            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
+            if(AuthUserHelper.IsAdminUserLoggedIn){
+                foreach (var guard in GuardDetails)
+                {
+                    guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
+                }
+            }
+            return new JsonResult(GuardDetails);
         }
 
         public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
@@ -2102,7 +2109,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         
-        public JsonResult OnPostResetGaurdHrPin(int guardId)
+        public JsonResult OnPostResetGaurdHrPin(int guardId,string siteName )
         {
             var message = string.Empty;
             var success = false;
@@ -2112,7 +2119,7 @@ namespace CityWatch.Web.Pages.Admin
             if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
             {
                 // Generate email body and send email
-                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin);
+                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin, siteName);
                 SendEmailNew(emailBody, guard.Email);
 
                 // Update message
@@ -2190,7 +2197,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-        public string GetPasswordResetEmail(string userName, string temporaryPassword)
+        public string GetPasswordResetEmail(string userName, string temporaryPassword,string siteName)
         {
             var sb = new StringBuilder();
 
@@ -2245,6 +2252,7 @@ namespace CityWatch.Web.Pages.Admin
             sb.AppendLine("    </div>");
             sb.AppendLine($"    <p>Hi {userName},</p>");
             sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
+            sb.AppendLine($"    <p>Logged in Site: <span class=\"temporary-password\">{siteName}</span></p>");
             sb.AppendLine("    <div class=\"footer\">");
             sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
             sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} C4i System. All rights reserved.</p>");
@@ -2301,6 +2309,113 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //p5-Issue-20-Instructor-end
+        public JsonResult OnGetHRSettingsWithCourseLibrary()
+        {
+            var jresult = _configDataProvider.GetHRSettings()
+            .Select(z => HrDoumentViewModel.FromDataModel(z))
+            .OrderBy(x => x.GroupName)
+            .ThenBy(x => x.referenceNo)
+            .ThenBy(x => x.referenceNoAlphabetsName);
+            
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
+            var newjResult = jresult.Where(x => hrSettingsIdWithCourses.Contains(x.Id)).ToList();
+            return new JsonResult(newjResult);
+
+            //return new JsonResult(_configDataProvider.GetHRSettings());
+        }
+
+        public JsonResult OnPostSaveDuressApp(DuressAppField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            
+            try
+            {
+
+                _guardLogDataProvider.SaveDuressApp(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostSaveAudio()
+        {
+            var success = false;
+            var message = string.Empty;
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "DuressAppAudio");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var Label = Request.Form["label"];
+           
+            var Name = Request.Form["name"];
+            int Id = Convert.ToInt32(Request.Form["id"]);
+
+            var type = 1;
+
+            _guardLogDataProvider.SaveDuressApp(new DuressAppField()
+                {
+                    
+                    Name = Name,
+                   TypeId= type,
+                   Label= Label,
+                   Id= Id
+
+            });
+
+                success = true;
+           
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetAudioDetails(int id)
+        {
+            return new JsonResult(_clientDataProvider.GetAudioByID(id));
+
+        }
+        public JsonResult OnPostDeleteDuressApp(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteDuressApp(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
 
 

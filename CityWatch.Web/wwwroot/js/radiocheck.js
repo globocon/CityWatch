@@ -1861,12 +1861,15 @@ $('#forgotpassword').click(function (e) {
     $('#spinner').removeClass('d-none').addClass('d-inline-block'); // Show spinner
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    
+   
     // AJAX request example
     $.ajax({
         url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
         type: 'POST',
         data: {
-            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            siteName: $('#hidden_guardKey').val()
             
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -2375,6 +2378,21 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
         {
             targets: -1,
             data: null,
+            render: function (data, type, row, meta) {
+                if (data.isLogin == 'Guard') {
+                    if (data.hrBanEdit) {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                    } else {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                    }
+                }
+
+
+            },
             defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                 '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
             width: '15%'
@@ -2504,42 +2522,96 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     const messageHtml = '';
     $('#schRunStatusNew').html(messageHtml);
 
-    if (HrVal != '' && DescVal != '' && FileVa != 'None') {
-      
-        if (ExpirayDateVal == '') {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+    let selectedItem = $('.es-visible').val();
+    var HRBan = false;
+    if (LoginVal == 'GuardLogin') {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+            type: 'GET',
+            data: {
+                DescriptionID: selectedItem
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (DescVal) {
+            if (DescVal.hrBanEdit == true) {
+                HRBan = true;
+                displayGuardValidationSummary('compliancelicanseValidationSummary1', 'This description is restricted and cannot be added.');
+            }
+            else {
+                processFormSubmission()
+            }
 
-            alert('Please Enter the Expiry Date or Date of issue');
-            //if (confirm('Are you sure you not want to enter expiry Date')) {
-            //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-            //    $('#loader').show();
-            //    $.ajax({
-            //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
-            //        data: $('#frm_add_complianceandlicense').serialize(),
-            //        type: 'POST',
-            //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            //    }).done(function (result) {
-            //        if (result.status) {
-            //            $('#addGuardCompliancesLicenseModal').modal('hide');
-            //            const messageHtml1 = '';
-            //            $('#schRunStatusNew').html(messageHtml1);
-            //            gridGuardLicensesAndLicenceKey.ajax.reload();
+        });
+    }
 
-            //            if (!result.dbxUploaded) {
-            //                // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-            //            }
-            //        } else {
-            //            const messageHtml = '';
-            //            $('#schRunStatusNew').html(messageHtml);
-            //            displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
-            //        }
-            //    }).always(function () {
-            //        $('#loader').hide();
-            //    });
-            //}
+    function processFormSubmission() {
+        if (HrVal != '' && DescVal != '' && FileVa != 'None') {
+
+            if (ExpirayDateVal == '') {
+
+                alert('Please Enter the Expiry Date or Date of issue');
+                //if (confirm('Are you sure you not want to enter expiry Date')) {
+                //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                //    $('#loader').show();
+                //    $.ajax({
+                //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
+                //        data: $('#frm_add_complianceandlicense').serialize(),
+                //        type: 'POST',
+                //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                //    }).done(function (result) {
+                //        if (result.status) {
+                //            $('#addGuardCompliancesLicenseModal').modal('hide');
+                //            const messageHtml1 = '';
+                //            $('#schRunStatusNew').html(messageHtml1);
+                //            gridGuardLicensesAndLicenceKey.ajax.reload();
+
+                //            if (!result.dbxUploaded) {
+                //                // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                //            }
+                //        } else {
+                //            const messageHtml = '';
+                //            $('#schRunStatusNew').html(messageHtml);
+                //            displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                //        }
+                //    }).always(function () {
+                //        $('#loader').hide();
+                //    });
+                //}
+            }
+            else {
+                $('#loader').show();
+                $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
+                    data: $('#frm_add_complianceandlicense').serialize(),
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.status) {
+                        $('#addGuardCompliancesLicenseModal').modal('hide');
+                        const messageHtml1 = '';
+                        $('#schRunStatusNew').html(messageHtml1);
+                        gridGuardLicensesAndLicenceKey.ajax.reload();
+
+                        if (!result.dbxUploaded) {
+                            // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                        }
+                    } else {
+                        const messageHtml = '';
+                        $('#schRunStatusNew').html(messageHtml);
+                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                    }
+                }).always(function () {
+                    $('#loader').hide();
+                });
+            }
+
         }
         else {
-            $('#loader').show();
             $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            $('#loader').show();
             $.ajax({
                 url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
                 data: $('#frm_add_complianceandlicense').serialize(),
@@ -2564,35 +2636,10 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
                 $('#loader').hide();
             });
         }
-
     }
-    else {
-        $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-        $('#loader').show();
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
-            data: $('#frm_add_complianceandlicense').serialize(),
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#addGuardCompliancesLicenseModal').modal('hide');
-                const messageHtml1 = '';
-                $('#schRunStatusNew').html(messageHtml1);
-                gridGuardLicensesAndLicenceKey.ajax.reload();
-
-                if (!result.dbxUploaded) {
-                    // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-                }
-            } else {
-                const messageHtml = '';
-                $('#schRunStatusNew').html(messageHtml);
-                displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
-            }
-        }).always(function () {
-            $('#loader').hide();
-        });
-    }
+        
+    
+   
 
     
     

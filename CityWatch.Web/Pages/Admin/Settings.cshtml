@@ -521,6 +521,7 @@
                             <option value="2">KV</option>
                             <option value="3">IR</option>
                             <option value="4">TA</option>
+                             <option value="6">DURESS APP</option>
                         </select>
                     </div>
                 </div>
@@ -568,6 +569,11 @@
 
 
                         </select>
+                        <select class="form-control" id="duressapp_types">
+                            <option value="">None</option>
+                            <option value="1">Audio</option>
+                            <option value="2">Log Activity</option>
+                        </select>
                     </div>
                 </div>
                 <div class="row" id="fieldSettings">
@@ -578,6 +584,8 @@
                             <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_KPI_Telematics_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_duressapp_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_DuressAppAudio" data-toggle="modal" data-target="#DuressAppAudio-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
                         </div>
                         <table class="table" id="field_settings"></table>
                         <table class="table" id="field_settings_Area" hidden></table>
@@ -585,6 +593,8 @@
                         <table class="table" id="tbl_dosanddonts_fields"></table>
                         <table class="table" id="tbl_kpitelematics_fields"></table>
                         <table class="table" id="tbl_ta_fields"></table>
+                        <table class="table" id="tbl_duressapp_fields"></table>
+                        <table class="table" id="tbl_duressappLog_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -1099,6 +1109,7 @@
                                             <th>Sites</th>
                                             <th>Pin</th>
                                             <th></th>
+                                            <th></th>
                                             <th>Gender</th>
                                             <th>Active</th>
                                             <th>HR1</th>
@@ -1161,6 +1172,20 @@
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" style="display:none"></th>
+                                            <th rowspan="2">HR Group</th>
+                                            <th colspan="2">Reference No</th>
+                                            <th rowspan="2">Description</th>
+                                            <th rowspan="2">State</th>
+                                            <th rowspan="2">Site</th>
+                                            <th rowspan="2"></th>
+                                            <th rowspan="2"></th>
+                                        </tr>
+                                    </thead>
+                                </table>
                                 <div id="SettingsDiv" style="display:none">
                                     <div class="form-group row">
                                         <div class="col-md-8">
@@ -1389,6 +1414,7 @@
                                                 <th>Sites</th>
                                                 <th>Pin</th>
                                                 <th></th>
+                                                <th></th>
                                                 <th>Gender</th>
                                                 <th>Active</th>
                                                 <th>HR1</th>
@@ -1451,6 +1477,20 @@
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                        <thead>
+                                            <tr>
+                                                <th rowspan="2" style="display:none"></th>
+                                                <th rowspan="2">HR Group</th>
+                                                <th colspan="2">Reference No</th>
+                                                <th rowspan="2">Description</th>
+                                                <th rowspan="2">State</th>
+                                                <th rowspan="2">Site</th>
+                                                <th rowspan="2"></th>
+                                                <th rowspan="2"></th>
+                                            </tr>
+                                        </thead>
+                                    </table>
                                     <div id="SettingsDiv" style="display:none">
                                         <div class="form-group row">
                                             <div class="col-md-8">
@@ -1889,6 +1929,7 @@
                                                     <th>Sites</th>
                                                     <th>Pin</th>
                                                     <th></th>
+                                                    <th></th>
                                                     <th>Gender</th>
                                                     <th>Active</th>
                                                     <th>HR1</th>
@@ -1952,6 +1993,20 @@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
                                         <div id="SettingsDiv" style="display:none">
                                             <div class="form-group row">
                                                 <div class="col-md-8">
@@ -2195,6 +2250,7 @@
                                                     <th>Sites</th>
                                                     <th>Pin</th>
                                                     <th></th>
+                                                    <th></th>
                                                     <th>Gender</th>
                                                     <th>Active</th>
                                                     <th>HR1</th>
@@ -2258,6 +2314,20 @@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
                                         <div id="SettingsDiv" style="display:none">
                                             <div class="form-group row">
                                                 <div class="col-md-8">
@@ -2501,6 +2571,7 @@
                                                     <th>Sites</th>
                                                     <th>Pin</th>
                                                     <th></th>
+                                                    <th></th>
                                                     <th>Gender</th>
                                                     <th>Active</th>
                                                     <th>HR1</th>
@@ -2564,6 +2635,20 @@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
                                         <div id="SettingsDiv" style="display:none">
                                             <div class="form-group row">
                                                 <div class="col-md-8">
@@ -2937,6 +3022,7 @@
                                     <option value="2">KV</option>
                                     <option value="3">IR</option>
                                     <option value="4">TA</option>
+                                    <option value="6">DURESS APP</option>
                                 </select>
                             </div>
                         </div>
@@ -2978,6 +3064,11 @@
                                     <option value="">None</option>
                                     <option value="1">Instructor & Position</option>
                                 </select>
+                                 <select class="form-control" id="duressapp_types">
+                                    <option value="">None</option>
+                                    <option value="1">Audio</option>
+                                    <option value="2">Log Activity</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row" id="fieldSettings">
@@ -2995,6 +3086,7 @@
                                 <table class="table" id="tbl_dosanddonts_fields"></table>
                                 <table class="table" id="tbl_kpitelematics_fields"></table>
                                 <table class="table" id="tbl_ta_fields"></table>
+                                <table class="table" id="tbl_duressapp_fields"></table>
 
                             </div>
                         </div>
@@ -3460,6 +3552,7 @@
                                                     <th>Sites</th>
                                                     <th>Pin</th>
                                                     <th></th>
+                                                    <th></th>
                                                     <th>Gender</th>
                                                     <th>Active</th>
                                                     <th>HR1</th>
@@ -3523,6 +3616,20 @@
                                                     <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
                                         <div id="SettingsDiv" style="display:none">
                                             <div class="form-group row">
                                                 <div class="col-md-8">
@@ -3849,36 +3956,48 @@
                                     @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
                                 </div>
 
-
                                 <label class="form-check-label pl-3 pr-3">Is Active</label>
                                 <div class="pl-3 pr-3 mt-1">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                                <label class="form-check-label pl-3 ">RC Bypass</label>
-                                <div style="padding-left: 18px;" class="mt-1">
+                                
+                                <div style="padding-left: 0px;width: 233px;" class="mt-1">
+                                     <select class="form-control" id="Guard_Terminated" name="Guard.IsTerminated" disabled>
+                                        <option selected="selected" value="false">Select</option>
+                                        <option value="true">Guard Terminated (Banned)</option>
+                                       </select>
+                                   
+                                </div>
+
+
+                            
+                            </div>
+
+                         
+                         
+
+                            <div class="form-group row">
+
+                                <label class="col-md-2 col-form-label"></label>
+                                <div class="col-md-3">
+                                </div>
+                                <label class="col-md-1 col-form-label"></label>
+                                <div class="col-md-2">
+                                </div>
+                                <div>
+                                </div>
+                                <label class="form-check-label pl-3 pr-3">RC Bypass</label>
+                                <div class="">
                                     <input type="checkbox" class="form-check" id="cbIsRCBypass">
-                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
+                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass" >
                                 </div>
-                                <div class="pl-3">
-                                    <input type="hidden" id="Guard_DOE">
-                                    <button type="button" class="btn p-0 mb-3" style="margin-left:80px" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
+
+                                <div style="padding-left: 0px;width: 233px;" class="">
+                                    <input type="hidden" id="Guard_DOE" >
+                                    <button type="button" class="btn" style="margin-left: 209px;text-align: right;" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                                 </div>
-                                @*<label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>*@
-                                @*<div class="col-md-3">*@
-                                @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
-                                @*<select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>*@
-                                @*</div>*@
                             </div>
-
-
-                            @*    <div class="form-group row">
-                            <label class="col-md-2 form-check-label">Is Active</label>
-                            <div class="col-md-3">
-                            <input type="checkbox" class="form-check" id="cbIsActive">
-                            <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
-                            </div>
-                            </div> *@
                             <div class="form-row">
                                 <div class="col-md-12">
                                     <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status">
@@ -4481,6 +4600,54 @@
                 <button type="button" id="btnSaveContractorDomain" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save</button>
             </div>
 
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="DuressAppAudio-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Add File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_duressapp_audio" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="audioId" name="id" value="-1">
+                    <input type="hidden" id="filenameaudio" name="filenameaudio" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="add_label">Label</label>
+                                <input type="text" name="add_Label" id="add_label" class="form-control" />
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" accept="audio/*" name="add_filenameduress" id="add_filenameduress" class="form-control-file" />
+                                <label id="dynamicAudio" class="pt-1"></label>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDivAudio" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveAudioFile" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Audio</button>
+            </div>
         </div>
     </div>
 </div>

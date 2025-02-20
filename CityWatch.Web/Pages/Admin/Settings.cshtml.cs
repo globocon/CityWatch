@@ -2667,6 +2667,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+
         public JsonResult OnGetClientTypesThirdParty(int UserID)
         {
             
@@ -2683,6 +2684,13 @@ namespace CityWatch.Web.Pages.Admin
             var ClientTypesThirdParty = clienttypes.Where(x => x.IsSubDomainEnabled == true).ToList();
             return new JsonResult(ClientTypesThirdParty);
             
+        }
+        public JsonResult OnGetDuressAppDetails(int typeId)
+        {
+            var fields = _configDataProvider.GetDuressAppByType(typeId);
+
+            return new JsonResult(fields);
+
         }
     }
     public class helpDocttype

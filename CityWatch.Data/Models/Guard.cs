@@ -138,5 +138,7 @@ namespace CityWatch.Data.Models
         //p1-273 access level- end
         public bool IsRCHRAccess { get; set; }
         public bool IsRCLiteAccess { get; set; }
+
+        public bool IsTerminated { get; set; }
     }
 }

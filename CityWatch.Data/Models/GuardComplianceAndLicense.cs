@@ -59,5 +59,9 @@ namespace CityWatch.Data.Models
         public bool IsDateFilterEnabledHidden { get; set; }
         [NotMapped]
         public bool HRBanEdit { get; set; }
+        [NotMapped]
+        public string IsLogin { get; set; }
+
+
     }
 }

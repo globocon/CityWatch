@@ -784,6 +784,285 @@
         }
     });
     /* p1 - 192 client site email seach - end*/
+
+    //Duress App start
+    let gridDuressAppLogFields;
+    let isDuressAppFieldAdding = false;
+    gridDuressAppLogFields = $('#tbl_duressapp_fields').grid({
+        dataSource: '/Admin/Settings?handler=DuressAppDetails',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        /*selectionType: 'multiple',*/
+        button: true,
+        inlineEditing: { mode: 'command' },
+
+        columns: [
+            { field: 'label', title: 'Label', width: '100%', editor: true },
+            { field: 'name', title: 'Text to Stamp into LB', width: '100%', editor: true },
+            
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    let gridDuressAppAudioFields;
+    let isDuressAppFieldAudioAdding = false;
+    gridDuressAppAudioFields = $('#tbl_duressappLog_fields').grid({
+        dataSource: '/Admin/Settings?handler=DuressAppDetails',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        /*selectionType: 'multiple',*/
+        button: true,
+        //inlineEditing: { mode: 'command' },
+
+        columns: [
+            { field: 'label', title: 'Label', width: '100%', editor: true },
+            { field: 'name', title: 'File Name', width: '100%', editor: true },
+            { width: 166, renderer: schButtonRendererAudio },
+
+
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    function schButtonRendererAudio(value, record) {
+        let buttonHtml = '';
+        buttonHtml = '<a href="/DuressAppAudio/' + record.name + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-microphone"></i></a>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#DuressAppAudio-modal" data-au-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editAudio"><i class="fa fa-pencil"></i></button>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-duressAudio d-block" data-aud-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
+        return buttonHtml;
+    }
+    $('#tbl_duressappLog_fields').on('click', '.del-duressAudio', function () {
+        const idToDelete = $(this).attr('data-aud-id');
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteDuressApp',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridDuressAppAudioFields.reload({ typeId: $('#duressapp_types').val() });
+            });
+        }
+
+    });
+    $('#DuressAppAudio-modal').on('shown.bs.modal', function (event) {
+        clearAudioModal();
+
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editAudio';
+        if (isEdit) {
+            schId = button.data('au-id');
+            DuressAppModalOnEdit(schId);
+        }
+    });
+    function clearAudioModal() {
+
+        $('#filenameaudio').val('');
+        $('#add_Label').val('');
+        $('#add_filenameduress').val('');
+        $('#dynamicAudio').html('');
+        $('#audioId').val('-1');
+    }
+    function DuressAppModalOnEdit(AudioId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=AudioDetails&id=' + AudioId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#add_Label').val(data.label);
+            $('#audioId').val(data.id);
+            $('#filenameaudio').val(data.name);
+            $('#dynamicAudio').html('<a href="/DuressAppAudio/' + data.name + '" class="btn btn-outline-primary" target="_blank"><i class="fa fa-microphone"></i></a>');
+
+
+        }).always(function () {
+            $('#loadinDivAudio').hide();
+        });
+    }
+
+    $('#duressapp_types').on('change', function () {
+        const selKvlFieldTypeId = $('#duressapp_types').val();
+       
+        if (selKvlFieldTypeId == 2) {
+            $('#add_duressapp_fields').show();
+            gridDuressAppAudioFields.hide();
+            gridDuressAppLogFields.show();
+            gridDuressAppLogFields.clear();
+            gridDuressAppLogFields.reload({ typeId: selKvlFieldTypeId });
+            $('#add_DuressAppAudio').hide();
+
+        }
+        else if (selKvlFieldTypeId == 1) {
+            $('#add_duressapp_fields').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.show();
+            gridDuressAppAudioFields.clear();
+            gridDuressAppAudioFields.reload({ typeId: selKvlFieldTypeId });
+            $('#add_DuressAppAudio').show();
+
+
+        }
+        else {
+            $('#add_duressapp_fields').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            
+            $('#add_DuressAppAudio').hide();
+        }
+        
+    });
+    let isDuressFieldAdding = false;
+    $('#add_duressapp_fields').on('click', function () {
+        const selFieldTypeId = $('#duressapp_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        if (selFieldTypeId == 1) {
+            if (isDuressAppFieldAudioAdding) {
+                alert('Unsaved changes in the grid. Refresh the page');
+            } else {
+                isDuressFieldAdding = true;
+                gridDuressAppAudioFields.addRow({
+                    'id': -1,
+                    'typeId': selFieldTypeId,
+                    'name': '',
+                }).edit(-1);
+            }
+        }
+        else {
+            if (isDuressAppFieldAdding) {
+                alert('Unsaved changes in the grid. Refresh the page');
+            } else {
+                isDuressFieldAdding = true;
+                gridDuressAppLogFields.addRow({
+                    'id': -1,
+                    'typeId': selFieldTypeId,
+                    'name': '',
+                }).edit(-1);
+            }
+        }
+       
+    });
+    if (gridDuressAppLogFields) {
+        gridDuressAppLogFields.on('rowDataChanged', function (e, id, record1) {
+            const data1 = $.extend(true, {}, record1);
+            console.log(data1);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveDuressApp',
+                data: { record: data1 },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+
+                    gridDuressAppLogFields.reload({ typeId: $('#duressapp_types').val() });
+                }
+                else {
+                    alert(result.message);
+                   
+                    gridDuressAppLogFields.edit(id);
+
+
+                }
+
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isDuressAppFieldAdding)
+                    isDuressAppFieldAdding = false;
+            });
+        });
+
+        gridDuressAppLogFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteDuressApp',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridDuressAppLogFields.reload({ typeId: $('#duressapp_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isDuressAppFieldAdding)
+                        isDuressAppFieldAdding = false;
+                });
+            }
+        });
+
+    }
+
+   
+
+    $('#btnSaveAudioFile').on('click', function () {
+        $('#loadinDivAudio').show();
+        var fileName = $('#filenameaudio').val();
+        var label = $('#add_label').val();
+        
+        var TypeId = $('#duressapp_types').val();
+        
+        var fileInput = $('#add_filenameduress')[0]; 
+        var Id = $('#audioId').val();
+        const fileForm = new FormData();
+       
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0]; 
+            const fileExtn = file.name.split('.').pop().toLowerCase(); 
+            fileName = file.name;
+
+            fileForm.append('file', file);
+
+        }
+        else {
+
+            fileForm.append('file', '');
+        }
+        if (fileName == '') {
+            showModal('Please select the file to upload');
+            return false;
+        }
+        fileForm.append('typeId', TypeId);
+        fileForm.append('label', label);
+        fileForm.append('name', fileName);
+        fileForm.append('id', Id);
+        
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveAudio',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                $('#DuressAppAudio-modal').modal('hide');
+
+                gridDuressAppAudioFields.reload({ typeId: $('#duressapp_types').val() });
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            $('#loadinDivAudio').hide();
+        });
+
+
+
+    });
+
+     //Duress App stop
+
+
     /****** Report Fileds start *******/
     let gridReportFields;
 
@@ -4074,6 +4353,11 @@
         gridTAFields.hide();
         $('#ta_field_types').hide();
         $('#add_ta_fields').hide();
+        $('#duressapp_types').hide();
+        gridDuressAppLogFields.hide();
+        gridDuressAppAudioFields.hide();
+        $('#add_duressapp_fields').hide();
+        $('#add_DuressAppAudio').hide();
 
         //p5 - Issue - 20 - Instructor - end
 
@@ -4093,6 +4377,12 @@
             $('#add_dosanddonts_fields').show();
             $('#add_kvl_fields').hide();
             $('#irNotes').hide();
+
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
 
             gridReportFields.hide();
             gridKvlFields.hide();
@@ -4115,6 +4405,12 @@
             $('#report_field_types').hide();
 
             $('#kvl_fields_types').show();
+
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').hide();
@@ -4144,6 +4440,12 @@
             $('#report_field_types').show();
             $('#kvl_fields_types').hide();
 
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
+
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').hide();
             $('#add_KPI_Telematics_fields').hide();
@@ -4172,6 +4474,12 @@
             $('#doanddontfields_types').hide();
             $('#report_field_types').hide();
             $('#kvl_fields_types').hide();
+
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').show();
@@ -4207,12 +4515,18 @@
             $('#add_KPI_Telematics_fields').hide();
 
 
+
             gridTAFields.hide();
             $('#ta_field_types').show();
             $('#add_ta_fields').show();
             $('#ta_field_types').val('');
             // gridTAFields.reload();
 
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
 
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();
@@ -4230,7 +4544,45 @@
             gridTAFields.reload({ typeId: $('#ta_field_types').val() });
 
         }
+        else if ($('#report_module_types').val() == 6) {
+            $('#fieldSettings').show();
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
 
+            $('#lblFieldType').show();
+            $('#KPITelematicsfields_types').hide();
+            $('#add_KPI_Telematics_fields').hide();
+
+
+            gridTAFields.hide();
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            $('#ta_field_types').val('');
+            // gridTAFields.reload();
+
+            $('#duressapp_types').show();
+            gridDuressAppLogFields.show();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').show();
+            $('#add_DuressAppAudio').hide();
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+            $('#irNotes').hide();
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+            gridAreaReportFields.hide();
+            gridKPITelematicsFields.hide();
+            $('#report_field_types').val('');
+            $('#ta_field_types').hide();
+            $('#add_ta_fields').hide();
+            gridTAFields.hide();
+            gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+
+        }
         else {
 
             $('#doanddontfields_types').hide();
@@ -4238,6 +4590,13 @@
             $('#kvl_fields_types').hide();
             $('#KPITelematicsfields_types').hide();
             $('#lblFieldType').hide();
+
+
+            $('#duressapp_types').hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppAudioFields.hide();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
 
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();
@@ -4999,6 +5358,64 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
+let gridHrSettingswithCourseLibrary;
+gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettingsWithCourseLibrary',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+    showHiddenColumnsAsDetails: false,
+    primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'groupName', width: '10%' }, // Show the HR Group column
+        { field: 'referenceNo', width: '10%' },
+        { field: 'description', width: '30%' },
+        { field: 'states' },
+        { field: 'clientSitesSummary' },
+        { width: '5%', renderer: hrgroupLockButtonRenderer },
+        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
+
+        { width: '10%', renderer: hrgroupButtonRenderer },
+    ],
+    dataBound: function (e, records, totalRecords) {
+        var tbody = $(e.target).find('tbody');
+        var rows = tbody.find('tr');
+
+        var lastGroupValue = null;
+
+        rows.each(function (index, row) {
+            var expandbutton
+
+            var currentGroupValue = $(row).find('td:eq(2)').text();
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 9).text(currentGroupValue));
+                headerRow.css('background-color', '#CCCCCC');
+                $(row).before(headerRow);
+            }
+        });
+    },
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last')
+            .prev()
+            .prev()// Select the column before the last
+            .addClass('text-center')
+            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last')
+            .prev()
+
+            .addClass('text-center')
+            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
+        $('#tbl_hr_settings_with_CourseLibrary thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 
 function hrgroupLockButtonRenderer(value, record) {
     if (record.hrlock) {
@@ -5120,6 +5537,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function () {
         gridHrSettings.reload();
+        gridHrSettingswithCourseLibrary.reload();
         //showStatusNotification(true, 'Saved successfully');
     }).fail(function () {
         console.log('error');
@@ -5186,12 +5604,155 @@ $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
             }
         }).done(function () {
             gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
         }).always(function () {
             $('#loader').hide();
         });
     }
 });
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnLock', function () {
+    $('#lockHRRcord').prop('checked', false);
+    const userId = $(this).attr('data-doc-id');
+    const lockStatus = $(this).attr('data-lock-status');
+    $('#user-access-for-idlock').val($(this).attr('data-doc-id'));
+    if (lockStatus === '1') {
+        $('#lockHRRcord').prop('checked', true);
+    }
+    else {
+        $('#lockHRRcord').prop('checked', false);
+    }
 
+    if (ucaTreeLock === undefined) {
+
+
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+    else {
+
+        ucaTreeLock.destroy(); // Destroys and removes the current tree
+
+        // Clear the container's inner HTML to remove any tree remnants
+        $('#ucaTreeViewlock').empty();
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+
+    ucaTreeLock.uncheckAll();
+    ucaTreeLock.reload({ hrSttingsId: userId });
+    $('#loader').show();
+    $('#user-client-access-modal-lock').modal('show');
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnBan', function () {
+    const userId = $(this).attr('data-doc-id');
+    let enableStatus = 0;
+    let Status = $(this).attr('data-ban-status');
+    if (Status == 1) {
+        enableStatus = 0
+    }
+    else {
+        enableStatus = 1;
+    }
+
+
+    $.ajax({
+        url: '/Admin/Settings?handler=HrSettingsBanEdit',
+        data: {
+            hrSttingsId: userId,
+            enableStatus: enableStatus
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        gridHrSettingswithCourseLibrary.reload();
+        //showStatusNotification(true, 'Saved successfully');
+    }).fail(function () {
+        console.log('error');
+    });
+
+
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', function () {
+
+
+    $('#loader').show();
+    $('#hrSettingsModal').modal('show');
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'));
+    $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+    $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+    $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+    $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        clearCriticalModalHrDoc();
+        var selectedValues = [];
+        $.each(data.hrSettingsClientStates, function (index, item2) {
+            selectedValues.push(item2.state);
+        });
+
+        $("#HrState").multiselect();
+        $("#HrState").val(selectedValues);
+        $("#HrState").multiselect("refresh");
+        $("#clientTypeNameDocHrDoc").multiselect("refresh");
+
+        $.each(data.hrSettingsClientSites, function (index, item) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCountHrDoc();
+
+        });
+        $("#clientSitesDocHrDoc").multiselect("refresh");
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+
+
+
+
+
+});
+$('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', function () {
+    // var data = keyVehicleLog.row($(this).parents('tr')).data();
+    if (confirm('Are you sure want to delete this  entry?')) {
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            data: { 'id': $(this).attr('data-doc-id') },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function () {
+            gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+});
 
 /*Lock Start*/
 
@@ -5219,6 +5780,7 @@ $('#btnSaveUserAccesslock').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
             gridHrSettings.reload();
+            gridHrSettingswithCourseLibrary.reload();
             //showStatusNotification(true, 'Saved successfully');
         }).fail(function () {
             console.log('error');
@@ -5386,6 +5948,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -5402,6 +5965,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -5417,6 +5981,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -5430,6 +5995,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -5454,6 +6020,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
         gridClassroomLocation.hide();
+        gridHrSettingswithCourseLibrary.hide();
         $('#add_location').hide();
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
@@ -5480,6 +6047,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
 
@@ -5494,12 +6062,33 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.show();
         $('#add_location').show();
+        gridHrSettingswithCourseLibrary.hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 8) {
+        
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
+        
+        gridHrSettingswithCourseLibrary.show();
+        gridHrSettingswithCourseLibrary.clear();
+        gridHrSettingswithCourseLibrary.reload();
+        
     }
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
         gridLanguage.hide();
         gridClassroomLocation.hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -5609,7 +6198,7 @@ $('#add_hr_settings').on('click', function () {
         alert('Please select a field type to update');
         return;
     }
-    if (selFieldTypeId == 1) {
+    if (selFieldTypeId == 1 || selFieldTypeId==8) {
         $('#list_hrGroups').val('');
         $('#list_ReferenceNoNumber').val('');
         $('#list_ReferenceNoAlphabet').val('');
@@ -5877,6 +6466,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridLicenseTypes.hide();
     gridCriticalDocument.hide();
     gridLanguage.hide();
+    gridHrSettingswithCourseLibrary.hide();
    
 }
 
@@ -6158,6 +6748,8 @@ $('#btn_save_hr_settings').on('click', function () {
                 $('#hrSettingsModal').modal('hide');
                 gridHrSettings.clear();
                 gridHrSettings.reload();
+                gridHrSettingswithCourseLibrary.clear();
+                gridHrSettingswithCourseLibrary.reload();
             } else {
                 displayValidationSummaryHrSettings(result.errors);
             }
