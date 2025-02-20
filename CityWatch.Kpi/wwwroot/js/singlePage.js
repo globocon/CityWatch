@@ -34,9 +34,20 @@ $(function () {
 
     if (gritdSmartWands) {
         gritdSmartWands.on('rowDataChanged', function (e, id, record) {
+           
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
+
             $.ajax({
+                url: '/admin/settings?handler=SmartWandPhoneNumber',
+                data: { phoneNumber: data.phoneNumber },
+                type: 'GET'
+            }).done(function (response) {
+                if (response != null) {
+                    alert('Number already in use at site ' + response.clientSite.name + ' please deregister this number before trying to allocate it to a different site');
+                }
+                else {
+                    $.ajax({
                 url: '/admin/settings?handler=SmartWandSettings',
                 data: { record: data },
                 type: 'POST',
@@ -49,6 +60,11 @@ $(function () {
                 if (isSmartWandAdding)
                     isSmartWandAdding = false;
             });
+                }
+               
+            });
+
+            
         });
 
         gritdSmartWands.on('rowRemoving', function (e, id, record) {

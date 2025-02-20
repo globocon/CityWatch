@@ -213,7 +213,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-
+       
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {
             var success = false;
@@ -2322,6 +2322,99 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(newjResult);
 
             //return new JsonResult(_configDataProvider.GetHRSettings());
+        }
+
+        public JsonResult OnPostSaveDuressApp(DuressAppField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            
+            try
+            {
+
+                _guardLogDataProvider.SaveDuressApp(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostSaveAudio()
+        {
+            var success = false;
+            var message = string.Empty;
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "DuressAppAudio");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var Label = Request.Form["label"];
+           
+            var Name = Request.Form["name"];
+            int Id = Convert.ToInt32(Request.Form["id"]);
+
+            var type = 1;
+
+            _guardLogDataProvider.SaveDuressApp(new DuressAppField()
+                {
+                    
+                    Name = Name,
+                   TypeId= type,
+                   Label= Label,
+                   Id= Id
+
+            });
+
+                success = true;
+           
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetAudioDetails(int id)
+        {
+            return new JsonResult(_clientDataProvider.GetAudioByID(id));
+
+        }
+        public JsonResult OnPostDeleteDuressApp(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteDuressApp(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
         }
     }
 

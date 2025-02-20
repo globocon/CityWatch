@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 
 namespace CityWatch.Web.Pages
@@ -41,18 +42,21 @@ namespace CityWatch.Web.Pages
                 returnUrl = Url.Page("/");
 
             var isValidLogin = _userAuthentication.TryGetLoginUser(LoginUser, out User user);
-
+            var IsthirdParty = IsThirdParty(user.Id);
             if (!isValidLogin)
                 ModelState.AddModelError("Username", "Incorrect User Name or Password");
             else if (!user.IsAdmin && returnUrl == Url.Page("/Admin/Settings"))
                 ModelState.AddModelError("Username", "Not authorized to access this page");
             else if (user.IsDeleted)
                 ModelState.AddModelError("Username", "User is not active");
+            
             else
             {
                 SignInUser(user);
                 _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-                var subDomainRedirect = GetClientDetailsUsingSubDomain();
+                var subDomainRedirect = GetClientDetailsUsingSubDomain(user.Id);
+                
+                
                 // Check if the subDomainRedirect has a value and update the returnUrl accordingly
                 if (!string.IsNullOrEmpty(subDomainRedirect))
                 {
@@ -60,7 +64,19 @@ namespace CityWatch.Web.Pages
                 }
                 else
                 {
-                    return Redirect(Url.Page(returnUrl));
+                    if (IsthirdParty)
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+
+
+                    }
+                    else
+                    {
+                        return Redirect(Url.Page(returnUrl));
+                    }
+                        
+                    
+                    
                 }
 
                 
@@ -92,7 +108,7 @@ namespace CityWatch.Web.Pages
             HttpContext.Session.Remove("GuardId");
         }
 
-        public string GetClientDetailsUsingSubDomain()
+        public string GetClientDetailsUsingSubDomain(int userid)
         {
             var host = HttpContext.Request.Host.Host;
             var clientName = string.Empty;
@@ -123,6 +139,15 @@ namespace CityWatch.Web.Pages
                     clientName.Trim().ToLower() != "localhost"
                 )
                 {
+                    var IsthirdParty = IsThirdParty(userid);
+                    if (IsthirdParty)
+                    {
+                        url = "/Guard/Login?t=gl";
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+                    }
                     var domain = _dataProvider.GetSubDomainDetails(clientName);
                     if (domain != null)
                     {
@@ -136,6 +161,25 @@ namespace CityWatch.Web.Pages
             }
 
             return url;
+        }
+
+        public bool IsThirdParty(int userid)
+        {
+            var IsThirtPartyCheck = false;
+            var IsThirdparty = _userAuthentication.GetUserClientSiteAccessThirdParty(userid);
+            if (IsThirdparty != null && IsThirdparty.ThirdPartyID != null && IsThirdparty.ThirdPartyID != 0)
+            {
+                var DomainThirdParty = _dataProvider.GetSubDomainID(IsThirdparty.ThirdPartyID);
+                if (DomainThirdParty != null)
+                {
+                    IsThirtPartyCheck = true;
+                }
+                else
+                {
+                    IsThirtPartyCheck = false;
+                }
+            }
+            return IsThirtPartyCheck;
         }
     }
 
