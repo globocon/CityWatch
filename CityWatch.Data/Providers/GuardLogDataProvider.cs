@@ -362,6 +362,8 @@ namespace CityWatch.Data.Providers
         
 
         void DeleteTrainingCourseCertificateRPL(int id);
+         void SaveDuressApp(DuressAppField duressapp);
+        public void DeleteDuressApp(int id);
 
     }
 
@@ -5200,6 +5202,36 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //KPI Telematics End
+        public void SaveDuressApp(DuressAppField duressapp)
+        {
+            if (duressapp.Id == -1)
+            {
+                duressapp.Id = 0;
+                _context.DuressAppField.Add(duressapp);
+            }
+            else
+            {
+                var duressappUpdate = _context.DuressAppField.SingleOrDefault(x => x.Id == duressapp.Id);
+                if (duressappUpdate != null)
+                {
+                    duressappUpdate.Name = duressapp.Name;
+
+                    duressappUpdate.Label = duressapp.Label;
+                   
+                    duressappUpdate.TypeId = duressapp.TypeId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteDuressApp(int id)
+        {
+            var DuressAppToDelete = _context.DuressAppField.SingleOrDefault(x => x.Id == id);
+            if (DuressAppToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.Remove(DuressAppToDelete);
+            _context.SaveChanges();
+        }
         public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
         {
             _context.RadioCheckPushMessages.Add(radioCheckPushMessages);

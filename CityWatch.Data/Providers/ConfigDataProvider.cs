@@ -169,12 +169,14 @@ namespace CityWatch.Data.Providers
         void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId);
         void DeleteGuardScores(int guardId, int trainingCourseId);
         GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId);
-
+        public List<DuressAppField> GetDuressAppFields();
+        List<DuressAppField> GetDuressAppByType(int type);
         public bool AddDuressSetting(DuressSetting setting);
         DuressSetting GetDuressSetting(int clientSiteId, int siteDuressNumber);
         public DuressSetting GetDuressSettingById(int duressAppId);
         public bool UpdateDuressSetting(DuressSetting setting);
         public bool DeleteDuressSettingById(int duressAppId);
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -502,6 +504,10 @@ namespace CityWatch.Data.Providers
         public List<IncidentReportField> GetReportFields()
         {
             return _context.IncidentReportFields.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
+        }
+        public List<DuressAppField> GetDuressAppFields()
+        {
+            return _context.DuressAppField.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
         }
         public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
         {
@@ -1801,6 +1807,11 @@ namespace CityWatch.Data.Providers
             return report;
         }
 
+        public List<DuressAppField> GetDuressAppByType(int type)
+        {
+            return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Name).ToList();
+        }
+
 
         // ✅ Insert New Record
         public bool AddDuressSetting(DuressSetting setting)
@@ -1836,6 +1847,7 @@ namespace CityWatch.Data.Providers
             }
             return false;
         }
+
 
 
     }
