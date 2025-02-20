@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 
@@ -170,6 +171,12 @@ namespace CityWatch.Data.Providers
         GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId);
         public List<DuressAppField> GetDuressAppFields();
         List<DuressAppField> GetDuressAppByType(int type);
+        public bool AddDuressSetting(DuressSetting setting);
+        DuressSetting GetDuressSetting(int clientSiteId, int siteDuressNumber);
+        public DuressSetting GetDuressSettingById(int duressAppId);
+        public bool UpdateDuressSetting(DuressSetting setting);
+        public bool DeleteDuressSettingById(int duressAppId);
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1804,6 +1811,44 @@ namespace CityWatch.Data.Providers
         {
             return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Name).ToList();
         }
+
+
+        // ✅ Insert New Record
+        public bool AddDuressSetting(DuressSetting setting)
+        {
+            _context.DuressSettings.Add(setting);
+            return _context.SaveChanges() > 0;
+        }
+
+        public DuressSetting GetDuressSetting(int clientSiteId, int siteDuressNumber)
+        {
+            return _context.DuressSettings
+                .FirstOrDefault(d => d.ClientSiteId == clientSiteId && d.SiteDuressNumber == siteDuressNumber);
+        }
+
+        public DuressSetting GetDuressSettingById(int duressAppId)
+        {
+            return _context.DuressSettings.FirstOrDefault(d => d.Id == duressAppId);
+        }
+        public bool UpdateDuressSetting(DuressSetting setting)
+        {
+            _context.DuressSettings.Update(setting);
+            return _context.SaveChanges() > 0;
+        }
+
+        public bool DeleteDuressSettingById(int duressAppId)
+        {
+            var duressSetting = _context.DuressSettings.FirstOrDefault(d => d.Id == duressAppId);
+            if (duressSetting != null)
+            {
+                _context.DuressSettings.Remove(duressSetting);
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
+
 
     }
 

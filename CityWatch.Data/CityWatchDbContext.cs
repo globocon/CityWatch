@@ -152,7 +152,7 @@ namespace CityWatch.Data
         public DbSet<HyperLinks> HyperLinks { get; set; }
         public DbSet<DuressAppField> DuressAppField { get; set; }
 
-
+        public DbSet<DuressSetting> DuressSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
