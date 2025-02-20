@@ -1183,7 +1183,10 @@ namespace CityWatch.Web.Pages.Reports
 
         public IActionResult OnGetClientSites(string types)
         {
-            return new JsonResult(_viewDataService.GetUserClientSites(types).OrderBy(z => z.Text));
+            //return new JsonResult(_viewDataService.GetUserClientSites(types).OrderBy(z => z.Text));
+
+            return new JsonResult(_viewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, types).OrderBy(z => z.Text));
+            
         }
         public IActionResult OnPostGeneratePdfReport()
         {
