@@ -581,9 +581,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
                     var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
 
-                    var Subject = "Global Duress Alert";
+                    var Subject = "Global Duress Alert Deactivated";
                     var Notifications = "The duress alarm was deactivated by the CRO for the following reason"+ "<br/>" + "Reason:" +
-                     checkedStatus;
+                     checkedStatus+ "<br/>"+
+                      (string.IsNullOrEmpty(ClientsiteDetails.Name) ? string.Empty : "Site: " + ClientsiteDetails.Name) + "<br/>" ;
                     EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name);
                 }
 
