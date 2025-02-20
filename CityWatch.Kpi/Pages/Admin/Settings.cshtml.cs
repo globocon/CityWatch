@@ -1032,7 +1032,7 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-
+        
         public JsonResult OnPostDeleteSmartWandSettings(int id)
         {
             var success = false;
@@ -1067,7 +1067,11 @@ namespace CityWatch.Kpi.Pages.Admin
 
             _clientDataProvider.SaveClientSite(clientSite);
         }
-
+        public JsonResult OnGetSmartWandPhoneNumber(string PhoneNumber)
+        {
+            var ssd = _clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber);
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber));
+        }
 
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {
