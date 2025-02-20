@@ -47,7 +47,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly IDropboxService _dropboxUploadService;
-        
+
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -92,7 +92,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _configDataProvider = configDataProvider;
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
-            
+
         }
 
         public IActionResult OnGet()
@@ -188,7 +188,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var jobId = _importJobDataProvider.SaveKpiDataImportJob(serviceLog);
             await _importDataService.Run(jobId);
         }
-       
+
         //code added to search client name start
 
         public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm, int userId)
@@ -297,7 +297,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 {
                     if (clientSiteKpiSetting.Id != 0)
                     {
-                       
+
 
                         clientSiteId = clientSiteKpiSetting.ClientSiteId;
                         var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
@@ -737,7 +737,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 ForMonth = new DateTime(year, month, 1),
                 SettingsId = kpiSetting.Id,
                 Notes = string.Empty,
-                HRRecords= string.Empty
+                HRRecords = string.Empty
             };
             return new JsonResult(clientSiteKpiNote);
         }
@@ -1293,11 +1293,11 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             //p2-140 key photos  -start
             var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList();
-            foreach(var item in clientSiteKeys)
+            foreach (var item in clientSiteKeys)
             {
                 if (item.ImagePath == null)
                 {
-                    item.ImagePathNew = string.Empty;  
+                    item.ImagePathNew = string.Empty;
                 }
                 else
                 {
@@ -1314,7 +1314,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = string.Empty;
             try
             {
-                if(clientSiteKey.ImagePath==null)
+                if (clientSiteKey.ImagePath == null)
                 {
                     clientSiteKey.ImagePath = string.Empty;
                 }
@@ -1531,7 +1531,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnGetCriticalDocumentList(int clientSiteId)
         {
-          
+
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
@@ -1702,7 +1702,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             try
             {
-                if (files.Count == 1 )
+                if (files.Count == 1)
                 {
                     var file = files[0];
                     fileName = file.FileName;
@@ -1714,10 +1714,10 @@ namespace CityWatch.Kpi.Pages.Admin
                     if (!string.IsNullOrEmpty(keyNo))
                     {
                         newFileName = keyNo + extension;
-                        fileName =  newFileName;
+                        fileName = newFileName;
                     }
 
-                    
+
 
 
 
@@ -1732,7 +1732,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     if (!Directory.Exists(guardUploadDir))
                         Directory.CreateDirectory(guardUploadDir);
 
-                     filePath = Path.Combine(guardUploadDir, fileName);
+                    filePath = Path.Combine(guardUploadDir, fileName);
                     if (System.IO.File.Exists(filePath))
                     {
 
@@ -1757,7 +1757,7 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, imagePath, imagePathNew });
         }
 
-        public JsonResult OnPostDeleteKeyImageAttachment(int id,string name,int clientsiteid)
+        public JsonResult OnPostDeleteKeyImageAttachment(int id, string name, int clientsiteid)
 
         {
 
@@ -1767,7 +1767,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 if (id != 0)
                 {
-                   
+
                     var filePath = string.Empty;
                     filePath = Path.Combine(_webHostEnvironment.WebRootPath, "KeyImage", clientsiteid.ToString(), name);
                     if (System.IO.File.Exists(filePath))
@@ -1932,7 +1932,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     _guardSettingsDataProvider.SaveANPR(anpr);
                     success = true;
                 }
-                
+
             }
 
             catch (Exception ex)
@@ -1944,7 +1944,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 {
                     message = "Key number already exists";
                 }
-               
+
             }
 
             return new JsonResult(new { success, message });
@@ -1952,11 +1952,11 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnGetANPR(int clientSiteId)
         {
-           
+
             var clientSiteKeys = _guardSettingsDataProvider.GetANPR(clientSiteId).ToList();
-            
+
             return new JsonResult(clientSiteKeys);
-            
+
         }
         public JsonResult OnPostDeleteANPR(int id)
         {
@@ -2026,7 +2026,7 @@ namespace CityWatch.Kpi.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
                             DocumentType = type,
-                            ClientSite= ClienSiteID,
+                            ClientSite = ClienSiteID,
                             FilePath = staffDocsUrl
                         });
 
@@ -2072,6 +2072,142 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+
+
+
+        public JsonResult OnPostSaveDuressApp(int duressAppId, string positionFilter, int selectedPosition, int siteDuressNumber, int clientSiteIdDuress)
+        {
+            var success = false;
+            string message = "Failed to save data.";
+
+            try
+            {
+                // Check if duressAppId is 0 (Add new) or not (Update existing)
+                if (duressAppId == 0)
+                {
+                    // Add new DuressSetting
+                    var setting = new DuressSetting
+                    {
+                        ClientSiteId = clientSiteIdDuress,
+                        PositionFilter = positionFilter,
+                        SelectedPosition = selectedPosition,
+                        SiteDuressNumber = siteDuressNumber
+                    };
+                    success = _configDataProvider.AddDuressSetting(setting);
+                    if (success)
+                        message = "Duress settings saved successfully.";
+                }
+                else
+                {
+                    // Update existing DuressSetting
+                    var existingSetting = _configDataProvider.GetDuressSettingById(duressAppId);
+                    if (existingSetting != null)
+                    {
+
+                        if (existingSetting.SiteDuressNumber == siteDuressNumber)
+                        {
+                            existingSetting.PositionFilter = positionFilter;
+                            existingSetting.SelectedPosition = selectedPosition;
+                            existingSetting.SiteDuressNumber = siteDuressNumber;
+                            success = _configDataProvider.UpdateDuressSetting(existingSetting);
+                            if (success)
+                                message = "Duress settings updated successfully.";
+                            else
+                                message = "Failed to update Duress settings.";
+
+                        }
+                        else
+                        {
+                            var setting = new DuressSetting
+                            {
+                                ClientSiteId = clientSiteIdDuress,
+                                PositionFilter = positionFilter,
+                                SelectedPosition = selectedPosition,
+                                SiteDuressNumber = siteDuressNumber
+                            };
+                            success = _configDataProvider.AddDuressSetting(setting);
+                            if (success)
+                                message = "Duress settings saved successfully.";
+                        }
+                    }
+                    else
+                    {
+                        var setting = new DuressSetting
+                        {
+                            ClientSiteId = clientSiteIdDuress,
+                            PositionFilter = positionFilter,
+                            SelectedPosition = selectedPosition,
+                            SiteDuressNumber = siteDuressNumber
+                        };
+                        success = _configDataProvider.AddDuressSetting(setting);
+                        if (success)
+                            message = "Duress settings saved successfully.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                _logger.LogError(message);
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetGetDuressApp(int clientSiteIdDuress, int siteDuressNumber)
+        {
+            try
+            {
+                // Fetch the duress setting from the data provider
+                var clientSiteKpiNote = _configDataProvider.GetDuressSetting(clientSiteIdDuress, siteDuressNumber);
+
+                if (clientSiteKpiNote == null)
+                {
+                    // Return a custom error message if no record is found
+                    return new JsonResult(new { success = false, message = "No duress setting found for the specified site and duress number." });
+                }
+
+                // Return the successful result
+                return new JsonResult(new { success = true, data = clientSiteKpiNote });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (optional)
+                _logger.LogError(ex, "An error occurred while fetching the duress setting.");
+
+                // Return an error message
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
+
+        public JsonResult OnPostDeleteDuressApp(int duressAppId)
+        {
+            try
+            {
+                // Attempt to delete the duress setting
+                bool isDeleted = _configDataProvider.DeleteDuressSettingById(duressAppId);
+
+                if (!isDeleted)
+                {
+                    // Return a custom error message if no record is found
+                    return new JsonResult(new { success = false, message = "No duress setting found with the specified ID." });
+                }
+
+                // Return the successful result
+                return new JsonResult(new { success = true, message = "Duress setting deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (optional)
+                _logger.LogError(ex, "An error occurred while deleting the duress setting.");
+
+                // Return an error message
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
     }
+
 
 }
