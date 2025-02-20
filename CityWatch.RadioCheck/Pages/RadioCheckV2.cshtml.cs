@@ -30,6 +30,9 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using CityWatch.Web.Models;
 using CityWatch.Data.Services;
+using CityWatch.Web.Pages.Radio;
+using Dropbox.Api.Files;
+using System.Web;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -568,6 +571,24 @@ namespace CityWatch.RadioCheck.Pages.Radio
             var message = "success";
             try
             {
+                //Email send Duress Activate start
+                var colorId = _clientDataProvider.GetRadioCheckStatus(statusId);
+                if (colorId == 5)
+                {
+                    var GuradDetails = _clientDataProvider.GetGuradName(guardId);
+                    var ClientsiteDetails = _clientDataProvider.GetClientSiteName(clientSiteId);
+
+                    var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
+                    var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+
+                    var Subject = "Global Duress Alert";
+                    var Notifications = "The duress alarm was deactivated by the CRO for the following reason"+ "<br/>" + "Reason:" +
+                     checkedStatus;
+                    EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name);
+                }
+
+                
+                //Email send Duress Activate stop
 
                 var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
@@ -593,6 +614,48 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 success = false;
                 message = ex.Message;
             }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult EmailSender(string Email, string Subject, string Notifications, string GuradName, string Name)
+        {
+            var success = true;
+            var message = "success";
+            #region Email
+            if (Email != null)
+            {
+                var fromAddress = _EmailOptions.FromAddress.Split('|');
+                var toAddress = Email.Split(','); ;
+                var subject = Subject;
+                var messageHtml = Notifications;
+
+                var messagenew = new MimeMessage();
+                messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                foreach (var address in GetToEmailAddressList(toAddress))
+                    messagenew.To.Add(address);
+
+                messagenew.Subject = $"{subject}";
+
+                var builder = new BodyBuilder()
+                {
+                    HtmlBody = messageHtml
+                };
+
+                messagenew.Body = builder.ToMessageBody();
+
+                using (var client = new SmtpClient())
+                {
+                    client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                    if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                        !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                        client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                    client.Send(messagenew);
+                    client.Disconnect(true);
+                   
+                }
+            }
+
+            #endregion
+
             return new JsonResult(new { success, message });
         }
         //SaveRadioStatus -end

@@ -260,7 +260,9 @@ namespace CityWatch.Data.Providers
         public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting);
         public void AddHyperLinks(string Email, string TvNews, string wether);
         public List<HyperLinks> GetHyperLinksDetails();
+        public int? GetRadioCheckStatus(int? StatusID);
         public DuressAppField GetAudioByID(int documentId);
+
 
     }
 
@@ -815,6 +817,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards
                      .SingleOrDefault(z => z.Id == guardId);
+
+        }
+        public int? GetRadioCheckStatus(int? StatusID)
+        {
+            return _context.RadioCheckStatus
+                     .Where(z => z.Id == StatusID).FirstOrDefault().RadioCheckStatusColorId; 
 
         }
         public List<GlobalDuressEmail> GetGlobalDuressEmail()
