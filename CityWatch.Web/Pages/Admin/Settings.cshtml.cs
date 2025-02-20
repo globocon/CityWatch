@@ -795,13 +795,17 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_viewDataService.GetUserClientSiteAccess(userId));
         }
-
+        public JsonResult OnGetClientAccessThirdParty(int userId)
+        {
+            var sss = _viewDataService.GetUserClientSiteAccessNew(userId);
+            return new JsonResult(_viewDataService.GetUserClientSiteAccessNew(userId));
+        }
         public JsonResult OnGetHrSettingsLockedClientSites(int hrSttingsId)
         {
             return new JsonResult(_viewDataService.GetHrSettingsClientSiteLockStatus(hrSttingsId));
         }
 
-        public JsonResult OnPostClientAccessByUserId(int userId, int[] selectedSites)
+        public JsonResult OnPostClientAccessByUserId(int userId, int[] selectedSites,int ClientTypeId)
         {
             var status = true;
             var message = "Success";
@@ -810,9 +814,10 @@ namespace CityWatch.Web.Pages.Admin
                 var clientSiteAccess = selectedSites.Select(x => new UserClientSiteAccess()
                 {
                     ClientSiteId = x,
-                    UserId = userId
+                    UserId = userId,
+                    ThirdPartyID= ClientTypeId
                 }).ToList();
-                _userDataProvider.SaveUserClientSiteAccess(userId, clientSiteAccess);
+                _userDataProvider.SaveUserClientSiteAccess(userId, clientSiteAccess, ClientTypeId);
             }
             catch (Exception ex)
             {
@@ -2662,11 +2667,30 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+
+        public JsonResult OnGetClientTypesThirdParty(int UserID)
+        {
+            
+            var clienttypes = _viewDataService.GetUserClientTypesHavingAccessThird(UserID);
+            foreach (var item in clienttypes)
+            {
+               
+                var result = _userDataProvider.GetDomainDeatils(item.Id);
+                if (result != null)
+                {
+                    item.IsSubDomainEnabled = result.Enabled;
+                }
+            }
+            var ClientTypesThirdParty = clienttypes.Where(x => x.IsSubDomainEnabled == true).ToList();
+            return new JsonResult(ClientTypesThirdParty);
+            
+        }
         public JsonResult OnGetDuressAppDetails(int typeId)
         {
             var fields = _configDataProvider.GetDuressAppByType(typeId);
 
             return new JsonResult(fields);
+
         }
     }
     public class helpDocttype

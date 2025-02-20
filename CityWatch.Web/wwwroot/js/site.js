@@ -2403,13 +2403,31 @@
             { field: 'userName', title: 'User', width: 150 },
             { field: 'clientTypeCsv', title: 'Client Type Access', width: 250 },
             { field: 'clientSiteCsv', title: 'Client Site Access', width: 250 },
+            { title: '3rd Party', width: 50, renderer: domainSettings1, cssClass: 'text-center' },
             { width: 100, tmpl: '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal" data-id="{id}"><i class="fa fa-pencil mr-2"></i>Edit</button>', align: 'center' },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    function domainSettings1(value, record) {
 
+        // Check if the row is a newly added row by ID or another condition
+        if (record.id === -1) {
+            // Skip rendering the checkbox for new rows
+            return '';
+        }
+
+        if (record.thirdParty != null) {
+
+            return '<input type="checkbox" checked><input type="hidden" id="typeId1" value="' + record.id + '"> <input type="hidden" id="typeName1" value="' + record.name + '">'
+
+        }
+        else {
+            return '<input type="checkbox"><input type="hidden" id="typeId1" value="' + record.id + '"> <input type="hidden" id="typeName1" value="' + record.name + '">'
+        }
+
+    }
     /*p1-248 search client site access grid*/
 
     $('#btnSearchClientSiteAccess').on('click', function () {
@@ -2439,6 +2457,31 @@
                 checkedField: 'checked'
             });
         }
+
+       
+        //3rd Party Dropdown start
+        $('#sel_ThirdParty_type').html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientTypesThirdParty',
+            data: {
+                UserID: userId
+            },
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#sel_ThirdParty_type').append('<option value="">Select</option>');
+            data.map(function (clientType) {
+                $('#sel_ThirdParty_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
+            });
+            $.get(`/Admin/Settings?handler=ClientAccessThirdParty&userId=${userId}`, function (data1) {
+                if (data1 && data1.thirdPartyID) {
+                    console.log(data1.thirdPartyID);
+                    $('#sel_ThirdParty_type').val(data1.thirdPartyID); // Set dropdown value
+                }
+            });
+        });
+         //3rd Party Dropdown stop
+       
         ucaTree.uncheckAll();
         ucaTree.reload({ userId: userId });
     });
@@ -2446,6 +2489,7 @@
     $('#btnSaveUserAccess').on('click', function () {
         if (ucaTree) {
             const userId = $('#user-access-for-id').val();
+            var ClientTypeID = $('#sel_ThirdParty_type').val();
             let selectedSites = ucaTree.getCheckedNodes().filter(function (item) {
                 return item !== 'undefined';
             });
@@ -2453,7 +2497,8 @@
                 url: '/Admin/Settings?handler=ClientAccessByUserId',
                 data: {
                     userId: userId,
-                    selectedSites: selectedSites
+                    selectedSites: selectedSites,
+                    ClientTypeID: ClientTypeID
                 },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },

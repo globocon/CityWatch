@@ -169,6 +169,7 @@ namespace CityWatch.Data.Providers
         void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId);
         void DeleteGuardScores(int guardId, int trainingCourseId);
         GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId);
+        public SubDomain GetSubDomainID(int? TypeID);
         public List<DuressAppField> GetDuressAppFields();
         List<DuressAppField> GetDuressAppByType(int type);
         public bool AddDuressSetting(DuressSetting setting);
@@ -176,6 +177,7 @@ namespace CityWatch.Data.Providers
         public DuressSetting GetDuressSettingById(int duressAppId);
         public bool UpdateDuressSetting(DuressSetting setting);
         public bool DeleteDuressSettingById(int duressAppId);
+
 
     }
 
@@ -1243,6 +1245,14 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.SubDomain.Where(x => x.Domain.Trim() == domain.Trim()).FirstOrDefault();
+
+
+
+        }
+        public SubDomain GetSubDomainID(int? TypeID)
+        {
+
+            return _context.SubDomain.Where(x => x.TypeId == TypeID).FirstOrDefault();
 
 
 
