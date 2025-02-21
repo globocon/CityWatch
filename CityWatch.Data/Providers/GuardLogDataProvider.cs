@@ -6131,7 +6131,7 @@ namespace CityWatch.Data.Providers
             //    }
             //}
 
-            public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid

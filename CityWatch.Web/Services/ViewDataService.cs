@@ -166,6 +166,9 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
         List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
 
+        public List<DropdownItem> GetUserClientTypesWithId(int? userId);
+        public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
+
 
     }
 
@@ -485,10 +488,10 @@ namespace CityWatch.Web.Services
         }
         public int GetUserClientSitesNew(int? userId, string type = "")
         {
-           
+
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
             var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type).FirstOrDefault();
-            
+
             return mapping.Id;
         }
         public List<SelectListItem> GetUserClientSites(string types = "")
@@ -2050,14 +2053,14 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-            items.Add(new SelectListItem("Select", "",true));
+            items.Add(new SelectListItem("Select", "", true));
             //}
 
             foreach (var item in hrGroups)
             {
-                
-                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                
+
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+
             }
 
             return items;
@@ -2086,7 +2089,7 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-        
+
         public List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true)
         {
             var hrGroups = _guardDataProvider.GetTestTQNumbers();
@@ -2094,7 +2097,7 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-           // items.Add(new SelectListItem("Select", ""));
+            // items.Add(new SelectListItem("Select", ""));
             //}
 
             foreach (var item in hrGroups)
@@ -2113,7 +2116,7 @@ namespace CityWatch.Web.Services
         }
 
 
-        
+
         public List<SelectListItem> GetPracticalLocation(bool withoutSelect = true)
         {
             var hrGroups = _guardLogDataProvider.GetTrainingLocation();
@@ -2127,23 +2130,89 @@ namespace CityWatch.Web.Services
             foreach (var item in hrGroups)
             {
 
-                if (item.Id == 1) {
-                    items.Add(new SelectListItem(item.Location, item.Id.ToString(),true));
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Location, item.Id.ToString(), true));
                 }
                 else
                     items.Add(new SelectListItem(item.Location, item.Id.ToString()));
-                
+
             }
 
             return items;
         }
 
+        public List<DropdownItem> GetUserClientTypesWithId(int? userId)
+        {
+            var clientTypes = GetUserClientTypesHavingAccess(userId);
+
+            // Ensure sorting is done in a single step
+            var sortedClientTypes = clientTypes
+                .OrderByDescending(clientType => GetClientTypeCount(clientType.Id))
+                .ThenBy(clientType => clientType.Name)
+                .ToList(); // Materialize the collection
+
+            // Initialize with the default "Select" option
+            var items = new List<DropdownItem>
+    {
+        new DropdownItem { Id = 0, Name = "Select" }
+    };
+
+            // Add sorted client types
+            items.AddRange(sortedClientTypes.Select(item =>
+                new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = $"{item.Name} ({GetClientTypeCount(item.Id)})"
+                }
+            ));
+
+            return items;
+        }
+
+
+        public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id)
+        {
+            var sites = new List<DropdownItem>
+    {
+        new DropdownItem { Id = 0, Name = "Select" } // Default option
+    };
+
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+
+            if (clientType != null)
+            {
+                var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+
+                sites.AddRange(mapping.Select(item => new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = item.Name
+                }));
+            }
+
+            return sites;
+        }
+
+
+
+
+
+
     }
+
+
     public class HRGroupStatusNew
     {
         public int Status { get; set; }
         public string GroupName { get; set; }
         public string ColourCodeStatus { get; set; }
         public string Description { get; set; }
+    }
+
+    public class DropdownItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }
