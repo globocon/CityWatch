@@ -5993,7 +5993,7 @@ $(function () {
         $('#Guard_Terminated').val('');
     }
 
-    $('#btn_save_guard').on('click', function () {
+    $('#btn_save_guard, #btn_save_guard2').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
         $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
@@ -6615,7 +6615,7 @@ $(function () {
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
 
-    $('#btnAddGuardLicense').on('click', function () {
+    $('#btnAddGuardLicense,#btnAddGuardLicense2').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
         $("#ComplianceHiddenDiv").css({
             "pointer-events": "",
