@@ -167,13 +167,12 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
         List<ClientType> GetUserClientTypesHavingAccessThird(int? userId);
         public UserClientSiteAccess GetUserClientSiteAccessNew(int userId);
-
-
-
         public List<DropdownItem> GetUserClientTypesWithId(int? userId);
         public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
 
+        public List<DropdownItem> GetDressAppFields(int type);
 
+        public List<Mp3File> GetDressAppFieldsAudio(int type);
     }
 
     public class ViewDataService : IViewDataService
@@ -2171,6 +2170,47 @@ namespace CityWatch.Web.Services
             return items;
         }
 
+        public List<DropdownItem> GetDressAppFields(int type)
+        {
+            var hrGroups = _guardLogDataProvider.GetDuressAppFields(type);
+
+            // Convert the list of DuressAppField to DropdownItem
+            return hrGroups.Select(x => new DropdownItem
+            {
+                Id = x.Id,
+                Name = x.Name // Assuming DuressAppField has a 'Name' property
+            }).ToList();
+        }
+
+
+        //public List<Mp3File> GetDressAppFieldsAudio(int type)
+        //{
+        //    var audio = _guardLogDataProvider.GetDuressAppFields(type);
+
+        //    return audio.Select(x => new Mp3File
+        //    {
+        //        Label = x.Label,
+        //        Url = "http://test.c4i-system.com/DuressAppAudio/Deva%20Deva.mp3",
+
+        //    }).ToList();
+        //}
+        public List<Mp3File> GetDressAppFieldsAudio(int type)
+        {
+            var audio = _guardLogDataProvider.GetDuressAppFields(type);
+
+            string baseUrl = "https://cws-ir.com/DuressAppAudio/"; // Your base URL
+
+            return audio.Select(x => new Mp3File
+            {
+                Label = x.Label,
+                Url = $"{baseUrl}{Uri.EscapeDataString(x.Name)}" // Constructing dynamic URL
+
+            }).ToList();
+        }
+
+
+
+
         public List<DropdownItem> GetUserClientTypesWithId(int? userId)
         {
             var clientTypes = GetUserClientTypesHavingAccess(userId);
@@ -2243,5 +2283,11 @@ namespace CityWatch.Web.Services
     {
         public int Id { get; set; }
         public string Name { get; set; }
+    }
+    public class Mp3File
+    {
+        public string Label { get; set; }
+        public string Url { get; set; }
+        public Command PlayCommand { get; set; }
     }
 }

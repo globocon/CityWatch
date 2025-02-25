@@ -10,13 +10,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 
 namespace CityWatch.Web.API
 {
 
-
+  
     [Route("api/[controller]")]
     [ApiController]
     public class GuardSecurityNumberController : ControllerBase
@@ -25,6 +27,7 @@ namespace CityWatch.Web.API
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider)
         {
             _guardDataProvider = guardDataProvider;
@@ -160,23 +163,61 @@ namespace CityWatch.Web.API
 
 
 
-        [HttpGet("Getactivities")]
-        public IActionResult Getactivities(int userId, int clientTypeId)
+        [HttpGet("GetActivities")]
+        public IActionResult GetActivities([FromQuery] int type)
         {
             try
             {
-                var clientSites = _viewDataService.GetUserClientSitesUsingId(userId, clientTypeId);
+                var activity = _viewDataService.GetDressAppFields(type);
 
-                if (clientSites == null || !clientSites.Any())
-                    return NotFound(new { message = "No client sites found." });
+                if (activity == null || !activity.Any())
+                {
+                    return NotFound(new
+                    {
+                        message = "No client sites found."
+                    });
+                }
 
-                return Ok(clientSites);
+                return Ok(activity);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching activities.",
+                    error = ex.Message
+                });
             }
         }
+
+
+        [HttpGet("GetActivitiesAudio")]
+        public IActionResult GetActivitiesAudio([FromQuery] int type)
+        {
+            try
+            {
+                var activity = _viewDataService.GetDressAppFieldsAudio(type);
+
+                if (activity == null || !activity.Any())
+                {
+                    return NotFound(new
+                    {
+                        message = "No client sites found."
+                    });
+                }
+
+                return Ok(activity);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching activities.",
+                    error = ex.Message
+                });
+            }
+        }
+
 
 
         private int GetGuardLoginId(int logBookId, int guardId, int clientsiteId, int userId)
@@ -216,9 +257,89 @@ namespace CityWatch.Web.API
 
 
 
+        [HttpGet("PostActivity")]
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId,string activityString)
+        {
+            try
+            {
+
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+
+                var logBookType = LogBookType.DailyGuardLog;
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                // Get Guard Login ID
+                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+
+                // Default GPS coordinates (should be replaced with actual values if available)
+                var gpsCoordinates = string.Empty;
+
+                // Create a log entry
+                var signInEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    /*your message */
+                    Notes = activityString,
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gpsCoordinates
+                };
+
+                _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+                return Ok(new { message = "Guard successfully logged in.", guardLoginId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+
+        }
 
 
 
+
+        [HttpPost("UploadFile")]
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("No file uploaded.");
+                }
+
+                string fileExtension = Path.GetExtension(file.FileName);
+                string newFileName = $"{Guid.NewGuid()}{fileExtension}";
+                string filePath = Path.Combine(_uploadFolder, newFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{newFileName}";
+
+                return Ok(new { message = "File uploaded successfully!", fileUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
 
     }
