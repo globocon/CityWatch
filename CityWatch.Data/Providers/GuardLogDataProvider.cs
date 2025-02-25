@@ -362,8 +362,9 @@ namespace CityWatch.Data.Providers
         
 
         void DeleteTrainingCourseCertificateRPL(int id);
-         void SaveDuressApp(DuressAppField duressapp);
+        void SaveDuressApp(DuressAppField duressapp);
         public void DeleteDuressApp(int id);
+        public List<DuressAppField> GetDuressAppFields(int typeId);
 
     }
 
@@ -6509,7 +6510,23 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+
+
+        public List<DuressAppField> GetDuressAppFields(int typeId)
+        {
+            try
+            {
+                return _context.DuressAppField.Where(x => x.TypeId == typeId).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (Assuming you have logging in place)
+                Console.WriteLine($"Error fetching DuressAppFields: {ex.Message}");
+                return new List<DuressAppField>(); // Return an empty list on failure
+            }
+        }
+
     }
 
-   
+
 }
