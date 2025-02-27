@@ -265,9 +265,13 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnPostClientSiteKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
         {
+            var clientSiteId = 0;
+
             var success = true;
             try
             {
+                clientSiteId = clientSiteKpiSetting.ClientSiteId;
+
                 // Default TuneDowngradeBuffer = 1
                 if (clientSiteKpiSetting.TuneDowngradeBuffer.GetValueOrDefault() == 0)
                 {
@@ -281,7 +285,8 @@ namespace CityWatch.Kpi.Pages.Admin
                 success = false;
             }
 
-            return new JsonResult(success);
+            //return new JsonResult(success);
+            return new JsonResult(new { success, clientSiteId });
         }
 
         public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
