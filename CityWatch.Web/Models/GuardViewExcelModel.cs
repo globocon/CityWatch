@@ -487,6 +487,7 @@ namespace CityWatch.Web.Models
 
         public string Gender { get { return _guard.Gender; } }
         //p1-224 RC Bypass For HR -end
+        public bool IsTerminated { get { return _guard.IsTerminated; } }
 
         public string HR1Status { get; set; }
         public string HR2Status { get; set; }

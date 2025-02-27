@@ -316,6 +316,11 @@ namespace CityWatch.Web.Pages.Incident
                         _clientDataProvider.RemoveIncidentReportsPlatesLoadedWithUserId(LogId);
                     }
                 }
+                else
+                {
+                    /*delete all the 0 (temp) entery for the login user */
+                    _clientDataProvider.RemoveIncidentReportsPlatesLoadedWithUserId(LogId);
+                }
             }
             /* Remove the plate loaded for a user end */
 

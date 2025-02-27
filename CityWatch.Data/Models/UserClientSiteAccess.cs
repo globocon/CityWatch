@@ -11,6 +11,7 @@ namespace CityWatch.Data.Models
         public int UserId { get; set; }
 
         public int ClientSiteId { get; set; }
+        public int? ThirdPartyID { get; set; }
 
         [ForeignKey("UserId")]
         public User User { get; set; }
