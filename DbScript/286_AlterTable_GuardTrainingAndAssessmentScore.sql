@@ -1,0 +1,1 @@
+ALTER TABLE GuardTrainingAndAssessmentScore ADD TheoryDate datetime

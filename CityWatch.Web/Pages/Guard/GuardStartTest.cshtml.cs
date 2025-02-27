@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 using static Dropbox.Api.Team.GroupSelector;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -38,6 +40,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly ICertificateGenerator _certificateGenerator;
         public int GuardId { get; set; }
         public int GuardTrainingAssessmentId { get; set; }
         public GuardTrainingAndAssessment GuardTrainingAndAssessment { get; set; }
@@ -50,7 +53,7 @@ namespace CityWatch.Web.Pages.Guard
         public GuardStartTestModel(IViewDataService viewDataService,
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -61,6 +64,7 @@ namespace CityWatch.Web.Pages.Guard
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
+            _certificateGenerator = certificateGenerator;
         }
         public void OnGet()
         {
@@ -80,9 +84,9 @@ namespace CityWatch.Web.Pages.Guard
             }
             
         }
-        public JsonResult OnGetGuardQuestions(int hrSettingsId, int tqNumberId)
+        public JsonResult OnGetGuardQuestions(int hrSettingsId, int tqNumberId,int guardId)
         {
-            var result = _configDataProvider.GetGuardQuestions(hrSettingsId, tqNumberId);
+            var result = _configDataProvider.GetGuardQuestions(hrSettingsId, tqNumberId, guardId);
 
             return new JsonResult(result);
         }
@@ -127,10 +131,10 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetGuardQuestionCount(int hrSettingsId, int tqNumberId)
+        public JsonResult OnGetGuardQuestionCount(int hrSettingsId, int tqNumberId,int guardId)
         {
             int TotalQuestions = _configDataProvider.GetQuestionCount(hrSettingsId, tqNumberId);
-            var questionnumer = _configDataProvider.GetQuestionNumber(hrSettingsId, tqNumberId);
+            var questionnumer = _configDataProvider.GetQuestionNumber(hrSettingsId, tqNumberId, guardId);
             var countid = questionnumer.Count();
             string Qno = string.Empty;
             if (countid <= TotalQuestions)
@@ -271,7 +275,8 @@ namespace CityWatch.Web.Pages.Guard
                     TrainingCourseId = trainingCourseId,
                     TrainingCourseStatusId = 1,
                     Description = report.Description,
-                    HRGroupId = report.HRGroupId
+                    HRGroupId = report.HRGroupId,
+                    IsCompleted = false
 
                 });
                 success = true;
@@ -282,5 +287,226 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetGuardCertificate(int guardId, int hrSettingsId, int tqNumberId)
+        {
+            string input = GenerateFormattedString();
+            string hashCode = GenerateHashCode(input);
+            var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+            var filename = _certificateGenerator.GeneratePdf(guardId, hrSettingsId, hashCode, getcertificateSatus.IsCertificateHoldUntilPracticalTaken, getcertificateSatus.IsCertificateWithQAndADump, getcertificateSatus.IsCertificateExpiry);
+
+           
+
+            //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
+
+            //string guardScore = existingGuardScrore.FirstOrDefault().guardScore;
+
+            //bool IsPass = existingGuardScrore.FirstOrDefault().IsPass;
+
+
+
+            return new JsonResult(new { filename });
+        }
+        //To Generate Hash Code start
+        private string GenerateHashCode(string input)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+        private string GenerateFormattedString()
+        {
+            string[] segments = new string[5];
+            Random random = new Random();
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        segments[i] = GenerateRandomAlphanumeric(5, random);
+                        break;
+                    case 1:
+                        segments[i] = GenerateRandomAlphanumeric(8, random);
+                        break;
+                    case 2:
+                        segments[i] = GenerateRandomAlphanumeric(7, random);
+                        break;
+                    case 3:
+                        segments[i] = "fjfjfjjfl9999";
+                        break;
+                    case 4:
+                        segments[i] = "3456";
+                        break;
+                }
+            }
+
+            return string.Join("-", segments);
+        }
+
+        private string GenerateRandomAlphanumeric(int length, Random random)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        //To Generate Hash Code stop
+        public JsonResult OnPostGuardStartTest(int guardId, int hrSettingsId, int tqNumberId, int locationId)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                int id = 0;
+                var result = _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId);
+                if(result.Count()==0)
+                {
+                    id = 0;
+                }
+                else
+                {
+                    id = result.FirstOrDefault().Id;
+                }
+                _configDataProvider.SaveGuardTrainingStartTest(new GuardTrainingStartTest()
+                {
+                    Id = id,
+                    GuardId = guardId,
+                    TrainingCourseId = trainingCourseId,
+                    ClassroomLocationId=locationId,
+                    TestDate=DateTime.Now
+
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetGuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId, int tqNumberId)
+        {
+            string input = GenerateFormattedString();
+            string hashCode = GenerateHashCode(input);
+            var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+            if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
+            {
+                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = record.Id,
+                    GuardId = guardId,
+                    TrainingCourseId = TrainingCourseId,
+                    TrainingCourseStatusId = 3,
+                    Description = record.Description,
+                    HRGroupId = record.HRGroupId,
+                    IsCompleted = false
+
+                });
+            }
+            else
+            {
+                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                if (record != null)
+                {
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = record.Id,
+                        GuardId = guardId,
+                        TrainingCourseId = TrainingCourseId,
+                        TrainingCourseStatusId = 3,
+                        Description = record.Description,
+                        HRGroupId = record.HRGroupId,
+                        IsCompleted = true
+
+                    });
+                }
+            }
+            
+
+
+
+            //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
+
+            //string guardScore = existingGuardScrore.FirstOrDefault().guardScore;
+
+            //bool IsPass = existingGuardScrore.FirstOrDefault().IsPass;
+
+
+
+            return new JsonResult(new { getcertificateSatus });
+        }
+        public JsonResult OnGetGuardFeedbackQuestions(int hrSettingsId,int guardId)
+        {
+            var result = _configDataProvider.GetGuardFeedbackQuestions(hrSettingsId, guardId);
+
+            return new JsonResult(result);
+        }
+        public JsonResult OnGetGuardFeedbackOptions(int questionId)
+        {
+            var result = _configDataProvider.GetGuardFeedbackOptions(questionId);
+
+            return new JsonResult(result);
+        }
+        public JsonResult OnGetGuardFeedbackQuestionCount(int hrSettingsId,int guardId)
+        {
+            int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount(hrSettingsId);
+            var questionnumer = _configDataProvider.GetFeedbackQuestionNumber(hrSettingsId, guardId);
+            var countid = questionnumer.Count();
+            string Qno = string.Empty;
+            if (countid <= TotalQuestions)
+            {
+                int numberOfDigits = countid / 10 + 1;
+                if (numberOfDigits == 1)
+                {
+                    countid = countid + 1;
+                    Qno = "0" + countid.ToString();
+                }
+            }
+            return new JsonResult(new { TotalQuestions, Qno, countid });
+        }
+        public JsonResult OnPostSaveGuardFeedbackAnswers(GuardTrainingAttendedFeedbackQuestionsAndAnswers record)
+        {
+
+
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+
+
+
+
+                _configDataProvider.SaveGuardFeedbackAnswers(new GuardTrainingAttendedFeedbackQuestionsAndAnswers()
+                {
+                    Id = record.Id,
+                    GuardId = record.GuardId,
+                    HrSettingsId = record.HrSettingsId,
+                    TrainingTestFeedbackQuestionsId = record.TrainingTestFeedbackQuestionsId,
+                    TrainingTestFeedbackQuestionsAnswersId = record.TrainingTestFeedbackQuestionsAnswersId
+
+                });
+
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
+
 }

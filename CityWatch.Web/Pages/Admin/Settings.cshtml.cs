@@ -2406,7 +2406,8 @@ namespace CityWatch.Web.Pages.Admin
                     TrainingCourseId = TrainingCourseId,
                     TrainingCourseStatusId = TrainingCourseStatusId,
                     Description = description,
-                    HRGroupId= hrgroupid
+                    HRGroupId = hrgroupid,
+                    IsCompleted = false
 
                 });
 
@@ -2466,7 +2467,8 @@ namespace CityWatch.Web.Pages.Admin
                     TrainingCourseId = result.TrainingCourseId,
                     TrainingCourseStatusId = TrainingCourseStatusId,
                     Description = result.Description,
-                    HRGroupId = result.HRGroupId
+                    HRGroupId = result.HRGroupId,
+                    IsCompleted = false
 
                 });
 
