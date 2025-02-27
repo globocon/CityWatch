@@ -6395,7 +6395,9 @@ namespace CityWatch.Data.Providers
         public List<TrainingLocation> GetTrainingLocation()
         {
             return _context.TrainingLocation.Where(x => x.IsDeleted == false)
-                .OrderBy(x => x.Location).ToList();
+                .OrderBy(x => x.Location == "Online" ? 0 : 1) // "Online" gets priority
+            .ThenBy(x => x.Location).ToList();
+            //.OrderBy(x => x.Location).ToList();
         }
         public void SaveTrainingLocation(TrainingLocation trainingLocation)
         {
