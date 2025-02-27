@@ -165,8 +165,14 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetTestQuestionNumbers(bool withoutSelect = true);
         List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true);
         List<SelectListItem> GetPracticalLocation(bool withoutSelect = true);
+        List<ClientType> GetUserClientTypesHavingAccessThird(int? userId);
+        public UserClientSiteAccess GetUserClientSiteAccessNew(int userId);
+        public List<DropdownItem> GetUserClientTypesWithId(int? userId);
+        public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
 
+        public List<DropdownItem> GetDressAppFields(int type);
 
+        public List<Mp3File> GetDressAppFieldsAudio(int type);
     }
 
     public class ViewDataService : IViewDataService
@@ -485,10 +491,10 @@ namespace CityWatch.Web.Services
         }
         public int GetUserClientSitesNew(int? userId, string type = "")
         {
-           
+
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
             var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type).FirstOrDefault();
-            
+
             return mapping.Id;
         }
         public List<SelectListItem> GetUserClientSites(string types = "")
@@ -545,14 +551,16 @@ namespace CityWatch.Web.Services
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
             foreach (var user in users)
             {
+                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
                 var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
                 results.Add(new
                 {
                     user.Id,
                     user.UserName,
                     ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
-                    ClientSiteCsv = GetFormattedClientSites(currUserAccess)
-                });
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
+            });
             }
             var filteredResults = results;
 
@@ -640,7 +648,10 @@ namespace CityWatch.Web.Services
 
             return results;
         }
-
+        public UserClientSiteAccess GetUserClientSiteAccessNew(int userId)
+        {
+            return _userDataProvider.GetUserClientSiteAccessThirdParty(userId);
+        }
 
         public List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId)
         {
@@ -677,7 +688,27 @@ namespace CityWatch.Web.Services
             return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
         }
         //To get the count of ClientType start
-        public int GetClientTypeCount(int? typeId)
+        public List<ClientType> GetUserClientTypesHavingAccessThird(int? userId)
+        {
+            var results = new List<ClientType>();
+            
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null)
+                .GroupBy(x => new { x.ClientType.Name, x.ClientType.Id });
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new ClientType
+                {
+                    Name = item.Key.Name,
+                    Id = item.Key.Id,
+                    IsSubDomainEnabled = false,  // Default to false
+                    
+                });
+            }
+
+            return results;
+        }
+            public int GetClientTypeCount(int? typeId)
         {
             var result = _clientDataProvider.GetClientSite(typeId);
             return result;
@@ -2050,14 +2081,14 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-            items.Add(new SelectListItem("Select", "",true));
+            items.Add(new SelectListItem("Select", "", true));
             //}
 
             foreach (var item in hrGroups)
             {
-                
-                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                
+
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+
             }
 
             return items;
@@ -2086,7 +2117,7 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-        
+
         public List<SelectListItem> GetTestTQNumbers(bool withoutSelect = true)
         {
             var hrGroups = _guardDataProvider.GetTestTQNumbers();
@@ -2094,7 +2125,7 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-           // items.Add(new SelectListItem("Select", ""));
+            // items.Add(new SelectListItem("Select", ""));
             //}
 
             foreach (var item in hrGroups)
@@ -2113,7 +2144,7 @@ namespace CityWatch.Web.Services
         }
 
 
-        
+
         public List<SelectListItem> GetPracticalLocation(bool withoutSelect = true)
         {
             var hrGroups = _guardLogDataProvider.GetTrainingLocation();
@@ -2127,23 +2158,136 @@ namespace CityWatch.Web.Services
             foreach (var item in hrGroups)
             {
 
-                if (item.Id == 1) {
-                    items.Add(new SelectListItem(item.Location, item.Id.ToString(),true));
+                if (item.Id == 1)
+                {
+                    items.Add(new SelectListItem(item.Location, item.Id.ToString(), true));
                 }
                 else
                     items.Add(new SelectListItem(item.Location, item.Id.ToString()));
-                
+
             }
 
             return items;
         }
 
+        public List<DropdownItem> GetDressAppFields(int type)
+        {
+            var hrGroups = _guardLogDataProvider.GetDuressAppFields(type);
+
+            // Convert the list of DuressAppField to DropdownItem
+            return hrGroups.Select(x => new DropdownItem
+            {
+                Id = x.Id,
+                Name = x.Name // Assuming DuressAppField has a 'Name' property
+            }).ToList();
+        }
+
+
+        //public List<Mp3File> GetDressAppFieldsAudio(int type)
+        //{
+        //    var audio = _guardLogDataProvider.GetDuressAppFields(type);
+
+        //    return audio.Select(x => new Mp3File
+        //    {
+        //        Label = x.Label,
+        //        Url = "http://test.c4i-system.com/DuressAppAudio/Deva%20Deva.mp3",
+
+        //    }).ToList();
+        //}
+        public List<Mp3File> GetDressAppFieldsAudio(int type)
+        {
+            var audio = _guardLogDataProvider.GetDuressAppFields(type);
+
+            string baseUrl = "https://cws-ir.com/DuressAppAudio/"; // Your base URL
+
+            return audio.Select(x => new Mp3File
+            {
+                Label = x.Label,
+                Url = $"{baseUrl}{Uri.EscapeDataString(x.Name)}" // Constructing dynamic URL
+
+            }).ToList();
+        }
+
+
+
+
+        public List<DropdownItem> GetUserClientTypesWithId(int? userId)
+        {
+            var clientTypes = GetUserClientTypesHavingAccess(userId);
+
+            // Ensure sorting is done in a single step
+            var sortedClientTypes = clientTypes
+                .OrderByDescending(clientType => GetClientTypeCount(clientType.Id))
+                .ThenBy(clientType => clientType.Name)
+                .ToList(); // Materialize the collection
+
+            // Initialize with the default "Select" option
+            var items = new List<DropdownItem>
+    {
+        new DropdownItem { Id = 0, Name = "Select" }
+    };
+
+            // Add sorted client types
+            items.AddRange(sortedClientTypes.Select(item =>
+                new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = $"{item.Name} ({GetClientTypeCount(item.Id)})"
+                }
+            ));
+
+            return items;
+        }
+
+
+        public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id)
+        {
+            var sites = new List<DropdownItem>
+    {
+        new DropdownItem { Id = 0, Name = "Select" } // Default option
+    };
+
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+
+            if (clientType != null)
+            {
+                var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+
+                sites.AddRange(mapping.Select(item => new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = item.Name
+                }));
+            }
+
+            return sites;
+        }
+
+
+
+
+
+
     }
+
+
     public class HRGroupStatusNew
     {
         public int Status { get; set; }
         public string GroupName { get; set; }
         public string ColourCodeStatus { get; set; }
         public string Description { get; set; }
+    }
+
+    public class DropdownItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    public class Mp3File
+    {
+        public string Label { get; set; }
+        public string Url { get; set; }
+        public Command PlayCommand { get; set; }
     }
 }

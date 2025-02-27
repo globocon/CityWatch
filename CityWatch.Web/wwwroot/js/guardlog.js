@@ -5618,7 +5618,7 @@ $(function () {
 
             // Define headers and column widths
 
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status',
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE','Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
                /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
                 'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024'];
             const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
@@ -5665,6 +5665,7 @@ $(function () {
                 item.guardLanguage.replace('<br />', ' '),
                 item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
                 item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
+                item.isTerminated ? 'Banned' : '',
                 item.hR1Status,
                 item.hR2Status,
                 item.hR3Status,
@@ -6554,7 +6555,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': token }
             }).done(function (DescVal) {
                 if (DescVal.hrBanEdit == true) {
-                    if (confirm("This can't be selected")) {
+                    if (confirm("This description is restricted and cannot be added.")) {
                         $('#Description').val('');
                     }
 
@@ -6585,7 +6586,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': token }
             }).done(function (DescVal) {
                 if (DescVal.hrBanEdit == true) {
-                    if (confirm("This can't be selected")) {
+                    if (confirm("This description is restricted and cannot be added.")) {
                         $('#Description').val('');
                     }
 
@@ -6918,7 +6919,7 @@ $(function () {
     $('#btn_save_guard_compliancelicense').on('click', function () {
 
         clearGuardValidationSummary('compliancelicanseValidationSummary');
-
+        let selectedItem = $('.es-visible').val();
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
         var HrVal = $('#HRGroup').val();
         var DescVal = $('#Description').val();

@@ -521,6 +521,7 @@
                             <option value="2">KV</option>
                             <option value="3">IR</option>
                             <option value="4">TA</option>
+                             <option value="6">DURESS APP</option>
                         </select>
                     </div>
                 </div>
@@ -568,6 +569,11 @@
 
 
                         </select>
+                        <select class="form-control" id="duressapp_types">
+                            <option value="">None</option>
+                            <option value="1">Audio</option>
+                            <option value="2">Log Activity</option>
+                        </select>
                     </div>
                 </div>
                 <div class="row" id="fieldSettings">
@@ -578,6 +584,8 @@
                             <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_KPI_Telematics_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_duressapp_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_DuressAppAudio" data-toggle="modal" data-target="#DuressAppAudio-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
                         </div>
                         <table class="table" id="field_settings"></table>
                         <table class="table" id="field_settings_Area" hidden></table>
@@ -585,6 +593,8 @@
                         <table class="table" id="tbl_dosanddonts_fields"></table>
                         <table class="table" id="tbl_kpitelematics_fields"></table>
                         <table class="table" id="tbl_ta_fields"></table>
+                        <table class="table" id="tbl_duressapp_fields"></table>
+                        <table class="table" id="tbl_duressappLog_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -3012,6 +3022,7 @@
                                     <option value="2">KV</option>
                                     <option value="3">IR</option>
                                     <option value="4">TA</option>
+                                    <option value="6">DURESS APP</option>
                                 </select>
                             </div>
                         </div>
@@ -3053,6 +3064,11 @@
                                     <option value="">None</option>
                                     <option value="1">Instructor & Position</option>
                                 </select>
+                                 <select class="form-control" id="duressapp_types">
+                                    <option value="">None</option>
+                                    <option value="1">Audio</option>
+                                    <option value="2">Log Activity</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row" id="fieldSettings">
@@ -3070,6 +3086,7 @@
                                 <table class="table" id="tbl_dosanddonts_fields"></table>
                                 <table class="table" id="tbl_kpitelematics_fields"></table>
                                 <table class="table" id="tbl_ta_fields"></table>
+                                <table class="table" id="tbl_duressapp_fields"></table>
 
                             </div>
                         </div>
@@ -4583,6 +4600,54 @@
                 <button type="button" id="btnSaveContractorDomain" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save</button>
             </div>
 
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="DuressAppAudio-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Add File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_duressapp_audio" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="audioId" name="id" value="-1">
+                    <input type="hidden" id="filenameaudio" name="filenameaudio" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="add_label">Label</label>
+                                <input type="text" name="add_Label" id="add_label" class="form-control" />
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" accept="audio/*" name="add_filenameduress" id="add_filenameduress" class="form-control-file" />
+                                <label id="dynamicAudio" class="pt-1"></label>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDivAudio" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveAudioFile" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Audio</button>
+            </div>
         </div>
     </div>
 </div>

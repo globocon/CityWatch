@@ -260,6 +260,9 @@ namespace CityWatch.Data.Providers
         public int SaveClientSiteManningKpiSettingOnlyNoHours(ClientSiteKpiSetting setting);
         public void AddHyperLinks(string Email, string TvNews, string wether);
         public List<HyperLinks> GetHyperLinksDetails();
+        public int? GetRadioCheckStatus(int? StatusID);
+        public DuressAppField GetAudioByID(int documentId);
+
 
     }
 
@@ -814,6 +817,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards
                      .SingleOrDefault(z => z.Id == guardId);
+
+        }
+        public int? GetRadioCheckStatus(int? StatusID)
+        {
+            return _context.RadioCheckStatus
+                     .Where(z => z.Id == StatusID).FirstOrDefault().RadioCheckStatusColorId; 
 
         }
         public List<GlobalDuressEmail> GetGlobalDuressEmail()
@@ -2972,8 +2981,13 @@ namespace CityWatch.Data.Providers
             }
             return staffDoc;
         }
-
-        public void DeleteRCLinkedDuress(int id)
+        public DuressAppField GetAudioByID(int documentId)
+        {
+            var AudioDoc = _context.DuressAppField
+              .SingleOrDefault(x => x.Id == documentId);
+            return AudioDoc;
+        }
+            public void DeleteRCLinkedDuress(int id)
         {
             var recordToDelete = _context.RCLinkedDuressMaster.SingleOrDefault(x => x.Id == id);
             if (recordToDelete == null)

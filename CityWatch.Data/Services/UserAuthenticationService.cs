@@ -50,11 +50,16 @@ namespace CityWatch.Data.Services
             }
             
         }
+        public UserClientSiteAccess GetUserClientSiteAccessThirdParty(int? userId)
+        {
+            return _context.UserClientSiteAccess.Where(x => x.UserId == userId).FirstOrDefault();
+        }
     }
 
     public interface IUserAuthenticationService
     {
         bool TryGetLoginUser(User userLogin, out User user);
         void SaveUserLoginHistoryDetails(User user, string IPAddress);
+        UserClientSiteAccess GetUserClientSiteAccessThirdParty(int? userId);
     }
 }

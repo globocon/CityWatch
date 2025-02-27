@@ -362,6 +362,9 @@ namespace CityWatch.Data.Providers
         
 
         void DeleteTrainingCourseCertificateRPL(int id);
+        void SaveDuressApp(DuressAppField duressapp);
+        public void DeleteDuressApp(int id);
+        public List<DuressAppField> GetDuressAppFields(int typeId);
 
     }
 
@@ -5200,6 +5203,36 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //KPI Telematics End
+        public void SaveDuressApp(DuressAppField duressapp)
+        {
+            if (duressapp.Id == -1)
+            {
+                duressapp.Id = 0;
+                _context.DuressAppField.Add(duressapp);
+            }
+            else
+            {
+                var duressappUpdate = _context.DuressAppField.SingleOrDefault(x => x.Id == duressapp.Id);
+                if (duressappUpdate != null)
+                {
+                    duressappUpdate.Name = duressapp.Name;
+
+                    duressappUpdate.Label = duressapp.Label;
+                   
+                    duressappUpdate.TypeId = duressapp.TypeId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteDuressApp(int id)
+        {
+            var DuressAppToDelete = _context.DuressAppField.SingleOrDefault(x => x.Id == id);
+            if (DuressAppToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.Remove(DuressAppToDelete);
+            _context.SaveChanges();
+        }
         public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
         {
             _context.RadioCheckPushMessages.Add(radioCheckPushMessages);
@@ -6131,7 +6164,7 @@ namespace CityWatch.Data.Providers
             //    }
             //}
 
-            public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
@@ -6477,7 +6510,23 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+
+
+        public List<DuressAppField> GetDuressAppFields(int typeId)
+        {
+            try
+            {
+                return _context.DuressAppField.Where(x => x.TypeId == typeId).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (Assuming you have logging in place)
+                Console.WriteLine($"Error fetching DuressAppFields: {ex.Message}");
+                return new List<DuressAppField>(); // Return an empty list on failure
+            }
+        }
+
     }
 
-   
+
 }
