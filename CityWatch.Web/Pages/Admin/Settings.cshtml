@@ -4009,6 +4009,9 @@
                         </form>
                     </div>
                 </div>
+                <div class="modal-footer justify-content-start" style="border-top:none">
+                    <button type="button" class="btn btn-primary" id="btn_save_guard2">Save Guard</button>
+                </div>
                 <hr />
                 <div class="row m-0">
                     <div class="col-md-12">
@@ -4052,6 +4055,13 @@
                                         </table>
                                     </div>
                                 </div>
+                                <br/>
+                                <div class="form-row mb-2 btn-add-guard-addl-details">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success" id="btnAddGuardLicense2"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                    </div>
+                                </div>
+                             
                             </div>
                             @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                             {

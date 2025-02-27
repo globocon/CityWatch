@@ -2273,7 +2273,7 @@ $("#addGuardModalnew").on("hidden.bs.modal", function () {
     isPaused = false;
 });
 //To get the Compliance and License data start
-$('#btnAddGuardLicenseKey').on('click', function () {
+$('#btnAddGuardLicenseKey,#btnAddGuardLicenseKey2').on('click', function () {
     resetGuardLicenseandComplianceAddModal();
     const messageHtml2 = '';
     $('#schRunStatusNew').html(messageHtml2);
