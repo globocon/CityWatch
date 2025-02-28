@@ -549,7 +549,12 @@ $(function () {
                         const lastLogin = result.lastLogin;
 
                         $('#GuardLogin_Id').val(lastLogin.id);
-                        if ($('#hiddenClientTypeId').val() == lastLogin.clientSite.clientType.name) {
+
+                        if ($('#hiddenClientTypeId').val() == null || $('#hiddenClientTypeId').val() == '') {
+                            $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
+                            populateClientSites(lastLogin.clientSite.name);
+                        }
+                        else if ($('#hiddenClientTypeId').val() == lastLogin.clientSite.clientType.name) {
                             $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
                             populateClientSites(lastLogin.clientSite.name);
                         }
@@ -558,8 +563,13 @@ $(function () {
                             populateClientSites();
                         }
                         const isPosition = lastLogin.smartWandId === null ? true : false;
-                        const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
-                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
+                        //const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
+                        const smartWandOrPositionName = isPosition
+                            ? (lastLogin?.position?.name ?? null)
+                            : (lastLogin?.smartWand?.smartWandId ?? null);
+                        if (smartWandOrPositionName != null) {
+                            getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
+                        }
                         $('#GuardLogin_IsPosition').prop('checked', isPosition);
                         $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
 
