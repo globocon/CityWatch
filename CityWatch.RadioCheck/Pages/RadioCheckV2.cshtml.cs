@@ -1584,6 +1584,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 var logbookdate = DateTime.Today;
                 // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
                 var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
+                var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
 
                 if (logBookId != 0)
                 {
@@ -1596,7 +1597,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         {
                             ClientSiteId = Id,
                             LogBookId = logBookId,
-                            Notes = Subject + " : " + Notifications,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
                             IsAcknowledged = 0,
@@ -1612,7 +1613,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + " : " + Notifications,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm,
@@ -1628,7 +1629,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     }
                     else
                     {
-                        var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
+                        
 
                         /* Save the push message for reload to logbook on next day Start*/
                         var radioCheckPushMessages = new RadioCheckPushMessages()
@@ -1929,13 +1930,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
 
                         //LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
-                        var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId[0]).Select(x => x.Name).FirstOrDefault();
+                        var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteTypeID.Id).Select(x => x.Name).FirstOrDefault();
 
                         LogBookDetailsMsg(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata, clientsitename);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
+                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessagesActionList(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
