@@ -1573,10 +1573,32 @@ $(function () {
             data: $('#frm_site_settings').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
-            alert('Saved successfully');
-            $('#kpi-settings-modal').modal('hide');
-            gridClientSiteSettings.clear();
-            gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), userId: $('#hid_userIdSettings').val() });
+            if (data.success == true) {
+                alert('Saved successfully');
+                $('#kpi-settings-modal').modal('hide');
+                gridClientSiteSettings.clear();
+                gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), userId: $('#hid_userIdSettings').val() });
+                $('#div_site_settings').html('');
+
+                $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId, function () {
+
+                    console.log('Load operation completed!');
+
+                    $('#kpi-tab').tab('show');
+                    $('#contracted-manning-tab').tab('show');
+                    window.sharedVariable = data.clientSiteId;
+                    console.log('Load operation completed!');
+
+                    console.log(data.clientSiteId);
+
+                    //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
+
+                });
+            }
+            else {
+                alert('Error');
+            }
+           
         }).fail(function () { });
     });
 

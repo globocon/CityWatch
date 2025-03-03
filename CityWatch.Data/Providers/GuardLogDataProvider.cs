@@ -203,6 +203,8 @@ namespace CityWatch.Data.Providers
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
+        void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -4971,6 +4973,105 @@ namespace CityWatch.Data.Providers
 
         }
 
+        public void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
+        {
+            
+            var guardInitials = string.Empty;
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
+            
+
+            if (selectedGuardId != 0)
+            {
+
+                guardInitials = _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Name + " [" + _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Initial + "]";
+
+            }
+            /* Rc Status update*/
+            if (type == 2)
+            {
+                if (clientSiteForLogbook.Count() > 0)
+                {
+
+                    var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
+                    if (guardInitials != string.Empty)
+                    {
+                        notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+
+                    }
+                    else
+                    {
+
+                        notifications = "Control Room Alert for " + clientsitename + ": " + notifications;
+                    }
+                }
+
+
+            }
+
+            if (clientSiteForLogbook.Count != 0)
+            {
+               
+                var localDateTime = DateTime.Today;
+                var entryTime = DateTime.Now;
+                // p6#73 timezone bug - Modified by binoy 29-01-2024 changed DateTime.Today to localDateTime.Date
+                // var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
+                var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);
+                //var logbookdate = DateTime.Today;
+                //var logbooktype = LogBookType.DailyGuardLog;      
+                //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                //var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
+                var ClientSiteName = clientSiteForLogbook.Select(x => x.Name).FirstOrDefault();
+                var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
+                if (loginGuardId != 0)
+                {
+                    var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), localDateTime.Date); // DateTime.Today
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + ControlRoomMessage + " <br/> " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
+
+                    };
+                    SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + ControlRoomMessage + " <br/> " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
+                    };
+                    if (guardLog.ClientSiteLogBookId != 0)
+                    {
+                        SaveGuardLog(guardLog);
+                    }
+
+                }
+
+            }
+
+        }
         public void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                          IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
         {

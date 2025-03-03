@@ -719,7 +719,7 @@ pre {
 }
 
 #divmarqueeLiveEvents {
-    width: 900px;
+  
     overflow: hidden;
     display: grid;
 }
