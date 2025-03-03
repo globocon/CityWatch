@@ -2618,13 +2618,16 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                if(id==1)
+                if (id == 1)
                 {
                     success = false;
                     message = "Online is not allowed to delete";
                 }
-                _guardLogDataProvider.DeleteTrainingLocation(id);
-                success = true;
+                else
+                {
+                    _guardLogDataProvider.DeleteTrainingLocation(id);
+                    success = true;
+                }
             }
             catch (Exception ex)
             {

@@ -507,6 +507,37 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostUpdateCourseTestStatusToHold(int guardId, int hrSettingsId, int tqNumberId)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                int TotalQuestions = _configDataProvider.GetQuestionCount(hrSettingsId, tqNumberId);
+                int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+
+
+                var report = _configDataProvider.ReturnCourseTestStatusTostart(guardId, trainingCourseId);
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = report.Id,
+                    GuardId = guardId,
+                    TrainingCourseId = trainingCourseId,
+                    TrainingCourseStatusId = 3,
+                    Description = report.Description,
+                    HRGroupId = report.HRGroupId,
+                    IsCompleted = false
+
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
     }
 
 }

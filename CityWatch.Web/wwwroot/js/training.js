@@ -1,4 +1,5 @@
 ﻿$(function () {
+    
 });
 //p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
@@ -2377,8 +2378,8 @@ function renderPage(num) {
         var fixedWidth = 1110;  
         var fixedHeight = 600; 
         var viewport = page.getViewport({ scale: scale });
-        canvas.width = fixedWidth;
-        canvas.height = fixedHeight;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
         page.render({ canvasContext: ctx, viewport: viewport });
     });
 }
@@ -2413,12 +2414,37 @@ $("#coursePdfPrev").on('click', function (e) {
         renderPage(pageNum);
     }
 });
+function flashArrow(arrow) {
+    $(arrow).css('color', 'green');
+    //setTimeout(() => {
+    //    $(arrow).css('color', 'black');
+    //}, 150);
+}
+$("#coursePdfPrev, #coursePdfNext").on('mouseleave',
+    //function () {
+    //    $(this).css("color", "red"); // mouse enter
+    //},
+    function () {
+        $(this).css("background-color", "white"); // mouse leave
+    }
+);
+$("#coursePdfPrev, #coursePdfNext").on('mouseenter',
+    //function () {
+    //    $(this).css("color", "red"); // mouse enter
+    //},
+    function () {
+        $(this).css("background-color", "green"); // mouse leave
+    }
+);
 document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowLeft") {
         if (pageNum > 1) {
             isPausedForCourseDuration = true;
             pageNum--;
             renderPage(pageNum);
+            $('#coursePdfPrev').css("background-color", "green");
+            $('#coursePdfNext').css("background-color", "white");
+            
         }
     } else if (event.key === "ArrowRight") {
         if (pageNum < pdfDoc.numPages) {
@@ -2432,6 +2458,8 @@ document.addEventListener("keydown", function (event) {
                 //}, 30000);
             }
             renderPage(pageNum);
+            $('#coursePdfNext').css("background-color", "green");
+            $('#coursePdfPrev').css("background-color", "white");
         }
         else {
             isPausedForCourseDuration = true;
@@ -2515,6 +2543,9 @@ function ClearTimerAndReload() {
     clearInterval(nIntervCourseDurationId);
     DuressAlarmNotificationPending = false;
     nIntervCourseDurationId = null;
+    isPausedForCourseDuration = true;
+     deleteGuardAttendedQuestions(2);
+    //returnCoursetestStatustostart();
     location.reload();
 }
 //function getGuardCourseSpentTimeDetails() {
@@ -2605,6 +2636,9 @@ function ClearTimerAndReloadForTest() {
     clearInterval(nIntervCourseDurationTestId);
     DuressAlarmNotificationPendingForTest = false;
     nIntervCourseDurationTestId = null;
+    isPausedForTestDuration = true;
+     deleteGuardAttendedQuestions(2);
+   // returnCoursetestStatustostart();
     location.reload();
 }
 function GetQuestionsForGuard() {
@@ -2621,10 +2655,10 @@ function GetQuestionsForGuard() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result != null) {
-            $('#GuardTestQuestions').html(result.question);
+         /*   $('#GuardTestQuestions').html(result.question);*/
             $('#txtGuardTestQuestionId').val(result.id);
             GetOptionsForGuard();
-            GetQuestionCountForGuard();
+            GetQuestionCountForGuard(result.question);
 
         }
         else {
@@ -2644,9 +2678,9 @@ function GetQuestionsForGuard() {
 function GetOptionsForGuard() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
-        url: '/Guard/GuardStartTest?handler=GuardFeedbackOptions',
+        url: '/Guard/GuardStartTest?handler=GuardOptions',
         data: {
-            'questionId': $("#txtGuardTestFeedbackQuestionId").val()
+            'questionId': $("#txtGuardTestQuestionId").val()
         },
         //data: { id: record },
         type: 'GET',
@@ -2661,10 +2695,12 @@ function GetOptionsForGuard() {
                 var chkbox = 'chkGuardAnswer' + j
                 j++;
                 $('#' + txtoptions).val(d.id);
-                $('#' + label).html(d.options);
+                //$('#' + label).html(d.options);
                 $('#' + label).attr('hidden', false);
                 $('#' + chkbox).attr('hidden', false);
                 $('#' + chkbox).prop('checked', false);
+                $('#' + chkbox).get(0).nextSibling.nodeValue = '';
+                $('#' + chkbox).after(d.options);
 
             });
            
@@ -2679,7 +2715,7 @@ function GetOptionsForGuard() {
         console.log('error');
     })
 }
-function GetQuestionCountForGuard() {
+function GetQuestionCountForGuard(question) {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/Guard/GuardStartTest?handler=GuardQuestionCount',
@@ -2694,8 +2730,8 @@ function GetQuestionCountForGuard() {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions );
-            $('#QuestionNo').html('Q.' + result.qno);
-            
+           // $('#QuestionNo').html('Q.' + result.qno);
+            $('#GuardTestQuestions').html('Q.' + result.qno + "  " + question);
         }
         else {
             //alert('Something Wrong')
@@ -3035,7 +3071,7 @@ $('#btnContinueTest').on('click', function (e) {
     e.preventDefault();
     GetCertificateAndFeedBackStatus();
 
-    GetCertificateAndFeedBackStatus();
+    //GetCertificateAndFeedBackStatus();
    // GetGuardCertificate();
 
 
@@ -3058,6 +3094,9 @@ function GetCertificateAndFeedBackStatus() {
             GetCertificate()
 
         }
+        else {
+            UpdateStatusToHold()
+        }
         if (result.getcertificateSatus.isAnonymousFeedback == true) {
             GetFeedbackQuestionsForGuard();
             $('#cardFrontPage').hide();
@@ -3069,7 +3108,7 @@ function GetCertificateAndFeedBackStatus() {
             $('#cardFeedbackPage').attr('hidden', false);
 
         }
-        if (result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == true && result.getcertificateSatus.isAnonymousFeedback == false) {
+        if ((result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == true || result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == false)  && result.getcertificateSatus.isAnonymousFeedback == false) {
             $('#cardFrontPage').hide();
 
             $('#cardCoursePdf').hide();
@@ -3087,7 +3126,26 @@ function GetCertificateAndFeedBackStatus() {
         console.log('error');
     })
 }
+function UpdateStatusToHold() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=UpdateCourseTestStatusToHold',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+       
 
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function GetCertificate() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -3128,10 +3186,10 @@ function GetFeedbackQuestionsForGuard() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result != null) {
-            $('#GuardFeedbackQuestions').html(result.question);
+            /*$('#GuardFeedbackQuestions').html(result.question);*/
             $('#txtGuardFeedbacktQuestionId').val(result.id);
             GetFeedbackOptionsForGuard();
-            GetFeedbackQuestionCountForGuard();
+            GetFeedbackQuestionCountForGuard(result.question);
 
         }
         else {
@@ -3172,10 +3230,17 @@ function GetFeedbackOptionsForGuard() {
                 var chkbox = 'chkGuardFeedbackAnswer' + j
                 j++;
                 $('#' + txtoptions).val(d.id);
-                $('#' + label).html(d.options);
-                $('#' + label).attr('hidden', false);
+                //$('#' + label).html(d.options);
+                //$('#' + label).attr('hidden', false);
                 $('#' + chkbox).attr('hidden', false);
                 $('#' + chkbox).prop('checked', false);
+                $('#' + chkbox).prev().remove();
+                //let textAfter = $('#' + chkbox).get(0).nextSibling.nodeValue.trim();
+                $('#' + chkbox).get(0).nextSibling.nodeValue='';
+                //alert(textAfter);
+                $('#' + chkbox).after(d.options);
+                
+                
 
             });
 
@@ -3190,7 +3255,7 @@ function GetFeedbackOptionsForGuard() {
         console.log('error');
     })
 }
-function GetFeedbackQuestionCountForGuard() {
+function GetFeedbackQuestionCountForGuard(feedbackquestions) {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/Guard/GuardStartTest?handler=GuardFeedbackQuestionCount',
@@ -3204,7 +3269,8 @@ function GetFeedbackQuestionCountForGuard() {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions);
-            $('#FeedbackQuestionNo').html('Q.' + result.qno);
+            //$('#FeedbackQuestionNo').html('Q.' + result.qno);
+            $('#GuardFeedbackQuestions').html('Q.' + result.qno + ' ' + feedbackquestions);
 
         }
         else {

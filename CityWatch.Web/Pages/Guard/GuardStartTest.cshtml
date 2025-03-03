@@ -92,8 +92,11 @@
     <span id="courseTimerStart" hidden></span>
 
     <canvas id="canvasCousePdf" ></canvas>
-        <button class="btn" id="coursePdfPrev" hidden>Prev</button>
-        <button class="btn" id="coursePdfNext" hidden>Next</button>
+        @* <button class="btn" id="coursePdfPrev" hidden>Prev</button>
+        <button class="btn" id="coursePdfNext" hidden>Next</button> *@
+    <div id="coursePdfPrev" style="position: absolute; top: 50%; left: 10px; font-size: 2em; cursor:pointer;background-color: white;"><i class="fa fa-arrow-left"></i></div>
+    <div id="coursePdfNext" style="position: absolute; top: 50%; right: 10px; font-size: 2em; cursor: pointer;background-color: white;"><i class="fa fa-arrow-right"></i></div>
+
  
 </div>
 <div class="card" id="cardTestFrontPage" hidden>
@@ -171,9 +174,9 @@
                         <div class="form-group row m-0 mb-3">
 
                             <div class="col-sm-12">
-                                <div class="container p-0 justify-content-center" style="display:flex;align-items: center;font-size:11px;color:black">
+                                <div class="container p-0 justify-content-center" style="display:flex;align-items: center;font-size:11px;color:black; margin-bottom:100px;">
 
-                                    <label id="QuestionNo" class="col-form-label" style="font-size: 20px;font-weight:bold;margin:0; padding-right: 15px;"></label>
+                                    @* <label id="QuestionNo" class="col-form-label" style="font-size: 20px;font-weight:bold;margin:0; padding-right: 15px;"></label> *@
                                     
                                     <p style="font-size: 20px;font-weight:bold;margin:0;" id="GuardTestQuestions">
                                         
@@ -184,15 +187,15 @@
                             </div>
                         </div>
                         <div class="form-group row m-0 mb-3" id="GuardAnswersdivision">
-                            <div class="col-sm-3"></div>
-                            <div class="col-sm-3">
-                                <div class="form-group row justify-content-center">
-                                    <input type="checkbox" id="chkGuardAnswer1" hidden />
+                          @*   <div class="col-sm-3"></div> *@
+                            <div class="col-sm-6">
+                               @*  <div class="form-group row justify-content-center">
+                                <input type="checkbox" id="chkGuardAnswer1" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label>
                                     
                                     <input type="hidden" id="txtGuardAnswer1" />
-                                </div>
-                                <div class="form-group row justify-content-center">
+                                </div> *@
+                               @*  <div class="form-group row justify-content-center">
                                     <input type="checkbox" id="chkGuardAnswer3" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer3" style="font-size: 18px;" hidden></label>
                                     
@@ -203,29 +206,77 @@
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer5" style="font-size: 18px;" hidden></label>
                                     
                                     <input type="hidden" id="txtGuardAnswer5" />
-                                </div>
+                                </div> *@
+                                <ul class="list-unstyled justify-content-center" id="listGuardOptions1">
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer1" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardAnswer1" />
+                                        </div>
+                                    </li>
+                                    <li >
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer3" class="mr-2" hidden />
+                                            
+                                            <input type="hidden" id="txtGuardAnswer3" />
+                                        </div>
+                                    </li>
+                                    <li >
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer5" class="mr-2" hidden />
+
+                                            <input type="hidden" id="txtGuardAnswer5" />
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
-                            <div class="col-sm-3">
-                                <div class="form-group row justify-content-center">
+                            <div class="col-sm-6">
+                               @*  <div class="form-group row justify-content-center">
                                    
                                     <input type="checkbox" id="chkGuardAnswer2" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer2" style="font-size: 18px;" hidden></label>
                                     <input type="hidden" id="txtGuardAnswer2" />
-                                </div>
-                                <div class="form-group rowjustify-content-center">
+                                </div> *@
+                                @* <div class="form-group rowjustify-content-center">
                                     
                                     <input type="checkbox" id="chkGuardAnswer4" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer4" style="font-size: 18px;" hidden></label>
                                     <input type="hidden" id="txtGuardAnswer4" />
-                                </div>
-                                <div class="form-group row justify-content-center">
+                                </div> *@
+                                @* <div class="form-group row justify-content-center">
                                     
                                     <input type="checkbox" id="chkGuardAnswer1" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardAnswer6" style="font-size: 18px;" hidden></label>
                                     <input type="hidden" id="txtGuardAnswer1" />
-                                </div>
+                                </div> *@
+                                <ul class="list-unstyled justify-content-center" id="listGuardOptions2">
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer2" hidden class="mr-2" />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardAnswer2" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer4" class="mr-2" hidden />
+
+                                            <input type="hidden" id="txtGuardAnswer4" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardAnswer6" class="mr-2" hidden />
+
+                                            <input type="hidden" id="txtGuardAnswer6" />
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
-                            <div class="col-sm-3"></div>
+                            @* <div class="col-sm-3"></div> *@
 
                         </div>
 
@@ -360,9 +411,9 @@
                         <div class="form-group row m-0 mb-3">
 
                             <div class="col-sm-12">
-                                <div class="container p-0 justify-content-center" style="display:flex;align-items: center;font-size:11px;color:black">
+                                <div class="container p-0 justify-content-center" style="display:flex;align-items: center;font-size:11px;color:black;margin-bottom:100px;">
 
-                                    <label id="FeedbackQuestionNo" class="col-form-label" style="font-size: 20px;font-weight:bold;margin:0; padding-right: 15px;"></label>
+                                    @* <label id="FeedbackQuestionNo" class="col-form-label" style="font-size: 20px;font-weight:bold;margin:0; padding-right: 15px;"></label> *@
 
                                     <p style="font-size: 20px;font-weight:bold;margin:0;" id="GuardFeedbackQuestions">
 
@@ -373,9 +424,9 @@
                             </div>
                         </div>
                         <div class="form-group row m-0 mb-3" id="GuardFeedbackAnswersdivision">
-                            <div class="col-sm-3"></div>
-                            <div class="col-sm-3">
-                                <div class="form-group row justify-content-center">
+                          
+                            <div class="col-sm-6">
+@*                                 <div class="form-group row justify-content-center">
                                     <input type="checkbox" id="chkGuardFeedbackAnswer1" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardFeedbackAnswer1" style="font-size: 18px;" hidden></label>
 
@@ -392,10 +443,37 @@
                                     <label class=" col-form-label ml-2" id="lblGuardFeedbackAnswer5" style="font-size: 18px;" hidden></label>
 
                                     <input type="hidden" id="txtGuardFeedbackAnswer5" />
-                                </div>
+                                </div> *@
+                                <ul class="list-unstyled justify-content-center" id="listGuardFeedbackOptions1">
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer1" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer1" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer3" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer3" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer5" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer5" />
+                                        </div>
+                                    </li>
+                                </ul>
+
                             </div>
-                            <div class="col-sm-3">
-                                <div class="form-group row justify-content-center">
+                            <div class="col-sm-6">
+                                @* <div class="form-group row justify-content-center">
 
                                     <input type="checkbox" id="chkGuardFeedbackAnswer2" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardFeedbackAnswer2" style="font-size: 18px;" hidden></label>
@@ -412,9 +490,35 @@
                                     <input type="checkbox" id="chkGuardFeedbackAnswer1" hidden />
                                     <label class=" col-form-label ml-2" id="lblGuardFeedbackAnswer6" style="font-size: 18px;" hidden></label>
                                     <input type="hidden" id="txtGuardFeedbackAnswer1" />
-                                </div>
+                                </div> *@
+                                <ul class="list-unstyled justify-content-center" id="listGuardFeedbackOptions2">
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer2" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer2" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer4" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer4" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="form-group row " style="font-size: 18px;">
+                                            <input type="checkbox" id="chkGuardFeedbackAnswer6" class="mr-2" hidden />
+                                            @* <label class=" col-form-label ml-2" id="lblGuardAnswer1" style="font-size: 18px;" hidden></label> *@
+
+                                            <input type="hidden" id="txtGuardFeedbackAnswer6" />
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
-                            <div class="col-sm-3"></div>
+                            
 
                         </div>
 
@@ -429,18 +533,11 @@
     </div>
 </div>
 <div class="card" id="cardThankyouPage" hidden>
-    <div class="card-header container-fluid">
-        <div class="row">
-            <div class="col-md-11 mr-5 text-center">
-                <h3>Anonymous Feedback </h3>
-            </div>
-
-        </div>
-    </div>
+   
     <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
         <div class="card-body" id="events-list">
             <div class="form-row">
-                <div class="col-md-12 text-center">
+                <div class="col-md-12 text-center text-danger">
                     
                         <h3>Thank You! </h3>
                     
