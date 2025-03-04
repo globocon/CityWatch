@@ -505,7 +505,7 @@ function renderGuardCouseStatusForGuard(value, type, data) {
             }
 
 
-            cellValue += '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>';
+            //cellValue += '<button type="button" class="btn btn-outline-primary mr-2" name="btn_rpl_guard_TrainingAndAssessment">RPL</button>';
 
         return cellValue;
     }
@@ -614,8 +614,10 @@ function renderGuardCouseStatusForadmin(value, type, data) {
                     '<input type="hidden" id="CourseId" value="' + data.id + '">';
             }
         else {
-            cellValue = '<i class="fa fa-times-circle text-success mr-3"></i>' +
-                '<input type="hidden" id="CourseId" value="' + data.id + '">';
+                cellValue = '' +
+                    '<a href="#practicalDetailsModal" id="btnPracticalDetailsByGuard"><i class="fa fa-times-circle text-success mr-3"></i></a>' +
+                    '<input type="hidden" id="CourseId" value="' + data.id + '">' +
+                '<input type="hidden" id="trainingCourseId" value="' + data.trainingCourseId+ '">'                    ;
         }
         }
        
@@ -656,6 +658,18 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
         }
     ],
    
+});
+$('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', '#btnPracticalDetailsByGuard', function () {
+    $('#practicalDetailsModal').modal('show');
+    var GuardId = $('#Guard_Id').val();
+    $('#txtPrcticalGuardId').val(GuardId);
+    
+    $('#txtPrcticalCourseId').val($(this).closest("td").find('#trainingCourseId').val());
+
+    getPracticalCourseLocation();
+    getPracticaInstructorSignOff();
+
+
 });
 gridGuardTrainingAndAssessmentByAdmin.on('draw.dt', function () {
     var tbody = $('#tbl_guard_trainingAndAssessment_by_Admin tbody');
@@ -3415,3 +3429,133 @@ $('#btnExitCourse').on('click', function (e) {
 
 });
 //p6-issue8-end
+$('#btnSavePracticalDetails').on('click', function () {
+
+    clearGuardValidationSummary('ValidationSummary');
+ 
+
+
+
+
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveGuardTrainingPracticalDetails',
+        data: {
+            'guardId': $('#txtPrcticalGuardId').val(),
+            'courseId': $('#txtPrcticalCourseId').val(),
+            'practicalLocationId': $('#ddlPracticalCourseLocation').val(),
+            'instructorId': $('#ddlPracticalCourseInstructorsignOff').val(),
+            'practicalDate': $('#Practical_Date_completed').val()
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            GetHoldCertificate(result.hrsettingsId);
+            $('#practicalDetailsModal').modal('hide');
+            
+
+
+        } else {
+
+            displayGuardValidationSummary('rplValidationSummary', result.message);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+
+
+
+
+
+
+});
+function GetHoldCertificate(hrSettingsId) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardCertificate',
+        data: {
+            'guardId': $('#txtPrcticalGuardId').val(),
+            'hrSettingsId': hrSettingsId,
+            'tqNumberId': 0
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.filename) {
+            // deleteGuardScores(buttonmode);
+            UpdateCourseStatusToComplete(hrSettingsId)
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function UpdateCourseStatusToComplete(hrSettingsId) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=UpdateCourseStatusToComplete',
+        data: {
+            'guardId': $('#txtPrcticalGuardId').val(),
+            'hrSettingsId': hrSettingsId
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            // deleteGuardScores(buttonmode);
+           
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardLicensesAndLicence.clear().draw();
+            gridGuardLicensesAndLicence.ajax.reload();
+        }
+        else {
+            return;
+        }
+    });
+}
+function getPracticalCourseLocation() {
+    const practicalLocationControl = $('#ddlPracticalCourseLocation');
+    practicalLocationControl.html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingLocation',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            practicalLocationControl.append('<option value="" selected>Select</option>')
+            data.map(function (site) {
+                practicalLocationControl.append('<option value="' + site.id + '">' + site.location + '</option>');
+            });
+
+          
+        }
+    });
+}
+function getPracticaInstructorSignOff() {
+
+    const practicalInstructorControl = $('#ddlPracticalCourseInstructorsignOff');
+    practicalInstructorControl.html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=InstructorAndPosition',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            practicalInstructorControl.append('<option value="" selected>Select</option>')
+            data.map(function (site) {
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+
+            
+        }
+    });
+}

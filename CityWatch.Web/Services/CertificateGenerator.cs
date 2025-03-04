@@ -156,14 +156,34 @@ namespace CityWatch.Web.Services
             acroForm.GetField("Student").SetValue(guards.Name, true);
             acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
             acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
-            
+            var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
+            if (practicalresult == null)
+            {
                 acroForm.GetField("Location_practical").SetValue("", true);
                 acroForm.GetField("DOI_practical").SetValue("", true);
+            }
+            else
+            {
+                if (acroForm.GetField("DOI_practical") != null)
+                {
+                    acroForm.GetField("DOI_practical").SetValue(practicalresult.PracticalDate.ToString("dd-MMM-yyyy"), true);
+                }
+                if (acroForm.GetField("Location_practical") != null)
+                {
+                    acroForm.GetField("Location_practical").SetValue(practicalresult.TrainingLocation.Location, true);
+                }
+            }
             
             if(certificateRPL.Count()>0)
             {
-                acroForm.GetField("DOI_RPL_start").SetValue(certificateRPL.FirstOrDefault().AssessmentStartDate.ToString("dd-MMM-yyyy"), true);
-                acroForm.GetField("DOI_RPL_end").SetValue(certificateRPL.FirstOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
+                if (acroForm.GetField("DOI_RPL_start") != null)
+                {
+                    acroForm.GetField("DOI_RPL_start").SetValue(certificateRPL.FirstOrDefault().AssessmentStartDate.ToString("dd-MMM-yyyy"), true);
+                }
+                if (acroForm.GetField("DOI_RPL_end") != null)
+                {
+                    acroForm.GetField("DOI_RPL_end").SetValue(certificateRPL.FirstOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
+                }
             }
             if (isCertificateExpiry)
             {

@@ -293,8 +293,41 @@ namespace CityWatch.Web.Pages.Guard
             string hashCode = GenerateHashCode(input);
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
             var filename = _certificateGenerator.GeneratePdf(guardId, hrSettingsId, hashCode, getcertificateSatus.IsCertificateHoldUntilPracticalTaken, getcertificateSatus.IsCertificateWithQAndADump, getcertificateSatus.IsCertificateExpiry);
+            DateTime? expirydate= DateTime.Now;
+            if (getcertificateSatus.IsCertificateExpiry == true)
+            {
 
+                var expiryyears = _configDataProvider.GetTQSettings(hrSettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;
+
+                string newexpiry = expiryyears.Replace("year", "");
+                DateTime currentdate = DateTime.Now;
+                expirydate = currentdate.AddYears(Convert.ToInt32(newexpiry));
+
+            }
+            else
+            {
+                expirydate = null;
+            }
+            var hrdesription = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().Description;
+            var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
+            _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
+            {
+                Id = 0,
+                GuardId = guardId,
+                Description = hrdesription,
+                CurrentDateTime = DateTime.Now.ToString(),
+                FileName = filename,
+                HrGroup = (HrGroup?)hrgroupid,
+                ExpiryDate = expirydate,
+                DateType = false,
+                Reminder1 = 45,
+
+                Reminder2 = 7
+
+            });
+       
            
+
 
             //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
 
@@ -535,7 +568,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 message = ex.Message;
             }
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success, message,hrSettingsId });
         }
 
     }

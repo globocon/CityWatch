@@ -188,8 +188,11 @@ namespace CityWatch.Data.Providers
         public DuressSetting GetDuressSettingById(int duressAppId);
         public bool UpdateDuressSetting(DuressSetting setting);
         public bool DeleteDuressSettingById(int duressAppId);
+        List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId);
 
-
+        void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment);
+        List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId);
+        List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId);
 
     }
 
@@ -1970,8 +1973,45 @@ namespace CityWatch.Data.Providers
             }
             return false;
         }
+        public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
+        {
+            var course = _context.TrainingCourses.Where(x => x.Id == courseId ).OrderBy(x => x.Id).ToList();
+            return course;
+        }
+        public void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment)
+        {
+            if (trainingAssessment.Id == 0)
+            {
+                _context.GuardTrainingAndAssessmentPractical.Add(trainingAssessment);
+            }
+            else
+            {
+                var documentToUpdate = _context.GuardTrainingAndAssessmentPractical.SingleOrDefault(x => x.Id == trainingAssessment.Id);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.GuardId = trainingAssessment.GuardId;
+                    documentToUpdate.HRSettingsId = trainingAssessment.HRSettingsId;
+                    documentToUpdate.PracticalocationlId = trainingAssessment.PracticalocationlId;
+                    documentToUpdate.PracticalDate = trainingAssessment.PracticalDate;
+                    documentToUpdate.InstructorId = trainingAssessment.InstructorId;
 
-
+                }
+            }
+            _context.SaveChanges();
+        }
+        public List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId)
+        {
+            var startTest = _context.GuardTrainingAndAssessmentPractical.Where(x => x.GuardId == guardId && x.HRSettingsId == hrsettingsId).
+                Include(x => x.TrainingLocation)
+                
+                .OrderBy(x => x.Id).ToList();
+            return startTest;
+        }
+        public List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId)
+        {
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId ).OrderBy(x => x.Id).ToList();
+            return course;
+        }
 
     }
 

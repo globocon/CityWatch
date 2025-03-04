@@ -2702,6 +2702,69 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(fields);
 
         }
+        public JsonResult OnPostSaveGuardTrainingPracticalDetails(int guardId,int courseId,int practicalLocationId, int instructorId,DateTime practicalDate)
+        {
+            var success = false;
+            var message = string.Empty;
+            int hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
+            try
+            {
+                
+
+
+                _configDataProvider.SaveGuardTrainingPracticalDetails(new GuardTrainingAndAssessmentPractical()
+                {
+                    Id = 0,
+                    GuardId = guardId,
+                    HRSettingsId = hrsettingsId,
+                    PracticalocationlId = practicalLocationId,
+                    PracticalDate=practicalDate,
+                    InstructorId=instructorId
+
+                });
+               
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message , hrsettingsId });
+        }
+        public JsonResult OnPostUpdateCourseStatusToComplete(int guardId, int hrSettingsId)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                var TrainingCourses = _configDataProvider.GetTrainingCoursesWithOnlyHrSettingsId(hrSettingsId);
+                foreach (var item in TrainingCourses)
+                {
+                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == item.Id).FirstOrDefault();
+                    if (record != null)
+                    {
+                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                        {
+                            Id = record.Id,
+                            GuardId = guardId,
+                            TrainingCourseId = item.Id,
+                            TrainingCourseStatusId = record.TrainingCourseStatusId,
+                            Description = record.Description,
+                            HRGroupId = record.HRGroupId,
+                            IsCompleted = true
+
+                        });
+                    }
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {
