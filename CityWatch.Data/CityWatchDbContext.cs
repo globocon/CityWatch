@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Linq;
 using System.Reflection.Metadata;
+using Microsoft.Data.SqlClient;
 
 namespace CityWatch.Data
 {
@@ -217,6 +218,10 @@ namespace CityWatch.Data
 
 
         public DbSet<UserInput> UserInput { get; set; }
+
+
+        public DbSet<UserDemo> UsersDemo{ get; set; }
+        public DbSet<WorkOrder> WorkOrders { get; set; }
 
 
     }
