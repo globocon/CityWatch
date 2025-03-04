@@ -3516,8 +3516,8 @@ function UpdateCourseStatusToComplete(hrSettingsId) {
            
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-            gridGuardLicensesAndLicence.clear().draw();
-            gridGuardLicensesAndLicence.ajax.reload();
+            //gridGuardLicensesAndLicence.clear().draw();
+            //gridGuardLicensesAndLicence.ajax.reload();
         }
         else {
             return;
