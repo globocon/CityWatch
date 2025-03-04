@@ -6245,6 +6245,42 @@ gridSiteSearchradio = $('#client_site_RadioSearch').grid({
 });
 
 
+
+// search two textbox steps 
+
+
+$('#search_client_site2').on('keyup', function (e) {
+
+    var inputValue = $(this).val();
+    if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
+        e.preventDefault();
+
+        gridSiteSearchradio2.reload({ typeId: $('#dglClientTypeActionList2').val(), searchTerm: $(this).val() });
+        $('#logbook-modalRadioTwo').modal('show');
+        //alert('Letter typed and Enter pressed: ' + inputValue);
+    }
+
+});
+let gridSiteSearchradio2;
+gridSiteSearchradio2 = $('#client_site_RadioSearchTwo').grid({
+    dataSource: '/RadioCheckV2?handler=ClientSitesRadioSearch',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'typeId', hidden: true },
+        { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value ? value.name : ''; } },
+        { field: 'name', title: 'Client Site', width: 180, editor: false },
+        { width: 100, renderer: settingsButtonRenderer },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+// search two textbox steps  end 
+
+
 function settingsButtonRenderer(value, record) {
 
     var ClientTypeName = record.clientType.name;
@@ -6332,6 +6368,38 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
         console.log('Invalid data-sch-id format');
     }
 });
+
+
+$('#client_site_RadioSearchTwo').on('click', '.del-schedule', function () {
+    const ClientSiteName1 = $(this).attr('data-sch-id');
+    const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+    var fields = ClientSiteName1.split('_');
+
+    if (lastUnderscoreIndex !== -1) {
+        const recordName = fields[0];
+        const clientsiteid = fields[1];
+        const typeId = fields[2];
+
+        // Select the correct type
+        $('#dglClientTypeActionList2').val(typeId).trigger('change');
+
+        // Delay selection of client site to ensure the type change is processed
+        setTimeout(function () {
+            $('#dglClientSiteIdActionList2').val(clientsiteid).trigger('change');
+        }, 300);
+
+        // Clear search field
+        $('#search_client_site2').val('');
+
+        // Hide the modal after setting values
+        setTimeout(function () {
+            $('#logbook-modalRadioTwo').modal('hide');
+        }, 500);
+    } else {
+        console.log('Invalid data-sch-id format');
+    }
+});
+
 // funsion Start
 const today = new Date();
 const start = new Date(today.getFullYear(), today.getMonth(), 2);
