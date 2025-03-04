@@ -1571,6 +1571,110 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
+
+        public void LogBookDetailsMsg(int Id, string Notifications, string Subject, GuardLog tmzdata,string ClientSiteName)
+        {
+            #region Logbook
+            if (Id != null)
+            {
+
+                var logbooktype = LogBookType.DailyGuardLog;
+                //var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(Id, logbooktype, DateTime.Today);
+
+                var logbookdate = DateTime.Today;
+                // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
+                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
+                var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
+
+                if (logBookId != 0)
+                {
+                    var guardid = HttpContext.Session.GetInt32("GuardId");
+                    if (guardid != 0)
+                    {
+
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = Id,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0,
+                            IsDuress = 0,
+                            PlayNotificationSound = false
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+                        /* Save the push message for reload to logbook on next day end*/
+                        var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                        // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                        var guardLog = new GuardLog()
+                        {
+                            ClientSiteLogBookId = logBookId,
+                            GuardLoginId = guardLoginId,
+                            EventDateTime = DateTime.Now,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
+                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                            //IsSystemEntry = true,
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId = pushMessageId,
+                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                            PlayNotificationSound = true
+                        };
+                        _guardLogDataProvider.SaveGuardLog(guardLog);
+                    }
+                    else
+                    {
+                        
+
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = Id,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0,
+                            IsDuress = 0,
+                            PlayNotificationSound = false
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+
+
+                        var guardLog = new GuardLog()
+                        {
+                            ClientSiteLogBookId = logBookId,
+                            EventDateTime = DateTime.Now,
+                            Notes = Subject + " : "+ ControlRoomMessage + " <br/> " + Notifications,
+                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                            //IsSystemEntry = true,
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId = pushMessageId,
+                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                            PlayNotificationSound = true
+                        };
+                        if (guardLog.ClientSiteLogBookId != 0)
+                        {
+                            _guardLogDataProvider.SaveGuardLog(guardLog);
+                        }
+
+                    }
+
+
+                }
+
+            }
+            #endregion
+        }
         public void LogBookDetails(int Id, string Notifications, string Subject, GuardLog tmzdata)
         {
             #region Logbook
@@ -1800,6 +1904,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
                 if (clientSiteId.Length == 0)
                 {
+                    //var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x => x.Name).FirstOrDefault();
+
                     var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
@@ -1823,11 +1929,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
+                        //LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
+                        var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteTypeID.Id).Select(x => x.Name).FirstOrDefault();
+
+                        LogBookDetailsMsg(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata, clientsitename);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
+                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessagesActionList(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);

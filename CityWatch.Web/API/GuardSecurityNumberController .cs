@@ -459,7 +459,7 @@ namespace CityWatch.Web.API
 
                 var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
                 //Commneted for testing dileep
-                //EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name, gpsCoordinates);
+                EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name, gpsCoordinates);
 
                 var GlobalDuressSmsNumbers = _clientDataProvider.GetDuressSms();
                 if (ClientsiteDetails.DuressSms != null)
@@ -502,7 +502,7 @@ namespace CityWatch.Web.API
                     svl.EventLocalTimeZone = tmdata.EventDateTimeZoneShort;
                     svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     //Commneted for testing dileep
-                    //_smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + SmsNotifications, svl);
+                    _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + SmsNotifications, svl);
                 }
                 else
                 {
