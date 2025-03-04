@@ -218,7 +218,9 @@ namespace CityWatch.Data
 
 
         public DbSet<UserInput> UserInput { get; set; }
-
+        public DbSet<GuardTrainingStartTest> GuardTrainingStartTest { get; set; }
+        public DbSet<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GuardTrainingAttendedFeedbackQuestionsAndAnswers { get; set; }
+        public DbSet<GuardTrainingAndAssessmentPractical> GuardTrainingAndAssessmentPractical { get; set; }
 
         public DbSet<UserDemo> UsersDemo{ get; set; }
         public DbSet<WorkOrder> WorkOrders { get; set; }

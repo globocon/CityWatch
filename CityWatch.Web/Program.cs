@@ -64,7 +64,7 @@ builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
 builder.Services.AddScoped<ITimesheetReportGenerator, TimesheetReportGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
-
+builder.Services.AddScoped<ICertificateGenerator, CertificateGenerator>();
 
 builder.Services.AddRazorPages(options =>
 {

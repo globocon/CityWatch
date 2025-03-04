@@ -18,7 +18,7 @@ namespace CityWatch.Data.Models
         Timesheets = 5,
         [Display(Name = "LOTE")]
         Lote = 6,
-        [Display(Name = "ClassRoom Location")]
+        [Display(Name = "Classroom Location")]
         ClassroomLocation = 7,
         [Display(Name = "HR Groups - Course Library Only")]
         HRGroupsCourseLibrary = 8,

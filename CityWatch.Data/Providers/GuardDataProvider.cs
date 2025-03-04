@@ -1053,7 +1053,7 @@ namespace CityWatch.Data.Providers
         {
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardTrainingAndAssessment
-                 .Where(x => x.GuardId == guardId)
+                 .Where(x => x.GuardId == guardId && x.IsCompleted==false)
                  .Include(z => z.Guard)
                  .Include(z => z.HRGroups)
                  .Include(z => z.TrainingCourses)
