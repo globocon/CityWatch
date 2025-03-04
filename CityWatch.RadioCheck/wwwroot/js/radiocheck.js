@@ -6383,18 +6383,34 @@ $('#client_site_RadioSearchTwo').on('click', '.del-schedule', function () {
         // Select the correct type
         $('#dglClientTypeActionList2').val(typeId).trigger('change');
 
-        // Delay selection of client site to ensure the type change is processed
-        setTimeout(function () {
-            $('#dglClientSiteIdActionList2').val(clientsiteid).trigger('change');
-        }, 300);
+        const clientSiteControl = $('#dglClientSiteIdActionList2');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/RadioCheckV2?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: typeId
+
+            },
+            dataType: 'json',
+            success: function (data) {
+                $('#dglClientSiteIdActionList2').append(new Option('Select', '', true, true));
+                data.map(function (site) {
+                    $('#dglClientSiteIdActionList2').append(new Option(site.name, site.id, false, false));
+                });
+
+                $('#dglClientSiteIdActionList2').val(clientsiteid)
+            }
+        });
+
+        
 
         // Clear search field
         $('#search_client_site2').val('');
 
-        // Hide the modal after setting values
-        setTimeout(function () {
+       
             $('#logbook-modalRadioTwo').modal('hide');
-        }, 500);
+       
     } else {
         console.log('Invalid data-sch-id format');
     }
