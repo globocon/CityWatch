@@ -8,6 +8,7 @@
 	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.104.2" />
 		<PackageReference Include="Dropbox.Api" Version="6.25.0" />
 		<PackageReference Include="itext7" Version="7.2.0" />
 		<PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />
@@ -42,6 +43,10 @@
 	  <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Content Update="Pages\Demo\Admin\_ViewStart.cshtml">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </Content>
 	  <Content Update="Pages\_FusionGuardRCChats.cshtml">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </Content>

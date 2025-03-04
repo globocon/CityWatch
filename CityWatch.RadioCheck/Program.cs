@@ -7,6 +7,7 @@ using CityWatch.Data.Services;
 using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Services;
 using CityWatch.Web.Services;
+using FortescueWebApp.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -55,6 +56,9 @@ builder.Services.AddScoped<IGuardLoginDetailService, GuardLoginDetailService>();
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogReportGenerator, CityWatch.RadioCheck.Services.GuardLogReportGenerator>();
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogZipGenerator, CityWatch.RadioCheck.Services.GuardLogZipGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
+builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
