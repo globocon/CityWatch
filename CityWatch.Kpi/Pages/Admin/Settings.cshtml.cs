@@ -1072,10 +1072,10 @@ namespace CityWatch.Kpi.Pages.Admin
 
             _clientDataProvider.SaveClientSite(clientSite);
         }
-        public JsonResult OnGetSmartWandPhoneNumber(string PhoneNumber)
+        public JsonResult OnGetSmartWandPhoneNumber(string PhoneNumber,int id)
         {
-            var ssd = _clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber);
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber));
+            var ssd = _clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber, id);
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber, id));
         }
 
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)

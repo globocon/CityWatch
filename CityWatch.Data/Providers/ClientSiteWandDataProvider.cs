@@ -15,7 +15,7 @@ namespace CityWatch.Data.Providers
         List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId);
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
-        ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber);
+        ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber,int id);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -34,12 +34,12 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite)
                 .ToList();
         }
-        public ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber)
+        public ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber,int id)
         {
             return _dbContext.ClientSiteSmartWands
                 .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
-                .Where(x=>x.PhoneNumber== PhoneNumber)
+                .Where(x=>x.PhoneNumber== PhoneNumber && x.Id!= id)
                 .FirstOrDefault();
         }
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms )
