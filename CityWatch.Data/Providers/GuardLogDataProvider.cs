@@ -6313,6 +6313,7 @@ namespace CityWatch.Data.Providers
                 {
                     testQuestionSettingsToUpdate.Id = testQuestionSettings.Id;
                     testQuestionSettingsToUpdate.IsDeleted = testQuestionSettings.IsDeleted;
+                    testQuestionSettingsToUpdate.CourseDurationId = testQuestionSettings.CourseDurationId;
                     testQuestionSettingsToUpdate.TestDurationId = testQuestionSettings.TestDurationId;
                     testQuestionSettingsToUpdate.PassMarkId = testQuestionSettings.PassMarkId;
                     testQuestionSettingsToUpdate.AttemptsId = testQuestionSettings.AttemptsId;
