@@ -206,14 +206,18 @@ namespace CityWatch.Web.Pages.Guard
             int TotalQuestions = _configDataProvider.GetQuestionCount(hrSettingsId, tqNumberId);
             int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
             var existingGuardScrore = _configDataProvider.GetGuardScores(guardId, trainingCourseId);
+            int guardCorrectQuestionsCount = 0;
+            string guardScore = "0%";
+            bool IsPass = false;
+            if (existingGuardScrore.Count() >0)
+            {
 
+                guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
 
-            int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
+                 guardScore = existingGuardScrore.FirstOrDefault().guardScore;
 
-            string guardScore = existingGuardScrore.FirstOrDefault().guardScore;
-           
-            bool IsPass = existingGuardScrore.FirstOrDefault().IsPass;
-
+                 IsPass = existingGuardScrore.FirstOrDefault().IsPass;
+            }
 
 
             return new JsonResult(new { TotalQuestions, guardCorrectQuestionsCount, guardScore,IsPass });
