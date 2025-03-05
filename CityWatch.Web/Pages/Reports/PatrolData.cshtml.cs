@@ -36,10 +36,12 @@ namespace CityWatch.Web.Pages.Reports
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IPatrolDataZipGenerator _patroldataZipGenerator;
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider,
+             IPatrolDataZipGenerator patroldataZipGenerator)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -50,6 +52,7 @@ namespace CityWatch.Web.Pages.Reports
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
+            _patroldataZipGenerator = patroldataZipGenerator;
         }
 
         [BindProperty]
@@ -347,6 +350,29 @@ namespace CityWatch.Web.Pages.Reports
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
             return new JsonResult(new { results, fileName });
+        }
+
+        public JsonResult OnPostDownloadPatrolDataLogZip()
+        {
+            var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+            var success = true;
+            var message = string.Empty;
+            var zipFileName = string.Empty;
+
+            try
+            {
+                zipFileName = _patroldataZipGenerator.GenerateZipFile(ReportRequest);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+
+                if (ex.InnerException != null)
+                    message = ex.InnerException.Message;
+            }
+
+            return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
         }
 
 

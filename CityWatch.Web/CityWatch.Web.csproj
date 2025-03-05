@@ -44,6 +44,7 @@
     <Folder Include="wwwroot\GpsImage\" />
     <Folder Include="wwwroot\KvlUploads\" />
     <Folder Include="wwwroot\DuressAppAudio\" />
+    <Folder Include="wwwroot\Pdf\PatrolData\" />
     <Folder Include="wwwroot\SubdomainLogo\" />
     <Folder Include="wwwroot\Pdf\Archive\" />
     <Folder Include="wwwroot\Pdf\FromDropbox\" />

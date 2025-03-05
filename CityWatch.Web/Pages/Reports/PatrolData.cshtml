@@ -125,7 +125,7 @@
                                 <th>Date</th>
                                 <th>IR S/No</th>
                                 <th>
-                                    <span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span>
+                                    <span id="DownloadZipbtn" style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span>
                                 </th>
                                 <th>Control Room Job No</th>
                                 <th>Site</th>
@@ -484,6 +484,23 @@
         </div>
     </div>
     @*/*html to PDF content for the download PDF end*/*@
+
+    <div class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" id="report-zip-modal">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Download Zip</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="patroldata-zip-msg"><i class="fa fa-circle-o-notch fa-spin mr-2" aria-hidden="true"></i>Generating zip file. Please wait ...</p>
+                    <a style="display:none" class="btn btn-success" id="btn-patroldata-zip-download" href="#">Download Zip</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @Html.AntiForgeryToken()
 @section PageHeader {

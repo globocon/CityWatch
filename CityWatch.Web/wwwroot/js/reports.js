@@ -78,6 +78,45 @@
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
         $('#ReportRequest_Position option:first').prop('selected', true);
     });
+
+    $('#DownloadZipbtn').on('click', function () {
+        //$('#vklClientType').val('');
+        //$('#vklClientSiteId').val('');
+        //logBookTypeForAuditZip = 1;
+        //if ($('#dglClientSiteId').val() === '') {
+        //    alert('Please select a client site');
+        //    return;
+        //}
+        $('#report-zip-modal').modal('show');
+    });
+    $('#report-zip-modal').on('show.bs.modal', function (event) {
+        $('#btn-patroldata-zip-download').attr('href', '#');
+        $('#btn-patroldata-zip-download').hide();
+        $('#patroldata-zip-msg').show();
+
+       
+            downlodPatrolZipFile();
+       
+    });
+    function downlodPatrolZipFile() {
+        $.ajax({
+            url: '/Reports/PatrolData?handler=DownloadPatrolDataLogZip',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (!response.success) {
+                $('#report-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            } else {
+                $('#btn-patroldata-zip-download').attr('href', response.fileName);
+                $('#btn-patroldata-zip-download').show();
+                $('#patroldata-zip-msg').hide();
+            }
+        });
+    }
     /*p3-132 Contracted manning button-start*/
     $('#ReportRequest_DataFilter').val(2);
     $('#patrol_report_controls').show();

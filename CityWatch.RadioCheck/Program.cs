@@ -56,6 +56,7 @@ builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogReportGenerato
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogZipGenerator, CityWatch.RadioCheck.Services.GuardLogZipGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 
+
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
