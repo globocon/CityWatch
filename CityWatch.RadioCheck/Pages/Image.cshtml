@@ -174,7 +174,7 @@
 
     <h2>Uploaded Files</h2>
 
-    
+
 
     @if (Model.Files.Count > 0)
     {
@@ -182,7 +182,7 @@
             @for (int i = 0; i < Model.Files.Count; i++)
             {
                 var fileName = Model.Files[i];
-                string fileUrl = $"/uploads/{Model.FolderId}/{fileName}";
+                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}";
                 string fileExtension = System.IO.Path.GetExtension(fileName)?.ToLower();
 
                 <div class="image-card">
@@ -219,11 +219,18 @@
             <p id="imageName"></p>
         </div>
     }
+    else{
+
+        <h5 style="text-align: center;color: red;"> Sorry! , No files found</h5>
+       
+    }
+
 
 
     <script>
         let images = @Html.Raw(Json.Serialize(Model.Files));
-        let folderId = "@Model.FolderId";
+        let formName = "@Model.FormName";
+        let workOrder = "@Model.WorkOrder";
         let currentIndex = 0;
 
         function openModal(index) {
@@ -244,7 +251,7 @@
         }
 
         function updateModal() {
-            let fileUrl = `/uploads/${folderId}/${images[currentIndex]}`;
+            let fileUrl = `/uploads/jotform/${encodeURIComponent(formName)}/${encodeURIComponent(workOrder)}/${images[currentIndex]}`;
             document.getElementById("modalImg").src = fileUrl;
             document.getElementById("imageName").textContent = images[currentIndex];
         }
@@ -254,6 +261,7 @@
             if (event.key === "ArrowLeft") changeImage(-1);
             if (event.key === "Escape") closeModal();
         });
+
     </script>
 
 

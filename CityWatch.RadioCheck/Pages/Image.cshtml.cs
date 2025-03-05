@@ -10,6 +10,43 @@ namespace CityWatch.RadioCheck.Pages
 {
     public class ImageModel : PageModel
     {
+        //private readonly IWebHostEnvironment _env;
+
+        //public ImageModel(IWebHostEnvironment env)
+        //{
+        //    _env = env;
+        //}
+
+        //public List<string> Files { get; set; } = new List<string>();
+        //public string FolderId { get; set; } = string.Empty;
+
+        //public void OnGet()
+        //{
+        //    FolderId = Request.Query["folderId"];
+        //    Console.WriteLine($"FolderId: {FolderId}");
+
+        //    if (!string.IsNullOrEmpty(FolderId))
+        //    {
+        //        string folderPath = Path.Combine(_env.WebRootPath, "uploads", FolderId);
+        //        Console.WriteLine($"Checking folder: {folderPath}");
+
+        //        if (Directory.Exists(folderPath))
+        //        {
+        //            Files = Directory.GetFiles(folderPath)
+        //                .Where(file => !file.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+        //                .Select(Path.GetFileName)
+        //                .ToList();
+
+        //            Console.WriteLine($"Found {Files.Count} files.");
+        //        }
+        //        else
+        //        {
+        //            Console.WriteLine("Folder does not exist.");
+        //        }
+        //    }
+        //}
+
+
         private readonly IWebHostEnvironment _env;
 
         public ImageModel(IWebHostEnvironment env)
@@ -18,22 +55,26 @@ namespace CityWatch.RadioCheck.Pages
         }
 
         public List<string> Files { get; set; } = new List<string>();
-        public string FolderId { get; set; } = string.Empty;
+        public string FormName { get; set; } = string.Empty;
+        public string WorkOrder { get; set; } = string.Empty;
 
         public void OnGet()
         {
-            FolderId = Request.Query["folderId"];
-            Console.WriteLine($"FolderId: {FolderId}");
+            FormName = Request.Query["formName"];
+            WorkOrder = Request.Query["workOrder"];
 
-            if (!string.IsNullOrEmpty(FolderId))
+            Console.WriteLine($"FormName: {FormName}, WorkOrder: {WorkOrder}");
+
+            if (!string.IsNullOrEmpty(FormName) && !string.IsNullOrEmpty(WorkOrder))
             {
-                string folderPath = Path.Combine(_env.WebRootPath, "uploads", FolderId);
+                // Construct folder path
+                string folderPath = Path.Combine(_env.WebRootPath, "uploads", "jotform", FormName, WorkOrder);
                 Console.WriteLine($"Checking folder: {folderPath}");
 
                 if (Directory.Exists(folderPath))
                 {
                     Files = Directory.GetFiles(folderPath)
-                        .Where(file => !file.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                        .Where(file => !file.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) // Exclude text files
                         .Select(Path.GetFileName)
                         .ToList();
 
@@ -43,6 +84,10 @@ namespace CityWatch.RadioCheck.Pages
                 {
                     Console.WriteLine("Folder does not exist.");
                 }
+            }
+            else
+            {
+                Console.WriteLine("Invalid query parameters.");
             }
         }
     }
