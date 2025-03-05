@@ -40,7 +40,7 @@ $(function () {
 
             $.ajax({
                 url: '/admin/settings?handler=SmartWandPhoneNumber',
-                data: { phoneNumber: data.phoneNumber },
+                data: { phoneNumber: data.phoneNumber, Id: data.id },
                 type: 'GET'
             }).done(function (response) {
                 if (response != null) {
