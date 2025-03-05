@@ -1966,7 +1966,7 @@ $('#tbl_certificateDocumentFiles').on('click', '.delete_certificate_file_sop', f
 //p5-Issue3-CourseDocumentUpload-end
 
 //p5-Issue-2-start
-$('#btnAddGuardCourse').on('click', function (e) {
+$('#btnAddGuardCourse,#btnAddGuardCourse1').on('click', function (e) {
     e.preventDefault();
     //  ReloadHrGroupsforCourseList();
     var guardid = $('#Guard_Id').val();
