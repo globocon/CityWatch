@@ -204,7 +204,7 @@ namespace CityWatch.Data.Providers
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
-                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata,string clientSiteNameActionList);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -4974,7 +4974,7 @@ namespace CityWatch.Data.Providers
         }
 
         public void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
-                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata, string clientSiteNameActionList)
         {
             
             var guardInitials = string.Empty;
@@ -5024,7 +5024,7 @@ namespace CityWatch.Data.Providers
                 //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                 //var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
                 var ClientSiteName = clientSiteForLogbook.Select(x => x.Name).FirstOrDefault();
-                var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
+                var ControlRoomMessage = "CRO STEPS message to " + clientSiteNameActionList + ":";
                 if (loginGuardId != 0)
                 {
                     var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), localDateTime.Date); // DateTime.Today

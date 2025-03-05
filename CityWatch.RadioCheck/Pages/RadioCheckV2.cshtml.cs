@@ -1936,7 +1936,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessagesActionList(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
+                    var clientsitenameActionList = _guardLogDataProvider.GetClientSites(clientSiteId[0]).Select(x => x.Name).FirstOrDefault();
+                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessagesActionList(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata, clientsitenameActionList);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
