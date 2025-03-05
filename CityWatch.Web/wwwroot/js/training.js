@@ -2363,8 +2363,9 @@ function StartCourse() {
             $('#cardCoursePdf').attr('hidden', false);
             RunCourses();
             isPausedForCourseDuration = false;
-            startCourseDurationClock();
-
+            if (valnew != '0 minutes') {
+                startCourseDurationClock();
+            }
         }
       
 
@@ -2558,9 +2559,10 @@ function ClearTimerAndReload() {
     DuressAlarmNotificationPending = false;
     nIntervCourseDurationId = null;
     isPausedForCourseDuration = true;
-     deleteGuardAttendedQuestions(2);
+     //deleteGuardAttendedQuestions(2);
     //returnCoursetestStatustostart();
-    location.reload();
+    //location.reload();
+    getTimerMessage();
 }
 //function getGuardCourseSpentTimeDetails() {
 //    var obj =
@@ -2601,7 +2603,10 @@ $('#btnStartTest').on('click', function (e) {
     
     $('#divTestDurationTimer').attr('hidden', false);
     isPausedForTestDuration = false;
-    startTestDurationClock();
+    if (valnewfortest != '0 minutes') { 
+        
+        startTestDurationClock();
+    }
     GetQuestionsForGuard();
    
 });
@@ -2635,7 +2640,7 @@ function startTestDurationClock() {
                 seconds = seconds < 10 ? "0" + seconds : seconds;
 
                 display.textContent = minutes + " min" + " " + seconds + " sec";
-
+             
                 if (--timer < 0) {
                     ClearTimerAndReloadForTest();
                 }
@@ -2651,9 +2656,56 @@ function ClearTimerAndReloadForTest() {
     DuressAlarmNotificationPendingForTest = false;
     nIntervCourseDurationTestId = null;
     isPausedForTestDuration = true;
-     deleteGuardAttendedQuestions(2);
+     //deleteGuardAttendedQuestions(2);
    // returnCoursetestStatustostart();
-    location.reload();
+    //location.reload();
+    getTimerMessage();
+    //GetGuardMarks();
+
+}
+function getTimerMessage() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardMarks',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'tqNumberId': $("#txtGuardTQNumberId").val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            $('#cardFrontPage').hide();
+
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').attr('hidden', false);
+            $('#resultHeading').html('Time Has Expired');
+            $('#ResultIconCross').attr('hidden', false);
+            $('#ResultIconTrophy').hide();
+            message = 'You have not passed the test.Please press Retry to try again or Exit to try again in a later date.'
+            $('#btnContinueTest').hide();
+            $('#btnRetryTest').attr('hidden', false);
+            $('#btnExitTest').attr('hidden', false);
+
+
+            $('#ResultMessage').html(message);
+            $('#divTestDurationTimer').hide();
+            $('#QuestionCounts').html('');
+            $('#lblTotalQuestionscount').html(result.totalQuestions);
+            $('#lblCorrectQuestionscount').html(result.guardCorrectQuestionsCount);
+            $('#lblTotalScore').html(result.guardScore);
+            $('#lblAttempts').html(1);
+            $('#lblDuration').html('02:33');
+        }
+    
+        }).fail(function () {
+            console.log('error');
+        })
 }
 function GetQuestionsForGuard() {
     const token = $('input[name="__RequestVerificationToken"]').val();
