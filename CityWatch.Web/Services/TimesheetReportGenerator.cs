@@ -644,6 +644,31 @@ namespace CityWatch.Web.Services
                 if (start != null)
                 {
                     GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                    //Set GPS Image start
+                    var imagePath = "wwwroot/images/GPSImage.png";
+                    var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                        .SetWidth(12)
+                        .SetHeight(12);
+
+                    siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
+                    var paragraph = new Paragraph()
+                        .SetBorder(Border.NO_BORDER)
+                        .Add(siteImage);
+
+                    var cell = new Cell()
+                        .SetFont(PdfHelper.GetPdfFont())
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .SetTextAlignment(TextAlignment.LEFT)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                        .SetPadding(2)
+                        .SetMargin(0)
+                        .SetHeight(15);
+
+                    cell.Add(paragraph);
+                    GuardTable.AddCell(cell);
+                    //Set GPS Image stop
 
                     TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                     if (endDateDifference.HasValue)
@@ -653,6 +678,31 @@ namespace CityWatch.Web.Services
                                                         endDateDifference.Value.Minutes);
                         GuardTable.AddCell(GetSiteValueCell(enddate1));
 
+                        //Set GPS Image start
+                        var imagePath1 = "wwwroot/images/GPSImage.png";
+                        var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
+                            .SetWidth(12)
+                            .SetHeight(12);
+
+                        siteImage1.SetTextAlignment(TextAlignment.RIGHT);
+
+                        var paragraph1 = new Paragraph()
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(siteImage1);
+
+                        var cell1 = new Cell()
+                            .SetFont(PdfHelper.GetPdfFont())
+                            .SetFontSize(CELL_FONT_SIZE)
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetPadding(2)
+                            .SetMargin(0)
+                            .SetHeight(15);
+
+                        cell1.Add(paragraph1);
+                        GuardTable.AddCell(cell1);
+                        //Set GPS Image stop
                         DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
                         DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
 
@@ -875,6 +925,31 @@ namespace CityWatch.Web.Services
                 if (start != null)
                 {
                     GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                    //Set GPS Image start
+                    var imagePath = "wwwroot/images/GPSImage.png";
+                    var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                        .SetWidth(12)
+                        .SetHeight(12);
+
+                    siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
+                    var paragraph = new Paragraph()
+                        .SetBorder(Border.NO_BORDER)
+                        .Add(siteImage);
+
+                    var cell = new Cell()
+                        .SetFont(PdfHelper.GetPdfFont())
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .SetTextAlignment(TextAlignment.LEFT)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                        .SetPadding(2)
+                        .SetMargin(0)
+                        .SetHeight(15);
+
+                    cell.Add(paragraph);
+                    GuardTable.AddCell(cell);
+                    //Set GPS Image stop
 
                     TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                     if (endDateDifference.HasValue)
@@ -883,6 +958,31 @@ namespace CityWatch.Web.Services
                                                         (int)endDateDifference.Value.TotalHours,
                                                         endDateDifference.Value.Minutes);
                         GuardTable.AddCell(GetSiteValueCell(enddate1));
+                        //Set GPS Image start
+                        var imagePath1 = "wwwroot/images/GPSImage.png";
+                        var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
+                            .SetWidth(12)
+                            .SetHeight(12);
+
+                        siteImage1.SetTextAlignment(TextAlignment.RIGHT);
+
+                        var paragraph1 = new Paragraph()
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(siteImage1);
+
+                        var cell1 = new Cell()
+                            .SetFont(PdfHelper.GetPdfFont())
+                            .SetFontSize(CELL_FONT_SIZE)
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetPadding(2)
+                            .SetMargin(0)
+                            .SetHeight(15);
+
+                        cell1.Add(paragraph1);
+                        GuardTable.AddCell(cell1);
+                        //Set GPS Image stop
 
                         DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
                         DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
