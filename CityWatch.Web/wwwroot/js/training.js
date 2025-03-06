@@ -126,6 +126,24 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
         $delete.hide();
         $update.show();
         $cancel.show();
+        // DisableTQColumn();
+        let rowCount = $('#tbl_courseDocumentFiles tbody tr').length;
+      
+            let tqColumn = $(this).closest('tr').find('td').eq(2);
+        let tqInput = tqColumn.find('select');
+        let tqInputNew = tqColumn.find('button');
+        if (rowCount === 1) {
+            /* tqInput.prop('disabled', true); // disable input*/
+
+            //tqColumn.hide();
+            //$('#tbl_courseDocumentFiles thead th:eq(2)').hide();
+            tqInput.attr('disabled', 'disabled');
+            tqInputNew.attr('disabled', 'disabled');
+        }
+        //else {
+        //    //tqInput.prop('disabled', false); // enable input if more than one row
+        //    tqInput.attr('data-mode', 'edit');
+        //}
     });
     $delete.on('click', function (e) {
         $grid.removeRow($(this).data('key'));
@@ -145,6 +163,18 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
         $cancel.hide();
     });
     $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+}
+function DisableTQColumn() {
+    let rowCount = $('#tbl_courseDocumentFiles tbody tr').length;
+    let tqInput = $(this).closest('tr').find('td').eq(2);
+    if (rowCount === 1) {
+        /* tqInput.prop('disabled', true); // disable input*/
+        tqInput.attr('data-mode', 'display');
+    } else {
+        //tqInput.prop('disabled', false); // enable input if more than one row
+        tqInput.attr('data-mode', 'edit');
+    }
+
 }
 var editCourseTQNumber;
 editCourseTQNumber = function (value, record) {
@@ -220,13 +250,14 @@ if (gridCourseDocumentFiles) {
         }).done(function (result) {
 
             if (result.success) {
-                showStatusNotification(true, 'Updated Successfully');
+                alert('Updated Successfully');
                 gridCourseDocumentFiles.clear();
                 gridCourseDocumentFiles.reload();
             } else {
 
-                showStatusNotification(false, 'Please try again');
-                gridCourseDocumentFiles.edit(id);
+                alert(result.message);
+                gridCourseDocumentFiles.clear();
+                gridCourseDocumentFiles.reload();
             }
         }).fail(function () {
             console.log('error');
