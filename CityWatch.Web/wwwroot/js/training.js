@@ -2754,6 +2754,37 @@ function GetOptionsForGuard() {
     }).done(function (result) {
         if (result.length > 0) {
             j = 1;
+            $('#txtGuardAnswer1').val('');
+            $('#txtGuardAnswer2').val('');
+            $('#txtGuardAnswer3').val('');
+            $('#txtGuardAnswer4').val('');
+            $('#txtGuardAnswer5').val('');
+            $('#txtGuardAnswer6').val('');
+            $('#chkGuardAnswer1').attr('hidden', 'hidden');
+            $('#chkGuardAnswer1').prop('checked', false);
+            $('#chkGuardAnswer2').attr('hidden', 'hidden');
+            $('#chkGuardAnswer2').prop('checked', false);
+            $('#chkGuardAnswer3').attr('hidden', 'hidden');
+            $('#chkGuardAnswer3').prop('checked', false);
+            $('#chkGuardAnswer4').attr('hidden', 'hidden');
+            $('#chkGuardAnswer4').prop('checked', false);
+            $('#chkGuardAnswer5').attr('hidden', 'hidden');
+            $('#chkGuardAnswer5').prop('checked', false);
+            $('#chkGuardAnswer6').attr('hidden', 'hidden');
+            $('#chkGuardAnswer6').prop('checked', false);
+            $('#chkGuardAnswer1').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer2').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer3').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer4').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer5').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer6').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardAnswer1').after('');
+            $('#chkGuardAnswer2').after('');
+            $('#chkGuardAnswer3').after('');
+            $('#chkGuardAnswer4').after('');
+            $('#chkGuardAnswer5').after('');
+            $('#chkGuardAnswer6').after('');
+            
             $.each(result, function (i, d) {
 
                 var txtoptions = 'txtGuardAnswer' + j;
@@ -3289,6 +3320,36 @@ function GetFeedbackOptionsForGuard() {
     }).done(function (result) {
         if (result.length > 0) {
             j = 1;
+            $('#txtGuardFeedbackAnswer1').val('');
+            $('#txtGuardFeedbackAnswer2').val('');
+            $('#txtGuardFeedbackAnswer3').val('');
+            $('#txtGuardFeedbackAnswer4').val('');
+            $('#txtGuardFeedbackAnswer5').val('');
+            $('#txtGuardFeedbackAnswer6').val('');
+            $('#chkGuardFeedbackAnswer1').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer1').prop('checked', false);
+            $('#chkGuardFeedbackAnswer2').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer2').prop('checked', false);
+            $('#chkGuardFeedbackAnswer3').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer3').prop('checked', false);
+            $('#chkGuardFeedbackAnswer4').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer4').prop('checked', false);
+            $('#chkGuardFeedbackAnswer5').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer5').prop('checked', false);
+            $('#chkGuardFeedbackAnswer6').attr('hidden', 'hidden');
+            $('#chkGuardFeedbackAnswer6').prop('checked', false);
+            $('#chkGuardFeedbackAnswer1').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer2').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer3').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer4').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer5').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer6').get(0).nextSibling.nodeValue = '';
+            $('#chkGuardFeedbackAnswer1').after('');
+            $('#chkGuardFeedbackAnswer2').after('');
+            $('#chkGuardFeedbackAnswer3').after('');
+            $('#chkGuardFeedbackAnswer4').after('');
+            $('#chkGuardFeedbackAnswer5').after('');
+            $('#chkGuardFeedbackAnswer6').after('');
             $.each(result, function (i, d) {
 
                 var txtoptions = 'txtGuardFeedbackAnswer' + j;
