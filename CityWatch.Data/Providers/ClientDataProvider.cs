@@ -262,8 +262,9 @@ namespace CityWatch.Data.Providers
         public List<HyperLinks> GetHyperLinksDetails();
         public int? GetRadioCheckStatus(int? StatusID);
         public DuressAppField GetAudioByID(int documentId);
-
-
+        public string GetGuardEnrollment(int GuardID);
+        public string GetGuardLicenseState(int GuardID);
+        public string GetGuardCRMSupplier(int GuardID);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -577,6 +578,57 @@ namespace CityWatch.Data.Providers
             if (guardLogin != null && guardLogin.Guard != null)
             {
                 return guardLogin.Guard.SecurityNo;
+            }
+            else
+            {
+                return "";
+            }
+        }
+        public string GetGuardEnrollment(int GuardID)
+        {
+
+            var guardLogin = _context.GuardLogins
+                .Include(x => x.Guard)
+     .FirstOrDefault(x => x.GuardId == GuardID);
+
+            if (guardLogin != null && guardLogin.Guard != null)
+            {
+                DateTime date = (DateTime)guardLogin.Guard.DateEnrolled;
+                return date.ToString("dd-MMM-yyyy").ToUpper();
+            }
+            else
+            {
+                return "";
+            }
+        }
+        public string GetGuardLicenseState(int GuardID)
+        {
+
+            var guardLogin = _context.GuardLogins
+                .Include(x => x.Guard)
+     .FirstOrDefault(x => x.GuardId == GuardID);
+
+            if (guardLogin != null && guardLogin.Guard != null)
+            {
+                
+                return guardLogin.Guard.State;
+            }
+            else
+            {
+                return "";
+            }
+        }
+        public string GetGuardCRMSupplier(int GuardID)
+        {
+
+            var guardLogin = _context.GuardLogins
+                .Include(x => x.Guard)
+     .FirstOrDefault(x => x.GuardId == GuardID);
+
+            if (guardLogin != null && guardLogin.Guard != null)
+            {
+
+                return guardLogin.Guard.Provider;
             }
             else
             {
