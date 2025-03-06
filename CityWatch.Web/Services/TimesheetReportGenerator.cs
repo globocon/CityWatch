@@ -286,6 +286,9 @@ namespace CityWatch.Web.Services
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet- {fileNamePart} -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
             var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+            var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid);
+            var State = _clientDataProvider.GetGuardLicenseState(guradid);
+            var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
@@ -296,9 +299,9 @@ namespace CityWatch.Web.Services
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
 
-            doc.Add(CreateNameTable(Name));
-            doc.Add(CreateLicenseTable(LicenseNo));
-            doc.Add(CreateDateTable(dateTime));
+            doc.Add(CreateNameTable(Name, Enrollment));
+            doc.Add(CreateLicenseTable(LicenseNo, State));
+            doc.Add(CreateDateTable(dateTime, Supplier));
             // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
             var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
@@ -341,6 +344,9 @@ namespace CityWatch.Web.Services
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
             var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+            var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid);
+            var State = _clientDataProvider.GetGuardLicenseState(guradid);
+            var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
@@ -350,11 +356,11 @@ namespace CityWatch.Web.Services
 
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
-           
-            doc.Add(CreateNameTable(Name));
-            doc.Add(CreateLicenseTable(LicenseNo));
-            doc.Add(CreateDateTable(dateTime));
-           // doc.Add(CreateSiteTable(SiteName));
+
+            doc.Add(CreateNameTable(Name, Enrollment));
+            doc.Add(CreateLicenseTable(LicenseNo, State));
+            doc.Add(CreateDateTable(dateTime, Supplier));
+            // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
             var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
             bool hasContentOnCurrentPage = false;
@@ -397,6 +403,9 @@ namespace CityWatch.Web.Services
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
             var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+            var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid);
+            var State = _clientDataProvider.GetGuardLicenseState(guradid);
+            var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
@@ -407,9 +416,9 @@ namespace CityWatch.Web.Services
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
 
-            doc.Add(CreateNameTable(Name));
-            doc.Add(CreateLicenseTable(LicenseNo));
-            doc.Add(CreateDateTable(dateTime));
+            doc.Add(CreateNameTable(Name, Enrollment));
+            doc.Add(CreateLicenseTable(LicenseNo, State));
+            doc.Add(CreateDateTable(dateTime, Supplier));
             // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
             var (GuardLoginTables, totalHours) = CreateGuardLoginDetails1(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
@@ -441,40 +450,48 @@ namespace CityWatch.Web.Services
 
             return reportFileName;
         }
-        private static Table CreateNameTable(string Name)
+        private static Table CreateNameTable(string Name,string Enrollment)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11 , 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
 
 
-            siteDataTable.AddCell(GetSiteValueCell("Name"));
+            siteDataTable.AddCell(GetSiteValueCellHeader("Name"));
 
             siteDataTable.AddCell(GetSiteValueCell(Name));
+            siteDataTable.AddCell(GetSiteValueCellHeader("Enrolled"));
+
+            siteDataTable.AddCell(GetSiteValueCell(Enrollment));
 
 
             return siteDataTable;
         }
-        private static Table CreateLicenseTable(string LicensoNo)
+        private static Table CreateLicenseTable(string LicensoNo,string State)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11, 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
 
 
-            siteDataTable.AddCell(GetSiteValueCell("Licence"));
+            siteDataTable.AddCell(GetSiteValueCellHeader("Licence"));
 
             siteDataTable.AddCell(GetSiteValueCell(LicensoNo));
+            siteDataTable.AddCell(GetSiteValueCellHeader("Licence State"));
+
+            siteDataTable.AddCell(GetSiteValueCell(State));
 
 
             return siteDataTable;
         }
-        private static Table CreateDateTable(DateTime dateTime)
+        private static Table CreateDateTable(DateTime dateTime,string Supplier)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11, 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
 
             string formattedDate = dateTime.ToString("dd/MM/yyyy");
-            siteDataTable.AddCell(GetSiteValueCell("WEEK ENDING"));
+            siteDataTable.AddCell(GetSiteValueCellHeader("Week Ending"));
 
             siteDataTable.AddCell(GetSiteValueCell(formattedDate));
 
+            siteDataTable.AddCell(GetSiteValueCellHeader("CRM(Supplier)"));
 
+            siteDataTable.AddCell(GetSiteValueCell(Supplier));
             return siteDataTable;
         }
         private static Table CreateSiteTable(string sitename)
@@ -604,7 +621,7 @@ namespace CityWatch.Web.Services
             // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = new float[6];
+                float[] columnPercentages = new float[8];
                 var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
@@ -622,7 +639,7 @@ namespace CityWatch.Web.Services
                 string dayName = startDate.ToString("dddd");
                 GuardTable.AddCell(GetSiteValueCell(dayName));
                 GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
-
+                //GuardTable.AddCell(GetSiteValueCell(dayName));
                 var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
                 if (start != null)
                 {
@@ -650,6 +667,8 @@ namespace CityWatch.Web.Services
                 }
                 else
                 {
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
@@ -717,12 +736,61 @@ namespace CityWatch.Web.Services
                     {
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
 
+                        //Set GPS Image start
+                        var imagePath = "wwwroot/images/GPSImage.png";
+                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                            .SetWidth(12) 
+                            .SetHeight(12); 
+
+                        siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
+                        var paragraph = new Paragraph()
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(siteImage);
+
+                        var cell = new Cell()
+                            .SetFont(PdfHelper.GetPdfFont())
+                            .SetFontSize(CELL_FONT_SIZE)
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetPadding(2) 
+                            .SetMargin(0) 
+                            .SetHeight(15); 
+
+                        cell.Add(paragraph);
+                        GuardTable.AddCell(cell);
+                        //Set GPS Image stop
                         TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
                         if (endDateDifference.HasValue)
                         {
                             string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
                             GuardTable.AddCell(GetSiteValueCell(enddate1));
+                            //Set GPS Image start
+                            var imagePath1 = "wwwroot/images/GPSImage.png";
+                            var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
+                                .SetWidth(12)
+                                .SetHeight(12);
 
+                            siteImage1.SetTextAlignment(TextAlignment.RIGHT);
+
+                            var paragraph1 = new Paragraph()
+                                .SetBorder(Border.NO_BORDER)
+                                .Add(siteImage1);
+
+                            var cell1 = new Cell()
+                                .SetFont(PdfHelper.GetPdfFont())
+                                .SetFontSize(CELL_FONT_SIZE)
+                                .SetTextAlignment(TextAlignment.LEFT)
+                                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                .SetPadding(2)
+                                .SetMargin(0)
+                                .SetHeight(15);
+
+                            cell1.Add(paragraph1);
+                            GuardTable.AddCell(cell1);
+                            //Set GPS Image stop
                             TimeSpan enddate = TimeSpan.Parse(enddate1);
                             TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
 
@@ -747,12 +815,16 @@ namespace CityWatch.Web.Services
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
                     }
 
                     currentDate = currentDate.AddDays(1);
                     daysProcessed++;
                 }
 
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
@@ -780,7 +852,7 @@ namespace CityWatch.Web.Services
             // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = new float[6];
+                float[] columnPercentages = new float[8];
                 var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
@@ -829,6 +901,9 @@ namespace CityWatch.Web.Services
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+
                     GuardTable.AddCell(GetSiteValueCell(start?.ClientSite.Name ?? ""));
                 }
 
@@ -882,12 +957,62 @@ namespace CityWatch.Web.Services
                     if (start != null)
                     {
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                        //Set GPS Image start
+                        var imagePath = "wwwroot/images/GPSImage.png";
+                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                            .SetWidth(12)
+                            .SetHeight(12);
+
+                        siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
+                        var paragraph = new Paragraph()
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(siteImage);
+
+                        var cell = new Cell()
+                            .SetFont(PdfHelper.GetPdfFont())
+                            .SetFontSize(CELL_FONT_SIZE)
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetPadding(2)
+                            .SetMargin(0)
+                            .SetHeight(15);
+
+                        cell.Add(paragraph);
+                        GuardTable.AddCell(cell);
+                        //Set GPS Image stop
 
                         TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
                         if (endDateDifference.HasValue)
                         {
                             string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
                             GuardTable.AddCell(GetSiteValueCell(enddate1));
+                            //Set GPS Image start
+                            var imagePath1 = "wwwroot/images/GPSImage.png";
+                            var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
+                                .SetWidth(12)
+                                .SetHeight(12);
+
+                            siteImage1.SetTextAlignment(TextAlignment.RIGHT);
+
+                            var paragraph1 = new Paragraph()
+                                .SetBorder(Border.NO_BORDER)
+                                .Add(siteImage1);
+
+                            var cell1 = new Cell()
+                                .SetFont(PdfHelper.GetPdfFont())
+                                .SetFontSize(CELL_FONT_SIZE)
+                                .SetTextAlignment(TextAlignment.LEFT)
+                                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                .SetPadding(2)
+                                .SetMargin(0)
+                                .SetHeight(15);
+
+                            cell1.Add(paragraph1);
+                            GuardTable.AddCell(cell1);
+                            //Set GPS Image stop
 
                             TimeSpan enddate = TimeSpan.Parse(enddate1);
                             TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
@@ -913,12 +1038,16 @@ namespace CityWatch.Web.Services
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
                     }
 
                     currentDate = currentDate.AddDays(1);
                     daysProcessed++;
                 }
 
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
@@ -949,7 +1078,7 @@ namespace CityWatch.Web.Services
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 20f,30f }; // Adjust these values as needed
+                float[] columnWidths = { 100f, 200f, 100f, 100f, 100f, 100f, 20f,30f }; // Adjust these values as needed
                                                                         // Total width of the table in points
                 table.SetWidth(UnitValue.CreatePointValue(380)); // Example total width in points, adjust as needed
               
@@ -958,8 +1087,10 @@ namespace CityWatch.Web.Services
                 // const float CELL_WIDTH = 1f;
                 table.AddCell(GetSiteValueCellHeader(""));
                 table.AddCell(GetSiteValueCellHeader("Date"));
-                table.AddCell(GetSiteValueCellHeader("start"));
+                table.AddCell(GetSiteValueCellHeader("Start"));
+                table.AddCell(GetSiteValueCellHeader("GPS"));
                 table.AddCell(GetSiteValueCellHeader("Finish"));
+                table.AddCell(GetSiteValueCellHeader("GPS"));
                 table.AddCell(GetSiteValueCellHeader("Total Hrs"));
                 table.AddCell(GetSiteValueCellHeader("Site"));
 
