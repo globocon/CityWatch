@@ -286,15 +286,40 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
+        /// <summary>
+        /// Old Code its working but replace to handle the file url 
+        /// </summary>
+        /// <param name="fileArray"></param>
+        /// <param name="saveDirectory"></param>
+        /// <param name="logFilePath"></param>
+        /// <returns></returns>
+        //private async Task ProcessFileArray(JArray fileArray, string saveDirectory, string logFilePath)
+        //{
+        //    var fileUrls = fileArray.ToObject<List<string>>();
+        //    foreach (var fileUrl in fileUrls)
+        //    {
+        //        if (Uri.IsWellFormedUriString(fileUrl, UriKind.Absolute))
+        //        {
+        //            await DownloadAndSaveFile(fileUrl, saveDirectory, logFilePath);
+        //        }
+        //    }
+        //}
+
 
         private async Task ProcessFileArray(JArray fileArray, string saveDirectory, string logFilePath)
         {
             var fileUrls = fileArray.ToObject<List<string>>();
             foreach (var fileUrl in fileUrls)
             {
-                if (Uri.IsWellFormedUriString(fileUrl, UriKind.Absolute))
+                string normalizedUrl = Regex.Unescape(fileUrl).Replace("\\", "/").Trim();  // Unescape JSON & fix slashes
+
+                if (Uri.IsWellFormedUriString(normalizedUrl, UriKind.Absolute))
                 {
-                    await DownloadAndSaveFile(fileUrl, saveDirectory, logFilePath);
+                    await DownloadAndSaveFile(normalizedUrl, saveDirectory, logFilePath);
+                }
+                else
+                {
+                    WriteLog(logFilePath, $"Invalid URL: {fileUrl}");
                 }
             }
         }
