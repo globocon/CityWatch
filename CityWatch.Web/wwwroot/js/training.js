@@ -2451,7 +2451,9 @@ $("#coursePdfPrev, #coursePdfNext").on('mouseenter',
         $(this).css("background-color", "green"); // mouse leave
     }
 );
-document.addEventListener("keydown", function (event) {
+document.addEventListener("keydown", function (event) {   
+
+
     if (event.key === "ArrowLeft") {
         if (pageNum > 1) {
             isPausedForCourseDuration = true;
@@ -2490,10 +2492,13 @@ document.addEventListener("keydown", function (event) {
        // setInterval(detectScreenRecording, 1000);
         alert('Screenshots are disabled!');
     }
+
+    /*Commented its affecting all pages ,not only training */
+    /*
     if (event.ctrlKey == true && event.key === 'c') {
         event.preventDefault();  // Disable Ctrl+C
         alert('Copying is disabled!');
-    }
+    }*/
     
 });
 
