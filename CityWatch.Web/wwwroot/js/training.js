@@ -1193,7 +1193,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             Id: 0,
             TrainingTestQuestionsId: testQuestionAnswersId,
             Options: $('#txt_Option5').val(),
-            c,
+            IsAnswer: $('#IsOption5').val(),
         }
         objAnswers.push(objAnswersnew);
     }
