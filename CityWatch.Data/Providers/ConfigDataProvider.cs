@@ -193,6 +193,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment);
         List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId);
         List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId);
+        List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
 
     }
 
@@ -2011,6 +2012,16 @@ namespace CityWatch.Data.Providers
         {
             var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId ).OrderBy(x => x.Id).ToList();
             return course;
+        }
+        public List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid)
+        {
+
+
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+
+            return result;
+
         }
 
     }

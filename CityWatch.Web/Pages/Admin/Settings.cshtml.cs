@@ -2463,22 +2463,36 @@ namespace CityWatch.Web.Pages.Admin
 
                 
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
-               
-                
-                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
+                bool selected = false;
+                var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId);
+                var  trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
+                if (trainingSettings.Count==0 || trainingSettingsQuestions.Count==0)
                 {
-                    Id = Id,
-                    GuardId = result.GuardId,
-                    TrainingCourseId = result.TrainingCourseId,
-                    TrainingCourseStatusId = TrainingCourseStatusId,
-                    Description = result.Description,
-                    HRGroupId = result.HRGroupId,
-                    IsCompleted = false
+                    selected = false;
+                    message = "Training details for this course have not been saved. Please contact your administrator.";
+                }
+                else
+                {
+                    selected = true;
+                }
+                if (selected == true)
+                {
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = Id,
+                        GuardId = result.GuardId,
+                        TrainingCourseId = result.TrainingCourseId,
+                        TrainingCourseStatusId = TrainingCourseStatusId,
+                        Description = result.Description,
+                        HRGroupId = result.HRGroupId,
+                        IsCompleted = false
 
-                });
+                    });
 
 
-                success = true;
+                    success = true;
+                }
             }
             catch (Exception ex)
             {

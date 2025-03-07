@@ -68,18 +68,25 @@ namespace CityWatch.Web.Pages.Guard
         }
         public void OnGet()
         {
-             GuardId = Convert.ToInt32(Request.Query["guid"]);
-            GuardTrainingAssessmentId = Convert.ToInt32(Request.Query["guardCourseId"]);
-            if(GuardTrainingAssessmentId!=0)
+            try
             {
-                GuardTrainingAndAssessment = _guardDataProvider.GetGuardTrainingAndAssessment(GuardId).Where(x=>x.Id== GuardTrainingAssessmentId).FirstOrDefault();
-                TrainingTestQuestionSettings= _configDataProvider.GetTQSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId).FirstOrDefault();
-                var jresult = _configDataProvider.GetHRSettings().Where(x=>x.Id== GuardTrainingAndAssessment.TrainingCourses.HRSettingsId);
-                var hrreferenceNumber = "HR"+ jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name;
-                var CourseDocsFolder = Path.Combine("TA", hrreferenceNumber, "Course", GuardTrainingAndAssessment.TrainingCourses.FileName);
-                CourseDocsPath = CourseDocsFolder;
-                hrreferencenumber = hrreferenceNumber;
-                Coursefilename = GuardTrainingAndAssessment.TrainingCourses.FileName;
+                GuardId = Convert.ToInt32(Request.Query["guid"]);
+                GuardTrainingAssessmentId = Convert.ToInt32(Request.Query["guardCourseId"]);
+                if (GuardTrainingAssessmentId != 0)
+                {
+                    GuardTrainingAndAssessment = _guardDataProvider.GetGuardTrainingAndAssessment(GuardId).Where(x => x.Id == GuardTrainingAssessmentId).FirstOrDefault();
+                    TrainingTestQuestionSettings = _configDataProvider.GetTQSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId).FirstOrDefault();
+                    var jresult = _configDataProvider.GetHRSettings().Where(x => x.Id == GuardTrainingAndAssessment.TrainingCourses.HRSettingsId);
+                    var hrreferenceNumber = "HR" + jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name;
+                    var CourseDocsFolder = Path.Combine("TA", hrreferenceNumber, "Course", GuardTrainingAndAssessment.TrainingCourses.FileName);
+                    CourseDocsPath = CourseDocsFolder;
+                    hrreferencenumber = hrreferenceNumber;
+                    Coursefilename = GuardTrainingAndAssessment.TrainingCourses.FileName;
+
+                }
+            }
+            catch(Exception ex)
+            {
 
             }
             
