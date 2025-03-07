@@ -495,7 +495,7 @@ function renderGuardCouseStatusForGuard(value, type, data) {
                 cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
                     '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }  else if (data.trainingCourseStatus.trainingCourseStatusColorId == 2) {
-                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InProgress_guard_TrainingAndAssessment" disabled>In Progress</button>&nbsp;' +
+                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InProgress_guard_TrainingAndAssessment" >In Progress</button>&nbsp;' +
                     '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }
          else {
@@ -584,7 +584,10 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
             gridGuardTrainingAndAssessment.ajax.reload();
             GetClassroomLocation(1);
             window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
-            
+
+        }
+        else {
+            alert(result.message);
         }
         $('#loader').hide();
 
@@ -596,6 +599,42 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
     }).fail(function () {
         console.log('error');
     })
+});
+$('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_InProgress_guard_TrainingAndAssessment]', function () {
+
+
+    var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
+    //const token = $('input[name="__RequestVerificationToken"]').val();
+    //var courseStatus = 2
+    //$.ajax({
+    //    url: '/Admin/Settings?handler=UpdateCoursesStatus',
+    //    data: {
+    //        'Id': data.id,
+    //        'TrainingCourseStatusId': courseStatus
+    //    },
+    //    // data: { id: record },
+    //    type: 'POST',
+    //    headers: { 'RequestVerificationToken': token },
+    //}).done(function (result) {
+    //    if (result.success == true) {
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+            GetClassroomLocation(1);
+            window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+
+      /*  }*/
+        $('#loader').hide();
+
+
+        //$.each(item1 in result)
+        //{
+        //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+        //}
+    //}).fail(function () {
+    //    console.log('error');
+    //})
 });
 //p5-Issue1-End
 
