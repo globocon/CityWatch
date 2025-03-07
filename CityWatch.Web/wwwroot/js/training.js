@@ -3166,22 +3166,57 @@ function returnCoursetestStatustostart() {
 //p6-Issue8-start
 $('#btnContinueTest').on('click', function (e) {
     e.preventDefault();
-    GetCertificateAndFeedBackStatus();
-
+  //  GetCertificateAndFeedBackStatus();
+    GetGuardAllTestPass();
     //GetCertificateAndFeedBackStatus();
    // GetGuardCertificate();
 
 
 
 });
+function GetGuardAllTestPass() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=GuardAllTestPass',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result) {
+            GetCertificateAndFeedBackStatus();
+
+        }
+        else {
+            $('#cardFrontPage').hide();
+
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').hide();
+            $('#cardFeedbackPage').hide();
+            $('#cardThankyouPage').attr('hidden', false);
+        }
+       
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
 function GetCertificateAndFeedBackStatus() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/Guard/GuardStartTest?handler=GuardCertificateAndfeedBackStatus',
         data: {
             'guardId': $('#txtguardIdForTest').val(),
-            'hrSettingsId': $("#txtGuardHRSettings").val(),
-            'tqNumberId': $("#txtGuardTQNumberId").val()
+            'hrSettingsId': $("#txtGuardHRSettings").val()
+            //,
+            //'tqNumberId': $("#txtGuardTQNumberId").val()
         },
         //data: { id: record },
         type: 'GET',
