@@ -486,7 +486,7 @@
                 <div class="form-group">
                     <input type="hidden" id="trainingguardId" value="" />
                     <ul id="courseList" class="list-group">
-                        @foreach(var itemnew in configDataProvider.GetHRGroupsDropDown())
+                        @* @foreach(var itemnew in configDataProvider.GetHRGroupsDropDown())
                         {
                             
                         if (@configDataProvider.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(@itemnew.Value)) != null)
@@ -525,7 +525,7 @@
                             }
 
                         }
-                        }
+                        } *@
                     </ul>
 
 

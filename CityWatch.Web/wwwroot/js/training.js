@@ -1605,6 +1605,10 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
     if ($("#txt_FeedbackQuestionAnswersId").val() == '') {
         $("#txt_FeedbackQuestionAnswersId").val(-1);
     }
+    if ($("#txtFeedbackQuestion").val() == '') {
+        var placeholderValue = $('#txtFeedbackQuestion').attr('placeholder');
+        $("#txtFeedbackQuestion").val(placeholderValue);
+    }
     var feedbackQuestionAnswersId = parseInt($("#txt_FeedbackQuestionAnswersId").val());
     var certificateExpiry;
 
@@ -2013,9 +2017,54 @@ $('#btnAddGuardCourse,#btnAddGuardCourse1').on('click', function (e) {
     //$('#courseList').html('');
     
     $('#selectCoursesForGuardByAdmin').modal('show');
+    loadTrainingCourses()
     //$('#courseList').load();
     
 })
+function loadTrainingCourses() {
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingCourses',
+        type: 'GET',
+        success: function (data) {
+            let courseList = $('#courseList');
+            courseList.empty(); // Clear existing content
+
+            data.forEach(group => {
+                let groupItem = `
+                        <li class="list-group-item list-group-item-success" 
+                            id="attach_${group.groupId}" 
+                            data-index="${group.groupId}" 
+                            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                        </li>`;
+
+                courseList.append(groupItem);
+
+                group.courses.forEach(course => {
+                    let courseItem = course.fileName
+                        ? `<li class="list-group-item" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                    ${course.fileName}
+                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                                       title="Select" 
+                                       style="cursor: pointer;float:right"></i>
+                               </li>`
+                        : `<li class="list-group-item list-group-item-success" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                               </li>`;
+
+                    courseList.append(courseItem);
+                });
+            });
+        },
+        error: function () {
+            alert('Failed to load training courses.');
+        }
+    });
+}
 function ReloadHrGroupsforCourseList() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -2171,15 +2220,22 @@ if ($('#hr_settings_fields_types').val() == '') {
 
 $('#add_location').on('click', function () {
     if ($('#hr_settings_fields_types').val() == 7) {
-        if (isLocationAdding) {
-            alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isLocationAdding = true;
-            gridClassroomLocation.addRow({
-                'id': -1,
-                'location': '',
-            }).edit(-1);
-        }
+        //if (isLocationAdding) {
+        //    alert('Unsaved changes in the grid. Refresh the page');
+        //} else {
+        //    isLocationAdding = true;
+        //    gridClassroomLocation.addRow({
+        //        'id': -1,
+        //        'location': '',
+        //    }).edit(-1);
+        //}
+        const newRecord = {
+            id: -1, // Temporary ID for new record
+            location: $('#txtClassroomlocation').val()
+        };
+        gridClassroomLocation.trigger('rowDataChanged', [-1, newRecord]);
+        $('#txtClassroomlocation').val('')
+        gridClassroomLocation.reload();
     }
 });
 $('#tbl_certificateDocumentFiles tbody').on('click', '#btnRPLCertificate', function () {

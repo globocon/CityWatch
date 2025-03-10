@@ -2779,6 +2779,23 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetTrainingCourses()
+        {
+            var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+            var result = hrGroups.Select(group => new
+            {
+                GroupId = group.Value,
+                Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                    .Select(course => new
+                    {
+                        course.Id,
+                        course.FileName
+                    }).ToList()
+            }).Where(group => group.Courses.Any()).ToList();
+
+            return new JsonResult(result);
+        }
+
     }
     public class helpDocttype
     {

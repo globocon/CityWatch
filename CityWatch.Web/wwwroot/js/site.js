@@ -5949,6 +5949,9 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+
+
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
     }
 
@@ -5966,6 +5969,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
@@ -5982,6 +5986,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
@@ -5996,6 +6001,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
@@ -6023,6 +6029,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridClassroomLocation.hide();
         gridHrSettingswithCourseLibrary.hide();
         $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
             type: 'GET',
@@ -6048,6 +6055,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
@@ -6063,6 +6071,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').hide();
         gridClassroomLocation.show();
         $('#add_location').show();
+        $('#ClassroomLocationDiv').show();
         gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
@@ -6078,7 +6087,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_lote').hide();
         gridClassroomLocation.hide();
         $('#add_location').hide();
-        
+        $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.show();
         gridHrSettingswithCourseLibrary.clear();
         gridHrSettingswithCourseLibrary.reload();

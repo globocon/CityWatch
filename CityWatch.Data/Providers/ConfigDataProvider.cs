@@ -1617,8 +1617,20 @@ namespace CityWatch.Data.Providers
         {
             
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
-            var trainigCourses = _context.TrainingCourses.Include(x=>x.TQNumber).Where(x=>hrsettingsid.Contains(x.HRSettingsId)).ToList();
-           
+            //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+
+            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+            && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+            && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+            (!_context.TrainingTestQuestionSettings
+            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+            .Any() ||
+            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+        )
+            )
+            ).ToList();
+
             // return _context.RadioCheckStatus.ToList();
             return trainigCourses.OrderBy(x => Convert.ToInt32(x.HRSettingsId)).ToList();
         }
