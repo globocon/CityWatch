@@ -2051,7 +2051,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        if (".pdf,.ppt,.pptx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
                         int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
@@ -2411,8 +2411,9 @@ namespace CityWatch.Web.Pages.Admin
                     TrainingCourseId = TrainingCourseId,
                     TrainingCourseStatusId = TrainingCourseStatusId,
                     Description = description,
-                    HRGroupId = hrgroupid,
-                    IsCompleted = false
+                    HRGroupId = hrgroupid
+                    //,
+                    //IsCompleted = false
 
                 });
 
@@ -2485,8 +2486,9 @@ namespace CityWatch.Web.Pages.Admin
                         TrainingCourseId = result.TrainingCourseId,
                         TrainingCourseStatusId = TrainingCourseStatusId,
                         Description = result.Description,
-                        HRGroupId = result.HRGroupId,
-                        IsCompleted = false
+                        HRGroupId = result.HRGroupId
+                        //,
+                        //IsCompleted = false
 
                     });
 
@@ -2763,10 +2765,11 @@ namespace CityWatch.Web.Pages.Admin
                             Id = record.Id,
                             GuardId = guardId,
                             TrainingCourseId = item.Id,
-                            TrainingCourseStatusId = record.TrainingCourseStatusId,
+                            TrainingCourseStatusId = 4,
                             Description = record.Description,
-                            HRGroupId = record.HRGroupId,
-                            IsCompleted = true
+                            HRGroupId = record.HRGroupId
+                            //,
+                            //IsCompleted = true
 
                         });
                     }
@@ -2779,6 +2782,23 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetTrainingCourses()
+        {
+            var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+            var result = hrGroups.Select(group => new
+            {
+                GroupId = group.Value,
+                Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                    .Select(course => new
+                    {
+                        course.Id,
+                        course.FileName
+                    }).ToList()
+            }).Where(group => group.Courses.Any()).ToList();
+
+            return new JsonResult(result);
+        }
+
     }
     public class helpDocttype
     {

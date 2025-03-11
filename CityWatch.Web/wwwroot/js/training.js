@@ -113,7 +113,7 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
     var hrreferenceNumber = 'HR' + referenceNumber;
     var data = $grid.data(),
         $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_course_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
+            '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx, .mp4" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
             '</form></label>').attr('data-key', id),
         $downlaod = $('<a href="/TA/' + hrreferenceNumber +'/Course/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
         $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
@@ -499,7 +499,7 @@ function renderGuardCouseStatusForGuard(value, type, data) {
                     '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }
          else {
-            cellValue = 
+                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InHold_guard_TrainingAndAssessment" disabled >On Hold</button>&nbsp;' +
                 '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }
             }
@@ -673,7 +673,7 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     paging: false,
     info: false,
     ajax: {
-        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
+        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTabByAdmin',
         data: function (d) {
             d.guardId = $('#GuardComplianceandlicense_GuardId').val();
         },
@@ -740,8 +740,8 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
     var hrreferenceNumber = 'HR' + referenceNumber;
     const file = uploadCtrl.get(0).files.item(0);
     const fileExtn = file.name.split('.').pop();
-    if (!fileExtn || '.pdf,.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) < 0) {
-        showModal('Unsupported file type. Please upload a .pdf, .ppt or .pptx file');
+    if (!fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+        showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
         return false;
     }
 
@@ -1201,7 +1201,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             Id: 0,
             TrainingTestQuestionsId: testQuestionAnswersId,
             Options: $('#txt_Option5').val(),
-            c,
+            IsAnswer: $('#IsOption5').val(),
         }
         objAnswers.push(objAnswersnew);
     }
@@ -1604,6 +1604,10 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
     $('#loader').show();
     if ($("#txt_FeedbackQuestionAnswersId").val() == '') {
         $("#txt_FeedbackQuestionAnswersId").val(-1);
+    }
+    if ($("#txtFeedbackQuestion").val() == '') {
+        var placeholderValue = $('#txtFeedbackQuestion').attr('placeholder');
+        $("#txtFeedbackQuestion").val(placeholderValue);
     }
     var feedbackQuestionAnswersId = parseInt($("#txt_FeedbackQuestionAnswersId").val());
     var certificateExpiry;
@@ -2013,9 +2017,54 @@ $('#btnAddGuardCourse,#btnAddGuardCourse1').on('click', function (e) {
     //$('#courseList').html('');
     
     $('#selectCoursesForGuardByAdmin').modal('show');
+    loadTrainingCourses()
     //$('#courseList').load();
     
 })
+function loadTrainingCourses() {
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingCourses',
+        type: 'GET',
+        success: function (data) {
+            let courseList = $('#courseList');
+            courseList.empty(); // Clear existing content
+
+            data.forEach(group => {
+                let groupItem = `
+                        <li class="list-group-item list-group-item-success" 
+                            id="attach_${group.groupId}" 
+                            data-index="${group.groupId}" 
+                            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                        </li>`;
+
+                courseList.append(groupItem);
+
+                group.courses.forEach(course => {
+                    let courseItem = course.fileName
+                        ? `<li class="list-group-item" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                    ${course.fileName}
+                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                                       title="Select" 
+                                       style="cursor: pointer;float:right"></i>
+                               </li>`
+                        : `<li class="list-group-item list-group-item-success" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                               </li>`;
+
+                    courseList.append(courseItem);
+                });
+            });
+        },
+        error: function () {
+            alert('Failed to load training courses.');
+        }
+    });
+}
 function ReloadHrGroupsforCourseList() {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -2171,15 +2220,22 @@ if ($('#hr_settings_fields_types').val() == '') {
 
 $('#add_location').on('click', function () {
     if ($('#hr_settings_fields_types').val() == 7) {
-        if (isLocationAdding) {
-            alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isLocationAdding = true;
-            gridClassroomLocation.addRow({
-                'id': -1,
-                'location': '',
-            }).edit(-1);
-        }
+        //if (isLocationAdding) {
+        //    alert('Unsaved changes in the grid. Refresh the page');
+        //} else {
+        //    isLocationAdding = true;
+        //    gridClassroomLocation.addRow({
+        //        'id': -1,
+        //        'location': '',
+        //    }).edit(-1);
+        //}
+        const newRecord = {
+            id: -1, // Temporary ID for new record
+            location: $('#txtClassroomlocation').val()
+        };
+        gridClassroomLocation.trigger('rowDataChanged', [-1, newRecord]);
+        $('#txtClassroomlocation').val('')
+        gridClassroomLocation.reload();
     }
 });
 $('#tbl_certificateDocumentFiles tbody').on('click', '#btnRPLCertificate', function () {
@@ -2929,7 +2985,7 @@ function GetGuardMarks() {
     }).done(function (result) {
         if (result != null) {
             $('#cardFrontPage').hide();
-
+            $('#cardWarningPage').hide();
             $('#cardCoursePdf').hide();
             $('#cardTestFrontPage').hide();
             $('#cardTestPage').hide();
@@ -3580,11 +3636,19 @@ $('#btnSubmitFeedback').on('click', function (e) {
 });
 $('#btnExitCourse').on('click', function (e) {
     e.preventDefault();
+
+    // Refresh the previous (parent) tab
+    if (window.opener && !window.opener.closed) {
+       
+        window.opener.location.reload();
+        // window.opener.$('#btnHRDetails').trigger('click');
+        //window.opener.gridGuardTrainingAndAssessment.clear().draw();
+        //window.opener.gridGuardTrainingAndAssessment.ajax.reload();
+    }
     window.close();
-
-
-
 });
+
+
 //p6-issue8-end
 $('#btnSavePracticalDetails').on('click', function () {
 
@@ -3716,3 +3780,23 @@ function getPracticaInstructorSignOff() {
         }
     });
 }
+$('#btnWarningContinueTest').on('click', function (e) {
+    e.preventDefault();
+    
+    $('#cardWarningPage').hide();
+    $('#cardFrontPage').hide();
+
+    $('#cardCoursePdf').hide();
+    $('#cardTestFrontPage').hide();
+    $('#cardTestPage').attr('hidden', false);
+  
+            GetQuestionsForGuard();
+       
+});
+$('#btnWarningRetryTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(1);
+
+    location.reload();
+
+});

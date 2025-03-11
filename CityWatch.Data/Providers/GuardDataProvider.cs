@@ -105,6 +105,7 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
         string GetCourseNameUsingCourseId(int id);
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId);
 
     }
 
@@ -1053,7 +1054,8 @@ namespace CityWatch.Data.Providers
         {
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardTrainingAndAssessment
-                 .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                // .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                .Where(x => x.GuardId == guardId && x.TrainingCourseStatusId != 4)
                  .Include(z => z.Guard)
                  .Include(z => z.HRGroups)
                  .Include(z => z.TrainingCourses)
@@ -1146,6 +1148,36 @@ namespace CityWatch.Data.Providers
             var coursename = _context.HrSettings.Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
 
             return coursename;
+        }
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                // .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                .Where(x => x.GuardId == guardId && x.TrainingCourseStatusId!=4)
+                 .Include(z => z.Guard)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .OrderBy(x => x.HRGroupId)
+                 .ThenBy(x => x.Id)
+                 .ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+            foreach (var item in result)
+            {
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+
+
+
+            return result;
+
+
+
         }
 
     }

@@ -1617,8 +1617,20 @@ namespace CityWatch.Data.Providers
         {
             
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
-            var trainigCourses = _context.TrainingCourses.Include(x=>x.TQNumber).Where(x=>hrsettingsid.Contains(x.HRSettingsId)).ToList();
-           
+            //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+
+            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+            && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+            && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+            (!_context.TrainingTestQuestionSettings
+            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+            .Any() ||
+            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+        )
+            )
+            ).ToList();
+
             // return _context.RadioCheckStatus.ToList();
             return trainigCourses.OrderBy(x => Convert.ToInt32(x.HRSettingsId)).ToList();
         }
@@ -1657,7 +1669,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
-                    documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
+                    //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
 
                 }
             }
@@ -1830,7 +1842,8 @@ namespace CityWatch.Data.Providers
         public GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId)
         {
 
-            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
+            //var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
+            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).FirstOrDefault();
             return report;
         }
         public void SaveGuardTrainingStartTest(GuardTrainingStartTest guardTrainingStartTest)
