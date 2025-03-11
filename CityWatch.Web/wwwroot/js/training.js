@@ -113,7 +113,7 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
     var hrreferenceNumber = 'HR' + referenceNumber;
     var data = $grid.data(),
         $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_course_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
+            '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx, .mp4" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
             '</form></label>').attr('data-key', id),
         $downlaod = $('<a href="/TA/' + hrreferenceNumber +'/Course/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
         $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
@@ -499,7 +499,7 @@ function renderGuardCouseStatusForGuard(value, type, data) {
                     '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }
          else {
-            cellValue = 
+                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InHold_guard_TrainingAndAssessment" disabled >On Hold</button>&nbsp;' +
                 '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
             }
             }
@@ -740,8 +740,8 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
     var hrreferenceNumber = 'HR' + referenceNumber;
     const file = uploadCtrl.get(0).files.item(0);
     const fileExtn = file.name.split('.').pop();
-    if (!fileExtn || '.pdf,.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) < 0) {
-        showModal('Unsupported file type. Please upload a .pdf, .ppt or .pptx file');
+    if (!fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+        showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
         return false;
     }
 
