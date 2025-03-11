@@ -11,3 +11,4 @@ WHERE dc.parent_object_id = OBJECT_ID('GuardTrainingAndAssessment')
 DROP CONSTRAINT DF__GuardTrai__IsCom__46DD686B;
 
 alter table GuardTrainingAndAssessment drop column IsCompleted
+delete from GuardTrainingAndAssessment where TrainingCourseId in(select id from TrainingCourses where HRSettingsId=90)
