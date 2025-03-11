@@ -2051,7 +2051,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        if (".pdf,.ppt,.pptx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
                         int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
