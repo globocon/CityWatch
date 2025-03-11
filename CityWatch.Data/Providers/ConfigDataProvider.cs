@@ -1669,7 +1669,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
-                    documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
+                    //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
 
                 }
             }
@@ -1842,7 +1842,8 @@ namespace CityWatch.Data.Providers
         public GuardTrainingAndAssessment ReturnCourseTestStatusTostart(int guardId, int trainingCourseId)
         {
 
-            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
+            //var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
+            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).FirstOrDefault();
             return report;
         }
         public void SaveGuardTrainingStartTest(GuardTrainingStartTest guardTrainingStartTest)

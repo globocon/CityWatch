@@ -2416,6 +2416,10 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetGuardTrainingAndAssessmentTabByAdmin(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
+        }
     }
 
 

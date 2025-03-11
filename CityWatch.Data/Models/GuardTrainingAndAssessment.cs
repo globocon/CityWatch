@@ -25,7 +25,7 @@ namespace CityWatch.Data.Models
 
         public int TrainingCourseStatusId { get; set; }
 
-        public bool IsCompleted { get; set; }
+       // public bool IsCompleted { get; set; }
 
 
 

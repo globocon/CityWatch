@@ -673,7 +673,7 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     paging: false,
     info: false,
     ajax: {
-        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
+        url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTabByAdmin',
         data: function (d) {
             d.guardId = $('#GuardComplianceandlicense_GuardId').val();
         },
@@ -1201,7 +1201,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             Id: 0,
             TrainingTestQuestionsId: testQuestionAnswersId,
             Options: $('#txt_Option5').val(),
-            c,
+            IsAnswer: $('#IsOption5').val(),
         }
         objAnswers.push(objAnswersnew);
     }
@@ -2985,7 +2985,7 @@ function GetGuardMarks() {
     }).done(function (result) {
         if (result != null) {
             $('#cardFrontPage').hide();
-
+            $('#cardWarningPage').hide();
             $('#cardCoursePdf').hide();
             $('#cardTestFrontPage').hide();
             $('#cardTestPage').hide();
@@ -3636,11 +3636,19 @@ $('#btnSubmitFeedback').on('click', function (e) {
 });
 $('#btnExitCourse').on('click', function (e) {
     e.preventDefault();
+
+    // Refresh the previous (parent) tab
+    if (window.opener && !window.opener.closed) {
+       
+        window.opener.location.reload();
+        // window.opener.$('#btnHRDetails').trigger('click');
+        //window.opener.gridGuardTrainingAndAssessment.clear().draw();
+        //window.opener.gridGuardTrainingAndAssessment.ajax.reload();
+    }
     window.close();
-
-
-
 });
+
+
 //p6-issue8-end
 $('#btnSavePracticalDetails').on('click', function () {
 
@@ -3772,3 +3780,23 @@ function getPracticaInstructorSignOff() {
         }
     });
 }
+$('#btnWarningContinueTest').on('click', function (e) {
+    e.preventDefault();
+    
+    $('#cardWarningPage').hide();
+    $('#cardFrontPage').hide();
+
+    $('#cardCoursePdf').hide();
+    $('#cardTestFrontPage').hide();
+    $('#cardTestPage').attr('hidden', false);
+  
+            GetQuestionsForGuard();
+       
+});
+$('#btnWarningRetryTest').on('click', function (e) {
+    e.preventDefault();
+    deleteGuardAttendedQuestions(1);
+
+    location.reload();
+
+});

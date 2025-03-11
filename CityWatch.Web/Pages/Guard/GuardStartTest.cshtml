@@ -19,7 +19,83 @@
 <input type="hidden" id="txtCoursefilename" asp-for="@Model.Coursefilename" />
 <input type="hidden" id="txtGuardHRSettings" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.HRSettingsId" />
 <input type="hidden" id="txtGuardTQNumberId" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.TQNumberId" />
+@if(Model.GuardTrainingAttendedQuestionsAndAnswers.Count()>0)
+{
 
+    <div class="card" id="cardWarningPage" >
+        <div class="card-header container-fluid">
+            <div class="row">
+                <div class="col-md-11 mr-5 text-center">
+                    <h3>Warning </h3>
+                    <i class="fa fa-exclamation-triangle" style="color: orange; font-size: 24px;" id="ResultIconWarning"></i>
+                </div>
+
+            </div>
+        </div>
+        <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+            <div class="card-body" id="events-list">
+                @* <div class="row mt-2">
+            <div class="col-md-6">
+            <label >Classroom Location</label>
+            <select id="ddlTestClassroomLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select>
+            </div>
+            </div> *@
+                <div class="form-row">
+
+                    <div class="col-md-12">
+                        <form id="frm_warning_message_button">
+                            @*    <div class="form-group row m-0 mb-3 ">
+
+                                <div class="col-sm-10 d-flex justify-content-center">
+                                    <div class="container p-0 d-flex align-items-center" style="font-size:11px; color:black; gap:10px;">
+                                        <p style="font-size: 20px; font-weight:bold; margin: 0;" id="resultwaHeading"></p>
+                                        <i class="fa fa-trophy" style="color: gold; font-size: 24px;" id="ResultIconTrophy" hidden></i>
+                                    </div>
+                                </div>
+                            </div> *@
+                            <div class="form-group row m-0 mb-3">
+
+                                <div class="col-sm-10">
+
+                                    <div class="container p-0" style="display:flex;align-items: center;font-size:11px;color:black">
+
+
+                                        @if (@Model.GuardTrainingAttendedQuestionsAndAnswers.Count() == @Model.totalQuestions)
+                                        {
+                                            <p style="font-size: 18px; color: black;" id="WarningMessage">
+
+                                                You have already  completed @Model.totalQuestions questions before, do you wish to continue and re-sit  or cancel?
+
+                                            </p>
+                                        }
+                                        else
+                                        {
+                                            <p style="font-size: 18px; color: black;" id="WarningMessage">
+
+                                                You have already successfully completed @Model.GuardTrainingAttendedQuestionsAndAnswers.Count() of @Model.totalQuestions  questions before, do you wish to continue and re-sit  or cancel?
+
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row m-0 mb-3">
+                                <button class="btn btn-success col-md-4" id="btnWarningContinueTest" >Cancel</button>
+                                <button class="btn btn-warning col-md-2 mr-5" id="btnWarningRetryTest" >Retry</button>
+                            </div>
+
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    
 
 <div class="card" id="cardFrontPage">
     <div class="card-header container-fluid">
@@ -86,6 +162,7 @@
         </div>
     </div>
 </div>
+}
 
 <div class="card" id="cardCoursePdf" hidden>
     <input type="hidden" id="txtCourseTimerStart" asp-for="@Model.TrainingTestQuestionSettings.CourseDuration.Name" />
