@@ -86,7 +86,7 @@ namespace CityWatch.Web.Pages.Guard
                     hrreferencenumber = hrreferenceNumber;
                     Coursefilename = GuardTrainingAndAssessment.TrainingCourses.FileName;
                     GuardTrainingAttendedQuestionsAndAnswers = _configDataProvider.GetGuardAttendedQuestionsAndanswers(GuardId, GuardTrainingAndAssessment.TrainingCourseId).ToList();
-                    totalQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId).Count;
+                    totalQuestions = _configDataProvider.GetTrainingQuestionsWithHRAndTQSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId, GuardTrainingAndAssessment.TrainingCourses.TQNumberId).Count;
 
                 }
             }

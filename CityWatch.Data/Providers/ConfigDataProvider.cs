@@ -194,6 +194,7 @@ namespace CityWatch.Data.Providers
         List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId);
         List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId);
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
+        List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid, int tqNumberId);
 
     }
 
@@ -2032,6 +2033,16 @@ namespace CityWatch.Data.Providers
 
 
             var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+
+            return result;
+
+        }
+        public List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid,int tqNumberId)
+        {
+
+
+
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId== tqNumberId).OrderBy(x => x.Id).ToList();
 
             return result;
 
