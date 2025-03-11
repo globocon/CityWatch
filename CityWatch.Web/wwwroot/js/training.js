@@ -3170,6 +3170,7 @@ $('#btnExitTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(2);
 
+
    
 
 });
@@ -3247,6 +3248,14 @@ function returnCoursetestStatustostart() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success) {
+            // Refresh the previous (parent) tab
+            if (window.opener && !window.opener.closed) {
+
+                window.opener.location.reload();
+                // window.opener.$('#btnHRDetails').trigger('click');
+                //window.opener.gridGuardTrainingAndAssessment.clear().draw();
+                //window.opener.gridGuardTrainingAndAssessment.ajax.reload();
+            }
             window.close();
             return;
 
