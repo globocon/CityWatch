@@ -2088,8 +2088,13 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { AccessPermission, SuccessMessage });
         }
-
-        public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
+        public JsonResult OnPostSaveHandovernotes(int ClientSiteID, string Notes)
+        {
+            string SuccessMessage = "Success";
+            _guardDataProvider.SetNotes(ClientSiteID, Notes);
+            return new JsonResult(new { SuccessMessage });
+        }
+            public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
         {
           
             return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));

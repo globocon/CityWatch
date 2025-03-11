@@ -194,6 +194,7 @@ namespace CityWatch.Data.Providers
         List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId);
         List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId);
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
+        public HandoverNotes GetHandoverNotes(int CientSiteID);
 
     }
 
@@ -1264,6 +1265,11 @@ namespace CityWatch.Data.Providers
 
 
 
+        }
+        public HandoverNotes GetHandoverNotes(int CientSiteID)
+        {
+
+            return _context.HandoverNotes.Where(x => x.ClientSiteID == CientSiteID).FirstOrDefault();
         }
         public SubDomain GetSubDomainID(int? TypeID)
         {

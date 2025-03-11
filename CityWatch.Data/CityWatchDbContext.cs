@@ -154,6 +154,7 @@ namespace CityWatch.Data
         public DbSet<DuressAppField> DuressAppField { get; set; }
 
         public DbSet<DuressSetting> DuressSettings { get; set; }
+        public DbSet<HandoverNotes> HandoverNotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
