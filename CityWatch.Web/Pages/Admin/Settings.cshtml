@@ -573,6 +573,7 @@
                             <option value="">None</option>
                             <option value="1">Audio</option>
                             <option value="2">Log Activity</option>
+                             <option value="3">Multimedia</option>
                         </select>
                     </div>
                 </div>
@@ -585,6 +586,7 @@
                             <button class="btn btn-success mb-3" id="add_KPI_Telematics_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_duressapp_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_duressappMultimedia_fields" data-toggle="modal" data-target="#DuressAppMiltimedia-modal"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_DuressAppAudio" data-toggle="modal" data-target="#DuressAppAudio-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
                         </div>
                         <table class="table" id="field_settings"></table>
@@ -595,6 +597,7 @@
                         <table class="table" id="tbl_ta_fields"></table>
                         <table class="table" id="tbl_duressapp_fields"></table>
                         <table class="table" id="tbl_duressappLog_fields"></table>
+                         <table class="table" id="tbl_duressappMultimedia_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -4733,6 +4736,54 @@
                     <span class="sr-only">Loading...</span>
                 </div>
                 <button type="button" id="btnSaveAudioFile" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Audio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="DuressAppMiltimedia-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Add File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_duressapp_audio" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="multimediaId" name="id" value="-1">
+                    <input type="hidden" id="filenamemultimedia" name="filenamemultimedia" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="add_label">Label</label>
+                                <input type="text" name="add_Label" id="add_label1" class="form-control" />
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" accept="audio/*,video/mp4,video/x-msvideo,image/jpeg" name="add_multimediaduress" id="add_multimediaduress" class="form-control-file" />
+                                <label id="dynamicMultimedia" class="pt-1"></label>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDivMultimedia" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveMultimedia" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save File</button>
             </div>
         </div>
     </div>

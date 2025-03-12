@@ -1950,7 +1950,7 @@ namespace CityWatch.Data.Providers
 
         public List<DuressAppField> GetDuressAppByType(int type)
         {
-            return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Name).ToList();
+            return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Label).ToList();
         }
 
 
