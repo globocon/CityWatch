@@ -5992,7 +5992,7 @@ $(function () {
         gridGuardLicenses.clear().draw();
         gridGuardCompliances.clear().draw();
         gridGuardLicensesAndLicence.clear().draw();
-
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
         let value = 1;
