@@ -837,6 +837,53 @@
         buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-duressAudio d-block" data-aud-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
         return buttonHtml;
     }
+
+
+    let gridDuressAppMultimediaFields;
+    let isDuressAppFieldMultimediaAdding = false;
+    gridDuressAppMultimediaFields = $('#tbl_duressappMultimedia_fields').grid({
+        dataSource: '/Admin/Settings?handler=DuressAppDetails',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        /*selectionType: 'multiple',*/
+        button: true,
+        //inlineEditing: { mode: 'command' },
+
+        columns: [
+            { field: 'label', title: 'Label', width: '100%', editor: false },
+            { field: 'name', title: 'File Name', width: '100%', editor: false },
+            { width: 166, renderer: schButtonRendererMultimedia },
+
+
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    function schButtonRendererMultimedia(value, record) {
+        let buttonHtml = '';
+        buttonHtml = '<a href="/DuressAppMultimedia/' + record.name + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-play"></i></a>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#DuressAppMiltimedia-modal" data-au-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editMultimedia"><i class="fa fa-pencil"></i></button>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-duressMultimedia d-block" data-aud-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
+        return buttonHtml;
+    }
+    $('#tbl_duressappMultimedia_fields').on('click', '.del-duressMultimedia', function () {
+        const idToDelete = $(this).attr('data-aud-id');
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteDuressApp',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridDuressAppMultimediaFields.reload({ typeId: $('#duressapp_types').val() });
+            });
+        }
+
+    });
     $('#tbl_duressappLog_fields').on('click', '.del-duressAudio', function () {
         const idToDelete = $(this).attr('data-aud-id');
         if (confirm('Are you sure want to delete this file?')) {
@@ -861,6 +908,16 @@
             DuressAppModalOnEdit(schId);
         }
     });
+    $('#DuressAppMiltimedia-modal').on('shown.bs.modal', function (event) {
+        clearMultimediaModal();
+
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editMultimedia';
+        if (isEdit) {
+            schId = button.data('au-id');
+            DuressAppModalOnEditMultimedia(schId);
+        }
+    });
     function clearAudioModal() {
 
         $('#filenameaudio').val('');
@@ -868,6 +925,14 @@
         $('#add_filenameduress').val('');
         $('#dynamicAudio').html('');
         $('#audioId').val('-1');
+    }
+    function clearMultimediaModal() {
+
+        $('#filenamemultimedia').val('');
+        $('#add_label1').val('');
+        $('#add_multimediaduress').val('');
+        $('#dynamicMultimedia').html('');
+        $('#multimediaId').val('-1');
     }
     function DuressAppModalOnEdit(AudioId) {
         $('#loader').show();
@@ -888,35 +953,70 @@
         });
     }
 
+    function DuressAppModalOnEditMultimedia(MultimediaId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=AudioDetails&id=' + MultimediaId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+
+            $('#add_label1').val(data.label);
+            $('#multimediaId').val(data.id);
+            $('#filenamemultimedia').val(data.name);
+            $('#dynamicMultimedia').html('<a href="/DuressAppMultimedia/' + data.name + '" class="btn btn-outline-primary" target="_blank"><i class="fa fa-play"></i></a>');
+
+
+        }).always(function () {
+            $('#loadinDivMultimedia').hide();
+        });
+    }
+
     $('#duressapp_types').on('change', function () {
         const selKvlFieldTypeId = $('#duressapp_types').val();
        
         if (selKvlFieldTypeId == 2) {
+            $('#add_duressappMultimedia_fields').hide();
             $('#add_duressapp_fields').show();
             gridDuressAppAudioFields.hide();
             gridDuressAppLogFields.show();
             gridDuressAppLogFields.clear();
             gridDuressAppLogFields.reload({ typeId: selKvlFieldTypeId });
             $('#add_DuressAppAudio').hide();
+            gridDuressAppMultimediaFields.hide();
 
         }
         else if (selKvlFieldTypeId == 1) {
+            $('#add_duressappMultimedia_fields').hide();
             $('#add_duressapp_fields').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.show();
             gridDuressAppAudioFields.clear();
             gridDuressAppAudioFields.reload({ typeId: selKvlFieldTypeId });
             $('#add_DuressAppAudio').show();
+            gridDuressAppMultimediaFields.hide();
 
 
+        }
+        else if (selKvlFieldTypeId == 3) {
+            $('#add_duressappMultimedia_fields').show();
+            $('#add_duressapp_fields').hide();
+            $('#add_DuressAppAudio').hide();
+            gridDuressAppAudioFields.hide();
+            gridDuressAppLogFields.hide();
+            gridDuressAppMultimediaFields.show();
+            gridDuressAppMultimediaFields.clear();
+            gridDuressAppMultimediaFields.reload({ typeId: selKvlFieldTypeId });
         }
         else {
             $('#add_duressapp_fields').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
-            
+            $('#add_duressappMultimedia_fields').hide();
             $('#add_DuressAppAudio').hide();
+            gridDuressAppMultimediaFields.hide();
         }
+
         
     });
     let isDuressFieldAdding = false;
@@ -939,15 +1039,17 @@
             }
         }
         else {
-            if (isDuressAppFieldAdding) {
-                alert('Unsaved changes in the grid. Refresh the page');
-            } else {
-                isDuressFieldAdding = true;
-                gridDuressAppLogFields.addRow({
-                    'id': -1,
-                    'typeId': selFieldTypeId,
-                    'name': '',
-                }).edit(-1);
+            if (selFieldTypeId == 2) {
+                if (isDuressAppFieldAdding) {
+                    alert('Unsaved changes in the grid. Refresh the page');
+                } else {
+                    isDuressFieldAdding = true;
+                    gridDuressAppLogFields.addRow({
+                        'id': -1,
+                        'typeId': selFieldTypeId,
+                        'name': '',
+                    }).edit(-1);
+                }
             }
         }
        
@@ -1055,6 +1157,70 @@
             showStatusNotification(false, 'Something went wrong');
         }).always(function () {
             $('#loadinDivAudio').hide();
+        });
+
+
+
+    });
+    $("#add_multimediaduress").on("change", function () {
+        var maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size exceeds 5MB');
+            $('#loadinDivMultimedia').hide();
+            return false; // Stop execution
+        }
+    });
+    $('#btnSaveMultimedia').on('click', function () {
+        $('#loadinDivMultimedia').show();
+        var fileName = $('#filenamemultimedia').val();
+        var label = $('#add_label1').val();
+
+        var TypeId = $('#duressapp_types').val();
+
+        var fileInput = $('#add_multimediaduress')[0];
+        var Id = $('#multimediaId').val();
+        const fileForm = new FormData();
+
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const fileExtn = file.name.split('.').pop().toLowerCase();
+            fileName = file.name;
+           
+            fileForm.append('file', file);
+
+        }
+        else {
+
+            fileForm.append('file', '');
+        }
+        if (fileName == '') {
+            showModal('Please select the file to upload');
+            return false;
+        }
+        
+        fileForm.append('typeId', TypeId);
+        fileForm.append('label', label);
+        fileForm.append('name', fileName);
+        fileForm.append('id', Id);
+
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveMultimedia',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                $('#DuressAppMiltimedia-modal').modal('hide');
+
+                gridDuressAppMultimediaFields.reload({ typeId: $('#duressapp_types').val() });
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            $('#loadinDivMultimedia').hide();
         });
 
 
@@ -4357,8 +4523,10 @@
         $('#duressapp_types').hide();
         gridDuressAppLogFields.hide();
         gridDuressAppAudioFields.hide();
+        gridDuressAppMultimediaFields.hide();
         $('#add_duressapp_fields').hide();
         $('#add_DuressAppAudio').hide();
+        $('#add_duressappMultimedia_fields').hide();
 
         //p5 - Issue - 20 - Instructor - end
 
@@ -4382,8 +4550,10 @@
             $('#duressapp_types').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
+            gridDuressAppMultimediaFields.hide();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             gridReportFields.hide();
             gridKvlFields.hide();
@@ -4410,8 +4580,10 @@
             $('#duressapp_types').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
+            gridDuressAppMultimediaFields.hide();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').hide();
@@ -4444,8 +4616,10 @@
             $('#duressapp_types').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
+            gridDuressAppMultimediaFields.hide();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').hide();
@@ -4479,8 +4653,10 @@
             $('#duressapp_types').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
+            gridDuressAppMultimediaFields.hide();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').show();
@@ -4526,8 +4702,10 @@
             $('#duressapp_types').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
+            gridDuressAppMultimediaFields.hide();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();
@@ -4563,10 +4741,12 @@
             // gridTAFields.reload();
 
             $('#duressapp_types').show();
-            gridDuressAppLogFields.show();
+            gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
-            $('#add_duressapp_fields').show();
+            gridDuressAppMultimediaFields.hide();
+            $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#add_duressappMultimedia_fields').hide();
 
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();

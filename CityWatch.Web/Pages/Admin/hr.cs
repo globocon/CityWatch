@@ -2401,6 +2401,61 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostSaveMultimedia()
+        {
+            var success = false;
+            var message = string.Empty;
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "DuressAppMultimedia");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var Label = Request.Form["label"];
+
+            var Name = Request.Form["name"];
+            int Id = Convert.ToInt32(Request.Form["id"]);
+
+            var type = 3;
+
+            _guardLogDataProvider.SaveDuressApp(new DuressAppField()
+            {
+
+                Name = Name,
+                TypeId = type,
+                Label = Label,
+                Id = Id
+
+            });
+
+            success = true;
+
+
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnGetAudioDetails(int id)
         {
             return new JsonResult(_clientDataProvider.GetAudioByID(id));
