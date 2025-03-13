@@ -698,8 +698,17 @@ namespace CityWatch.Web.Services
                         siteImage1.SetTextAlignment(TextAlignment.RIGHT);
 
                         var paragraph1 = new Paragraph()
-                            .SetBorder(Border.NO_BORDER)
-                            .Add(siteImage1);
+                            .SetBorder(Border.NO_BORDER);
+                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            paragraph1.Add(siteImage1);
+                        }
+                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                            siteImage1.SetAction(linkAction);
+                        }
 
                         var cell1 = new Cell()
                             .SetFont(PdfHelper.GetPdfFont())
