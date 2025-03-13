@@ -265,6 +265,7 @@ namespace CityWatch.Data.Providers
         public string GetGuardEnrollment(int GuardID);
         public string GetGuardLicenseState(int GuardID);
         public string GetGuardCRMSupplier(int GuardID);
+        public GuardLog GetGuardLogs(int Id);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -646,6 +647,19 @@ namespace CityWatch.Data.Providers
                 SiteName = SiteName1.Name;
             }
             return SiteName;
+        }
+        public GuardLog GetGuardLogs(int Id)
+        {
+            return _context.GuardLogs
+                .Where(z => z.GuardLoginId== Id && z.IsSystemEntry==false)
+                .Include(z => z.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.Guard)
+                .OrderBy(z => z.Id)
+                .ThenBy(z => z.EventDateTime)
+                .FirstOrDefault();
+
+
+
         }
         public List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds)
         {

@@ -39,6 +39,7 @@ using static Dropbox.Api.TeamLog.TimeUnit;
 using System.Threading.Tasks;
 using System.IO;
 using System.IO.Compression;
+using iText.Kernel.Pdf.Action;
 
 namespace CityWatch.Web.Services
 {
@@ -644,6 +645,7 @@ namespace CityWatch.Web.Services
                 if (start != null)
                 {
                     GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                    var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
                     //Set GPS Image start
                     var imagePath = "wwwroot/images/GPSImage.png";
                     var siteImage = new Image(ImageDataFactory.Create(imagePath))
@@ -653,9 +655,18 @@ namespace CityWatch.Web.Services
                     siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                     var paragraph = new Paragraph()
-                        .SetBorder(Border.NO_BORDER)
-                        .Add(siteImage);
+                        .SetBorder(Border.NO_BORDER);
+                       if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                    {
+                        paragraph.Add(siteImage);
+                    }
 
+                    if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                    {
+                        var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                        var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                        siteImage.SetAction(linkAction);
+                    }
                     var cell = new Cell()
                         .SetFont(PdfHelper.GetPdfFont())
                         .SetFontSize(CELL_FONT_SIZE)
@@ -785,7 +796,7 @@ namespace CityWatch.Web.Services
                     if (start != null)
                     {
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-
+                        var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
                         //Set GPS Image start
                         var imagePath = "wwwroot/images/GPSImage.png";
                         var siteImage = new Image(ImageDataFactory.Create(imagePath))
@@ -795,9 +806,19 @@ namespace CityWatch.Web.Services
                         siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                         var paragraph = new Paragraph()
-                            .SetBorder(Border.NO_BORDER)
-                            .Add(siteImage);
+                            .SetBorder(Border.NO_BORDER);
+                            if (_guardLogs!=null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            paragraph.Add(siteImage);
+                        }
 
+                       
+                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                            siteImage.SetAction(linkAction);
+                        }
                         var cell = new Cell()
                             .SetFont(PdfHelper.GetPdfFont())
                             .SetFontSize(CELL_FONT_SIZE)
@@ -825,9 +846,17 @@ namespace CityWatch.Web.Services
                             siteImage1.SetTextAlignment(TextAlignment.RIGHT);
 
                             var paragraph1 = new Paragraph()
-                                .SetBorder(Border.NO_BORDER)
-                                .Add(siteImage1);
-
+                                .SetBorder(Border.NO_BORDER);
+                                if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            {
+                                paragraph1.Add(siteImage1);
+                            }
+                            if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            {
+                                var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                                var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                                siteImage1.SetAction(linkAction);
+                            }
                             var cell1 = new Cell()
                                 .SetFont(PdfHelper.GetPdfFont())
                                 .SetFontSize(CELL_FONT_SIZE)
@@ -925,6 +954,7 @@ namespace CityWatch.Web.Services
                 if (start != null)
                 {
                     GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                    var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
                     //Set GPS Image start
                     var imagePath = "wwwroot/images/GPSImage.png";
                     var siteImage = new Image(ImageDataFactory.Create(imagePath))
@@ -934,8 +964,17 @@ namespace CityWatch.Web.Services
                     siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                     var paragraph = new Paragraph()
-                        .SetBorder(Border.NO_BORDER)
-                        .Add(siteImage);
+                        .SetBorder(Border.NO_BORDER);
+                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                    {
+                        paragraph.Add(siteImage);
+                    }
+                    if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                    {
+                        var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                        var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                        siteImage.SetAction(linkAction);
+                    }
 
                     var cell = new Cell()
                         .SetFont(PdfHelper.GetPdfFont())
@@ -967,8 +1006,18 @@ namespace CityWatch.Web.Services
                         siteImage1.SetTextAlignment(TextAlignment.RIGHT);
 
                         var paragraph1 = new Paragraph()
-                            .SetBorder(Border.NO_BORDER)
-                            .Add(siteImage1);
+                            .SetBorder(Border.NO_BORDER);
+                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            paragraph1.Add(siteImage1);
+                        }
+
+                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                            siteImage1.SetAction(linkAction);
+                        }
 
                         var cell1 = new Cell()
                             .SetFont(PdfHelper.GetPdfFont())
@@ -1057,6 +1106,7 @@ namespace CityWatch.Web.Services
                     if (start != null)
                     {
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                        var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
                         //Set GPS Image start
                         var imagePath = "wwwroot/images/GPSImage.png";
                         var siteImage = new Image(ImageDataFactory.Create(imagePath))
@@ -1066,8 +1116,18 @@ namespace CityWatch.Web.Services
                         siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                         var paragraph = new Paragraph()
-                            .SetBorder(Border.NO_BORDER)
-                            .Add(siteImage);
+                            .SetBorder(Border.NO_BORDER);
+                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            paragraph.Add(siteImage);
+                        }
+                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        {
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                            siteImage.SetAction(linkAction);
+                        }
+
 
                         var cell = new Cell()
                             .SetFont(PdfHelper.GetPdfFont())
@@ -1097,8 +1157,18 @@ namespace CityWatch.Web.Services
                             siteImage1.SetTextAlignment(TextAlignment.RIGHT);
 
                             var paragraph1 = new Paragraph()
-                                .SetBorder(Border.NO_BORDER)
-                                .Add(siteImage1);
+                                .SetBorder(Border.NO_BORDER);
+                                  if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            {
+                                paragraph1.Add(siteImage1);
+                            }
+
+                            if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            {
+                                var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                                var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                                siteImage1.SetAction(linkAction);
+                            }
 
                             var cell1 = new Cell()
                                 .SetFont(PdfHelper.GetPdfFont())

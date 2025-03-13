@@ -1150,7 +1150,8 @@
                                     <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                     <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                     <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+
+                          @*           <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -1170,8 +1171,20 @@
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                <div id="ClassroomLocationDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label" >Location</label>
+                                            <input class="form-control" type="text" id="txtClassroomlocation">
+                                        </div>
+                                        <div class="col-md-4" style="padding-top:28px">
+                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
                                     <thead>
                                         <tr>
@@ -1186,6 +1199,7 @@
                                         </tr>
                                     </thead>
                                 </table>
+                                
                                 <div id="SettingsDiv" style="display:none">
                                     <div class="form-group row">
                                         <div class="col-md-8">
@@ -1455,7 +1469,7 @@
                                         <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                         <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                         <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                        <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                     </div>
                                 </div>
                                 <div class="col-md-12">
@@ -1475,6 +1489,17 @@
                                     </table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                    <div id="ClassroomLocationDiv" style="display:none">
+                                        <div class="form-group row">
+                                            <div class="col-md-8">
+                                                <label class="form-label">Location</label>
+                                                <input class="form-control" type="text" id="txtClassroomlocation">
+                                            </div>
+                                            <div class="col-md-4" style="padding-top:28px">
+                                                <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
@@ -1970,7 +1995,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -1990,6 +2015,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -2291,7 +2327,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -2311,6 +2347,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -2612,7 +2659,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -2632,6 +2679,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label" >Location</label>
+                                            <input class="form-control" type="text" id="txtClassroomlocation">
+                                        </div>
+                                        <div class="col-md-4" style="padding-top:28px">
+                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        </div>
+                                    </div>
+                                </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -3593,7 +3651,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -3613,6 +3671,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label" >Location</label>
+                                            <input class="form-control" type="text" id="txtClassroomlocation">
+                                        </div>
+                                        <div class="col-md-4" style="padding-top:28px">
+                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        </div>
+                                    </div>
+                                </div>
                                                     <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>

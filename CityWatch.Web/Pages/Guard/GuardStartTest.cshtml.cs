@@ -44,10 +44,13 @@ namespace CityWatch.Web.Pages.Guard
         public int GuardId { get; set; }
         public int GuardTrainingAssessmentId { get; set; }
         public GuardTrainingAndAssessment GuardTrainingAndAssessment { get; set; }
+        public List<GuardTrainingAttendedQuestionsAndAnswers> GuardTrainingAttendedQuestionsAndAnswers { get; set; }
+
         public TrainingTestQuestionSettings TrainingTestQuestionSettings { get; set; }
         public string CourseDocsPath;
         public string Coursefilename;
         public string hrreferencenumber;
+        public int totalQuestions;
        
 
         public GuardStartTestModel(IViewDataService viewDataService,
@@ -82,6 +85,8 @@ namespace CityWatch.Web.Pages.Guard
                     CourseDocsPath = CourseDocsFolder;
                     hrreferencenumber = hrreferenceNumber;
                     Coursefilename = GuardTrainingAndAssessment.TrainingCourses.FileName;
+                    GuardTrainingAttendedQuestionsAndAnswers = _configDataProvider.GetGuardAttendedQuestionsAndanswers(GuardId, GuardTrainingAndAssessment.TrainingCourseId).ToList();
+                    totalQuestions = _configDataProvider.GetTrainingQuestionsWithHRAndTQSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId, GuardTrainingAndAssessment.TrainingCourses.TQNumberId).Count;
 
                 }
             }
@@ -286,8 +291,9 @@ namespace CityWatch.Web.Pages.Guard
                     TrainingCourseId = trainingCourseId,
                     TrainingCourseStatusId = 1,
                     Description = report.Description,
-                    HRGroupId = report.HRGroupId,
-                    IsCompleted = false
+                    HRGroupId = report.HRGroupId
+                    //,
+                    //IsCompleted = false
 
                 });
                 success = true;
@@ -456,8 +462,9 @@ namespace CityWatch.Web.Pages.Guard
                     TrainingCourseId = TrainingCourseId,
                     TrainingCourseStatusId = 3,
                     Description = record.Description,
-                    HRGroupId = record.HRGroupId,
-                    IsCompleted = false
+                    HRGroupId = record.HRGroupId
+                    //,
+                    //IsCompleted = false
 
                 });
             }
@@ -472,10 +479,10 @@ namespace CityWatch.Web.Pages.Guard
                         Id = record.Id,
                         GuardId = guardId,
                         TrainingCourseId = TrainingCourseId,
-                        TrainingCourseStatusId = 3,
+                        TrainingCourseStatusId = 4,
                         Description = record.Description,
-                        HRGroupId = record.HRGroupId,
-                        IsCompleted = true
+                        HRGroupId = record.HRGroupId
+                       // IsCompleted = true
 
                     });
                 }
@@ -573,8 +580,9 @@ namespace CityWatch.Web.Pages.Guard
                     TrainingCourseId = trainingCourseId,
                     TrainingCourseStatusId = 3,
                     Description = report.Description,
-                    HRGroupId = report.HRGroupId,
-                    IsCompleted = false
+                    HRGroupId = report.HRGroupId
+                    //,
+                    //IsCompleted = false
 
                 });
                 success = true;
