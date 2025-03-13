@@ -1211,8 +1211,15 @@ else
                                        @*  Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number. *@
                                     </span>
                                 </div>
+                                    @if (HandoverNotes!=null)
+                                    {
+                                        <textarea class="form-control" rows="4" maxlength="512" id="NotesHandover">@HandoverNotes.Notes</textarea>
+                                    }
+                                    else
+                                    {
+                                        <textarea class="form-control" rows="4" maxlength="512" id="NotesHandover"></textarea>
+                                    }
 
-                                    <textarea class="form-control" rows="4" maxlength="512" id="NotesHandover">@HandoverNotes.Notes</textarea>
                              @*    <span style="font-size:0.8rem" class="d-block">
                                     You can add new notes above. But never delete the previous or existing entries (Add entries: Z-A)
                                 </span> *@
