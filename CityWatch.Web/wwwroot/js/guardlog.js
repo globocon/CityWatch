@@ -2016,7 +2016,39 @@ $(function () {
             $('#loader').hide();
         });
     };
+    $('#save_HandoverNotes').on('click', function () {
+        clearGuardValidationSummary('HandOvervalidationSummary');
+        isPaused = false;
+        const Notes = $('#NotesHandover').val();
+        if (Notes == '') {
+            displayGuardValidationSummary('HandOvervalidationSummary', 'Handover Notes required');
+            return;
+        }
+        // Validate the length of securityLicenseNo
 
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveHandovernotes',
+            type: 'POST',
+            data: {
+                ClientSiteID: $('#ClientSiteID').val(),
+                Notes: Notes
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (SuccessMessage) {
+            if (SuccessMessage) {
+                
+                alert('saved Successfully');
+                $('#Handover-modal').modal('hide');
+            } else {
+                // displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
+            }
+        }).fail(function () {
+            console.error("Error in the first AJAX request.");
+        }).always(function () {
+            console.log("First AJAX request completed.");
+        });
+
+    });
     $('#guard_offduty').on('click', function (e) {
         e.preventDefault();
         if (confirm('Are you sure you want to end your shift?')) {

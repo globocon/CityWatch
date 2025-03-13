@@ -1666,6 +1666,10 @@ $('#btnHRDetails').on('click', function () {
 });
 
 
+$('#btnHO').on('click', function () {
+    $('#Handover-modal').modal('show');
+});
+
 
 
 $('#btnGuardHrUpdateNewPIN').on('click', function () {

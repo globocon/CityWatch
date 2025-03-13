@@ -7,6 +7,7 @@ using System.Linq;
 using CityWatch.Data.Helpers;
 using System.Security.Cryptography;
 using System.Threading;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Data.Providers
 {
@@ -105,7 +106,9 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
         string GetCourseNameUsingCourseId(int id);
+        public void SetNotes(int ClientSiteId, string Notes);
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId);
+
 
     }
 
@@ -143,7 +146,31 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public void SetNotes(int ClientSiteId, string Notes)
+        {
+            var updateNotes1 = _context.HandoverNotes.SingleOrDefault(x => x.ClientSiteID == ClientSiteId);
+            if (updateNotes1 != null)
+            {
+                updateNotes1.Notes = Notes;
+                _context.SaveChanges();
 
+            }
+            else
+            {
+                _context.HandoverNotes.Add(new HandoverNotes()
+                {
+                    ClientSiteID = ClientSiteId,
+                    Notes = Notes
+
+                });
+
+                _context.SaveChanges();
+            }
+
+
+
+
+        }
         //P4#70 to display only active guards PartB-C -x => x.IsActive == true-Added by Manju -start
 
         public List<Guard> GetActiveGuards()
