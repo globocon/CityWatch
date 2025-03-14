@@ -490,7 +490,7 @@ namespace CityWatch.Web.Services
 
             siteDataTable.AddCell(GetSiteValueCell(formattedDate));
 
-            siteDataTable.AddCell(GetSiteValueCellHeader("CRM(Supplier)"));
+            siteDataTable.AddCell(GetSiteValueCellHeader("CRM (Supplier)"));
 
             siteDataTable.AddCell(GetSiteValueCell(Supplier));
             return siteDataTable;
