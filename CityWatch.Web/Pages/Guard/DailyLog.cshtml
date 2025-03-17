@@ -24,7 +24,7 @@
     <input type="hidden" id="hid_duressEnabledGpsCoordinates">
 
     var clientSiteSOp = new List<StaffDocument>();
-
+    var userid = AuthUserHelper.GetLoggedInUserId;
     clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.GuardLog.ClientSiteLogBook.ClientSite.Id);
 
 
@@ -41,18 +41,18 @@ else
     <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
 <div id="loader"></div>
-<div class="row">
+<div class="row align-items-center">
     <div class="col-md-4">
         <div>
             <b>Log Book Date: </b>@Model.GuardLog.ClientSiteLogBook.Date.ToString("dd MMM yyyy (dddd)").ToUpper()   @*  @DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper() *@
         </div>
     </div>
-    <div class="col-md-3 p-0">
-        <div class="float-right">
+    <div class="col-md-2 p-0">
+        <div class="float-right text-nowrap">
             Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
         </div>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-6">
         <div class="float-right">
             @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
             <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
@@ -113,6 +113,12 @@ else
             <a class="btn btn-outline-primary" id="generate_log_AlldocketList" href="#">POI List</a>
             
             <a class="btn btn-outline-primary" id="btnHO" href="#"><i class="fa fa-handshake-o mr-1" aria-hidden="true"></i>HO</a>
+            <!-- QR Code Button -->
+            
+            <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#staticBackdrop">
+                <i class="fa fa-qrcode" aria-hidden="true"></i>
+            </button>
+
             <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank"><i class="fa fa-download mr-1" aria-hidden="true"></i>PDF</a>
             <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
         </div>
@@ -1175,6 +1181,42 @@ else
         </div>
     </div>
 </div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" role="dialog"  tabindex="-1" aria-labelledby="staticBackdropLabel" >
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Mobile APP Login QR Code</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                @{
+                    // Safely extracting values with null checks
+                    var userId = userid?.ToString() ?? "unknown";
+                    var clientId = Model?.GuardLog?.ClientSiteLogBook?.ClientSite?.Id.ToString() ?? "unknown";
+
+                    // Adding a validation string like 'VALID' or similar
+                    var validationString = $"c4i2025-{userId}-{clientId}";
+
+                    // Building the QR code URL
+                    var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={validationString}";
+                }
+
+                <img src="@qrCodeUrl"
+                     alt="QR Code"
+                     class="img-fluid">
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
 
 <div class="modal" tabindex="-1" role="dialog" id="Handover-modal" style="margin-bottom:0;">
     <div class="modal-dialog modal-md modal-dialog-centered" role="document" style="max-height: 95%;">
