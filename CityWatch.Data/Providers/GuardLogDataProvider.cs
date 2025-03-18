@@ -5788,7 +5788,7 @@ namespace CityWatch.Data.Providers
                .ToList();
 
             var checkGMT = data
-                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null && (x.ActivityType == "LB") && (x.NotificationType!=1))
                   .Select(x => x.EventDateTimeZoneShort)
                   .FirstOrDefault();
 
@@ -5842,7 +5842,7 @@ namespace CityWatch.Data.Providers
 
           // Check for GMT timezone
           var checkGMT = GuardLogs
-              .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+              .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort) &&  (x.EventType == 0))
               .Select(x => x.EventDateTimeZoneShort)
               .FirstOrDefault();
 
@@ -5857,7 +5857,7 @@ namespace CityWatch.Data.Providers
               GuardName = log.GuardLogin?.Guard != null
       ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
       : null, // Null check for Guard
-              EventDateTimeZoneShort = log.EventDateTimeZoneShort,
+              EventDateTimeZoneShort = checkGMT,
               EventDateTime = log.EventDateTime,
               EventDateTimeLocal = log.EventDateTimeLocal,
               gpsCoordinates = log.GpsCoordinates,
