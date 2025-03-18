@@ -1207,7 +1207,7 @@ else
                     var clientId = Model?.GuardLog?.ClientSiteLogBook?.ClientSite?.Id.ToString() ?? "unknown";
 
                     // Adding a validation string like 'VALID' or similar
-                    var validationString = $"c4i2025-{userId}-{clientId}-{userName}";
+                    var validationString = $"c4i2025|{userId}|{clientId}|{userName}";
 
                     // Building the QR code URL
                     var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={validationString}";
