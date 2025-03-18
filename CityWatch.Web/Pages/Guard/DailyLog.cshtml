@@ -25,6 +25,12 @@
 
     var clientSiteSOp = new List<StaffDocument>();
     var userid = AuthUserHelper.GetLoggedInUserId;
+    var userName = "Guest";
+    if (User.Identity.IsAuthenticated)
+    {
+       userName = User.Identity.Name;
+
+    }
     clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.GuardLog.ClientSiteLogBook.ClientSite.Id);
 
 
@@ -1201,7 +1207,7 @@ else
                     var clientId = Model?.GuardLog?.ClientSiteLogBook?.ClientSite?.Id.ToString() ?? "unknown";
 
                     // Adding a validation string like 'VALID' or similar
-                    var validationString = $"c4i2025-{userId}-{clientId}";
+                    var validationString = $"c4i2025-{userId}-{clientId}-{userName}";
 
                     // Building the QR code URL
                     var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={validationString}";
