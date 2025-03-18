@@ -109,7 +109,7 @@ namespace CityWatch.Data.Providers
         public void SetNotes(int ClientSiteId, string Notes);
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId);
 
-
+        void SaveGuardMobileNo(int GuardID, string mobileNo);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -226,7 +226,13 @@ namespace CityWatch.Data.Providers
             var Number = _context.Guards.Where(x => x.SecurityNo == LicenseNo).Select(x => x.Id);
             return Number.FirstOrDefault();
         }
+        public void SaveGuardMobileNo(int GuardID,string mobileNo)
+        {
+            var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == GuardID);
+            updateGuard.Mobile = mobileNo;
+            _context.SaveChanges();
 
+        }
         public int SaveGuard(Guard guard, out string initalsUsed)
         {
             initalsUsed = guard.Initial;
