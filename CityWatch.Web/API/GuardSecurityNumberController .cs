@@ -637,6 +637,36 @@ namespace CityWatch.Web.API
 
 
 
+        [HttpGet("GetSiteName")]
+        public IActionResult GetSiteName(int clientsiteId)
+        {
+            try
+            {
+                var site = _clientDataProvider.GetClientSiteName(clientsiteId); // Fetch site name
+
+                if (site == null || string.IsNullOrEmpty(site.Name))
+                {
+                    return NotFound(new
+                    {
+                        message = "No site found for the given ID."
+                    });
+                }
+
+                return Ok(new { siteName = site.Name }); // Return site name in JSON format
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching the site name.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
+
+
     }
 
     public class DuressRequest
