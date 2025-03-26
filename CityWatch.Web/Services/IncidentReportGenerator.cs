@@ -54,7 +54,7 @@ namespace CityWatch.Web.Services
 
     public interface IIncidentReportGenerator
     {
-        string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite);
+        string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite, string Templete);
         string GeneratePdfReport(PatrolRequest patrolRequest);
 
     }
@@ -141,9 +141,10 @@ namespace CityWatch.Web.Services
             _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
         }
 
-        public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite)
-
+        public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite,string Templete)
         {
+            //dynamic template based on the domain 
+            var IRPdfTemplete = IO.Path.Combine(_ReportRootDir, TEMPLATE_DIR, Templete);
             _IncidentReport = incidentReport;
             _clientSite = clientSite;
             _UploadRootDir = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", incidentReport.ReportReference);
@@ -164,7 +165,7 @@ namespace CityWatch.Web.Services
             }
             string reportFileName = GetReportFileName(eventType);
             var reportPdf = IO.Path.Combine(_ReportRootDir, REPORT_DIR, reportFileName);
-            PdfDocument pdfDocument = new PdfDocument(new PdfReader(_TemplatePdf), new PdfWriter(reportPdf));
+            PdfDocument pdfDocument = new PdfDocument(new PdfReader(IRPdfTemplete), new PdfWriter(reportPdf));
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
 

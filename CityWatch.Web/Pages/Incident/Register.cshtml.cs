@@ -622,7 +622,21 @@ namespace CityWatch.Web.Pages.Incident
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var ToAddreddAppset = _EmailOptions.ToAddress.Split('|');
-            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+
+            //var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+
+            var toAddressData = string.Empty;
+            var thirpartyemail = getClientEmailId();
+            if (thirpartyemail != string.Empty)
+            {
+                toAddressData = thirpartyemail + '|' + ToAddreddAppset[1];
+            }
+            else
+            {
+                toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+            }
+            
+
             var toAddress = toAddressData.Split('|');
 
             //var toAddress = _EmailOptions.ToAddress.Split('|');
@@ -1134,7 +1148,8 @@ namespace CityWatch.Web.Pages.Incident
                 /* Store the value of the Irresquest Object to seesion for create the Ir from the session start */
                 HttpContext.Session.SetString("IRReport", JsonSerializer.Serialize(Report));
                 /* Store the value of the Irresquest Object to seesion for create the Ir from the session end */
-                fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite);
+                var templateFilename = CheckIfTheUrlIsAThirdPartyUrl();
+                fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite, templateFilename);
                 reportGenerated = true;
                 TempData["ReportFileName"] = fileName;
                 // TODO: Remove - debug log of GPS issue
@@ -1518,5 +1533,82 @@ namespace CityWatch.Web.Pages.Incident
             }
         }
 
+
+        //retur templete 
+        public string CheckIfTheUrlIsAThirdPartyUrl()
+        {
+            string defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                  .FirstOrDefault(x => x.SubDomainId == 0)
+                                                  ?.FileName ?? string.Empty;
+
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Exclude reserved keywords
+                // var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
+                {
+                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+
+                        if (subDomainIrTemplate != null)
+                        {
+                            defaultValue = subDomainIrTemplate.FileName;
+                        }
+                    }
+                }
+            }
+
+            return defaultValue;
+        }
+
+
+
+        public string getClientEmailId ()
+        {
+            string defaultValue = string.Empty;
+
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Exclude reserved keywords
+                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+                //var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
+                {
+                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+
+                        if (subDomainIrTemplate != null)
+                        {
+                            defaultValue = subDomainIrTemplate.DefaultEmail;
+                        }
+                    }
+                }
+            }
+
+            return defaultValue;
+        }
     }
 }

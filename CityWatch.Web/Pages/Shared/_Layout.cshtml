@@ -324,6 +324,21 @@
                         if (ViewBag.PageName != PageNameHelper.Login)
                         {
                             <div><a href="/Guard/Login?t=gl" class="nav-link py-0"><i class="fa fa-list-alt mr-2"></i>Daily Log Book (LB)</a></div>
+
+                            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal)
+                            {   /* Check the guard Login Conformation*/
+                                <div>
+                                    <a href="/Incident/Register" id="LoginConformationBtnIR" class="nav-link py-0"><i class="fa fa-file-pdf-o mr-2"></i>Incident Report (IR)</a>
+                                </div>
+
+                            }
+                            else
+                            {
+
+                                <div>
+                                    <a href="/Incident/Register" class=" nav-link py-0"><i class=" fa fa-file-pdf-o mr-2"></i>Incident Report (IR)</a>
+                                </div>
+                            }
                             <div><a href="/Incident/ToolSelecter" class="nav-link py-0"><i class="fa fa-wrench mr-2"></i>Tools</a></div>
                             <div><a href="" id="LoginConformationBtnC4iSettingsThirdParty" class="nav-link py-0" hidden><i class="fa fa-cog mr-2"></i>C4i System Settings</a></div>
                            @*  <div> *@
@@ -350,7 +365,44 @@
             </div>
         </div>
     </footer>
+    @*IR Guard login Conformation Popup*@
+    <div id="modelGuardLoginConIR" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        Guard Access permission for Incident Report (IR)
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        &times;
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <form id="frm_GuardLogin" method="post">
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <div class="input-group">
+                                        <label class="mt-2 mr-2">Security License No</label><br />
+                                        <input class="form-control" type="text" id="txt_securityLicenseNoIR">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-primary" id="btnGuardLoginIR" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display:block">
+                    <div class="text-left ml-3">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery-editable-select/dist/jquery-editable-select.min.js"></script>
