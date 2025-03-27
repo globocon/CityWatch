@@ -324,7 +324,7 @@
                         if (ViewBag.PageName != PageNameHelper.Login)
                         {
                             <div><a href="/Guard/Login?t=gl" class="nav-link py-0"><i class="fa fa-list-alt mr-2"></i>Daily Log Book (LB)</a></div>
-                            if (ViewBag.PageName == PageNameHelper.DailyGuardLog || ViewBag.PageName == PageNameHelper.VehicleAndKeyLog)
+                            if (pageName == "KV" || pageName == "LB")
                             {
                                 <div class="check1">
                                 <a href="/Incident/Register" class="nav-link py-0"><i class="fa fa-file-pdf-o mr-2"></i>Incident Report (IR)</a>
