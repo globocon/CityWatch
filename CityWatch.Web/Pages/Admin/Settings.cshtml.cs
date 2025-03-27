@@ -409,7 +409,62 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm") });
         }
+
+        public JsonResult OnPostIrTemplateUploadThirdParty()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var dateTimeUpdated = DateTime.Now;
+            var files = Request.Form.Files;
+            var domainName = Request.Form.ContainsKey("domain") ? Request.Form["domain"].ToString() : "Unknown";
+            var domainId = Request.Form.ContainsKey("domainId") ? Request.Form["domainId"].ToString() : "Unknown";
+            if (files.Count == 1 && domainId!=string.Empty)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (Path.GetExtension(file.FileName) != ".pdf")
+                            throw new ArgumentException("Unsupported file type");
+
+                        var fileName = domainId == "0" ? "IR_Form_Template.pdf" : "IR_Form_Template_"+domainName.Trim()+".pdf";
+                        var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Template");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, fileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                         
+                        _configDataProvider.SaveDefaultEmailThirdPartyDomains(string.Empty,int.Parse(domainId), fileName);
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            // Fetch updated template details safely
+            var templateDetails = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()?
+                                  .FirstOrDefault(x => x.DomainId == int.Parse(domainId));
+
+            // If no record found, return default values
+            return new JsonResult(new
+            {
+                success,
+                message,
+                dateTimeUpdated = templateDetails?.LastUpdated != null
+                                  ? templateDetails.LastUpdated.ToString("dd MMM yyyy @ HH:mm")
+                                  : "",
+                defaultEmail = templateDetails?.DefaultEmail ?? "",
+                filename = templateDetails?.FileName ?? ""
+            });
+        }
         //To get the default Email Path start
+
+
+
         public JsonResult OnPostDefaultEmailUpdate(string defaultMailEdit)
         {
 
@@ -431,6 +486,41 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //To get the default Email Path stop
+
+
+        public JsonResult OnPostDefaultEmailUpdateThirdPartyDomains(int domainId, string domain, string DefaultEmail)
+        {
+            var success = false;
+            var message = "Updated successfully";
+
+            try
+            {
+                // Save the email update
+                _configDataProvider.SaveDefaultEmailThirdPartyDomains(DefaultEmail, domainId, string.Empty);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            // Fetch updated template details safely
+            var templateDetails = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()?
+                                  .FirstOrDefault(x => x.DomainId == domainId);
+
+            // If no record found, return default values
+            return new JsonResult(new
+            {
+                success,
+                message,
+                dateTimeUpdated = templateDetails?.LastUpdated != null
+                                  ? templateDetails.LastUpdated.ToString("dd MMM yyyy @ HH:mm")
+                                  : "",
+                defaultEmail = templateDetails?.DefaultEmail ?? "",
+                filename = templateDetails?.FileName ?? ""
+            });
+        }
+
         public JsonResult OnGetStaffDocs()
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());

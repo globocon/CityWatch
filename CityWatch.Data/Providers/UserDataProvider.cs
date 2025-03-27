@@ -20,6 +20,8 @@ namespace CityWatch.Data.Providers
         List<HrSettingsLockedClientSites> GetHrSettingsLockedClientSites(int? hrSettingsId);
         void SaveHrSettingsLockedClientSites(int hrSettingsId, List<HrSettingsLockedClientSites> hrSettingsLockedClientSites);
         UserClientSiteAccess GetUserClientSiteAccessThirdParty(int? userId);
+
+        List<ReportTemplate> GetThirdPartyDomainOrTemplateDetails();
     }
     public class UserDataProvider : IUserDataProvider
     {
@@ -166,7 +168,7 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
-        public void SaveUserClientSiteAccess(int userId, List<UserClientSiteAccess> userClientSiteAccess,int ClientTypeID)
+        public void SaveUserClientSiteAccess(int userId, List<UserClientSiteAccess> userClientSiteAccess, int ClientTypeID)
         {
             var currentAccess = _context.UserClientSiteAccess.Where(x => x.UserId == userId).ToList();
             _context.RemoveRange(currentAccess);
@@ -257,5 +259,51 @@ namespace CityWatch.Data.Providers
             return _context.SubDomain.FirstOrDefault(x => x.TypeId == typeId);
         }
 
+
+
+        public List<ReportTemplate> GetThirdPartyDomainOrTemplateDetails()
+        {
+            var subdomin = _context.SubDomain
+                .Where(x => _context.ClientTypes.Any(ct => ct.IsActive && ct.Id == x.TypeId))
+                .Select(x => new
+                {
+                    x.Domain,
+                    x.Id
+                })
+                .ToList();
+             var primaryDefaultTemplate= _context.ReportTemplates.Where(x => x.SubDomainId == 0).FirstOrDefault();
+            var reportTemplets = _context.ReportTemplates
+                .Where(rt => subdomin.Select(s => s.Id).Contains(rt.SubDomainId)) // Fetch only necessary templates
+                .ToList();
+
+            List<ReportTemplate> temp = new List<ReportTemplate>();
+
+            foreach (var domin in subdomin)
+            {
+                var checkifexist = reportTemplets.FirstOrDefault(x => x.SubDomainId == domin.Id);
+
+                temp.Add(new ReportTemplate
+                {
+                    Domain = domin.Domain,
+                    DomainId = domin.Id,
+                    Id = checkifexist?.Id ?? 0, // Use null-coalescing to handle null cases
+                    LastUpdated = checkifexist?.LastUpdated ?? DateTime.MinValue,
+                    DefaultEmail = checkifexist?.DefaultEmail ?? "", // Ensure non-null values
+                    FileName = checkifexist?.FileName ?? "",
+                    SubDomainId= domin.Id
+                });
+            }
+            temp.Add(primaryDefaultTemplate);
+            return temp;
+        }
+
+
+       
+
+
+
+
+
     }
 }
+

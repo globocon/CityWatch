@@ -147,11 +147,11 @@ namespace CityWatch.Data.Providers
         void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate);
         List<TrainingCourseCertificate> GetCourseCertificateDocuments();
         void DeleteCourseCertificateDocument(int id);
-         StaffDocument GetStaffDocumentsID(int ClientSiteID);
+        StaffDocument GetStaffDocumentsID(int ClientSiteID);
 
         //p5-Issue-2-start
         List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
-       
+
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
@@ -161,7 +161,7 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestionsAnswers> GetGuardOptions(int questionId);
         void SaveGuardAnswers(GuardTrainingAttendedQuestionsAndAnswers attendedQuestions);
         int GetQuestionCount(int hrSettingsId, int tqNumberId);
-        List<GuardTrainingAttendedQuestionsAndAnswers> GetQuestionNumber(int hrSettingsId, int tqNumberId,int guardId);
+        List<GuardTrainingAttendedQuestionsAndAnswers> GetQuestionNumber(int hrSettingsId, int tqNumberId, int guardId);
         List<TrainingCourses> GetTrainingCourses(int hrSettingsId, int tqNumberId);
         List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardCorrectQuestions(int guardId, int trainingCourseId);
         void SaveGuardTestScores(GuardTrainingAndAssessmentScore scoreObtained);
@@ -196,7 +196,7 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
         public HandoverNotes GetHandoverNotes(int CientSiteID);
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid, int tqNumberId);
-
+        public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName);
 
     }
 
@@ -277,7 +277,7 @@ namespace CityWatch.Data.Providers
 
         public ReportTemplate GetReportTemplate()
         {
-            return _context.ReportTemplates.Single();
+            return _context.ReportTemplates.Where(x => x.SubDomainId == 0).FirstOrDefault();
         }
 
         public void SaveReportTemplate(DateTime dateTimeUpdated)
@@ -293,6 +293,65 @@ namespace CityWatch.Data.Providers
             templateToUpdate.DefaultEmail = DefaultEmail;
             _context.SaveChanges();
         }
+
+
+
+        public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName)
+        {
+            var dateTimeUpdated = DateTime.Now;
+            var defaultPath = "/httpdocs/wwwroot/Pdf/Template"; // Hardcoded default path
+
+            var existingTemplate = _context.ReportTemplates
+                .FirstOrDefault(x => x.SubDomainId == domainId);
+
+            if (existingTemplate != null)
+            {
+                if (!string.IsNullOrWhiteSpace(defaultEmail))
+                    existingTemplate.DefaultEmail = defaultEmail;
+
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    existingTemplate.FileName = fileName;
+                    existingTemplate.LastUpdated = dateTimeUpdated; // Update timestamp only if fileName is provided
+                }
+
+                existingTemplate.Path = defaultPath; // Set the path explicitly
+            }
+            else
+            {
+
+
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    _context.ReportTemplates.Add(new ReportTemplate
+                    {
+                        SubDomainId = domainId,
+                        DefaultEmail = !string.IsNullOrWhiteSpace(defaultEmail) ? defaultEmail : null,
+                        FileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : null,
+                        Path = defaultPath, // Set the path explicitly
+                        LastUpdated = dateTimeUpdated  // Only set LastUpdated if fileName exists
+                    });
+
+                }
+                else
+                {
+                    _context.ReportTemplates.Add(new ReportTemplate
+                    {
+                        SubDomainId = domainId,
+                        DefaultEmail = !string.IsNullOrWhiteSpace(defaultEmail) ? defaultEmail : null,
+                        FileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : null,
+                        Path = defaultPath, // Set the path explicitly
+                        LastUpdated = dateTimeUpdated  // Only set LastUpdated if fileName exists
+                    });
+
+
+                }
+            }
+
+            _context.SaveChanges();
+        }
+
+
 
 
         public List<State> GetStates()
@@ -432,12 +491,12 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID)
         {
             var staffDocList = _context.StaffDocuments
-               .Where(x => x.DocumentType == type && x.ClientSite== ClientSiteID)
+               .Where(x => x.DocumentType == type && x.ClientSite == ClientSiteID)
                .ToList();
             return staffDocList;
         }
 
-            public void SaveStaffDocument(StaffDocument staffdocument)
+        public void SaveStaffDocument(StaffDocument staffdocument)
         {
             if (staffdocument.Id == 0)
             {
@@ -1295,10 +1354,10 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourses
-                .Include(x=>x.TQNumber)
+                .Include(x => x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
-            foreach(var item in courseDocList)
+            foreach (var item in courseDocList)
             {
                 item.TQNumberName = item.TQNumber.Name;
             }
@@ -1376,16 +1435,16 @@ namespace CityWatch.Data.Providers
         public int GetLastTQNumber(int hrsettingsid)
         {
             int LastTQNumber = 0;
-            
-            var result=_context.TrainingCourses.Where(x=>x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
-           if(result.Count==0)
+
+            var result = _context.TrainingCourses.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            if (result.Count == 0)
             {
                 LastTQNumber = _context.TrainingTQNumbers.FirstOrDefault().Id;
             }
             if (result.Count > 0)
             {
                 int[] tqnumbers = result.Select(x => x.TQNumberId).ToArray();
-                LastTQNumber=_context.TrainingTQNumbers.Where(x=>!tqnumbers.Contains(x.Id)).FirstOrDefault().Id;
+                LastTQNumber = _context.TrainingTQNumbers.Where(x => !tqnumbers.Contains(x.Id)).FirstOrDefault().Id;
             }
             return LastTQNumber;
 
@@ -1395,22 +1454,22 @@ namespace CityWatch.Data.Providers
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingTestQuestionSettings
                 .Include(x => x.CourseDuration)
-                .Include(x=>x.TestDuration)
+                .Include(x => x.TestDuration)
                 .Include(x => x.PassMark)
                 .Include(x => x.Attempts)
                 .Include(x => x.CertificateExpiryYears)
-                
+
                 .Where(x => x.HRSettingsId == hrSettingsId)
                 .ToList();
 
 
             return courseDocList;
         }
-        public int GetNextQuestionWithinSameTQNumber(int hrsettingsid,int tqNumberId)
+        public int GetNextQuestionWithinSameTQNumber(int hrsettingsid, int tqNumberId)
         {
             int LastTQuestionNumber = 0;
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId==tqNumberId).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
             if (result.Count == 0)
             {
                 LastTQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
@@ -1425,11 +1484,11 @@ namespace CityWatch.Data.Providers
         }
         public int GetQuestionsCount(int hrsettingsid, int tqNumberId)
         {
-           
+
 
             var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
-            
-            
+
+
             return result.Count;
 
         }
@@ -1447,13 +1506,13 @@ namespace CityWatch.Data.Providers
             return LastTQNumber;
 
         }
-        public TrainingTestQuestions GetTrainingQuestions(int hrsettingsid,int tqNumberId,int questionumberId)
+        public TrainingTestQuestions GetTrainingQuestions(int hrsettingsid, int tqNumberId, int questionumberId)
         {
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId==tqNumberId && x.QuestionNoId==questionumberId).OrderBy(x => x.Id).FirstOrDefault();
-            
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.QuestionNoId == questionumberId).OrderBy(x => x.Id).FirstOrDefault();
+
             return result;
 
         }
@@ -1472,7 +1531,7 @@ namespace CityWatch.Data.Providers
 
             int LastFeedbackQuestionNumber = 0;
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
             if (result.Count == 0)
             {
                 LastFeedbackQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
@@ -1490,7 +1549,7 @@ namespace CityWatch.Data.Providers
         {
 
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
 
 
             return result.Count;
@@ -1529,7 +1588,7 @@ namespace CityWatch.Data.Providers
             _context.TrainingCourses.Remove(docToDelete);
             _context.SaveChanges();
         }
-   
+
 
         public List<KPITelematicsField> GetTelematicsList()
         {
@@ -1537,7 +1596,7 @@ namespace CityWatch.Data.Providers
         }
         public KPITelematicsField GetTelematicsMobileNo(int Id)
         {
-            return _context.KPITelematicsField.Where(x=>x.Id==Id).FirstOrDefault();
+            return _context.KPITelematicsField.Where(x => x.Id == Id).FirstOrDefault();
         }
 
         public ClientSite GetClientSiteLandline(int ClientSiteID)
@@ -1557,7 +1616,7 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.HRSettingsId == type)
                 .ToList();
 
-            foreach(var item in courseDocList)
+            foreach (var item in courseDocList)
             {
                 if (item.TrainingInstructorId == null)
                 {
@@ -1586,7 +1645,7 @@ namespace CityWatch.Data.Providers
                 {
                     documentToUpdate.HRSettingsId = trainingCourseInstructor.HRSettingsId;
                     documentToUpdate.TrainingInstructorId = trainingCourseInstructor.TrainingInstructorId;
-                    
+
                 }
             }
             _context.SaveChanges();
@@ -1620,10 +1679,10 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-            //p5-Issue-2-start
-       public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
+        //p5-Issue-2-start
+        public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
         {
-            
+
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
             //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
 
@@ -1707,7 +1766,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificateRPL
-                .Where(x => x.TrainingCourseCertificateId == id )
+                .Where(x => x.TrainingCourseCertificateId == id)
                 .ToList();
 
 
@@ -1717,7 +1776,7 @@ namespace CityWatch.Data.Providers
         {
             var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
             int[] courseid = course.Select(x => x.Id).ToArray();
-            var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId==guardId).OrderBy(x => x.Id).ToList();
+            var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             var questions = new TrainingTestQuestions();
             if (result.Count == 0)
             {
@@ -1737,7 +1796,7 @@ namespace CityWatch.Data.Providers
         public List<TrainingTestQuestionsAnswers> GetGuardOptions(int questionId)
         {
             var Options = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId).OrderBy(x => x.Id).ToList();
-            
+
 
             return Options;
 
@@ -1766,15 +1825,15 @@ namespace CityWatch.Data.Providers
         public int GetQuestionCount(int hrSettingsId, int tqNumberId)
         {
             var course = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
-          
+
             return course.Count;
 
         }
-        public List<GuardTrainingAttendedQuestionsAndAnswers> GetQuestionNumber(int hrSettingsId, int tqNumberId,int guardId)
+        public List<GuardTrainingAttendedQuestionsAndAnswers> GetQuestionNumber(int hrSettingsId, int tqNumberId, int guardId)
         {
             var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
             int[] courseid = course.Select(x => x.Id).ToArray();
-            var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId==guardId).OrderBy(x => x.Id).ToList();
+            var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             return result;
 
         }
@@ -1785,7 +1844,7 @@ namespace CityWatch.Data.Providers
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardCorrectQuestions(int guardId, int trainingCourseId)
         {
-            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCorrect==true).OrderBy(x => x.Id).ToList();
+            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCorrect == true).OrderBy(x => x.Id).ToList();
             return correctQuestions;
         }
         public void SaveGuardTestScores(GuardTrainingAndAssessmentScore scoreObtained)
@@ -1801,10 +1860,10 @@ namespace CityWatch.Data.Providers
                 {
                     documentToUpdate.GuardId = scoreObtained.GuardId;
                     documentToUpdate.TrainingCourseId = scoreObtained.TrainingCourseId;
-                     
 
 
-        
+
+
                     documentToUpdate.TotalQuestions = scoreObtained.TotalQuestions;
                     documentToUpdate.guardCorrectQuestionsCount = scoreObtained.guardCorrectQuestionsCount;
                     documentToUpdate.guardScore = scoreObtained.guardScore;
@@ -1817,10 +1876,10 @@ namespace CityWatch.Data.Providers
         }
         public List<GuardTrainingAndAssessmentScore> GetGuardScores(int guardId, int trainingCourseId)
         {
-            var scores = _context.GuardTrainingAndAssessmentScore.Where(x=>x.GuardId==guardId && x.TrainingCourseId==trainingCourseId).OrderBy(x => x.Id).ToList();
+            var scores = _context.GuardTrainingAndAssessmentScore.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).OrderBy(x => x.Id).ToList();
             return scores;
         }
-        public void DeleteGuardAttendedQuestions(int guardId,int trainingCourseId)
+        public void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId)
         {
 
             var report = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).ToList(); ;
@@ -1836,7 +1895,7 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardScores(int guardId, int trainingCourseId)
         {
 
-            var report = _context.GuardTrainingAndAssessmentScore.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).ToList() ;
+            var report = _context.GuardTrainingAndAssessmentScore.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).ToList();
             if (report.Count > 0)
             {
                 foreach (var item in report)
@@ -1877,24 +1936,24 @@ namespace CityWatch.Data.Providers
         public List<GuardTrainingStartTest> GetGuardTrainingStartTest(int guardId, int trainingCourseId)
         {
             var startTest = _context.GuardTrainingStartTest.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).
-                Include(x=>x.TrainingLocation)
+                Include(x => x.TrainingLocation)
                 .OrderBy(x => x.Id).ToList();
             return startTest;
         }
         public List<TrainingCourses> GetTrainingCoursesWithHrSettingsId(int hrSettingsId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId ).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
             return course;
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardAttendedQuestionsAndanswers(int guardId, int trainingCourseId)
         {
-            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId ).Include(x=>x.TrainingTestQuestions).Include(x=>x.TrainingTestQuestionsAnswers).OrderBy(x => x.Id).ToList();
+            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).Include(x => x.TrainingTestQuestions).Include(x => x.TrainingTestQuestionsAnswers).OrderBy(x => x.Id).ToList();
             return correctQuestions;
         }
-        public TrainingTestFeedbackQuestions GetGuardFeedbackQuestions(int hrSettingsId,int guardId)
+        public TrainingTestFeedbackQuestions GetGuardFeedbackQuestions(int hrSettingsId, int guardId)
         {
-            
-            var result = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.HrSettingsId==hrSettingsId && x.GuardId==guardId).OrderBy(x => x.Id).ToList();
+
+            var result = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.HrSettingsId == hrSettingsId && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             var questions = new TrainingTestFeedbackQuestions();
             if (result.Count == 0)
             {
@@ -1921,15 +1980,15 @@ namespace CityWatch.Data.Providers
         }
         public int GetFeedbackQuestionCount(int hrSettingsId)
         {
-            var course = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrSettingsId ).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
 
             return course.Count;
 
         }
-        public List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetFeedbackQuestionNumber(int hrSettingsId,int guardId)
+        public List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetFeedbackQuestionNumber(int hrSettingsId, int guardId)
         {
-           
-            var result = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.HrSettingsId==hrSettingsId && x.GuardId==guardId).OrderBy(x => x.Id).ToList();
+
+            var result = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.HrSettingsId == hrSettingsId && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             return result;
 
         }
@@ -1948,7 +2007,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.HrSettingsId = attendedQuestions.HrSettingsId;
                     documentToUpdate.TrainingTestFeedbackQuestionsId = attendedQuestions.TrainingTestFeedbackQuestionsId;
                     documentToUpdate.TrainingTestFeedbackQuestionsAnswersId = attendedQuestions.TrainingTestFeedbackQuestionsAnswersId;
-                   
+
 
                 }
             }
@@ -1997,7 +2056,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
         {
-            var course = _context.TrainingCourses.Where(x => x.Id == courseId ).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.Id == courseId).OrderBy(x => x.Id).ToList();
             return course;
         }
         public void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment)
@@ -2025,13 +2084,13 @@ namespace CityWatch.Data.Providers
         {
             var startTest = _context.GuardTrainingAndAssessmentPractical.Where(x => x.GuardId == guardId && x.HRSettingsId == hrsettingsId).
                 Include(x => x.TrainingLocation)
-                
+
                 .OrderBy(x => x.Id).ToList();
             return startTest;
         }
         public List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId ).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
             return course;
         }
         public List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid)
@@ -2039,17 +2098,17 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid ).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
 
             return result;
 
         }
-        public List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid,int tqNumberId)
+        public List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid, int tqNumberId)
         {
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId== tqNumberId).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
 
             return result;
 

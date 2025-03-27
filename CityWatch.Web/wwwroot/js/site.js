@@ -2911,6 +2911,133 @@
             showStatusNotification(false, 'Something went wrong');
         });
     });
+
+    $(".edit-btn").click(function () {
+        var id = $(this).data("id");
+        $("#DefaultMail_" + id).hide();
+        $("#DefaultMailTextbox_" + id).show();
+        $(this).hide();
+        $(".update-btn[data-id='" + id + "']").show();
+    });
+
+    $(".update-btn").click(function () {
+        var id = $(this).data("id");
+        var domain = $(this).data("domain");
+        var newEmail = $("#DefaultMailTextboxval_" + id).val();
+        var defaultMailEdit = newEmail;
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(defaultMailEdit)) {
+
+            showStatusNotification(false, 'Please enter a valid email address.');
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DefaultEmailUpdateThirdPartyDomains',
+            type: 'POST',
+            data: { domainId: id, domain: domain, DefaultEmail: newEmail }, // Send data as key-value pair
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        }).done(function (data) {
+            console.log("Response Data:", data); // Debugging: See what data is returned
+
+            if (data.success) {
+                showStatusNotification(true, data.message);
+
+                // Update the Last Updated Date
+                if (data.dateTimeUpdated) {
+                    $("#ir_template_updatedOn_" + id).text(data.dateTimeUpdated);
+                }
+
+                // Update the Email Text
+                $("#DefaultMail_" + id).text(data.defaultEmail || "-").show();
+                $("#DefaultMailTextbox_" + id).hide();
+
+                // Hide update button, show edit button
+                $(".update-btn[data-id='" + id + "']").hide();
+                $(".edit-btn[data-id='" + id + "']").show();
+
+                // Clear file input if necessary
+                $("#row_" + id + " .file-upload").val("");
+
+            } else {
+                showStatusNotification(false, data.message || 'Something went wrong');
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        });
+
+       
+    });
+
+    $(".file-upload").change(function () {
+        const file = $(this).get(0).files.item(0);
+        if (!file) return; // Prevent errors if no file is selected
+        const fileExtn = file.name.split('.').pop().toLowerCase();
+        if (fileExtn !== 'pdf') {
+            showModal('Unsupported file type. Please upload a .pdf file');
+            return false;
+        }
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        // Retrieve additional data from the element
+        const id = $(this).data("id");
+        const domain = $(this).data("domain");
+        fileForm.append('domainId', id);
+        fileForm.append('domain', domain);
+
+        $.ajax({
+            url: '/Admin/Settings?handler=IrTemplateUploadThirdParty',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                showStatusNotification(true, data.message);
+
+                // Update the Last Updated Date
+                if (data.dateTimeUpdated) {
+                    $("#ir_template_updatedOn_" + id).text(data.dateTimeUpdated);
+                }
+
+                // Update the Email Text
+                $("#DefaultMail_" + id).text(data.defaultEmail || "-").show();
+                $("#DefaultMailTextbox_" + id).hide();
+
+                // Hide update button, show edit button
+                $(".update-btn[data-id='" + id + "']").hide();
+                $(".edit-btn[data-id='" + id + "']").show();
+
+                // Clear file input if necessary
+                $("#row_" + id + " .file-upload").val("");
+
+                // Update the Download button dynamically
+                if (data.filename) {
+                    let downloadButton = $("#download_btn_" + id);
+                    downloadButton.attr("href", `/Pdf/Template/${data.filename}`); // Update file path
+                    downloadButton.removeClass("disabled"); // Enable button
+                }
+
+            } else {
+                showStatusNotification(false, data.message || 'Something went wrong');
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            $('#ir_template_upload').val(''); // Reset input field
+        });
+    });
+
+    // Update row function (refresh only the affected row)
+    function updateRow(domainId, data) {
+        $("#ir_template_updatedOn_" + domainId).text(data.dateTimeUpdated);
+        $("#DefaultMail_" + domainId).text(data.defaultEmail || "-");
+        $("#row_" + domainId + " .file-upload").val(""); // Clear file input
+    }
+
     let gridStaffDocs;
     let gridStaffDocsTypeCompanySop;
     let gridStaffDocsTypeTraining;
@@ -7183,6 +7310,9 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         alert("An error occurred while exporting data.");
     }
 });
+
+
+
 
 
 
