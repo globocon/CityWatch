@@ -1,6 +1,7 @@
 ﻿@page
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
+@using CityWatch.Data.Providers
 @using CityWatch.Web.Helpers
 @using CityWatch.Web.Services
 @using Microsoft.Extensions.Configuration
@@ -8,6 +9,8 @@
 @model CityWatch.Web.Pages.Incident.RegisterModel
 @inject IViewDataService viewDataService
 @inject IConfiguration Configuration
+@inject IConfigDataProvider _configDataProvider
+@inject IUserDataProvider _userDataProvider
 @{
     ViewData["Title"] = "CityWatch Security | Incident Report";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Register;
@@ -28,6 +31,40 @@
             Int32.TryParse(guardIdString, out guardid);
         }
 
+    }
+
+    // based on the domin show pdf templete 
+    string defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                  .FirstOrDefault(x => x.SubDomainId == 0)
+                                                  ?.FileName ?? string.Empty;
+
+    var host = HttpContext.Request.Host.Host;
+    var hostParts = host.Split('.');
+
+    // Extract the client name
+    string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                        ? hostParts[1]
+                        : hostParts[0];
+
+    if (!string.IsNullOrEmpty(clientName))
+    {
+        // Exclude reserved keywords
+        var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+        //var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+        if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
+        {
+            var domain = _configDataProvider.GetSubDomainDetails(clientName);
+            if (domain != null)
+            {
+                var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                           .FirstOrDefault(x => x.SubDomainId == domain.Id);
+
+                if (subDomainIrTemplate != null)
+                {
+                    defaultValue = subDomainIrTemplate.FileName;
+                }
+            }
+        }
     }
 }
 <div id="loader"></div>
@@ -603,7 +640,9 @@
             <label class="custom-control-label" for="Report.DisableEmail">Download completed IR without sending emails</label>
         </div>
         <button type="button" class="btn btn-primary mr-4 mb-2" id="btnSumbit">Submit Incident Report</button>
-        <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary mb-2">Download Blank IR Template</a>
+        <a href="@Url.Content($"~/Pdf/Template/{defaultValue}")" target="_blank" class="btn btn-outline-primary mb-2">
+            Download Blank IR Template
+        </a>
     </div>
 </div>
 <div class="row mt-3">

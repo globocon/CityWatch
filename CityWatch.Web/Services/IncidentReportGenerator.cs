@@ -145,6 +145,11 @@ namespace CityWatch.Web.Services
         {
             //dynamic template based on the domain 
             var IRPdfTemplete = IO.Path.Combine(_ReportRootDir, TEMPLATE_DIR, Templete);
+            if(IRPdfTemplete==string.Empty)
+            {
+                IRPdfTemplete = _TemplatePdf;
+
+            }
             _IncidentReport = incidentReport;
             _clientSite = clientSite;
             _UploadRootDir = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", incidentReport.ReportReference);

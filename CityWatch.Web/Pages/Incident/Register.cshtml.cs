@@ -1552,8 +1552,8 @@ namespace CityWatch.Web.Pages.Incident
             if (!string.IsNullOrEmpty(clientName))
             {
                 // Exclude reserved keywords
-                // var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
-                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+                 var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+               // var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
                 if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
                 {
                     var domain = _configDataProvider.GetSubDomainDetails(clientName);
