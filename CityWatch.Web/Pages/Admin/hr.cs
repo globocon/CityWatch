@@ -1445,6 +1445,7 @@ namespace CityWatch.Web.Pages.Admin
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());
                         if (guard.Mobile == null || guard.Mobile == "+61 4")
                         {
+                            GuId = guard.Id;
                             SuccessMessage = "Mobile is null";
                         }
                         else
@@ -1564,7 +1565,14 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
-        private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
+        public JsonResult OnPostSaveMobileNo(string mobileNo,int GuardID)
+        {
+            var status = true;
+            _guardDataProvider.SaveGuardMobileNo(GuardID, mobileNo);
+            return new JsonResult(new { status });
+        }
+
+            private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
         {
             guardLicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardLicense.GuardId);
             var existingGuardLicense = _guardDataProvider.GetGuardLicense(guardLicense.Id);

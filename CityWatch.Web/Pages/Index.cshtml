@@ -125,6 +125,45 @@
         </div>
     </div>
 </div>
+<!-- Mobile Number modal -->
+<div class="modal" tabindex="-1" role="dialog" id="mobileno-modal">
+    
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-user" aria-hidden="true"></i> Update Mobile Number</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="hidden" id="GuardID">
+                    <div class="form-group row m-0 mb-3">
+                        <label for="mobileNo" class="col-sm-4 col-form-label">Mobile No</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="mobileNo" value="+61 4">
+                        </div>
+                    </div>
+
+                    <div class="form-group row m-0 mb-3">
+                        <div class="col-sm-8">
+                            
+                        </div>
+                    </div>
+                </form>
+            </div>
+          @*   <div class="modal-footer">
+                <span id="mobileNo-modal-validation" class="text-danger"></span>
+                <button type="button" id="btnSavemobileNo" class="btn btn-outline-primary">Save</button>
+            </div> *@
+            <div class="modal-footer d-flex justify-content-between align-items-center p-1">
+                <div id="MobileNovalidationSummary" class="pl-4 text-left"></div>
+                <button type="button" id="btnSavemobileNo" class="btn btn-outline-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 @{
     var CalendarEvents = _configDataProvider.GetBroadcastCalendarEventsByDate();
     @if (CalendarEvents.Count() > 0)
