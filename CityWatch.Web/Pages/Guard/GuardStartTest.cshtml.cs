@@ -446,40 +446,25 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetGuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId, int tqNumberId)
+        public JsonResult OnGetGuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId)
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
             if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
             {
-                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
-                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
-                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
+                foreach (var item in tqNumberList)
                 {
-                    Id = record.Id,
-                    GuardId = guardId,
-                    TrainingCourseId = TrainingCourseId,
-                    TrainingCourseStatusId = 3,
-                    Description = record.Description,
-                    HRGroupId = record.HRGroupId
-                    //,
-                    //IsCompleted = false
-
-                });
-            }
-            else
-            {
-                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
-                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
-                if (record != null)
-                {
+                    int tqNumberId = item.TQNumberId;
+                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
                     _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
                     {
                         Id = record.Id,
                         GuardId = guardId,
                         TrainingCourseId = TrainingCourseId,
-                        TrainingCourseStatusId = 4,
+                        TrainingCourseStatusId = 3,
                         Description = record.Description,
                         HRGroupId = record.HRGroupId
                        // IsCompleted = true
@@ -487,7 +472,29 @@ namespace CityWatch.Web.Pages.Guard
                     });
                 }
             }
-            
+            else
+            {
+                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
+                foreach (var item in tqNumberList)
+                {
+                    int tqNumberId = item.TQNumberId;
+                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                    if (record != null)
+                    {
+                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                        {
+                            Id = record.Id,
+                            GuardId = guardId,
+                            TrainingCourseId = TrainingCourseId,
+                            TrainingCourseStatusId = 4,
+                            Description = record.Description,
+                            HRGroupId = record.HRGroupId
+
+                        });
+                    }
+                }
+            }
 
 
 
@@ -592,6 +599,67 @@ namespace CityWatch.Web.Pages.Guard
                 message = ex.Message;
             }
             return new JsonResult(new { success, message,hrSettingsId });
+        }
+        public JsonResult OnGetGuardAllTestPass(int hrSettingsId, int guardId)
+        {
+            var success = false;
+            try
+            {
+                var allcourses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId);
+                int[] coursesid = allcourses.Select(x => x.Id).ToArray();
+                var result = _configDataProvider.GetallGuardAttendedCourse(guardId).Where(x => coursesid.Contains(x.TrainingCourseId) && x.IsPass == true).ToList();
+                if (result.Count() == allcourses.Count())
+                {
+                    success = true;
+                }
+
+                if (result.Count() > 0)
+                {
+                    foreach (var item in result)
+                    {
+                        var tqsettings = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+                        var resultnew = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == item.TrainingCourseId).FirstOrDefault();
+                        if (resultnew != null)
+                        {
+                            if (tqsettings.IsCertificateHoldUntilPracticalTaken)
+                            {
+                                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                                {
+                                    Id = resultnew.Id,
+                                    GuardId = guardId,
+                                    TrainingCourseId = resultnew.TrainingCourseId,
+                                    TrainingCourseStatusId = 3,
+                                    Description = resultnew.Description,
+                                    HRGroupId = resultnew.HRGroupId
+                                    //,
+                                    //IsCompleted = true
+
+                                });
+                            }
+                            else
+                            {
+                                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                                {
+                                    Id = resultnew.Id,
+                                    GuardId = guardId,
+                                    TrainingCourseId = resultnew.TrainingCourseId,
+                                    TrainingCourseStatusId = 4,
+                                    Description = resultnew.Description,
+                                    HRGroupId = resultnew.HRGroupId
+                                    //,
+                                    //IsCompleted = true
+
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            return new JsonResult(success);
         }
 
     }
