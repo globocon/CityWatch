@@ -446,13 +446,17 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetGuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId, int tqNumberId)
+        public JsonResult OnGetGuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId)
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
             if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
             {
+
+                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
+                foreach (var item in tqNumberList)
+
                 int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
                 var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
                 _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
@@ -473,7 +477,11 @@ namespace CityWatch.Web.Pages.Guard
                 int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
                 var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
                 if (record != null)
+
                 {
+                    int tqNumberId = item.TQNumberId;
+                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
                     _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
                     {
                         Id = record.Id,
@@ -485,6 +493,30 @@ namespace CityWatch.Web.Pages.Guard
                        // IsCompleted = true
 
                     });
+                }
+            }
+            else
+            {
+                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
+                foreach (var item in tqNumberList)
+                {
+                    int tqNumberId = item.TQNumberId;
+                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                    if (record != null)
+                    {
+                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                        {
+                            Id = record.Id,
+                            GuardId = guardId,
+                            TrainingCourseId = TrainingCourseId,
+                            TrainingCourseStatusId = record.TrainingCourseStatusId,
+                            Description = record.Description,
+                            HRGroupId = record.HRGroupId,
+                            IsCompleted = true
+
+                        });
+                    }
                 }
             }
             
@@ -592,6 +624,25 @@ namespace CityWatch.Web.Pages.Guard
                 message = ex.Message;
             }
             return new JsonResult(new { success, message,hrSettingsId });
+        }
+        public JsonResult OnGetGuardAllTestPass(int hrSettingsId, int guardId)
+        {
+            var success = false;
+            try
+            {
+                var allcourses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId);
+                int[] coursesid = allcourses.Select(x => x.Id).ToArray();
+                var result = _configDataProvider.GetallGuardAttendedCourse(guardId).Where(x => coursesid.Contains(x.TrainingCourseId) && x.IsPass == true).ToList();
+                if (result.Count() == allcourses.Count())
+                {
+                    success = true;
+                }
+            }
+            catch(Exception ex)
+            {
+                success = false;
+            }
+            return new JsonResult(success);
         }
 
     }

@@ -193,10 +193,14 @@ namespace CityWatch.Data.Providers
         void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment);
         List<GuardTrainingAndAssessmentPractical> GetGuardTrainingPracticalDetails(int guardId, int hrsettingsId);
         List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId);
+
+        List<GuardTrainingAndAssessmentScore> GetallGuardAttendedCourse(int guardId);
+
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
         public HandoverNotes GetHandoverNotes(int CientSiteID);
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid, int tqNumberId);
         public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName);
+
 
     }
 
@@ -2093,6 +2097,12 @@ namespace CityWatch.Data.Providers
             var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
             return course;
         }
+
+        public List<GuardTrainingAndAssessmentScore> GetallGuardAttendedCourse(int guardId)
+        {
+            var course = _context.GuardTrainingAndAssessmentScore.Where(x => x.GuardId == guardId).OrderBy(x => x.Id).ToList();
+            return course;
+
         public List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid)
         {
 
@@ -2111,6 +2121,7 @@ namespace CityWatch.Data.Providers
             var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
 
             return result;
+
 
         }
 
