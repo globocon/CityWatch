@@ -2395,8 +2395,30 @@ namespace CityWatch.Web.Pages.Admin
                     {
 
                 int TQNumbernew = _configDataProvider.GetTQNumbers().Where(x => x.Name == name).FirstOrDefault().Id;
-                if (TQNumbernew != 0)
-                {
+
+                        if (TQNumbernew != 0)
+                        {
+                            var courseswithSameTQNumber = _configDataProvider.GetTrainingCoursesWithHrSettingsId(record.HRSettingsId).Where(x => x.TQNumberId == TQNumbernew);
+                            if (courseswithSameTQNumber.Count() == 0)
+                            {
+                                _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                                {
+                                    Id = record.Id,
+                                    FileName = record.FileName,
+                                    LastUpdated = DateTime.Now,
+                                    HRSettingsId = record.HRSettingsId,
+                                    TQNumberId = TQNumbernew
+
+                                });
+                                success = true;
+                            }
+                            else
+                            {
+                                message = "Same TQ number is used for other courses";
+                                success = false;
+                            }
+                         }
+                       
 
 
                     var courseswithSameTQNumber = _configDataProvider.GetTrainingCoursesWithHrSettingsId(record.HRSettingsId).Where(x => x.TQNumberId == TQNumbernew);

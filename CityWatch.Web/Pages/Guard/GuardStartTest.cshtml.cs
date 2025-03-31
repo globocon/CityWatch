@@ -453,8 +453,33 @@ namespace CityWatch.Web.Pages.Guard
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
             if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
             {
+
+
                 var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
                 foreach (var item in tqNumberList)
+
+                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = record.Id,
+                    GuardId = guardId,
+                    TrainingCourseId = TrainingCourseId,
+                    TrainingCourseStatusId = 3,
+                    Description = record.Description,
+                    HRGroupId = record.HRGroupId
+                    //,
+                    //IsCompleted = false
+
+                });
+            }
+            else
+            {
+                int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
+                var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
+                if (record != null)
+
+
                 {
                     int tqNumberId = item.TQNumberId;
                     int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
@@ -487,6 +512,7 @@ namespace CityWatch.Web.Pages.Guard
                             Id = record.Id,
                             GuardId = guardId,
                             TrainingCourseId = TrainingCourseId,
+
                             TrainingCourseStatusId = 4,
                             Description = record.Description,
                             HRGroupId = record.HRGroupId
@@ -495,6 +521,7 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
+
 
 
 
@@ -613,6 +640,7 @@ namespace CityWatch.Web.Pages.Guard
                     success = true;
                 }
 
+
                 if (result.Count() > 0)
                 {
                     foreach (var item in result)
@@ -656,6 +684,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
             catch (Exception ex)
+
             {
                 success = false;
             }
