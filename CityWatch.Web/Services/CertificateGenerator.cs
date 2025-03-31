@@ -294,11 +294,21 @@ namespace CityWatch.Web.Services
             {
                
                 int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().Id;
+                //if(result.Count()>1)
+                //{
+                //    string courseName = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().FileName;
+                //    doc.Add(new Paragraph(courseName)
+                //.SetTextAlignment(TextAlignment.CENTER)
+                //.SetFontSize(19)
+                //.SetBold()
+                //.SetMarginBottom(20));
+
+                //}
                 var attendedQuestions = _configDataProvider.GetGuardAttendedQuestionsAndanswers(guardId, trainingCourseId);
                 if (attendedQuestions.Count() > 0)
                 {
-                    
-                    foreach(var attendedquestion in attendedQuestions)
+                    //int questionno = 1;
+                    foreach (var attendedquestion in attendedQuestions)
                     {
                         int numberOfDigits = questionno / 10 + 1;
                         string Qno=string.Empty;
@@ -330,52 +340,72 @@ namespace CityWatch.Web.Services
 
                         // Add list items
                         
-                        doc.Add(new Paragraph("Actual Answer")
-                    .SetTextAlignment(TextAlignment.LEFT)
-                    .SetFontSize(14)
-                    .SetBold()
-                    .SetMarginTop(30));
+                    //    doc.Add(new Paragraph("Actual Answer")
+                    //.SetTextAlignment(TextAlignment.LEFT)
+                    //.SetFontSize(14)
+                    //.SetBold()
+                    //.SetMarginTop(30));
                         var actualanswer = _configDataProvider.GetTrainingQuestionsAnswers(attendedquestion.TrainingTestQuestionsId).Where(x=>x.IsAnswer==true).FirstOrDefault().Options;
-                        doc.Add(new Paragraph(actualanswer)
-                                .SetMarginLeft(20)
-                                .SetFontSize(12));
+                        //doc.Add(new Paragraph(actualanswer)
+                        //        .SetMarginLeft(20)
+                        //        .SetFontSize(12));
+                        //                    doc.Add(new Paragraph("Actual Answer: " )
+                        //.SetTextAlignment(TextAlignment.LEFT)
+                        //.SetFontSize(14)
+                        //.SetBold()
+                        //.SetMarginTop(30)
+                        ////.Add("\n") // Line break before the actual answer
+                        //.Add(new Text(actualanswer).SetFontSize(12)));
+                        doc.Add(new Paragraph()
+                        .Add(new Text("Actual Answer: ").SetBold().SetFontSize(14)) // Bold only for the label
+                        .Add(new Text(actualanswer).SetFontSize(12)) // Normal text for the answer
+                        .SetTextAlignment(TextAlignment.LEFT)
+                        .SetMarginTop(30));
 
-                        doc.Add(new Paragraph("Student Answer")
-                    .SetTextAlignment(TextAlignment.LEFT)
-                    .SetFontSize(14)
-                    .SetBold()
-                    .SetMarginTop(30));
                         var answer = attendedquestion.TrainingTestQuestionsAnswers.Options;
+
+                        doc.Add(new Paragraph()
+                       .Add(new Text("Student Answer: ").SetBold().SetFontSize(14)) // Bold only for the label
+                       .Add(new Text(answer).SetFontSize(12)) // Normal text for the answer
+                       .SetTextAlignment(TextAlignment.LEFT)
+                       .SetMarginTop(30));
+                        //    doc.Add(new Paragraph("Student Answer")
+                        //.SetTextAlignment(TextAlignment.LEFT)
+                        //.SetFontSize(14)
+                        //.SetBold()
+                        //.SetMarginTop(30));
+
                         //question.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
-                        doc.Add(new Paragraph(answer)
-                                 .SetMarginLeft(20)
-                                 .SetFontSize(12));
+                        //doc.Add(new Paragraph(answer)
+                        //         .SetMarginLeft(20)
+                        //         .SetFontSize(12));
 
                         questionno++;
                     }
                 }
-                doc.Close();
-
-
-
-                var uploadPdfName = IO.Path.Combine(_UploadRootDir, "QuestionBank.pdf");
-                var uploadDoc = new PdfDocument(new PdfReader(reportPdf));
-
-
-
-                uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
-                uploadDoc.Close();
-                FileInfo file = new FileInfo(reportPdf);
-                if (file.Exists)//check file exsit or not  
-                {
-                    file.Delete();
-                }
+                
 
             }
-            
+            doc.Close();
 
-            
-        
+
+
+            var uploadPdfName = IO.Path.Combine(_UploadRootDir, "QuestionBank.pdf");
+            var uploadDoc = new PdfDocument(new PdfReader(reportPdf));
+
+
+
+            uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
+            uploadDoc.Close();
+            FileInfo file = new FileInfo(reportPdf);
+            if (file.Exists)//check file exsit or not  
+            {
+                file.Delete();
+            }
+
+
+
+
 
 
         }
@@ -389,8 +419,8 @@ namespace CityWatch.Web.Services
             siteDataTable.AddCell(GetCertificateHeaderCell("Score Obtained:"));
             siteDataTable.AddCell(GetCertificateValueCell(guardScore));
 
-            
 
+            siteDataTable.SetMarginBottom(20);
 
 
             return siteDataTable;

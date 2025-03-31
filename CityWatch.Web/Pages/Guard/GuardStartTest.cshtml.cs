@@ -454,6 +454,7 @@ namespace CityWatch.Web.Pages.Guard
             if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
             {
 
+
                 var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
                 foreach (var item in tqNumberList)
 
@@ -478,6 +479,7 @@ namespace CityWatch.Web.Pages.Guard
                 var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
                 if (record != null)
 
+
                 {
                     int tqNumberId = item.TQNumberId;
                     int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
@@ -487,7 +489,7 @@ namespace CityWatch.Web.Pages.Guard
                         Id = record.Id,
                         GuardId = guardId,
                         TrainingCourseId = TrainingCourseId,
-                        TrainingCourseStatusId = 4,
+                        TrainingCourseStatusId = 3,
                         Description = record.Description,
                         HRGroupId = record.HRGroupId
                        // IsCompleted = true
@@ -510,16 +512,16 @@ namespace CityWatch.Web.Pages.Guard
                             Id = record.Id,
                             GuardId = guardId,
                             TrainingCourseId = TrainingCourseId,
-                            TrainingCourseStatusId = record.TrainingCourseStatusId,
+
+                            TrainingCourseStatusId = 4,
                             Description = record.Description,
-                            HRGroupId = record.HRGroupId,
-                            IsCompleted = true
+                            HRGroupId = record.HRGroupId
 
                         });
                     }
                 }
             }
-            
+
 
 
 
@@ -637,8 +639,52 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     success = true;
                 }
+
+
+                if (result.Count() > 0)
+                {
+                    foreach (var item in result)
+                    {
+                        var tqsettings = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+                        var resultnew = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == item.TrainingCourseId).FirstOrDefault();
+                        if (resultnew != null)
+                        {
+                            if (tqsettings.IsCertificateHoldUntilPracticalTaken)
+                            {
+                                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                                {
+                                    Id = resultnew.Id,
+                                    GuardId = guardId,
+                                    TrainingCourseId = resultnew.TrainingCourseId,
+                                    TrainingCourseStatusId = 3,
+                                    Description = resultnew.Description,
+                                    HRGroupId = resultnew.HRGroupId
+                                    //,
+                                    //IsCompleted = true
+
+                                });
+                            }
+                            else
+                            {
+                                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                                {
+                                    Id = resultnew.Id,
+                                    GuardId = guardId,
+                                    TrainingCourseId = resultnew.TrainingCourseId,
+                                    TrainingCourseStatusId = 4,
+                                    Description = resultnew.Description,
+                                    HRGroupId = resultnew.HRGroupId
+                                    //,
+                                    //IsCompleted = true
+
+                                });
+                            }
+                        }
+                    }
+                }
             }
-            catch(Exception ex)
+            catch (Exception ex)
+
             {
                 success = false;
             }

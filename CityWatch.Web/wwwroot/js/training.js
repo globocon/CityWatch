@@ -128,8 +128,10 @@ editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displ
         $cancel.show();
         // DisableTQColumn();
         let rowCount = $('#tbl_courseDocumentFiles tbody tr').length;
-      
-            let tqColumn = $(this).closest('tr').find('td').eq(2);
+
+
+        let tqColumn = $(this).closest('tr').find('td').eq(2);
+
         let tqInput = tqColumn.find('select');
         let tqInputNew = tqColumn.find('button');
         if (rowCount === 1) {
@@ -3306,8 +3308,11 @@ function returnCoursetestStatustostart() {
 //p6-Issue8-start
 $('#btnContinueTest').on('click', function (e) {
     e.preventDefault();
-  //  GetCertificateAndFeedBackStatus();
+
+    //  GetCertificateAndFeedBackStatus();
     GetGuardAllTestPass();
+
+
     //GetCertificateAndFeedBackStatus();
    // GetGuardCertificate();
 
@@ -3340,7 +3345,7 @@ function GetGuardAllTestPass() {
             $('#cardFeedbackPage').hide();
             $('#cardThankyouPage').attr('hidden', false);
         }
-       
+
 
 
 

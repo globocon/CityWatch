@@ -199,6 +199,10 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRSettings(int hrsettingsid);
         public HandoverNotes GetHandoverNotes(int CientSiteID);
         List<TrainingTestQuestions> GetTrainingQuestionsWithHRAndTQSettings(int hrsettingsid, int tqNumberId);
+
+
+        List<GuardTrainingAndAssessmentScore> GetallGuardAttendedCourse(int guardId);
+
         public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName);
 
 
@@ -2123,6 +2127,11 @@ namespace CityWatch.Data.Providers
             return result;
 
 
+        }
+        public List<GuardTrainingAndAssessmentScore> GetallGuardAttendedCourse(int guardId)
+        {
+            var course = _context.GuardTrainingAndAssessmentScore.Where(x => x.GuardId == guardId).OrderBy(x => x.Id).ToList();
+            return course;
         }
 
     }
