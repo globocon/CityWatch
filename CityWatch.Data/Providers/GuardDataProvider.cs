@@ -7,6 +7,7 @@ using System.Linq;
 using CityWatch.Data.Helpers;
 using System.Security.Cryptography;
 using System.Threading;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Data.Providers
 {
@@ -105,7 +106,10 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestionNumbers> GetTestQuestionNumbers();
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentwithId(int id);
         string GetCourseNameUsingCourseId(int id);
+        public void SetNotes(int ClientSiteId, string Notes);
+        List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId);
 
+        void SaveGuardMobileNo(int GuardID, string mobileNo);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -142,7 +146,31 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public void SetNotes(int ClientSiteId, string Notes)
+        {
+            var updateNotes1 = _context.HandoverNotes.SingleOrDefault(x => x.ClientSiteID == ClientSiteId);
+            if (updateNotes1 != null)
+            {
+                updateNotes1.Notes = Notes;
+                _context.SaveChanges();
 
+            }
+            else
+            {
+                _context.HandoverNotes.Add(new HandoverNotes()
+                {
+                    ClientSiteID = ClientSiteId,
+                    Notes = Notes
+
+                });
+
+                _context.SaveChanges();
+            }
+
+
+
+
+        }
         //P4#70 to display only active guards PartB-C -x => x.IsActive == true-Added by Manju -start
 
         public List<Guard> GetActiveGuards()
@@ -198,7 +226,13 @@ namespace CityWatch.Data.Providers
             var Number = _context.Guards.Where(x => x.SecurityNo == LicenseNo).Select(x => x.Id);
             return Number.FirstOrDefault();
         }
+        public void SaveGuardMobileNo(int GuardID,string mobileNo)
+        {
+            var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == GuardID);
+            updateGuard.Mobile = mobileNo;
+            _context.SaveChanges();
 
+        }
         public int SaveGuard(Guard guard, out string initalsUsed)
         {
             initalsUsed = guard.Initial;
@@ -1053,7 +1087,8 @@ namespace CityWatch.Data.Providers
         {
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardTrainingAndAssessment
-                 .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                // .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                .Where(x => x.GuardId == guardId && x.TrainingCourseStatusId != 4)
                  .Include(z => z.Guard)
                  .Include(z => z.HRGroups)
                  .Include(z => z.TrainingCourses)
@@ -1146,6 +1181,36 @@ namespace CityWatch.Data.Providers
             var coursename = _context.HrSettings.Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
 
             return coursename;
+        }
+        public List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardTrainingAndAssessment
+                // .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                .Where(x => x.GuardId == guardId && x.TrainingCourseStatusId!=4)
+                 .Include(z => z.Guard)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .OrderBy(x => x.HRGroupId)
+                 .ThenBy(x => x.Id)
+                 .ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+            foreach (var item in result)
+            {
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+            }
+
+
+
+
+            return result;
+
+
+
         }
 
     }

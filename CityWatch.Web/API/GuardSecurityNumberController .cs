@@ -9,7 +9,9 @@ using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
 using System.Collections.Generic;
@@ -37,7 +39,7 @@ namespace CityWatch.Web.API
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider)
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -47,6 +49,7 @@ namespace CityWatch.Web.API
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _WebHostEnvironment = webHostEnvironment;
             _smsSenderProvider = smsSenderProvider;
+            _emailOptions = emailOptions.Value;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -631,6 +634,36 @@ namespace CityWatch.Web.API
                 return StatusCode(500, new { message = "An error occurred.", error = ex.Message });
             }
         }
+
+
+
+        [HttpGet("GetSiteName")]
+        public IActionResult GetSiteName(int clientsiteId)
+        {
+            try
+            {
+                var site = _clientDataProvider.GetClientSiteName(clientsiteId); // Fetch site name
+
+                if (site == null || string.IsNullOrEmpty(site.Name))
+                {
+                    return NotFound(new
+                    {
+                        message = "No site found for the given ID."
+                    });
+                }
+
+                return Ok(new { siteName = site.Name }); // Return site name in JSON format
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching the site name.",
+                    error = ex.Message
+                });
+            }
+        }
+
 
 
 

@@ -1445,6 +1445,7 @@ namespace CityWatch.Web.Pages.Admin
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());
                         if (guard.Mobile == null || guard.Mobile == "+61 4")
                         {
+                            GuId = guard.Id;
                             SuccessMessage = "Mobile is null";
                         }
                         else
@@ -1564,7 +1565,14 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
-        private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
+        public JsonResult OnPostSaveMobileNo(string mobileNo,int GuardID)
+        {
+            var status = true;
+            _guardDataProvider.SaveGuardMobileNo(GuardID, mobileNo);
+            return new JsonResult(new { status });
+        }
+
+            private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
         {
             guardLicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardLicense.GuardId);
             var existingGuardLicense = _guardDataProvider.GetGuardLicense(guardLicense.Id);
@@ -2088,8 +2096,13 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { AccessPermission, SuccessMessage });
         }
-
-        public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
+        public JsonResult OnPostSaveHandovernotes(int ClientSiteID, string Notes)
+        {
+            string SuccessMessage = "Success";
+            _guardDataProvider.SetNotes(ClientSiteID, Notes);
+            return new JsonResult(new { SuccessMessage });
+        }
+            public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
         {
           
             return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
@@ -2396,6 +2409,61 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostSaveMultimedia()
+        {
+            var success = false;
+            var message = string.Empty;
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "DuressAppMultimedia");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var Label = Request.Form["label"];
+
+            var Name = Request.Form["name"];
+            int Id = Convert.ToInt32(Request.Form["id"]);
+
+            var type = 3;
+
+            _guardLogDataProvider.SaveDuressApp(new DuressAppField()
+            {
+
+                Name = Name,
+                TypeId = type,
+                Label = Label,
+                Id = Id
+
+            });
+
+            success = true;
+
+
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnGetAudioDetails(int id)
         {
             return new JsonResult(_clientDataProvider.GetAudioByID(id));
@@ -2415,6 +2483,10 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetGuardTrainingAndAssessmentTabByAdmin(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
         }
     }
 

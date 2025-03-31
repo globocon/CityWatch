@@ -1666,6 +1666,10 @@ $('#btnHRDetails').on('click', function () {
 });
 
 
+$('#btnHO').on('click', function () {
+    $('#Handover-modal').modal('show');
+});
+
 
 
 $('#btnGuardHrUpdateNewPIN').on('click', function () {
@@ -1721,6 +1725,8 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
 
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
+                    gridGuardTrainingAndAssessment.clear().draw();
+                    gridGuardTrainingAndAssessment.ajax.reload();
                     $("#Guard_Access1").multiselect();
                     $("#Guard_Access1").val(selectedValues);
                     $("#Guard_Access1").multiselect("refresh");

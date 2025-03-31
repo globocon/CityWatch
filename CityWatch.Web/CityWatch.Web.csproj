@@ -4,7 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
 
 
-    <AssemblyVersion>2.8.0.0</AssemblyVersion>
+    <AssemblyVersion>2.12.0.0</AssemblyVersion>
 
     <UserSecretsId>76f13c08-5e97-4538-8a73-379b3dd62110</UserSecretsId>
   </PropertyGroup>
@@ -44,6 +44,9 @@
     <Folder Include="wwwroot\GpsImage\" />
     <Folder Include="wwwroot\KvlUploads\" />
     <Folder Include="wwwroot\DuressAppAudio\" />
+    <Folder Include="wwwroot\NewFolder1\" />
+    <Folder Include="wwwroot\DuressAppMultimedia\" />
+    <Folder Include="wwwroot\NewFolder\" />
     <Folder Include="wwwroot\SubdomainLogo\" />
     <Folder Include="wwwroot\Pdf\Archive\" />
     <Folder Include="wwwroot\Pdf\FromDropbox\" />

@@ -2016,7 +2016,39 @@ $(function () {
             $('#loader').hide();
         });
     };
+    $('#save_HandoverNotes').on('click', function () {
+        clearGuardValidationSummary('HandOvervalidationSummary');
+        isPaused = false;
+        const Notes = $('#NotesHandover').val();
+        if (Notes == '') {
+            displayGuardValidationSummary('HandOvervalidationSummary', 'Handover Notes required');
+            return;
+        }
+        // Validate the length of securityLicenseNo
 
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveHandovernotes',
+            type: 'POST',
+            data: {
+                ClientSiteID: $('#ClientSiteID').val(),
+                Notes: Notes
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (SuccessMessage) {
+            if (SuccessMessage) {
+                
+                alert('saved Successfully');
+                $('#Handover-modal').modal('hide');
+            } else {
+                // displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
+            }
+        }).fail(function () {
+            console.error("Error in the first AJAX request.");
+        }).always(function () {
+            console.log("First AJAX request completed.");
+        });
+
+    });
     $('#guard_offduty').on('click', function (e) {
         e.preventDefault();
         if (confirm('Are you sure you want to end your shift?')) {
@@ -5960,7 +5992,7 @@ $(function () {
         gridGuardLicenses.clear().draw();
         gridGuardCompliances.clear().draw();
         gridGuardLicensesAndLicence.clear().draw();
-
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
         let value = 1;
@@ -7209,7 +7241,17 @@ $(function () {
                             //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
                             //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
                             /*alert(msg);*/
+                           
                             $('#alert-wand-in-use-modal').modal('show');
+                          
+                            $('#btn_confrim_wand_usok').click(function () {
+                                $('#GuardID').val(result.guId);
+                                clearGuardValidationSummary('MobileNovalidationSummary')
+                                $('#alert-wand-in-use-modal').modal('hide'); // Hide the first modal
+                               
+                                    $('#mobileno-modal').modal('show'); // Show the second modal after the first one fully hides
+                               
+                            });
                         }
                         else {
 
@@ -7229,6 +7271,29 @@ $(function () {
         }
     });
     /* Check if Guard can access the IR-END */
+
+    $('#btnSavemobileNo').click(function () {
+        clearGuardValidationSummary('MobileNovalidationSummary')
+        var mobileNo = $('#mobileNo').val();
+        var GuardID = $('#GuardID').val();
+        if (mobileNo == '' || mobileNo == '+61 4') {
+            displayGuardValidationSummary('MobileNovalidationSummary', 'Please enter mobile number');
+            return;
+        }
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveMobileNo',
+            type: 'POST',
+            data: {
+                mobileNo: mobileNo,
+                GuardID: GuardID
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            $('#mobileno-modal').modal('hide');
+        });
+         // Show the second modal after the first one fully hides
+
+    });
 
     $('#btnGuardLoginRC').on('click', function () {
         $('#Access_permission_RC_status').hide();

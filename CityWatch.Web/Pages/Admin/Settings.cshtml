@@ -13,6 +13,7 @@
 @inject IClientDataProvider clientDataProvider
 @inject IClientSiteViewDataService clientViewDataService
 @inject IGuardDataProvider guarddataProvider
+@inject IUserDataProvider userDataProvider
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
 <style>
@@ -22,7 +23,7 @@
         -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE/Edge */
     }
-    
+
 </style>
 
 @{
@@ -51,6 +52,12 @@
 
     var totalSiteCount = clientDataProvider.GetClientSites(null).Count;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+    var subDominIrTempletes = userDataProvider
+    .GetThirdPartyDomainOrTemplateDetails()
+    .ToList()  // Ensure the data is loaded before sorting
+    .OrderBy(x => x.DomainId) // Place SubDomainId == 0 first
+    .ToList();
+
 
 }
 
@@ -372,14 +379,14 @@
                         <table class="table table-bordered tbl-settings">
                             <thead>
                                 <tr>
-                                    <th style="width:267px">Current Location</th>
+                                    <th style="width:267px">Assignment</th>
                                     <th style="width:168px">Last Uploaded DTG</th>
                                     <th style="width:257px">Default Email for IR sending/HR Warning</th>
                                     <th style="width:240px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                @*  <tr>
                                     <td class="align-middle">@Model.ReportTemplate.Path</td>
                                     <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
 
@@ -398,7 +405,48 @@
                                         <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
 
                                     </td>
-                                </tr>
+                                </tr> *@
+
+                                @foreach (var template in subDominIrTempletes)
+                                {
+                                    <tr id="row_@template.DomainId">
+                                        <td class="align-middle">@(string.IsNullOrWhiteSpace(template.Domain) ? "Primary" : template.Domain)</td>
+                                        <td id="ir_template_updatedOn_@template.DomainId" class="align-middle">
+                                            @(template.LastUpdated != DateTime.MinValue ? template.LastUpdated.ToString("dd MMM yyyy @ HH:mm") : "")
+                                        </td>
+
+                                        <td class="align-middle" id="DefaultMail_@template.DomainId">@template.DefaultEmail</td>
+                                        <td class="align-middle" style="display: none;" id="DefaultMailTextbox_@template.DomainId">
+                                            <input type="text" class="form-control" id="DefaultMailTextboxval_@template.DomainId" style="width:100%" name="DefaultEmail" value="@template.DefaultEmail" />
+                                        </td>
+
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-outline-primary edit-btn" data-id="@template.DomainId">
+                                                <i class="gj-icon pencil" style="font-size:15px"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary update-btn" data-id="@template.DomainId" data-domain="@template.Domain" style="display:none">
+                                                <i class="gj-icon check-circle" style="font-size:15px"></i>
+                                            </button>
+
+                                            <label class="btn btn-success mb-0">
+                                                <i class="fa fa-upload mr-2"></i>Replace
+                                                <input type="file" class="file-upload" data-id="@template.DomainId" data-domain="@template.Domain" accept=".pdf" hidden>
+                                            </label>
+
+                                            <a id="download_btn_@template.DomainId"
+                                               href="@Url.Content($"~/Pdf/Template/{template.FileName}")"
+                                               target="_blank"
+                                               class="btn btn-outline-primary @(string.IsNullOrWhiteSpace(template.FileName) ? "disabled" : "")">
+                                                <i class="fa fa-download mr-2"></i>Download
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+
+
+
+
+
                             </tbody>
                         </table>
                     </div>
@@ -521,7 +569,7 @@
                             <option value="2">KV</option>
                             <option value="3">IR</option>
                             <option value="4">TA</option>
-                             <option value="6">DURESS APP</option>
+                            <option value="6">Mobile App</option>
                         </select>
                     </div>
                 </div>
@@ -573,6 +621,7 @@
                             <option value="">None</option>
                             <option value="1">Audio</option>
                             <option value="2">Log Activity</option>
+                            <option value="3">Multimedia</option>
                         </select>
                     </div>
                 </div>
@@ -585,6 +634,7 @@
                             <button class="btn btn-success mb-3" id="add_KPI_Telematics_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_duressapp_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_duressappMultimedia_fields" data-toggle="modal" data-target="#DuressAppMiltimedia-modal"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_DuressAppAudio" data-toggle="modal" data-target="#DuressAppAudio-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
                         </div>
                         <table class="table" id="field_settings"></table>
@@ -595,6 +645,7 @@
                         <table class="table" id="tbl_ta_fields"></table>
                         <table class="table" id="tbl_duressapp_fields"></table>
                         <table class="table" id="tbl_duressappLog_fields"></table>
+                        <table class="table" id="tbl_duressappMultimedia_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -1150,7 +1201,8 @@
                                     <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                     <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                     <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+
+                                    @*           <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -1170,8 +1222,20 @@
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                <div id="ClassroomLocationDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label">Location</label>
+                                            <input class="form-control" type="text" id="txtClassroomlocation">
+                                        </div>
+                                        <div class="col-md-4" style="padding-top:28px">
+                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
                                     <thead>
                                         <tr>
@@ -1186,6 +1250,7 @@
                                         </tr>
                                     </thead>
                                 </table>
+
                                 <div id="SettingsDiv" style="display:none">
                                     <div class="form-group row">
                                         <div class="col-md-8">
@@ -1455,7 +1520,7 @@
                                         <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                         <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                         <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                        <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                        @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                     </div>
                                 </div>
                                 <div class="col-md-12">
@@ -1475,6 +1540,17 @@
                                     </table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                    <div id="ClassroomLocationDiv" style="display:none">
+                                        <div class="form-group row">
+                                            <div class="col-md-8">
+                                                <label class="form-label">Location</label>
+                                                <input class="form-control" type="text" id="txtClassroomlocation">
+                                            </div>
+                                            <div class="col-md-4" style="padding-top:28px">
+                                                <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
@@ -1679,33 +1755,74 @@
                                 <table class="table table-bordered tbl-settings">
                                     <thead>
                                         <tr>
-                                            <th style="width:267px">Current Location</th>
+                                            <th style="width:267px">Assignment</th>
                                             <th style="width:168px">Last Uploaded DTG</th>
                                             <th style="width:257px">Default Email for IR sending/HR Warning</th>
                                             <th style="width:240px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td class="align-middle">@Model.ReportTemplate.Path</td>
-                                            <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+                                        @*  <tr>
+                                    <td class="align-middle">@Model.ReportTemplate.Path</td>
+                                    <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
 
-                                            <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
-                                            <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
+                                    <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
+                                    <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
 
-                                            <td class="text-center">
-                                                <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
-                                                <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
-                                                <label class="btn btn-success mb-0">
-                                                    <form id="form_ir_template" method="post">
+                                    <td class="text-center">
+                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
+                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
+                                        <label class="btn btn-success mb-0">
+                                            <form id="form_ir_template" method="post">
+                                                <i class="fa fa-upload mr-2"></i>Replace
+                                                <input type="file" id="ir_template_upload" accept=".pdf" hidden>
+                                            </form>
+                                        </label>
+                                        <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+
+                                    </td>
+                                </tr> *@
+
+                                        @foreach (var template in subDominIrTempletes)
+                                        {
+                                            <tr id="row_@template.DomainId">
+                                                <td class="align-middle">@(string.IsNullOrWhiteSpace(template.Domain) ? "Primary" : template.Domain)</td>
+                                                <td id="ir_template_updatedOn_@template.DomainId" class="align-middle">
+                                                    @(template.LastUpdated != DateTime.MinValue ? template.LastUpdated.ToString("dd MMM yyyy @ HH:mm") : "")
+                                                </td>
+
+                                                <td class="align-middle" id="DefaultMail_@template.DomainId">@template.DefaultEmail</td>
+                                                <td class="align-middle" style="display: none;" id="DefaultMailTextbox_@template.DomainId">
+                                                    <input type="text" class="form-control" id="DefaultMailTextboxval_@template.DomainId" style="width:100%" name="DefaultEmail" value="@template.DefaultEmail" />
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-outline-primary edit-btn" data-id="@template.DomainId">
+                                                        <i class="gj-icon pencil" style="font-size:15px"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary update-btn" data-id="@template.DomainId" data-domain="@template.Domain" style="display:none">
+                                                        <i class="gj-icon check-circle" style="font-size:15px"></i>
+                                                    </button>
+
+                                                    <label class="btn btn-success mb-0">
                                                         <i class="fa fa-upload mr-2"></i>Replace
-                                                        <input type="file" id="ir_template_upload" accept=".pdf" hidden>
-                                                    </form>
-                                                </label>
-                                                <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+                                                        <input type="file" class="file-upload" data-id="@template.DomainId" data-domain="@template.Domain" accept=".pdf" hidden>
+                                                    </label>
 
-                                            </td>
-                                        </tr>
+                                                    <a id="download_btn_@template.DomainId"
+                                                       href="@Url.Content($"~/Pdf/Template/{template.FileName}")"
+                                                       target="_blank"
+                                                       class="btn btn-outline-primary @(string.IsNullOrWhiteSpace(template.FileName) ? "disabled" : "")">
+                                                        <i class="fa fa-download mr-2"></i>Download
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+
+
+
+
+
                                     </tbody>
                                 </table>
                             </div>
@@ -1970,7 +2087,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -1990,6 +2107,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -2291,7 +2419,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -2311,6 +2439,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -2612,7 +2751,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -2632,6 +2771,17 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -2889,33 +3039,74 @@
                                 <table class="table table-bordered tbl-settings">
                                     <thead>
                                         <tr>
-                                            <th style="width:267px">Current Location</th>
+                                            <th style="width:267px">Assignment</th>
                                             <th style="width:168px">Last Uploaded DTG</th>
                                             <th style="width:257px">Default Email for IR sending/HR Warning</th>
                                             <th style="width:240px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td class="align-middle">@Model.ReportTemplate.Path</td>
-                                            <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+                                        @*  <tr>
+                                    <td class="align-middle">@Model.ReportTemplate.Path</td>
+                                    <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
 
-                                            <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
-                                            <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
+                                    <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
+                                    <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
 
-                                            <td class="text-center">
-                                                <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
-                                                <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
-                                                <label class="btn btn-success mb-0">
-                                                    <form id="form_ir_template" method="post">
+                                    <td class="text-center">
+                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
+                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
+                                        <label class="btn btn-success mb-0">
+                                            <form id="form_ir_template" method="post">
+                                                <i class="fa fa-upload mr-2"></i>Replace
+                                                <input type="file" id="ir_template_upload" accept=".pdf" hidden>
+                                            </form>
+                                        </label>
+                                        <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+
+                                    </td>
+                                </tr> *@
+
+                                        @foreach (var template in subDominIrTempletes)
+                                        {
+                                            <tr id="row_@template.DomainId">
+                                                <td class="align-middle">@(string.IsNullOrWhiteSpace(template.Domain) ? "Primary" : template.Domain)</td>
+                                                <td id="ir_template_updatedOn_@template.DomainId" class="align-middle">
+                                                    @(template.LastUpdated != DateTime.MinValue ? template.LastUpdated.ToString("dd MMM yyyy @ HH:mm") : "")
+                                                </td>
+
+                                                <td class="align-middle" id="DefaultMail_@template.DomainId">@template.DefaultEmail</td>
+                                                <td class="align-middle" style="display: none;" id="DefaultMailTextbox_@template.DomainId">
+                                                    <input type="text" class="form-control" id="DefaultMailTextboxval_@template.DomainId" style="width:100%" name="DefaultEmail" value="@template.DefaultEmail" />
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-outline-primary edit-btn" data-id="@template.DomainId">
+                                                        <i class="gj-icon pencil" style="font-size:15px"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary update-btn" data-id="@template.DomainId" data-domain="@template.Domain" style="display:none">
+                                                        <i class="gj-icon check-circle" style="font-size:15px"></i>
+                                                    </button>
+
+                                                    <label class="btn btn-success mb-0">
                                                         <i class="fa fa-upload mr-2"></i>Replace
-                                                        <input type="file" id="ir_template_upload" accept=".pdf" hidden>
-                                                    </form>
-                                                </label>
-                                                <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+                                                        <input type="file" class="file-upload" data-id="@template.DomainId" data-domain="@template.Domain" accept=".pdf" hidden>
+                                                    </label>
 
-                                            </td>
-                                        </tr>
+                                                    <a id="download_btn_@template.DomainId"
+                                                       href="@Url.Content($"~/Pdf/Template/{template.FileName}")"
+                                                       target="_blank"
+                                                       class="btn btn-outline-primary @(string.IsNullOrWhiteSpace(template.FileName) ? "disabled" : "")">
+                                                        <i class="fa fa-download mr-2"></i>Download
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+
+
+
+
+
                                     </tbody>
                                 </table>
                             </div>
@@ -3022,7 +3213,7 @@
                                     <option value="2">KV</option>
                                     <option value="3">IR</option>
                                     <option value="4">TA</option>
-                                    <option value="6">DURESS APP</option>
+                                    <option value="6">Mobile App</option>
                                 </select>
                             </div>
                         </div>
@@ -3064,7 +3255,7 @@
                                     <option value="">None</option>
                                     <option value="1">Instructor & Position</option>
                                 </select>
-                                 <select class="form-control" id="duressapp_types">
+                                <select class="form-control" id="duressapp_types">
                                     <option value="">None</option>
                                     <option value="1">Audio</option>
                                     <option value="2">Log Activity</option>
@@ -3593,7 +3784,7 @@
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                             <button class="btn btn-success mb-3" id="add_lote" style="display:none"><i class="fa fa-plus mr-2"></i>Add Language</button>
-                                            <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                            @* <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button> *@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -3613,7 +3804,18 @@
                                         </table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
-                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
+                                        <div id="ClassroomLocationDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Location</label>
+                                                    <input class="form-control" type="text" id="txtClassroomlocation">
+                                                </div>
+                                                <div class="col-md-4" style="padding-top:28px">
+                                                    <button class="btn btn-success mb-3" id="add_location" style="display:none"><i class="fa fa-plus mr-2"></i>Add Training Location</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_classroomLocation"></table>
 
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings_with_CourseLibrary">
@@ -3961,21 +4163,21 @@
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                                
+
                                 <div style="padding-left: 0px;width: 233px;" class="mt-1">
-                                     <select class="form-control" id="Guard_Terminated" name="Guard.IsTerminated" disabled>
+                                    <select class="form-control" id="Guard_Terminated" name="Guard.IsTerminated" disabled>
                                         <option selected="selected" value="false">Select</option>
                                         <option value="true">Guard Terminated (Banned)</option>
-                                       </select>
-                                   
+                                    </select>
+
                                 </div>
 
 
-                            
+
                             </div>
 
-                         
-                         
+
+
 
                             <div class="form-group row">
 
@@ -3990,11 +4192,11 @@
                                 <label class="form-check-label pl-3 pr-3">RC Bypass</label>
                                 <div class="">
                                     <input type="checkbox" class="form-check" id="cbIsRCBypass">
-                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass" >
+                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
                                 </div>
 
                                 <div style="padding-left: 0px;width: 233px;" class="">
-                                    <input type="hidden" id="Guard_DOE" >
+                                    <input type="hidden" id="Guard_DOE">
                                     <button type="button" class="btn" style="margin-left: 209px;text-align: right;" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                                 </div>
                             </div>
@@ -4019,7 +4221,7 @@
                             <li class="nav-item">
                                 <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
                             </li>
-                             @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+                            @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" id="trainingAndAssessment-tab" data-toggle="tab" href="#guardTrainingAndAssessment" role="tab" aria-controls="guardTrainingAndAssessment" aria-selected="true">Training & Assessment</a>
@@ -4055,39 +4257,46 @@
                                         </table>
                                     </div>
                                 </div>
-                                <br/>
+                                <br />
                                 <div class="form-row mb-2 btn-add-guard-addl-details">
                                     <div class="col-md-2 offset-md-10 text-right">
                                         <button class="btn btn-success" id="btnAddGuardLicense2"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
                                     </div>
                                 </div>
-                             
+
                             </div>
                             @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                             {
                                 <div class="tab-pane fade show py-3" id="guardTrainingAndAssessment" role="tabpanel" aria-labelledby="trainingAndAssessment-tab">
-                                <div class="form-row mb-2 btn-add-guard-addl-details">
-                                    <div class="col-md-2 offset-md-10 text-right">
-                                        <button class="btn btn-success" id="btnAddGuardCourse"><i class="fa fa-plus mr-2"></i>Add Course</button>
+                                    <div class="form-row mb-2 btn-add-guard-addl-details">
+                                        <div class="col-md-2 offset-md-10 text-right">
+                                            <button class="btn btn-success" id="btnAddGuardCourse"><i class="fa fa-plus mr-2"></i>Add Course</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="col-md-12">
+                                            <table id="tbl_guard_trainingAndAssessment_by_Admin" class="table table-bordered table-sm" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Course Id</th>
+                                                        <th>HR Group</th>
+                                                        <th>Description</th>
+                                                        <th></th>
+
+                                                        <th class="text-center">Course</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <br />
+
+                                    <div class="form-row mb-2 btn-add-guard-addl-details">
+                                        <div class="col-md-2 offset-md-10 text-right">
+                                            <button class="btn btn-success" id="btnAddGuardCourse1"><i class="fa fa-plus mr-2"></i>Add Course</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="col-md-12">
-                                        <table id="tbl_guard_trainingAndAssessment_by_Admin" class="table table-bordered table-sm" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Course Id</th>
-                                                    <th>HR Group</th>
-                                                    <th>Description</th>
-                                                    <th></th>
-                                                    
-                                                    <th class="text-center">Course</th>
-                                                </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
                             }
                             @*    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
                             <div class="form-row mb-2 btn-add-guard-addl-details">
@@ -4657,6 +4866,54 @@
                     <span class="sr-only">Loading...</span>
                 </div>
                 <button type="button" id="btnSaveAudioFile" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Audio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="DuressAppMiltimedia-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Add File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_duressapp_audio" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="multimediaId" name="id" value="-1">
+                    <input type="hidden" id="filenamemultimedia" name="filenamemultimedia" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="add_label">Label</label>
+                                <input type="text" name="add_Label" id="add_label1" class="form-control" />
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" accept="audio/*,video/mp4,video/x-msvideo,image/jpeg" name="add_multimediaduress" id="add_multimediaduress" class="form-control-file" />
+                                <label id="dynamicMultimedia" class="pt-1"></label>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <div class="spinner-border pl-2" role="status" id="loadinDivMultimedia" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <button type="button" id="btnSaveMultimedia" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save File</button>
             </div>
         </div>
     </div>

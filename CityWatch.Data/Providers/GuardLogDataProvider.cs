@@ -204,7 +204,7 @@ namespace CityWatch.Data.Providers
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
-                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata,string clientSiteNameActionList);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -4974,7 +4974,7 @@ namespace CityWatch.Data.Providers
         }
 
         public void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
-                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata, string clientSiteNameActionList)
         {
             
             var guardInitials = string.Empty;
@@ -5024,7 +5024,7 @@ namespace CityWatch.Data.Providers
                 //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                 //var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
                 var ClientSiteName = clientSiteForLogbook.Select(x => x.Name).FirstOrDefault();
-                var ControlRoomMessage = "CRO STEPS message to " + ClientSiteName + ":";
+                var ControlRoomMessage = "CRO STEPS message to " + clientSiteNameActionList + ":";
                 if (loginGuardId != 0)
                 {
                     var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), localDateTime.Date); // DateTime.Today
@@ -5788,7 +5788,7 @@ namespace CityWatch.Data.Providers
                .ToList();
 
             var checkGMT = data
-                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null && (x.ActivityType == "LB") && (x.NotificationType!=1))
                   .Select(x => x.EventDateTimeZoneShort)
                   .FirstOrDefault();
 
@@ -5842,7 +5842,7 @@ namespace CityWatch.Data.Providers
 
           // Check for GMT timezone
           var checkGMT = GuardLogs
-              .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort))
+              .Where(x => !string.IsNullOrEmpty(x.EventDateTimeZoneShort) &&  (x.EventType == 0))
               .Select(x => x.EventDateTimeZoneShort)
               .FirstOrDefault();
 
@@ -5857,7 +5857,7 @@ namespace CityWatch.Data.Providers
               GuardName = log.GuardLogin?.Guard != null
       ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
       : null, // Null check for Guard
-              EventDateTimeZoneShort = log.EventDateTimeZoneShort,
+              EventDateTimeZoneShort = checkGMT,
               EventDateTime = log.EventDateTime,
               EventDateTimeLocal = log.EventDateTimeLocal,
               gpsCoordinates = log.GpsCoordinates,

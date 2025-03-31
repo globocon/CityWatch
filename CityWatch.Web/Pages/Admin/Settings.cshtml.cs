@@ -409,7 +409,62 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm") });
         }
+
+        public JsonResult OnPostIrTemplateUploadThirdParty()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var dateTimeUpdated = DateTime.Now;
+            var files = Request.Form.Files;
+            var domainName = Request.Form.ContainsKey("domain") ? Request.Form["domain"].ToString() : "Unknown";
+            var domainId = Request.Form.ContainsKey("domainId") ? Request.Form["domainId"].ToString() : "Unknown";
+            if (files.Count == 1 && domainId!=string.Empty)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (Path.GetExtension(file.FileName) != ".pdf")
+                            throw new ArgumentException("Unsupported file type");
+
+                        var fileName = domainId == "0" ? "IR_Form_Template.pdf" : "IR_Form_Template_"+domainName.Trim()+".pdf";
+                        var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Template");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, fileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                         
+                        _configDataProvider.SaveDefaultEmailThirdPartyDomains(string.Empty,int.Parse(domainId), fileName);
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            // Fetch updated template details safely
+            var templateDetails = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()?
+                                  .FirstOrDefault(x => x.DomainId == int.Parse(domainId));
+
+            // If no record found, return default values
+            return new JsonResult(new
+            {
+                success,
+                message,
+                dateTimeUpdated = templateDetails?.LastUpdated != null
+                                  ? templateDetails.LastUpdated.ToString("dd MMM yyyy @ HH:mm")
+                                  : "",
+                defaultEmail = templateDetails?.DefaultEmail ?? "",
+                filename = templateDetails?.FileName ?? ""
+            });
+        }
         //To get the default Email Path start
+
+
+
         public JsonResult OnPostDefaultEmailUpdate(string defaultMailEdit)
         {
 
@@ -431,6 +486,41 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //To get the default Email Path stop
+
+
+        public JsonResult OnPostDefaultEmailUpdateThirdPartyDomains(int domainId, string domain, string DefaultEmail)
+        {
+            var success = false;
+            var message = "Updated successfully";
+
+            try
+            {
+                // Save the email update
+                _configDataProvider.SaveDefaultEmailThirdPartyDomains(DefaultEmail, domainId, string.Empty);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            // Fetch updated template details safely
+            var templateDetails = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()?
+                                  .FirstOrDefault(x => x.DomainId == domainId);
+
+            // If no record found, return default values
+            return new JsonResult(new
+            {
+                success,
+                message,
+                dateTimeUpdated = templateDetails?.LastUpdated != null
+                                  ? templateDetails.LastUpdated.ToString("dd MMM yyyy @ HH:mm")
+                                  : "",
+                defaultEmail = templateDetails?.DefaultEmail ?? "",
+                filename = templateDetails?.FileName ?? ""
+            });
+        }
+
         public JsonResult OnGetStaffDocs()
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
@@ -2051,7 +2141,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        if (".pdf,.ppt,.pptx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
                         int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
@@ -2418,8 +2508,9 @@ namespace CityWatch.Web.Pages.Admin
                     TrainingCourseId = TrainingCourseId,
                     TrainingCourseStatusId = TrainingCourseStatusId,
                     Description = description,
-                    HRGroupId = hrgroupid,
-                    IsCompleted = false
+                    HRGroupId = hrgroupid
+                    //,
+                    //IsCompleted = false
 
                 });
 
@@ -2470,22 +2561,37 @@ namespace CityWatch.Web.Pages.Admin
 
                 
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
-               
-                
-                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
+                bool selected = false;
+                var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId);
+                var  trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
+                if (trainingSettings.Count==0 || trainingSettingsQuestions.Count==0)
                 {
-                    Id = Id,
-                    GuardId = result.GuardId,
-                    TrainingCourseId = result.TrainingCourseId,
-                    TrainingCourseStatusId = TrainingCourseStatusId,
-                    Description = result.Description,
-                    HRGroupId = result.HRGroupId,
-                    IsCompleted = false
+                    selected = false;
+                    message = "Training details for this course have not been saved. Please contact your administrator.";
+                }
+                else
+                {
+                    selected = true;
+                }
+                if (selected == true)
+                {
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = Id,
+                        GuardId = result.GuardId,
+                        TrainingCourseId = result.TrainingCourseId,
+                        TrainingCourseStatusId = TrainingCourseStatusId,
+                        Description = result.Description,
+                        HRGroupId = result.HRGroupId
+                        //,
+                        //IsCompleted = false
 
-                });
+                    });
 
 
-                success = true;
+                    success = true;
+                }
             }
             catch (Exception ex)
             {
@@ -2756,10 +2862,11 @@ namespace CityWatch.Web.Pages.Admin
                             Id = record.Id,
                             GuardId = guardId,
                             TrainingCourseId = item.Id,
-                            TrainingCourseStatusId = record.TrainingCourseStatusId,
+                            TrainingCourseStatusId = 4,
                             Description = record.Description,
-                            HRGroupId = record.HRGroupId,
-                            IsCompleted = true
+                            HRGroupId = record.HRGroupId
+                            //,
+                            //IsCompleted = true
 
                         });
                     }
@@ -2772,6 +2879,23 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetTrainingCourses()
+        {
+            var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+            var result = hrGroups.Select(group => new
+            {
+                GroupId = group.Value,
+                Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                    .Select(course => new
+                    {
+                        course.Id,
+                        course.FileName
+                    }).ToList()
+            }).Where(group => group.Courses.Any()).ToList();
+
+            return new JsonResult(result);
+        }
+
     }
     public class helpDocttype
     {

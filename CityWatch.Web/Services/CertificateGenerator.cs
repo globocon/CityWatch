@@ -188,8 +188,11 @@ namespace CityWatch.Web.Services
             if (isCertificateExpiry)
             {
                 var expiryyears = _configDataProvider.GetTQSettings(hrSettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;
-
-                string newexpiry = expiryyears.Replace("year", "");
+                string newexpiry = string.Empty;
+                if (expiryyears.Contains("year"))
+                     newexpiry = expiryyears.Replace("year", "");
+                if (expiryyears.Contains("years"))
+                    newexpiry = expiryyears.Replace("years", "");
                 DateTime currentdate = DateTime.Now;
                 DateTime futuredate = currentdate.AddYears(Convert.ToInt32(newexpiry));
                 if (acroForm.GetField("DOE") != null)
