@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -169,13 +170,15 @@ namespace CityWatch.RadioCheck.API
 
                 string formName = await GetFormNameFromJotForm(formID);
                 //string workOrder = webhookData != null && webhookData.ContainsKey("q3_workOrder") ? webhookData["q3_workOrder"].ToString() : "UnknownWorkOrder";
-                string workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder":  "UnknownWorkOrder";
+                string workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
                 string submissionFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName, workOrder);
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
                 string logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_test.txt");
+                string excelFilePath = Path.Combine(submissionFolder, "webhook_data.xlsx");
+                string jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
                 WriteLog(logFilePath, $"Webhook received. Data saved for Submission ID: {submissionID}");
@@ -183,6 +186,10 @@ namespace CityWatch.RadioCheck.API
                 if (webhookData != null)
                 {
                     await DownloadAllFiles(webhookData, submissionFolder, logFilePath);
+                    AppendToExcel(excelFilePath, webhookData);
+                    // Save JSON to a file
+                    string jsonOutput = GetImageNamesAndCaptionsJson(webhookData, logFilePath);
+                    await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
                 }
 
                 return Ok(new { message = $"Webhook received. Files saved in uploads/jotform/{formName}/{workOrder}/" });
@@ -358,9 +365,222 @@ namespace CityWatch.RadioCheck.API
                 Console.WriteLine($"Failed to write log: {ex.Message}");
             }
         }
+
+
+        private void AppendToExcel(string excelFilePath, Dictionary<string, object> webhookData)
+        {
+            bool fileExists = System.IO.File.Exists(excelFilePath);
+            using (var workbook = fileExists ? new XLWorkbook(excelFilePath) : new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("WebhookData");
+
+                // Determine the last used row (or set to 1 if empty)
+                int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+
+                // If file does not exist, write the headers
+                if (!fileExists)
+                {
+                    int colIndex = 1;
+                    foreach (var key in webhookData.Keys)
+                    {
+                        worksheet.Cell(1, colIndex).Value = key;
+                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                        colIndex++;
+                    }
+                }
+
+                // Append the new data row
+                int newRow = lastUsedRow + 1;
+                int col = 1;
+                foreach (var value in webhookData.Values)
+                {
+                    worksheet.Cell(newRow, col).Value = value?.ToString();
+                    col++;
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Columns().AdjustToContents();
+
+                // Save the workbook
+                workbook.SaveAs(excelFilePath);
+            }
+        }
+
+
+        //public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
+        //{
+        //    var imagesWithCaptions = new List<object>();
+
+        //    try
+        //    {
+        //        System.IO.File.AppendAllText(logFilePath, "Processing Webhook Data...\n");
+
+        //        foreach (var kvp in webhookData)
+        //        {
+        //            System.IO.File.AppendAllText(logFilePath, $"Processing key: {kvp.Key}\n");
+
+        //            if (kvp.Key.Contains("_Photo") && kvp.Value is object value)
+        //            {
+        //                if (value is JArray array) // If multiple images exist
+        //                {
+        //                    int index = 1;
+        //                    foreach (var item in array)
+        //                    {
+        //                        string imageUrl = item.ToString();
+        //                        string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
+
+        //                        // Find the matching caption key
+        //                        string captionKey = FindMatchingCaptionKey(webhookData, index, logFilePath);
+        //                        string caption = webhookData.ContainsKey(captionKey) ? webhookData[captionKey].ToString() : "No caption";
+
+        //                        // Log the caption status
+        //                        System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
+
+        //                        imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
+        //                        index++;
+        //                    }
+        //                }
+        //                else if (value is string imageUrl) // If a single image exists
+        //                {
+        //                    string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
+
+        //                    // Find the matching caption key
+        //                    string captionKey = FindMatchingCaptionKey(webhookData, 1, logFilePath); // Use index 1 for the first image
+        //                    string caption = webhookData.ContainsKey(captionKey) ? webhookData[captionKey].ToString() : "No caption";
+
+        //                    // Log the caption status
+        //                    System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
+
+        //                    imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
+        //                }
+        //            }
+        //        }
+
+        //        string jsonOutput = JsonConvert.SerializeObject(imagesWithCaptions, Formatting.Indented);
+        //        System.IO.File.AppendAllText(logFilePath, "Final JSON Output:\n" + jsonOutput + "\n");
+
+        //        return jsonOutput;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.IO.File.AppendAllText(logFilePath, "Error: " + ex.Message + "\n");
+        //        return "Error occurred. Check log file.";
+        //    }
+        //}
+        //private string FindMatchingCaptionKey(Dictionary<string, object> webhookData, int photoIndex, string logFilePath)
+        //{
+        //    // Construct the caption key based on the index
+        //    string captionKey = $"_photoCaption{photoIndex}";
+
+        //    // Log the key checking process
+        //    System.IO.File.AppendAllText(logFilePath, $"Checking Caption Key: {captionKey}\n");
+
+        //    // Iterate over each key in the webhookData
+        //    foreach (var key in webhookData.Keys)
+        //    {
+        //        // Check if the key ends with the constructed captionKey (suffix match)
+        //        if (key.EndsWith(captionKey, StringComparison.OrdinalIgnoreCase))
+        //        {
+        //            return key;  // Return the valid caption key
+        //        }
+        //    }
+
+        //    // Return null if no matching key found
+        //    return null;
+        //}
+
+
+        public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
+        {
+            var imagesWithCaptions = new List<object>();
+
+            try
+            {
+                System.IO.File.AppendAllText(logFilePath, "Processing Webhook Data...\n");
+
+                foreach (var kvp in webhookData)
+                {
+                    System.IO.File.AppendAllText(logFilePath, $"Processing key: {kvp.Key}\n");
+
+                    if (kvp.Key.Contains("_Photo") && kvp.Value is object value)
+                    {
+                        if (value is JArray array) // If multiple images exist
+                        {
+                            foreach (var item in array)
+                            {
+                                string imageUrl = item.ToString();
+                                string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
+
+                                // Find the matching caption key
+                                string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key, logFilePath);
+                                string caption = captionKey != null && webhookData.ContainsKey(captionKey)
+                                    ? webhookData[captionKey].ToString()
+                                    : "No caption";
+
+                                // Log the caption status
+                                System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
+
+                                imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
+                            }
+                        }
+                        else if (value is string imageUrl) // If a single image exists
+                        {
+                            string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
+
+                            // Find the matching caption key
+                            string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key, logFilePath);
+                            string caption = captionKey != null && webhookData.ContainsKey(captionKey)
+                                ? webhookData[captionKey].ToString()
+                                : "No caption";
+
+                            // Log the caption status
+                            System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
+
+                            imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
+                        }
+                    }
+                }
+
+                string jsonOutput = JsonConvert.SerializeObject(imagesWithCaptions, Formatting.Indented);
+                System.IO.File.AppendAllText(logFilePath, "Final JSON Output:\n" + jsonOutput + "\n");
+
+                return jsonOutput;
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.AppendAllText(logFilePath, "Error: " + ex.Message + "\n");
+                return "Error occurred. Check log file.";
+            }
+        }
+
+        private string FindMatchingCaptionKey(Dictionary<string, object> webhookData, string photoKey, string logFilePath)
+        {
+            // Extract the number from the _Photo key (e.g., "01TrackInspector_ExpectedMaterial_Photo2" -> "2")
+            var match = Regex.Match(photoKey, @"\d+$");
+            if (!match.Success)
+            {
+                System.IO.File.AppendAllText(logFilePath, $"No valid index found for {photoKey}\n");
+                return null;
+            }
+
+            string expectedCaptionSuffix = $"_photoCaption{match.Value}"; // e.g., "_photoCaption2"
+
+            System.IO.File.AppendAllText(logFilePath, $"Looking for Caption Key ending with: {expectedCaptionSuffix}\n");
+
+            // Find a key that ends with "_photoCaptionX"
+            foreach (var key in webhookData.Keys)
+            {
+                if (key.EndsWith(expectedCaptionSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    System.IO.File.AppendAllText(logFilePath, $"Found Matching Caption Key: {key}\n");
+                    return key;
+                }
+            }
+
+            System.IO.File.AppendAllText(logFilePath, $"No matching caption key found for {photoKey}\n");
+            return null;
+        }
     }
-
-
 
 
 }

@@ -1,5 +1,5 @@
 ﻿@page
-@model CityWatch.RadioCheck.Pages.ImageModel
+@model CityWatch.RadioCheck.Pages.ExcelModel
 @using System.IO
 
 <!DOCTYPE html>
@@ -172,60 +172,11 @@
 
 <body>
 
-    <h2>Uploaded Files</h2>
+    <h2>Form Data</h2>
     <!-- Display Form Name and Work Order -->
     <h4>Form Name: @Model.FormName</h4>
     <h4>Work Order: @Model.WorkOrder</h4>
 
-
-   @*  @if (Model.Files.Count > 0)
-    {
-        <div class="gallery-container">
-            @for (int i = 0; i < Model.Files.Count; i++)
-            {
-                var fileName = Model.Files[i];
-                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}";
-                string fileExtension = System.IO.Path.GetExtension(fileName)?.ToLower();
-
-                <div class="image-card">
-                    <p class="file-name">@fileName</p> <!-- Show file name above thumbnail -->
-                    @if (fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".jpeg" || fileExtension == ".gif")
-                    {
-                        <!-- Clickable Thumbnail -->
-                        <img src="@fileUrl" alt="@fileName" class="thumbnail" onclick="openModal(@i)">
-                    }
-                    else
-                    {
-                        <div class="file-list">
-                            <a href="@fileUrl" target="_blank" class="file-link">
-                                <i class="fa fa-file"></i> @fileName
-                            </a>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-
-        <!-- Image Modal -->
-        <div id="imageModal" class="modal">
-            <span class="close" onclick="closeModal()">&times;</span>
-
-            <!-- Left & Right arrows -->
-            <span class="prev" onclick="changeImage(-1)">&#10094;</span>
-            <span class="next" onclick="changeImage(1)">&#10095;</span>
-
-            <!-- Displaying Image -->
-            <img class="modal-content" id="modalImg">
-
-            <!-- Image Name -->
-            <p id="imageName"></p>
-        </div>
-    }
-    else{
-
-        <h5 style="text-align: center;color: red;"> Sorry! , No files found</h5>
-       
-    } *@
 
     @if (Model.Files.Count > 0)
     {
@@ -235,85 +186,31 @@
                 var fileName = Model.Files[i];
                 string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}";
                 string fileExtension = System.IO.Path.GetExtension(fileName)?.ToLower();
-                string caption = Model.ImageCaptions.ContainsKey(fileName) ? Model.ImageCaptions[fileName] : "No caption available";
 
                 <div class="image-card">
-                    <p class="file-name">@fileName</p> <!-- Show file name above thumbnail -->
-                    @if (fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".jpeg" || fileExtension == ".gif")
-                    {
-                        <!-- Clickable Thumbnail -->
-                        <img src="@fileUrl" alt="@fileName" class="thumbnail" onclick="openModal(@i)">
-                        <p class="image-caption">@caption</p> <!-- Show caption below image -->
-                    }
-                    else
-                    {
+                   @*  <p class="file-name">@fileName</p> *@ <!-- Show file name above thumbnail -->
+                   
                         <div class="file-list">
-                            <a href="@fileUrl" target="_blank" class="file-link">
-                                <i class="fa fa-file"></i> @fileName
+                        <a href="@fileUrl" target="_blank" class="btn btn-success">
+                            <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Excel
                             </a>
                         </div>
-                    }
+                    
                 </div>
             }
         </div>
 
-        <!-- Image Modal -->
-        <div id="imageModal" class="modal">
-            <span class="close" onclick="closeModal()">&times;</span>
-
-            <!-- Left & Right arrows -->
-            <span class="prev" onclick="changeImage(-1)">&#10094;</span>
-            <span class="next" onclick="changeImage(1)">&#10095;</span>
-
-            <!-- Displaying Image -->
-            <img class="modal-content" id="modalImg">
-
-            <!-- Image Name -->
-            <p id="imageName"></p>
-        </div>
+      
     }
-    else
-    {
-        <h5 style="text-align: center;color: red;"> Sorry! No files found</h5>
+    else{
+
+        <h5 style="text-align: center;color: red;"> Sorry! , No files found</h5>
+       
     }
 
 
-    <script>
-        let images = @Html.Raw(Json.Serialize(Model.Files));
-        let formName = "@Model.FormName";
-        let workOrder = "@Model.WorkOrder";
-        let currentIndex = 0;
 
-        function openModal(index) {
-            currentIndex = index;
-            updateModal();
-            document.getElementById("imageModal").style.display = "flex";
-        }
-
-        function closeModal() {
-            document.getElementById("imageModal").style.display = "none";
-        }
-
-        function changeImage(step) {
-            currentIndex += step;
-            if (currentIndex >= images.length) currentIndex = 0;
-            if (currentIndex < 0) currentIndex = images.length - 1;
-            updateModal();
-        }
-
-        function updateModal() {
-            let fileUrl = `/uploads/jotform/${encodeURIComponent(formName)}/${encodeURIComponent(workOrder)}/${images[currentIndex]}`;
-            document.getElementById("modalImg").src = fileUrl;
-            document.getElementById("imageName").textContent = images[currentIndex];
-        }
-
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "ArrowRight") changeImage(1);
-            if (event.key === "ArrowLeft") changeImage(-1);
-            if (event.key === "Escape") closeModal();
-        });
-
-    </script>
+   
 
 
 </body>
