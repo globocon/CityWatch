@@ -16,7 +16,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using NuGet.Packaging;
+using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +27,10 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using static Dropbox.Api.Team.GroupSelector;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using MailKit.Net.Smtp;
+
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -41,6 +46,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ICertificateGenerator _certificateGenerator;
+        private readonly EmailOptions _EmailOptions;
         public int GuardId { get; set; }
         public int GuardTrainingAssessmentId { get; set; }
         public GuardTrainingAndAssessment GuardTrainingAndAssessment { get; set; }
@@ -56,7 +62,8 @@ namespace CityWatch.Web.Pages.Guard
         public GuardStartTestModel(IViewDataService viewDataService,
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator)
+            IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator,
+             IOptions<EmailOptions> emailOptions)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -68,6 +75,7 @@ namespace CityWatch.Web.Pages.Guard
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _certificateGenerator = certificateGenerator;
+            _EmailOptions = emailOptions.Value;
         }
         public void OnGet()
         {
@@ -342,13 +350,12 @@ namespace CityWatch.Web.Pages.Guard
                 ExpiryDate = expirydate,
                 DateType = false,
                 Reminder1 = 45,
-
                 Reminder2 = 7
-
             });
-       
-           
 
+
+            var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
+            SendEmailNew(emailBody);
 
             //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
 
@@ -672,7 +679,74 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        //P5-Issue 19 send email-start
+        public string GiveGuardCourseCompletedNotification(int guardId, string hrdesription)
+        {
+            var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+            var sb = new StringBuilder();
 
+            var messageBody = string.Empty;
+            messageBody = $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Name of Guard</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.Name}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.SecurityNo}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.Provider}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Course</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{hrdesription}</td>";
+
+            sb.Append("Hi , <br/><br/>The following guard successfully completed a course <br/><br/>");
+            sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
+            sb.Append(" <tr><td style=\"width:2% ;border: 1px solid #000000;text-align:center \" colspan=\"2\"><b>Guard Details</b></td></tr>");
+            sb.Append(messageBody);
+            sb.Append("");
+
+
+            //mailBodyHtml.Append("");
+            return sb.ToString();
+        }
+        private void SendEmailNew(string mailBodyHtml)
+        {
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+
+
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+
+
+            message.Subject = "New Certificate Issued";
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = mailBodyHtml
+            };
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
+        }
+        //P5-Issue 19 send email-end
     }
 
 }
