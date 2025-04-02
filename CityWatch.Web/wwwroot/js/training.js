@@ -778,16 +778,16 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         return false;
     }
 
-    const fileForm = new FormData();
+        const fileForm = new FormData();
     fileForm.append('file', file);
-    fileForm.append('hrsettingsid', hrSettingsId);
-    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+        fileForm.append('hrsettingsid', hrSettingsId);
+        fileForm.append('hrreferenceNumber', hrreferenceNumber);
 
 
-    if (edit) {
-        fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+        if (edit) {
+            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
         fileForm.append('tq-id', uploadCtrl.attr('tq-id'))
-    }
+        }
 
     $.ajax({
         url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
@@ -797,11 +797,11 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         contentType: false,
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
     }).done(function (data) {
-        if (data.success) {
+            if (data.success) {
             gridCourseDocumentFiles.reload();
 
             showStatusNotification(data.success, data.message);
-        }
+            }
         else {
             gridCourseDocumentFiles.reload();
 
@@ -2073,12 +2073,12 @@ function loadTrainingCourses() {
                 courseList.append(groupItem);
 
                 group.courses.forEach(course => {
-                    let courseItem = course.fileName
+                    let courseItem = course.description
                         ? `<li class="list-group-item" 
                                     id="attach_${course.id}" 
                                     data-index="${course.id}" 
                                     style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                    ${course.fileName}
+                                    ${course.description}
                                     <i class="fa fa-check ml-2 text-success btn-select-course-status" 
                                        title="Select" 
                                        style="cursor: pointer;float:right"></i>
@@ -2159,14 +2159,15 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
     var parentId = target.parentNode.innerText.trim();
     
     const courseStatus = 1;
-    var courseId = target.parentNode.dataset.index;
+    //var courseId = target.parentNode.dataset.index;
+    var hrSettingsId = target.parentNode.dataset.index;
     var guardId = $('#trainingguardId').val();
    
     $.ajax({
         url: '/Admin/Settings?handler=SaveGuardTrainingAndAssessmentTab',
         type: 'POST',
         data: {
-            TrainingCourseId: courseId,
+            HRSettingsId: hrSettingsId,
             GuardId: guardId,
             TrainingCourseStatusId: courseStatus
         },

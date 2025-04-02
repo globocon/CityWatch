@@ -2893,7 +2893,7 @@ namespace CityWatch.Web.Pages.Admin
                     .Select(course => new
                     {
                         course.Id,
-                        course.FileName
+                        course.Description
                     }).ToList()
             }).Where(group => group.Courses.Any()).ToList();
 
