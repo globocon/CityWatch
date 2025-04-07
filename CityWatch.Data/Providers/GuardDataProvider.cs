@@ -1095,7 +1095,7 @@ namespace CityWatch.Data.Providers
                  .Include(z => z.TrainingCourseStatus)
                  .ThenInclude(x => x.TrainingCourseStatusColor)
                  .OrderBy(x => x.HRGroupId)
-                 .ThenBy(x => x.Id)
+                 .ThenBy(x => x.TrainingCourseId)
                  .ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;

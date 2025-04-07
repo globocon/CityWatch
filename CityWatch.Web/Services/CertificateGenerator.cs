@@ -289,21 +289,21 @@ namespace CityWatch.Web.Services
                 .SetFontSize(20)
                 .SetBold()
                 .SetMarginBottom(20));
-            int questionno = 1;
+            //int questionno = 1;
             foreach (var item in result)
             {
-               
+                int questionno = 1;
                 int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().Id;
-                //if(result.Count()>1)
-                //{
-                //    string courseName = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().FileName;
-                //    doc.Add(new Paragraph(courseName)
-                //.SetTextAlignment(TextAlignment.CENTER)
-                //.SetFontSize(19)
-                //.SetBold()
-                //.SetMarginBottom(20));
+                if (result.Count() > 1)
+                {
+                    string courseName = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().FileName;
+                    doc.Add(new Paragraph(courseName)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontSize(19)
+                .SetBold()
+                .SetMarginBottom(20));
 
-                //}
+                }
                 var attendedQuestions = _configDataProvider.GetGuardAttendedQuestionsAndanswers(guardId, trainingCourseId);
                 if (attendedQuestions.Count() > 0)
                 {

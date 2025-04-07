@@ -1714,23 +1714,46 @@ namespace CityWatch.Data.Providers
         {
 
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
-            //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
 
-            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
-            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
-            && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
-            && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
-            (!_context.TrainingTestQuestionSettings
-            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
-            .Any() ||
-            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
-        )
-            )
-            ).ToList();
+        //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+        //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+        //    && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+        //    && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+        //    (!_context.TrainingTestQuestionSettings
+        //    .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+        //    .Any() ||
+        //    _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+        //)
+        //    )
+        //    ).ToList();
 
             // return _context.RadioCheckStatus.ToList();
             var trainingCoursesHRSettingsId = trainigCourses.Select(x => x.HRSettingsId);
             var hrsettings = GetHRSettings().Where(x => trainingCoursesHRSettingsId.Contains(x.Id)).ToList();
+            foreach(var item in hrsettings)
+            {
+                var trainigCoursesnewresult = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => x.HRSettingsId == item.Id
+                && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+                && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId && tq.TQNumberId==x.TQNumberId))
+                && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+                (!_context.TrainingTestQuestionSettings
+                .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+                .Any() ||
+                _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+                 )
+                )
+                ).ToList();
+                var trainigCoursesCount = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => x.HRSettingsId==item.Id).ToList();
+                if (trainigCoursesnewresult.Count()>0 && trainigCoursesCount.Count()== trainigCoursesnewresult.Count())
+                {
+                    item.CourseStatus = "Green";
+                }
+                else
+                {
+                    item.CourseStatus = "Yellow";
+                }
+            }
             return hrsettings.OrderBy(x => Convert.ToInt32(x.Id)).ToList();
         }
 
