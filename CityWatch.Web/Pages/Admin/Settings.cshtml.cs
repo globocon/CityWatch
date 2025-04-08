@@ -2906,6 +2906,27 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(result);
         }
+        public JsonResult OnPostDeleteGuardCourseByAdmin(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteGuardCourseByAdmin( Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
 
     }
     public class helpDocttype

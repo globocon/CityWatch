@@ -715,8 +715,8 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     columns: [
         { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "30%" },
-        { data: 'newNullColumn', width: '10%' },
+        { data: 'description', width: "50%" },
+        { data: 'newNullColumn', width: '20%' },
 
         {
 
@@ -727,6 +727,19 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
             'render': function (value, type, data) {
                 return renderGuardCouseStatusForadmin(value, type, data);
             }
+        },
+        {
+            targets: -1,
+            data: null,
+            render: function (data, type, row, meta) {
+
+
+
+                return '<button class="btn btn-outline-danger" name="btn_delete_TrainingAndAssessmentByAdmin"><i class="fa fa-trash"></i></button>';
+
+
+
+            },
         }
     ],
    
@@ -741,6 +754,42 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', '#btnPracticalD
     getPracticalCourseLocation();
     getPracticaInstructorSignOff();
 
+
+});
+$('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=btn_delete_TrainingAndAssessmentByAdmin]', function () {
+    var data = gridGuardTrainingAndAssessmentByAdmin.row($(this).parents('tr')).data();
+    var GuardId = $('#Guard_Id').val();
+    $('#txtPrcticalGuardId').val(GuardId);
+
+    $('#txtPrcticalCourseId').val($(this).closest("td").find('#trainingCourseId').val());
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    if (confirm('Are you sure want to delete this Course?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteGuardCourseByAdmin',
+            data: {
+                'Id': data.id
+            },
+            // data: { id: record },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.success == true) {
+                gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+                gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+
+            }
+            $('#loader').hide();
+
+
+            //$.each(item1 in result)
+            //{
+            //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+            //}
+        }).fail(function () {
+            console.log('error');
+        })
+    }
 
 });
 gridGuardTrainingAndAssessmentByAdmin.on('draw.dt', function () {
@@ -1183,7 +1232,10 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
     }
     var testQuestionAnswersId = parseInt($("#txt_TestQuestionAnswersId").val());
     var certificateExpiry;
-
+    if ($("#txtQuestQuestion").val() == '') {
+        alert('Please Enter the Question ');
+        return;
+    }
     var obj = {
         Id: testQuestionAnswersId,
         QuestionNoId: $("#ddlTestQuestionNo").val(),

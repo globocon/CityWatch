@@ -367,6 +367,7 @@ namespace CityWatch.Data.Providers
         void SaveDuressApp(DuressAppField duressapp);
         public void DeleteDuressApp(int id);
         public List<DuressAppField> GetDuressAppFields(int typeId);
+        public void DeleteGuardCourseByAdmin(int Id);
 
     }
 
@@ -6628,6 +6629,20 @@ namespace CityWatch.Data.Providers
                 Console.WriteLine($"Error fetching DuressAppFields: {ex.Message}");
                 return new List<DuressAppField>(); // Return an empty list on failure
             }
+        }
+        public void DeleteGuardCourseByAdmin(int Id)
+        {
+
+            var guardtraining = _context.GuardTrainingAndAssessment.SingleOrDefault(x => x.Id == Id );
+            if (guardtraining == null)
+                throw new InvalidOperationException();
+
+            _context.Remove(guardtraining);
+                _context.SaveChanges();
+           
+
+
+
         }
 
     }
