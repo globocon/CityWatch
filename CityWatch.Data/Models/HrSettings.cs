@@ -78,5 +78,7 @@ namespace CityWatch.Data.Models
         public ICollection<HrSettingsClientSites> hrSettingsClientSites { get; set; }
 
         public ICollection<HrSettingsClientStates> hrSettingsClientStates { get; set; }
+        [NotMapped]
+        public string CourseStatus { get; set; }
     }
 }

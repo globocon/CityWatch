@@ -150,7 +150,7 @@ namespace CityWatch.Data.Providers
         StaffDocument GetStaffDocumentsID(int ClientSiteID);
 
         //p5-Issue-2-start
-        List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
+        List<HrSettings> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
 
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
@@ -1364,6 +1364,7 @@ namespace CityWatch.Data.Providers
             var courseDocList = _context.TrainingCourses
                 .Include(x => x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
+                .OrderBy(x=>x.TQNumberId)
                 .ToList();
             foreach (var item in courseDocList)
             {
@@ -1688,26 +1689,72 @@ namespace CityWatch.Data.Providers
         }
 
         //p5-Issue-2-start
-        public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
+        //public List<TrainingCourses> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
+        //{
+
+        //    var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
+        //    //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+
+        //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+        //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+        //    && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+        //    && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+        //    (!_context.TrainingTestQuestionSettings
+        //    .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+        //    .Any() ||
+        //    _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+        //)
+        //    )
+        //    ).ToList();
+
+        //    // return _context.RadioCheckStatus.ToList();
+        //    return trainigCourses.OrderBy(x => Convert.ToInt32(x.HRSettingsId)).ToList();
+        //}
+        public List<HrSettings> GetTrainingCoursesStatusWithOutcome(int hrgroupid)
         {
 
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
-            //var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
 
-            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
-            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
-            && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
-            && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
-            (!_context.TrainingTestQuestionSettings
-            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
-            .Any() ||
-            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
-        )
-            )
-            ).ToList();
+        //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+        //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+        //    && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+        //    && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+        //    (!_context.TrainingTestQuestionSettings
+        //    .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+        //    .Any() ||
+        //    _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+        //)
+        //    )
+        //    ).ToList();
 
             // return _context.RadioCheckStatus.ToList();
-            return trainigCourses.OrderBy(x => Convert.ToInt32(x.HRSettingsId)).ToList();
+            var trainingCoursesHRSettingsId = trainigCourses.Select(x => x.HRSettingsId);
+            var hrsettings = GetHRSettings().Where(x => trainingCoursesHRSettingsId.Contains(x.Id)).ToList();
+            foreach(var item in hrsettings)
+            {
+                var trainigCoursesnewresult = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => x.HRSettingsId == item.Id
+                && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+                && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId && tq.TQNumberId==x.TQNumberId))
+                && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+                (!_context.TrainingTestQuestionSettings
+                .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+                .Any() ||
+                _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+                 )
+                )
+                ).ToList();
+                var trainigCoursesCount = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => x.HRSettingsId==item.Id).ToList();
+                if (trainigCoursesnewresult.Count()>0 && trainigCoursesCount.Count()== trainigCoursesnewresult.Count())
+                {
+                    item.CourseStatus = "Green";
+                }
+                else
+                {
+                    item.CourseStatus = "Yellow";
+                }
+            }
+            return hrsettings.OrderBy(x => Convert.ToInt32(x.Id)).ToList();
         }
 
         public List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true)

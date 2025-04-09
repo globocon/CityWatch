@@ -715,8 +715,8 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     columns: [
         { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "30%" },
-        { data: 'newNullColumn', width: '10%' },
+        { data: 'description', width: "50%" },
+        { data: 'newNullColumn', width: '20%' },
 
         {
 
@@ -727,6 +727,19 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
             'render': function (value, type, data) {
                 return renderGuardCouseStatusForadmin(value, type, data);
             }
+        },
+        {
+            targets: -1,
+            data: null,
+            render: function (data, type, row, meta) {
+
+
+
+                return '<button class="btn btn-outline-danger" name="btn_delete_TrainingAndAssessmentByAdmin"><i class="fa fa-trash"></i></button>';
+
+
+
+            },
         }
     ],
    
@@ -741,6 +754,42 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', '#btnPracticalD
     getPracticalCourseLocation();
     getPracticaInstructorSignOff();
 
+
+});
+$('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=btn_delete_TrainingAndAssessmentByAdmin]', function () {
+    var data = gridGuardTrainingAndAssessmentByAdmin.row($(this).parents('tr')).data();
+    var GuardId = $('#Guard_Id').val();
+    $('#txtPrcticalGuardId').val(GuardId);
+
+    $('#txtPrcticalCourseId').val($(this).closest("td").find('#trainingCourseId').val());
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    if (confirm('Are you sure want to delete this Course?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteGuardCourseByAdmin',
+            data: {
+                'Id': data.id
+            },
+            // data: { id: record },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.success == true) {
+                gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+                gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+
+            }
+            $('#loader').hide();
+
+
+            //$.each(item1 in result)
+            //{
+            //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+            //}
+        }).fail(function () {
+            console.log('error');
+        })
+    }
 
 });
 gridGuardTrainingAndAssessmentByAdmin.on('draw.dt', function () {
@@ -778,16 +827,16 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         return false;
     }
 
-    const fileForm = new FormData();
+        const fileForm = new FormData();
     fileForm.append('file', file);
-    fileForm.append('hrsettingsid', hrSettingsId);
-    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+        fileForm.append('hrsettingsid', hrSettingsId);
+        fileForm.append('hrreferenceNumber', hrreferenceNumber);
 
 
-    if (edit) {
-        fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+        if (edit) {
+            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
         fileForm.append('tq-id', uploadCtrl.attr('tq-id'))
-    }
+        }
 
     $.ajax({
         url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
@@ -797,11 +846,11 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         contentType: false,
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
     }).done(function (data) {
-        if (data.success) {
+            if (data.success) {
             gridCourseDocumentFiles.reload();
 
             showStatusNotification(data.success, data.message);
-        }
+            }
         else {
             gridCourseDocumentFiles.reload();
 
@@ -1183,7 +1232,10 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
     }
     var testQuestionAnswersId = parseInt($("#txt_TestQuestionAnswersId").val());
     var certificateExpiry;
-
+    if ($("#txtQuestQuestion").val() == '') {
+        alert('Please Enter the Question ');
+        return;
+    }
     var obj = {
         Id: testQuestionAnswersId,
         QuestionNoId: $("#ddlTestQuestionNo").val(),
@@ -2073,15 +2125,18 @@ function loadTrainingCourses() {
                 courseList.append(groupItem);
 
                 group.courses.forEach(course => {
-                    let courseItem = course.fileName
+                    if (course.courseStatus == 'Yellow') { 
+                    let courseItem = course.description
                         ? `<li class="list-group-item" 
                                     id="attach_${course.id}" 
                                     data-index="${course.id}" 
                                     style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                    ${course.fileName}
-                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                                    <i class="fa fa-circle text-warning mr-2" style="float:center"></i>
+                                    ${course.description}
+                                    
+                                    <i class="fa fa-check ml-2 text-muted " 
                                        title="Select" 
-                                       style="cursor: pointer;float:right"></i>
+                                       style="float:right" ></i>
                                </li>`
                         : `<li class="list-group-item list-group-item-success" 
                                     id="attach_${course.id}" 
@@ -2089,7 +2144,29 @@ function loadTrainingCourses() {
                                     style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
                                </li>`;
 
-                    courseList.append(courseItem);
+                        courseList.append(courseItem);
+                    }
+                    if (course.courseStatus == 'Green') {
+                        let courseItem = course.description
+                            ? `<li class="list-group-item" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                    <i class="fa fa-circle text-success mr-2" style="float:center"></i>
+                                    ${course.description}
+                                    
+                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                                       title="Select" 
+                                       style="cursor: pointer;float:right"></i>
+                               </li>`
+                            : `<li class="list-group-item list-group-item-success" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                               </li>`;
+
+                        courseList.append(courseItem);
+                    }
                 });
             });
         },
@@ -2159,14 +2236,15 @@ $('#courseList').on('click', '.btn-select-course-status', function (event) {
     var parentId = target.parentNode.innerText.trim();
     
     const courseStatus = 1;
-    var courseId = target.parentNode.dataset.index;
+    //var courseId = target.parentNode.dataset.index;
+    var hrSettingsId = target.parentNode.dataset.index;
     var guardId = $('#trainingguardId').val();
    
     $.ajax({
         url: '/Admin/Settings?handler=SaveGuardTrainingAndAssessmentTab',
         type: 'POST',
         data: {
-            TrainingCourseId: courseId,
+            HRSettingsId: hrSettingsId,
             GuardId: guardId,
             TrainingCourseStatusId: courseStatus
         },

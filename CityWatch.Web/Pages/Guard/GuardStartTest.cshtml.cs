@@ -319,11 +319,12 @@ namespace CityWatch.Web.Pages.Guard
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
             var filename = _certificateGenerator.GeneratePdf(guardId, hrSettingsId, hashCode, getcertificateSatus.IsCertificateHoldUntilPracticalTaken, getcertificateSatus.IsCertificateWithQAndADump, getcertificateSatus.IsCertificateExpiry);
             DateTime? expirydate= DateTime.Now;
+            bool IsExpiry = false;
             if (getcertificateSatus.IsCertificateExpiry == true)
             {
 
                 var expiryyears = _configDataProvider.GetTQSettings(hrSettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;
-
+                IsExpiry = false;
                 string newexpiry = string.Empty;
                 if (expiryyears.Contains("year"))
                     newexpiry = expiryyears.Replace("year", "");
@@ -335,7 +336,8 @@ namespace CityWatch.Web.Pages.Guard
             }
             else
             {
-                expirydate = null;
+                expirydate = DateTime.Now;
+                IsExpiry = true;
             }
             var hrdesription = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().Description;
             var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
@@ -348,7 +350,7 @@ namespace CityWatch.Web.Pages.Guard
                 FileName = filename,
                 HrGroup = (HrGroup?)hrgroupid,
                 ExpiryDate = expirydate,
-                DateType = false,
+                DateType = IsExpiry,
                 Reminder1 = 45,
                 Reminder2 = 7
             });
