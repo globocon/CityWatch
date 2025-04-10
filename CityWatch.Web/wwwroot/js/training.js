@@ -1232,8 +1232,12 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
     }
     var testQuestionAnswersId = parseInt($("#txt_TestQuestionAnswersId").val());
     var certificateExpiry;
-    if ($("#txtQuestQuestion").val() == '') {
+    if ($("#txtQuestion").val() == '') {
         alert('Please Enter the Question ');
+        return;
+    }
+    if (($('#txt_Option1').val() == '') && ($('#txt_Option2').val() == '') && ($('#txt_Option3').val() == '') && ($('#txt_Option4').val() == '') && ($('#txt_Option5').val() == '') && ($('#txt_Option6').val() == '')) {
+        alert('Please Enter the Options ');
         return;
     }
     var obj = {
@@ -1693,6 +1697,10 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
     if ($("#txtFeedbackQuestion").val() == '') {
         var placeholderValue = $('#txtFeedbackQuestion').attr('placeholder');
         $("#txtFeedbackQuestion").val(placeholderValue);
+    }
+    if (($('#txt_FeedbackOption1').val() == '') && ($('#txt_FeedbackOption2').val() == '') && ($('#txt_FeedbackOption3').val() == '') && ($('#txt_FeedbackOption4').val() == '') && ($('#txt_FeedbackOption5').val() == '') && ($('#txt_FeedbackOption6').val() == '')) {
+        alert('Please Enter the Options ');
+        return;
     }
     var feedbackQuestionAnswersId = parseInt($("#txt_FeedbackQuestionAnswersId").val());
     var certificateExpiry;
