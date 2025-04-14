@@ -8,12 +8,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uploaded Files</title>
-    <
+   
     <style>
         /* General Page Styling */
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
+            background-color: #fff;
             color: #333;
             margin: 0;
             padding: 20px;
@@ -172,11 +172,23 @@
 
 <body>
 
-    <h2>Form Data</h2>
-    <!-- Display Form Name and Work Order -->
-    <h4>Form Name: @Model.FormName</h4>
-    <h4>Work Order: @Model.WorkOrder</h4>
+  <div style="position: relative; text-align: center; margin-bottom: 50px;">
+    <!-- Logo Image on the left -->
+    <img src="/images/fortescueLogo.jpeg" alt="Logo"
+         style="height: 50px; position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
 
+    <!-- Centered Heading -->
+    <h2 style="margin: 0;">Output Data</h2>
+    </div>
+    <!-- Display Form Name and Work Order -->
+    <h5>Form Name: @Model.FormName</h5>
+    <h5>Work Order: @Model.WorkOrder</h5>
+
+    <div class="file-list">
+        <a href="/ExcelTemp/A7 Scopping Output Data.xlsx" target="_blank" class="btn btn-primary">
+            <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download printable PDF template
+        </a>
+    </div>
 
     @if (Model.Files.Count > 0)
     {
