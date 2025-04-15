@@ -2899,8 +2899,9 @@ namespace CityWatch.Web.Pages.Admin
                     .Select(course => new
                     {
                         course.Id,
-                        course.Description,
-                        course.CourseStatus
+                        course.Description
+                        //,
+                        //course.CourseStatus
                     }).ToList()
             }).Where(group => group.Courses.Any()).ToList();
 
@@ -2926,6 +2927,31 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetCourseStatusColorById(int hrSettingsid)
+        {
+            bool courseLength = false;
+            bool testQuestionsLength = false;
+            bool certificateLength = false;
+            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).ToList();
+            if(coursesList.Count()>0)
+            {
+                courseLength = true;
+                
+            }
+            var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(hrSettingsid).ToList();
+            if (testQuestionsSettingsList.Count() > 0)
+            {
+                testQuestionsLength = true;
+            }
+            var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x=>x.HRSettingsId== hrSettingsid).ToList();
+            if (courseCertificatesList.Count() > 0)
+            {
+                certificateLength = true;
+            }
+
+            return new JsonResult(new { courseLength, testQuestionsLength, certificateLength });
+
         }
 
     }
