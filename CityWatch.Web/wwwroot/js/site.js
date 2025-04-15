@@ -5685,6 +5685,7 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
         { field: 'description', width: '30%' },
         { field: 'states' },
         { field: 'clientSitesSummary' },
+        { width: '5%', renderer: courseStatusColorRenderer },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
         { width: '5%', renderer: hrgroupEditBanButtonRenderer },
 
@@ -5724,7 +5725,36 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
         $('#tbl_hr_settings_with_CourseLibrary thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
+function courseStatusColorRenderer(value, record) {
+    var cellvalue;
+    if (record.courseColour == 'Yellow') {
+        cellvalue = '<div class="text-center">' +
+            '<i class="fa fa-circle text-warning" style="padding-top:10px;"></i>'
+            + '</div>';
+    }
+    else {
+        cellvalue = '<div class="text-center">' +
+            '<i class="fa fa-circle text-success" style="padding-top:10px;"></i>' + '</div>';
+    }
+    
+   
+    return cellvalue;
+}
+function hrgroupLockButtonRenderer(value, record) {
+    if (record.hrlock) {
+        // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
+        return '<div class="text-center">' +
+            '<a id="btnLock"    data-doc-id="' + record.id + '" data-lock-status=1 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
+            '</div>'
+    }
+    else {
 
+        //return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></button>'
+        return '<div class="text-center">' +
+            '<a id="btnLock"   data-doc-id="' + record.id + '" data-lock-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
+            '</div>'
+    }
+}
 function hrgroupLockButtonRenderer(value, record) {
     if (record.hrlock) {
         // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
@@ -6031,6 +6061,10 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
 
         });
         $("#clientSitesDocHrDoc").multiselect("refresh");
+
+        //To Show wherether the course file is added-start
+        ShowStatusColorForCourse();
+        //To Show wherether the course file is added-end
     }).always(function () {
         $('#loader').hide();
     });
@@ -6041,6 +6075,46 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
 
 
 });
+function ShowStatusColorForCourse() {
+    var hrSettingsId=$('#HrSettings_Id').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=CourseStatusColorById&hrSettingsid=' + hrSettingsId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        if (data.courseLength == true) {
+            $('#statusCourseColor').removeClass('text-warning');
+            $('#statusCourseColor').addClass('text-success');
+        }
+        else {
+            $('#statusCourseColor').removeClass('text-success');
+
+            $('#statusCourseColor').addClass('text-warning');
+        }
+        if (data.testQuestionsLength == true) {
+            $('#statusTestQuestionsColor').removeClass('text-warning');
+            $('#statusTestQuestionsColor').addClass('text-success');
+        }
+        else {
+            $('#statusTestQuestionsColor').removeClass('text-success');
+
+            $('#statusTestQuestionsColor').addClass('text-warning');
+        }
+        
+        if (data.certificateLength == true) {
+            $('#statusCertificateColor').removeClass('text-warning');
+            $('#statusCertificateColor').addClass('text-success');
+        }
+        else {
+            $('#statusCertificateColor').removeClass('text-success');
+
+            $('#statusCertificateColor').addClass('text-warning');
+        }
+       
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
 $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', function () {
     // var data = keyVehicleLog.row($(this).parents('tr')).data();
     if (confirm('Are you sure want to delete this  entry?')) {
@@ -6530,6 +6604,16 @@ $('#add_hr_settings').on('click', function () {
         $("#clientSitesDocHrDoc").multiselect("refresh");
         $("#HrState").multiselect("refresh");
         $('#hrSettingsModal').modal('show');
+
+        //$('#statusCourseColor').removeClass('text-warning');
+        $('#statusCourseColor').addClass('text-warning');
+
+        //$('#statusTestQuestionsColor').removeClass('text-warning');
+        $('#statusTestQuestionsColor').addClass('text-warning');
+
+        //$('#statusCertificateColor').removeClass('text-warning');
+        $('#statusCertificateColor').addClass('text-warning');
+
     }
     if ($('#hr_settings_fields_types').val() == 2) {
         if (isHrSettingsAdding) {

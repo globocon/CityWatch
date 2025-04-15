@@ -2332,6 +2332,24 @@ namespace CityWatch.Web.Pages.Admin
             
             int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
             var newjResult = jresult.Where(x => hrSettingsIdWithCourses.Contains(x.Id)).ToList();
+            foreach (var item in newjResult)
+            {
+                var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).ToList();
+                
+                var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(item.Id).ToList();
+                
+                var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.HRSettingsId == item.Id).ToList();
+                if (coursesList.Count() > 0 && testQuestionsSettingsList.Count() > 0 && courseCertificatesList.Count() > 0)
+                {
+                    item.CourseColour = "Green";
+
+                }
+                else
+                {
+                    item.CourseColour = "Yellow";
+                }
+
+            }
             return new JsonResult(newjResult);
 
             //return new JsonResult(_configDataProvider.GetHRSettings());
