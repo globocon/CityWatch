@@ -590,7 +590,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
                 }
                 else {
-                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';
+                    /*return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';*/
+                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + value + '</div>';
                 }
                 //return value;
             }
