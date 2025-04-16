@@ -172,14 +172,19 @@
 
 <body>
 
-  <div style="position: relative; text-align: center; margin-bottom: 50px;">
-    <!-- Logo Image on the left -->
-    <img src="/images/fortescueLogo.jpeg" alt="Logo"
-         style="height: 50px; position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; position: relative; margin-bottom: 30px; min-height: 60px;">
+        <!-- Logo on the left -->
+        <div style="flex: 0 0 auto;">
+            <img src="/images/fortescueLogo.jpeg" alt="Logo" style="height: 50px;">
+        </div>
 
-    <!-- Centered Heading -->
-    <h2 style="margin: 0;">Output Data</h2>
+        <!-- Centered heading -->
+        <div style="flex: 1 1 100%; text-align: center;">
+            <h2 style="margin: 0;">Output Data</h2>
+        </div>
     </div>
+
+    
     <!-- Display Form Name and Work Order -->
     <h5>Form Name: @Model.FormName</h5>
     <h5>Work Order: @Model.WorkOrder</h5>
