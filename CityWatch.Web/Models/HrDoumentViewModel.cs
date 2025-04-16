@@ -30,6 +30,7 @@ namespace CityWatch.Web.Models
 
         public bool hrlock { get; set; }
         public bool hrbanedit { get; set; }
+        public string CourseColour { get; set; }
 
 
 
@@ -50,7 +51,9 @@ namespace CityWatch.Web.Models
                 hrGroupId = hrSettings.HRGroupId,
                 ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty,
                 hrlock= hrSettings.HRLock,
-                hrbanedit=hrSettings.HRBanEdit
+                hrbanedit=hrSettings.HRBanEdit,
+                CourseColour = hrSettings.CourseColour
+
             };
         }
 

@@ -2133,18 +2133,16 @@ function loadTrainingCourses() {
                 courseList.append(groupItem);
 
                 group.courses.forEach(course => {
-                    if (course.courseStatus == 'Yellow') { 
                     let courseItem = course.description
                         ? `<li class="list-group-item" 
                                     id="attach_${course.id}" 
                                     data-index="${course.id}" 
                                     style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                    <i class="fa fa-circle text-warning mr-2" style="float:center"></i>
                                     ${course.description}
                                     
-                                    <i class="fa fa-check ml-2 text-muted " 
+                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
                                        title="Select" 
-                                       style="float:right" ></i>
+                                       style="cursor: pointer;float:right"></i>
                                </li>`
                         : `<li class="list-group-item list-group-item-success" 
                                     id="attach_${course.id}" 
@@ -2152,29 +2150,49 @@ function loadTrainingCourses() {
                                     style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
                                </li>`;
 
-                        courseList.append(courseItem);
-                    }
-                    if (course.courseStatus == 'Green') {
-                        let courseItem = course.description
-                            ? `<li class="list-group-item" 
-                                    id="attach_${course.id}" 
-                                    data-index="${course.id}" 
-                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                    <i class="fa fa-circle text-success mr-2" style="float:center"></i>
-                                    ${course.description}
+                    courseList.append(courseItem);
+                    //if (course.courseStatus == 'Yellow') { 
+                    //let courseItem = course.description
+                    //    ? `<li class="list-group-item" 
+                    //                id="attach_${course.id}" 
+                    //                data-index="${course.id}" 
+                    //                style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //                //<i class="fa fa-circle text-warning mr-2" style="float:center"></i>
+                    //                ${course.description}
                                     
-                                    <i class="fa fa-check ml-2 text-success btn-select-course-status" 
-                                       title="Select" 
-                                       style="cursor: pointer;float:right"></i>
-                               </li>`
-                            : `<li class="list-group-item list-group-item-success" 
-                                    id="attach_${course.id}" 
-                                    data-index="${course.id}" 
-                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                               </li>`;
+                    //                <i class="fa fa-check ml-2 text-muted " 
+                    //                   title="Select" 
+                    //                   style="float:right" ></i>
+                    //           </li>`
+                    //    : `<li class="list-group-item list-group-item-success" 
+                    //                id="attach_${course.id}" 
+                    //                data-index="${course.id}" 
+                    //                style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //           </li>`;
 
-                        courseList.append(courseItem);
-                    }
+                    //    courseList.append(courseItem);
+                    //}
+                    //if (course.courseStatus == 'Green') {
+                        //let courseItem = course.description
+                        //    ? `<li class="list-group-item" 
+                        //            id="attach_${course.id}" 
+                        //            data-index="${course.id}" 
+                        //            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                        //            //<i class="fa fa-circle text-success mr-2" style="float:center"></i>
+                        //            ${course.description}
+                                    
+                        //            <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                        //               title="Select" 
+                        //               style="cursor: pointer;float:right"></i>
+                        //       </li>`
+                        //    : `<li class="list-group-item list-group-item-success" 
+                        //            id="attach_${course.id}" 
+                        //            data-index="${course.id}" 
+                        //            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                        //       </li>`;
+
+                        //courseList.append(courseItem);
+                    //}
                 });
             });
         },
