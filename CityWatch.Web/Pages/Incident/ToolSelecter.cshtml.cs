@@ -1,3 +1,4 @@
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace CityWatch.Web.Pages.Incident
     public class ToolSelecterModel : PageModel
     {
         private readonly IClientDataProvider _clientDataProvider;
+       
         public ToolSelecterModel(
             IClientDataProvider clientDataProvider
             )

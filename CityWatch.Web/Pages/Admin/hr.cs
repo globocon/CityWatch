@@ -1554,6 +1554,37 @@ namespace CityWatch.Web.Pages.Admin
 
 
                     }
+                    if (type == "TrainingAndSettings")
+
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+
+                        if (guard.IsActive)
+                        {
+                            
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                               
+                                SuccessCode = 1;
+                            
+                           
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+
+
+
+
+
+                        //if (AuthUserHelper.LoggedInUserId != null)
+                        //{
+                        //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        //}
+                        //SuccessCode = 1;
+                    }
                 }
                 else
                 {
