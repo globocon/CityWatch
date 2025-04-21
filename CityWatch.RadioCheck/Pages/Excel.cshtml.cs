@@ -10,7 +10,7 @@ namespace CityWatch.RadioCheck.Pages
 {
     public class ExcelModel : PageModel
     {
-        
+
 
         private readonly IWebHostEnvironment _env;
 
@@ -22,6 +22,8 @@ namespace CityWatch.RadioCheck.Pages
         public List<string> Files { get; set; } = new List<string>();
         public string FormName { get; set; } = string.Empty;
         public string WorkOrder { get; set; } = string.Empty;
+
+        public string TemplateUrl { get; set; } = string.Empty;
 
         public void OnGet()
         {
@@ -60,7 +62,44 @@ namespace CityWatch.RadioCheck.Pages
             {
                 Console.WriteLine("Invalid query parameters. Ensure 'formName' and 'workOrder' are provided.");
             }
-        }
 
+            if (!string.IsNullOrWhiteSpace(FormName))
+            {
+                string folderPath = Path.Combine(_env.WebRootPath, "uploads", "jotform", FormName);
+                Console.WriteLine($"Checking folder path: {folderPath}");
+
+                if (Directory.Exists(folderPath))
+                {
+                    try
+                    {
+                      
+
+                        // Check for Template.xlsx specifically
+                        string templatePath = Path.Combine(folderPath, "Template.xlsx");
+                        if (System.IO.File.Exists(templatePath))
+                        {
+                            // Construct the downloadable URL
+                            string downloadUrl = Path.Combine("/uploads/jotform", FormName, "Template.xlsx").Replace("\\", "/");
+                            Console.WriteLine($"Template file found. Download URL: {downloadUrl}");
+
+                            TemplateUrl = downloadUrl; 
+                        }
+                        else
+                        {
+                            Console.WriteLine("Template.xlsx not found.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error accessing folder: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Target folder does not exist.");
+                }
+            }
+
+        }
     }
 }
