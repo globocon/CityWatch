@@ -3984,3 +3984,216 @@ $('#btnWarningRetryTest').on('click', function (e) {
     location.reload();
 
 });
+$("#TrainingAndAssessmentBtnSettings").on('click', function () {
+    clearGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment');
+    $('#txt_securityLicenseNoTrainingAndAssessment').val('');
+    $("#modelGuardLoginTrainingAndAssessment").modal("show");
+    return false;
+});
+$('#btnGuardLoginTrainingAndAssessment').on('click', function () {
+    const securityLicenseNo = $('#txt_securityLicenseNoTrainingAndAssessment').val();
+    if (securityLicenseNo === '') {
+        displayGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment', 'Please enter the security license No ');
+    }
+    else {
+
+
+
+        /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+            type: 'POST',
+            data: {
+                securityLicenseNo: securityLicenseNo,
+                type: 'TrainingAndSettings'
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.accessPermission) {
+                /* $('#txt_securityLicenseNoIR').val('');*/
+                $('#modelGuardLoginTrainingAndAssessment').modal('hide');
+
+                clearGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment');
+                //window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                LoggingIntoTrainingAndAssessment(result.guId);
+            }
+            else {
+
+                // $('#txt_securityLicenseNo').val('');
+                /*$('#txt_securityLicenseNoIR').val('');*/
+                $('#modelGuardLoginTrainingAndAssessment').modal('show');
+                if (result.successCode === 0) {
+                    displayGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment', result.successMessage);
+                }
+            }
+        });
+
+
+        clearGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment');
+
+
+
+    }
+});
+function LoggingIntoTrainingAndAssessment( guId)
+{
+        $('#txt_guardKey').val('');
+    $('#txt_guardKeyNewPIN').val('');
+    $('#GuardLog_GuardLogin_GuardId').val(guId);
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+        type: 'POST',
+        data: {
+            guardId: guId
+
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+
+        if (result.accessPermission) {
+            $('#loginHrNewPasswordSetGuard').modal('show');
+            $('#loginHrEditGuard').modal('hide');
+        }
+        else {
+            $('#loginHrNewPasswordSetGuard').modal('hide');
+            $('#loginHrEditGuard').modal('show');
+
+        }
+    }).fail(function () {
+    }).always(function () {
+
+    });
+}
+$('#btnGuardHrUpdateForTraining').on('click', function () {
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    const securityLicenseNo = $('#txt_guardKey').val();
+    if (securityLicenseNo === '') {
+        displayGuardValidationSummary('GuardLoginValidationSummaryHR', 'Please enter PIN ');
+    }
+    else {
+
+
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
+            type: 'POST',
+            data: {
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                key: securityLicenseNo
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+
+            if (result.accessPermission) {
+
+                $('#modelGuardLoginForHrUpdate').modal('hide');
+                $('#Guard_Id1').val($('#GuardLog_GuardLogin_GuardId').val());
+                updateLanguagesDropdown();
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
+                    data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+                }).done(function (response) {
+                    $('#addGuardModalnew').modal('show');
+                    isPaused = true;
+                    $('.btn-add-guard-addl-details').show();
+                    $('#addGuardModal1').modal('show');
+                    $('#GuardLicense_GuardId1').val(response[0].id);
+                    $('#GuardCompliance_GuardId1').val(response[0].id);
+                    $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+                    $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+                    $('#guardNameTraining').val(response[0].name)
+                    $('#licenseNoTraining').val(response[0].securityNo);
+                    $('#mobileTraining').val(response[0].mobile);
+                    $('#emailTraining').val(response[0].email);
+                    
+
+                    // ;
+                    var selectedValues = [];
+                    if (response[0].isRCAccess) {
+                        selectedValues.push(4);
+                    }
+                    if (response[0].isKPIAccess) {
+                        selectedValues.push(3);
+                    }
+                    if (response[0].isLB_KV_IR) {
+                        selectedValues.push(1);
+                    }
+                    if (response[0].isSTATS) {
+                        selectedValues.push(2);
+                    }
+                    //selectedValues.forEach(function (value) {
+
+                    //    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    //});
+
+                    gridGuardLicensesLogDaily.ajax.reload();
+                    gridGuardCompliancesLogDaily.ajax.reload();
+                    gridGuardLicensesAndLicenceKey.ajax.reload();
+                    gridGuardTrainingAndAssessment.ajax.reload();
+                    $("#Guard_Access1").multiselect();
+                    $("#Guard_Access1").val(selectedValues);
+                    $("#Guard_Access1").multiselect("refresh");
+                    $('#loginHrEditGuard').modal('hide');
+
+                });
+
+
+            }
+            else {
+
+
+
+
+
+
+                displayGuardValidationSummary('GuardLoginValidationSummaryHR', result.successMessage);
+
+
+
+            }
+        });
+
+
+
+
+
+
+    }
+});
+$('#btn_save_PersonalTraining').on('click', function () {
+    clearGuardValidationSummary('glValidationSummary');
+
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=PersonalDetails',
+        data: $('#frm_add_personal').serialize(),
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.status) {
+            if (result.status) {
+                alert("Saved Successfully");
+
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+
+            }
+        } else {
+            displayGuardValidationSummary('glValidationSummary', result.message);
+        }
+    });
+});

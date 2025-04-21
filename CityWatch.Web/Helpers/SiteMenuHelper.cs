@@ -128,7 +128,7 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools || pageName == PageNameHelper.Notify || pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.VehicleAndKeyLog)
+            if (pageName == PageNameHelper.Index ||  pageName == PageNameHelper.Notify || pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.VehicleAndKeyLog)
             {
                 menuHtml.AppendLine("<div>");
                 menuHtml.AppendLine(@"<a href=""/Incident/ToolSelecter"" class=""nav-link py-0""><i class=""fa fa-wrench mr-2""></i>Tools</a>");
@@ -229,24 +229,53 @@ namespace CityWatch.Web.Helpers
             //    menuHtml.AppendLine("</div>");
             //}
             //p1#187 Hyperlink Missing Below lines are commented- Manju - 26-03-2024 --end
-            if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.GuardSettings || pageName == PageNameHelper.VehicleAndKeyLog)
+            //if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.GuardSettings || pageName == PageNameHelper.VehicleAndKeyLog)
+            //{
+            //    //if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminAuditor)
+            //    if (AuthUserHelper.IsAdminUserLoggedIn )
+            //    {
+            //        menuHtml.AppendLine("<div>");
+            //        menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
+            //        menuHtml.AppendLine("</div>");
+            //    }
+            //    else
+            //    {
+            //        menuHtml.AppendLine("<div>");
+            //        menuHtml.AppendLine(@"<a href=""#"" id=""OtherAdminsAudtiLogAccessButton"" class=""nav-link py-0"" ><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
+            //        menuHtml.AppendLine("</div>");
+            //    }
+                
+            //}
+            
+            if (pageName ==  PageNameHelper.Tools)
             {
-                //if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminAuditor)
-                if (AuthUserHelper.IsAdminUserLoggedIn )
+                menuHtml.AppendLine("<div>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
                 {
-                    menuHtml.AppendLine("<div>");
+                    menuHtml.AppendLine(@"<a href=""{0}"" id=""TrainingAndAssessmentBtnSettings""class=""nav-link py-0""><i class=""fa fa-book mr-2""></i>Training & Assessment</a>");
+
+                    
+                    
+                }
+               
+                menuHtml.AppendLine("</div>");
+                menuHtml.AppendLine("<div>");
+                if (AuthUserHelper.IsAdminUserLoggedIn)
+                {
+                    
                     menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
-                    menuHtml.AppendLine("</div>");
+                    
                 }
                 else
                 {
-                    menuHtml.AppendLine("<div>");
+                    
                     menuHtml.AppendLine(@"<a href=""#"" id=""OtherAdminsAudtiLogAccessButton"" class=""nav-link py-0"" ><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
-                    menuHtml.AppendLine("</div>");
+                    
                 }
-                
+                menuHtml.AppendLine("</div>");
             }
-           
+                
+            
 
             return menuHtml.ToString();
         }
