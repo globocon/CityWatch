@@ -1104,10 +1104,20 @@ namespace CityWatch.Data.Providers
                 item.HrGroupText = item.HRGroups.Name;
                 item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
                 int hrSettingsId = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().HRSettingsId;
-                item.IsRPLEnabled = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().isRPLEnabled;
-                item.TrainingCertificateId = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
-                var list = GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == item.TrainingCertificateId && x.GuardId == guardId).ToList();
-                item.RPLCount = list.Count();
+                var certificatescount = GetCourseCertificateDocsUsingSettingsId(hrSettingsId);
+                if (certificatescount.Count() > 0)
+                { 
+                    item.IsRPLEnabled = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().isRPLEnabled;
+                    item.TrainingCertificateId = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
+                    var list = GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == item.TrainingCertificateId && x.GuardId == guardId).ToList();
+                    item.RPLCount = list.Count();
+                }
+                else
+                {
+                    item.IsRPLEnabled = false;
+                    item.TrainingCertificateId = 0;
+                    item.RPLCount = 0;
+                }
                 item.hrSettingsId = hrSettingsId;
             }
 
