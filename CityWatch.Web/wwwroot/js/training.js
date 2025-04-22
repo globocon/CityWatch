@@ -525,8 +525,21 @@ function renderGuardCouseStatusForGuard(value, type, data) {
         if (value) {
             // Check if data.guardlogins.logindate is present
             if (data.trainingCourseStatus.trainingCourseStatusColorId == 1) {
-                cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
-                    '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
+                if (data.isRPLEnabled == true && data.rplCount > 0)
+                {
+                    cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment" disabled>Start</button>&nbsp;' +
+                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">' +
+                        '<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate">RPL</button>';
+                }
+                else if (data.isRPLEnabled == true && data.rplCount == 0) {
+                    cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment" disabled>Start</button>&nbsp;' +
+                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">' +
+                        '<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate" disabled>RPL</button>';
+                }
+                else {
+                    cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +
+                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
+                }
             }  else if (data.trainingCourseStatus.trainingCourseStatusColorId == 2) {
                 cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_InProgress_guard_TrainingAndAssessment" >In Progress</button>&nbsp;' +
                     '<input type="hidden" id="GuardCourseId" value="' + data.id + '">';
@@ -670,7 +683,13 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_InProgr
     //})
 });
 //p5-Issue1-End
+$('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_guard_TrainingAndAssessmentRPLCertificate]', function () {
 
+
+    var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
+    //GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
+   
+});
 //p5-Issue2-Start
 function renderGuardCouseStatusForadmin(value, type, data) {
     if (type === 'display') {
@@ -699,6 +718,24 @@ function renderGuardCouseStatusForadmin(value, type, data) {
     }
     return value;
 }
+function renderGuardCouseCertificateForadmin(value, type, data) {
+    if (type === 'display') {
+        let cellvalue;
+        
+            if (data.isRPLEnabled == true) {
+                cellvalue = '<button class="btn btn-outline-danger" name="btn_delete_TrainingAndAssessmentRPLByAdmin">RPL</button>';
+               
+            }
+            else {
+                cellvalue = '';
+                
+            }
+
+       
+        return cellvalue;
+    }
+    return value;
+}
 let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_by_Admin').DataTable({
     autoWidth: false,
     ordering: false,
@@ -715,8 +752,15 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
     columns: [
         { data: 'id', visible: false },
         { data: 'hrGroupText', width: "12%" },
-        { data: 'description', width: "50%" },
-        { data: 'newNullColumn', width: '20%' },
+        { data: 'description', width: "60%" },
+        {
+            targets: -1,
+            data: null,
+             width: '10%',
+            'render': function (value, type, data) {
+                return renderGuardCouseCertificateForadmin(value, type, data);
+            }
+        },
 
         {
 
@@ -753,6 +797,20 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', '#btnPracticalD
 
     getPracticalCourseLocation();
     getPracticaInstructorSignOff();
+
+
+});
+$('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=btn_delete_TrainingAndAssessmentRPLByAdmin]', function () {
+    var data = gridGuardTrainingAndAssessmentByAdmin.row($(this).parents('tr')).data();
+    $('#rplDetailsModal').modal('show');
+    getPracticalLocation('');
+    getRPLInstructorSignOff('');
+
+    $('#rplCertificateId').val(data.trainingCertificateId);
+    var GuardId = $('#Guard_Id').val();
+    $('#rplGuardId').val(GuardId);
+    
+    fetchURPLDeatils(data.trainingCertificateId, GuardId);
 
 
 });
@@ -2382,25 +2440,48 @@ $('#tbl_certificateDocumentFiles tbody').on('click', '#btnRPLCertificate', funct
     
        
     var id = $(this).closest("td").find('#certificateId').val();
-    if (isChecked == true) {
-        $('#rplDetailsModal').modal('show');
-        getPracticalLocation('');
-        getRPLInstructorSignOff('');
-        //var userName = $(this).closest("td").find('#userName').val();
-        //$('#siteTypeDomainDeatils').find('#userName1').text(typeName)
-        //$('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
-        $('#rplCertificateId').val(id);
-        fetchURPLDeatils(id);
-    }
-    else {
-        disableRPLDetails(id)
-    }
+    //if (isChecked == true) {
+    //    $('#rplDetailsModal').modal('show');
+    //    getPracticalLocation('');
+    //    getRPLInstructorSignOff('');
+    //    //var userName = $(this).closest("td").find('#userName').val();
+    //    //$('#siteTypeDomainDeatils').find('#userName1').text(typeName)
+    //    //$('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
+    //    $('#rplCertificateId').val(id);
+    //    fetchURPLDeatils(id);
+    //}
+    //else {
+    //    disableRPLDetails(id)
+    //}
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveCourseCertificateIsRPL',
+        type: 'POST',
+        data: {
+            certificateId: id,
+            'isRPLchecked': isChecked
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (data.success) {
+
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+        }
+        else {
+            gridCertificatesDocumentFiles.clear();
+            gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+
+            showStatusNotification(data.success, data.message);
+        }
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    });
 });
-function fetchURPLDeatils(Id) {
+function fetchURPLDeatils(Id,GuardId) {
     $.ajax({
         url: '/Admin/Settings?handler=RPLDetails',
         method: 'GET',
-        data: { id: Id },
+        data: { id: Id, guardid: GuardId },
         success: function (data) {
         
                 //ClearModelControls();
@@ -2412,9 +2493,11 @@ function fetchURPLDeatils(Id) {
             //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
             getPracticalLocation(data.trainingPracticalLocationId);
             $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
-            $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
+                $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
+                $('#rplDetailsModal').find('#rplGuardId').val(GuardId)
             // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
                 getRPLInstructorSignOff(data.trainingInstructorId)
+
             }
                 //});
                
@@ -2506,6 +2589,7 @@ $('#btnSaveRPLDetails').on('click', function () {
         AssessmentEndDate: $('#RPL_DateAssessment_ended').val(),
         TrainingCourseCertificateId: $('#rplCertificateId').val(),
         TrainingInstructorId: $('#ddlRPLInstructorsignOff').val(),
+        GuardId: $('#rplGuardId').val(),
         isDeleted: false
         }
    
@@ -3436,7 +3520,7 @@ function GetGuardAllTestPass() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result) {
-            GetCertificateAndFeedBackStatus();
+            GetCertificateAndFeedBackStatus($('#txtguardIdForTest').val(), $("#txtGuardHRSettings").val());
 
         }
         else {
@@ -3457,13 +3541,13 @@ function GetGuardAllTestPass() {
         console.log('error');
     })
 }
-function GetCertificateAndFeedBackStatus() {
+function GetCertificateAndFeedBackStatus(guardid,hrsettingsid) {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/Guard/GuardStartTest?handler=GuardCertificateAndfeedBackStatus',
         data: {
-            'guardId': $('#txtguardIdForTest').val(),
-            'hrSettingsId': $("#txtGuardHRSettings").val()
+            'guardId': guardid,
+            'hrSettingsId': hrsettingsid
             //,
             //'tqNumberId': $("#txtGuardTQNumberId").val()
         },
@@ -3472,7 +3556,7 @@ function GetCertificateAndFeedBackStatus() {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == false) {
-            GetCertificate()
+            GetCertificate(guardid, hrsettingsid)
 
         }
         else {
@@ -3527,14 +3611,13 @@ function UpdateStatusToHold() {
         console.log('error');
     })
 }
-function GetCertificate() {
+function GetCertificate(guardid,hrsettingsid) {
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/Guard/GuardStartTest?handler=GuardCertificate',
         data: {
-            'guardId': $('#txtguardIdForTest').val(),
-            'hrSettingsId': $("#txtGuardHRSettings").val(),
-            'tqNumberId': $("#txtGuardTQNumberId").val()
+            'guardId': guardid,
+            'hrSettingsId': hrsettingsid
         },
         //data: { id: record },
         type: 'GET',

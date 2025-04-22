@@ -1103,6 +1103,12 @@ namespace CityWatch.Data.Providers
             {
                 item.HrGroupText = item.HRGroups.Name;
                 item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+                int hrSettingsId = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().HRSettingsId;
+                item.IsRPLEnabled = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().isRPLEnabled;
+                item.TrainingCertificateId = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
+                var list = GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == item.TrainingCertificateId && x.GuardId == guardId).ToList();
+                item.RPLCount = list.Count();
+                item.hrSettingsId = hrSettingsId;
             }
 
 
@@ -1113,7 +1119,30 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<TrainingCourseCertificateRPL> GetCourseCertificateRPL()
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseCertificateRPL
+                .ToList();
 
+
+            return courseDocList;
+        }
+        public List<TrainingCourseCertificate> GetCourseCertificateDocsUsingSettingsId(int type)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseCertificate
+                .Where(x => x.HRSettingsId == type)
+                .ToList();
+
+
+            return courseDocList;
+        }
+        public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
+        {
+            var course = _context.TrainingCourses.Where(x => x.Id == courseId).OrderBy(x => x.Id).ToList();
+            return course;
+        }
 
         public List<TrainingCourseDuration> GetCourseDuration()
         {

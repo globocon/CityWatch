@@ -312,7 +312,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetGuardCertificate(int guardId, int hrSettingsId, int tqNumberId)
+        public JsonResult OnGetGuardCertificate(int guardId, int hrSettingsId)
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
