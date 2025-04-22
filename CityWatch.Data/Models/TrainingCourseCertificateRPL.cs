@@ -22,6 +22,7 @@ namespace CityWatch.Data.Models
         [ForeignKey("TrainingInstructorId")]
         public TrainingInstructor TrainingInstructor { get; set; }
         public bool isDeleted { get; set; }
+        public int GuardId { get; set; }
 
 
     }

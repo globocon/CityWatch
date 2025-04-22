@@ -2613,29 +2613,29 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetCourseCertificateDocsUsingSettingsId(int type)
         {
             var result = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(type);
-            foreach(var item in result)
-            {
-                var getRPL = _configDataProvider.GetCourseCertificateRPLUsingId(item.Id);
-                if(getRPL.Count>0)
-                {
-                    foreach(var itemnew in getRPL)
-                    { 
-                        if(itemnew.isDeleted==false)
-                        {
-                            item.isRPLEnabled = true;
-                        }
-                        else
-                        {
-                            item.isRPLEnabled = false;
-                        }
-                    }
+            //foreach(var item in result)
+            //{
+            //    var getRPL = _configDataProvider.GetCourseCertificateRPLUsingId(item.Id);
+            //    if(getRPL.Count>0)
+            //    {
+            //        foreach(var itemnew in getRPL)
+            //        { 
+            //            if(itemnew.isDeleted==false)
+            //            {
+            //                item.isRPLEnabled = true;
+            //            }
+            //            else
+            //            {
+            //                item.isRPLEnabled = false;
+            //            }
+            //        }
                     
-                }
-                else
-                {
-                    item.isRPLEnabled = false;
-                }
-            }
+            //    }
+            //    else
+            //    {
+            //        item.isRPLEnabled = false;
+            //    }
+            //}
             return new JsonResult(result);
         }
         public JsonResult OnPostUploadCourseCertificateDocUsingHR()
@@ -2674,6 +2674,7 @@ namespace CityWatch.Web.Pages.Admin
                                 FileName = filename,
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
+                                isRPLEnabled=false,
 
                             });
                         
@@ -2758,10 +2759,10 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetRPLDetails(int id)
+        public JsonResult OnGetRPLDetails(int id,int guardid)
         {
             var success = false;
-             return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).FirstOrDefault());
+             return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).Where(x=> x.GuardId==guardid).FirstOrDefault());
         }
         public JsonResult OnPostSaveRPLDetails(TrainingCourseCertificateRPL record)
         {
@@ -2952,6 +2953,41 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { courseLength, testQuestionsLength, certificateLength });
 
+        }
+        public JsonResult OnPostSaveCourseCertificateIsRPL(int certificateId,bool isRPLchecked)
+        {
+            var success = false;
+            var message = "Saved successfully";
+           
+                    try
+                    {
+
+                        var record = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == certificateId).FirstOrDefault();
+                        _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
+                        {
+                            Id = record.Id,
+                            FileName = record.FileName,
+                            LastUpdated = record.LastUpdated,
+                            HRSettingsId = record.HRSettingsId,
+                            isRPLEnabled = isRPLchecked,
+
+                        });
+
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetCertificateIsRPL(int courseId)
+        {
+            int hrSettingsid = _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
+
+            return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsid).FirstOrDefault());
         }
 
     }

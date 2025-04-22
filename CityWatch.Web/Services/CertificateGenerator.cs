@@ -140,7 +140,7 @@ namespace CityWatch.Web.Services
             string CertificateTemplatePath = IO.Path.Combine(_TemplatePdf, hrreferenceNumber, "Certificate", certificateName);
             var guardsstarttest = _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId).FirstOrDefault();
             int certificateId = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
-            var certificateRPL=_configDataProvider.GetCourseCertificateRPLUsingId( certificateId);
+            var certificateRPL=_configDataProvider.GetCourseCertificateRPLUsingId( certificateId).Where(x=>x.GuardId==guardId);
             //_IncidentReport = incidentReport;
             //_clientSite = clientSite;
             _UploadRootDir =  IO.Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", licenseno);
@@ -154,8 +154,8 @@ namespace CityWatch.Web.Services
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
 
             acroForm.GetField("Student").SetValue(guards.Name, true);
-            acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
-            acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
+                acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
+                acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
             var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
             if (practicalresult == null)
             {
@@ -211,7 +211,7 @@ namespace CityWatch.Web.Services
             if (acroForm.GetField("sign_off_title") != null)
             {
                 acroForm.GetField("sign_off_title").SetValue("", true);
-
+            
             }
 
             acroForm.FlattenFields();

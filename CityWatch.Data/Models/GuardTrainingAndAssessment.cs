@@ -49,6 +49,14 @@ namespace CityWatch.Data.Models
         public string LicenseNo { get; set; }
         [NotMapped]
         public string statusColor { get; set; }
+        [NotMapped]
+        public bool IsRPLEnabled { get; set; }
+        [NotMapped]
+        public int TrainingCertificateId { get; set; }
+        [NotMapped]
+        public int RPLCount { get; set; }
+        [NotMapped]
+        public int hrSettingsId { get; set; }
 
     }
 }

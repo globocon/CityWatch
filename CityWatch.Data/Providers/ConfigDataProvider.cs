@@ -1684,6 +1684,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.FileName = trainingCourseCertificate.FileName;
                     documentToUpdate.LastUpdated = trainingCourseCertificate.LastUpdated;
                     documentToUpdate.HRSettingsId = trainingCourseCertificate.HRSettingsId;
+                    documentToUpdate.isRPLEnabled = trainingCourseCertificate.isRPLEnabled;
                 }
             }
             _context.SaveChanges();

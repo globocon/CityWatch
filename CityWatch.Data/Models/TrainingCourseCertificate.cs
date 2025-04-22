@@ -19,7 +19,7 @@ namespace CityWatch.Data.Models
        
         [NotMapped]
         public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } }
-        [NotMapped]
+        //[NotMapped]
         public bool isRPLEnabled { get; set; }
        
     }
