@@ -756,7 +756,8 @@ let gridGuardTrainingAndAssessmentByAdmin = $('#tbl_guard_trainingAndAssessment_
         {
             targets: -1,
             data: null,
-             width: '10%',
+            width: '10%',
+            defaultContent: '',
             'render': function (value, type, data) {
                 return renderGuardCouseCertificateForadmin(value, type, data);
             }
