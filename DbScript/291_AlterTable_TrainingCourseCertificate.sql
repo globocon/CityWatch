@@ -13,6 +13,8 @@ WHERE Id NOT IN (
     FROM TrainingCourseCertificateRPL
 );
 ALTER TABLE TrainingCourseCertificateRPL ADD GuardId int
+update TrainingCourseCertificateRPL set guardid=0
+
 
 SELECT * FROM TrainingCourseCertificateRPL
 SELECT * FROM TrainingCourseCertificate
