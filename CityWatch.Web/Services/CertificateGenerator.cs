@@ -154,8 +154,13 @@ namespace CityWatch.Web.Services
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
 
             acroForm.GetField("Student").SetValue(guards.Name, true);
+            if (guardsstarttest != null)
+            {
+
+
                 acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
                 acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
+            }
             var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
             if (practicalresult == null)
             {
@@ -215,11 +220,13 @@ namespace CityWatch.Web.Services
             }
 
             acroForm.FlattenFields();
-           
-            AttachScoreCard(pdfDocument, guardId, hrSettingsId,certificateName);
-            if (isCertificatewithQADump)
+            if (certificateRPL.Count() == 0)
             {
-                AttachQuestionsAndAnswers(pdfDocument,guardId,hrSettingsId, certificateName);
+                AttachScoreCard(pdfDocument, guardId, hrSettingsId, certificateName);
+                if (isCertificatewithQADump)
+                {
+                    AttachQuestionsAndAnswers(pdfDocument, guardId, hrSettingsId, certificateName);
+                }
             }
 
             pdfDocument.Close();

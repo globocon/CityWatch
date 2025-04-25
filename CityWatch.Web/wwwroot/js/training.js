@@ -687,7 +687,7 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
 
 
     var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
-    //GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
+    GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
    
 });
 //p5-Issue2-Start
