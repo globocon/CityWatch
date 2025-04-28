@@ -97,7 +97,7 @@ namespace CityWatch.Web.Services
 
                                 //     mailBodyHtml.Append("Hi, <br/><br/>Following guard documents are expiring soon. <br/><br/>");
                                 //p5-Issue-16-start
-                                mailBodyHtml.Append("Hi, <br/><br/>The following HR documents are expiring soon.Please log into the C4i System and update your HR documents with a current and version: <br/><br/>");
+                                mailBodyHtml.Append("Hi, <br/><br/>The following HR documents are expiring soon. Please log into the C4i System and update your HR documents with a current and version: <br/><br/>");
                                 //p5-Issue-16-end
                                 mailBodyHtml.Append(" <table width=\"100%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
                                 mailBodyHtml.Append(" <tr><td style=\"width:10% ;border: 1px solid #000000; \"><b>Document Type</b></td><td style=\"width:20% ;border: 1px solid #000000;\"><b>Guard Name</b></td><td style=\"width:10% ;border: 1px solid #000000;\"><b>Expiry Date</b></td><td style=\"width:60% ;border: 1px solid #000000;\"><b>Description</b></td></tr>");
