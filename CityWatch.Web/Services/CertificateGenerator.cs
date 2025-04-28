@@ -164,8 +164,14 @@ namespace CityWatch.Web.Services
             var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
             if (practicalresult == null)
             {
-                acroForm.GetField("Location_practical").SetValue("", true);
-                acroForm.GetField("DOI_practical").SetValue("", true);
+                if (acroForm.GetField("Location_practical") != null)
+                {
+                    acroForm.GetField("Location_practical").SetValue("", true);
+                }
+                if (acroForm.GetField("DOI_practical") != null)
+                {
+                    acroForm.GetField("DOI_practical").SetValue("", true);
+                }
             }
             else
             {
@@ -177,6 +183,15 @@ namespace CityWatch.Web.Services
                 {
                     acroForm.GetField("Location_practical").SetValue(practicalresult.TrainingLocation.Location, true);
                 }
+                if (acroForm.GetField("sign_off_name") != null)
+            {
+                acroForm.GetField("sign_off_name").SetValue(practicalresult.TrainingInstructor.Name, true);
+            }
+            if (acroForm.GetField("sign_off_title") != null)
+            {
+                acroForm.GetField("sign_off_title").SetValue(practicalresult.TrainingInstructor.Position, true);
+            
+            }
             }
             
             if(certificateRPL.Count()>0)
@@ -188,6 +203,23 @@ namespace CityWatch.Web.Services
                 if (acroForm.GetField("DOI_RPL_end") != null)
                 {
                     acroForm.GetField("DOI_RPL_end").SetValue(certificateRPL.FirstOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
+                }
+                if (acroForm.GetField("sign_off_name") != null)
+                {
+                    acroForm.GetField("sign_off_name").SetValue(certificateRPL.FirstOrDefault().TrainingInstructor.Name, true);
+                }
+                if (acroForm.GetField("sign_off_title") != null)
+                {
+                    acroForm.GetField("sign_off_title").SetValue(certificateRPL.FirstOrDefault().TrainingInstructor.Position, true);
+
+                }
+                //if (acroForm.GetField("DOI_practical") != null)
+                //{
+                //    acroForm.GetField("DOI_practical").SetValue(practicalresult.PracticalDate.ToString("dd-MMM-yyyy"), true);
+                //}
+                if (acroForm.GetField("Location_practical") != null)
+                {
+                    acroForm.GetField("Location_practical").SetValue(certificateRPL.FirstOrDefault().TrainingLocation.Location, true);
                 }
             }
             if (isCertificateExpiry)
@@ -209,15 +241,7 @@ namespace CityWatch.Web.Services
             {
                 acroForm.GetField("HASH").SetValue(hashCode, true);
             }
-            if (acroForm.GetField("sign_off_name") != null)
-            {
-                acroForm.GetField("sign_off_name").SetValue("", true);
-            }
-            if (acroForm.GetField("sign_off_title") != null)
-            {
-                acroForm.GetField("sign_off_title").SetValue("", true);
             
-            }
 
             acroForm.FlattenFields();
             if (certificateRPL.Count() == 0)
