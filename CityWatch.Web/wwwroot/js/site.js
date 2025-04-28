@@ -6117,7 +6117,7 @@ function ShowStatusColorForCourse() {
 }
 $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', function () {
     // var data = keyVehicleLog.row($(this).parents('tr')).data();
-    if (confirm('Are you sure want to delete this  entry?')) {
+    if (confirm('Are you sure want to delete this entry?')) {
         $.ajax({
             type: 'POST',
             url: '/Admin/GuardSettings?handler=DeleteHRSettings',
