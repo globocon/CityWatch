@@ -82,5 +82,6 @@ namespace CityWatch.Data.Models
         public string CourseStatus { get; set; }
         [NotMapped]
         public string CourseColour { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

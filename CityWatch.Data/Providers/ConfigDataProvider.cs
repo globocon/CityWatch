@@ -994,7 +994,7 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 3-start
         public List<HrSettings> GetHRSettings()
         {
-            return _context.HrSettings.Include(z => z.HRGroups)
+            return _context.HrSettings.Where(x=>x.IsDeleted ==false).Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .Include(z => z.hrSettingsClientStates)
@@ -1668,7 +1668,7 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
 
-            return courseDocList;
+           return courseDocList;
         }
         public void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate)
         {

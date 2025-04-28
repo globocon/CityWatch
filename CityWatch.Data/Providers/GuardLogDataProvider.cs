@@ -5616,7 +5616,8 @@ namespace CityWatch.Data.Providers
         {
             var deleteHrSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
             if (deleteHrSettings != null)
-                _context.HrSettings.Remove(deleteHrSettings);
+                //_context.HrSettings.Remove(deleteHrSettings);
+                deleteHrSettings.IsDeleted = true;
 
             _context.SaveChanges();
         }
