@@ -1824,6 +1824,8 @@ namespace CityWatch.Data.Providers
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificateRPL
                 .Where(x => x.TrainingCourseCertificateId == id)
+                .Include(x => x.TrainingLocation)
+                .Include(x => x.TrainingInstructor)
                 .ToList();
 
 

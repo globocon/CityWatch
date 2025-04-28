@@ -18,4 +18,5 @@ update TrainingCourseCertificateRPL set guardid=0
 
 SELECT * FROM TrainingCourseCertificateRPL
 SELECT * FROM TrainingCourseCertificate
+select * from TrainingInstructor
 
