@@ -1,3 +1,5 @@
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -27,8 +29,29 @@ using static Dropbox.Api.FileRequests.GracePeriod;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
+
 using Microsoft.Office.Interop.PowerPoint;
 using Microsoft.Office.Core;
+
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
+
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MimeKit;
+using Org.BouncyCastle.Crypto.Macs;
+using System.Net.Http.Headers;
+using MailKit.Net.Smtp;
+using System.Text.RegularExpressions;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using static Dropbox.Api.Team.GroupSelector;
+using System.Text;
+using Org.BouncyCastle.Crypto.Generators;
+using static Dropbox.Api.Sharing.MemberSelector;
+
 
 
 namespace CityWatch.Web.Pages.Admin
@@ -43,13 +66,16 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly Helpers.Settings _settings;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
-             ITimesheetReportGenerator TimesheetReportGenerator,IGuardDataProvider guardDataProvider)
+             ITimesheetReportGenerator TimesheetReportGenerator,IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
+             IDropboxService dropboxUploadService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -59,6 +85,8 @@ namespace CityWatch.Web.Pages.Admin
             _viewDataService = viewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
             _guardDataProvider = guardDataProvider;
+            _settings = settings.Value;
+            _dropboxUploadService = dropboxUploadService;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -2158,8 +2186,12 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             file.CopyTo(stream);
                         }
-
-                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        var DropboxDir = _guardDataProvider.GetDrobox();
+                        //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+                        var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{ file.FileName}");
+                        var dbxUploaded = true;
+                        dbxUploaded=UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName),  dbxFilePath);
+                    var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                         int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
                         if (TQNumbernew == 0)
                         {
@@ -2222,6 +2254,26 @@ namespace CityWatch.Web.Pages.Admin
                 }
             }
             return new JsonResult(new { success, message });
+        }
+        
+        private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
         }
         public JsonResult OnPostDeleteCourseDocUsingHR(int id,string hrreferenceNumber)
         {
@@ -2698,7 +2750,11 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             file.CopyTo(stream);
                         }
-
+                        var DropboxDir = _guardDataProvider.GetDrobox();
+                        //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+                        var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Certificate/{file.FileName}");
+                        var dbxUploaded = true;
+                        dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName), dbxFilePath);
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                         
                             _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
@@ -3022,6 +3078,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsid).FirstOrDefault());
         }
+        
 
     }
     public class helpDocttype

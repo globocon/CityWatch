@@ -664,11 +664,102 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpGet("GetSiteLog")]
+        public IActionResult GetSiteLog(int clientsiteId)
+        {
+            try
+            {
+                // Fetch site name (optional usage)
+                var site = _clientDataProvider.GetClientSiteName(clientsiteId);
+
+                // Get today's logbook
+                var logbook = _clientDataProvider.GetClientSiteLogBook(clientsiteId, LogBookType.DailyGuardLog, DateTime.Today);
+                if (logbook == null)
+                {
+                    return NotFound(new { message = "No logbook found for today." });
+                }
+
+                // Get guard logs
+                var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logbook.Id, DateTime.Today)
+                    .OrderByDescending(z => z.Id)
+                    .ThenByDescending(z => z.EventDateTime)
+                    .ToList();
+
+                var result = new List<GuardLogDto>();
+
+                foreach (var guardlog in guardLogs)
+                {
+                    var imageUrls = new List<string>();
+                    var notes = guardlog.Notes ?? "";
+
+                    // Process images
+                    var images = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+                    foreach (var img in images)
+                    {
+                        if (img.IsTwentyfivePercentfile == true && !string.IsNullOrEmpty(img.ImagePath))
+                            imageUrls.Add(img.ImagePath);
+
+                        if (img.IsRearfile == true && !string.IsNullOrEmpty(img.ImagePath))
+                        {
+                            var filename = Path.GetFileName(img.ImagePath);
+                            notes += $"</br>See attached file <a href=\"{img.ImagePath}\" target=\"_blank\">{filename}</a>";
+                        }
+                    }
+
+                    // Create response DTO
+                    var localTime = TimeZoneInfo.ConvertTimeFromUtc(guardlog.EventDateTime, TimeZoneInfo.Local);
+                    var offset = TimeZoneInfo.Local.GetUtcOffset(guardlog.EventDateTime);
+
+                    var offsetSign = offset.TotalMinutes >= 0 ? "+" : "-";
+                    var formattedOffset = $"{offsetSign}{offset:hh\\:mm}";
+                    var timeZoneShort = $"GMT{formattedOffset}";
+
+                    var formattedDisplayTime = localTime.ToString("HH:mm") + " Hrs " + timeZoneShort;
+
+                    var dto = new GuardLogDto
+                    {
+                        Id = guardlog.Id,
+                        EventDateTime = guardlog.EventDateTime,
+                        EventDateTimeLocal = formattedDisplayTime, 
+                        Notes = notes,
+                        ImageUrls = imageUrls,
+                        GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A"
+                    };
+
+
+
+                    result.Add(dto);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching the site log.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
 
 
 
     }
 
+    public class GuardLogDto
+    {
+        public int Id { get; set; }
+        public DateTime EventDateTime { get; set; }
+        public string EventDateTimeLocal { get; set; } // For frontend use
+        public string EventDateTimeZoneShort { get; set; } // For frontend use
+
+        public string Notes { get; set; }
+        public List<string> ImageUrls { get; set; }
+        public string GuardInitials { get; set; }
+    }
     public class DuressRequest
     {
         public int ClientSiteId { get; set; }
