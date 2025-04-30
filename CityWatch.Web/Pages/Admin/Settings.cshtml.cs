@@ -27,6 +27,8 @@ using static Dropbox.Api.FileRequests.GracePeriod;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
+using Microsoft.Office.Interop.PowerPoint;
+using Microsoft.Office.Core;
 
 
 namespace CityWatch.Web.Pages.Admin
@@ -2129,6 +2131,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_configDataProvider.GetTQNumbers());
         }
 
+        [RequestSizeLimit(1073741824)] // 100 MB
         public JsonResult OnPostUploadCourseDocUsingHR()
         {
             var success = false;
@@ -2189,6 +2192,28 @@ namespace CityWatch.Web.Pages.Admin
                         }
 
                         success = true;
+                        if (".ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) > 0)
+                        {
+                            Application pptApplication = new Application();
+                            Presentation pptPresentation = null;
+
+                            string inputPath = Path.Combine(CourseDocsFolder, file.FileName);
+                            string outputPath = Path.ChangeExtension(Path.Combine(CourseDocsFolder, file.FileName), ".pdf");
+                            if (System.IO.File.Exists(outputPath))
+                                //throw new ArgumentException("File Already Exists");
+                                System.IO.File.Delete(outputPath);
+
+                            try
+                            {
+                                pptPresentation = pptApplication.Presentations.Open(inputPath, WithWindow: MsoTriState.msoFalse);
+                                pptPresentation.SaveAs(outputPath, PpSaveAsFileType.ppSaveAsPDF);
+                            }
+                            finally
+                            {
+                                pptPresentation?.Close();
+                                pptApplication.Quit();
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -2210,8 +2235,16 @@ namespace CityWatch.Web.Pages.Admin
                     var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber,"Course", document.FileName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
+                    if (".ppt,.pptx".IndexOf(Path.GetExtension(document.FileName).ToLower()) > 0)
+                    {
+                        Application pptApplication = new Application();
+                        Presentation pptPresentation = null;
 
-                    _configDataProvider.DeleteCourseDocument(id);
+                        string outputPath = Path.ChangeExtension(Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course", document.FileName), ".pdf");
+                        if (System.IO.File.Exists(outputPath))
+                            System.IO.File.Delete(outputPath);
+                    }
+                        _configDataProvider.DeleteCourseDocument(id);
                 }
 
 
