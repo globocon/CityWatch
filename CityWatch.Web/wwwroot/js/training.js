@@ -2696,12 +2696,28 @@ var pdfUrl;
 var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
 function RunCourses() {
     canvas = document.getElementById("canvasCousePdf");
-     ctx = canvas.getContext('2d')
-    pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val()  ;
+    ctx = canvas.getContext('2d')
+    const fileExtn = $('#txtCoursefilename').val().split('.').pop();
+    //if (fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+    //    showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
+    //    return false;
+    //}
+    if ('.pdf'.indexOf(fileExtn.toLowerCase()) > 0) {
+
+
+
+        pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val();
+    }
+    else {
+        pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val().replace(/\.(pptx|ppt)$/i, '.pdf');
+       
+    }
     pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
         pdfDoc = pdf;
         renderPage(pageNum);
     });
+    
+    //else if ('.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0)
 }
 
 
