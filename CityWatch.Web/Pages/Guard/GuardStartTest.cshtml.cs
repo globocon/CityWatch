@@ -459,73 +459,47 @@ namespace CityWatch.Web.Pages.Guard
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
+
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
-            if (getcertificateSatus.IsCertificateHoldUntilPracticalTaken)
+            if (getcertificateSatus == null)
             {
-
-
-                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
-                foreach (var item in tqNumberList)
-                {
-                    int tqNumberId = item.TQNumberId;
-                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
-                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
-                    if (record != null)
-                    {
-                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
-                        {
-                            Id = record.Id,
-                            GuardId = guardId,
-                            TrainingCourseId = TrainingCourseId,
-                            TrainingCourseStatusId = 3,
-                            Description = record.Description,
-                            HRGroupId = record.HRGroupId
-                            //,
-                            //IsCompleted = false
-
-                        });
-                    }
-                }
-            }
-           
-            else
-            {
-                var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId).ToList();
-                foreach (var item in tqNumberList)
-                {
-                    int tqNumberId = item.TQNumberId;
-                    int TrainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
-                    var record = _guardDataProvider.GetGuardTrainingAndAssessment(guardId).Where(x => x.TrainingCourseId == TrainingCourseId).FirstOrDefault();
-                    if (record != null)
-                    {
-                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
-                        {
-                            Id = record.Id,
-                            GuardId = guardId,
-                            TrainingCourseId = TrainingCourseId,
-
-                            TrainingCourseStatusId = 4,
-                            Description = record.Description,
-                            HRGroupId = record.HRGroupId
-
-                        });
-                    }
-                }
+                return new JsonResult(new { error = "Certificate status not found." });
             }
 
+            var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId)?.ToList();
+            if (tqNumberList == null || !tqNumberList.Any())
+            {
+                return new JsonResult(new { error = "No training course numbers found." });
+            }
 
+            foreach (var item in tqNumberList)
+            {
+                int tqNumberId = item.TQNumberId;
+                var trainingCourse = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault();
+                if (trainingCourse == null) continue;
 
+                int trainingCourseId = trainingCourse.Id;
+                var record = _guardDataProvider
+                    .GetGuardTrainingAndAssessment(guardId)?
+                    .FirstOrDefault(x => x.TrainingCourseId == trainingCourseId);
 
-            //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
-
-            //string guardScore = existingGuardScrore.FirstOrDefault().guardScore;
-
-            //bool IsPass = existingGuardScrore.FirstOrDefault().IsPass;
-
-
+                if (record != null)
+                {
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = record.Id,
+                        GuardId = guardId,
+                        TrainingCourseId = trainingCourseId,
+                        TrainingCourseStatusId = getcertificateSatus.IsCertificateHoldUntilPracticalTaken ? 3 : 4,
+                        Description = record.Description,
+                        HRGroupId = record.HRGroupId
+                    });
+                }
+            }
 
             return new JsonResult(new { getcertificateSatus });
         }
+
         public JsonResult OnGetGuardFeedbackQuestions(int hrSettingsId,int guardId)
         {
             var result = _configDataProvider.GetGuardFeedbackQuestions(hrSettingsId, guardId);
