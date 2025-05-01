@@ -2196,9 +2196,15 @@ namespace CityWatch.Web.Services
         //}
         public List<Mp3File> GetDressAppFieldsAudio(int type)
         {
+            string baseUrl = "https://cws-ir.com/DuressAppAudio/";
             var audio = _guardLogDataProvider.GetDuressAppFields(type);
 
-            string baseUrl = "https://cws-ir.com/DuressAppAudio/"; // Your base URL
+            if (type == 3)
+            {
+                 baseUrl = "https://cws-ir.com/DuressAppMultimedia/"; // Your base URL
+
+            }
+            
 
             return audio.Select(x => new Mp3File
             {
@@ -2207,6 +2213,9 @@ namespace CityWatch.Web.Services
 
             }).ToList();
         }
+
+
+       
 
 
 
