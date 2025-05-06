@@ -3,9 +3,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<AssemblyVersion>2.56.0.0</AssemblyVersion>
 	</PropertyGroup>
-	<PropertyGroup>
-		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
-	</PropertyGroup>
+	
 	<ItemGroup>
 	  <Content Remove="wwwroot\js\radiocheck.js~RF45fa00.TMP" />
 	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
