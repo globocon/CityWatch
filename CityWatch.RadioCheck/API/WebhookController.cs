@@ -1,5 +1,7 @@
 ﻿using ClosedXML.Excel;
+using Dropbox.Api.FileProperties;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -126,11 +128,17 @@ namespace CityWatch.RadioCheck.API
     public class WebhookController : ControllerBase
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private string templateFileName;
+        private string jsonMappingFile;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
-        private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
-        public WebhookController()
+        //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
+        public WebhookController(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
+            _configuration = configuration;
+            templateFileName = "Template.xlsx";
+            jsonMappingFile = "form_fields_mapping.json";
         }
 
         [HttpPost("jotform")]
@@ -172,6 +180,7 @@ namespace CityWatch.RadioCheck.API
                 //string workOrder = webhookData != null && webhookData.ContainsKey("q3_workOrder") ? webhookData["q3_workOrder"].ToString() : "UnknownWorkOrder";
                 string workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
                 string submissionFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName, workOrder);
+                string templateFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName);
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
@@ -186,7 +195,16 @@ namespace CityWatch.RadioCheck.API
                 if (webhookData != null)
                 {
                     await DownloadAllFiles(webhookData, submissionFolder, logFilePath);
-                    AppendToExcel(excelFilePath, webhookData);
+                    if (DoesTemplateExists(templateFolder))
+                    {
+                        //CreateExcelInTemplateFormat(excelFilePath, webhookData);
+                        UpdateTemplateUsingJsonMapping(templateFolder, excelFilePath, webhookData);
+                    }
+                    else
+                    {
+                        AppendToExcel(excelFilePath, webhookData);
+                    }
+                    
                     // Save JSON to a file
                     string jsonOutput = GetImageNamesAndCaptionsJson(webhookData, logFilePath);
                     await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
@@ -206,6 +224,7 @@ namespace CityWatch.RadioCheck.API
         {
             try
             {
+                var JotFormApiKey = _configuration["jotformSettings:ApiKey"];
                 string url = $"https://api.jotform.com/form/{formID}?apiKey={JotFormApiKey}";
                 var response = await _httpClient.GetStringAsync(url);
                 var formResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
@@ -407,6 +426,108 @@ namespace CityWatch.RadioCheck.API
         }
 
 
+        private void CreateExcelInTemplateFormat(string excelFilePath, Dictionary<string, object> webhookData)
+        {
+            bool fileExists = System.IO.File.Exists(excelFilePath);
+            using (var workbook = fileExists ? new XLWorkbook(excelFilePath) : new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("WebhookData");
+
+                // Determine the last used row (or set to 1 if empty)
+                int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+
+                // If file does not exist, write the headers
+                if (!fileExists)
+                {
+                    int colIndex = 1;
+                    foreach (var key in webhookData.Keys)
+                    {
+                        worksheet.Cell(1, colIndex).Value = key;
+                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
+                        colIndex++;
+                    }
+                }
+
+                // Append the new data row
+                int newRow = lastUsedRow + 1;
+                int col = 1;
+                foreach (var value in webhookData.Values)
+                {
+                    worksheet.Cell(newRow, col).Value = value?.ToString();
+                    col++;
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Columns().AdjustToContents();
+
+                // Save the workbook
+                workbook.SaveAs(excelFilePath);
+            }
+        }
+
+        private void UpdateTemplateUsingJsonMapping(string TemplateFolder, string excelFilePath, Dictionary<string, object> webhookData)
+        {
+            // Load field mappings: ExcelHeader -> WebhookDataKey
+            string templateFileWithPath = Path.Combine(TemplateFolder, templateFileName);
+            string jsonMappingFileWithPath = Path.Combine(TemplateFolder, jsonMappingFile);
+
+            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
+            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
+
+            //Create a copy of template file in the new folder for export
+            System.IO.File.Copy(templateFileWithPath, excelFilePath, true);
+
+
+            using (var workbook = new XLWorkbook(excelFilePath))
+            {
+                var worksheet = workbook.Worksheet("OutputData");
+
+                int headerRow = 3;
+                int dataRow = 4;
+                int col = 1;
+
+                // Traverse headers in row 3
+                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
+                {
+                    string excelHeader = worksheet.Cell(headerRow, col).GetString();
+
+                    // Find webhook key where value in the mapping matches Excel header
+                    var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Value == excelHeader);
+                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Key, out var rawValue))
+                    {
+                        object cellValue = null;
+
+                        if (rawValue is JObject dateObj &&
+                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
+                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
+                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
+                            int.TryParse(dateObj["year"]?.ToString(), out int year))
+                        {
+                            // Format date to dd/MM/yyyy or as DateTime
+                            DateTime date = new DateTime(year, month, day);
+                            cellValue = date.ToString("dd/MM/yyyy");
+                        }
+                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
+                        {
+                            cellValue = rawValue.ToString();
+                        }
+
+                        // Write to Excel only if there's a value
+                        if (cellValue != null)
+                        {
+                            worksheet.Cell(dataRow, col).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
+                        }
+                    }
+
+                    col++;
+                }
+                                
+                workbook.Save();
+            }
+        }
+
+
+
         //public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
         //{
         //    var imagesWithCaptions = new List<object>();
@@ -579,6 +700,18 @@ namespace CityWatch.RadioCheck.API
 
             System.IO.File.AppendAllText(logFilePath, $"No matching caption key found for {photoKey}\n");
             return null;
+        }
+
+        private bool DoesTemplateExists(string TemplateFolder)
+        {
+            // Check for Template.xlsx specifically
+            string templatePath = Path.Combine(TemplateFolder, templateFileName);
+            string jsonMappingPath = Path.Combine(TemplateFolder, jsonMappingFile);
+            if (!System.IO.File.Exists(templatePath) && !System.IO.File.Exists(jsonMappingPath))
+            {
+                return false;
+            }
+            return true;
         }
     }
 
