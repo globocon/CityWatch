@@ -74,10 +74,4 @@
     <ProjectReference Include="..\CityWatch.Data\CityWatch.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.PowerPoint">
-      <HintPath>C:\Users\USER\Downloads\Microsoft.Office.Interop.PowerPoint_x86\Microsoft.Office.Interop.PowerPoint.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
