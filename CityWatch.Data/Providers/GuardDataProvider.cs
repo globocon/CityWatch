@@ -110,6 +110,7 @@ namespace CityWatch.Data.Providers
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessmentByAdmin(int guardId);
 
         void SaveGuardMobileNo(int GuardID, string mobileNo);
+        void SaveGuardRCLoginDetails(LoginUserRCHistory loginuserrc);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1249,6 +1250,19 @@ namespace CityWatch.Data.Providers
             return result;
 
 
+
+        }
+        public void SaveGuardRCLoginDetails(LoginUserRCHistory loginuserrc)
+        {
+
+            if (loginuserrc.Id==0)
+            {
+                
+                _context.LoginUserRCHistory.Add(loginuserrc);
+            }
+
+
+            _context.SaveChanges();
 
         }
 

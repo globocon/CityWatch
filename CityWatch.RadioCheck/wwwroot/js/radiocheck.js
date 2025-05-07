@@ -350,6 +350,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
         },
         {
+            
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-guardlogin',
+            action: function () {
+                getLoggedGuardDetails();
+
+            }
+
+        },
+        {
             extend: 'pdf',
             text: '<i class="fa fa-globe"></i>',
             titleAttr: 'Globe Map',
@@ -974,6 +985,18 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             className: 'btn-hidden',
             enabled: false,
             name: 'Space',
+
+        },
+        {
+            
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-guardlogin',
+            action: function () {
+                getLoggedGuardDetails();
+               
+
+            }
 
         },
         {
@@ -3584,6 +3607,17 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
         },
         {
+            
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-guardlogin',
+            action: function () {
+                getLoggedGuardDetails();
+
+            }
+
+        },
+        {
             extend: 'pdf',
             text: '<i class="fa fa-globe"></i>',
             titleAttr: 'Globe Map',
@@ -3594,6 +3628,13 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 const newPageUrl = '/GlobeMapNoActivity';
                 window.open(newPageUrl, '_blank');
             }
+        },
+        {
+            extend: 'pdf',
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-pdf',
+
         },
         {
             extend: 'pdf',
@@ -3917,22 +3958,26 @@ if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess')
     $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
 
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
 
 
     $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
     $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
 
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
     
 
 }
@@ -3945,6 +3990,7 @@ if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
 
 
 
@@ -3952,6 +3998,7 @@ if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
     $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
 
 
 }
@@ -4096,6 +4143,17 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
         },
         {
+            
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-guardlogin',
+            action: function () {
+                getLoggedGuardDetails();
+
+            }
+
+        },
+        {
             extend: 'pdf',
             text: '<i class="fa fa-globe"></i>',
             titleAttr: 'Globe Map',
@@ -4106,6 +4164,17 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 const newPageUrl = '/GlobeMapNoActivity';
                 window.open(newPageUrl, '_blank');
             }
+        },
+        {
+           
+            text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
+            titleAttr: '',
+            className: 'btn btn-md mr-2 btn-guardlogin',
+            action: function () {
+                getLoggedGuardDetails();
+
+            }
+
         },
         {
             extend: 'pdf',
@@ -9276,3 +9345,185 @@ function createCustomIcon(color) {
         iconSize: [25, 25],
     });
 }
+//p4-117-start
+
+const columns = [];
+//let gridGuardRCLogin = $('#loggedGuardsDetails').DataTable({
+//    paging: false,
+//    ordering: false,
+//    info: false,
+//    searching: false,
+//    fixedColumns: {
+//        left: 1
+//    },
+//    scrollCollapse: true,
+//    scrollX: true,
+//    autoWidth: false,
+//   data: null,
+//    columns: columns
+//});
+function getLoggedGuardDetails() {
+    $('#loggedGuardsInfoModal').modal('show');
+    const subHeaders = ['Time', 'IP'];
+    const now = new Date();
+    const start = new Date(now.getTime() - (72 * 60 * 60 * 1000)); // 72 hours ago
+    const dates = [];
+    isPaused = true;
+    // Generate dates
+    for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toLocaleDateString('en-GB', {
+            weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+        }));
+    }
+
+    // Row 1: Main headers (dates)
+    let topRow = '<tr><th rowspan="2">CRO</th><th rowspan="2">Licence</th>';
+    dates.forEach(date => {
+        topRow += `<th colspan="${subHeaders.length}">${date}</th>`;
+    });
+    topRow += '</tr>';
+
+    // Row 2: Sub-headers (Time, IP)
+    let secondRow = '<tr>';
+    dates.forEach(() => {
+        subHeaders.forEach(sub => {
+            secondRow += `<th>${sub}</th>`;
+        });
+    });
+    secondRow += '</tr>';
+    var headerrow = '<thead>' + topRow + secondRow + '</thead>';
+    GetGuardRCLoginDetails(headerrow, dates);
+   /* $('#loggedGuardsDetails').html('<thead>' + topRow + secondRow + '</thead>' + databody);*/
+    
+}
+function GetGuardRCLoginDetails(headerrow, dates) {
+    $.ajax({
+        url: '/RadioCheckV2?handler=GuardRCLoginDetails',
+        type: 'GET',
+        dataType: 'json',
+        //data: function (d) { d.id = $('#txt_SpecificGuardDetailsId').val(); }
+    })
+        .done(function (response) {
+            let datarow = '<tbody>';
+            response.forEach(item => {
+                datarow += `<tr>`;
+                datarow += `<td> ${item.guardName}</td> `;
+                datarow += `<td> ${item.license}</td> `;
+                dates.forEach(date => {
+                    const log = item.logins.find(log => log.formattedLastLoginDate === date);
+                    if (log) {
+                        datarow += `<td>${log.formattedLastLoginTime}</td>`;
+                        datarow += `<td>${log.ipAddress}</td>`;
+                    } else {
+                        datarow += `<td></td><td></td>`;
+                    }
+                });
+                //item.logins.forEach(itemnew => {
+                //    if (dates[0] == itemnew.formattedLastLoginDate) {
+                //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //        datarow += `<td> ${itemnew.ipAddress}</td> `;
+
+                //    }
+                //    else {
+                //        datarow += `<td> </td> `;
+                //        datarow += `<td></td> `;
+                //    }
+                //    if (dates[1] == itemnew.formattedLastLoginDate) {
+                        
+                //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //        datarow += `<td> ${itemnew.ipAddress}</td> `;
+                        
+                        
+                //    }
+                //    else {
+                //        datarow += `<td> </td> `;
+                //        datarow += `<td></td> `;
+                //    }
+                //    if (dates[2] == itemnew.formattedLastLoginDate) {
+
+                //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //        datarow += `<td> ${itemnew.ipAddress}</td> `;
+
+                //    }
+                //    else {
+                //        datarow += `<td> </td> `;
+                //        datarow += `<td></td> `;
+                //    }
+                //    if (dates[3] == itemnew.formattedLastLoginDate) {
+                       
+                //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //        datarow += `<td> ${itemnew.ipAddress}</td> `;
+
+                //    }
+                //    else {
+                //        datarow += `<td> </td> `;
+                //        datarow += `<td></td> `;
+                //    }
+                //    //dates.forEach(date => {
+                //    //    if (date == itemnew.formattedLastLoginDate) {
+                //    //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //    //        datarow += `<td> ${itemnew.ipAddress}</td> `;
+                //    //    }
+                //    //    else {
+                //    //        datarow += `<td> </td> `;
+                //    //        datarow += `<td></td> `;
+                //    //    }
+                //    //   // topRow += `<th colspan="${subHeaders.length}">${date}</th>`;
+                //    //});
+                //    //datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
+                //    //datarow += `<td> ${itemnew.ipAddress}</td> `;
+                   
+                //});
+                //if (item.logins.length == 0) {
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //}
+                //else if (item.logins.length == 1) {
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+
+                //}
+                //else if (item.logins.length == 2) {
+                    
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+
+                //}
+                //else if (item.logins.length == 3) {
+
+                    
+                //    datarow += `<td> </td> `;
+                //    datarow += `<td> </td> `;
+
+                //}
+                //else if (item.logins.length == 4) {
+
+
+                //    datarow += ` `;
+
+                //}
+
+
+                datarow += `</tr>`;
+                
+            });
+            datarow += `</tbody>`;
+            $('#loggedGuardsDetails').html(headerrow + datarow);
+            //gridGuardRCLogin.ajax.reload(null, false)
+            //gridGuardRCLogin.refresh();
+            //gridGuardRCLogin.ajax.reload();
+        });
+}
+//p4-117-end
