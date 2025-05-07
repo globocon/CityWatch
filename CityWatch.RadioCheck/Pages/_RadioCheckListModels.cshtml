@@ -1,0 +1,30 @@
+﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Http
+@model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
+@inject IConfigDataProvider configDataProvider
+@inject IGuardDataProvider guarddataProvider
+<div class="modal" tabindex="-1" role="dialog" id="loggedGuardsInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label>Logged Guards</label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="loggedGuardsDetails" class="table table-bordered" style="width:100%;">
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

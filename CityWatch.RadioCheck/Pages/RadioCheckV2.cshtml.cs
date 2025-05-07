@@ -33,6 +33,7 @@ using CityWatch.Data.Services;
 using CityWatch.Web.Pages.Radio;
 using Dropbox.Api.Files;
 using System.Web;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -175,7 +176,16 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
                         AuthUserHelper.IsAdminGlobal = false;
                     }
-                   
+
+                    
+                         _guardDataProvider.SaveGuardRCLoginDetails(new LoginUserRCHistory()
+                         {
+                             
+                             IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                             LoginTime = DateTime.Now,
+                             Id=0,
+                             GuardId = GuardId,
+                         });
                 }
 
 
@@ -2623,6 +2633,24 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
         }
 
-
+        public JsonResult OnGetGuardRCLoginDetails()
+        {
+           
+            var data = _guardLogDataProvider.GetGuardRCLoginDetails();
+            //var result = hrGroups.Select(group => new
+            //{
+            //    GroupId = group.Value,
+            //    Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+            //        .Select(course => new
+            //        {
+            //            course.Id,
+            //            course.Description
+            //            //,
+            //            //course.CourseStatus
+            //        }).ToList()
+            //}).Where(group => group.Courses.Any()).ToList();
+            
+            return new JsonResult(data);
+        }
     }
 }

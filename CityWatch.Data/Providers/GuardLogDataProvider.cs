@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
@@ -368,6 +369,7 @@ namespace CityWatch.Data.Providers
         public void DeleteDuressApp(int id);
         public List<DuressAppField> GetDuressAppFields(int typeId);
         public void DeleteGuardCourseByAdmin(int Id);
+        List<GuardRCLoginDetail> GetGuardRCLoginDetails();
 
     }
 
@@ -6645,6 +6647,33 @@ namespace CityWatch.Data.Providers
 
 
 
+        }
+        public List<GuardRCLoginDetail> GetGuardRCLoginDetails()
+        {
+            DateTime cutoff = DateTime.Now.AddHours(-72);
+
+            var recentLogins = _context.LoginUserRCHistory
+                .Where(x => x.LoginTime >= cutoff)
+                .ToList();
+
+            var guardIds = recentLogins.Select(x => x.GuardId).Distinct().ToList();
+
+            var guards = _context.Guards
+                .Where(g => guardIds.Contains(g.Id))
+                .ToList();
+
+            var guardDetails = guards.Select(guard => new GuardRCLoginDetail
+            {
+                GuardName = guard.Name,
+                License = guard.SecurityNo,
+                Logins = recentLogins
+                    .Where(login => login.GuardId == guard.Id)
+                    .GroupBy(login => login.LoginTime.Value.Date) // Group by date only
+        .Select(g => g.OrderByDescending(l => l.LoginTime).First())
+                    .ToList()
+            }).ToList();
+
+            return guardDetails;
         }
 
     }
