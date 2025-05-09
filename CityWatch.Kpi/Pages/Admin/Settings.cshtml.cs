@@ -258,7 +258,10 @@ namespace CityWatch.Kpi.Pages.Admin
             if (clientSiteKpiSetting == null)
             {
                 var clientSiteForTheId = _guardLogDataProvider.GetClientSites(siteId).FirstOrDefault();
-                clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId, ClientSite = clientSiteForTheId };
+                clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId, ClientSite = clientSiteForTheId, clientSiteMobileAppSettings = new ClientSiteMobileAppSettings() { ClientSiteId = siteId } };
+            }else if (clientSiteKpiSetting.clientSiteMobileAppSettings == null)
+            {
+                clientSiteKpiSetting.clientSiteMobileAppSettings = new ClientSiteMobileAppSettings() { ClientSiteId = siteId };
             }
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }

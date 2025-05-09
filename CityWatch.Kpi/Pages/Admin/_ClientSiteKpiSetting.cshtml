@@ -2035,55 +2035,55 @@
                         <h6>Site Alarm SOP's:</h6>
                         <table class="table table-bordered tbl-settings" id="tbl_summaryImage1">
                             @*  <thead>
-                                <tr>
+                            <tr>
 
-                                    <th style="width:370px">File Name</th>
-                                    <th style="width:370px">Date & Time Uploaded</th>
-                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                </tr>
+                            <th style="width:370px">File Name</th>
+                            <th style="width:370px">Date & Time Uploaded</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                            </tr>
                             </thead> *@
                             @*   <tbody>
-                                <tr>
-                                    @{
-                                        if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
-                                        {
-                                            <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="align-middle" id="summary_imageRC"></td>
-                                        }
+                            <tr>
+                            @{
+                            if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
+                            {
+                            <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
+                            }
+                            else
+                            {
+                            <td class="align-middle" id="summary_imageRC"></td>
+                            }
 
-                                        if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
-                                        {
-                                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="align-middle" id="summary_image_updatedRC"></td>
-                                        }
-                                    }
-                                    <td class="text-center">
-                                        <label class="btn btn-success mb-0">
+                            if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
+                            {
+                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                            }
+                            else
+                            {
+                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                            }
+                            }
+                            <td class="text-center">
+                            <label class="btn btn-success mb-0">
 
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+                            <i class="fa fa-upload mr-2"></i>Replace
+                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
 
-                                        </label>
-                                        @{
-                                            if (Model.rclistKP.Imagepath != string.Empty)
-                                            {
-                                                <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                            }
-                                            else
-                                            {
-                                                <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                            }
-                                        }
+                            </label>
+                            @{
+                            if (Model.rclistKP.Imagepath != string.Empty)
+                            {
+                            <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                            }
+                            else
+                            {
+                            <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                            }
+                            }
 
-                                        <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
-                                    </td>
-                                </tr>
+                            <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
+                            </td>
+                            </tr>
                             </tbody> *@
                         </table><br />
 
@@ -2204,118 +2204,54 @@
         <div class="tab-pane" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
             <ul class="nav nav-tabs" id="RcActionList" role="tablist">
                 <li class="nav-item " role="presentation">
-                    <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Settings</a>
+                    <a class="nav-link active" id="DuressAppSettings-tab" data-toggle="tab" href="#DuressAppSettingsTab" role="tab" aria-controls="DuressAppSettings">Settings</a>
                 </li>
-            </ul>
-            <div class="tab-content">
-                  <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
-                  <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
-                <div id="messagesContainer"></div>
-
-                <div class="row pt-3">
-                    <!-- Left 50%: Form Controls -->
-                    <div class="col-md-6">
-                        <!-- Site Duress Number -->
-                        <div class="form-group">
-                            <label class="form-label">Site Duress Number</label>
-                            <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
-                                <option value="">Select Site Duress Number</option>
-                                <option value="1">01</option>
-                                <option value="2">02</option>
-                            </select>
-                        </div>
-
-                        <!-- Position Selection -->
-                        <div class="form-group">
-                            <div class="d-flex flex-row justify-content-between">
-                                <label class="form-label">Position</label>
-                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
-                                    <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
-                                </div>
-                            </div>
-                            <div class="form-group p-0">
-                                <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right 50%: QR Code -->
-                    <div class="col-md-6 d-flex justify-content-center align-items-center">
-                        <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
-                    </div>
-                </div>
-
-                <!-- Buttons -->
-                <div class="pt-3">
-                    <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
-                        <i class="fa fa-trash mr-2"></i>Delete
-                    </button>
-                    <button type="button" class="btn btn-success" id="save_DuressApp">
-                        <i class="fa fa-save mr-2"></i>Save RC Action List
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        @* <div class="tab-pane" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
-            <ul class="nav nav-tabs" id="RcActionList" role="tablist">
                 <li class="nav-item " role="presentation">
-                    <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Duress App Settings</a>
+                    <a class="nav-link" id="MobileAppCrowdControl-tab" data-toggle="tab" href="#CrowdControlTab" role="tab" aria-controls="Crowd Control">Crowd Control</a>
                 </li>
             </ul>
             <div class="tab-content">
-                <div class="tab-content">
+                <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
+                <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
+                <div class="tab-pane active" id="DuressAppSettingsTab" role="tabpanel" aria-labelledby="crowdControlTab">
                     <div id="messagesContainer"></div>
-                    <div class="tab-pane active pt-2" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
-                        <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
-                        <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
-                        <!-- First Row: Site Duress Number -->
-                        <div class="form-row pt-3">
-                            <!-- Added pt-3 for top padding -->
-                            <div class="col-md-6">
-                                <div class="form-group row">
-                                    <label class="col-md-4 form-label text-left pl-4">Site Duress Number</label>
-                                    <div class="col-md-8">
-                                        <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
-                                            <option value="">Select Site Duress Number</option>
-                                            <option value="1">01</option>
-                                            <option value="2">02</option>
-                                        </select>
+
+                    <div class="row pt-3">
+                        <!-- Left 50%: Form Controls -->
+                        <div class="col-md-6">
+                            <!-- Site Duress Number -->
+                            <div class="form-group">
+                                <label class="form-label">Site Duress Number</label>
+                                <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
+                                    <option value="">Select Site Duress Number</option>
+                                    <option value="1">01</option>
+                                    <option value="2">02</option>
+                                </select>
+                            </div>
+
+                            <!-- Position Selection -->
+                            <div class="form-group">
+                                <div class="d-flex flex-row justify-content-between">
+                                    <label class="form-label">Position</label>
+                                    <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                        <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
+                                        <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
                                     </div>
+                                </div>
+                                <div class="form-group p-0">
+                                    <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Second Row: Position & QR Code -->
-                        <div class="form-row pt-3">
-                            <!-- Added pt-3 for top padding -->
-                            <!-- Left Side: Position Selection -->
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <div class="d-flex flex-row justify-content-between">
-                                        <label class="form-label">Position</label>
-                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
-                                            <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
-                                        </div>
-                                    </div>
-                                    <div class="form-group p-0">
-                                        <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Side: QR Code -->
-                            <div class="col-md-6 d-flex justify-content-end align-items-center">
-                                <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
-                            </div>
+                        <!-- Right 50%: QR Code -->
+                        <div class="col-md-6 d-flex justify-content-center align-items-center">
+                            <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
                         </div>
                     </div>
 
                     <!-- Buttons -->
                     <div class="pt-3">
-                        <!-- Added pt-3 for spacing before buttons -->
                         <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
                             <i class="fa fa-trash mr-2"></i>Delete
                         </button>
@@ -2325,13 +2261,140 @@
                     </div>
                 </div>
 
+                <div class="tab-pane" id="CrowdControlTab" role="tabpanel" aria-labelledby="crowdControlTab">
+                    <div class="row m-0 pt-2">
+                        <div class="col-md-12">
+                            <form id="frm_crowdcontrol_field">
+                                <input type="hidden" id="ClientSiteMobileAppSettings_Id"  asp-for="@Model.clientSiteMobileAppSettings.Id" /> 
+                                <div class="form-group row mb-2">
+                                    <label class="col-md-3 col-form-label">Crowd Control Site Profile</label>
+                                    <div class="col-md-6">
+                                        <div class="custom-control custom-switch custom-control-inline mt-2" title="Enable/Disable crowd control for site" style="padding-bottom:5px">
+                                            <input type="checkbox" class="custom-control-input" id="IsCrowdCountEnabled" asp-for="@Model.clientSiteMobileAppSettings.IsCrowdCountEnabled">
+                                            <label class="custom-control-label" for="Iscrowdcontrol"></label>
+                                            <input type="hidden" id="IscrowdcontrolEnabledHidden" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row align-items-center">
+                                    <label class="col-md-3 col-form-label">Counter Location</label>
+                                    <div class="col-md-9 d-flex align-items-center">
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableCCDoor" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsDoorEnabled">
+                                            <label for="enableCCDoor" class="form-check-label">Door</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableCCGate" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsGateEnabled">
+                                            <label for="enableCCGate" class="form-check-label">Gate</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableCCLevelFloor" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsLevelFloorEnabled">
+                                            <label for="enableCCLevelFloor" class="form-check-label">Level (Floor)</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableCCRoom" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsRoomEnabled">
+                                            <label for="enableCCRoom" class="form-check-label">Room</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-md-3 col-form-label mt-0">Counter Quantity</label>
+                                    <div class="col-md-3">
+                                        @* <select id="CCCounterQuantity" name="CCCounterQuantity" asp-for="@Model.CrmSupplierForSettings" asp-items="@ViewDataService.ProviderList()" class="form-control"> *@
+                                        <select id="CCCounterQuantity" name="CCCounterQuantity"  asp-for="@Model.clientSiteMobileAppSettings.CounterQuantity" class="form-control">
+                                            <option value="0">Select Counter Quantity</option>                                            
+                                                @for (var colIndex = 1; colIndex < 11; colIndex++){
+                                                <option value="@colIndex">@(colIndex.ToString("00")) </option>
+                                                }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row mt-3">
+                                    <button type="button" class="btn btn-success pull-right" id="btnSaveCrowdControlSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
+        </div>
+
+        @* <div class="tab-pane" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
+        <ul class="nav nav-tabs" id="RcActionList" role="tablist">
+        <li class="nav-item " role="presentation">
+        <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#DuressApp" role="tab" aria-controls="DuressApp">Duress App Settings</a>
+        </li>
+        </ul>
+        <div class="tab-content">
+        <div class="tab-content">
+        <div id="messagesContainer"></div>
+        <div class="tab-pane active pt-2" id="DuressApp" role="tabpanel" aria-labelledby="DuressApp">
+        <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
+        <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
+        <!-- First Row: Site Duress Number -->
+        <div class="form-row pt-3">
+        <!-- Added pt-3 for top padding -->
+        <div class="col-md-6">
+        <div class="form-group row">
+        <label class="col-md-4 form-label text-left pl-4">Site Duress Number</label>
+        <div class="col-md-8">
+        <select id="siteDuressNumber" name="siteDuressNumber" class="form-control">
+        <option value="">Select Site Duress Number</option>
+        <option value="1">01</option>
+        <option value="2">02</option>
+        </select>
+        </div>
+        </div>
+        </div>
+        </div>
+
+        <!-- Second Row: Position & QR Code -->
+        <div class="form-row pt-3">
+        <!-- Added pt-3 for top padding -->
+        <!-- Left Side: Position Selection -->
+        <div class="col-md-6">
+        <div class="form-check">
+        <div class="d-flex flex-row justify-content-between">
+        <label class="form-label">Position</label>
+        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+        <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCarDuressApp" name="positionfilterPatrolCarDuressApp">
+        <label class="custom-control-label" for="positionfilterPatrolCarDuressApp">Patrol Car</label>
+        </div>
+        </div>
+        <div class="form-group p-0">
+        <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+        </div>
+        </div>
+        </div>
+
+        <!-- Right Side: QR Code -->
+        <div class="col-md-6 d-flex justify-content-end align-items-center">
+        <img src="#" id="QrCode" alt="QR Code" class="img-fluid" style="display: none;">
+        </div>
+        </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="pt-3">
+        <!-- Added pt-3 for spacing before buttons -->
+        <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
+        <i class="fa fa-trash mr-2"></i>Delete
+        </button>
+        <button type="button" class="btn btn-success" id="save_DuressApp">
+        <i class="fa fa-save mr-2"></i>Save RC Action List
+        </button>
+        </div>
+        </div>
+
+        </div>
         </div>  *@
 
-        
 
 
-        
+
+
 
 
     </div>
