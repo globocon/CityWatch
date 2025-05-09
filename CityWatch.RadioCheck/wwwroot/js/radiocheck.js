@@ -9527,3 +9527,84 @@ function GetGuardRCLoginDetails(headerrow, dates) {
         });
 }
 //p4-117-end
+$('#btnSendActionListLater').on('click', function () {
+    $('#MessageSendTimeInfoModal').modal('show');
+});
+$('#btnSaveMessageTime').on('click', function () {
+    $(this).prop('disabled', true);
+    var messagetime = $('#txtSendMessageDate').val()
+    var clientSiteId = $('#dglClientSiteIdActionList2').val();
+    var Notifications = $('#txtMessageActionList').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+
+    var ClientType = $('#dglClientTypeActionList2').val();
+    var ClientSite = $('#dglClientSiteIdActionList2').val();
+    var AlarmKeypadCode = $('#Site_Alarm_Keypad_code').val();
+    var Action1 = $('#Action1').val();
+    var Physicalkey = $('#site_Physical_key').val();
+    var Action2 = $('#Action2').val();
+    var SiteCombinationLook = $('#Site_Combination_Look').val();
+    var Action3 = $('#Action3').val();
+    var Action4 = $('#Action4').val();
+    var Action5 = $('#Action5').val();
+    var CommentsForControlRoomOperator = $('#txtComments').val();
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
+    }
+
+    else if (chkClientType == true && ClientType == null) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
+    }
+    else if (ClientType == '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
+    }
+    else if (ClientSite == '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+        $(this).prop('disabled', false);
+    }
+    else {
+
+        // Task p6#73_TimeZone issue -- added by Binoy - Start   
+        fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+        // Task p6#73_TimeZone issue -- added by Binoy - End
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveActionListLater',
+            type: 'POST',
+            data: {
+                Notifications: Notifications,
+                Subject: Subject,
+                ClientType: ClientType,
+                clientSiteId: clientSiteId,
+                AlarmKeypadCode: AlarmKeypadCode,
+                Action1: Action1,
+                Physicalkey: Physicalkey,
+                Action2: Action2,
+                SiteCombinationLook: SiteCombinationLook,
+                Action3: Action3,
+                Action4: Action4,
+                Action5: Action5,
+                CommentsForControlRoomOperator: CommentsForControlRoomOperator,
+                tmzdata: tmzdata,
+                messagetime: messagetime
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $(this).prop('disabled', false);
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+                $('#Access_permission_RC_status').hide();
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});

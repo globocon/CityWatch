@@ -1,10 +1,12 @@
 ﻿@page
+@using CityWatch.Data.Helpers
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using Microsoft.AspNetCore.Http
 @model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
 @inject IConfigDataProvider configDataProvider
 @inject IGuardDataProvider guarddataProvider
+@inject IGuardLogDataProvider _guardLogDataProvider
 <div class="modal" tabindex="-1" role="dialog" id="loggedGuardsInfoModal">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
@@ -25,6 +27,486 @@
 
             </div>
 
+        </div>
+    </div>
+</div>
+<!----------------- Push Notification Details Modal -------------------->
+
+<div class="modal fade" id="pushNoTificationsControlRoomModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_push_notifications_for_rc">
+                    <input type="hidden" id="inpCallingFunction" value="SITEBUTTON" />
+                    <div class="container">
+                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="globalalertTab" data-toggle="tab" href="#globalalert" role="tab" aria-controls="globalalert" aria-selected="true">Global Alert</a>
+                            </li>
+                            @*   <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="RCActionListTab" data-toggle="tab" href="#rcactionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li> *@
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="ActionListTab" data-toggle="tab" href="#actionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-2">
+                            <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode C4i : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkLB" checked>
+                                                    <label class="col-form-label">LB</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSiteEmail">
+                                                    <label class="col-form-label">Site Email</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWand">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtPushNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtPushNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendPushLotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status_new" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="globalalert" role="tabpanel" aria-labelledby="globalalert">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast C4i Grouping : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkNationality" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">National</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label">(LB+Site Email)</label>
+                                                <div class="col-md-2">
+                                                    <input type="checkbox" id="chkSiteState" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">State</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <select class="form-control" id="State1" style="width:209px" disabled>
+                                                        @*  <option value="">Select</option> *@
+                                                        @foreach (var State in _guardLogDataProvider.GetStates())
+                                                        {
+                                                            <option value="@State.Name">@State.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-4">
+                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
+                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+                                                        @{
+                                                            var userClientTypes = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes = userClientTypes.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                                                            foreach (var clientType in sortedClientTypes)
+                                                            {
+                                                                var countClientType = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                                            }
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkGlobalPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonalGlobal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWandGlobal">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="actionlist" role="tabpanel" aria-labelledby="actionlist">
+                                <div class="row m-1">
+                                    <form id="frm_ActionList" class="mt-1">
+                                        <input type="hidden" id="gl_client_site_id" />
+                                        <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath">
+                                        <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <label class="mx-1" for="dglClientTypeActionList">Client Type</label>
+                                                <select class="form-control" id="dglClientTypeActionList" style="width:209px">
+                                                    <option value="">Select</option>
+                                                    @{
+                                                        var userClientTypes1 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                        var sortedClientTypes1 = userClientTypes1.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                        sortedClientTypes1 = userClientTypes1.OrderBy(clientType => clientType.Name);
+                                                        foreach (var clientType in sortedClientTypes1)
+                                                        {
+                                                        //var countClientType1 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 m-0 p-0">
+                                                <label class="mx-1" for="dglClientSiteIdActionList">Client Site</label>
+                                                <select class="form-control mx-1" id="dglClientSiteIdActionList" style="width:209px"></select>
+
+                                            </div>
+                                            <div class="col-md-2 m-0 p-0">
+                                                <label class="mt-3"></label>
+                                                <input type="text" id="search_client_siteSteps" class="form-control mb-3" placeholder="Search Site">
+                                            </div>
+                                            <div class="col-md-2 m-0 p-0 text-center">
+                                                <label class="mt-3"></label>
+                                                <div class="col-md-12">
+                                                    <button type="button" id="btn_Edit_ActionList" class="btn btn-outline-primary"><i class="fa fa-pencil mr-1"></i>Edit</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-md-9">
+                                                <input type="text" id="pn_client_site_address" class="form-control mb-3" placeholder="Site address" readonly>
+                                            </div>
+                                            <div class="form-group col-md-3 mx-0 pl-4">
+                                                <label class="form-label pull-left mt-1">GPS Map Link</label>
+                                                <a class="btn btn-sm w-25 ml-2" id="pn_sitegpsmap" target="_blank" title="Click to view in map"><i class="fa fa-map fa-2x text-dark"></i></a>
+                                            </div>
+                                        </div>
+
+                                        <div id="searchResults" class="form-group row mt-2">
+                                        </div>
+
+                                        <div class="form-group row mt-2">
+                                            <div class="form-group col-md-6">
+                                                <div class="form-group col-md-12 mb-4">
+                                                    <div class="row mb-1">
+                                                        <div class="col-md-12">
+                                                            <h6 class="font-weight-bold">Site Access</h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Alarm Keypad Code</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Physical Key</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Combination Lock</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">SOP'S<i class="fa fa-download mr-1"></i></label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            @* <a class="btn btn-outline-primary w-100 text-primary" id="download_imageRCList" target="_blank"><i class="fa fa-download mr-1"></i>Download</a> @*Download*@
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_imageRCList" target="_blank">Alarms</a> @*Alams*@
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_siteRCSOPList" target="_blank">Site</a> @*SOP*@
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Contracted Manning</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <button type="button" class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>View</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <div class="form-group col-md-12 mb-2">
+                                                    <div class="row">
+                                                        <div class="col-md-8">
+                                                            <h6 class="font-weight-bold">Alarm Response</h6>
+                                                        </div>
+                                                        <div class="col-md-4 pull-right text-right">
+                                                            <button type="button" class="btn btn-sm w-50" id="btncopytoclipboard" title="Copy to Clipboard"><i class="fa fa-clipboard fa-2x text-success"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12 mt-2 pt-1">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 1</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action1" name="RCActionList.Action1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 2</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action2" name="RCActionList.Action2">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 3</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action3" name="RCActionList.Action3">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 4</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action4" name="RCActionList.Action4">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 5</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action5" name="RCActionList.Action5">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator" class="form-control" placeholder="Subject" />
+                                                <textarea id="txtComments" style="height:100px;" class="form-control"></textarea>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <input type="text" id="txtMessageActionList1" value="New Outgoing Message:" class="form-control" placeholder="Subject" />
+                                                <textarea id="txtMessageActionList" style="height:100px;" class="form-control"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+
+                                            <div class="col-md-4">
+
+                                                <label class="mx-1" for="dglClientTypeActionList2">Client Type</label>
+                                                <select class="form-control" id="dglClientTypeActionList2" style="width:209px">
+                                                    <option value="">Select</option>
+                                                    @{
+                                                        var userClientTypes2 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                        var sortedClientTypes2 = userClientTypes2.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                        sortedClientTypes2 = sortedClientTypes2.OrderBy(clientType => clientType.Name);
+                                                        foreach (var clientType in sortedClientTypes2)
+                                                        {
+                                                            var countClientType2 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                            <option value="@clientType.Id">@clientType.Name (@countClientType2)</option>
+                                                        }
+                                                    }
+                                                </select>
+
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="mx-1" for="dglClientSiteIdActionList2">Client Site</label>
+                                                <select class="form-control mx-1" id="dglClientSiteIdActionList2" style="width:209px"></select>
+
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="mt-3"></label>
+                                                <input type="text" id="search_client_site2" class="form-control mb-3" placeholder="Search Site">
+                                            </div>
+                                            <div class="col-md-2  text-right">
+                                                <label class="mt-5" for="dglClientSiteIdActionList2"></label>
+                                                <button type="button" id="btnSendActionListLater" class="btn btn-warning ">Send >></button>
+                                                <button type="button" id="btnSendActionList" class="btn btn-success mt-2">Send >></button>
+                                                
+                                                <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                            </div>
+                                        </div>
+
+                                    </form>
+                                </div>
+                            </div>
+
+
+
+
+
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="MessageSendTimeInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label>Send Message Time</label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="form-row">
+                    <div class="form-group col-md-4 col-ipad-50">
+                        <label for="Report_DateLocation_IncidentDate">Date / Time for sending messages</label>
+                        <div class="d-flex">
+                            <input class="form-control" type="datetime-local" id="txtSendMessageDate"  value=""><input name="__Invariant" type="hidden" value="txtSendMessageDate">
+                            <span class="field-validation-valid" data-valmsg-for="txtSendMessageDate" data-valmsg-replace="true"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer pb-0">
+                <div class="form-row text-right">
+                    <div class="col-md-12  text-right">
+                        <button type="button" id="btnSaveMessageTime" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+          
         </div>
     </div>
 </div>

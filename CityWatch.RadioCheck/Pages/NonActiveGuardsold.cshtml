@@ -100,105 +100,10 @@
         </div>
     </div>
 </div>
-<!----------------- Push Notification Details Modal -------------------->
-
-<div class="modal fade" id="pushNoTificationsControlRoomModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="form_push_notifications_for_rc">
-                    <div class="container">
-                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
-                            </li>
-                        </ul>
-                        <div class="tab-content p-2">
-                            <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
-                                <input type="hidden" id="gl_client_site_id" />
-                                <div class="row m-0">
-                                    <div class="col-md-12">
-                                        <form>
-                                            <input type="hidden" id="txtNotificationsGuardId" />
-                                            <input type="hidden" id="txtNotificationsCompanyId" />
-                                            <div class="form-group row mb-1">
-                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode C4i : </label>
-                                                <div class="col-md-6">
-                                                    <input type="checkbox" id="chkLB" checked>
-                                                    <label class="col-form-label">LB</label>
-                                                    <input type="hidden" id="IsLB">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
-                                                <div class="col-md-6">
-                                                    <input type="checkbox" id="chkSiteEmail" >
-                                                    <label class="col-form-label">Site Email</label>
-                                                    <input type="hidden" id="IsSiteEmail">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
-                                                <div class="col-md-6">
-                                                    <input type="checkbox" id="chkPersonalEmail">
-                                                    <label class="col-form-label">Personal Email</label>
-                                                    <input type="hidden" id="IsPersonalEmail">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row mb-1">
-                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
-                                                <div class="col-md-6">
-                                                    <input type="checkbox" id="chkSMSPersonal">
-                                                    <label class="col-form-label">SMS Personal</label>
-                                                    <input type="hidden" id="IsSMSPersonal">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
-                                                <div class="col-md-6">
-                                                    <input type="checkbox" id="chkSMSSmartWand">
-                                                    <label class="col-form-label">SMS Smart Wand</label>
-                                                    <input type="hidden" id="IsSMSSmartWand">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
-                                                <div class="col-md-6">
-                                                    <input type="text" id="txtPushNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
-                                                    <textarea id="txtPushNotificationMessage" style="width:450px;height:200px;" class="form-control"></textarea>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-row text-right">
-                                                <div class="col-md-12  text-right">
-                                                    <button type="button" id="btnSendPushLotificationMessage" class="btn btn-primary">Send >></button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer" style="display:block">
-                <div class="text-left">
-                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 @Html.AntiForgeryToken()
+<partial name="_RadioCheckListModels" />
 @section PageHeader {
     <h3 class="text-center">NON ACTIVE GUARDS</h3>
 }
