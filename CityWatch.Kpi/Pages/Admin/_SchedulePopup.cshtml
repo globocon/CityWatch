@@ -30,7 +30,7 @@
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
                                         <select class="form-control" id="clientTypeName" name="clientTypeName">
-                                            @foreach (var item in Model.ViewDataService.ClientTypes)
+                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
                                             {
                                                 <option value="@item.Value">@item.Text</option>
                                             }
@@ -58,11 +58,27 @@
                                         </div>
                                     </div>
                                     <div class="d-flex flex-row p-2">
+                                        <label class="mr-3">2 Hr Log Book is <span id="hrTimerIsPausedStatus"></span> :</label>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="hrTimerIsPaused">
+                                            <label class="custom-control-label" for="hrTimerIsPaused"></label>
+                                            <input type="hidden" id="isHrTimerPaused" name="isHrTimerPaused">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row p-2">
                                         <label class="mr-3">Schedule is <span id="cbIsPausedStatus"></span> :</label>
                                         <div class="custom-control custom-switch">
                                             <input type="checkbox" class="custom-control-input" id="cbIsPaused">
                                             <label class="custom-control-label" for="cbIsPaused"></label>
                                             <input type="hidden" id="isPaused" name="isPaused">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row p-2">
+                                        <label class="mr-3">Critical Documents Downselect</label>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="cbIsDownselect">
+                                            <label class="custom-control-label" for="cbIsDownselect"></label>
+                                            <input type="hidden" id="IsDownselect" name="IsCriticalDocumentDownselect">
                                         </div>
                                     </div>
                                 </div>
@@ -95,6 +111,15 @@
                                     <div class="form-group">
                                         <label for="emailTo">Email Recipients [BCC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in BCC"></i></label>
                                         <textarea class="form-control" id="emailBcc" name="emailBcc" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="policyGroup">Select Policy Group</label>
+                                        <select class="form-control" id="CriticalGroupNameID" name="CriticalGroupNameID" disabled>
+                                            @foreach (var item in Model.ViewDataService.CriticalGroupNameList())
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -234,7 +259,10 @@
             </div>
             <div class="modal-footer d-flex flex-column align-items-start">
                 <input type="hidden" value="" name="sch-id" id="sch-id" />
-                <button type="button" class="btn btn-primary" id="btnScheduleRun">Run Now</button>
+                <div class="btn-toolbar">
+                    <button type="button" class="btn btn-primary mr-3" id="btnScheduleRun">Run Now</button>
+                    <button id="btnScheduleDownload" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
+                </div>
                 <span id="schRunStatus" class="mt-2"></span>
             </div>
         </div>

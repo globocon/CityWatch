@@ -1,14 +1,309 @@
 ﻿@page
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@inject IConfigDataProvider _configDataProvider;
 @model CityWatch.Web.Pages.ControlRoomModel
 @{
     ViewData["Title"] = "CityWatch Security | Control Room";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.ControlRoom;
 }
 
-<div class="m-auto p-5">
+<div class="m-auto p-3">
     <h3 class="text-center">Citywatch Control Room</h3>
 </div>
 <partial name="_Slogan" />
-@section PageHeader {
-    <h3 class="text-center">CONTROL ROOM</h3>    
+@{
+    var LiveEventsNotExpired = _configDataProvider.GetBroadcastLiveEventsNotExpired();
+    var LiveEventsNotExpiredUrls = _configDataProvider.GetUrlsInsideBroadcastLiveEventsNotExpired();
+    var LiveEventsweblink = _configDataProvider.GetBroadcastLiveEventsWeblink();
+    if (LiveEventsNotExpired != string.Empty)
+    {
+        @section LiveEvents {
+        <div class="container d-flex flex-column flex-md-row pb-1">
+            <div class=" form-group col-md-2 p-0">
+                <div class="container marquee-style" id="divLiveEvents">
+                    <label class="lblclass">Live Events:</label>
+                </div>
+            </div>
+            <div id="divmarqueeLiveEvents" class="form-group col-md-9 p-0 container marquee-stylenew marquee marqueeurls"><pre>@LiveEventsNotExpired</pre></div>
+
+            @{
+                    if (!string.IsNullOrEmpty(LiveEventsweblink))
+                    {
+                        if (LiveEventsweblink.Contains("https://"))
+                        {
+                            <a href="@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="https://@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a href="" class="nav-link py-2" target="_blank">
+                            <u>SEE LINK</u>
+                        </a>
+                    }
+                }
+
+
+            </div>
+
+            <input type="hidden" id="inp_marqueeurls" value="@LiveEventsNotExpiredUrls" />
+            <a id="a_marqueeurls" hidden href="" target="_blank"></a>
+    }
+    }
 }
+
+
+@section Scripts{
+    <script src="~/lib/marquee/jquery.marquee.min.js?v=3" type="text/javascript"></script>
+    <script src="~/lib/marquee/jquery.easing.1.3.js"></script>
+    <script>
+
+        $(function () {
+            $('.marquee').marquee({
+
+                // Set to false if you want to use jQuery animate method
+                allowCss3Support: true,
+
+                // CSS3 easing function
+                css3easing: 'linear',
+
+                // Requires jQuery easing plugin.
+                easing: 'linear',
+
+                // Time to wait before starting the animation
+                delayBeforeStart: 500,
+
+                // 'left', 'right', 'up' or 'down'
+                direction: 'left',
+
+                // Should the marquee be duplicated to show an effect of continues flow
+                duplicated: false,
+
+                // Duration of the animation
+                duration: 8500,
+
+                // Space in pixels between the tickers
+                gap: 20,
+
+                // On cycle pause the marquee
+                pauseOnCycle: false,
+
+                // Pause on hover
+                pauseOnHover: true,
+
+                // The marquee is visible initially positioned next to the border towards it will be moving
+                startVisible: false
+
+            });
+        });
+    </script>
+    }
+@*Rc Guard login Conformation Popup*@
+<div id="modelGuardLoginConRc" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Guard Access permission for Radio Checklist (RC)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoRC">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginRC" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryRC"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*KPI Guard login Conformation Popup*@
+<div id="modelGuardLoginCon" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Guard Access permission for Telematics (KPI)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNo">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginKPI" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer"  style="display:block">
+                <div class="text-left ml-3">
+                <div asp-validation-summary="All" id="GuardLoginValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*Patrol and Alarm Statics Guard login Conformation Popup*@
+<div id="modelGuardLoginConPatrol" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for Patrol & Alarm Statistics
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoPatrols">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginPatrols" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryPatrols"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<partial name="_Slogan" />*@
+@section PageHeader {
+    <h3 class="text-center">CONTROL ROOM</h3>
+}
+@{
+    var CalendarEvents = _configDataProvider.GetBroadcastCalendarEventsByDate();
+    @if (CalendarEvents.Count() > 0)
+    {
+        @section CalendarLogo {
+
+        <i class="fa fa-calendar" style="font-size:48px"></i>
+        @foreach (var item in CalendarEvents)
+            {
+                <label class="ml-2 mt-2"><b>Event:</b> @item.TextMessage</label>
+                break;
+            }
+            @if (CalendarEvents.Count() > 1)
+            {
+                <a href="#calendarEventModal" id="btncalendarEventModal" class="text-center text-md-left ml-2 mt-2">..<i class="fa fa-caret-down" aria-hidden="true" style="font-size:25px"></i></a>
+            }
+
+    }
+    }
+}
+@*Event Description Model*@
+<div class="modal" tabindex="-1" role="dialog" id="calendarEventModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><label id="lbl_calendarEvent">Today's Events</label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="calendarEventsDetails" class="table table-bordered" style="width:100%;">
+                        </table>
+                        <div class="m-3"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@*Patrol and Alarm Statics Guard login Conformation Popup*@
+<div id="modelGuardLoginC4iSettingsPatrol" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for C4i Settings
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoC4iSettings">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginC4iSettings" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryC4iSettings"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,7 +3,6 @@ using Dropbox.Api;
 using Dropbox.Api.Common;
 using Dropbox.Api.Files;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +14,8 @@ namespace CityWatch.Common.Services
         Task<bool> Upload(DropboxSettings settings, string fileToUpload, string dbxFilePath);
 
         Task<bool> Download(DropboxSettings settings, string downloadToFolder, string[] filesToDownload);
+
+        Task<bool> CreateFolder(DropboxSettings settings, string newfolderNameIncludingPath);
     }
 
     public class DropboxService : IDropboxService
@@ -69,6 +70,33 @@ namespace CityWatch.Common.Services
             return true;
         }
 
+        public async Task<bool> CreateFolder(DropboxSettings settings, string newfolderNameIncludingPath)
+        {
+            using var dbxTeam = new DropboxTeamClient(settings.AccessToken, settings.RefreshToken, settings.AppKey, settings.AppSecret, new DropboxClientConfig());
+            var team = dbxTeam.Team.MembersListAsync().Result;
+            if (team.Members.Count > 0)
+            {
+                var cwsMember = team.Members.SingleOrDefault(z => z.Profile.Email == settings.UserEmail);
+                if (cwsMember != null)
+                {
+                    var dbx = dbxTeam.AsMember(cwsMember.Profile.TeamMemberId);
+                    var account = await dbx.Users.GetCurrentAccountAsync();
+                    var nsId = new PathRoot.NamespaceId(account.RootInfo.RootNamespaceId);
+
+                    if (await FolderExists(dbx, nsId, newfolderNameIncludingPath))
+                    {
+                        Console.WriteLine($"Folder '{newfolderNameIncludingPath}' already exists.");
+                        return true;
+                    }
+                    else
+                    {
+                        return await CreateNewFolder(dbx, nsId, newfolderNameIncludingPath);
+                    }
+                }
+            }
+            return false;
+        }
+
         private static async Task<bool> ChunkUpload(DropboxClient client, PathRoot.NamespaceId nsId, string srcFilePath, string destFilePath)
         {
             int chunkSize = 128 * 1024;       // Chunk size is 128KB.
@@ -111,5 +139,46 @@ namespace CityWatch.Common.Services
             using var fileStream = File.Create(localFilePath);
             (await response.GetContentAsStreamAsync()).CopyTo(fileStream);
         }
+
+        private static async Task<bool> CreateNewFolder(DropboxClient client, PathRoot.NamespaceId nsId, string newfolderNameIncludingPath)
+        {
+            try
+            {
+                var folderResult = await client.WithPathRoot(nsId).Files.CreateFolderV2Async(new CreateFolderArg(newfolderNameIncludingPath));
+                Console.WriteLine($"Folder '{folderResult.Metadata.PathDisplay}' created successfully.");
+                return true;
+            }
+            catch (ApiException<CreateFolderError> ex)
+            {
+                Console.WriteLine($"Error creating folder: {ex.ErrorResponse}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static async Task<bool> FolderExists(DropboxClient dbx, PathRoot.NamespaceId nsId, string folderPath)
+        {
+            try
+            {
+                // Check if the folder exists
+                var metadata = await dbx.WithPathRoot(nsId).Files.GetMetadataAsync(folderPath);
+                return metadata.IsFolder;
+            }
+            catch (ApiException<GetMetadataError> ex)
+            {
+                // If error is not_found, it means the folder does not exist
+                if (ex.ErrorResponse.IsPath && ex.ErrorResponse.AsPath.Value.IsNotFound)
+                {
+                    return false;
+                }
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
+        }
+
     }
 }

@@ -13,8 +13,10 @@ namespace CityWatch.Data.Models
 
         public int ClientSiteId { get; set; }
 
-        [Display(Name = "Koios Site Id")]
+        [Display(Name = "Koios Site Id A")]
         public int? KoiosClientSiteId { get; set; }
+        [Display(Name = "Koios Site Id B")]
+        public int? KoiosClientSiteIdB { get; set; }
 
         [Display(Name = "Dropbox Directory")]
         public string DropboxImagesDir { get; set; }
@@ -42,10 +44,67 @@ namespace CityWatch.Data.Models
         public int? MinPatrolFreq { get; set; }
 
         [Display(Name = "Minimum Images per patrol")]
-        public int? MinImagesPerPatrol { get; set; }
+        public int? MinImagesPerPatrol { get; set; }         
+       
 
         public List<ClientSiteKpiNote> Notes { get; set; }
 
+        public List<RCActionList> RCActionList { get; set; }
+
+        [Display(Name ="")]
+        public bool KpiTelematicsAndStatistics { get; set; } = true;
+        [Display(Name = "")]
+        public bool SmartWandPatrolReports { get; set; } = true;
+        [Display(Name = "")]
+        public bool MonthlyClientReport { get; set; } = false;
+
+        [ForeignKey("ClientSiteId")]
+        public List<ClientSiteKpiSettingsCustomDropboxFolder> clientSiteKpiSettingsCustomDropboxFolder { get; set; }
+
+        public RCActionList rclistKP
+        {
+            get
+            {
+                if (Id != 0)
+                {
+                    if (RCActionList != null)
+                    {
+                        var rcActionList = RCActionList.FirstOrDefault();
+                        return rcActionList ?? new RCActionList()
+                        {
+                            ClientSiteID = ClientSiteId,
+                            SettingsId = Id,
+                            SiteAlarmKeypadCode = string.Empty,
+                            Imagepath = string.Empty
+                        };
+
+                    }
+                    else
+                    {
+                        return new RCActionList()
+                        {
+                            ClientSiteID = ClientSiteId,
+                            SettingsId = Id,
+                            SiteAlarmKeypadCode = string.Empty,
+                            Imagepath = string.Empty
+                        };
+
+                    }
+
+                }
+                else
+                {
+                    return new RCActionList()
+                    {
+                        ClientSiteID = ClientSiteId,
+                        SettingsId = Id,
+                        SiteAlarmKeypadCode = string.Empty,
+                        Imagepath = string.Empty
+                    };
+
+                }
+            }
+        }
         public ClientSiteKpiNote NotesForThisMonth
         {
             get
@@ -55,7 +114,7 @@ namespace CityWatch.Data.Models
                 return notesThisMonth ?? new ClientSiteKpiNote()
                 {
                     ForMonth = thisMonthDate,
-                    Notes = string.Empty,
+                   Notes = string.Empty,
                     SettingsId = Id
                 };
             }
@@ -76,6 +135,84 @@ namespace CityWatch.Data.Models
             set
             {
                 _clientSiteDayKpiSettings = value;
+            }
+        }
+        [NotMapped]
+        public int PositionId { get; set; }
+        [NotMapped]
+        public string PositionGuard { get; set; }
+        [NotMapped]
+        public string PositionPatrolCar { get; set; }
+        private List<ClientSiteManningKpiSetting> _clientSiteManningKpiSettings;
+        private List<ClientSiteManningKpiSetting> _clientSiteManningPatrolCarKpiSettings;
+        private List<ClientSiteManningKpiSettingADHOC> _clientSiteManningKpiSettingsADHOC;
+        private List<ClientSiteManningKpiSettingADHOC> _clientSiteManningPatrolCarKpiSettingsADHOC;
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningGuardKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningKpiSettings == null || !_clientSiteManningKpiSettings.Any())
+                    _clientSiteManningKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningKpiSettings;
+            }
+
+            set
+            {
+                
+                    _clientSiteManningKpiSettings = value;
+
+            }
+        }
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningPatrolCarKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningPatrolCarKpiSettings == null || !_clientSiteManningPatrolCarKpiSettings.Any())
+                    _clientSiteManningPatrolCarKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningPatrolCarKpiSettings;
+            }
+
+            set
+            {
+               
+                    _clientSiteManningPatrolCarKpiSettings = value;
+            }
+        }
+
+
+        [NotMapped]
+        public List<ClientSiteManningKpiSettingADHOC> ClientSiteManningGuardKpiSettingsADHOC
+        {
+            get
+            {
+                if (_clientSiteManningKpiSettingsADHOC == null || !_clientSiteManningKpiSettingsADHOC.Any())
+                    _clientSiteManningKpiSettingsADHOC = GetDefaultClientManningDayKpiSettingsADHOC();
+                return _clientSiteManningKpiSettingsADHOC;
+            }
+
+            set
+            {
+
+                _clientSiteManningKpiSettingsADHOC = value;
+
+            }
+        }
+        [NotMapped]
+        public List<ClientSiteManningKpiSettingADHOC> ClientSiteManningPatrolCarKpiSettingsADHOC
+        {
+            get
+            {
+                if (_clientSiteManningPatrolCarKpiSettingsADHOC == null || !_clientSiteManningPatrolCarKpiSettingsADHOC.Any())
+                    _clientSiteManningPatrolCarKpiSettingsADHOC = GetDefaultClientManningDayKpiSettingsADHOC();
+                return _clientSiteManningPatrolCarKpiSettingsADHOC;
+            }
+
+            set
+            {
+
+                _clientSiteManningPatrolCarKpiSettingsADHOC = value;
             }
         }
 
@@ -150,5 +287,57 @@ namespace CityWatch.Data.Models
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Sunday}
             };
         }
+
+        private List<ClientSiteManningKpiSetting> GetDefaultClientManningDayKpiSettings()
+        {
+            return new List<ClientSiteManningKpiSetting>
+            {
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true},
+                /* New Field for PHO*/
+                 new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true,IsPHO=1}
+
+
+            };
+        }
+
+        private List<ClientSiteManningKpiSettingADHOC> GetDefaultClientManningDayKpiSettingsADHOC()
+        {
+            return new List<ClientSiteManningKpiSettingADHOC>
+            {
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Sunday, DefaultValue = true},
+                /* New Field for PHO*/
+                 new ClientSiteManningKpiSettingADHOC() { WeekDay = DayOfWeek.Sunday, DefaultValue = true,IsPHO=1}
+
+
+            };
+        }
+
+        public bool ScheduleisActive { get; set; }
+
+        public bool ScheduleisActiveADHOC { get; set; }
+
+        public string TimezoneString { get; set; }
+
+        public string UTC { get; set; }
+        public int? KPITelematicsFieldID { get; set; }
+        
+        public string CrmSupplierForSettings { get; set; }
+
+        [Display(Name = "")]
+        public bool DropboxScheduleisActive { get; set; } = true;
+
+        
     }
 }

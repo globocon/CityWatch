@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<AssemblyVersion>2.56.0.0</AssemblyVersion>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <Content Remove="wwwroot\js\radiocheck.js~RF45fa00.TMP" />
+	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.104.2" />
+		<PackageReference Include="Dropbox.Api" Version="6.25.0" />
+		<PackageReference Include="itext7" Version="7.2.0" />
+		<PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />
+		<PackageReference Include="MailKit" Version="3.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.15">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.15" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.15">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CityWatch.Common\CityWatch.Common.csproj" />
+		<ProjectReference Include="..\CityWatch.Data\CityWatch.Data.csproj" />
+		<ProjectReference Include="..\CityWatch.Web\CityWatch.Web.csproj" />
+		
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Logs\" />
+	  <Folder Include="wwwroot\AudioRecordings\" />
+	  <Folder Include="wwwroot\lib\Notify\" />
+	  <Folder Include="wwwroot\Pdf\Archive\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="wwwroot\jsJotform\script.js" />
+	  <None Include="wwwroot\jsJotform\service-worker.js" />
+	  <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Update="Pages\Demo\Admin\_ViewStart.cshtml">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	  </Content>
+	  <Content Update="Pages\_FusionGuardRCChats.cshtml">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Pages\_FusionGuardSiteLog.cshtml">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+</Project>

@@ -1,38 +1,91 @@
 ﻿@page
 @using CityWatch.Data.Models
 @using CityWatch.Web.Helpers
+@using CityWatch.Data.Helpers
+@using Microsoft.Extensions.Configuration
 @model CityWatch.Web.Pages.Guard.LoginModel
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
-    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;       
-}
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
+    var IsLB_KV_IR = false;
+    if (Model.GuardLogin != null)
+    {
+        IsLB_KV_IR = Model.GuardLogin.Guard.IsLB_KV_IR;
+    }
+    }
 <div id="loader"></div>
-<div class="m-auto p-4">
-    <div class="m-auto card p-5 col-sm-10 col-md-7 col-lg-7">
-        <form id="frmGuardLogin">
+<div class="m-auto p-1 main-container">
+    <div class="m-auto card p-2 col-sm-10 col-md-9 col-lg-9 mb-0">
+        <form id="frmGuardLogin" style="margin-left: 5px; margin-right: 5px;">
             <input type="hidden" asp-for="@Model.GuardLogin.Id" />
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
+            <input type="hidden" id="GuardLogin_ClientSiteID" />
+            
+            
+            <input type="hidden" asp-for="@Model.GuardLogin.Guard.IsLB_KV_IR" value="@IsLB_KV_IR" />
             <input type="hidden" asp-for="@Model.LogBookType" />
+            <input type="hidden" id="hid_duressEnabledGpsCoordinates" asp-for="@Model.GuardLogin.GpsCoordinates">
+
             <div class="form-row">
+
                 <div class="form-group col-md-12">
+                    <div class="d-flex flex-wrap align-items-center">
+                     
+                        <div class="d-flex flex-grow-1 align-items-center pt-2">
+                            <label asp-for="@Model.GuardLogin.Guard.SecurityNo" style="white-space: nowrap; margin-right: 0.5rem;">Security License No.</label>
+                            <div class="input-group flex-grow-1">
+                                <input class="form-control" id="GuardLogin_Guard_SecurityNo" asp-for="@Model.GuardLogin.Guard.SecurityNo">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnGetGuardDetails" title="Get guard details">
+                                        <i class="fa fa-search mr-2"></i>
+                                        <span class="d-none d-md-inline-flex">Search</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                      
+                        <div class="form-check form-check-inline ml-2">
+                            <input type="checkbox" class="form-check-input" asp-for="@Model.GuardLogin.IsNewGuard" title="Tick if you are new guard" />
+                            <label class="form-check-label" title="Tick if you are new guard">New Guard?</label>
+                        </div>
+                    </div>
+                </div>
+
+
+
+          @*       <div class="form-group col-md-12">
                     <div class="d-flex flex-sm-row flex-column justify-content-between">
-                        <label asp-for="@Model.GuardLogin.Guard.SecurityNo">Security License No</label>
+                        <label asp-for="@Model.GuardLogin.Guard.SecurityNo">Security License No.</label>
+                        <div class="input-group">
+
+                            <input class="form-control" id="GuardLogin_Guard_SecurityNo" asp-for="@Model.GuardLogin.Guard.SecurityNo">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary" id="btnGetGuardDetails" title="Get guard details"><i class="fa fa-search mr-2"></i><span class="d-none d-md-inline-flex">Search</span></button>
+
+                            </div>
+                        </div>
                         <div>
                             <input type="checkbox" class="form-check-input" asp-for="@Model.GuardLogin.IsNewGuard" title="Tick if you are new guard" />
                             <label title="Tick if you are new guard">New Guard?</label>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input class="form-control" asp-for="@Model.GuardLogin.Guard.SecurityNo">
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-primary" id="btnGetGuardDetails" title="Get guard details"><i class="fa fa-search mr-2"></i><span class="d-none d-md-inline-flex">Search</span></button>
-                        </div>
-                    </div>
+                 
+                    </div> *@
                 </div>
-            </div>
-            <div class="form-row pb-2">
+           
+            <div class="form-row pb-0">
                 <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
-                    Enter Security License No and click Search
+                    Enter Security License No. and click Search
+                </div>
+                <div class="container p-0 pl-2 mt-1 mb-0" style="display:flex;font-size:11px;color:black">
+                    <p class="left-text">Note:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <p class="right-text style="white-space: nowrap;">
+                        If your licence expired,and new licence is a different No. Please do not add the replacement, and contact Admin
+                    </p>
                 </div>
             </div>
             <div class="form-row" style="display:none" id="divNewGuard">
@@ -40,20 +93,54 @@
                     <label>Full Name</label>
                     <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Name" />
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <label>Initials</label>
                     <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Initial" />
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
+                    <label>Gender</label>
+                    <select class="form-control" asp-for="@Model.GuardLogin.Guard.Gender">
+                        <option selected="selected" value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-Binary">Non-Binary</option>
+                        <option value="Not Stated">Not Stated</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
                     <label>State</label>
                     <select class="form-control" asp-for="@Model.GuardLogin.Guard.State" asp-items="@Model.ViewDataService.States"></select>
                 </div>
             </div>
+
             <div style="display:none" id="guardLoginDetails">
                 <div class="form-row">
+                    <div class="form-group col-md-6" id="divGuardEmail">
+                        <label>Personal(Private) Email</label>
+                        <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Email" />
+                    </div>
+                    <div class="form-group col-md-6" id="divGuardMobile">
+                        <label>Personal(Private) Mobile</label>
+                        <input type="text" class="form-control" value="+61 4" asp-for="@Model.GuardLogin.Guard.Mobile" />
+                    </div>
+
+                </div>
+                <div class="form-row mb-0 mt-0">
                     <div class="form-group col-md-6">
                         <label for="GuardLogin_ClientType">Client Type</label>
-                        <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId)" disabled></select>
+                             @* <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select> *@
+                        <input type="hidden" id="hiddenClientTypeId" asp-for="@Model.ClientTypeName" />
+                             @if(Model.ClientTypeId!=0)
+                            {
+                            
+                            <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCountWithTypeId(AuthUserHelper.LoggedInUserId,Model.ClientTypeId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select>
+                            }
+                            else
+                            {
+                                <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" ></select>
+                            }
+                            
                     </div>
                     <div class="form-group col-md-6">
                         <label asp-for="@Model.GuardLogin.ClientSiteName">Client Site</label>
@@ -62,8 +149,8 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-6">
+                <div class="form-row mb-0 mt-0">
+                    <div class="form-group col-md-6 mb-0">
                         <div class="d-flex flex-row justify-content-between">
                             <label>Smart Wand</label>
                             <div>
@@ -74,7 +161,7 @@
                         <select class="form-control" asp-for="@Model.GuardLogin.SmartWandOrPosition" style="font-family: 'FontAwesome', Inter, sans-serif;" disabled>
                         </select>
                     </div>
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-3  mb-0">
                         <label>On Duty</label>
                         <input type="time" class="form-control" id="GuardLogin_OnDuty_Time" disabled />
                         <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OnDuty" hidden />
@@ -87,7 +174,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-3  mb-0">
                         <label>Off Duty</label>
                         <input type="time" class="form-control" id="GuardLogin_OffDuty_Time" disabled />
                         <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OffDuty" hidden />
@@ -101,15 +188,32 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="col-md-12 mb-3">
-                        <i class="fa fa-clock-o mr-2"></i>Duty Time: <span id="guardShiftDayTime" class="text-primary">N/A</span>
+                <div class="form-row mb-0 mt-0">
+                    <div class="form-group col-md-8 mb-0 mt-0">
+                        <label for="GuardLogin_ClientType">Compliance Status</label>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <div class="row">
+                            <div class="col-md-2"><span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_0"></i>HR1 (C4i)</span></div>
+                            <div class="col-md-2">
+                                <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_1"></i>HR2 (Client)</span>
+                                <span id="client_status_date_1" class="small"></span>
+                            </div>
+                            <div class="col-md-2 pr-0">
+                                <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_2"></i>HR3 (Special)</span>
+                                <span id="client_status_date_2" class="small"></span>
+                            </div>
+                            <div class="col-md-6 text-right ">
+                                <i class="fa fa-clock-o mr-2"></i>Duty Time: <span id="guardShiftDayTime" class="text-primary">N/A</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
+        
+                <div class="form-row mb-0 mt-0">
                     <div class="col-md-12">
-                        <div asp-validation-summary="All" id="glValidationSummary"></div>
-                        <button type="button" id="btnGuardLogin" class="btn btn-primary">Enter Log Book</button>
+                        <div asp-validation-summary="All" id="glValidationSummary" class="pl-3"></div>
+                        <button type="button" id="btnGuardLogin" style="width:100%" class="btn btn-primary">Enter Log Book</button>
                     </div>
                 </div>
             </div>
@@ -135,10 +239,159 @@
         </div>
     </div>
 </div>
+
+<div class="modal" id="confirmModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="confirmModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="confirmMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmOk">Ok</button>
+                <button type="button" class="btn btn-primary" id="confirmCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelGuardLoginAuditSite" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for C4i Settings
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoAuditSiteLog">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardAuditSiteLog" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryAuditSite"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelGuardLoginC4iSettingsPatrol" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for C4i Settings
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoC4iSettings">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginC4iSettings" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryC4iSettings"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="confirmModalLogin" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="confirmModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="confirmMessageLogin">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmOkLogin">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelGuardLoginAditLog" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for Audit Site Logs
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoAuditSiteLogs">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginAuditSiteLogs" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryAuditSiteLogs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">
         @(Model.LogBookType == LogBookType.DailyGuardLog ? "LOGBOOK PORTAL" : "KEY, VEHICLE & VISITOR PORTAL")
     </h3>
+}
+@section scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
 }

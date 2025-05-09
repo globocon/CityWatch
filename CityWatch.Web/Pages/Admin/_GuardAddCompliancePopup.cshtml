@@ -1,0 +1,76 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Data.Enums;
+
+<div class="modal fade" id="addGuardCompliancesModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_compliance">
+                    <input type="hidden" id="GuardCompliance_Id" name="GuardCompliance.Id" />
+                    <input type="hidden" id="GuardCompliance_GuardId" name="GuardCompliance.GuardId" />
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Reference No</label>
+                            <input type="text" class="form-control" id="GuardCompliance_ReferenceNo" name="GuardCompliance.ReferenceNo">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="GuardCompliance_Description" name="GuardCompliance.Description">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="GuardCompliance_ExpiryDate" name="GuardCompliance.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 1</label>
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder1" value="45" name="GuardCompliance.Reminder1" min="1" max="365">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 2</label>
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder2" value="7" name="GuardCompliance.Reminder2" min="1" max="365">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">HR Group</label>
+                            <select class="form-control" id="GuardCompliance_HrGroup" name="GuardCompliance.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
+                                <option selected="selected" value="">Select</option>
+                            </select>
+                        </div>                        
+                    </div>
+                    <hr />
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">Compliance Document: <span id="guardCompliance_fileName">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardCompliance_FileName" name="GuardCompliance.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_compliance_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="delete_compliance_file"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <div asp-validation-summary="All" id="complianceValidationSummary"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliance">Save Compliance</button>
+            </div>
+        </div>
+    </div>
+</div>

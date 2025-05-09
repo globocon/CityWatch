@@ -1,8 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <AssemblyVersion>1.20.0.0</AssemblyVersion>
+    <TargetFramework>net7.0</TargetFramework>
+
+
+    <AssemblyVersion>2.17.0.0</AssemblyVersion>
+
     <UserSecretsId>76f13c08-5e97-4538-8a73-379b3dd62110</UserSecretsId>
   </PropertyGroup>
 
@@ -11,20 +14,38 @@
   </ItemGroup>
 
   <ItemGroup>
+    <COMReference Include="Microsoft.Office.Interop.PowerPoint">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>12</VersionMinor>
+      <VersionMajor>2</VersionMajor>
+      <Guid>91493440-5a91-11cf-8700-00aa0060263b</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.18.0" />
+    <PackageReference Include="ConvertApi" Version="3.1.1" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.16.0" />
     <PackageReference Include="Dropbox.Api" Version="6.25.0" />
     <PackageReference Include="itext7" Version="7.2.0" />
+    <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.10.0" />
     <PackageReference Include="MailKit" Version="3.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.13">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.13">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.12" />
+    <PackageReference Include="MSOffice.Object.Library" Version="15.0.4420.1018" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
   </ItemGroup>
 
@@ -34,10 +55,18 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\GpsImage\" />
+    <Folder Include="wwwroot\KvlUploads\" />
+    <Folder Include="wwwroot\DuressAppAudio\" />
+    <Folder Include="wwwroot\NewFolder1\" />
+    <Folder Include="wwwroot\DuressAppMultimedia\" />
+    <Folder Include="wwwroot\NewFolder\" />
+    <Folder Include="wwwroot\SubdomainLogo\" />
     <Folder Include="wwwroot\Pdf\Archive\" />
+    <Folder Include="wwwroot\Pdf\FromDropbox\" />
     <Folder Include="wwwroot\Pdf\Output\" />
+    <Folder Include="wwwroot\Pdf\ToDropbox\" />
     <Folder Include="wwwroot\StaffDocs\" />
-    <Folder Include="wwwroot\Uploads\" />
+    <Folder Include="wwwroot\Uploads\License\" />
   </ItemGroup>
 
   <ItemGroup>

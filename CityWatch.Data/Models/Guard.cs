@@ -1,8 +1,12 @@
 ﻿using CityWatch.Data.Providers;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
@@ -17,6 +21,8 @@ namespace CityWatch.Data.Models
         public string SecurityNo { get; set; }
 
         public string Initial { get; set; }
+        public string Pin { get; set; }
+        
 
         public string State { get; set; }
 
@@ -25,10 +31,30 @@ namespace CityWatch.Data.Models
         public DateTime? DateEnrolled { get; set; }
 
         public bool IsActive { get; set; }
+        public bool IsLB_KV_IR { get; set; }
+        public bool IsAdminPowerUser { get; set; }
+        public bool IsAdminGlobal { get; set; }
+        
+        public bool IsSTATS { get; set; }
+        [NotMapped]
+        public List<string> GuardAccess { get;  set; }
+        [NotMapped]
+        public List<string> LanguageDetails { get; set; }
 
+        [NotMapped]
+        public string? ProviderNo
+        {
+            get;
+            set ;
+        }
+        //p1-224 RC Bypass For HR -start
+        public string Gender { get; set; }
+        //p1-224 RC Bypass For HR -start
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
+
+            
 
             if (string.IsNullOrEmpty(SecurityNo))
                 errors.Add(new ValidationResult("Guard Security License Number is required"));
@@ -38,6 +64,15 @@ namespace CityWatch.Data.Models
 
             if (string.IsNullOrEmpty(Initial))
                 errors.Add(new ValidationResult("Guard Initial is required"));
+            //p1-224 RC Bypass For HR -start
+            if (string.IsNullOrEmpty(Gender))
+                errors.Add(new ValidationResult("Gender is required"));
+            //p1-224 RC Bypass For HR -end
+            //if (string.IsNullOrEmpty(Email))
+            //    errors.Add(new ValidationResult("Guard Email is required"));
+
+            //if (string.IsNullOrEmpty(Mobile))
+            //    errors.Add(new ValidationResult("Guard Mobile is required"));
 
             if (!string.IsNullOrEmpty(SecurityNo))
             {
@@ -77,5 +112,33 @@ namespace CityWatch.Data.Models
 
             return seqPattern.IndexOf(SecurityNo) != -1 || regex.IsMatch(SecurityNo) || revPattern.IndexOf(SecurityNo) != -1;
         }
+        public string Mobile { get; set; }
+        public string Email { get; set; }
+
+        public bool IsRCAccess { get; set; }
+        public bool IsKPIAccess { get; set; }
+        public bool IsReActive { get; set; }
+        //p1-224 RC Bypass For HR -start
+        public bool IsRCBypass { get; set; }
+        //p1-224 RC Bypass For HR -end
+        //p1-273 access level- start
+        public bool IsSTATSChartsAccess { get; set; }
+        public bool IsRCFusionAccess { get; set; }
+
+        public bool IsAdminSOPToolsAccess { get; set; }
+
+
+        public bool IsAdminAuditorAccess { get; set; }
+
+
+        public bool IsAdminInvestigatorAccess { get; set; }
+
+
+        public bool IsAdminThirdPartyAccess { get; set; }
+        //p1-273 access level- end
+        public bool IsRCHRAccess { get; set; }
+        public bool IsRCLiteAccess { get; set; }
+
+        public bool IsTerminated { get; set; }
     }
 }

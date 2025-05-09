@@ -27,6 +27,13 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds);
         public void SaveClientSiteKey(ClientSiteKey clientSiteKey);
         void DeleteClientSiteKey(int id);
+        //p2-140 key photos  -start
+        void DeleteClientSiteKeyImage(int id);
+        //p2-140 key photos  -end
+        public void SaveANPR(ANPR anpr);
+        public List<ANPR> GetANPR(int clientSiteId);
+        public void DeleteANPR(int id);
+        public ANPR GetANPRCheckbox(int clientSiteId);
     }
 
     public class GuardSettingsDataProvider : IGuardSettingsDataProvider
@@ -67,6 +74,7 @@ namespace CityWatch.Data.Providers
                 if (dataToUpdate != null)
                 {
                     dataToUpdate.Name = clientSitePoc.Name;
+                    dataToUpdate.Email = clientSitePoc.Email;
                 }
             }
 
@@ -131,16 +139,29 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId)
         {
             return _context.ClientSiteKeys
-                .Where(z => z.ClientSiteId == clientSiteId)
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
         }
-
+        public ANPR GetANPRCheckbox(int clientSiteId)
+        {
+            return _context.ANPR
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .Include(x => x.ClientSite)
+                .FirstOrDefault();
+        }
+        public List<ANPR> GetANPR(int clientSiteId)
+        {
+            return _context.ANPR
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds)
         {
             return _context.ClientSiteKeys
-                .Where(z => clientSiteIds.Contains(z.ClientSiteId))
+                .Where(z => clientSiteIds.Contains(z.ClientSiteId) && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
@@ -162,6 +183,33 @@ namespace CityWatch.Data.Providers
                 {
                     clientSiteKeyToUpdate.KeyNo = clientSiteKey.KeyNo;
                     clientSiteKeyToUpdate.Description = clientSiteKey.Description;
+                    //p2-140 key photos  -start
+                    clientSiteKeyToUpdate.ImagePath = clientSiteKey.ImagePath;
+                    //p2-140 key photos  -end
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void SaveANPR(ANPR anpr)
+        {
+            if (anpr == null)
+                throw new ArgumentNullException();
+
+            if (anpr.Id == 0)
+            {
+                _context.ANPR.Add(anpr);
+            }
+            else
+            {
+                var anprToUpdate = _context.ANPR.SingleOrDefault(x => x.Id == anpr.Id);
+                if (anprToUpdate != null)
+                {
+                    anprToUpdate.profile = anpr.profile;
+                    anprToUpdate.Apicalls = anpr.Apicalls;
+                    anprToUpdate.LaneLabel = anpr.LaneLabel;
+                    anprToUpdate.IsDisabled = anpr.IsDisabled;
+                    anprToUpdate.IsSingleLane = anpr.IsSingleLane;
+                    anprToUpdate.IsSeperateEntryAndExitLane = anpr.IsSeperateEntryAndExitLane;
                 }
             }
             _context.SaveChanges();
@@ -175,6 +223,29 @@ namespace CityWatch.Data.Providers
                 _context.ClientSiteKeys.Remove(clientSiteKeyToDelete);
                 _context.SaveChanges();
             }
-        }        
+        }
+        //p2-140 key photos  -start
+
+        public void DeleteANPR(int id)
+        {
+            var ANPRToDelete = _context.ANPR.SingleOrDefault(x => x.Id == id);
+            if (ANPRToDelete != null)
+            {
+                _context.ANPR.Remove(ANPRToDelete);
+                _context.SaveChanges();
+            }
+        }
+        public void DeleteClientSiteKeyImage(int id)
+        {
+            var clientSiteKeyToDelete = _context.ClientSiteKeys.SingleOrDefault(x => x.Id == id);
+            if (clientSiteKeyToDelete != null)
+            {
+                clientSiteKeyToDelete.ImagePath = string.Empty;
+                
+            }
+            _context.SaveChanges();
+        }
+        //p2-140 key photos  -end
     }
+
 }

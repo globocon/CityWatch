@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-	<AssemblyVersion>1.6.4.0</AssemblyVersion>
+    <TargetFramework>net7.0</TargetFramework>
+	<AssemblyVersion>2.6.0.1</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,13 +10,13 @@
     <PackageReference Include="itext7" Version="7.2.0" />
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />
     <PackageReference Include="MailKit" Version="3.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.13">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.13">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -30,9 +30,9 @@
 
   <ItemGroup>    
     <Folder Include="wwwroot\GraphImage\" />    
-    <Folder Include="wwwroot\SummaryImage\" />    
-    <Folder Include="wwwroot\Pdf\Output\" />
-    <Folder Include="wwwroot\SiteImage\" />
+    <Folder Include="wwwroot\SummaryImage\" />
+	  <Folder Include="wwwroot\Pdf\Output\" />
+	  <Folder Include="wwwroot\SiteImage\" />
   </ItemGroup>
 
 </Project>

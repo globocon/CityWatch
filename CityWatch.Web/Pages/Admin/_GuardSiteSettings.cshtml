@@ -11,34 +11,42 @@
             <div class="modal-body p-2">
                 <div class="conatiner">
                     <ul class="nav nav-tabs" id="gridSiteSettingsTab" role="tablist">
-                        <li class="nav-item" role="presentation">
+                        @*<li class="nav-item" role="presentation">
                             <a class="nav-link active" id="settingsTab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="true">Settings</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
+                        </li>*@
+                        @*<li class="nav-item" role="presentation">
                             <a class="nav-link" id="smartWandsTab" data-toggle="tab" href="#smartWands" role="tab" aria-controls="smartWands" aria-selected="false">Smart Wands</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
+                        </li>*@
+                       @* <li class="nav-item" role="presentation">
                             <a class="nav-link" id="patrolCarsTab" data-toggle="tab" href="#patrolCars" role="tab" aria-controls="patrolCars" aria-selected="false">Patrol Cars</a>
-                        </li>
-                        <li class="nav-item" role="presentation">
+                        </li>*@
+                        @*<li class="nav-item" role="presentation">
                             <a class="nav-link" id="customFieldsTab" data-toggle="tab" href="#customFields" role="tab" aria-controls="customFields" aria-selected="false">Custom Fields</a>
-                        </li>
+                        </li>*@
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="pocsAndLocationsTab" data-toggle="tab" href="#pocsAndLocations" role="tab" aria-controls="pocsAndLocations" aria-selected="false">POCs & Locations</a>
                         </li>
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="clientSiteKeysTab" data-toggle="tab" href="#clientSiteKeys" role="tab" aria-controls="clientSitekeys" aria-selected="false">Keys</a>
                         </li>
+                        @*for toggle areas-start*@
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="toggleKeysTab" data-toggle="tab" href="#toggleKeys" role="tab" aria-controls="toggelKeys" aria-selected="false">Toggle</a>
+                        </li>
+                        @*for toggle areas-end*@
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="ringFenceTab" data-toggle="tab" href="#ringFence" role="tab" aria-controls="ringFence" aria-selected="false">RingFence</a>
                         </li>
                     </ul>
                     <div class="tab-content p-2">
-                        <div class="tab-pane active" id="settings" role="tabpanel" aria-labelledby="settingsTab">
+                        @*<div class="tab-pane active" id="settings" role="tabpanel" aria-labelledby="settingsTab">
                             <input type="hidden" id="gl_client_site_id" />
-                            <div class="row">
+                            <div class="row m-0">
                                 <div class="col-md-12">
                                     <form>
+                                        <div>
+                                            <label>LB & KV Site Report Settings</label>
+                                        </div>
                                         <div class="form-group row">
                                             <label for="gs_site_email" class="col-md-3 col-form-label">Site Email</label>
                                             <div class="col-md-6">
@@ -62,39 +70,55 @@
                                                 <label><em>Preceding day log will be sent &#64; 2 am on the next day</em></label>
                                             </div>
                                         </div>
+                                        <div>
+                                            <label>Duress Local Site Setting</label>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="gs_duress_email" class="col-md-3 col-form-label">Email alert</label>
+                                            <div class="col-md-6">
+                                                <input type="email" class="form-control" id="gs_duress_email">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="gs_duress_sms" class="col-md-3 col-form-label">SMS alert</label>
+                                            <div class="col-md-6">
+                                                <input type="text" class="form-control" id="gs_duress_sms">
+                                            </div>
+                                        </div>
                                         <div class="form-row mt-3">
                                             <button type="button" id="btnSaveGuardSiteSettings" class="btn btn-primary">Save</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
-                        </div>
-                        <div class="tab-pane" id="smartWands" role="tabpanel" aria-labelledby="smartWandsTab">
-                            <div class="row">
+                        </div>*@
+                        <input type="hidden" id="gl_client_site_id" />
+                        @*<div class="tab-pane active" id="smartWands" role="tabpanel" aria-labelledby="smartWandsTab">
+                            <div class="row m-0">
                                 <div class="col-md-12 text-right">
                                     <button class="btn btn-success mb-3" id="add_smart_wand"><i class="fa fa-plus mr-2"></i>Add Smart Wand</button>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
+                            <div class="row m-0">
+                                <div class="col-md-12 m-0 p-0">
                                     <table class="table" id="cs-smart-wands"></table>
                                 </div>
                             </div>
-                        </div>
-                        <div class="tab-pane" id="patrolCars" role="tabpanel" aria-labelledby="patrolCarsTab">
-                            <div class="row">
+                        </div>*@
+                        @*<div class="tab-pane" id="patrolCars" role="tabpanel" aria-labelledby="patrolCarsTab">
+                            <div class="row m-0">
                                 <div class="col-md-12 text-right">
                                     <button class="btn btn-success mb-3" id="add_patrol_car"><i class="fa fa-plus mr-2"></i>Add Patrol Car</button>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
+                            <div class="row m-0 p-0">
+                                <div class="col-md-12 p-0">
                                     <table class="table" id="cs-patrol-cars"></table>
                                 </div>
                             </div>
-                        </div>
-                        <div class="tab-pane" id="customFields" role="tabpanel" aria-labelledby="customFieldsTab">
-                            <div class="row pt-2">
+                        </div>*@
+                     @*   <div class="tab-pane" id="customFields" role="tabpanel" aria-labelledby="customFieldsTab">
+                            <div class="row m-0 pt-2">
                                 <div class="col-md-12">
                                     <form id="frm_custom_field">
                                         <input type="hidden" id="ClientSiteCustomField_ClientSiteId" name="ClientSiteCustomField.ClientSiteId" />
@@ -123,14 +147,14 @@
                                 </div>
                             </div>
                             <hr />
-                            <div class="row">
+                            <div class="row m-0">
                                 <div class="col-md-12">
                                     <table class="table" id="cs-custom-fields"></table>
                                 </div>
                             </div>
-                        </div>
+                        </div>*@
                         <div class="tab-pane" id="pocsAndLocations" role="tabpanel" aria-labelledby="pocsAndLocationsTab">
-                            <div class="row">
+                            <div class="row m-0">
                                 <div class="col-md-12 col-lg-6 pt-2">
                                     <div class="row">
                                         <div class="col-md-12">
@@ -158,12 +182,16 @@
                             </div>
                         </div>
                         <div class="tab-pane" id="clientSiteKeys" role="tabpanel" aria-labelledby="clientSiteKeysTab">
-                            <div class="row">
+                            <div class="row m-0">
                                 <div class="col-md-12 text-right">
+                                   @*  code added to add Download button  *@
+                                    <a href="#" class="btn btn-primary mb-3" id="add_Downloadbtn">Download Zip</a>
+                              
                                     <button class="btn btn-success mb-3" id="add_client_site_key"><i class="fa fa-plus mr-2"></i>Add Key</button>
                                 </div>
+                               
                             </div>
-                            <div class="row">
+                            <div class="row m-0">
                                 <div class="col-md-12">
                                     <table class="table table-bordered" width="100%" id="cs_client_site_keys">
                                         <thead>
@@ -178,6 +206,102 @@
                                 </div>
                             </div>
                         </div>
+                        @*for toggle areas-start*@
+                        <div class="tab-pane" id="toggleKeys" role="tabpanel" aria-labelledby="toggleKeysTab">
+                          
+                            <div class="row m-0">
+                                <div class="col-md-12">
+                                    <table class="table table-bordered" width="100%" id="cs_toggle_keys">
+                                        <thead>
+                                            <tr>
+                                                <th> Toggle</th>
+                                                <th>Default Mode</th>
+                                                
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>
+                                                    <table class="table table-borderless mb-0">
+                                                        <tr>
+                                                            <td width="200px">
+                                                                <input type="checkbox" id="chk_cs_time_slot" checked />
+                                                                <label id="lbl_cs_IsTimeSlotNo">Time Slot No.</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" id="chk_cs_tn_no_load" />
+                                                                <label id="lbl_cs_IsTNo">T.No. (Load).</label>
+                                                                <input type="hidden" id="chk_cs_Is_Time_Slot" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>
+
+                                                    <table class="table table-borderless mb-0">
+                                                        <tr>
+                                                            <td width="200px">
+                                                                <input type="checkbox" id="chk_cs_vwi" checked />
+                                                                <label id="lbl_cs_IsVWI">VWI</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" id="chk_cs_Manifest" />
+                                                                <label id="lbl_cs_Manifest">Manifest</label>
+                                                                <input type="hidden" id="chk_cs_Is_VWI" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>
+                                                    <table class="table table-borderless mb-0">
+                                                        <tr>
+                                                            <td width="200px">
+                                                                <input type="checkbox" id="chk_cs_Sender" checked />
+                                                                <label id="lbl_cs_IsSender">Sender Address</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" id="chk_cs_Receiver" />
+                                                                <label id="lbl_cs_Receiver">Receiver Address</label>
+                                                                <input type="hidden" id="chk_cs_Is_Sender" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td>
+                                                    <table class="table table-borderless mb-0">
+                                                        <tr>
+                                                            <td width="200px">
+                                                                <input type="checkbox" id="chk_cs_Reels" checked />
+                                                                <label id="lbl_cs_IsReels">Reels</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" id="chk_cs_QTY" />
+                                                                <label id="lbl_cs_QTY">QTY</label>
+                                                                <input type="hidden" id="chk_cs_Is_Reels" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="form-row mt-3">
+                                <button type="button" id="btnSaveToggleKeys" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                        @*for toggle areas-end*@
                         <div class="tab-pane" id="ringFence" role="tabpanel" aria-labelledby="ringFenceTab">
                             <div class="container">
                                 <h4 class="my-3 text-center"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>CAUTION</h4>

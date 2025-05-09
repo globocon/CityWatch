@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
 {
@@ -15,6 +16,7 @@ namespace CityWatch.Data.Models
         public int ClientSiteLogBookId { get; set; }
 
         public int GuardLoginId { get; set; }
+
 
         [NotMapped]
         public int? ActiveGuardLoginId { get; set; }
@@ -29,6 +31,8 @@ namespace CityWatch.Data.Models
 
         public string TimeSlotNo { get; set; }
 
+        public string DocketSerialNo { get; set; }
+
         public string VehicleRego { get; set; }
 
         public string Trailer1Rego { get; set; }
@@ -38,15 +42,25 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+        public string IndividualTitle { get; set; }
+        public string Gender { get; set; }
+        public string CompanyABN { get; set; }
+        public string CompanyLandline { get; set; }
+        public string Email { get; set; }
+        public string Website { get; set; }
+        public string CRMId { get; set; }
+        public string BDMList { get; set; }
 
-        public int? PlateId { get; set; }
+        public int PlateId { get; set; }
+
 
         public string KeyNo { get; set; }
 
         public string CompanyName { get; set; }
 
         public string PersonName { get; set; }
-        
+        public string POIImage { get; set; }
+
         public string MobileNumber { get; set; }
 
         /// <summary>
@@ -66,6 +80,8 @@ namespace CityWatch.Data.Models
         [Column("PurposeOfEntry")]
         public string Product { get; set; }
 
+        [NotMapped]
+        public string ProductOther { get; set; }
         public decimal? InWeight { get; set; }
 
         public decimal? OutWeight { get; set; }
@@ -79,15 +95,21 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-
-        public decimal? Reels { get; set; } 
+        
+        public string ClientSitePocIdsVehicleLog { get; set; }
+        public decimal? Reels { get; set; }
 
         public string CustomerRef { get; set; }
 
-        public string Wvi { get; set; }
+        [Column("Wvi")]
+        public string Vwi { get; set; }
 
         [HiddenInput]
         public bool IsSender { get; set; }
+
+        [HiddenInput]
+        public bool IsBDM { get; set; }
+        public int? PersonOfInterest { get; set; }
 
         public string Sender { get; set; }
 
@@ -120,6 +142,8 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSitePocId")]
         public ClientSitePoc ClientSitePoc { get; set; }
+        //[ForeignKey("CRMId")]
+        //public  CRMPersonalDec  { get; set; }
 
         public bool MoistureDeduction { get; set; }
 
@@ -135,20 +159,132 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public bool IsPreviousDayEntry { get { return CopiedFromId.HasValue; } }
 
+        public DateTime? EntryCreatedDateTimeLocal { get; set; }
+        public DateTimeOffset? EntryCreatedDateTimeLocalWithOffset { get; set; }
+        public string EntryCreatedDateTimeZone { get; set; }
+        public string EntryCreatedDateTimeZoneShort { get; set; }
+        public int? EntryCreatedDateTimeUtcOffsetMinute { get; set; }
+
+
+
+        public int? Trailer1PlateId { get; set; }
+
+        public int? Trailer2PlateId { get; set; }
+
+        public int? Trailer3PlateId { get; set; }
+
+        public int? Trailer4PlateId { get; set; }
+
+
+        [HiddenInput]
+        public bool IsDocketNo { get; set; }
+        public string LoaderName { get; set; }
+        public string DispatchName { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
+            var RegoStatus = false;
 
             if (!InitialCallTime.HasValue && !EntryTime.HasValue)
                 errors.Add(new ValidationResult("Initial Call or Entry Time is required"));
-
+            // if (string.IsNullOrEmpty(VehicleRego))
+            //errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
+            /* New change for Add rigo without plate number 21032024 dileep*/
             if (string.IsNullOrEmpty(VehicleRego))
-                errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
+            {
+                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego)
+                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego))
+                {
 
-            if (!string.IsNullOrEmpty(VehicleRego) && PlateId.GetValueOrDefault() <= 0)
+                    RegoStatus = true;
+                }
+                else
+                {
+
+                    errors.Add(new ValidationResult("ID No or Vehicle Registration or Trailer Rego is required"));
+                }
+
+            }
+
+            if (!string.IsNullOrEmpty(Trailer1Rego)
+                || !string.IsNullOrEmpty(Trailer2Rego)
+                    || !string.IsNullOrEmpty(Trailer3Rego)
+                    || !string.IsNullOrEmpty(Trailer4Rego)
+                    || !string.IsNullOrEmpty(VehicleRego))
+            {
+                bool sameValue = false;
+                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, VehicleRego };
+
+                // Loop through each string and compare it with the others
+                for (int i = 0; i < strings.Length; i++)
+                {
+                    for (int j = i + 1; j < strings.Length; j++)
+                    {
+                        if (!string.IsNullOrEmpty((strings[i])) && !string.IsNullOrEmpty((strings[j])))
+                        {
+                            if (strings[i] == strings[j])
+                            {
+
+                                errors.Add(new ValidationResult("The same Trailer Rego or Vehicle Rego (" + strings[i] + ") not allowed. "));
+                                sameValue = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            if (RegoStatus)
+            {
+                if (!string.IsNullOrEmpty(Trailer1Rego))
+                {
+                    if (Trailer1PlateId == null || Trailer1PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 1 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer2Rego))
+                {
+                    if (Trailer2PlateId == null || Trailer2PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 2 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer3Rego))
+                {
+                    if (Trailer3PlateId == null || Trailer3PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 3 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer4Rego))
+                {
+                    if (Trailer4PlateId == null || Trailer4PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 4 Rego"));
+                    }
+
+                }
+
+                if (TrailerType == null || TrailerType == 0)
+                {
+                    errors.Add(new ValidationResult("Please select Trailer Type"));
+
+                }
+            }
+
+            if (!string.IsNullOrEmpty(VehicleRego) && PlateId <= 0)
                 errors.Add(new ValidationResult("State of ID / Plate is required"));
 
-            if (!PersonType.HasValue)
+            //Tailer Change New change for Add rigo without plate number 21032024
+            //if (!PersonType.HasValue)
+            //errors.Add(new ValidationResult("Type of Individual is required"));
+            if (!PersonType.HasValue && !RegoStatus)
                 errors.Add(new ValidationResult("Type of Individual is required"));
 
             if (InWeight.HasValue && InWeight.Value < 0)
@@ -160,7 +296,32 @@ namespace CityWatch.Data.Models
             if (MaxWeight.HasValue && MaxWeight.Value < 0)
                 errors.Add(new ValidationResult("Max Weight is invalid"));
 
+            if (!string.IsNullOrEmpty(Email))
+            {
+                if (!Email.Contains('@'))
+                {
+                    //KV wont accept email - bug
+                    //It will NOT accept group@swcsecurity.com.au   
+                    errors.Add(new ValidationResult("Email is invalid"));
+                }
+                //if (!Regex.IsMatch(Email, regex))
+                //{
+
+                //    errors.Add(new ValidationResult("Email is invalid"));
+                //}
+            }
+
             return errors;
         }
+        [HiddenInput]
+        public bool IsReels { get; set; }
+        [HiddenInput]
+        public bool IsVWI { get; set; }
+        public string EmailCompany { get; set; }
+        public string Emailindividual { get; set; }
+        [NotMapped]
+        public string SitePocNames { get; set; }
+        [HiddenInput]
+        public bool IsISOVIN { get; set; }
     }
 }

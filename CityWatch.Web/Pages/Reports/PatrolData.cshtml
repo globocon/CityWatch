@@ -6,6 +6,7 @@
 @{
     ViewData["Title"] = "CityWatch Security | Alarm Response";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.PatrolData;
+    var colourcode = @Model.ConfigDataProiver.GetFeedbackTypesId("Colour Codes");
 }
 <div id="loader-p"></div>
 <div class="full-width">
@@ -23,11 +24,15 @@
                 <label class="mx-1" asp-for="@Model.ReportRequest.DataFilter"></label>
                 <select class="form-control" asp-for="@Model.ReportRequest.DataFilter" asp-items="Html.GetEnumSelectList<PatrolDataFilter>()"></select>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-6">
                 <label class="mx-1">&nbsp;</label>
                 <div>
                     <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>
-                    <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel">Download Excel</a>
+                    <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Excel</a>
+                    @*<a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>*@
+                    <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download Pdf</a>
+                    <input type="hidden" id="txtDownloadfilename" />
+
                 </div>
             </div>
         </div>
@@ -58,50 +63,125 @@
                     }
                 </select>
             </div>
+
+            <div class="form-group col-md-2">
+                <label class="font-weight-normal" asp-for="@Model.ReportRequest.ColourCode">Colour Code</label>
+                <select asp-for="@Model.ReportRequest.ColourCode" class="form-control">
+                    <option style="background-color:white; color:black" value="" selected>All</option>
+                    @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
+                    {
+                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor" value="@item.Id">@item.Name</option>
+                    }
+                </select>
+            </div>
+            @* p3-132 contracted manning-start*@
+            <div class="form-group col-md-2">
+                <label class="mx-1">&nbsp;</label>
+                <button type="button" class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>Contracted Manning</button>
+            </div>
+            @*p3-132 contracted manning-end*@
         </div>
     </form>
     <ul class="nav nav-tabs" id="patrol-data-tabs" role="tablist">
         <li class="nav-item" role="presentation">
             <a class="nav-link active" id="pd-report-tab" data-toggle="tab" href="#pd-report" role="tab" aria-controls="pd-report" aria-selected="true">Report</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
-        </li>
+        @if (Model.guard != null)
+        {
+            @if (Model.guard.IsSTATSChartsAccess == true || Model.guard.IsAdminGlobal == true)
+            {
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="hrstat-chart-tab" data-toggle="tab" href="#hrstat-chart" role="tab" aria-controls="hrstat-chart" aria-selected="false">HR Stats</a>
+                </li>
+            }
+        }
+        else
+        {
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="hrstat-chart-tab" data-toggle="tab" href="#hrstat-chart" role="tab" aria-controls="hrstat-chart" aria-selected="false">HR Stats</a>
+            </li>
+        }
     </ul>
     <div class="tab-content pt-3">
         <div class="tab-pane active" id="pd-report" role="tabpanel" aria-labelledby="pd-report-tab">
             <div id="monthly_patrol_data_wrapper">
-                <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Date</th>
-                            <th>Control Room Job No</th>
-                            <th>Site</th>
-                            <th>Address</th>
-                            <th>Desp. Time</th>
-                            <th>Arrival</th>
-                            <th>Depart</th>
-                            <th>CWS SNo.</th>
-                            <th>Total Mins on Site</th>
-                            <th>Resp. Time</th>
-                            <th>Alarm</th>
-                            <th>Patrol Att.</th>
-                            <th>Action Taken</th>
-                            <th>Notified By</th>
-                            <th>Bill To</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="large-table-container-2">
+                    <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
+                        <thead style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>IR S/No</th>
+                                <th>
+                                    <span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span>
+                                </th>
+                                <th>Control Room Job No</th>
+                                <th>Site</th>
+                                <th>Address</th>
+                                <th>Desp. Time</th>
+                                <th>Arrival</th>
+                                <th>Depart</th>
+                                <th>CWS SNo.</th>
+                                <th>Total Mins on Site</th>
+                                <th>Resp. Time</th>
+                                <th>Alarm</th>
+                                <th>Patrol Att.</th>
+                                <th>Action Taken</th>
+                                <th>Notified By</th>
+                                <th>Bill To</th>
+                            </tr>
+                        </thead>
+
+                        <tfoot style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>IR S/No</th>
+                                <th>
+                                    <span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span>
+                                </th>
+                                <th>Control Room Job No</th>
+                                <th>Site</th>
+                                <th>Address</th>
+                                <th>Desp. Time</th>
+                                <th>Arrival</th>
+                                <th>Depart</th>
+                                <th>CWS SNo.</th>
+                                <th>Total Mins on Site</th>
+                                <th>Resp. Time</th>
+                                <th>Alarm</th>
+                                <th>Patrol Att.</th>
+                                <th>Action Taken</th>
+                                <th>Notified By</th>
+                                <th>Bill To</th>
+                            </tr>
+                            <!-- Footer content here (will be styled to look like the header) -->
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
+        @*   @if (Model.guard.IsSTATSChartsAccess == true)
+        { *@
         <div class="tab-pane" id="pd-chart" role="tabpanel" aria-labelledby="pd-chart-tab">
             <div class="row">
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                            IR Records Percentage By Site
-                            <div class="float-right">Total Site Count: <span id="count_by_site"></span></div>
+                            IR Records Percentage By Site (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_site"><span id="count_by_site" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
                         </div>
                         <div class="card-body">
                             <svg width="500" height="200" id="pie_chart_ir_by_site"></svg>
@@ -111,22 +191,25 @@
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                            IR Records Percentage By Area/Ward
-                            <div class="float-right">Total Area/Ward Count: <span id="count_by_area_ward"></span></div>
+                            IR Records Percentage By Area/Ward (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_area_ward"><span id="count_by_area_ward" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Area/Ward Count: <a href="#" class="btn btn-link" id="btncount_by_area_ward"><span id="count_by_area_ward"></span></a></div>*@
                         </div>
-                        <div class="card-body">
-                            <svg width="400" height="200" id="pie_chart_ir_by_areaward"></svg>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @*Old piechart modified to chart js chart*@
+                            @*<svg width="400" height="200" id="pie_chart_ir_by_areaward"></svg>*@
+                            <canvas id="pie_chart_ir_by_areaward"></canvas>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                            IR Records Percentage By Colour Code
-                            <div class="float-right">Total Color Code Count: <span id="count_color_code"></span></div>
+                            IR Records Percentage By Colour Code (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_color_code"><span id="count_color_code" class="p-0 b-0"></span></a>)
+                            @*<div class="float-right">Total Color Code Count: <a href="#" class="btn btn-link" id="btncount_color_code"><span id="count_color_code"></span></a></div>*@
                         </div>
-                        <div class="card-body">
-                            <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            <canvas id="pie_chart_ir_by_colorcode"></canvas>
+                            @* <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>*@
                         </div>
                     </div>
                 </div>
@@ -135,8 +218,8 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
-                            IR Event Type Quantity
-                            <div class="float-right">Total IR Count:  <span id="count_by_ir"></span></div>
+                            IR Event Type Quantity (Count :<span id="count_by_ir" class="p-0 b-0"></span>)
+                            @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
                         </div>
                         <div class="card-body">
                             <div class="d-flex flex-row align-items-center">
@@ -152,9 +235,803 @@
                 </div>
             </div>
         </div>
+        <div class="tab-pane" id="rcstat-chart" role="tabpanel" aria-labelledby="rcstat-chart-tab">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerWeek"><span id="count_by_numberofduressperweek" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_forweek"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerMonth"><span id="count_by_numberofduresspermonth" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_formonth"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerYear"><span id="count_by_numberofduressperyear" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_foryear"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Times Radio Check Pushed By CRO (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberoftimesrcpushedbycro"><span id="count_by_numberoftimesrcpushedbycro" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_pushedby_cro"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Guards Went To PRE-ALARM (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnenttoprealarm"><span id="count_by_numberofguardswnenttoprealarm" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_guards_wenttoprealarm"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Guards Pushed to OffDuty By CRO (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnentfromprealarmorangetored"><span id="count_by_numberofguardswnentfromprealarmorangetored" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       @* Hr tab panel*@
+
+        <div class="tab-pane" id="hrstat-chart" role="tabpanel" aria-labelledby="hrstat-chart-tab">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Active Guard Vs Inactive Guard (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_ActiveGuardVsInactiveGuard"><span id="count_hr_activeGuardVsInactiveGuard" class="p-0 b-0"></span></a>)
+                          
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            <canvas id="pie_chart_by_hr_activeGuardVsInactiveGuard"></canvas>
+                           
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Gender (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_GenderGuard"><span id="count_hr_GenderGuard" class="p-0 b-0"></span></a>)
+                           
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            <canvas id="pie_chart_by_hr_genderGuard"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            LOTE (Count :)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                           @* <canvas id="bar_chart_by_rc_duress_foryear"></canvas>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Year of Onboarding (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_YearofOnboarding"><span id="count_hr_numberofYearofOnboarding" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="pie_chart_by_hr_YearofOnboarding"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Year of Onboarding (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_YearofOnboarding2"><span id="count_hr_numberofYearofOnboarding2" class="p-0 b-0"></span></a>)
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            <canvas id="bar_chart_by_hr_YearofOnboarding"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                        
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                           @* <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored"></canvas>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* } *@
     </div>
+    @*/*html to PDF content for the download PDF Start*/*@
+    <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">
+        <div id="content-to-pdf" style="width:99%">
+            <div class="page-break">
+                <div class="row pt-1">
+                    <div class="col-md-11" style="text-align:center">
+                        <h5 style="padding-top: 20px;text-align: center;">
+                            IR Statistics Report
+                        </h5>
+                        <span id="Spanfromdate"></span> to <span id="Spantodate"></span>
+                    </div>
+                    <div class="col-md-1">
+                        <img src="~/images/cwslogopdf.png" class="img-thumbnail" />
+                    </div>
+                </div>
+                <div class="row pt-1">
+                    <div class="col-md-6 pr-1">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Site (Count :<span id="count_by_site3" class="p-0 b-0"></span>)
+                                @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            </div>
+                            <div class="card-body">
+                                <svg width="600" height="260" id="pie_chart_ir_by_site3"></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6  pl-1">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Area/Ward (Count :<span id="count_by_area_ward3" class="p-0 b-0"></span>)
+                            </div>
+                            <div class="card-body">
+                                <svg width="600" height="260" id="pie_chart_ir_by_areaward3pdf"></svg>
+                            </div>
+                            @* <div class="card-body"> Old Code withChart js*@
+                            @*<div style="height:750px ;width:1200px">*@
+                            @* Old Code withChart js Start<div style="height:260px ;width:490px">
+                            <canvas id="pie_chart_ir_by_areaward3"></canvas>
+                            </div>*@
+                            @*Old Code withChart js end </div>*@
+                            @*</div>*@
+                        </div>
+                    </div>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-md-6  pr-1">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Colour Code (Count :<span id="count_color_code3" class="p-0 b-0"></span>)
+                            </div>
+                            <div class="card-body">
+                                @*<div style="height:750px ;width:1200px">*@
+                                @* Old Code with Chart js Start  <div style="height:260px ;width:532px">
+                                <canvas id="pie_chart_ir_by_colorcode3"></canvas>
+                                </div>Old Code with Chart js end*@
+                                @* </div>*@
+
+
+                                <svg width="600" height="260" id="pie_chart_ir_by_colorcode3pdf"></svg>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 pl-1">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Event Type Quantity (Count :<span id="count_by_ir3" class="p-0 b-0"></span>)
+                                @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
+                            </div>
+                            <div class="card-body">
+                                @*<div class="d-flex flex-row align-items-center">*@
+
+                                <svg width="600" height="260" id="pie_chart_by_ireventype_quantity3"></svg>
+
+                                @* <div class="col-md-3">
+                                <svg width="200" height="150" id="bar_chart_by_ireventype_quantity3"></svg>
+                                </div>*@
+                                @*  </div>*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+    </div>
+    @*/*html to PDF content for the download PDF end*/*@
 </div>
 @Html.AntiForgeryToken()
 @section PageHeader {
-    <h3 class="text-center">PATROL DATA</h3>
+    <h3 class="text-center">IR & Patrol Car Statistics</h3>
 }
+<div id="modelIRRecordsbySiteGraph" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header p-0 m-0">
+
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @*<div class="modal-body">*@
+            @*  <div class="row">*@
+            @*  <div class="col-md-12">*@
+            @* <div class="card">*@
+            @* <div class="card-header">
+            IR Records Percentage By Site
+            <div class="float-right">Total Site Count: <span id="count_by_site1"></span></div>
+            </div>*@
+            @* <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_ir_by_site1"></svg>
+            @* </div>*@
+            @* </div>*@
+            @*</div>*@
+
+            @*</div>*@
+            @* </div>*@
+
+        </div>
+    </div>
+</div>
+<div id="modelIRRecordsbyAreaWardGraph" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="pie_chart_ir_by_areaward1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelIRRecordsbyColorCodeGraph" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                @*  <h5 class="modal-title">
+                </h5>*@
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">
+            IR Records Percentage By Colour Code
+            <div class="float-right">Total Color Code Count:: <span id="count_color_code1"></span></div>
+            </div>*@
+            @*   <div class="card-body">*@
+
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1150px">
+                    <canvas id="pie_chart_ir_by_colorcode1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+
+            @*   </div>
+            </div>
+            </div>
+
+            </div>
+            </div>*@
+            @* <div class="modal-footer" style="display:block">
+            <div class="text-left">
+            <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+            </div>
+            </div>*@
+        </div>
+    </div>
+</div>
+<div id="modelIreventypeQuantity" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                @*  <h5 class="modal-title">
+                </h5>*@
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">
+            IR Records Percentage By Colour Code
+            <div class="float-right">Total Color Code Count:: <span id="count_color_code1"></span></div>
+            </div>*@
+            @*   <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_by_ireventype_quantity1"></svg>
+            @*   </div>
+            </div>
+            </div>
+
+            </div>
+            </div>*@
+            @* <div class="modal-footer" style="display:block">
+            <div class="text-left">
+            <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+            </div>
+            </div>*@
+        </div>
+    </div>
+
+
+
+</div>
+@*p3-132 Contracted Manning Button-start*@
+<div class="modal" tabindex="-1" role="dialog" id="kpi-settings-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear" aria-hidden="true"></i> Edit Settings for <span id="client_site_name"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modelchoice" />
+                <div id="div_site_settings"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@*p3-132 Contracted Manning Button-end*@
+<div id="modelRCDuressEntriesGraphForWeek" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_forweek1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCDuressEntriesGraphForMonth" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_formonth1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCDuressEntriesGraphForYear" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_foryear1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelRCButtonPushedbyCRO" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_pushedby_cro1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCGuardswenttoprealarm" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_guards_wenttoprealarm1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCGuardswentfromprealarmorangetored" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="modelHrActiveGuardVsInactiveGuard" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="pie_chart_by_hr_activeGuardVsInactiveGuard1"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelHrYearofOnboardingModel" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>           
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="pie_chart_by_hr_YearofOnboarding1"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelHrYearofOnboardingModel2" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_hr_YearofOnboarding1"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="modelHrGender" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="pie_chart_by_hr_genderGuard1"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- CRM Supplier Details Modal -------------------->
+<div class="modal fade" id="crmSupplierDetailsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="crmSupplierDetailsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>CRM Supplier Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <ul class="list-unstyled col-md-12">
+                        <li class="row">
+
+                            <label style="white-space: nowrap;" class="col-md-3 col-form-label">Company Name:  </label>
+                            <label class="col-form-label" id="lbl_company_name"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">ABN: </label>
+                            <label class="col-form-label" id="lbl_abn"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Landline: </label>
+                            <label class="col-form-label" id="lbl_landline"></label>
+                        </li>
+
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Email: </label>
+                            <label class="col-form-label" id="lbl_email"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Website:</label>
+                            <label class="col-form-label" id="lbl_website"></label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

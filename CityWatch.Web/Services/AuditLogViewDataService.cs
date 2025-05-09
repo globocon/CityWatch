@@ -3,7 +3,9 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace CityWatch.Web.Services
 {
@@ -11,6 +13,9 @@ namespace CityWatch.Web.Services
     {
         List<GuardLogViewModel> GetAuditGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
+        List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
@@ -31,6 +36,23 @@ namespace CityWatch.Web.Services
             var dailyGuardLogs = new List<GuardLogViewModel>();
             foreach (var group in dailyGuardLogGroups)
             {
+                //p6-102 add photo-start
+                foreach (var guardlog in group)
+                {
+                    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+                    foreach (var guardLogImage in guardlogImages)
+                    {
+                        if (guardLogImage.IsRearfile == true)
+                        {
+                            guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        }
+                        if (guardLogImage.IsTwentyfivePercentfile == true)
+                        {
+                            guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+                        }
+                    }
+                }
+                //p6-102 add photo-end
                 var patrolCarLogs = patrolCarLogGroups.Where(z => z.ClientSiteLogBookId == group.Key);
                 if (patrolCarLogs.Any())
                 {
@@ -51,7 +73,7 @@ namespace CityWatch.Web.Services
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             return _guardLogDataProvider.GetKeyVehicleLogs(kvlRequest.ClientSiteIds, kvlRequest.LogFromDate, kvlRequest.LogToDate)
-                .Where(z => 
+                .Where(z =>
                     (string.IsNullOrEmpty(kvlRequest.VehicleRego) || string.Equals(z.VehicleRego, kvlRequest.VehicleRego, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(kvlRequest.CompanyName) || string.Equals(z.CompanyName, kvlRequest.CompanyName, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(kvlRequest.PersonName) || string.Equals(z.PersonName, kvlRequest.PersonName, StringComparison.OrdinalIgnoreCase)) &&
@@ -65,6 +87,39 @@ namespace CityWatch.Web.Services
                     (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo))))
                 .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                 .ToList();
+        }
+        public List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest kvlRequest)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            return _guardLogDataProvider.GetKeyVehicleLogs(kvlRequest.ClientSiteIds, kvlRequest.LogFromDate, kvlRequest.LogToDate)
+                .Where(z =>
+                    (string.IsNullOrEmpty(kvlRequest.VehicleRego) || string.Equals(z.VehicleRego, kvlRequest.VehicleRego, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(kvlRequest.CompanyName) || string.Equals(z.CompanyName, kvlRequest.CompanyName, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(kvlRequest.PersonName) || string.Equals(z.PersonName, kvlRequest.PersonName, StringComparison.OrdinalIgnoreCase)) &&
+                    (!kvlRequest.PersonType.HasValue || z.PersonType == kvlRequest.PersonType) &&
+                    (!kvlRequest.EntryReason.HasValue || z.EntryReason == kvlRequest.EntryReason) &&
+                    (string.IsNullOrEmpty(kvlRequest.Product) || z.Product == kvlRequest.Product) &&
+                    (!kvlRequest.TruckConfig.HasValue || z.TruckConfig == kvlRequest.TruckConfig) &&
+                    (!kvlRequest.TrailerType.HasValue || z.TrailerType == kvlRequest.TrailerType) &&
+                    (string.IsNullOrEmpty(kvlRequest.ClientSitePocIdNew) || kvlRequest.ClientSitePocIds.Contains(Convert.ToInt16(z.ClientSitePocId))) &&
+                    (string.IsNullOrEmpty(kvlRequest.ClientSiteLocationIdNew) || kvlRequest.ClientSiteLocationIds.Contains(Convert.ToInt16(z.ClientSiteLocationId))) &&
+                    (string.IsNullOrEmpty(kvlRequest.PersonOfInterest) || kvlRequest.PersonOfInterestIds.Contains(Convert.ToInt16(z.PersonOfInterest))) &&
+                    (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo))))
+                .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
+                .ToList();
+        }
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+            return dailyGuardLogGroups.ToList();
+        }
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, false);
+            return dailyGuardLogGroups.ToList();
         }
     }
 }

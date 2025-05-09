@@ -1,11 +1,17 @@
 using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 
 namespace CityWatch.Web.Pages
@@ -13,9 +19,11 @@ namespace CityWatch.Web.Pages
     public class LoginModel : PageModel
     {
         private readonly IUserAuthenticationService _userAuthentication;
-        public LoginModel(IUserAuthenticationService userAuthentication)
+        private readonly IConfigDataProvider _dataProvider;
+        public LoginModel(IUserAuthenticationService userAuthentication, IConfigDataProvider dataProvider)
         {
             _userAuthentication = userAuthentication;
+            _dataProvider = dataProvider;
         }
 
         [BindProperty]
@@ -24,25 +32,55 @@ namespace CityWatch.Web.Pages
         public void OnGet()
         {
             LoginUser = new User();
+
         }
 
         public IActionResult OnPost(string returnUrl)
         {
+
             if (string.IsNullOrEmpty(returnUrl))
                 returnUrl = Url.Page("/");
 
             var isValidLogin = _userAuthentication.TryGetLoginUser(LoginUser, out User user);
-
+            var IsthirdParty = IsThirdParty(user.Id);
             if (!isValidLogin)
                 ModelState.AddModelError("Username", "Incorrect User Name or Password");
             else if (!user.IsAdmin && returnUrl == Url.Page("/Admin/Settings"))
                 ModelState.AddModelError("Username", "Not authorized to access this page");
             else if (user.IsDeleted)
                 ModelState.AddModelError("Username", "User is not active");
+            else if(IsthirdParty && !CheckIfTheUrlIsAThirpartyUrl())
+                ModelState.AddModelError("Username", "Not authorized to access this page");
             else
             {
                 SignInUser(user);
-                return Redirect(Url.Page(returnUrl));
+                _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
+                var subDomainRedirect = GetClientDetailsUsingSubDomain(user.Id);
+                
+                
+                // Check if the subDomainRedirect has a value and update the returnUrl accordingly
+                if (!string.IsNullOrEmpty(subDomainRedirect))
+                {
+                    return Redirect(subDomainRedirect);
+                }
+                else
+                {
+                    if (IsthirdParty)
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+
+
+                    }
+                    else
+                    {
+                        return Redirect(Url.Page(returnUrl));
+                    }
+                        
+                    
+                    
+                }
+
+                
             }
             return Page();
         }
@@ -67,6 +105,131 @@ namespace CityWatch.Web.Pages
             HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
+            // clear the GuardId for IR when the user Login
+            HttpContext.Session.Remove("GuardId");
+        }
+
+        public string GetClientDetailsUsingSubDomain(int userid)
+        {
+            var host = HttpContext.Request.Host.Host;
+            var clientName = string.Empty;
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+            {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Check if clientName is valid and not a reserved keyword
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                    &&
+                    clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    var IsthirdParty = IsThirdParty(userid);
+                    if (IsthirdParty)
+                    {
+                        url = "/Guard/Login?t=gl";
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Username", "Not authorized to access this page");
+                    }
+                    var domain = _dataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        url = "/Guard/Login?t=gl";
+                    }
+                    else
+                    {
+                        url = "/Account/Login";
+                    }
+                }
+            }
+
+            return url;
+        }
+
+        public bool IsThirdParty(int userid)
+        {
+            var IsThirtPartyCheck = false;
+            var IsThirdparty = _userAuthentication.GetUserClientSiteAccessThirdParty(userid);
+            if (IsThirdparty != null && IsThirdparty.ThirdPartyID != null && IsThirdparty.ThirdPartyID != 0)
+            {
+                var DomainThirdParty = _dataProvider.GetSubDomainID(IsThirdparty.ThirdPartyID);
+                if (DomainThirdParty != null)
+                {
+                    IsThirtPartyCheck = true;
+                }
+                else
+                {
+                    IsThirtPartyCheck = false;
+                }
+            }
+            return IsThirtPartyCheck;
+        }
+
+
+        public bool CheckIfTheUrlIsAThirpartyUrl()
+        {
+            bool IsthridPartyUrl = false;
+            var host = HttpContext.Request.Host.Host;
+            var clientName = string.Empty;
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+            {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Check if clientName is valid and not a reserved keyword
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                    &&
+                    clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    
+                    var domain = _dataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        return true;
+                    }
+                  
+                }
+            }
+
+            return IsthridPartyUrl;
         }
     }
+
+
+
 }

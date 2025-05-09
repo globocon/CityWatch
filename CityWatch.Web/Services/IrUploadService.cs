@@ -56,6 +56,10 @@ namespace CityWatch.Web.Services
 
         public async Task Process()
         {
+            /* Update client site expiring to expire automatically Start*/
+            await UpdateExpirySites();
+            /* Update client site expiring to expire automatically end*/
+
             var irsToProcess = _irDataProvider.GetIncidentReports(DateTime.Now.AddDays(-7), DateTime.Today)
                                     .Where(i => !i.DbxUploaded && i.ClientSiteId.HasValue)
                                     .ToList();
@@ -87,7 +91,7 @@ namespace CityWatch.Web.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError("Error uploading IR {0} to patrols folder", incidentReport.FileName, ex.Message);
+                        _logger.LogError("Error uploading IR {0} to patrols folder, Message : {1}", incidentReport.FileName, ex.Message);
                     }
                 }
             }
@@ -95,21 +99,35 @@ namespace CityWatch.Web.Services
             var siteDbxBasePath = _clientSiteKpiSettings.SingleOrDefault(z => z.ClientSiteId == incidentReport.ClientSiteId)?.DropboxImagesDir;
             if (!string.IsNullOrEmpty(siteDbxBasePath))
             {
+             
+             
                 var siteUploadPath = $"{siteDbxBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{irDate.Year}/{irDate:yyyyMM} - {irDate.ToString("MMMM").ToUpper()} DATA/{incidentReport.FileName}";
                 try
                 {
-                    var irUploaded = await _dropboxService.Upload(dropboxSettings, fileToUpload, siteUploadPath);
-                    if (irUploaded)
+                    var kpisetting = _clientSiteKpiSettings.SingleOrDefault(z => z.ClientSiteId == incidentReport.ClientSiteId);
+                    if (kpisetting.DropboxScheduleisActive)
                     {
-                        _irDataProvider.MarkAsUploaded(incidentReport.Id);
-                        File.Move(fileToUpload, Path.Combine(_ReportRootDir, "Archive", incidentReport.FileName), true);
+                        var irUploaded = await _dropboxService.Upload(dropboxSettings, fileToUpload, siteUploadPath);
+                        if (irUploaded)
+                        {
+                            _irDataProvider.MarkAsUploaded(incidentReport.Id);
+                            File.Move(fileToUpload, Path.Combine(_ReportRootDir, "Archive", incidentReport.FileName), true);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Error uploading IR {0} to client site folder", incidentReport.FileName, ex.Message); ;
+                    _logger.LogError("Error uploading IR {0} to client site folder , Message : {1}", incidentReport.FileName, ex.Message); ;
                 }
             }
+        }
+
+
+
+        private async Task UpdateExpirySites()
+        {
+             _irDataProvider.UpdateTheSiteExpiringToExpired();
+
         }
     }
 }

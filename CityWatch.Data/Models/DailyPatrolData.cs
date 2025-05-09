@@ -1,6 +1,24 @@
-﻿using System;
+﻿using CityWatch.Data.Providers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using Azure.Storage;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using Microsoft.Extensions.Configuration;
+using CityWatch.Data;
+using Microsoft.AspNetCore.Hosting;
+using System.Configuration;
+using static System.Net.WebRequestMethods;
+using Azure;
+using System.Drawing.Imaging;
+
 
 namespace CityWatch.Data.Models
 {
@@ -8,11 +26,14 @@ namespace CityWatch.Data.Models
     {
         private readonly IncidentReport _incidentReport;
         private readonly List<ClientSite> _clientSites;
-
-        public DailyPatrolData(IncidentReport incidentReport, List<ClientSite> clientSites)
+        public readonly IConfigDataProvider _configDataProvider;
+        
+        public DailyPatrolData(IncidentReport incidentReport, List<ClientSite> clientSites, IConfigDataProvider configDataProvider)
         {
             _incidentReport = incidentReport;
             _clientSites = clientSites;
+            _configDataProvider = configDataProvider;
+            
         }
 
         public string NameOfDay
@@ -191,8 +212,90 @@ namespace CityWatch.Data.Models
         {
             get
             {
-                return _incidentReport.ColourCode;
+                
+                return _incidentReport.ColourCode;               
+               
+              
             }
+        }
+        public string ColorCodeStr
+        {
+            get
+            {
+
+                int? colorCode = _incidentReport.ColourCode;
+
+                return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == colorCode)?.Name;
+            }
+        }
+        public string fileNametodownload {
+            get
+            {
+                return _incidentReport.FileName;
+            }
+
+        }
+        public string pspfname
+        {
+            get
+            {
+                var pspfid= _incidentReport.PSPFId.Value;
+                return _configDataProvider.GetPSPFNameFromId(pspfid);              
+
+
+
+            }
+
+        }
+        public async Task<long?> GetBlobSizeAsync()
+
+        {
+            try
+            {
+         
+                string azureStorageConnectionString = "DefaultEndpointsProtocol=https;AccountName=c4istorage1;AccountKey=12Q6IOpVChRVlh/gCuYdYoZfkWCDhV82f02Cu9md5jDbiAkxeHuyShvCXrIazkrZYuYj0QmY73ii+AStLR19UQ==;EndpointSuffix=core.windows.net";
+
+                string containerName = "irfiles";
+                string blobPath = _incidentReport.FileName.Substring(0, 8) + '/' + _incidentReport.FileName;
+               
+                BlobServiceClient blobServiceClient = new BlobServiceClient(azureStorageConnectionString);
+                // Get the BlobContainerClient using the container name
+                BlobContainerClient blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+                // Get the BlobClient using the blob path
+                BlobClient blobClient = blobContainerClient.GetBlobClient(blobPath);
+
+                if (blobClient != null)
+                {
+                    BlobProperties properties = await blobClient.GetPropertiesAsync();
+                    return properties.ContentLength;
+                    
+             
+                }
+                else
+                {
+                    Console.WriteLine("File not found.");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return null;
+
+            }
+        }
+
+       
+
+        public string hashvalue
+        {
+            get
+            {
+                return _incidentReport.HASH;
+                
+            }
+
         }
     }
 }

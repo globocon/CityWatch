@@ -100,7 +100,7 @@ namespace CityWatch.Kpi.Services
 
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
             var monthlyKpiReportData = _viewDataService.GetMonthlyKpiReportData(clientSiteIds, fromDate, toDate);
-            var totalSitePrinted = CreateSummaryTable(monthlyKpiReportData, doc, fromDate);
+            var totalSitePrinted = CreateSummaryTable(monthlyKpiReportData, doc, fromDate, schedule.IsHrTimerPaused);
 
             if (totalSitePrinted > MAX_SITES_PER_PAGE_FOR_FOOTER)
                 doc.Add(new AreaBreak());
@@ -112,13 +112,7 @@ namespace CityWatch.Kpi.Services
                 DataFilter = PatrolDataFilter.Custom,
                 ClientSites = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.Name).ToArray(),
             });
-
-            if (patrolDataReport.ResultsCount > 0)
-            {
-                var graphsTable = CreateGraphsTables(patrolDataReport);
-                doc.Add(graphsTable);
-            }
-
+                        
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
 
@@ -126,6 +120,14 @@ namespace CityWatch.Kpi.Services
             {
                 var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
                 doc.Add(tableNotes);
+            }
+
+            if (patrolDataReport.ResultsCount > 0)
+            {                
+                doc.Add(new AreaBreak());
+                doc.Add(tableReportHeader);
+                var graphsTable = CreateGraphsTables(patrolDataReport);
+                doc.Add(graphsTable);
             }
 
             doc.Close();
@@ -152,7 +154,7 @@ namespace CityWatch.Kpi.Services
         private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
         {
             var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
-
+            
             chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY SITE", "\nTotal Site Count: " + patrolDataReport.SitePercentage.Count));
 
             // row 1 blank cell
@@ -195,6 +197,9 @@ namespace CityWatch.Kpi.Services
 
             var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
             chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
+
+            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
+            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
 
             return chartDataTable;
         }
@@ -380,7 +385,7 @@ namespace CityWatch.Kpi.Services
             doc.Add(isoV3Image);
         }
 
-        private int CreateSummaryTable(Dictionary<int, MonthlyKpiResult> monthlyKpiReportData, Document doc, DateTime fromDate)
+        private int CreateSummaryTable(Dictionary<int, MonthlyKpiResult> monthlyKpiReportData, Document doc, DateTime fromDate, bool isHrTimerPaused)
         {
             var tableWidth = UnitValue.CreatePercentArray(new float[] { 21, 8, 8, 8, 8, 8, 8, 8, 23 });
             var table = new Table(tableWidth).UseAllAvailableWidth();
@@ -411,7 +416,7 @@ namespace CityWatch.Kpi.Services
 
                     var shiftFilledVsRoster = clientData.ShiftFilledVsRosterPercentage;
                     var logReportsVsRoster = clientData.LogReportsVsRosterPercentage;
-                    var guardCompetency = "See Excel";
+                    var guardCompetency = "HR Records";
                     var kpiForFlir = clientData.ImageCountPercentage;
                     var kpiForWand = clientData.WandScanPercentage;
                     var irLodged = clientData.IrCountTotal;
@@ -420,8 +425,9 @@ namespace CityWatch.Kpi.Services
 
                     if (row == 0)
                     {
-                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{shiftFilledVsRoster:0.00} %")));
-                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{logReportsVsRoster:0.00} %")));
+                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{shiftFilledVsRoster.GetValueOrDefault():0.00} %")));
+                        var logReportsVsRosterValue = isHrTimerPaused ? 0 : logReportsVsRoster.GetValueOrDefault();
+                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{logReportsVsRosterValue:0.00} %")));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(guardCompetency)));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{kpiForFlir.GetValueOrDefault():0.00} %")));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{kpiForWand.GetValueOrDefault():0.00} %")));
@@ -430,10 +436,17 @@ namespace CityWatch.Kpi.Services
                     }
                     else if (row == 1)
                     {
-                        CreateKpiStatusCell(table, shiftFilledVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT, shiftFilledVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL);
-                        CreateKpiStatusCell(table, uploadGuardLogEnabled ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A",
-                                                   uploadGuardLogEnabled ? (logReportsVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
-                        CreateKpiStatusCell(table, string.Empty, string.Empty);
+                        var logReportsVsRosterStatus = "N/A";
+                        var logReportsVsRosterColor = COLOR_DEFAULT;
+                        var HrRecords= clientData.ClientSiteKpiSetting.Notes?.SingleOrDefault(z => z.ForMonth == new DateTime(fromDate.Year, fromDate.Month, 1))?.HRRecords ?? string.Empty;
+                        if (!isHrTimerPaused)
+                        {
+                            logReportsVsRosterStatus = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A") : "N/A";
+                            logReportsVsRosterColor = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT) : COLOR_DEFAULT;
+                        }
+                        CreateKpiStatusCell(table, shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
+                        CreateKpiStatusCell(table, logReportsVsRosterStatus, logReportsVsRosterColor);
+                        CreateKpiStatusCell(table, !string.IsNullOrEmpty(HrRecords) ? HrRecords : "All Ok", !string.IsNullOrEmpty(HrRecords) ? COLOR_FAIL: COLOR_PASS);
                         CreateKpiStatusCell(table, kpiForFlir.HasValue ? (kpiForFlir >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForFlir.HasValue ? (kpiForFlir >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                         CreateKpiStatusCell(table, kpiForWand.HasValue ? (kpiForWand >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForWand.HasValue ? (kpiForWand >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                     }
@@ -489,7 +502,7 @@ namespace CityWatch.Kpi.Services
                 .Add(new Paragraph().Add(new Text("LEGEND").SetUnderline()))
                 .Add(new Paragraph().Add(new Text("PASS").SetFontColor(WebColors.GetRGBColor("#2FB254"))).Add(new Text(" = Required KPI were met")))
                 .Add(new Paragraph().Add(new Text("ONGOING").SetFontColor(WebColors.GetRGBColor("#d19404"))).Add(new Text(" = Some Data exists from the AM shift; shift is split;  Nightshift is expected to “top up” short fall to reach KPI")))
-                .Add(new Paragraph().Add(new Text("FAIL").SetFontColor(WebColors.GetRGBColor("#FF323A"))).Add(new Text(" = Required KPI not met ‐ needs to be investigated to determine if IR exists to explain situation, if there is a tehcnical fault, or if guard failed preformance")))
+                .Add(new Paragraph().Add(new Text("FAIL").SetFontColor(WebColors.GetRGBColor("#FF323A"))).Add(new Text(" = Required KPI not met ‐ needs to be investigated to determine if IR exists to explain situation, if there is a technical fault, or if guard failed performance")))
                 .Add(new Paragraph().Add(new Text("N/A").SetFontColor(WebColors.GetRGBColor("#928382"))).Add(new Text(" = Weekend only site or no fixed shift (ADHOC support)")))
                 .Add(new Paragraph().Add(new Text("IR").SetFontColor(WebColors.GetRGBColor("#000000"))).Add(new Text(" = How many Incident Reports were lodged or created; default value is 0")));
             legendTable.AddCell(cellLegend);
@@ -554,15 +567,21 @@ namespace CityWatch.Kpi.Services
 
         private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
         {
+            var modifiedData = data;
             if (data.All(z => z.Value == 0))
-                return null;
+            {
+                modifiedData = new KeyValuePair<string, double>[]
+                {
+                    new KeyValuePair<string, double>("no/data", 100)
+                };
+            }
 
             try
             {
                 var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
                 var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
 
-                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
                 var success = task.Result == "OK";
 
                 if (!success)

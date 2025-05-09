@@ -7,6 +7,43 @@
 <form id="form_kvl_auditlog_request" method="post" class="border-bottom">
     <div class="form-row">
         <div class="form-group col-md-2">
+            <label class="mx-1">Client Type</label>
+              @if (Model.ClientTypeId != 0)
+                                        {
+            <select class="form-control" multiple="multiple" id="vklClientType">
+                @{
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId).Where(x => x.Id == Model.ClientTypeId);
+                    var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                    sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                    foreach (var clientType in sortedClientTypes)
+                    {
+                        var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                        <option value="@clientType.Name" selected>@clientType.Name (@countClientType)</option>
+                    }
+                }
+            </select>
+                                        }
+                                         @if (Model.ClientTypeId == 0)
+                                        {
+                <select class="form-control" multiple="multiple" id="vklClientType">
+                    @{
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                        var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                        sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                        foreach (var clientType in sortedClientTypes)
+                        {
+                            var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                            <option value="@clientType.Name" >@clientType.Name (@countClientType)</option>
+                        }
+                    }
+                </select>
+                                        }
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1">Client Site</label>
+            <select class="form-control mx-1" multiple="multiple" id="vklClientSiteId"></select>
+        </div>
+        <div class="form-group col-md-2">
             <label class="mx-1">From Date</label>
             <input type="date" class="form-control" id="vklAudtitFromDate" />
         </div>
@@ -14,24 +51,13 @@
             <label class="mx-1" for="vklAudtitToDate">To Date</label>
             <input type="date" class="form-control" id="vklAudtitToDate">
         </div>
-        <div class="form-group col-md-2">
-            <label class="mx-1">Client Type</label>
-            <select class="form-control" multiple="multiple" id="vklClientType">
-                @foreach (var clientType in viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
-                {
-                    <option value="@clientType.Name">@clientType.Name</option>
-                }
-            </select>
-        </div>
-        <div class="form-group col-md-2">
-            <label class="mx-1">Client Site</label>
-            <select class="form-control mx-1" multiple="multiple" id="vklClientSiteId"></select>
-        </div>
-        <div class="form-group col-md-3">
+        <div class="form-group col-md-4">
             <label class="mx-1">&nbsp;</label>
             <div>
-                <button type="button" class="btn btn-primary mx-1" id="btnGenerateVklAuditReport">View Report</button>
-                <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip">Download Zip</button>
+                <button type="button" class="btn btn-primary" id="btnGenerateVklAuditReport">View Report</button>
+                <button type="button" class="btn btn-primary" id="btnGenerateVklAuditLogReport">View Audit Log</button>
+                <a href="#" class="btn btn-primary" id="btnDownloadVklAuditExcel">Download Exl</a>
+                <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip" title="Download Logs As Zip">Download Zip</button>
             </div>
         </div>
     </div>
@@ -40,16 +66,22 @@
             <div class="card-body">
                 <div class="form-row">
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteId" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.PersonOfInterest" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogBookType" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogFromDate" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogToDate" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteLocationIdNew" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSitePocIdNew" />
                     <div class="form-group col-md-2">
                         <label>ID No. / Car or Truck Rego.</label>
                         <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.VehicleRego" />
                     </div>
                     <div class="form-group col-md-2">
                         <label>Company Name</label>
-                        <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName" />
+                        <select class="form-control" id="KeyVehicleLogAuditLogRequest_CompanyName" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName">
+                            <option></option>
+                        </select>
+                        @*<input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName" />*@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Individuals Name</label>
@@ -86,19 +118,23 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Site POC</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSitePocId">
-                            <option value="">Select</option>
+                        <select class="form-control" multiple="multiple" id="vklSitePOC">
                         </select>
+
                     </div>
                     <div class="form-group col-md-2">
                         <label class="mx-1">Site Location</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteLocationId">
-                            <option value="">Select</option>
+                        <select class="form-control" multiple="multiple" id="vklSiteLoc">
                         </select>
                     </div>
                     <div class="form-group col-md-2">
                         <label class="mx-1">Key #</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo"></select>
+                        <select class="form-control" id="listKeyVehicleLogAuditLogRequestKeyNo"></select>
+                        <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="mx-1">POI</label>
+                        <select class="form-control mx-1" multiple="multiple" id="vklPersonOfInterest" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest,true)"></select>
                     </div>
                 </div>
             </div>
@@ -115,7 +151,18 @@
         </div>
     </div>
 </form>
-<div class="row mt-3">
+<div class="full-width">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="vehicle-key-log-report-tab" data-toggle="tab" href="#keyVehicleLogReport" role="tab" aria-controls="keyVehicleLogReport" aria-selected="true">Report</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="vehicle-key-log-chart-tab" data-toggle="tab" href="#keyVehicleLogChart" role="tab" aria-controls="keyVehicleLogChart" aria-selected="false">Chart</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade py-3 show active" id="keyVehicleLogReport" role="tabpanel" aria-labelledby="vehicle-key-log-report-tab">
+            <div class="row mt-3">
     <div class="col-md-12">
         <table class="table table-bordered table-sm" width="100%" id="vkl_site_log">
             <thead>
@@ -158,5 +205,92 @@
                 </tr>
             </thead>
         </table>
+        <table class="table table-bordered table-sm" width="100%" id="vkl_site_lognew" hidden="hidden">
+            <thead>
+                <tr>
+                    <th style="display:none"></th>
+                    <th></th>
+                    <th colspan="4"><center>Clocks</center></th>
+                    <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                    <th rowspan="2"><center>ID / Plate</center></th>
+                    <th colspan="2"><center>Vehicle Description</center></th>
+                    <th colspan="4"><center>Trailers Rego or ISO</center></th>
+                    <th rowspan="2"><center>Key / Card Scan</center></th>
+                    <th rowspan="2"><center>Company Name</center></th>
+                    <th colspan="3"><center>Individual</center></th>
+                    <th rowspan="2"><center>Site POC</center></th>
+                    <th rowspan="2"><center>Site Location</center></th>
+                    <th rowspan="2"><center>Purpose Of Entry</center></th>
+                    <th colspan="3"><center>Weight</center></th>
+                    <th style="min-width: 250px" rowspan="2"><center>Notes</center></th>
+                </tr>
+                <tr>
+                    <th style="display:none"></th>
+                    <th>Client Site</th>
+                    <th>Initial Call</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Time Slot No</th>
+                    <th>Truck Config</th>
+                    <th>Trailer Type</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>Name</th>
+                    <th>Mobile No:</th>
+                    <th>Type</th>
+                    <th>In Gross (t)</th>
+                    <th>Out Net (t)</th>
+                    <th>Tare (t)</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+        </div>
+        <div class="tab-pane fade py-3" id="keyVehicleLogChart" role="tabpanel" aria-labelledby="vehicle-key-log-chart-tab">
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Truck Entries Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerWeek"><span id="count_by_kventriesperweek" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_kv_vehicleentries_forweek"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Truck Entries Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerMonth"><span id="count_by_kventriespermonth" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_kv_vehicleentries_formonth"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Truck Entries Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerYear"><span id="count_by_kventriesperyear" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_kv_vehicleentries_foryear"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

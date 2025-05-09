@@ -1,12 +1,16 @@
-﻿using CityWatch.Data.Helpers;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Services;
 using CityWatch.Kpi.Models;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
 using iText.Layout;
+using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using Jering.Javascript.NodeJS;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
@@ -28,19 +32,25 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_RED = "#ffcccc";
         private const string CELL_HEADER_BLUE = "#bdd7ee";
         private const string COLOR_WHITE = "#ffffff";
+        private const string COLOR_GREY = "#666362";
 
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
         private readonly string _siteImageRootDir;
+        private readonly string _graphImageRootDir;
         private readonly IViewDataService _viewDataService;
-
+        private readonly IPatrolDataReportService _patrolDataReportService;
         public WeeklySummaryReportGenerator(IWebHostEnvironment webHostEnvironment,
-            IViewDataService viewDataService)
+            IViewDataService viewDataService, IPatrolDataReportService patrolDataReportService)
         {
             _viewDataService = viewDataService;
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _siteImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
+            //nEWLY ADDAED-START
+            _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
+            _patrolDataReportService = patrolDataReportService;
+            //nEWLY ADDAED-END
         }
 
         public string GeneratePdfReport(KpiSendSchedule schedule, DateTime fromDate, DateTime toDate)
@@ -57,16 +67,33 @@ namespace CityWatch.Kpi.Services
 
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
             var summaryData = _viewDataService.GetKpiReportData(clientSiteIds, fromDate, toDate);
-            var totalSitePrinted = CreateSummaryTable(summaryData, doc, toDate);
+            var totalSitePrinted = CreateSummaryTable(summaryData, doc, toDate, schedule.IsHrTimerPaused);
 
             if (totalSitePrinted > MAX_SITES_PER_PAGE_FOR_FOOTER)
                 doc.Add(new AreaBreak());
+            //NEWLY ADDED-START
+            var patrolDataReport = _patrolDataReportService.GetDailyPatrolData(new PatrolRequest()
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                DataFilter = PatrolDataFilter.Custom,
+                ClientSites = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.Name).ToArray(),
+            });
 
+            if (patrolDataReport.ResultsCount > 0)
+            {
+                doc.Add(new AreaBreak());
+                doc.Add(tableReportHeader);
+                var graphsTable = CreateGraphsTables(patrolDataReport);
+                doc.Add(graphsTable);
+            }
+            //NEWLY ADDED-END
+            
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
 
-            var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
-            doc.Add(tableNotes);
+            //var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
+            //doc.Add(tableNotes);
 
             doc.Close();
             pdfDoc.Close();
@@ -83,7 +110,7 @@ namespace CityWatch.Kpi.Services
                 .Add(new Paragraph().Add(new Text("LEGEND").SetUnderline()))
                 .Add(new Paragraph().Add(new Text("PASS").SetFontColor(WebColors.GetRGBColor("#2FB254"))).Add(new Text(" = Required KPI were met")))
                 .Add(new Paragraph().Add(new Text("ONGOING").SetFontColor(WebColors.GetRGBColor("#d19404"))).Add(new Text(" = Some Data exists from the AM shift; shift is split;  Nightshift is expected to “top up” short fall to reach KPI")))
-                .Add(new Paragraph().Add(new Text("FAIL").SetFontColor(WebColors.GetRGBColor("#FF323A"))).Add(new Text(" = Required KPI not met ‐ needs to be investigated to determine if IR exists to explain situation, if there is a tehcnical fault, or if guard failed preformance")))
+                .Add(new Paragraph().Add(new Text("FAIL").SetFontColor(WebColors.GetRGBColor("#FF323A"))).Add(new Text(" = Required KPI not met ‐ needs to be investigated to determine if IR exists to explain situation, if there is a technical fault, or if guard failed performance")))
                 .Add(new Paragraph().Add(new Text("N/A").SetFontColor(WebColors.GetRGBColor("#928382"))).Add(new Text(" = Weekend only site or no fixed shift (ADHOC support)")))
                 .Add(new Paragraph().Add(new Text("IR").SetFontColor(WebColors.GetRGBColor("#000000"))).Add(new Text(" = How many Incident Reports were lodged or created; default value is 0")));
             legendTable.AddCell(cellLegend);
@@ -146,7 +173,7 @@ namespace CityWatch.Kpi.Services
             table.AddHeaderCell(new Paragraph().Add("Notes")).SetBackgroundColor(WebColors.GetRGBColor(CELL_HEADER_BLUE)).SetFontSize(CELL_FONT_SIZE);
         }
 
-        private int CreateSummaryTable(List<DailyKpiResult> summaryData, Document doc, DateTime toDate)
+        private int CreateSummaryTable(List<DailyKpiResult> summaryData, Document doc, DateTime toDate, bool isHrTimerPaused)
         {
             var totalSitePrinted = 0;
             var tableWidth = UnitValue.CreatePercentArray(new float[] { 21, 9, 6, 9, 9, 5, 5, 5, 31 });
@@ -192,7 +219,7 @@ namespace CityWatch.Kpi.Services
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(dailySiteData.Date.Day.ToString())));
                             table.AddCell(GetKpiImageStatusCell(dailySiteData));
                             table.AddCell(GetKpiWandScanStatusCell(dailySiteData));
-                            table.AddCell(GetKpiDailyLogTimerCell(dailySiteData));
+                            table.AddCell(GetKpiDailyLogTimerCell(dailySiteData, isHrTimerPaused));
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(dailySiteData.IncidentCount.ToString())));
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(string.IsNullOrEmpty(dailySiteData.HasFireOrAlarm) ? "0" : "1")));
                         }
@@ -299,28 +326,146 @@ namespace CityWatch.Kpi.Services
             return new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).SetFontColor(WebColors.GetRGBColor(color)).Add(new Paragraph(text));
         }
 
-        private Cell GetKpiDailyLogTimerCell(DailyKpiResult dailyKpiResult)
+        private Cell GetKpiDailyLogTimerCell(DailyKpiResult dailyKpiResult, bool isHrTimerPaused)
         {
-            string text;
+            string text = "-";
             var bgColor = COLOR_WHITE;
-            if (!dailyKpiResult.IsAcceptableLogFreq.HasValue)
+            if (!isHrTimerPaused && dailyKpiResult.IsAcceptableLogFreq.HasValue)
             {
-                text = "-";
-            }
-            else
-            {
-                if (dailyKpiResult.IsAcceptableLogFreq.Value)
-                {
-                    text = "< 2hr";
-                    bgColor = CELL_BG_GREEN;
-                }
-                else
-                {
-                    text = "> 2hr";
-                    bgColor = CELL_BG_RED;
-                }
+                bgColor = dailyKpiResult.IsAcceptableLogFreq.Value ? CELL_BG_GREEN : CELL_BG_RED;
+                text = dailyKpiResult.IsAcceptableLogFreq.Value ? "< 2hr" : "> 2hr";
             }
             return new Cell().SetBackgroundColor(WebColors.GetRGBColor(bgColor)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).SetFontColor(WebColors.GetRGBColor("#000000")).Add(new Paragraph(text));
         }
+        //NEWLY ADDED-START
+        private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
+        {
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable1(patrolDataReport)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable2(patrolDataReport)));
+            return graphTable;
+        }
+
+        private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY SITE", "\nTotal Site Count: " + patrolDataReport.SitePercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY AREA/WARD", "\nTotal Area/Ward Count: " + patrolDataReport.AreaWardPercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+
+            var sitesPieChartImage = GetChartImage(patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var areaPieChartImage = GetChartImage(patrolDataReport.AreaWardPercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var colorCodeChartImage = GetChartImage(patrolDataReport.ColorCodePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(colorCodeChartImage));
+
+            return chartDataTable;
+        }
+
+        private Table CreateGraphsTable2(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
+
+            var eventTypeCount = patrolDataReport.EventTypeQuantity.Sum(z => z.Value);
+            chartDataTable.AddCell(GetChartHeaderCell("IR EVENT TYPE QUANTITY", "Total IR Count: " + eventTypeCount, 2));
+
+            var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 615);
+            chartDataTable.AddCell(GetChartImageCell(eventTypePieChartImage).SetBorderRight(Border.NO_BORDER));
+
+            var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
+            chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
+
+            return chartDataTable;
+        }
+        private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
+        {
+            var cell = new Cell(1, colspan)
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+               .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY))
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            var p = new Paragraph(leftText);
+            p.Add(new Tab());
+            p.AddTabStops(new TabStop(1000, TabAlignment.RIGHT));
+            p.Add(new Text(rightText).SetFontSize(4.5f));
+            cell.Add(p);
+
+            return cell;
+        }
+
+        private Cell GetChartImageCell(Image chartImage)
+        {
+            var imageCell = new Cell();
+            if (chartImage != null)
+                imageCell.Add(chartImage).SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            return imageCell;
+        }
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        {
+            var modifiedData = data;
+            if (data.All(z => z.Value == 0))
+            {
+                modifiedData = new KeyValuePair<string, double>[]
+                {
+                    new KeyValuePair<string, double>("no/data", 100)
+                };
+            }
+
+            try
+            {
+                var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
+                var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
+
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var success = task.Result == "OK";
+
+                if (!success)
+                    throw new ApplicationException("Create graph failed");
+
+                if (success && !IO.File.Exists(graphFileName))
+                    throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
+
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(90);
+
+                IO.File.Delete(graphFileName);
+
+                return graphImage;
+            }
+            catch
+            {
+                // no ops
+            }
+            return null;
+        }
+        //NEWLY ADDED END
     }
 }

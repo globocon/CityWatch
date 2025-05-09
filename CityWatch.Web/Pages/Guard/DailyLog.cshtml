@@ -1,20 +1,138 @@
 ﻿@page
+@using CityWatch.Data.Enums;
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Services;
+@using CityWatch.Data.Helpers
+@using CityWatch.Web.Helpers;
+@using Microsoft.Extensions.Configuration
+
+@inject IViewDataService viewDataService
+@inject IGuardLogDataProvider guardmodel
+@inject IConfiguration Configuration
+@inject IViewDataService viewDataServiceNew
+@inject IConfigDataProvider dataProvider
+
 @model CityWatch.Web.Pages.Guard.DailyLogModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+    <input type="hidden" id="hid_duressEnabledAddress">
+    <input type="hidden" id="hid_duressEnabledGpsCoordinates">
+
+    var clientSiteSOp = new List<StaffDocument>();
+    var userid = AuthUserHelper.GetLoggedInUserId;
+    var userName = "Guest";
+    if (User.Identity.IsAuthenticated)
+    {
+       userName = User.Identity.Name;
+
+    }
+    clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.GuardLog.ClientSiteLogBook.ClientSite.Id);
+
+
+    var IsDOSDONTList = @Model.GuardLog.ClientSiteLogBook.ClientSite.IsDosDontList;
+    var HandoverNotes = dataProvider.GetHandoverNotes(@Model.GuardLog.ClientSiteLogBook.ClientSite.Id);
+
+}
+@if (AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="AdminGlobal" />
+}
+else
+{
+    <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
 <div id="loader"></div>
-<div class="row">
-    <div class="col-md-8">
+<div class="row align-items-center">
+    <div class="col-md-4">
         <div>
-            <b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
+            <b>Log Book Date: </b>@Model.GuardLog.ClientSiteLogBook.Date.ToString("dd MMM yyyy (dddd)").ToUpper()   @*  @DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper() *@
         </div>
     </div>
-    <div class="col-md-4 text-right">
-        <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
-        <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download Pdf</a>
+    <div class="col-md-2 p-0">
+        <div class="float-right text-nowrap">
+            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+        </div>
     </div>
+    <div class="col-md-6">
+        <div class="float-right">
+            @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
+            <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+
+
+
+
+
+            @if (clientSiteSOp.Count != 0)
+            {
+
+                <a href="#" data-toggle="modal" class="btn btn-outline-primary" data-target=".bd-example-modal-lg" title="Click here SOP">SOP</a>
+                <!-- Modal -->
+                <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Download SOP Documents</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style="width:80%">File Name</th>
+                                            <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var file in clientSiteSOp)
+                                        {
+                                            <tr>
+                                                <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                <td>
+                                                    <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                                </td>
+                                            </tr>
+
+                                        }
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-primary" id="btnSOP" aria-disabled="true">SOP</button>
+            }
+
+
+            <a class="btn btn-outline-primary" id="generate_log_AlldocketList" href="#">POI List</a>
+            
+            <a class="btn btn-outline-primary" id="btnHO" href="#"><i class="fa fa-handshake-o mr-1" aria-hidden="true"></i>HO</a>
+            <!-- QR Code Button -->
+            
+            <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#staticBackdrop">
+                <i class="fa fa-qrcode" aria-hidden="true"></i>
+            </button>
+
+            <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank"><i class="fa fa-download mr-1" aria-hidden="true"></i>PDF</a>
+            <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
+        </div>
+    </div>
+
+
+
+
 </div>
 <div class="row my-2">
     <div class="col-md-12">
@@ -25,40 +143,108 @@
             </div>
             <div id="collapseOne" class="collapse multi-collapse show">
                 <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
-                            <span class="mr-1"><b>Client Site: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.Name | </span>
-                            <span><b>Client Type: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
-                        </li>
-                        <li>
-                            <b>Address: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
-                        </li>
-                        <li>
-                            <b>Landline: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
-                        </li>
-                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <ul class="list-unstyled">
+                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                                    <span class="mr-1"><b>Client Site: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.Name | </span>
+                                    <span><b>Client Type: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
+                                </li>
+                                <li>
+                                    <b>Address: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
+                                </li>
+                                <li>
+                                    <b>Landline: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
+                                </li>
+                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                                    @{
+                                        var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.GuardLog.ClientSiteLogBook.ClientSiteId);
+                                    }
+                                    @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-center">
                             @{
-                                var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.GuardLog.ClientSiteLogBook.ClientSiteId);
+                                bool isControlRoomLogBook = false;  // Project 4 , Task 48, Audio notification, Added By Binoy
+                                var clientSiteForLogbook = Model.ClientDataProvider.GetClientSiteForRcLogBook();
+                                var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
+                                var duressStatus = isDuressActive ? "Active" : "Normal";
+                                if (clientSiteForLogbook.Count != 0)
+                                {
+                                    if (clientSiteForLogbook.FirstOrDefault().Id != Model.GuardLog.ClientSiteLogBook.ClientSiteId)
+                                    {
+
+                                        var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+                                        <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
+                                        <p class="mb-0 mt-2">
+                                            Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+                                        </p>
+
+                                    }
+                                    else { isControlRoomLogBook = true; }
+
+
+                                }
+                                else
+                                {
+
+                                    var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+                                    <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
+                                    <p class="mb-0 mt-2">
+                                        Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+                                    </p>
+
+                                }
+
+                                <input type="hidden" id="inpHdisControlRoomLogBook" value="@isControlRoomLogBook.ToString().ToLower()" />
                             }
-                            @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
                     <hr />
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;
                         <b>Initials: </b>@Model.GuardLog.GuardLogin.Guard.Initial ;
-                        <b>Smart WAND: </b>@(Model.GuardLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;
+                        @if (Model.GuardLog.GuardLogin.SmartWand?.SmartWandId != null)
+                        {
+                            <b>Smart WAND: </b>
+                            @Model.GuardLog.GuardLogin.SmartWand?.SmartWandId
+
+
+
+                        }
+                        else
+                        {
+                            <b>Smart WAND: <span style="color:red"> N/A</span></b>
+
+                        };
+
+
                         <b>Position: </b>@(Model.GuardLog.GuardLogin.Position?.Name ?? "N/A")
                     </p>
                 </div>
             </div>
         </div>
-        <div class="row my-2">  
+        <div class="row my-2">
             <div class="col-lg-6 pr-2 mb-2">
-                <table class="table" id="custom_field_log" style="display:none"></table>
+                <div class="card d-none" id="card_custom_field_log">
+                    <div class="card-header">
+                        <i class="fa fa-chevron-up pull-right text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseCustom_field_log" aria-expanded="false" aria-controls="collapseCustom_field_log"></i>
+                    </div>
+                    <div id="collapseCustom_field_log" class="collapse multi-collapse show">
+                        <table class="table" id="custom_field_log" style="display:none"></table>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-6 pl-2">
-                <table class="table" id="patrol_cars_log" style="display:none"></table>
+                <div class="card d-none" id="card_patrol_car">
+                    <div class="card-header">
+                        <i class="fa fa-chevron-up pull-right text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapsePatrolCar" aria-expanded="false" aria-controls="collapsePatrolCar"></i>
+                    </div>
+                    <div id="collapsePatrolCar" class="collapse multi-collapse show">
+                        <table class="table" id="patrol_cars_log" style="display:none"></table>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card my-2" id="card_new_entry">
@@ -74,12 +260,33 @@
                             <div class="col-md-2 col-md-2-tight">
                                 <input type="time" class="form-control" id="new_log_time" value="@DateTime.Now.ToString("hh:mm")">
                                 <input type="hidden" asp-for="@Model.GuardLog.EventDateTime" />
+                                <input type="hidden" asp-for="@Model.GuardLog.TimePartOnly" />
+                                <input type="hidden" id="hid_duressEnabledGpsCoordinatesDailyLog" asp-for="@Model.GuardLog.GpsCoordinates">
                             </div>
                         </div>
                         <div class="form-group row">
                             <label for="new_event_notes" class="col-md-2 col-md-2-tight col-form-label">Event / Notes</label>
                             <div class="col-md-10">
-                                <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes" onPaste="return false"></textarea>
+                                @{
+
+                                    if (clientSiteForLogbook.Count != 0)
+                                    {
+                                        var value = 0;
+                                        if (clientSiteForLogbook.FirstOrDefault().Id == Model.GuardLog.ClientSiteLogBook.ClientSiteId)
+                                        {
+                                            value = 1;
+                                            <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes"></textarea>
+
+                                        }
+                                        else
+                                        {
+                                            value = 0;
+                                            <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes" onPaste="return false"></textarea>
+                                        }
+                                        <input type="hidden" id="IsAssignedLogBook" value="@value" />
+                                    }
+
+                                }
                             </div>
                         </div>
                         <div class="form-row">
@@ -104,6 +311,10 @@
         </div>
     </div>
 </div>
+
+
+<partial name="_PrintManualDocketPopup" />
+
 <div class="row mt-2">
     <div class="col-md-12">
         <table class="table" id="guard_daily_log"></table>
@@ -115,19 +326,27 @@
         <table class="table" id="guard_daily_log_previous_day"></table>
     </div>
 </div>
-<div class="row mt-2">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <b>Do's & Dont's</b>
-                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
-            </div>
-            <div id="collapseThree" class="collapse multi-collapse show">
-                <div class="card-body row">
-                    <div class="col-md-6">
-                        <h3 class="text-success">Do's</h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fa fa-check text-success mr-2"></i>Smart WAND checked and is online / no damage</li>
+@{
+
+    if (IsDOSDONTList == true)
+    {
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <b>Do's & Dont's</b>
+                        <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
+                    </div>
+                    <div id="collapseThree" class="collapse multi-collapse show">
+                        <div class="card-body row m-0">
+                            <div class="col-md-6">
+                                <h3 class="text-success">Do's</h3>
+                                <ul class="list-unstyled">
+                                    @foreach (var item in @guardmodel.GetDosandDontsFields(1))
+                                    {
+                                        <li><i class="fa fa-check text-success mr-2"></i>@item.Name</li>
+                                    }
+                                    @*<li><i class="fa fa-check text-success mr-2"></i>Smart WAND checked and is online / no damage</li>
                             <li><i class="fa fa-check text-success mr-2"></i>PC / Laptop Checked; Dropbox checked / sync ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>CCTV checked and is working / active</li>
                             <li><i class="fa fa-check text-success mr-2"></i>All radios working and on charge</li>
@@ -138,27 +357,35 @@
                             <li><i class="fa fa-check text-success mr-2"></i>Fire panel + ASE + VESDA appears ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>Consumables such as Toilet paper / Fly Spray / Handwash etc all ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>Write in logbook within 2 hours of last entry</li>
-                            <li><i class="fa fa-check text-success mr-2"></i>Ensure entries are trueful</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h3 class="text-danger">Dont's</h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fa fa-times text-danger mr-2"></i>I started my shift</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Ensure entries are trueful</li>*@
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h3 class="text-danger">Dont's</h3>
+                                <ul class="list-unstyled">
+                                    @foreach (var item in @guardmodel.GetDosandDontsFields(2))
+                                    {
+                                        <li><i class="fa fa-times text-danger mr-2"></i>@item.Name</li>
+                                    }
+                                    @*<li><i class="fa fa-times text-danger mr-2"></i>I started my shift</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I ended my shift</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I went on patrol</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I completed an Incident Report</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Code 20 "Welfare" check</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Write in logbook longer than 2 hours after last entry</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Write any false or misleading entries</li>
-                            <li><i class="fa fa-times text-danger mr-2"></i>Mention you are doing a handover / next guard onsite</li>
-                        </ul>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Mention you are doing a handover / next guard onsite</li>*@
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    }
+
+}
+
 <div class="modal fade" id="logbook-expiry-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbookExpiryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -166,7 +393,7 @@
                 <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning: Logbook Expired</h5>
             </div>
             <div class="modal-body">
-                <p>A new day started and this logbook (LB) expired. Click Ok to create a new book for @DateTime.Today.AddDays(1).ToString("dd MMM yyyy")</p>
+                <p>A new day started and this logbook (LB) expired. Click Ok to create a new book for @Model.GuardLog.ClientSiteLogBook.Date.AddDays(1).ToString("dd MMM yyyy")</p> @* @DateTime.Today.AddDays(1).ToString("dd MMM yyyy") *@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btn_confirm_logbook_expiry">Ok</button>
@@ -174,8 +401,955 @@
         </div>
     </div>
 </div>
-<partial name="_MessagePopup" />
+<div class="modal fade" id="pushNoTificationsGuardModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_push_notifications_for_rc">
+                    <div class="container">
+                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-2">
+                            <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsControlRoomMessage" />
+                                            <input type="hidden" id="rcPushMessageId" />
+                                            <div class="form-group row mb-3">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Acknowledge Message :</label>
+                                                <div class="col-md-6 mr-5 mt-2 p-0">
+                                                    <input type="checkbox" id="chkAcknowledgeMessage" checked>
+                                                    <input type="hidden" id="IsAcknowledgeMessage">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message Back Instead :</label>
+                                                <div class="col-md-6 mr-5 mt-2 p-0">
+                                                    <input type="checkbox" id="chkMessageBack">
+                                                    <input type="hidden" id="IsMessageBack">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-4"></div>
+                                                <div class="col-md-6 p-0">
+                                                    <textarea id="txtPushNotificationGuardReturnMessage" style="width:450px;height:200px;" class="form-control" disabled></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendPushLotificationFromGuardMessage" class="btn btn-primary">Send >></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardModalnew" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addGuardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        @*<form id="frm_add_guard">*@
+                        <input type="hidden" id="Guard_Id" name="Guard.Id" />
+                        @*    <div class="form-group row">
+                        <label class="col-md-2 col-form-label">Guard Name</label>
+                        <div class="col-md-3">
+                        <input type="text" class="form-control" id="Guard_Name1" name="Guard.Name">
+                        </div>
+                        <label class="col-md-1 col-form-label text-left">Intial</label>
+                        <div class="col-md-2">
+                        <input type="text" class="form-control" id="Guard_Initial1" name="Guard.Initial">
+                        </div>
+                        <label class="col-md-1 col-form-label">Mobile</label>
+                        <div class="col-md-3">
+                        <input type="text" class="form-control" id="Guard_Mobile1" name="Guard.Mobile" value="+61 4">
+                        </div>
+
+                        </div>
+                        <div class="form-group row">
+                        <label class="col-md-2 col-form-label">License No (Primary)</label>
+                        <div class="col-md-3">
+                        <input type="text" class="form-control" id="Guard_SecurityNo1" name="Guard.SecurityNo">
+                        </div>
+                        <label class="col-md-1 col-form-label">State</label>
+                        <div class="col-md-2">
+                        <select id="Guard_State1" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
+                        </div>
+                        <label class="col-md-1 col-form-label">Email</label>
+                        <div class="col-md-3">
+                        <input type="text" class="form-control" id="Guard_Email1" name="Guard.Email">
+                        </div>
+                        </div>
+                        <div class="form-group row">
+
+                        <label class="col-md-2 form-check-label">Access</label>
+                        <div class="col-md-3">
+                        <select class="form-control" multiple="multiple" id="Guard_Access1" name="Guard.GuardAccess">
+                        @foreach (var AccessType in viewDataService.GetAccessTypes(true))
+                        {
+
+                        <option value="@AccessType.Value">@AccessType.Text</option>
+                        }
+                        </select>
+
+                        </div>
+                        <label class="col-md-1 form-check-label">Is Active</label>
+                        <div class="col-md-2">
+                        <input type="checkbox" class="form-check" id="cbIsActive1">
+                        <input type="hidden" id="Guard_IsActive1" name="Guard.IsActive">
+                        </div>
+                        <label class="col-md-1 col-form-label">Provider</label>
+                        <div class="col-md-3">
+                        <input type="text" class="form-control" id="Guard_Provider1" name="Guard.Provider">
+                        </div>
+                        </div>
+
+
+                        @*    <div class="form-group row">
+                        <label class="col-md-2 form-check-label">Is Active</label>
+                        <div class="col-md-3">
+                        <input type="checkbox" class="form-check" id="cbIsActive">
+                        <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                        </div>
+                        </div> *@
+                        @*     <div class="form-row">
+                        <div class="col-md-12">
+                        <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status1">
+                        <i class="fa fa-check-circle-o mr-2"></i>Guard saved successfully
+                        </div>
+                        <div asp-validation-summary="All" id="glValidationSummary1"></div>
+                        </div>
+                        </div>
+                        </form>
+                        </div>
+                        </div>
+                        <hr />*@
+                        <div class="row m-0">
+                            <div class="col-md-12">
+                                <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="lote-tab" data-toggle="tab" href="#lote" role="tab" aria-controls="lote" aria-selected="true">Personal</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="trainingAndAssessment-tab" data-toggle="tab" href="#guardTrainingAndAssessment" role="tab" aria-controls="guardTrainingAndAssessment" aria-selected="true">Training & Assessment</a>
+                                    </li>
+                                    @*  <li class="nav-item">
+                                    <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
+                                    </li>
+                                    <li class="nav-item">
+                                    <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
+                                    </li> *@
+                                </ul>
+                                <div class="tab-content" id="guardDataTabContent">
+                                    <div class="tab-pane fade show active py-3" id="guardLicensesandCompliance" role="tabpanel" aria-labelledby="licensesAndCombliance-tab">
+                                        <div class="form-row mb-2 btn-add-guard-addl-details">
+                                            <div class="col-md-2 offset-md-10 text-right">
+                                                <button class="btn btn-success" id="btnAddGuardLicenseKey"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="col-md-12">
+                                                <table id="tbl_guard_licensesAndComplianceKey" class="table table-bordered table-sm" width="100%">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>HR Group</th>
+                                                            <th>Description</th>
+                                                            <th>Expiry Date</th>
+                                                            <th>File</th>
+                                                            <th>Status</th>
+                                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <div class="form-row mb-2 btn-add-guard-addl-details">
+                                            <div class="col-md-2 offset-md-10 text-right">
+                                                <button class="btn btn-success" id="btnAddGuardLicenseKey2"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-pane fade show py-3" id="lote" role="tabpanel" aria-labelledby="lote-tab">
+                                        <div class="container-fluid">
+                                            <div class="form-row">
+                                                <div class="col-md-6">
+                                                    <form id="frm_add_personal">
+                                                        <input type="hidden" id="Guard_Id1" name="Guard.Id" value="@Model.GuardLog.GuardLogin.Guard.Id" />
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userName" class="col-sm-4 col-form-label">Guard Name</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="guardName" value="@Model.GuardLog.GuardLogin.Guard.Name" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userPassword" class="col-sm-4 col-form-label">License No(Primary)</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="licenseNo" value="@Model.GuardLog.GuardLogin.Guard.SecurityNo" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Mobile</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="mobile" value="@Model.GuardLog.GuardLogin.Guard.Mobile" disabled="disabled">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Email</label>
+                                                            <div class="col-sm-6">
+                                                                <input type="text" class="form-control" id="email" value="@Model.GuardLog.GuardLogin.Guard.Email" disabled="disabled">
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">LOTE</label>
+                                                            <div class="col-sm-6">
+                                                                <select class="form-control" multiple="multiple" id="LoteDrp" name="Guard.LanguageDetails">
+                                                                    @foreach (var AccessType in viewDataServiceNew.GetLanguageMaster(true))
+                                                                    {
+
+                                                                        <option value="@AccessType.Value">@AccessType.Text</option>
+                                                                    }
+
+
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row m-0 mb-3">
+                                                            <div class="col-sm-4">
+                                                                <button type="button" class="btn btn-primary" id="btn_save_Personal">Save</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="col-sm-7" style="padding-top:164px">
+                                                        <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+                                                            <p class="left-text">Note:</p>&nbsp;&nbsp;
+
+                                                            <p class="right-text">
+                                                                Only LOTE can be edited  from this portal.<br>If other details need to be updated,Please
+                                                                contact your supervior or ADMIN
+                                                            </p>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade show py-3" id="guardTrainingAndAssessment" role="tabpanel" aria-labelledby="trainingAndAssessment-tab">
+
+                                        <div class="form-row">
+                                            <div class="col-md-12">
+                                                <table id="tbl_guard_trainingAndAssessment" class="table table-bordered table-sm" width="100%">
+                                                    <thead>
+                                                        <tr>
+                                                            <th></th>
+                                                            <th>HR Group</th>
+                                                            <th>Description</th>
+                                                            <th></th>
+                                                            <th class="text-center">Course</i></th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+                            @*<div class="modal-footer justify-content-start">
+                            <button type="button" class="btn btn-primary" id="btn_save_guard">Save Guard</button>
+                            </div>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardLicenseLogDailyModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addLicenceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit License</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_license">
+                    <input type="hidden" id="GuardLicense_Id1" name="GuardLicense.Id" />
+                    <input type="hidden" id="GuardLicense_GuardId1" name="GuardLicense.GuardId" />
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">License No</label>
+                            <input type="text" class="form-control" id="GuardLicense_LicenseNo1" name="GuardLicense.LicenseNo">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="form-label">License Type</label>
+                            @* <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                            <option value="">Select</option>
+                            </select>*@
+                            <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@viewDataService.GetLicenseTypes(true)">
+                                @*<option value="">Select</option>*@
+                            </select>
+                            <input type="hidden" id="GuardLicense_License1" name="GuardLicense.LicenseType" />
+                            <input type="hidden" id="LicenseTypeOther1" name="GuardLicense.LicenseTypeName" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="GuardLicense_ExpiryDate1" name="GuardLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 1</label>
+                            <input type="number" class="form-control" id="GuardLicense_Reminder11" value="45" name="GuardLicense.Reminder1" min="1" max="365" disabled>
+
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 2</label>
+                            <input type="number" class="form-control" id="GuardLicense_Reminder21" value="7" name="GuardLicense.Reminder2" min="1" max="365" disabled>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">License Document: <span id="guardLicense_fileName1">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardLicense_FileName1" name="GuardLicense.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_license_file1" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="delete_license_file1"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div asp-validation-summary="All" id="licenseValidationSummary1"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_license1">Save License</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardCompliancesLogDailyModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_compliance">
+                    <input type="hidden" id="GuardCompliance_Id1" name="GuardCompliance.Id" />
+                    <input type="hidden" id="GuardCompliance_GuardId1" name="GuardCompliance.GuardId" />
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Reference No</label>
+                            <input type="text" class="form-control" id="GuardCompliance_ReferenceNo1" name="GuardCompliance.ReferenceNo">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="GuardCompliance_Description1" name="GuardCompliance.Description">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="GuardCompliance_ExpiryDate1" name="GuardCompliance.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 1</label>
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder11" value="45" name="GuardCompliance.Reminder1" min="1" max="365" disabled>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 2</label>
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder21" value="7" name="GuardCompliance.Reminder2" min="1" max="365" disabled>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">HR Group</label>
+                            <select class="form-control" id="GuardCompliance_HrGroup1" name="GuardCompliance.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
+                                <option selected="selected" value="">Select</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">Compliance Document: <span id="guardCompliance_fileName1">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardCompliance_FileName1" name="GuardCompliance.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_compliance_file1" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="delete_compliance_file1"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <div asp-validation-summary="All" id="complianceValidationSummary1"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliance1">Save Compliance</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-1 pt-1">
+                <form id="frm_add_complianceandlicense">
+                    <input type="hidden" id="GuardComplianceandlicense_Id" name="GuardComplianceAndLicense.Id" />
+                    <input type="hidden" id="GuardComplianceandlicense_GuardId" name="GuardComplianceAndLicense.GuardId" />
+                    <input type="hidden" id="GuardComplianceandlicense_CurrentDateTime" name="GuardComplianceAndLicense.CurrentDateTime" />
+                    <input type="hidden" id="GuardComplianceandlicense_LicenseNo" name="GuardComplianceAndLicense.LicenseNo" />
+                    <div class="form-row" style="height:363px;">
+                        <p style="color:black">
+                            The HR database allows uploads of compliance and license documents based on three groups.
+                            Please read legend and select the correct group first, before selecting the description of the file you are uploading. If a document you
+                            are trying to upload is not listed in the dropdown description list, please contact admin
+                        </p>
+                        <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
+                        <h8 style="color:black;font-size:11px">HR 1=C4i Onboarding    (CV,LICENSES,C4i Training)</h8>
+                        <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
+                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8>
+                        <div class="row pt-3" id="ComplianceHiddenDiv">
+                            <div class="form-group col-md-5 col-lg-5 col-12">
+                                <label class="form-label">HR Group</label>
+                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@viewDataServiceNew.GetHRGroups( true)">
+                                    @*  <option selected="selected" value="">Select</option> *@
+                                </select>
+                            </div>
+                            <div class="form-group col-md-7 col-lg-7 col-12">
+                                <label class="form-label" id="DescLabel">Description</label>
+                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:278px"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-5 col-lg-5 col-12">
+                                <label class="form-label" id="ComplianceDate" style="width: 140px;">Expiry Date (DOE)</label>
+                                <input type="hidden" id="IsDateFilterEnabledHidden" name="GuardComplianceAndLicense.IsDateFilterEnabledHidden" />
+                                <div class="custom-control custom-switch custom-control-inline m-0" title="Switch between Patrol Car and Guards" style="padding-bottom:5px">
+                                    <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter">
+                                    <label class="custom-control-label" for="LicanseTypeFilter"></label>
+                                </div>
+                                <div class="pr-3">
+                                    <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                                </div>
+                            </div>
+                            <div class="form-group col-md-7 mb-1  pl-0">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+
+                                    <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
+
+                                    <p class="right-text">
+                                        Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated.
+                                        Where a document has no expiry,then use toggle and add the issue date instead
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="mb-1 mt-1" />
+                    <div class="form-row">
+                        <div class="form-group col-md-12 mt-1">
+                            <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label>
+                        </div>
+                        <div class="form-group col-md-8">
+                            <div id="fileUpload"></div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="button" class="btn btn-outline-danger w-100" style="height:60px" id="delete_complianceandlicense_file"><i class="fa fa-trash fa-lg mr-2"></i>Delete</button>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
+                            <div class="container  pl-0" style="display:flex;font-size:11px;color:black">
+                                <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
+                                <p class="right-text">
+                                    The system will only
+                                    allow
+                                    single
+                                    files to be uploaded to one HR group.
+                                    Therefore you
+                                    may need to make multiple separate uploads,
+                                    based on variations to HR Group and
+                                    description.
+                                    Where an older document already exists, don’t
+                                    ADD it again, simply
+                                    edit the existing document, upload the version over the top with new expiry
+                                    or issue date. If your licence expires and you are
+                                    issued a new number please
+                                    inform Admin; don’t add yourself as a new guard, Admin will edit the record.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row pl-5">
+                        <div class="form-group col-md-12 m-0">
+                            <div asp-validation-summary="All" id="compliancelicanseValidationSummary1"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancelicenseKey">Save Compliance</button>
+                <span id="schRunStatusNew" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*new for Hr document upload *@
+<div class="modal fade" id="loginHrEditGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">HR Document PIN</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter your PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardKey" />
+                                </div>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div class="text-start" style="flex-grow: 1;">
+                                        <a href="#" id="forgotpassword" style="text-align: left; display: inline-block;">Forgot password?</a>
+                                        <div class="spinner-border spinner-border-sm pl-2 d-none" id="spinner" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>                                    
+                                    <button type="button" class="btn btn-primary" id="btnGuardHrUpdate" title="Get Access to HR documents">
+                                        <i class="fa fa-sign-in mr-2"></i>
+                                        <span class="d-none d-md-inline-flex"></span>
+                                    </button>
+                                    <input type="hidden" id="hidden_guardKey" value="@Model.GuardLog.ClientSiteLogBook.ClientSite.Name" />
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryHR" class="pl-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="loginHrNewPasswordSetGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Set your PIN for the first time</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter New PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardKeyNewPIN" />
+                                </div>
+                                <div>
+                                    <div class="mt-2 d-flex align-items-start">
+                                        <div style="font-size: 11px; width: 170px;">
+                                            First-time users are required to enter a custom 4 to 6-digit PIN code to protect their personal information.
+                                            Please do not share your PIN.
+                                        </div>
+                                        <button type="button" class="btn btn-primary ms-3" id="btnGuardHrUpdateNewPIN" title="Get guard details">
+                                            <i class="fa fa-save mr-1"></i><span class="d-none d-md-inline-flex">Save PIN</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryHRNewPIN" class="pl-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="dgl-image-modal">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus mr-3"></i>Add Image into LB</h5>
+                @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @{
+                var dlgAttachments = ViewData["DailyGuardLog_Attachments"] as List<string>;
+                var dglAttachmentsCount = dlgAttachments != null ? dlgAttachments.Count : 0;
+                var dglKeys = ViewData["DailyGuardLog_Keys"] as List<ClientSiteKey>;
+                var dglKeysCount = dglKeys != null ? dglKeys.Count : 0;
+                var dglAttachmentRootPath = ViewData["DailyGuardLog_FilesPathRoot"] as string;
+            }
+            <div class="modal-body pb-0">
+
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <input type="hidden" id="GuardimagedataId" />
+                        <input type="checkbox" id="chbIsAttachmentToRear" />
+                        <label for="chbIsAttachmentToRear"> Add as attachment to rear (Full Page)</label>
+                        <input type="hidden" id="IsAttachmentToRear" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <input type="checkbox" id="chbIsTwentyfivePercentOfPage" checked />
+                        <label for="chbIsTwentyfivePercentOfPage"> Add within field(25% of the Page) </label>
+                        <input type="hidden" id="IsTwentyfivePercentOfPage" />
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+
+                        <ul id="dgl-attachment-list" class="list-group d-block w-auto pt-2">
+                            <li class="list-group-item"></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-3 mb-3 p-0">
+                    <div class="d-flex flex-row">
+                        <i class="fa fa-exclamation-circle mr-2" style="color:burlywood;font-size: large;"></i>
+                        <span style="font-size:0.8rem;font-weight: 500;" class="d-block">
+                            <b>Note: Photos uploaded within the LB do not negate the need to complete an IR</b>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button class="btn btn-primary " id="btnIsRearOrTwentyfivePercent"><i class="fa fa-plus"></i>Add</button>
+                <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif, .heic,.png" multiple hidden>
+                @*<input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif" multiple hidden>*@
+                <button class="btn btn-success ml-2 " id="btnIsRearOrTwentyfivePercentSaveAndClose">Save and Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*p6-102 add photo new changes in pdf-start*@
+<div class="modal" tabindex="-1" role="dialog" id="msg-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Submit failed. Please fill all required fields</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*p6-102 add photo new changes in pdf-end*@
+
+@*p1-287 add personal model*@
+<div class="modal fade" id="addpersonalModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Personal</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-1 pt-1">
+                <form id="frm_add_personal">
+                    <input type="hidden" id="userId" value="">
+                    <div class="form-group row m-0 mb-3">
+                        <label for="userName" class="col-sm-4 col-form-label">User Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="userName">
+                        </div>
+                    </div>
+                    <div class="form-group row m-0 mb-3">
+                        <label for="userPassword" class="col-sm-4 col-form-label">Password</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="userPassword">
+                        </div>
+                    </div>
+                    <div class="form-group row m-0 mb-3">
+                        <label for="userConfirmPassword" class="col-sm-4 col-form-label">Confirm Password</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="userConfirmPassword">
+                        </div>
+                    </div>
+                    <div class="form-group row m-0 mb-3">
+                        <div class="col-sm-8">
+                            <span id="user-modal-validation" class="text-danger hide"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancelicenseKey">Save Compliance</button>
+                <span id="schRunStatusNew" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" role="dialog"  tabindex="-1" aria-labelledby="staticBackdropLabel" >
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Mobile APP Login QR Code</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                @{
+                    // Safely extracting values with null checks
+                    var userId = userid?.ToString() ?? "unknown";
+                    var clientId = Model?.GuardLog?.ClientSiteLogBook?.ClientSite?.Id.ToString() ?? "unknown";
+
+                    // Adding a validation string like 'VALID' or similar
+                    var validationString = $"c4i2025|{userId}|{clientId}|{userName}";
+
+                    // Building the QR code URL
+                    var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={validationString}";
+                }
+
+                <img src="@qrCodeUrl"
+                     alt="QR Code"
+                     class="img-fluid">
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal" tabindex="-1" role="dialog" id="Handover-modal" style="margin-bottom:0;">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document" style="max-height: 95%;">
+        <div class="modal-content" style="margin-bottom:0;">
+            <form id="frm_HandOver">
+            <div class="modal-header col-md-12">
+
+
+                <h6 class="modal-title col-md-5">Handover</h6>
+
+                <h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0 mt-0 pt-2">
+               
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="ho-notes-tab" data-toggle="tab" data-target="#ho-notes" role="tab" aria-controls="ho-notes" aria-selected="true">
+                                <i class="fa fa-pencil-square-o mr-2"></i>Handover Notes
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active p-1" id="ho-notes" role="tabpanel" aria-labelledby="ho-notes-tab">
+                        <div class="form-row">
+                            <div class="form-group col-md-12 custom-control-log">
+                                <div class="form-row">
+                                    <label class="col-md-1"></label>
+
+                                    <span style="font-size:0.8rem;font:italic" class="col-md-11">
+                                       @*  Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number. *@
+                                    </span>
+                                </div>
+                                    @if (HandoverNotes!=null)
+                                    {
+                                        <textarea class="form-control" rows="4" maxlength="5000" id="NotesHandover">@HandoverNotes.Notes</textarea>
+                                    }
+                                    else
+                                    {
+                                        <textarea class="form-control" rows="4" maxlength="5000" id="NotesHandover"></textarea>
+                                    }
+
+                             @*    <span style="font-size:0.8rem" class="d-block">
+                                    You can add new notes above. But never delete the previous or existing entries (Add entries: Z-A)
+                                </span> *@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+                <div class="modal-footer d-flex justify-content-between align-items-center p-1">
+                    <div id="HandOvervalidationSummary" class="pl-4 text-left"></div>
+                    <button class="btn btn-success mr-3" id="save_HandoverNotes">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">LOGBOOK PORTAL</h3>
 }
+
+@section scripts {
+
+    <script>
+        function initialize() {
+            var geocoder = new google.maps.Geocoder();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+
+                    gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                    var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                    $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
+                    reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+                });
+            }
+
+        }
+
+        function getDurressLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                    reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+                });
+            }
+        }
+
+
+        function reverseGeocode(latitude, longitude) {
+            var latlng = new google.maps.LatLng(latitude, longitude);
+            console.log('Latitude:', latitude);
+            console.log('Longitude:', longitude);
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
+                    if (results[0]) {
+                        var address = results[0].formatted_address;
+                        $("#hid_duressEnabledAddress").val(address);
+                        console.log('Reverse Geocoding Result: ', address);
+
+                    } else {
+                        console.error('No results found');
+                    }
+                } else {
+                    console.error('Geocoder failed due to: ' + status);
+                }
+            });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
+}
+

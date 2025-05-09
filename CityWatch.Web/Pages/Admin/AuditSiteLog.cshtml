@@ -8,28 +8,117 @@
     ViewData["Title"] = "CityWatch Security | Audit Site Logs";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.AuditSiteLogs;
 }
+
+@section PageHeader {
+            <style>
+                div.dataTables_length {
+                margin-right: 1em;
+                }
+            </style>
+}
+
+
+
+<div id="loader"></div>
 <div class="full-width">
     <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
-        </li>
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminThirdParty)
+        {
+                    <li class="nav-item">
+                        <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
+                    </li>
+                    <li class="nav-item">
+
+                        <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
+                    </li>
+
+                        <li class="nav-item">
+
+                        <a class="nav-link" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
+                         </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                </li>
+        }
+        else if (AuthUserHelper.IsAdminAuditor)
+        {
+
+                            <li class="nav-item">
+
+                                <a class="nav-link active" id="timesheet_log" data-toggle="tab" href="#timesheet" role="tab" aria-controls="timesheetlog" aria-selected="false">Time Sheets</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                            </li>
+
+
+        }
+        else if (AuthUserHelper.IsAdminInvestigator)
+        {
+                 <li class="nav-item">
+                            <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
+                        </li>
+                        <li class="nav-item">
+
+                            <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+
+                        </li>
+                       @*  <li class="nav-item">
+                            <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+                    </li> *@
+
+        }
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
-            <partial name="_DailyGuardAuditSiteLog"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
-            <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
-        </div>
-        <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
-            <partial name="_VisitorProfileAuditSiteLog"></partial>
-        </div>
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminThirdParty)
+        {
+                <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
+                    <partial name="_DailyGuardAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
+                    <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
+                    <partial name="_FusionGuardSiteLog"></partial> 
+                </div>
+                <div class="tab-pane fade py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
+                    <partial name="_TimesheetBulkAuditSiteLog"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="downloadLog" role="tabpanel" aria-labelledby="download-key-log-tab">
+                    <partial name="_DownloadAuditSiteLog"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
+                    <partial name="_VisitorProfileAuditSiteLog"></partial>
+                    </div>
+        }
+        else
+        {
+            if (AuthUserHelper.IsAdminAuditor)
+            {
+                                <div class="tab-pane fade show active py-3" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
+                                    <partial name="_TimesheetBulkAuditSiteLog"></partial>
+                                </div>
+                                <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
+                                    <partial name="_VisitorProfileAuditSiteLog"></partial>
+                                </div>
+            }
+
+        }
     </div>
 </div>
 <div class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" id="auditlog-zip-modal">
@@ -44,6 +133,23 @@
             <div class="modal-body">
                 <p id="auditlog-zip-msg"><i class="fa fa-circle-o-notch fa-spin mr-2" aria-hidden="true"></i>Generating zip file. Please wait ...</p>
                 <a style="display:none" class="btn btn-success" id="btn-auditlog-zip-download" href="#">Download Zip</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" id="auditfusionlog-zip-modal">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Fusion Logs Download</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="auditfusionlog-zip-msg"><i class="fa fa-circle-o-notch fa-spin mr-2" aria-hidden="true"></i>Generating zip file. Please wait ...</p>
+                <a style="display:none" class="btn btn-success" id="btn-auditfusionlog-zip-download" href="#">Download Zip</a>
             </div>
         </div>
     </div>
@@ -69,7 +175,7 @@
 </div>
 <!----------------- Guard Details Modal -------------------->
 <div class="modal fade" id="guardInfoModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered  modal-sm">
+    <div class="modal-dialog modal-dialog-centered  ">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>Guard Details</h5>
@@ -81,20 +187,32 @@
                 <div class="row">
                     <ul class="list-unstyled col-md-12">
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Guard Name: </label>
+                            <label class="col-md-4 col-form-label">Guard Name: </label>
                             <label class="col-form-label" id="lbl_guard_name"></label>
                         </li>
                         <li class="row">                           
-                            <label class="col-md-5 col-form-label">Security No: </label>
+                            <label class="col-md-4 col-form-label">Security No: </label>
                             <label class="col-form-label" id="lbl_guard_security_no"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">State: </label>
+                            <label class="col-md-4 col-form-label">State: </label>
                             <label class="col-form-label" id="lbl_guard_state"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Provider:</label>
+                            <label class="col-md-4 col-form-label">Mobile: </label>
+                            <label class="col-form-label" id="lbl_guard_mobile"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Email: </label>
+                            <label class="col-form-label" id="lbl_guard_email"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">CRM (Supplier):</label>
                             <label class="col-form-label" id="lbl_guard_provider"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">No:</label>
+                            <label class="col-form-label" id="lbl_guard_provider_no"></label>
                         </li>
                     </ul>
                 </div>
@@ -104,3 +222,154 @@
 </div>
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
+<div class="modal" tabindex="-1" role="dialog" id="vkl-auditlog-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Audit Log History : <span id="vkl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <table class="table table-bordered table-sm" width="100%" id="vehicle_key_log_audit_history">
+                            <thead>
+                                <tr>
+                                    <th width="35%">Audit Date</th>
+                                    <th width="15%">Guard Initial</th>
+                                    <th width="50%">Audit Message</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelKVEntriesForweek" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_kv_vehicleentries_forweek1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelKVEntriesFormonth" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_kv_vehicleentries_formonth1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelKVEntriesForyear" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_kv_vehicleentries_foryear1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,6 +6,17 @@ a.navbar-brand {
     word-break: break-all;
 }
 
+
+.custom-control-log {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
+.main-container {
+    margin-top: 0px; /* Decreased margin at the top */
+    padding-bottom: 0px; /* Space for links at the bottom */
+   
+
+}
 /* Provide sufficient contrast against white background */
 a {
     color: #0366d6;
@@ -58,6 +69,7 @@ body {
     /* Margin bottom by footer height */
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
+    
 }
 
 .footer {
@@ -140,7 +152,7 @@ a.cws-footer-link :visited {
 
 #client_type_settings th:last-child,
 #client_site_settings th:last-child {
-    width: 180px !important;
+    width: 130px !important;
 }
 
 #ucaTreeView {
@@ -291,10 +303,10 @@ button.multiselect-option.dropdown-item > .form-check > label {
     padding: 0.5rem
 }
 
-#patrol_cars_log.table td[data-mode=edit] [data-role=edit] input[type=text],
-#custom_field_log.table td[data-mode=edit] [data-role=edit] input[type=text] {
-    padding-left: 0px;
-}
+    #patrol_cars_log.table td[data-mode=edit] [data-role=edit] input[type=text],
+    #custom_field_log.table td[data-mode=edit] [data-role=edit] input[type=text] {
+        padding-left: 0px;
+    }
 
 #cs-pocs th:last-child,
 #cs-locations th:last-child {
@@ -356,6 +368,24 @@ button.multiselect-option.dropdown-item > .form-check > label {
         box-shadow: 0 0 0 0 !important;
     }
 
+.btn-duress.btn-md {
+    width: 80px;
+    height: 80px;
+    padding: 7px 10px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    border: 5px solid #C0C0C0;
+    background-color: #F7CF15;
+}
+
+    .btn-duress.btn-md.active {
+        border-color: #C0C0C0 !important;
+        background-color: #ff0000;
+    }
+
 /*  gijgo grid group column set bg-light color */
 tr[role=group] {
     background-color: #f8f9fa !important;
@@ -397,7 +427,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 #vehicle_key_daily_log_filter {
-    display:none;
+    display: none;
 }
 
 #form_new_vehicle_and_key_log label {
@@ -410,22 +440,336 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 /* -- radio check -- */
 
-#weekly_radio_checklist_wrapper .dataTable thead th,
-#weekly_radio_checklist_wrapper .dataTable thead td,
-#weekly_radio_checklist.dataTable thead th,
-#weekly_radio_checklist.dataTable thead td {
-    font-size: 0.9rem;
-    min-width: 55px;
-}
-
-#weekly_radio_checklist.dataTable tbody th,
-#weekly_radio_checklist.dataTable tbody td {
-    font-size: 0.9rem;
-    min-width: 55px;
-}
-
-tr.rc-header-row-2 th {
-    font-weight: 500 !important;
+.rc-client-status {
+    font-size: 1.25em;
 }
 
 /* -- */
+/* -- DownloadSelecter Page -- */
+#dvDownloadSelecterOuter {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    text-align: center
+}
+
+#dvcompanysop {
+    width: 25%;
+}
+
+#dvtraining {
+    width: 25%;
+}
+
+#dvformsandtemplates {
+    width: 25%;
+}
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.centerIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width:992px) {
+    #dvDownloadSelecterOuter {
+        flex-direction: column;
+    }
+
+    #dvcompanysop, #dvtraining, #dvformsandtemplates {
+        width: 100%;
+        margin-bottom: 7px;
+    }
+}
+
+.imgIcon {
+    width: 25px;
+    height: 25px;
+}
+
+#container {
+    text-align: center;
+}
+.dynamic-link {
+    width: 150px;
+    margin: 3px;
+}
+
+.button-container-div {
+    text-align: center;
+}
+
+.grouped-column {
+    background-color: #EFEFEF;
+}
+
+/* Dark Mode Change 20/09/2023 Start*/
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+    .dark-mode .bg-white {
+        background-color: #333 !important;
+        color: #fff;
+    }
+
+    .dark-mode .bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode .odd {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody tr {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody > tr td {
+        background-color: #333 !important;
+    }
+
+    .dark-mode .table-bordered {
+        color: #fff;
+    }
+
+    .dark-mode .modal-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        pointer-events: auto;
+        background-color: #333 !important;
+        background-clip: padding-box;
+        border: 1px solid #fff;
+    }
+
+    .dark-mode .es-list {
+        max-height: 320px !important;
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode #list_product {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .fa-clipboard {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .table-hover tbody tr:hover {
+        color: #fff;
+        background-color: rgba(0,0,0,.075);
+    }
+
+
+    .dark-mode.btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .dark-mode.fa-sign-out {
+        background-color: transparent !important;
+    }
+
+    .dark-mode a:hover {
+        color: #F36523;
+        text-decoration: none;
+    }
+
+    .dark-mode.bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode.border-dark {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.d-md-inline-flex {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.fa-search {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.card {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.text-muted {
+        color: #fff !important;
+    }
+
+    .dark-mode.fa-plus {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.list-group-item {
+        color: #333 !important;
+    }
+
+    .dark-mode #Report_SiteColourCodeId {
+        background-color: #4D4746 !important;
+    }
+
+    .dark-mode #kvl_list_plates {
+        color: #4D4746 !important;
+    }
+
+    .dark-mode #myTable th {
+        /* Your CSS styles for <th> elements here */
+        background-color: lightblue;
+        color: white;
+        font-weight: bold;
+    }
+
+    .dark-mode.gj-grid thead th {
+        background-color: #333;
+        color: #fff;
+    }
+
+    .dark-mode.fa-sign-in {
+        background-color: transparent !important;
+    }
+
+    .dark-mode .list-group-item {
+        color: white !important;
+    }
+
+    .dark-mode #kvl-attachment-list li {
+        color: #333 !important;
+    }
+
+
+
+
+
+/* Dark Mode Change 20/09/2023 End*/
+/* for scroll events -start*/
+.marquee-style {
+    background-color: dimgrey;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    text-shadow: 2px 2px 8px #FF0000;
+}
+
+.marquee-stylenew {
+    background-color: #737CA1;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
+}
+
+.dark-mode .marquee-style {
+    background-color: white;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    text-shadow: 2px 2px 8px #fff;
+}
+
+.dark-mode .marquee-stylenew {
+    background-color: white;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    /*text-shadow: 2px 2px 8px #fff;*/
+}
+
+.dark-mode .lblclass {
+    background-color: white;
+    color: black;
+}
+
+pre {
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    overflow: hidden;
+    margin-bottom: 0px;
+    margin-top: 5px;
+    height: auto;
+    width: auto;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
+}
+
+#divmarqueeLiveEvents {
+  
+    overflow: hidden;
+    display: grid;
+}
+
+    #divmarqueeLiveEvents .dark-mode {
+        background-color: white;
+        color: black;
+    }
+
+pre.dark-mode {
+    background-color: white;
+    color: black;
+    overflow: hidden;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    height: auto;
+    width: auto;
+}
+
+
+/* for scroll events -end*/
+/*form trafiic lights-start*/
+.initial-call-colour {
+    background-color: #FCF3CF;
+}
+
+.entry-time-colour {
+    background-color: #A9DFBF;
+}
+
+.exit-time-colour {
+    background-color: #F5B7B1;
+}
+
+
+
+.page-break {
+    page-break-after: always;
+}
+
+.no-padding {
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
+#user_settings tbody div[data-role="display"] {
+    vertical-align: middle;
+    text-indent: 0;
+    white-space: normal !important; /* Override white-space: pre-wrap */
+    -ms-word-break: break-word;
+    word-break: break-word;
+}
+
+

@@ -52,13 +52,21 @@ namespace CityWatch.Web.Models
         public int? SiteColourCodeId { get; set; }
 
         public string LinkedSerialNos { get; set; }
+        [Display(Name = "No(n/a)")]
+        public bool PlateLoadedNo { get; set; }
+
+        [Display(Name = "Yes")]
+        public bool PlateLoadedYes { get; set; }
+        public string VehicleRego { get; set; }
+        public int? PlateId { get; set; }
 
         [Display(Name = "Supervisor or person you reported this to:")]
         public string ReportedBy { get; set; }
 
         public List<string> Attachments { get; set; }
 
-        public bool IsPositionPatrolCar { get; set; }        
+        public bool IsPositionPatrolCar { get; set; }
+        
 
         public string OccurrenceNo
         {
@@ -116,6 +124,17 @@ namespace CityWatch.Web.Models
                 return eventTypes;
             }
         }
+
+        public string PSPFName { get; set; }
+
+        public string HASH { get; set; }
+        public string IP { get; set; }
+        
+        public int? FeedbackType { get; set; }
+        public int? FeedbackTemplates { get; set; }
+
+        public ReportCreatedLocalTimeZone ReportCreatedLocalTimeZone { get; set; }
+
     }
 
     public class EventType
@@ -233,6 +252,8 @@ namespace CityWatch.Web.Models
         [HiddenInput]
         public string ClientSiteLiveGps { get; set; }
 
+       
+
         public string ClientSiteLiveGpsInDegrees 
         {
             get
@@ -245,5 +266,14 @@ namespace CityWatch.Web.Models
         }
 
         public bool ShowIncidentLocationAddress { get; set; }
+    }
+
+    public class ReportCreatedLocalTimeZone
+    {
+        public DateTime? CreatedOnDateTimeLocal { get; set; }
+        public DateTimeOffset? CreatedOnDateTimeLocalWithOffset { get; set; }
+        public string CreatedOnDateTimeZone { get; set; }
+        public string CreatedOnDateTimeZoneShort { get; set; }
+        public int? CreatedOnDateTimeUtcOffsetMinute { get; set; }
     }
 }

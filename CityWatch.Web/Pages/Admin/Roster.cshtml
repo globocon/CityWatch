@@ -1,0 +1,142 @@
+﻿@page
+@model CityWatch.Web.Pages.Admin.RosterModel
+@{
+   
+    ViewData["Title"] = "CityWatch Security | ROSTERS";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Roster;
+
+}
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-4" style="padding-top:90px">
+        <div class="col-sm-2"> <h3>TIMESHEETS</h3></div>
+        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
+            <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
+                <img src="~/images/Timesheet.jpg" class="center" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-4" style="padding-top:90px">
+        <div class="col-sm-2" style="padding-left:29px"> <h3>ROSTERS</h3></div>
+        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
+            <a href="https://app.guardhousehq.com/au/account/login/" id="Ancompanysop3">
+                <img src="~/images/calender.png" class="center" />
+            </a>
+        </div>
+    </div>
+</div>
+@* <div id="dvDownloadSelecterOuter">
+    <h3>Timesheet</h3> <!-- Heading outside the div -->
+    <div>
+        <div id="dvcompanysop" style="width:300px;border: 8px solid grey;padding: 50px;margin: 20px;">
+            <a href="/Incident/Downloads?type=1" id="Ancompanysop">
+                <img src="~/images/Timesheet.jpg" class="center" />
+            </a>
+        </div>
+    </div>
+
+    <div id="dvtraining"><a href="/Incident/Downloads?type=2" id="Antraining"><img src="~/images/c4itraining.png" class="center" /></a></div>
+    <div id="dvformsandtemplates"><a href="/Incident/Downloads?type=3" id="Anformsandtemplates"><img src="~/images/formsandtemplates.png" class="center" /></a></div>
+</div> *@
+@Html.AntiForgeryToken()
+<!----------------- Guard Details Modal -------------------->
+<div class="modal fade" id="mdlAuthGuardForSopDownload" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateGuardForSopDownload" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Security License No</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        @* <div class="d-flex flex-sm-row flex-column justify-content-between">
+                        <label class="col-form-label">Security License No.</label>
+                        </div> *@
+                        <div class="input-group">
+                            <input class="form-control" id="GuardDownloadSop_SecurityNo">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary" id="btnTimesheetConfirm" title="Authenticate guard"><i class="fa fa-key mr-2"></i><span class="d-none d-md-inline-flex">License No</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row pb-2">
+                    <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
+                        Enter Security License No. and click Download
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div id="AuthGuardForSopDwnldValidationSummary1" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                </div>
+            </div>
+            <div>
+                <input type="hidden" id="sop_filename" />
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Timesheet Modal -------------------->
+<div class="modal fade" id="timesheetModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar mr-2"></i>Timesheet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="hidden" id="TimesheetGuard_Id1" />
+                        <h>Instant Timesheet</h>
+                        <div class="form-group">
+                            <label for="frequency"></label>
+                            <select class="form-control" id="frequency" name="frequency">
+                                <option value="">Select</option>
+                                <option value="Today">Today</option>
+                                <option value="ThisWeek">This Week</option>
+                                <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                <option value="Last4weeks">Last 4 weeks(month)</option>
+                                <option value="Month">This Month(partial)</option>
+                                <option value="LastMonth">Last Month</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" id="btnDownloadTimesheetFrequencyRoster" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                            </div>
+                        </div><br />
+                        <h>Custom Timesheets</h><br />
+                        <div class="form-group">
+                        </div>
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" class="form-control" id="startDateRoster" name="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" class="form-control" id="endDateRoster" name="endDate">
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" id="btnDownloadTimesheetRoster" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section PageHeader {
+    <h3 class="text-center">ROSTERS</h3>
+}

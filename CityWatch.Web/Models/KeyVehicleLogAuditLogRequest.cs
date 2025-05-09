@@ -1,5 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace CityWatch.Web.Models
@@ -39,9 +41,36 @@ namespace CityWatch.Web.Models
         public int? TrailerType { get; set; }
 
         public int? ClientSitePocId { get; set; }
-
+        public string ClientSitePocIdNew { get; set; }
+        public int[] ClientSitePocIds
+        {
+            get
+            {
+                return ClientSitePocIdNew?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
         public int? ClientSiteLocationId { get; set; }
-
+        public string ClientSiteLocationIdNew { get; set; }
+        public int[] ClientSiteLocationIds
+        {
+            get
+            {
+                return ClientSiteLocationIdNew?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
         public string KeyNo { get; set; }
+        //public int? PersonOfInterest { get; set; }
+        public string PersonOfInterest { get; set; }
+        public int[] PersonOfInterestIds
+        {
+            get
+            {
+                return PersonOfInterest?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
+        [NotMapped]
+        public string DateRange { get; set; }
+        [NotMapped]
+        public int RecordCount { get; set; }
     }
 }

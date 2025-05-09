@@ -15,13 +15,13 @@ function drawChart(callback, options, data) {
         { 'name': 'yellow', 'color': '#ffff00' },
         { 'name': 'green', 'color': '#00ff00' },
         { 'name': 'n/a', 'color': '#4682b4' },
+        { 'name': 'no/data', 'color': '#FFFFFF' },
     ]
 
     const getFillColor = (d, i, key) => {
-        let colorFound = colorCodes.find(function (item) {
+        let colorFound = colorCodes.find(function (item) {            
             return key && key.toLowerCase().includes(item.name);
         });
-
         if (colorFound) return colorFound.color;
 
         return d3Colors(i);
@@ -84,10 +84,16 @@ function drawChart(callback, options, data) {
             .append("g")
             .attr("class", "arc");
 
-        //Draw arc paths
+        //Draw arc paths      
         arcs.append("path")
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
             .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); })
-            .attr("d", arc);
+            .attr("d", arc);            
 
         //Append values on chart
         arcs.append("text")
@@ -96,6 +102,8 @@ function drawChart(callback, options, data) {
             .style("font-family", "Arial")
             .attr("text-anchor", "middle")
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
                 if (data[i].value > 0)
                     return data[i].value + '%';
             });
@@ -115,7 +123,11 @@ function drawChart(callback, options, data) {
 
         //Append legend text
         legend.append("text")
-            .text(function (d, i) { return truncate(data[i].key) + " (" + data[i].value + "%)"; })
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key) + " (" + data[i].value + "%)";
+            })
             .style("font-size", "11px")
             .style("font-family", "Arial")
             .attr("x", 12)
@@ -185,9 +197,19 @@ function drawChart(callback, options, data) {
             .append('rect')
             .attr('x', x(0))
             .attr('y', function (d) { return y(d.key); })
-            .attr('width', function (d) { return x(d.value); })
+            .attr('width', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value);
+            })
             .attr('height', y.bandwidth())
-            .attr('fill', '#00468b')
+            .attr('fill', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '#FFFFFF';
+                else
+                    return '#00468b';                
+            })
 
         // values on bar chart
         svg.selectAll('text.bar')
@@ -195,14 +217,26 @@ function drawChart(callback, options, data) {
             .enter().append("text")
             .attr("font-size", "11px")
             .attr("font-family", "Arial")
-            .attr('x', function (d) { return x(d.value) + 8; })
-            .attr('y', function (d) { return y(d.key) + 12; })
+            .attr('x', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value) + 8;
+            })
+            .attr('y', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return y(d.key) + 12;
+            })
             .attr('width', function (d) { return x(d.value); })
             .attr('height', y.bandwidth())
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
                 if (data[i].value > 0)
                     return data[i].value
-            });
+            });           
     }
 }
 

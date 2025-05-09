@@ -1,6 +1,17 @@
-﻿@using Microsoft.AspNetCore.Hosting
+﻿@using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Hosting
 @using Microsoft.Extensions.Hosting
+@using System.Security.Claims;
 @inject IWebHostEnvironment environment
+@inject IUserDataProvider viewDataService
+@{
+    var claimsIdentity = User.Identity as ClaimsIdentity;
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+    var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
+    var currentUrl = Context.Request.Path;
+    var isLoginPage = currentUrl.StartsWithSegments("/Account/Login");
+
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,25 +20,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico">    
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
 </head>
 <body class="d-flex flex-column">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
-            <div class="container-fluid">                
+            <div class="container-fluid">
                 <div>
                     <img src="#" width="200" height="112" id="header_img_client_site" class="d-none" />
                 </div>
-                <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
-                    <img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>
+                @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
+                <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                    <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
-						aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h3 class="text-center">KPI TELEMATICS ENGINE</h3>
@@ -45,18 +58,31 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-12 col-md-6 text-center">
-                    &copy; @DateTime.Today.Year - <a href="https://citywatchsecurity.com.au" target="_blank" class="cws-footer-link">CityWatch Security</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
+                    &copy; @DateTime.Today.Year - <a href="https://@companydetail.Hyperlink" target="_blank" class="cws-footer-link" style="color:@companydetail.HyperlinkColour;">@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
                 </div>
                 <div class="col-sm-12 col-md-6 d-flex justify-content-center">
                     <div>
                         <a href="@(environment.IsDevelopment() ? "" : "https://cws-ir.com/")" class="nav-link py-0" target="_blank"><i class="fa fa-home mr-2"></i>Home Page</a>
                     </div>
-                    <div>
-                        <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
-                    </div>
-                    <div>
-                        <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
-                    </div>
+                   @* @if (!isLoginPage)
+                    {
+                        <div>
+
+
+                            <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
+
+
+                        </div>
+                        <div>
+
+
+                            <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
+
+
+                        </div>
+
+                    }*@
+                   
                 </div>
             </div>
         </div>
@@ -67,6 +93,7 @@
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/custom-drag-drop-file-upload/fileupload.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

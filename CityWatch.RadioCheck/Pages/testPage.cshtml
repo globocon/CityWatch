@@ -1,0 +1,44 @@
+﻿@page
+@model CityWatch.RadioCheck.Pages.testPageModel
+@{
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data from mobile App</title>
+</head>
+<body>
+
+    <h2>User Inputs</h2>
+
+    @if (Model.UserInputs.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Text</th>
+                    <th>Updated Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var input in Model.UserInputs)
+                {
+                    <tr>
+                        <td>@input.Id</td>
+                        <td>@input.Text</td>
+                        <td>@input.UpdatedDate</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No data available.</p>
+    }
+   
+</body>
+</html>

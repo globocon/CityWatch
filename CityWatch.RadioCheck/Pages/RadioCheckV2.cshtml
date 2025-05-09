@@ -1,0 +1,1316 @@
+﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Http
+@model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
+@inject IConfigDataProvider configDataProvider
+@inject IGuardDataProvider guarddataProvider
+@{
+
+    ViewData["Title"] = "Radio Check";
+    ViewData["PageName"] = "Radio Check";
+    Layout = "_Layout_InnerPage";
+    ViewData["DisplayItem"] = Model.DisplayItem;
+    var guardid = Request.Query["guid"];  // Initialize with a default value
+    // var guard = guarddataProvider.GetGuards().SingleOrDefault(z => z.Id == Model.GuardId);
+    
+
+    var loginUserId = Request.Query["lud"];
+}
+
+@using CityWatch.Data.Helpers;
+@using CityWatch.Data.Services;
+@inject IGuardLogDataProvider _guardLogDataProvider
+<div class="row mt-2">
+    <div class="col-md-12">
+    </div>
+</div>
+@*----------------Hidden Inputs---------------------*@
+<input type="hidden" id="txtClientSiteId" />
+<input type="hidden" id="txtGuardId" />
+<input type="hidden" id="txtSignalRConnectionUrl" value="@Model.SignalRConnectionUrl" />
+<input type="hidden" asp-for="@guardid" id="GuardLog_GuardLogin_GuardId" />
+<input type="hidden" asp-for="@loginUserId" id="loginUserId" />
+<input type="hidden" id="txtguardGuardRCAccess" asp-for="@Model.Guard.IsRCAccess" />
+<input type="hidden" id="txtguardGuardRCHRAccess" asp-for="@Model.Guard.IsRCHRAccess" />
+<input type="hidden" id="txtguardGuardRCLiteAccess" asp-for="@Model.Guard.IsRCLiteAccess" />
+<!-----------------In Acive List -------------------->
+
+<div class="card">
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5">
+                <h3>No Activity (@Model.InActiveGuardCount)</h3>
+            </div>
+            <div class="float-right">
+                <a data-toggle="collapse" href="#collapse-example" aria-expanded="true" aria-controls="collapse-example" id="heading-example" class="btn p-0 m-1" style="outline:0;box-shadow: none;">
+                    <i class="fa fa-chevron-down pull-right"></i>
+                </a>
+                <button class="btn p-0 m-1" style="outline:0;box-shadow: none;" id="openInActiveGuardInNewPage">
+                    <i class="fa fa-window-restore"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
+        <div class="card-body" id="events-list">
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <table id="clientSiteInActiveGuards" class="table table-bordered" style="width:99%;">
+                        <thead>
+                            <tr>
+                                <th>ClientSiteId</th>
+                                <th>Site Name</th>
+                                <th>Address</th>
+                                <th>Site Name/Guard</th>
+                                <th>Expected or Login Time</th>
+                                <th>Last Event</th>
+                                <th>UTC/GMT</th>
+                                <th>2Hr Alert</th>
+                                <th>Radio Check</th>
+                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>ClientSiteId</th>
+                                <th>Site Name</th>
+                                <th>Address</th>
+                                <th>Site Name/Guard</th>
+                                <th>Expected or Login Time</th>
+                                <th>Last Event</th>
+                                <th>UTC/GMT</th>
+                                <th>2Hr Alert</th>
+                                <th>Radio Check</th>
+                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                <th>Name</th>
+                            </tr>
+                            <!-- Footer content here (will be styled to look like the header) -->
+                            @*</tfoot>*@
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-12">
+    </div>
+</div>
+
+<!----------------- Acive List -------------------->
+<div class="card" id="ActiveGuardsDivision">
+    <div class="card-header container-fluid">
+        <div class="row">
+            <div class="col-md-11 mr-5">
+                <h3>Activity in Last 2 hrs (@Model.ActiveGuardCount)</h3>
+            </div>
+            <div class="float-right">
+                <a data-toggle="collapse" href="#collapse-example2" aria-expanded="true" aria-controls="collapse-example2" id="heading-example2" class="btn p-0 m-1" style="outline:0;box-shadow: none;">
+                    <i class="fa fa-chevron-down pull-right"></i>
+                </a>
+                <button class="btn p-0 m-1" style="outline:0;box-shadow: none;" id="openActiveGuardInNewPage">
+                    <i class="fa fa-window-restore"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="collapse-example2" class="collapse show" aria-labelledby="heading-example2">
+        <div class="card-body" id="events-list">
+            <div class="row mt-2">
+                <div class="col-md-12">
+                     <audio id="audioPlayback" controls style="display:none"></audio>
+                    <table id="clientSiteActiveGuards" class="table table-bordered" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>ClientSiteId</th>
+                                <th>Site Name</th>
+                                <th>Address</th>
+                                <th style="cursor:pointer;">Site Name/Guard</th> @*Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024*@
+                                <th>LB</th>
+                                <th>KV</th>
+                                <th>IR</th>
+                                <th>SW</th>
+                                <th><i class='fa fa-hourglass-half'></i></th>
+                                <th>Radio Check</th>
+                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
+                                <th>HR1</th>
+                                <th>HR2</th>
+                                <th>HR3</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>ClientSiteId</th>
+                                <th>Site Name</th>
+                                <th>Address</th>
+                                <th>Site Name/Guard</th>
+                                <th>LB</th>
+                                <th>KV</th>
+                                <th>IR</th>
+                                <th>SW</th>
+                                <th><i class='fa fa-hourglass-half'></i></th>
+                                <th>Radio Check</th>
+                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
+                                <th>HR1</th>
+                                <th>HR2</th>
+                                <th>HR3</th>
+                            </tr>
+                            <!-- Footer content here (will be styled to look like the header) -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mt-2">
+    <div class="col-md-12">
+    </div>
+</div>
+@*P4#70 Non active guards link not required -Commented Below lines -Start -Manju *@
+@*------------------Non Active List------------------*@
+@* <div class="card">
+    <h4 class="card-header">Guards Not Active</h4>
+    <div class="card-body" id="events-list">
+        <div class="row mt-2">
+            <div class="col-md-12 text-center">
+                <button class="btn p-0 m-1" style="outline:0;box-shadow: none;color:#0056b3" id="btnNonActiveList">
+                    Click here to view
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+ *@
+@*P4#70 Non active guards link not required -Commented Below lines -End -Manju *@
+<!----------------- Guard Details Modal -------------------->
+<div class="modal fade" id="guardInfoModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>Guard Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <ul class="list-unstyled col-md-12">
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Guard Name: </label>
+                            <label class="col-form-label" id="lbl_guard_name"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Security No: </label>
+                            <label class="col-form-label" id="lbl_guard_security_no"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">State: </label>
+                            <label class="col-form-label" id="lbl_guard_state"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Gender: </label>
+                            <label class="col-form-label" id="lbl_guard_gender"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">LOTE: </label>
+                            <label class="col-form-label" id="lbl_guard_lotes"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Mobile: </label>
+                            <label class="col-form-label" id="lbl_guard_mobile"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">Email: </label>
+                            <label class="col-form-label" id="lbl_guard_email"></label>
+                        </li>
+                        <li class="row">
+                                        <label class="col-md-4 col-form-label">CRM (Supplier):</label>
+                                        <label class="col-form-label" id="lbl_guard_provider"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">No:</label>
+                             <label class="col-form-label" id="lbl_guard_provider_no"></label>
+                            <label class="col-md-4 col-form-label text-right " id="lbl_GuardDetailedDetails"></label>
+                         </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Log Book,Key Vehicle And Incident Reports Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookInfoModal" style="overflow:hidden;width:100%;">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document" onscroll="false">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsLogBookDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>LogBook Id</th>
+                                    <th>Notes</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+                                    <th>GPS</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!----------------- Vehicle  Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardKeyVehicleInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader1"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsKeyVehicleDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>KeyVehicleLog Id</th>
+                                    <th>License No</th>
+                                    <th>Individual</th>
+                                    <th>Company</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!----------------- Incident Reports  Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardIncidentReportsInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader2"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsIncidentReportsDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>IncidentReport Id</th>
+                                    <th>File</th>
+
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                        @if (Model.Guard != null)
+                        {
+                            @if (Model.Guard.IsRCAccess == false && Model.Guard.IsRCHRAccess == false)
+                            {
+                                <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
+                                <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
+                            }
+                        }
+                        else
+                        {
+                             <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
+                                <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
+                                                        
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!----------------- SW  Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardSWInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader4"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 pb-2">
+                        <table id="clientSiteActiveGuardsSWDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Template Name       </th>
+                                    <th>Smart Wand</th>
+                                    <th>Smart Wand Number</th>
+                                    <th>Inspection Start</th>
+                                    <th>Location</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!----------------- Log Book History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardLogBookHistoryModalHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_lb_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsLogBookHistory" class="table table-bordered" style="width:100%;">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Vehicle  History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardKeyVehicleHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_KvGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_kv_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsKeyVehicleHistory" class="table table-bordered" style="width:99%;">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Incident Reports History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardIncidentReportsHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_IrGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_Ir_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsIncidentReportsHistory" class="table table-bordered" style="width:100%;">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- SW  History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardSWHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_SwGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_Sw_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsSwHistory" class="table table-bordered" style="width:100%;">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!----------------- Radio Check Status pop up -------------------->
+<div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                    <input type="hidden" id="nottifcationType" value="" />
+                    <ul id="itemList" class="list-group">
+                        @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                        {
+
+                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                            {
+
+                                if (!string.IsNullOrWhiteSpace(item.Text))
+                                {
+                                    if (item.Text.Trim().ToLower() != "select")
+                                    {
+                                        <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                            @item.Text
+                                            <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
+
+                                        </li>
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    <li class="list-group-item list-group-item-success" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+
+
+
+                                    </li>
+
+                                }
+
+
+                            }
+
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="selectRadioCheckStatusActive" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusActiveLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                    <ul id="itemList2" class="list-group">
+                        @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                        {
+
+                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                            {
+
+                                if (!string.IsNullOrWhiteSpace(item.Text))
+                                {
+                                    if (item.Text.Trim().ToLower() != "select")
+                                    {
+                                        <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                            @item.Text
+                                            <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
+
+                                        </li>
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    <li class="list-group-item list-group-item-success" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+
+
+
+                                    </li>
+
+                                }
+
+
+                            }
+
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Push Notification Details Modal -------------------->
+
+<div class="modal fade" id="pushNoTificationsControlRoomModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_push_notifications_for_rc">
+                    <input type="hidden" id="inpCallingFunction" value="SITEBUTTON" />
+                    <div class="container">
+                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="globalalertTab" data-toggle="tab" href="#globalalert" role="tab" aria-controls="globalalert" aria-selected="true">Global Alert</a>
+                            </li>
+                            @*   <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="RCActionListTab" data-toggle="tab" href="#rcactionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li> *@
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="ActionListTab" data-toggle="tab" href="#actionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-2">
+                            <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode C4i : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkLB" checked>
+                                                    <label class="col-form-label">LB</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSiteEmail">
+                                                    <label class="col-form-label">Site Email</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWand">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtPushNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtPushNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendPushLotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status_new" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="globalalert" role="tabpanel" aria-labelledby="globalalert">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast C4i Grouping : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkNationality" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">National</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label">(LB+Site Email)</label>
+                                                <div class="col-md-2">
+                                                    <input type="checkbox" id="chkSiteState" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">State</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <select class="form-control" id="State1" style="width:209px" disabled>
+                                                        @*  <option value="">Select</option> *@
+                                                        @foreach (var State in _guardLogDataProvider.GetStates())
+                                                        {
+                                                            <option value="@State.Name">@State.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-4">
+                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
+                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+                                                        @{
+                                                            var userClientTypes = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes = userClientTypes.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                                                            foreach (var clientType in sortedClientTypes)
+                                                            {
+                                                                var countClientType = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                                            }
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkGlobalPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonalGlobal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWandGlobal">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="actionlist" role="tabpanel" aria-labelledby="actionlist">
+                                <div class="row m-1">
+                                    <form id="frm_ActionList" class="mt-1">
+                                        <input type="hidden" id="gl_client_site_id" />
+                                        <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath">
+                                        <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <label class="mx-1" for="dglClientTypeActionList">Client Type</label>
+                                                <select class="form-control" id="dglClientTypeActionList" style="width:209px">
+                                                    <option value="">Select</option>
+                                                    @{
+                                                        var userClientTypes1 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                        var sortedClientTypes1 = userClientTypes1.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                        sortedClientTypes1 = userClientTypes1.OrderBy(clientType => clientType.Name);
+                                                        foreach (var clientType in sortedClientTypes1)
+                                                        {
+                                                        //var countClientType1 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 m-0 p-0">
+                                                <label class="mx-1" for="dglClientSiteIdActionList">Client Site</label>
+                                                <select class="form-control mx-1" id="dglClientSiteIdActionList" style="width:209px"></select>
+
+                                            </div>
+                                            <div class="col-md-2 m-0 p-0">
+                                                <label class="mt-3"></label>
+                                                <input type="text" id="search_client_siteSteps" class="form-control mb-3" placeholder="Search Site">
+                                            </div>
+                                            <div class="col-md-2 m-0 p-0 text-center">
+                                                <label class="mt-3"></label>
+                                                <div class="col-md-12">
+                                                    <button type="button" id="btn_Edit_ActionList" class="btn btn-outline-primary"><i class="fa fa-pencil mr-1"></i>Edit</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-md-9">
+                                                <input type="text" id="pn_client_site_address" class="form-control mb-3" placeholder="Site address" readonly>
+                                            </div>
+                                            <div class="form-group col-md-3 mx-0 pl-4">
+                                                <label class="form-label pull-left mt-1">GPS Map Link</label> 
+                                                <a class="btn btn-sm w-25 ml-2" id="pn_sitegpsmap" target="_blank" title="Click to view in map"><i class="fa fa-map fa-2x text-dark"></i></a>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                           
+                                                <div class="col-md-2">
+                                                    <label class="form-label text-left pl-0">Smart Wand:</label>
+                                                </div>
+                                                <div class="col-md-10" style="padding-right:27px">
+                                                    <input type="text" class="form-control" id="Smart_wand">
+                                                </div>
+                                           
+                                        </div>
+                                        <div class="form-group row">
+
+                                            <div class="col-md-2">
+                                                <label class="form-label text-left pl-0">Landline:</label>
+                                            </div>
+                                            <div class="col-md-10" style="padding-right:27px">
+                                                <input type="text" class="form-control" id="Landline">
+                                            </div>
+
+                                        </div>
+
+                                        <div id="searchResults" class="form-group row mt-2">
+                                        </div>
+
+                                        <div class="form-group row mt-2">
+                                            <div class="form-group col-md-6">
+                                                <div class="form-group col-md-12 mb-4">
+                                                    <div class="row mb-1">
+                                                        <div class="col-md-12">
+                                                            <h6 class="font-weight-bold">Site Access</h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Alarm Keypad Code</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Physical Key</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Combination Lock</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">SOP'S <i class="fa fa-download mr-1"></i></label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            @* <a class="btn btn-outline-primary w-100 text-primary" id="download_imageRCList" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>*@ 
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_imageRCList" target="_blank">Alarms</a> @*Alams*@
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_siteRCSOPList" target="_blank">Site</a> @*SOP*@
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Contracted Manning</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <button type="button" class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>View</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <div class="form-group col-md-12 mb-2">
+                                                    <div class="row">
+                                                        <div class="col-md-8">
+                                                            <h6 class="font-weight-bold">Alarm Response</h6>
+                                                        </div>
+                                                        <div class="col-md-4 pull-right text-right">
+                                                            <button type="button" class="btn btn-sm w-50" id="btncopytoclipboard" title="Copy to Clipboard"><i class="fa fa-clipboard fa-2x text-success"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12 mt-2 pt-1">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 1</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action1" name="RCActionList.Action1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 2</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action2" name="RCActionList.Action2">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 3</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action3" name="RCActionList.Action3">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 4</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action4" name="RCActionList.Action4">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label text-left pl-0">Action 5</label>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <input type="text" class="form-control" id="Action5" name="RCActionList.Action5">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator" class="form-control" placeholder="Subject" />
+                                                <textarea id="txtComments" style="height:100px;" class="form-control"></textarea>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <input type="text" id="txtMessageActionList1" value="New Outgoing Message:" class="form-control" placeholder="Subject" />
+                                                <textarea id="txtMessageActionList" style="height:100px;" class="form-control"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+
+                                            <div class="col-md-4">
+
+                                                <label class="mx-1" for="dglClientTypeActionList2">Client Type</label>
+                                                <select class="form-control" id="dglClientTypeActionList2" style="width:209px">
+                                                    <option value="">Select</option>
+                                                    @{
+                                                        var userClientTypes2 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                        var sortedClientTypes2 = userClientTypes2.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                        sortedClientTypes2 = sortedClientTypes2.OrderBy(clientType => clientType.Name);
+                                                        foreach (var clientType in sortedClientTypes2)
+                                                        {
+                                                            var countClientType2 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                            <option value="@clientType.Id">@clientType.Name (@countClientType2)</option>
+                                                        }
+                                                    }
+                                                </select>
+
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="mx-1" for="dglClientSiteIdActionList2">Client Site</label>
+                                                <select class="form-control mx-1" id="dglClientSiteIdActionList2" style="width:209px"></select>
+
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="mt-3"></label>
+                                                <input type="text" id="search_client_site2" class="form-control mb-3" placeholder="Search Site">
+                                            </div>
+                                            <div class="col-md-2  text-right">
+                                                <label class="mt-5" for="dglClientSiteIdActionList2"></label>
+                                                <button type="button" id="btnSendActionList" class="btn btn-primary">Send >></button>
+                                                <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                            </div>
+                                        </div>
+
+                                    </form>
+                                </div>
+                            </div>
+
+
+
+
+
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Hover Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="hoverModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeaderHover"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteRadiostatusDetailsHover" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>LogBook Id</th>
+                                    <th>Notes</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Client site RC ActionList Edit kpi settings modal -->
+<div class="modal" tabindex="-1" role="dialog" id="kpi-settings-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear" aria-hidden="true"></i> Edit Settings for <span id="client_site_name"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modelchoice" />
+                <div id="div_site_settings"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- logbook model popup start-->
+<div class="modal fade bd-example-modal-lg" id="logbook-modalRadio" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site Select
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <table class="table" id="client_site_RadioSearch"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* search two start
+ *@
+<div class="modal fade bd-example-modal-lg" id="logbook-modalRadioTwo" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site Select
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <table class="table" id="client_site_RadioSearchTwo"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* search two end  *@
+
+<!----------------- CRM Supplier Details Modal -------------------->
+<div class="modal fade" id="crmSupplierDetailsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="crmSupplierDetailsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>CRM Supplier Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <ul class="list-unstyled col-md-12">
+                        <li class="row">
+
+                            <label style="white-space: nowrap;" class="col-md-3 col-form-label">Company Name:  </label>
+                            <label class="col-form-label" id="lbl_company_name"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">ABN: </label>
+                            <label class="col-form-label" id="lbl_abn"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Landline: </label>
+                            <label class="col-form-label" id="lbl_landline"></label>
+                        </li>
+
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Email: </label>
+                            <label class="col-form-label" id="lbl_email"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Website:</label>
+                            <label class="col-form-label" id="lbl_website"></label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="specificGuardDetailsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_specificGuardName"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <input type="hidden" id="txt_SpecificGuardDetailsId" />
+                    </div>
+                    <div class="col-md-12" id="guardcontent">
+                        <table id="specificGuardDetailsTable" class="table table-bordered" style="width:99%;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>License No</th>
+                                    <th>Initial</th>
+                                    <th>Mobile No</th>
+                                    <th>Email</th>
+                                    <th>CRM Supplier</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lgAlarm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" style="display:none">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Download SOP Documents</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="clientSiteId" value="" />
+                <table class="table table-hover" id="StaffDocumentsAlarm">
+                   @*  <thead>
+                        <tr>
+                            <th scope="col" style="width:80%">File Name</th>
+                            <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+
+                        </tr>
+                    </thead> *@
+                   
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- logbook model popup end-->
+@Html.AntiForgeryToken()
+<partial name="_RadioCheckListModels" />
+@section PageHeader {
+    <h3 class="text-center">RADIO CHECKLIST</h3>
+}
+

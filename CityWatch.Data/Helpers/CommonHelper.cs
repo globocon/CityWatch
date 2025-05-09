@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Reflection;
 
 namespace CityWatch.Data.Helpers
@@ -72,5 +73,83 @@ namespace CityWatch.Data.Helpers
             }
             return name;
         }
-    }    
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    public static class DateTimeHelper
+    {
+        public static DateTime GetCurrentLocalTimeFromUtcMinute(int utcmin)
+        {
+            var CurrLocalTime = DateTime.UtcNow.AddMinutes(utcmin);
+            return CurrLocalTime;
+        }
+
+       
+        public static DateTime GetLogbookEndTimeFromDate(DateTime ldtm)
+        {            
+            return new DateTime(ldtm.Year, ldtm.Month, ldtm.Day, 23, 59, 00);
+        }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
+
+
+    public static class TimeZoneHelper
+    {
+
+        public static string GetCurrentTimeZone()
+        {            
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var mint = (int)localZone.BaseUtcOffset.TotalMinutes;
+            string[] arr = Convert.ToString(localZone.BaseUtcOffset).Split(":");
+            var CurrLocalTime = localZone.StandardName + " " + string.Format("GMT{0}:{1}", mint > 0 ? '+' + arr[0] : arr[0], arr[1]); 
+            return CurrLocalTime;
+        }
+        public static string GetCurrentTimeZoneShortName()
+        {
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var mint = (int)localZone.BaseUtcOffset.TotalMinutes;
+            string[] arr = Convert.ToString(localZone.BaseUtcOffset).Split(":");
+            var CurrLocalTime = string.Format("GMT{0}:{1}", mint > 0 ? '+' + arr[0] : arr[0], arr[1]);
+            return CurrLocalTime;
+        }
+
+        public static int GetCurrentTimeZoneOffsetMinute()
+        {
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var CurrLocalTime = localZone.BaseUtcOffset ;
+            return (int) CurrLocalTime.TotalMinutes;
+        }
+
+        public static DateTime GetCurrentTimeZoneCurrentTime()
+        {            
+            var CurrLocalTime = DateTime.Now;
+            return CurrLocalTime;
+        }
+
+        public static DateTimeOffset GetCurrentTimeZoneCurrentTimeWithOffset()
+        {
+            var CurrLocalTime = DateTimeOffset.Now;
+            return CurrLocalTime;
+        }
+
+       
+
+    }
+
+    public static class ColorConvertorHelper
+    {
+        public static string GetHexToRGBConvertedColorCode(string HexColorCode)
+        {
+            var color = ColorTranslator.FromHtml(HexColorCode); // System.Drawing.Color.FromString(HexColorCode);
+            // Convert HEX to RGB 
+            int r = Convert.ToInt16(color.R);
+            int g = Convert.ToInt16(color.G);
+            int b = Convert.ToInt16(color.B);
+
+            string rgbColor = string.Format("rgba({0}, {1}, {2});", r, g, b);
+
+            return rgbColor;
+        }
+    }
 }

@@ -155,23 +155,43 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public decimal ShiftFilledVsRosterPercentage
+        public decimal? ShiftFilledVsRosterPercentage
         {
             get
             {
-                if (_dailyKpiResults
-                    .Where(z => z.EffectiveEmployeeHours.HasValue && z.EffectiveEmployeeHours.Value > 0)
-                    .All(z => z.ImageCount.GetValueOrDefault() > 0 && z.WandScanCount.GetValueOrDefault() > 0))
+                var data = _dailyKpiResults.Where(z => z.EffectiveEmployeeHours.HasValue && z.EffectiveEmployeeHours.Value > 0);
+                //var ImageCount = data.Sum(z => z.ImageCount);
+                //var WandScanCount = data.Sum(z => z.WandScanCount);
+
+                //if(ImageCount == 0 && WandScanCount == 0)
+                //    return null;
+
+                //if (ImageCount > 0 && WandScanCount > 0)
+                //    return 100M;
+
+                //if (ImageCount > 0 || WandScanCount > 0)
+                //    return 50M;
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() == 0 && z.WandScanCount.GetValueOrDefault() == 0))
+                    return null;
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() > 0 && z.WandScanCount.GetValueOrDefault() > 0))
                     return 100M;
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() > 0 || z.WandScanCount.GetValueOrDefault() > 0))
+                    return 50M;
 
                 return decimal.Zero;
             }
         }
 
-        public decimal LogReportsVsRosterPercentage
+        public decimal? LogReportsVsRosterPercentage
         {
             get
             {
+                if (_dailyKpiResults.Select(z => z.IsAcceptableLogFreq).All(z => !z.HasValue))
+                    return null;
+
                 var dailyAcceptableLogFreq = _dailyKpiResults.Select(z => z.IsAcceptableLogFreq).Where(z => z.HasValue);
                 var totalCount = dailyAcceptableLogFreq.Count();
                 if (totalCount > 0)                    
@@ -226,8 +246,15 @@ namespace CityWatch.Kpi.Models
 
                 if (dayCount % 7 == 0)
                 {
-                    _dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
-                    _dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+
+                    //Change 02052024 dileep the old codes show error with  multiple values 
+                    _dailyKpiResults.FirstOrDefault(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
+                    _dailyKpiResults.FirstOrDefault(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+                    //Old Code Start
+                    //_dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
+                    //_dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+                    //Old Code end
+                  
 
                     ++weekCount;
                     _effortCounts.Add(new EffortCount()
