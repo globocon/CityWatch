@@ -6582,7 +6582,7 @@ namespace CityWatch.Data.Providers
                     traininglocationToUpdate.AssessmentEndDate = trainingCertificateRPL.AssessmentEndDate;
                     traininglocationToUpdate.TrainingInstructorId = trainingCertificateRPL.TrainingInstructorId;
                     traininglocationToUpdate.GuardId = trainingCertificateRPL.GuardId;
-                    traininglocationToUpdate.isDeleted = false;
+                    traininglocationToUpdate.isDeleted = trainingCertificateRPL.isDeleted;
 
                 }
             }

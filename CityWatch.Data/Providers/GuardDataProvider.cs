@@ -111,6 +111,7 @@ namespace CityWatch.Data.Providers
 
         void SaveGuardMobileNo(int GuardID, string mobileNo);
         void SaveGuardRCLoginDetails(LoginUserRCHistory loginuserrc);
+        List<TrainingCourseCertificateRPL> GetCourseCertificateRPL();
     }
 
     public class GuardDataProvider : IGuardDataProvider

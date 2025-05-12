@@ -354,7 +354,22 @@ namespace CityWatch.Web.Pages.Guard
                 Reminder1 = 45,
                 Reminder2 = 7
             });
-
+            var IsRPL = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault(); ;
+            if(IsRPL.isRPLEnabled==true)
+            {
+                var rpldetails = _guardDataProvider.GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == IsRPL.Id && x.GuardId == guardId).FirstOrDefault();
+                _guardLogDataProvider.SaveTrainingCourseCertificateRPL(new TrainingCourseCertificateRPL()
+                {
+                    Id = rpldetails.Id,
+                    GuardId = rpldetails.GuardId,
+                    TrainingCourseCertificateId = rpldetails.TrainingCourseCertificateId,
+                    AssessmentStartDate = rpldetails.AssessmentStartDate,
+                    AssessmentEndDate = rpldetails.AssessmentEndDate,
+                    TrainingPracticalLocationId = rpldetails.TrainingPracticalLocationId,
+                    TrainingInstructorId = rpldetails.TrainingInstructorId,
+                    isDeleted = true
+                });
+            }
 
             var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
             SendEmailNew(emailBody);
