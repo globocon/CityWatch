@@ -188,6 +188,9 @@ namespace CityWatch.Data.Providers
         public DuressSetting GetDuressSettingById(int duressAppId);
         public bool UpdateDuressSetting(DuressSetting setting);
         public bool DeleteDuressSettingById(int duressAppId);
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
+        public ClientSiteMobileAppSettings SaveCrowdSettingForSite(ClientSiteMobileAppSettings csmacs);
+        public ClientSiteMobileAppSettings UpdateCrowdSettingForSite(ClientSiteMobileAppSettings csmacs);
         List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId);
 
         void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment);
@@ -2113,6 +2116,32 @@ namespace CityWatch.Data.Providers
             }
             return false;
         }
+
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
+        {            
+            return _context.ClientSiteMobileAppSettings.AsNoTracking().FirstOrDefault(d => d.ClientSiteId == siteId); 
+        }
+
+        public ClientSiteMobileAppSettings SaveCrowdSettingForSite(ClientSiteMobileAppSettings csmacs)
+        {
+            _context.Add(csmacs);
+            _context.SaveChanges();
+            return csmacs;
+        }
+
+        public ClientSiteMobileAppSettings UpdateCrowdSettingForSite(ClientSiteMobileAppSettings csmacs)
+        { 
+            var existingRecord = _context.ClientSiteMobileAppSettings.FirstOrDefault(d => d.ClientSiteId == csmacs.ClientSiteId);
+            existingRecord.IsCrowdCountEnabled = csmacs.IsCrowdCountEnabled;
+            existingRecord.IsDoorEnabled = csmacs.IsDoorEnabled;
+            existingRecord.IsGateEnabled = csmacs.IsGateEnabled;
+            existingRecord.IsLevelFloorEnabled = csmacs.IsLevelFloorEnabled;
+            existingRecord.IsRoomEnabled = csmacs.IsRoomEnabled;
+            existingRecord.CounterQuantity = csmacs.CounterQuantity;
+            _context.SaveChanges();
+            return existingRecord;
+        }
+
         public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
         {
             var course = _context.TrainingCourses.Where(x => x.Id == courseId).OrderBy(x => x.Id).ToList();

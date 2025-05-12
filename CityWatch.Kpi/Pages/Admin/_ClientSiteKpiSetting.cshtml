@@ -2213,7 +2213,7 @@
             <div class="tab-content">
                 <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
                 <input type="hidden" id="clientSiteIdDuress" name="clientSiteIdDuress" value="@Model.ClientSiteId" />
-                <div class="tab-pane active" id="DuressAppSettingsTab" role="tabpanel" aria-labelledby="crowdControlTab">
+                <div class="tab-pane active" id="DuressAppSettingsTab" role="tabpanel" aria-labelledby="duressAppSettingsTab">
                     <div id="messagesContainer"></div>
 
                     <div class="row pt-3">
@@ -2264,55 +2264,56 @@
                 <div class="tab-pane" id="CrowdControlTab" role="tabpanel" aria-labelledby="crowdControlTab">
                     <div class="row m-0 pt-2">
                         <div class="col-md-12">
-                            <form id="frm_crowdcontrol_field">
-                                <input type="hidden" id="ClientSiteMobileAppSettings_Id"  asp-for="@Model.clientSiteMobileAppSettings.Id" /> 
-                                <div class="form-group row mb-2">
-                                    <label class="col-md-3 col-form-label">Crowd Control Site Profile</label>
-                                    <div class="col-md-6">
-                                        <div class="custom-control custom-switch custom-control-inline mt-2" title="Enable/Disable crowd control for site" style="padding-bottom:5px">
-                                            <input type="checkbox" class="custom-control-input" id="IsCrowdCountEnabled" asp-for="@Model.clientSiteMobileAppSettings.IsCrowdCountEnabled">
-                                            <label class="custom-control-label" for="Iscrowdcontrol"></label>
-                                            <input type="hidden" id="IscrowdcontrolEnabledHidden" />
-                                        </div>
+                            @* <form id="frm_crowdcontrol_field"> *@
+                            <input type="hidden" asp-for="@Model.clientSiteMobileAppSettings.Id" />
+                            <input type="hidden" asp-for="@Model.clientSiteMobileAppSettings.ClientSiteId" />
+                            <div class="form-group row mb-2">
+                                <label class="col-md-3 col-form-label">Crowd Control Site Profile</label>
+                                <div class="col-md-6">
+                                    <div class="custom-control custom-switch mt-2" title="Enable/Disable crowd control for site" style="padding-bottom:5px">
+                                        <input type="checkbox" class="custom-control-input" asp-for="@Model.clientSiteMobileAppSettings.IsCrowdCountEnabled" checked="@Model.clientSiteMobileAppSettings.IsCrowdCountEnabled">
+                                        <label class="custom-control-label" for="clientSiteMobileAppSettings_IsCrowdCountEnabled"></label>
                                     </div>
                                 </div>
-                                <div class="form-group row align-items-center">
-                                    <label class="col-md-3 col-form-label">Counter Location</label>
-                                    <div class="col-md-9 d-flex align-items-center">
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableCCDoor" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsDoorEnabled">
-                                            <label for="enableCCDoor" class="form-check-label">Door</label>
-                                        </div>
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableCCGate" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsGateEnabled">
-                                            <label for="enableCCGate" class="form-check-label">Gate</label>
-                                        </div>
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableCCLevelFloor" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsLevelFloorEnabled">
-                                            <label for="enableCCLevelFloor" class="form-check-label">Level (Floor)</label>
-                                        </div>
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableCCRoom" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsRoomEnabled">
-                                            <label for="enableCCRoom" class="form-check-label">Room</label>
-                                        </div>
+                            </div>
+                            <div class="form-group row align-items-center">
+                                <label class="col-md-3 col-form-label">Counter Location</label>
+                                <div class="col-md-9 d-flex align-items-center">
+                                    <div class="form-check mr-5">
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsDoorEnabled" checked="@Model.clientSiteMobileAppSettings.IsDoorEnabled">
+                                        <label for="clientSiteMobileAppSettings_IsDoorEnabled" class="form-check-label">Door</label>
+                                    </div>
+                                    <div class="form-check mr-5">
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsGateEnabled" checked="@Model.clientSiteMobileAppSettings.IsGateEnabled">
+                                        <label for="clientSiteMobileAppSettings_IsGateEnabled" class="form-check-label">Gate</label>
+                                    </div>
+                                    <div class="form-check mr-5">
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsLevelFloorEnabled" checked="@Model.clientSiteMobileAppSettings.IsLevelFloorEnabled">
+                                        <label for="clientSiteMobileAppSettings_IsLevelFloorEnabled" class="form-check-label">Level (Floor)</label>
+                                    </div>
+                                    <div class="form-check mr-5">
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.clientSiteMobileAppSettings.IsRoomEnabled" checked="@Model.clientSiteMobileAppSettings.IsRoomEnabled">
+                                        <label for="clientSiteMobileAppSettings_IsRoomEnabled" class="form-check-label">Room</label>
                                     </div>
                                 </div>
-                                <div class="form-group row">
-                                    <label class="col-md-3 col-form-label mt-0">Counter Quantity</label>
-                                    <div class="col-md-3">
-                                        @* <select id="CCCounterQuantity" name="CCCounterQuantity" asp-for="@Model.CrmSupplierForSettings" asp-items="@ViewDataService.ProviderList()" class="form-control"> *@
-                                        <select id="CCCounterQuantity" name="CCCounterQuantity"  asp-for="@Model.clientSiteMobileAppSettings.CounterQuantity" class="form-control">
-                                            <option value="0">Select Counter Quantity</option>                                            
-                                                @for (var colIndex = 1; colIndex < 11; colIndex++){
-                                                <option value="@colIndex">@(colIndex.ToString("00")) </option>
-                                                }
-                                        </select>
-                                    </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label mt-0">Counter Quantity</label>
+                                <div class="col-md-3">
+                                    @* <select id="CCCounterQuantity" name="CCCounterQuantity" asp-for="@Model.CrmSupplierForSettings" asp-items="@ViewDataService.ProviderList()" class="form-control"> *@
+                                    <select asp-for="@Model.clientSiteMobileAppSettings.CounterQuantity" class="form-control" >
+                                        <option value="0">Select Counter Quantity</option>
+                                        @for (var colIndex = 1; colIndex < 11; colIndex++)
+                                        {
+                                            <option value="@colIndex">@(colIndex.ToString("00")) </option>
+                                        }
+                                    </select>
                                 </div>
-                                <div class="form-row mt-3">
-                                    <button type="button" class="btn btn-success pull-right" id="btnSaveCrowdControlSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-                                </div>
-                            </form>
+                            </div>
+                            <div class="form-row mt-3">
+                                <button type="button" class="btn btn-success" id="btnSaveCrowdControlSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                            </div>
+                            @* </form> *@
                         </div>
                     </div>
                 </div>
