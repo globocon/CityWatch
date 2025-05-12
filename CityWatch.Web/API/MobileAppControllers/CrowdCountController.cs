@@ -14,13 +14,11 @@ namespace CityWatch.Web.API
     [Route("api/[controller]")]
     [ApiController]
     public class CrowdCountController : ControllerBase
-    {
-        private readonly IUserAuthenticationService _userAuthentication;
+    {        
         private readonly IViewDataService _viewDataService;
 
-        public CrowdCountController(IUserAuthenticationService userAuthentication, IViewDataService viewDataService)
-        {
-            _userAuthentication = userAuthentication;
+        public CrowdCountController(IViewDataService viewDataService)
+        {            
             _viewDataService = viewDataService;
         }
 
