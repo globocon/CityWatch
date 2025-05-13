@@ -4,6 +4,7 @@ using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.Web.API;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -65,6 +66,7 @@ builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationServi
 builder.Services.AddScoped<ITimesheetReportGenerator, TimesheetReportGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ICertificateGenerator, CertificateGenerator>();
+builder.Services.AddScoped<IRPLCertificateGeneratorService, RPLCertificateGeneratorService>();
 
 builder.Services.AddRazorPages(options =>
 {

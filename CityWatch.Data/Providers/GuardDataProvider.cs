@@ -1134,7 +1134,7 @@ namespace CityWatch.Data.Providers
         public List<TrainingCourseCertificateRPL> GetCourseCertificateRPL()
         {
             // Retrieve documents of the specified type
-            var courseDocList = _context.TrainingCourseCertificateRPL
+            var courseDocList = _context.TrainingCourseCertificateRPL.Where(x=>x.isDeleted==false)
                 .ToList();
 
 
