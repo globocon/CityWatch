@@ -690,6 +690,7 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
     GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
     gridGuardTrainingAndAssessment.clear().draw();
     gridGuardTrainingAndAssessment.ajax.reload();
+    gridGuardLicensesAndLicenceKey.ajax.reload();
    
 });
 //p5-Issue2-Start
@@ -3625,7 +3626,9 @@ function UpdateStatusToHold() {
     }).done(function (result) {
        
 
-
+        gridGuardTrainingAndAssessment.clear().draw();
+        gridGuardTrainingAndAssessment.ajax.reload();
+        gridGuardLicensesAndLicenceKey.ajax.reload();
     }).fail(function () {
         console.log('error');
     })
@@ -3643,7 +3646,10 @@ function GetCertificate(guardid,hrsettingsid) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success) {
-           // deleteGuardScores(buttonmode);
+            // deleteGuardScores(buttonmode);
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+            gridGuardLicensesAndLicenceKey.ajax.reload();
 
         }
         else {
