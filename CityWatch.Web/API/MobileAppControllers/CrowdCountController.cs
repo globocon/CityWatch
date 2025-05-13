@@ -22,11 +22,11 @@ namespace CityWatch.Web.API
             _viewDataService = viewDataService;
         }
 
-        [HttpGet("GetCrowdCountControlSettings/{siteId}")]
-        public IActionResult GetClientSitesCrowdCountControlSettings(int siteId)
+        [HttpGet("GetCrowdCountControlSettings")]
+        public IActionResult GetCrowdCountControlSettings(int siteId)
         {
             try
-            {
+            {                
                 var clientSiteMobileAppSettings = _viewDataService.GetCrowdSettingForSite(siteId);
 
                 if (clientSiteMobileAppSettings == null)
