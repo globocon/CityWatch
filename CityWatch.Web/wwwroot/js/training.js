@@ -690,6 +690,7 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
     GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
     gridGuardTrainingAndAssessment.clear().draw();
     gridGuardTrainingAndAssessment.ajax.reload();
+    gridGuardLicensesAndLicenceKey.ajax.reload();
    
 });
 //p5-Issue2-Start
@@ -2567,7 +2568,7 @@ function getRPLInstructorSignOff(seletedInstructor) {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             if (seletedInstructor) {
@@ -3625,7 +3626,9 @@ function UpdateStatusToHold() {
     }).done(function (result) {
        
 
-
+        gridGuardTrainingAndAssessment.clear().draw();
+        gridGuardTrainingAndAssessment.ajax.reload();
+        gridGuardLicensesAndLicenceKey.ajax.reload();
     }).fail(function () {
         console.log('error');
     })
@@ -3643,7 +3646,10 @@ function GetCertificate(guardid,hrsettingsid) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success) {
-           // deleteGuardScores(buttonmode);
+            // deleteGuardScores(buttonmode);
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+            gridGuardLicensesAndLicenceKey.ajax.reload();
 
         }
         else {
@@ -4059,7 +4065,7 @@ function getPracticaInstructorSignOff() {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             
