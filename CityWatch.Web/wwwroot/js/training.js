@@ -2568,7 +2568,7 @@ function getRPLInstructorSignOff(seletedInstructor) {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             if (seletedInstructor) {
@@ -4065,7 +4065,7 @@ function getPracticaInstructorSignOff() {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             
