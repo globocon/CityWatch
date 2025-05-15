@@ -134,7 +134,7 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("EnterGuardLogin")]
-        public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId)
+        public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId,string gps)
         {
             try
             {
@@ -155,7 +155,7 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Guard login failed." });
 
                 // Default GPS coordinates (should be replaced with actual values if available)
-                var gpsCoordinates = string.Empty;
+                var gpsCoordinates = gps;
 
                 // Create a log entry
                 var signInEntry = new GuardLog
