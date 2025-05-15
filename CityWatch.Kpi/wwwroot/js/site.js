@@ -3080,6 +3080,73 @@ $('#div_site_settings').on('click', '#delete_DuressApp', function () {
     });
 });
 
+$('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () { 
+    var data = {
+        'Id': 0,
+        'ClientSiteId': $('#clientSiteMobileAppSettings_ClientSiteId').val(),
+        'IsCrowdCountEnabled': $('#clientSiteMobileAppSettings_IsCrowdCountEnabled').is(':checked'),
+        'IsDoorEnabled': $('#clientSiteMobileAppSettings_IsDoorEnabled').is(':checked'),
+        'IsGateEnabled': $('#clientSiteMobileAppSettings_IsGateEnabled').is(':checked'),
+        'IsLevelFloorEnabled': $('#clientSiteMobileAppSettings_IsLevelFloorEnabled').is(':checked'),
+        'IsRoomEnabled': $('#clientSiteMobileAppSettings_IsRoomEnabled').is(':checked'),
+        'CounterQuantity': $('#clientSiteMobileAppSettings_CounterQuantity option:selected').val(),
+    };
+
+    let ccid = $('#clientSiteMobileAppSettings_Id').val();
+    if (ccid != null) {
+        if (parseInt(ccid) > 0) {
+            data.id = parseInt(ccid);
+        }
+    }
+    //console.log("data Id:" + data.Id);
+    //console.log("data ClientSiteId:" + data.ClientSiteId);
+    //console.log("data IsCrowdCountEnabled:" + data.IsCrowdCountEnabled);
+    //console.log("data IsDoorEnabled:" + data.IsDoorEnabled);
+    //console.log("data IsGateEnabled:" + data.IsGateEnabled);
+    //console.log("data CounterQuantity:" + data.CounterQuantity);
+
+    if ((data.IsCrowdCountEnabled) && (data.IsDoorEnabled == false && data.IsGateEnabled == false && data.IsLevelFloorEnabled == false && data.IsRoomEnabled == false))
+    {
+        alert("Please select atleast one Counter Location.");
+        return;
+    }
+    if (data.IsDoorEnabled || data.IsGateEnabled || data.IsLevelFloorEnabled || data.IsRoomEnabled) {
+        ccqty = parseInt(data.CounterQuantity);
+        if (ccqty < 1) {
+            alert("Counter Quantity must be greater than 0.");
+            return;
+        }
+    }
+    if (data.IsCrowdCountEnabled == false)
+    {
+        data.IsDoorEnabled = false;
+        data.IsGateEnabled = false;
+        data.IsLevelFloorEnabled = false;
+        data.IsRoomEnabled = false;
+        data.CounterQuantity = 0;
+                       
+        $('#clientSiteMobileAppSettings_IsDoorEnabled').prop('checked', false);
+        $('#clientSiteMobileAppSettings_IsGateEnabled').prop('checked', false);
+        $('#clientSiteMobileAppSettings_IsLevelFloorEnabled').prop('checked', false);
+        $('#clientSiteMobileAppSettings_IsRoomEnabled').prop('checked', false);
+        $('#clientSiteMobileAppSettings_CounterQuantity').val('0');
+    }
+
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveClientSiteMobileAppCrowdSettings',
+        type: 'POST',
+        dataType: 'json',
+        data: { csmas: data },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {        
+        if (response.success) {
+            $('#clientSiteMobileAppSettings_Id').val(response.clientSiteMobileAppSettings.id);
+        } 
+        alert(response.message);
+        $('#loader').hide();
+    }).fail(function () { alert('An error occured while svaing the settings. Please try again.'); });
+});
 
 
 

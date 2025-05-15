@@ -514,6 +514,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Include(x => x.Notes)
                  .Include(x => x.RCActionList)
+                 .Include(x => x.clientSiteMobileAppSettings)
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {

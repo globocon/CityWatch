@@ -173,6 +173,8 @@ namespace CityWatch.Web.Services
         public List<ActivityModel> GetDressAppFields(int type);
 
         public List<Mp3File> GetDressAppFieldsAudio(int type);
+
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -2274,7 +2276,10 @@ namespace CityWatch.Web.Services
         }
 
 
-
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
+        {
+            return _configDataProvider.GetCrowdSettingForSite(siteId);
+        }
 
 
 

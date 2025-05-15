@@ -690,6 +690,7 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
     GetCertificateAndFeedBackStatus(data.guardId, data.hrSettingsId);
     gridGuardTrainingAndAssessment.clear().draw();
     gridGuardTrainingAndAssessment.ajax.reload();
+    gridGuardLicensesAndLicenceKey.ajax.reload();
    
 });
 //p5-Issue2-Start
@@ -2567,7 +2568,7 @@ function getRPLInstructorSignOff(seletedInstructor) {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             if (seletedInstructor) {
@@ -3583,6 +3584,7 @@ function GetCertificateAndFeedBackStatus(guardid,hrsettingsid) {
         }
         if (result.getcertificateSatus.isAnonymousFeedback == true) {
             GetFeedbackQuestionsForGuard();
+            
             $('#cardFrontPage').hide();
 
             $('#cardCoursePdf').hide();
@@ -3625,7 +3627,9 @@ function UpdateStatusToHold() {
     }).done(function (result) {
        
 
-
+        gridGuardTrainingAndAssessment.clear().draw();
+        gridGuardTrainingAndAssessment.ajax.reload();
+        gridGuardLicensesAndLicenceKey.ajax.reload();
     }).fail(function () {
         console.log('error');
     })
@@ -3643,7 +3647,10 @@ function GetCertificate(guardid,hrsettingsid) {
         headers: { 'RequestVerificationToken': token },
     }).done(function (result) {
         if (result.success) {
-           // deleteGuardScores(buttonmode);
+            // deleteGuardScores(buttonmode);
+            gridGuardTrainingAndAssessment.clear().draw();
+            gridGuardTrainingAndAssessment.ajax.reload();
+            gridGuardLicensesAndLicenceKey.ajax.reload();
 
         }
         else {
@@ -3683,6 +3690,7 @@ function GetFeedbackQuestionsForGuard() {
             $('#cardTestPage').hide();
             $('#cardResultPage').hide();
             $('#cardFeedbackPage').hide();
+            StoreFeedbackFromGuard();
             $('#cardThankyouPage').attr('hidden', false);
         }
 
@@ -3692,6 +3700,32 @@ function GetFeedbackQuestionsForGuard() {
         console.log('error');
     })
 }
+//store feedback for guard-start
+function StoreFeedbackFromGuard() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=StoreFeedbackFromGuard',
+        data: {
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+            'guardId': $('#txtguardIdForTest').val()
+        },
+        //data: { id: record },
+        type: 'GET',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result != null) {
+            return;
+
+        }
+        
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+//store feedback for guard-startend
 
 function GetFeedbackOptionsForGuard() {
     const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3922,14 +3956,11 @@ $('#btnSubmitFeedback').on('click', function (e) {
 });
 $('#btnExitCourse').on('click', function (e) {
     e.preventDefault();
-
+    
     // Refresh the previous (parent) tab
     if (window.opener && !window.opener.closed) {
        
         window.opener.location.reload();
-        // window.opener.$('#btnHRDetails').trigger('click');
-        //window.opener.gridGuardTrainingAndAssessment.clear().draw();
-        //window.opener.gridGuardTrainingAndAssessment.ajax.reload();
     }
     window.close();
 });
@@ -4059,7 +4090,7 @@ function getPracticaInstructorSignOff() {
         success: function (data) {
             practicalInstructorControl.append('<option value="" selected>Select</option>')
             data.map(function (site) {
-                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                practicalInstructorControl.append('<option value="' + site.id + '">' + site.name + ' (' + site.position + ')' + '</option>');
             });
 
             
