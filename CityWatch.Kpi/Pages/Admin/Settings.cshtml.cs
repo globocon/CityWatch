@@ -255,10 +255,19 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            var _clientSiteMobileAppSettings = _configDataProvider.GetCrowdSettingForSite(siteId);
+            if(_clientSiteMobileAppSettings == null)
+            {
+                _clientSiteMobileAppSettings = new ClientSiteMobileAppSettings() { ClientSiteId = siteId };
+            }
             if (clientSiteKpiSetting == null)
             {
                 var clientSiteForTheId = _guardLogDataProvider.GetClientSites(siteId).FirstOrDefault();
-                clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId, ClientSite = clientSiteForTheId };
+                clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId, ClientSite = clientSiteForTheId, clientSiteMobileAppSettings = _clientSiteMobileAppSettings };
+            }
+            else
+            {
+                clientSiteKpiSetting.clientSiteMobileAppSettings = _clientSiteMobileAppSettings;
             }
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
@@ -278,6 +287,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     clientSiteKpiSetting.TuneDowngradeBuffer = 1;
                 }
                 clientSiteKpiSetting.ScheduleisActive = true;
+                clientSiteKpiSetting.clientSiteMobileAppSettings = null;
                 _clientDataProvider.SaveClientSiteKpiSetting(clientSiteKpiSetting);
             }
             catch
@@ -1037,7 +1047,7 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-        
+
         public JsonResult OnPostDeleteSmartWandSettings(int id)
         {
             var success = false;
@@ -1072,7 +1082,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             _clientDataProvider.SaveClientSite(clientSite);
         }
-        public JsonResult OnGetSmartWandPhoneNumber(string PhoneNumber,int id)
+        public JsonResult OnGetSmartWandPhoneNumber(string PhoneNumber, int id)
         {
             var ssd = _clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber, id);
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandsNo(PhoneNumber, id));
@@ -2206,6 +2216,46 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 // Log the exception details (optional)
                 _logger.LogError(ex, "An error occurred while deleting the duress setting.");
+
+                // Return an error message
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
+        public JsonResult OnPostSaveClientSiteMobileAppCrowdSettings(ClientSiteMobileAppSettings csmas)
+        {
+            try
+            {
+
+                if (csmas.ClientSiteId != 0)
+                {
+                    // Check if settings already exists
+                    var existingSetting = _configDataProvider.GetCrowdSettingForSite(csmas.ClientSiteId);
+                    if (existingSetting != null)
+                    {
+                        //Update changes
+                        existingSetting = _configDataProvider.UpdateCrowdSettingForSite(csmas);
+                        return new JsonResult(new { success = true, message = "Crowd setting saved successfully.", clientSiteMobileAppSettings = existingSetting });
+                    }
+                    else
+                    {
+                        //New record
+                        var newrecord = _configDataProvider.SaveCrowdSettingForSite(csmas);
+                        return new JsonResult(new { success = true, message = "Crowd setting saved successfully.", clientSiteMobileAppSettings = newrecord });
+
+                    }
+                }
+                else
+                {
+                    // Return a custom error message if no record is found
+                    return new JsonResult(new { success = false, message = "No client site found with the specified ID." });
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (optional)
+                _logger.LogError(ex, "An error occurred while saving the crowd setting.");
 
                 // Return an error message
                 return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
