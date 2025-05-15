@@ -30,6 +30,10 @@ using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using MailKit.Net.Smtp;
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using System.Threading.Tasks;
+using CityWatch.Common.Services;
 
 
 namespace CityWatch.Web.Pages.Guard
@@ -47,6 +51,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
+        private readonly IDropboxService _dropboxUploadService;
         public int GuardId { get; set; }
         public int GuardTrainingAssessmentId { get; set; }
         public GuardTrainingAndAssessment GuardTrainingAndAssessment { get; set; }
@@ -63,7 +68,8 @@ namespace CityWatch.Web.Pages.Guard
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions,
+             IDropboxService dropboxUploadService)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -76,6 +82,7 @@ namespace CityWatch.Web.Pages.Guard
             _guardLogDataProvider = guardLogDataProvider;
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
+            _dropboxUploadService = dropboxUploadService;
         }
         public void OnGet()
         {
@@ -738,6 +745,39 @@ namespace CityWatch.Web.Pages.Guard
             return emailAddressList;
         }
         //P5-Issue 19 send email-end
+        public JsonResult OnGetStoreFeedbackFromGuard(int guardId, int hrSettingsId)
+        {
+            var filename = _certificateGenerator.GenerateGuardFeedbackPdf(guardId, hrSettingsId);
+            var DropboxDir = _guardDataProvider.GetDrobox();
+            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            //string feedbackPath = filename.Substring(filename.IndexOf("Feedback"));
+            var securitylicense = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault().SecurityNo;
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/Feedback/{securitylicense}/{filename}");
+            var dbxUploaded = true;
+            dbxUploaded = UpoadDocumentToDropbox(filename, dbxFilePath);
+
+
+            return new JsonResult(new { filename });
+        }
+        private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
+        }
     }
 
 }

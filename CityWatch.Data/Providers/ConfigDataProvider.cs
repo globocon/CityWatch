@@ -205,7 +205,7 @@ namespace CityWatch.Data.Providers
 
         public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName);
         List<TrainingTestQuestions> GetTrainingTestQuestionsColor(int hrsettingsId);
-
+        List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetGuardAttendedFeedBackQuestionsAndanswers(int guardId, int hrsettingsId);
 
     }
 
@@ -2194,6 +2194,11 @@ namespace CityWatch.Data.Providers
 
             return trainigCourses; 
 
+        }
+        public List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetGuardAttendedFeedBackQuestionsAndanswers(int guardId, int hrsettingsId)
+        {
+            var correctQuestions = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.HrSettingsId == hrsettingsId).Include(x => x.TrainingTestFeedbackQuestions).Include(x => x.TrainingTestFeedbackQuestionsAnswers).OrderBy(x => x.Id).ToList();
+            return correctQuestions;
         }
 
 
