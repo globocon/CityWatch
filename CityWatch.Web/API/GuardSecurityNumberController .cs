@@ -10,13 +10,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -38,8 +43,9 @@ namespace CityWatch.Web.API
         private readonly EmailOptions _emailOptions;
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly ISmsSenderProvider _smsSenderProvider;
+        private readonly IConfiguration _configuration;
         private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions)
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -50,6 +56,7 @@ namespace CityWatch.Web.API
             _WebHostEnvironment = webHostEnvironment;
             _smsSenderProvider = smsSenderProvider;
             _emailOptions = emailOptions.Value;
+            _configuration= configuration;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -274,7 +281,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString,string gps)
         {
             try
             {
@@ -295,7 +302,7 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Guard login failed." });
 
                 // Default GPS coordinates (should be replaced with actual values if available)
-                var gpsCoordinates = string.Empty;
+               var gpsCoordinates = gps;
 
                 // Create a log entry
                 var signInEntry = new GuardLog
@@ -359,7 +366,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("SaveClientSiteDuress")]
-        public async Task<IActionResult> SaveClientSiteDuress(int guardId, int clientsiteId, int userId)
+        public async Task<IActionResult> SaveClientSiteDuress(int guardId, int clientsiteId, int userId,string gps)
         {
             try
             {
@@ -386,10 +393,38 @@ namespace CityWatch.Web.API
                 }
 
                
-                var gpsCoordinates = string.Empty;
+                var gpsCoordinates = gps;
                 var enabledAddress = string.Empty;
                 var status = true;
                 var message = "Success";
+              
+
+                if (!string.IsNullOrEmpty(gpsCoordinates) && gpsCoordinates.Contains(","))
+                {
+                    var parts = gpsCoordinates.Split(',');
+
+                    if (parts.Length == 2 &&
+                        double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out double lat) &&
+                        double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out double lng))
+                    {
+                        string address = await GetAddressFromCoordinatesAsync(lat, lng);
+
+                        enabledAddress= address;
+                        // Use the address as needed
+                        Console.WriteLine(address);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid GPS format.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("GPS coordinates are missing or invalid.");
+                }
+
+
+                
 
 
                 var tmdata = new GuardLog()
@@ -417,7 +452,7 @@ namespace CityWatch.Web.API
                 });
 
                 var ClientsiteDetails = _clientDataProvider.GetClientSiteName(clientsiteId);
-                enabledAddress = ClientsiteDetails.Address;
+                enabledAddress = string.IsNullOrWhiteSpace(enabledAddress) ? ClientsiteDetails.Address : enabledAddress;
                 var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
                 var GuradDetails = _clientDataProvider.GetGuradName(guardId);
                 _viewDataService.EnableClientSiteDuress(clientsiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress, tmdata, ClientsiteDetails.Name, GuradDetails.Name);
@@ -600,6 +635,31 @@ namespace CityWatch.Web.API
 
             return new JsonResult(new { success, message });
         }
+        public async Task<string> GetAddressFromCoordinatesAsync(double latitude, double longitude)
+        {
+
+            var mapSettings = _configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+            var apiKey = mapSettings.ApiKey;
+            string requestUri = $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latitude},{longitude}&key={apiKey}";
+
+            using (HttpClient client = new HttpClient())
+            {
+                var response = await client.GetAsync(requestUri);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<GoogleGeocodeResponse>(json);
+
+                    if (result.status == "OK" && result.results.Count > 0)
+                    {
+                        return result.results[0].formatted_address;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
 
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
@@ -770,6 +830,15 @@ namespace CityWatch.Web.API
     }
 
 
+    public class GeocodeResult
+    {
+        public string formatted_address { get; set; }
+    }
 
+    public class GoogleGeocodeResponse
+    {
+        public string status { get; set; }
+        public List<GeocodeResult> results { get; set; }
+    }
 
 }
