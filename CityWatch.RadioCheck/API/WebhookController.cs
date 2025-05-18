@@ -140,6 +140,7 @@ namespace CityWatch.RadioCheck.API
         private string templateFileName;
         private string jsonMappingFile;
         private string jsonImageToFolderMappingFile;
+        private string uploadFolder;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
         //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
         public WebhookController(IConfiguration configuration)
@@ -149,6 +150,7 @@ namespace CityWatch.RadioCheck.API
             templateFileName = "Template.xlsx";
             jsonMappingFile = "form_fields_mapping.json";
             jsonImageToFolderMappingFile = "image_folder_mapping.json";
+            uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform");
         }
 
         [HttpPost("jotform")]
@@ -189,14 +191,14 @@ namespace CityWatch.RadioCheck.API
                 string formName = await GetFormNameFromJotForm(formID);
                 //string workOrder = webhookData != null && webhookData.ContainsKey("q3_workOrder") ? webhookData["q3_workOrder"].ToString() : "UnknownWorkOrder";
                 string workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
-                string submissionFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName, workOrder);
-                string templateFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName);
+                string submissionFolder = Path.Combine(uploadFolder, formName, workOrder);
+                string templateFolder = Path.Combine(uploadFolder, formName);
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
                 string logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(submissionFolder, formName, "_", workOrder, "_Output_data.xlsx");
+                string excelFilePath = Path.Combine(submissionFolder, $"{formName}_{workOrder}_Output_data.xlsx");
                 string jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
@@ -583,7 +585,7 @@ namespace CityWatch.RadioCheck.API
                     headerCellRange.Style.Font.Bold = true;
 
                     // read json file for image and caption from the folder in value
-                    string _folderToSearchImage = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", _Foldervalue, workOrderId);
+                    string _folderToSearchImage = Path.Combine(uploadFolder, _Foldervalue, workOrderId);
                     string _file_image_caption = Path.Combine(_folderToSearchImage, image_captions_List_jsonFileName);
                     if (System.IO.File.Exists(_file_image_caption))
                     {
@@ -602,7 +604,7 @@ namespace CityWatch.RadioCheck.API
                                         img = Image.FromFile(_imageFileToread);
                                     }                                       
 
-                                    InsertImageWithCaption(ref worksheet, f.Caption, img, 300, startColumnLetter, endColumnLetter);
+                                    InsertImageWithCaption(ref worksheet, f.Caption, img, 670, startColumnLetter, endColumnLetter);
                                 }
                             }
                         }
@@ -671,14 +673,14 @@ namespace CityWatch.RadioCheck.API
                     image.Save(ms, ImageFormat.Png); // PNG for better quality
                     ms.Seek(0, SeekOrigin.Begin);
 
-                    // Add picture to sheet
-                    var picture = worksheet.AddPicture(ms)
-                                           .MoveTo(worksheet.Cell(imageRow, startCol))
-                                           .WithPlacement(XLPicturePlacement.FreeFloating);
-
                     // Adjust row height to fit image (approximate conversion)
                     float rowHeight = image.Height * 0.75f;
                     worksheet.Row(imageRow).Height = rowHeight;
+
+                    // Add picture to sheet 
+                    var picture = worksheet.AddPicture(ms)
+                                           .MoveTo(worksheet.Cell(imageRow, startCol));                                           
+                                           //.WithPlacement(XLPicturePlacement.FreeFloating);                    
                 }
             }
             else
@@ -694,7 +696,7 @@ namespace CityWatch.RadioCheck.API
             captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            captionCellRange.Style.Font.Bold = true;
+            
         }
     }
 
