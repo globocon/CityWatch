@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System;
 using Newtonsoft.Json;
+using CityWatch.RadioCheck.Models;
 
 namespace CityWatch.RadioCheck.Pages
 {
@@ -159,8 +160,4 @@ namespace CityWatch.RadioCheck.Pages
         }
     }
 }
-public class ImageCaptionModel
-{
-    public string ImageName { get; set; }
-    public string Caption { get; set; }
-}
+
