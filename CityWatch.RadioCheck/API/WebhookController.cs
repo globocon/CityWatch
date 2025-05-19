@@ -695,14 +695,31 @@ namespace CityWatch.RadioCheck.API
             captionCellRange.Merge().Value = caption;
             // Enable text wrapping
             captionCellRange.Style.Alignment.WrapText = true;
+            double totalColWidth = 0;
+            for (int col = startCol; col <= endCol; col++)
+            {
+                totalColWidth += worksheet.Column(col).Width;
+            }
+
+            // Estimate characters that fit in one line (Excel assumes ~1 char per width unit)
+            int charsPerLine = (int)(totalColWidth * 1.5); // can fine-tune multiplier if needed
+
+            // Estimate how many lines needed
+            int estimatedLineCount = (int)Math.Ceiling((double)caption.Length / charsPerLine);
+
+            // Set estimated row height (approx. 15 units per line is common in Excel)
+            worksheet.Row(captionRow).Height = estimatedLineCount * 15;
+            
             // Auto-adjust row height to fit content
-            worksheet.Row(captionRow).AdjustToContents();
+            //worksheet.Row(captionRow).AdjustToContents(startCol, endCol);
+            //worksheet.Row(captionRow).ClearHeight();
             captionCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            
+
+
         }
     }
 
