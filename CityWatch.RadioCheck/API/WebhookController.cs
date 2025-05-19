@@ -674,7 +674,7 @@ namespace CityWatch.RadioCheck.API
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // Adjust row height to fit image (approximate conversion)
-                    float rowHeight = image.Height * 0.75f;
+                    float rowHeight = image.Height * 0.78f;
                     worksheet.Row(imageRow).Height = rowHeight;
 
                     // Add picture to sheet 
@@ -684,19 +684,42 @@ namespace CityWatch.RadioCheck.API
                 }
             }
             else
-            {
-                worksheet.Cell(imageRow, startCol).Value = "No image";
+            {                
+                var noimageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
+                noimageCellRange.Merge().Value = "No image";
+                noimageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             }
 
             // Write caption in the row below image, merging the same column range
             var captionCellRange = worksheet.Range(captionRow, startCol, captionRow, endCol);
             captionCellRange.Merge().Value = caption;
+            // Enable text wrapping
+            captionCellRange.Style.Alignment.WrapText = true;
+            double totalColWidth = 0;
+            for (int col = startCol; col <= endCol; col++)
+            {
+                totalColWidth += worksheet.Column(col).Width;
+            }
+
+            // Estimate characters that fit in one line (Excel assumes ~1 char per width unit)
+            int charsPerLine = (int)(totalColWidth * 1.5); // can fine-tune multiplier if needed
+
+            // Estimate how many lines needed
+            int estimatedLineCount = (int)Math.Ceiling((double)caption.Length / charsPerLine);
+
+            // Set estimated row height (approx. 15 units per line is common in Excel)
+            worksheet.Row(captionRow).Height = estimatedLineCount * 15;
+            
+            // Auto-adjust row height to fit content
+            //worksheet.Row(captionRow).AdjustToContents(startCol, endCol);
+            //worksheet.Row(captionRow).ClearHeight();
             captionCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            
+
+
         }
     }
 
