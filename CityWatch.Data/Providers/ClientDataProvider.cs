@@ -514,12 +514,13 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Include(x => x.Notes)
                  .Include(x => x.RCActionList)
-                 .Include(x => x.clientSiteMobileAppSettings)
+                // .Include(x => x.clientSiteMobileAppSettings)
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-
-
+                // New code for clientSiteMobileAppSettings
+                clientSiteKpiSetting.clientSiteMobileAppSettings = _context.ClientSiteMobileAppSettings
+                .FirstOrDefault(x => x.ClientSiteId == clientSiteId);
 
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettingsADHOC = _context.ClientSiteManningKpiSettingsADHOC.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
