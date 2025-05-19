@@ -674,7 +674,7 @@ namespace CityWatch.RadioCheck.API
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // Adjust row height to fit image (approximate conversion)
-                    float rowHeight = image.Height * 0.75f;
+                    float rowHeight = image.Height * 0.78f;
                     worksheet.Row(imageRow).Height = rowHeight;
 
                     // Add picture to sheet 
@@ -684,13 +684,19 @@ namespace CityWatch.RadioCheck.API
                 }
             }
             else
-            {
-                worksheet.Cell(imageRow, startCol).Value = "No image";
+            {                
+                var noimageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
+                noimageCellRange.Merge().Value = "No image";
+                noimageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             }
 
             // Write caption in the row below image, merging the same column range
             var captionCellRange = worksheet.Range(captionRow, startCol, captionRow, endCol);
             captionCellRange.Merge().Value = caption;
+            // Enable text wrapping
+            captionCellRange.Style.Alignment.WrapText = true;
+            // Auto-adjust row height to fit content
+            worksheet.Row(captionRow).AdjustToContents();
             captionCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
