@@ -226,9 +226,13 @@ namespace CityWatch.Data
         public DbSet<UserDemo> UsersDemo{ get; set; }
         public DbSet<WorkOrder> WorkOrders { get; set; }
         public DbSet <LoginUserRCHistory> LoginUserRCHistory { get; set; }
+
         public DbSet<RCActionListMessages> RCActionListMessages { get; set; }
         public DbSet<RCActionListMessagesGuardLogs> RCActionListMessagesGuardLogs { get; set; }
         public DbSet<RCActionListMessagesClientsites> RCActionListMessagesClientsites { get; set; }
+
+
+        public DbSet<ClientSiteMobileAppSettings> ClientSiteMobileAppSettings { get; set; }
 
 
     }
