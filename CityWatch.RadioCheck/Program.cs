@@ -57,7 +57,8 @@ builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogReportGenerato
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogZipGenerator, CityWatch.RadioCheck.Services.GuardLogZipGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>(); 
+builder.Services.AddScoped<IPushNotificationServicecs, PushNotificationServicecs>();
 
 
 builder.Services.AddSession();

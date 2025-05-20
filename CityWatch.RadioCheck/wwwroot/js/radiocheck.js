@@ -9528,57 +9528,88 @@ function GetGuardRCLoginDetails(headerrow, dates) {
 }
 //p4-117-end
 $('#btnSendActionListLater').on('click', function () {
+    $('#MessageType').val('ActionList');
     $('#MessageSendTimeInfoModal').modal('show');
 });
-$('#btnSaveMessageTime').on('click', function () {
-    $(this).prop('disabled', true);
-    var messagetime = $('#txtSendMessageDate').val()
-    var clientSiteId = $('#dglClientSiteIdActionList2').val();
-    var Notifications = $('#txtMessageActionList').val();
-    var Subject = $('#txtGlobalNotificationSubject').val();
+function fillRefreshLocalTimeZoneDetailswithMessageTime(formData, modelname, isform) {
+    // for reference https://moment.github.io/luxon/#/
 
-    var ClientType = $('#dglClientTypeActionList2').val();
-    var ClientSite = $('#dglClientSiteIdActionList2').val();
-    var AlarmKeypadCode = $('#Site_Alarm_Keypad_code').val();
-    var Action1 = $('#Action1').val();
-    var Physicalkey = $('#site_Physical_key').val();
-    var Action2 = $('#Action2').val();
-    var SiteCombinationLook = $('#Site_Combination_Look').val();
-    var Action3 = $('#Action3').val();
-    var Action4 = $('#Action4').val();
-    var Action5 = $('#Action5').val();
-    var CommentsForControlRoomOperator = $('#txtComments').val();
+    const { DateTime } = luxon;
 
-    if (Notifications === '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
-        $(this).prop('disabled', false);
-    }
+    let inputVal = $('#txtSendMessageDate').val(); // e.g. "2025-05-16T14:30"
+    var DateTimenew = DateTime.fromISO(inputVal);
+    //var DateTime = luxon.DateTime;
+    var dt1 = DateTimenew.toLocal();
+    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+    let diffTZ = dt1.offset
+    //let tzshrtnm = dt1.offsetNameShort;
+    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
 
-    else if (chkClientType == true && ClientType == null) {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
-        $(this).prop('disabled', false);
-    }
-    else if (ClientType == '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
-        $(this).prop('disabled', false);
-    }
-    else if (ClientSite == '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
-        $(this).prop('disabled', false);
+    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+    if (isform) {
+        formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+        formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+        formData.append(modelname + ".EventDateTimeZone", tz);
+        formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+        formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
     }
     else {
+        formData.EventDateTimeLocal = eventDateTimeLocal;
+        formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        formData.EventDateTimeZone = tz;
+        formData.EventDateTimeZoneShort = tzshrtnm;
+        formData.EventDateTimeUtcOffsetMinute = diffTZ;
+    }
+}
+$('#btnSaveMessageTime').on('click', function () {
+    if ($('#MessageType').val() == 'ActionList') {
 
-        // Task p6#73_TimeZone issue -- added by Binoy - Start   
-        fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
-        // Task p6#73_TimeZone issue -- added by Binoy - End
-        $.ajax({
-            url: '/RadioCheckV2?handler=SaveActionListLater',
-            type: 'POST',
-            data: {
+
+        $(this).prop('disabled', true);
+        var messagetime = $('#txtSendMessageDate').val()
+        var clientSiteId = $('#dglClientSiteIdActionList2').val();
+        var Notifications = $('#txtMessageActionList').val();
+        var Subject = $('#txtGlobalNotificationSubject').val();
+
+        var ClientType = $('#dglClientTypeActionList2').val();
+        var ClientSite = $('#dglClientSiteIdActionList2').val();
+        var AlarmKeypadCode = $('#Site_Alarm_Keypad_code').val();
+        var Action1 = $('#Action1').val();
+        var Physicalkey = $('#site_Physical_key').val();
+        var Action2 = $('#Action2').val();
+        var SiteCombinationLook = $('#Site_Combination_Look').val();
+        var Action3 = $('#Action3').val();
+        var Action4 = $('#Action4').val();
+        var Action5 = $('#Action5').val();
+        var CommentsForControlRoomOperator = $('#txtComments').val();
+
+        if (Notifications === '') {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+            $(this).prop('disabled', false);
+        }
+
+        else if (chkClientType == true && ClientType == null) {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+            $(this).prop('disabled', false);
+        }
+        else if (ClientType == '') {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+            $(this).prop('disabled', false);
+        }
+        else if (ClientSite == '') {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+            $(this).prop('disabled', false);
+        }
+        else {
+
+            // Task p6#73_TimeZone issue -- added by Binoy - Start   
+            fillRefreshLocalTimeZoneDetailswithMessageTime(tmzdata, "", false);
+            // Task p6#73_TimeZone issue -- added by Binoy - End
+            var objforMessage = {
+                Id: 0,
                 Notifications: Notifications,
                 Subject: Subject,
-                ClientType: ClientType,
-                clientSiteId: clientSiteId,
                 AlarmKeypadCode: AlarmKeypadCode,
                 Action1: Action1,
                 Physicalkey: Physicalkey,
@@ -9588,23 +9619,138 @@ $('#btnSaveMessageTime').on('click', function () {
                 Action4: Action4,
                 Action5: Action5,
                 CommentsForControlRoomOperator: CommentsForControlRoomOperator,
-                tmzdata: tmzdata,
-                messagetime: messagetime
-            },
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            if (data.success == true) {
-                $(this).prop('disabled', false);
-                $('#pushNoTificationsControlRoomModal').modal('hide');
-                $('#Access_permission_RC_status').hide();
+
+                messagetime: messagetime,
+                IsDeleted: false
             }
-            else {
-                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-                $(this).prop('disabled', false);
+            var objGuardLogs = {
+                Id: 0,
+                GuardId: 0,
+                RCActionListMessagesId: 0,
+                EventDateTimeLocal: tmzdata.EventDateTimeLocal,
+                EventDateTime: tmzdata.EventDateTime,
+                EventDateTimeLocalWithOffset: tmzdata.EventDateTimeLocalWithOffset,
+                EventDateTimeZone: tmzdata.EventDateTimeZone,
+                EventDateTimeZoneShort: tmzdata.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute: tmzdata.EventDateTimeUtcOffsetMinute
             }
-            //$('#selectRadioStatus').val('');
-            //$('#btnRefreshActivityStatus').trigger('click');
-        });
+
+            $.ajax({
+                url: '/RadioCheckV2?handler=SaveActionListLater',
+                type: 'POST',
+                data: {
+                    objforMessage: objforMessage,
+                    ClientType: ClientType,
+                    clientSiteId: clientSiteId,
+
+                    objGuardLogs: objGuardLogs
+                },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success == true) {
+                    $('#MessageSendTimeInfoModal').modal('hide');
+                    $('#pushNoTificationsControlRoomModal').modal('hide');
+                    alert(data.message)
+                    $(this).prop('disabled', false);
+
+                }
+                else {
+                    displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                    $(this).prop('disabled', false);
+                }
+                //$('#selectRadioStatus').val('');
+                //$('#btnRefreshActivityStatus').trigger('click');
+            });
+        }
+    }
+    else {
+        $(this).prop('disabled', true);
+        var messagetime = $('#txtSendMessageDate').val()
+        const checkedState = $('#chkSiteState').is(':checked');
+        const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+        const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+        const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+        var clientSiteId = $('#dglClientSiteId').val();
+        var Notifications = $('#txtGlobalNotificationMessage').val();
+        var Subject = $('#txtGlobalNotificationSubject').val();
+        var State = $('#State1').val();
+        var ClientType = $('#dglClientType').val();
+        const chkClientType = $('#chkClientType').is(':checked');
+        const chkNationality = $('#chkNationality').is(':checked');
+        const chkGlobalPersonalEmail = $('#chkGlobalPersonalEmail').is(':checked');
+        if (Notifications === '') {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+            $(this).prop('disabled', false);
+        }
+        else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false && chkGlobalPersonalEmail == false) {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+            $(this).prop('disabled', false);
+        }
+        else if (chkClientType == true && ClientType == null) {
+            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+            $(this).prop('disabled', false);
+        }
+        else {
+
+            $('#Access_permission_RC_status').hide();
+            $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
+            // Task p6#73_TimeZone issue -- added by Binoy - Start   
+            fillRefreshLocalTimeZoneDetailswithMessageTime(tmzdata, "", false);
+            // Task p6#73_TimeZone issue -- added by Binoy - End
+            var objGuardLogs = {
+                Id: 0,
+                GuardId: 0,
+                RCActionListMessagesId: 0,
+                EventDateTimeLocal: tmzdata.EventDateTimeLocal,
+                EventDateTime: tmzdata.EventDateTime,
+                EventDateTimeLocalWithOffset: tmzdata.EventDateTimeLocalWithOffset,
+                EventDateTimeZone: tmzdata.EventDateTimeZone,
+                EventDateTimeZoneShort: tmzdata.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute: tmzdata.EventDateTimeUtcOffsetMinute
+            }
+            $.ajax({
+                url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessagesLater',
+                type: 'POST',
+                data: {
+                    checkedState: checkedState,
+                    State: State,
+                    Notifications: Notifications,
+                    Subject: Subject,
+                    chkClientType: chkClientType,
+                    ClientType: ClientType,
+                    chkNationality: chkNationality,
+                    checkedSMSPersonal: checkedSMSPersonal,
+                    checkedSMSSmartWand: checkedSMSSmartWand,
+                    chkGlobalPersonalEmail: chkGlobalPersonalEmail,
+                    clientSiteId: clientSiteId,
+                    objGuardLogs: objGuardLogs,
+                    messagetime: messagetime
+                },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success == true) {
+                    $('#MessageSendTimeInfoModal').modal('hide');
+                    $('#pushNoTificationsControlRoomModal').modal('hide');
+                    $(this).prop('disabled', false);
+                    $('#Access_permission_RC_status').hide();
+                }
+                else {
+                    displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                    $(this).prop('disabled', false);
+                }
+                //$('#selectRadioStatus').val('');
+                //$('#btnRefreshActivityStatus').trigger('click');
+            });
+        }
     }
 });
+$('#btnSendGlabalNotificationMessageLater').on('click', function () {
+    $('#MessageType').val('GlobalList');
+    $('#MessageSendTimeInfoModal').modal('show');
+});
+$('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
+    $('#btnSaveMessageTime').prop('disabled', false);
+    $('#txtSendMessageDate').val('');
+    });

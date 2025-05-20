@@ -2652,73 +2652,41 @@ namespace CityWatch.RadioCheck.Pages.Radio
             
             return new JsonResult(data);
         }
-        public JsonResult OnPostSaveActionListLater(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode,
-            string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5,
-            string CommentsForControlRoomOperator, GuardLog tmzdata)
+        public JsonResult OnPostSaveActionListLater(RCActionListMessages objforMessage,  int[] ClientType, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs)
         {
             var success = true;
-            var message = "success";
-            //Coomented  as per the client request 07062024
-            //var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-            //       (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
-            //       (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-            //       (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
-            //       (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
-            //      (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
-            //       (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
-            //       (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
-            //       (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
-            //       (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
-
-
-            var ActionListMessage = (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications);
+            var message = "Success";
+            
             try
             {
 
+                objGuardLogs.GuardId= HttpContext.Session.GetInt32("GuardId") ?? 0;
 
                 if (clientSiteId.Length == 0)
                 {
                     //var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x => x.Name).FirstOrDefault();
 
-                    var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
-                    foreach (var clientSiteTypeID in clientSitesClientType)
-                    {
+                     clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x=>x.Id).ToArray();
 
-                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
-
-
-                    }
-                    /* log book entry to citywtch control room */
-                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0, tmzdata);
-                    foreach (var clientSiteTypeID in clientSitesClientType)
-                    {
-                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
-                    }
+                  
 
                 }
-                else
+                objforMessage.IsState = false;
+                objforMessage.IsNational = false;
+                objforMessage.IsClientType = false;
+                objforMessage.IsSMSPersonal = false;
+                objforMessage.IsSMSSmartWand = false;
+                objforMessage.IsPersonalEmail = false;
+
+                int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+                if (id != 0)
                 {
-                    var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => clientSiteId.Contains(x.Id));
-                    foreach (var clientSiteTypeID in clientSitesClientType)
-                    {
-
-                        //LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
-                        var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteTypeID.Id).Select(x => x.Name).FirstOrDefault();
-
-                        LogBookDetailsMsg(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata, clientsitename);
-                    }
-                    /* log book entry to citywtch control room */
-                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    var clientsitenameActionList = _guardLogDataProvider.GetClientSites(clientSiteId[0]).Select(x => x.Name).FirstOrDefault();
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessagesActionList(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata, clientsitenameActionList);
-                    foreach (var clientSiteTypeID in clientSitesClientType)
-                    {
-                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
-                    }
-
+                    
+                    _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
+                    objGuardLogs.RCActionListMessagesId = id;
+                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
                 }
-
 
 
 
@@ -2731,5 +2699,72 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostSaveGlobalNotificationTestMessagesLater(bool checkedState, string state, string Notifications, string Subject,
+           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime messagetime)
+        {
+            var success = true;
+            var message = "success";
+
+
+            try
+            {
+                if (checkedState == true)
+                {
+                    clientSiteId = _guardLogDataProvider.GetClientSitesForState(state).Select(x => x.Id).ToArray();
+                   
+
+                }
+                if (chkClientType == true)
+                {
+                    if (clientSiteId.Length == 0)
+                    {
+
+                        clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x => x.Id).ToArray();
+                        
+
+                    }
+                   
+                }
+                if (chkNationality == true)
+                {
+                    clientSiteId = _guardLogDataProvider.GetAllClientSites().Select(x => x.Id).ToArray();
+
+
+                }
+                RCActionListMessages objforMessage = new RCActionListMessages();
+                objforMessage.Id = 0;
+                objforMessage.Notifications = Notifications ;
+                objforMessage.Subject = Subject;
+                objforMessage.IsState = checkedState;
+                objforMessage.IsNational = chkNationality;
+                objforMessage.IsClientType = chkClientType;
+                objforMessage.IsSMSPersonal = checkedSMSPersonal;
+                objforMessage.IsSMSSmartWand = checkedSMSSmartWand;
+                objforMessage.IsPersonalEmail = chkGlobalPersonalEmail;
+                objforMessage.messagetime = messagetime;
+                objforMessage.IsDeleted = false;
+                objGuardLogs.GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+                if (id != 0)
+                {
+
+                    _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
+                    objGuardLogs.RCActionListMessagesId = id;
+                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    objGuardLogs.RemoteIPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+
+
     }
 }

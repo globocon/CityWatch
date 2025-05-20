@@ -31,6 +31,8 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
+using static iText.IO.Util.IntHashtable;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace CityWatch.Data.Providers
@@ -370,7 +372,15 @@ namespace CityWatch.Data.Providers
         public List<DuressAppField> GetDuressAppFields(int typeId);
         public void DeleteGuardCourseByAdmin(int Id);
         List<GuardRCLoginDetail> GetGuardRCLoginDetails();
-
+        int SaveRCActionListMessages(RCActionListMessages rcActionListMessages);
+        void SaveRCActionListMessagesClientSites(int id, int[] clientsiteids);
+        void SaveRCActionListMessagesGuardLogs(RCActionListMessagesGuardLogs objGuardLogs);
+        List<RCActionListMessages> GetRCActionListMessages();
+        List<RCActionListMessagesClientsites> GetRCActionListMessagesClientsites();
+        List<RCActionListMessagesGuardLogs> GetRCActionListMessagesGuardLogs();
+        void UpdateRCActionListMessagesClientSites(int id);
+        void UpdateRCActionListMessages(int id);
+        List<ClientSiteLogBook> GetClientSiteLogBooks(int clientsiteId, LogBookType type, DateTime logbookDate);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6675,6 +6685,114 @@ namespace CityWatch.Data.Providers
 
             return guardDetails;
         }
+        public int SaveRCActionListMessages(RCActionListMessages rcActionListMessages)
+        {
+
+            if (rcActionListMessages.Id == 0)
+            {
+                rcActionListMessages.Id = 0;
+
+                _context.RCActionListMessages.Add(rcActionListMessages);
+            }
+            
+
+            _context.SaveChanges();
+
+
+
+
+            return rcActionListMessages.Id;
+        }
+        public void SaveRCActionListMessagesClientSites(int id, int[] clientsiteids)
+        {
+
+            
+            RCActionListMessagesClientsites rcActionListMessagesClientsites = new RCActionListMessagesClientsites();
+            foreach (var item in clientsiteids)
+            {
+                rcActionListMessagesClientsites.Id = 0;
+                rcActionListMessagesClientsites.RCActionListMessagesId = id;
+                rcActionListMessagesClientsites.ClientSiteId = item;
+                rcActionListMessagesClientsites.IsDeleted = false;
+                _context.RCActionListMessagesClientsites.Add(rcActionListMessagesClientsites);
+                _context.SaveChanges();
+            }
+
+        }
+        public void SaveRCActionListMessagesGuardLogs(RCActionListMessagesGuardLogs objGuardLogs)
+
+        {
+
+
+            if (objGuardLogs.Id == 0)
+            {
+                //_context.RCActionListMessagesGuardLogs.Add(objGuardLogs);
+                _context.RCActionListMessagesGuardLogs.Add(new RCActionListMessagesGuardLogs()
+                {
+
+                    EventDateTime = DateTime.Now,
+
+                    EventDateTimeLocal = objGuardLogs.EventDateTimeLocal,
+                    EventDateTimeLocalWithOffset = objGuardLogs.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = objGuardLogs.EventDateTimeZone,
+                    EventDateTimeZoneShort = objGuardLogs.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = objGuardLogs.EventDateTimeUtcOffsetMinute,
+
+                    GuardId = objGuardLogs.GuardId,
+                    RCActionListMessagesId = objGuardLogs.RCActionListMessagesId,
+                    IsDeleted = false
+
+                });
+            }
+                _context.SaveChanges();
+            
+
+        }
+
+        public List<RCActionListMessages> GetRCActionListMessages()
+        {
+            var list = _context.RCActionListMessages.Where(x => x.IsDeleted == false ).ToList();
+            return list;
+        }
+        public List<RCActionListMessagesClientsites> GetRCActionListMessagesClientsites()
+        {
+            var list = _context.RCActionListMessagesClientsites.Where(x => x.IsDeleted == false).ToList();
+            return list;
+        }
+        public List<RCActionListMessagesGuardLogs> GetRCActionListMessagesGuardLogs()
+        {
+            var list = _context.RCActionListMessagesGuardLogs.Where(x => x.IsDeleted == false).ToList();
+            return list;
+        }
+        public void UpdateRCActionListMessagesClientSites(int id)
+        {
+
+
+            var rcActionListMessagesClientsites = _context.RCActionListMessagesClientsites.SingleOrDefault(x => x.Id == id);
+
+            rcActionListMessagesClientsites.IsDeleted = true;
+            _context.SaveChanges();
+            
+
+        }
+        
+        public void UpdateRCActionListMessages(int id)
+        {
+
+
+            var rcActionListMessages = _context.RCActionListMessages.SingleOrDefault(x => x.Id == id);
+
+            rcActionListMessages.IsDeleted = true;
+            _context.SaveChanges();
+
+
+        }
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientsiteId, LogBookType type,  DateTime logbookDate)
+        {
+            var lbid = _context.ClientSiteLogBooks.Where(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == logbookDate).ToList();
+            return lbid;
+        }
+
 
     }
 
