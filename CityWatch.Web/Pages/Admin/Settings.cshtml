@@ -824,6 +824,9 @@
                     <li class="nav-item">
                         <a class="nav-link" id="DefaultMail-tab" data-toggle="tab" href="#defaultMailbox" role="tab" aria-controls="defaultMailbox" aria-selected="false">Default Mailbox</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="API-tab" data-toggle="tab" href="#apisettings" role="tab" aria-controls="apisettings" aria-selected="false">API</a>
+                    </li>
 
                 </ul>
                 <div class="tab-content" id="coreSettingsTabContent">
@@ -885,15 +888,10 @@
                                 <div class="col-md-4">
                                     <input type="text" id="txt_LogoHyplerLink" class="form-control" />
                                 </div>
-                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                               @*  <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
                                 <div class="col-md-4">
                                     <input type="text" id="txt_APIProvider" class="form-control" />
-                                </div>
-                            </div>
-
-
-                            @*for logo in report-start*@
-                            <div class="form-group row">
+                                </div> *@
                                 <label class="col-form-label col-md-2">Report Logo</label>
                                 <div class="col-md-4">
                                     <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
@@ -910,11 +908,32 @@
                                     </label>
                                 </div>
 
-                                <label class="col-form-label col-md-2">API secret key</label>
+                            </div>
+
+
+                            @*for logo in report-start*@
+                            @* <div class="form-group row">
+                                <label class="col-form-label col-md-2">Report Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank"> *@
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        @* <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" /> *@
+                                   @*  </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_reportlogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+ *@
+                               @*  <label class="col-form-label col-md-2">API secret key</label>
                                 <div class="col-md-4">
                                     <input type="text" id="txt_APIsecretkey" class="form-control" />
                                 </div>
-                            </div>
+                            </div> *@
                             @*for logo in report-end*@
                             <div class="form-group row">
                                 @*  <label class="col-form-label col-md-2">Home Page Message</label>
@@ -964,7 +983,7 @@
                             </div>
                             <div class="form-group row">
                                 <label class="col-form-label col-md-2">Software License</label>
-                                <div class="col-md-2">
+                                <div class="col-md-2 pt-2">
                                     <select id="drp_swlicense" disabled="disabled">
                                         <option value="1">Gold</option>
                                         <option value="2">Silver</option>
@@ -973,7 +992,7 @@
 
                                 </div>
                                 <label class="col-form-label col-md-2">Type</label>
-                                <div class="col-md-2">
+                                <div class="col-md-2 pt-2">
                                     <select id="drp_type" disabled="disabled">
                                         <option value="1">Annual</option>
                                         <option value="2">Monthly</option>
@@ -982,7 +1001,7 @@
 
                                 </div>
                                 <label class="col-form-label col-md-2">Expires</label>
-                                <div class="col-md-2">
+                                <div class="col-md-2 pt-2">
                                     <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
 
                                 </div>
@@ -1025,6 +1044,42 @@
                             <div class="form-group row">
                                 <div class="col-md-10">
                                     <button class="btn btn-success" id="btn_CompanyMailSave">Save</button>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade py-3" id="apisettings" role="tabpanel" aria-labelledby="API-tab">
+                        <form>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIProvider" class="form-control" />
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">API secret key</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2 pr-0">API Provider (Ai for IR)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIProviderForIR" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">API secret key</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIsecretkeyForIR" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-10">
+                                    <button class="btn btn-success" id="btn_CompanyAPISave">Save</button>
                                 </div>
 
                             </div>

@@ -266,6 +266,7 @@ namespace CityWatch.Data.Providers
         public string GetGuardLicenseState(int GuardID);
         public string GetGuardCRMSupplier(int GuardID);
         public GuardLog GetGuardLogs(int Id);
+        void SaveCompanyAPIDetails(CompanyDetails companyDetails);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1008,6 +1009,8 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.ApiProvider = companyDetails.ApiProvider;
                     templateToUpdate.ApiSecretkey = companyDetails.ApiSecretkey;
                     //p1-225 Core Settings-end
+                    templateToUpdate.ApiProviderIR = companyDetails.ApiProviderIR;
+                    templateToUpdate.ApiSecretkeyIR = companyDetails.ApiSecretkeyIR;
                 }
 
             }
@@ -3469,6 +3472,23 @@ namespace CityWatch.Data.Providers
             return _context.KPITelematicsField
                 .Where(x => ids.Contains(x.Id))
                 .ToList();
+        }
+        public void SaveCompanyAPIDetails(CompanyDetails companyDetails)
+        {
+            if (companyDetails.Id != 0)
+            {
+                var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
+                if (templateToUpdate != null)
+                {
+                    templateToUpdate.ApiProvider = companyDetails.ApiProvider;
+                    templateToUpdate.ApiSecretkey = companyDetails.ApiSecretkey;
+                    templateToUpdate.ApiProviderIR = companyDetails.ApiProviderIR;
+                    templateToUpdate.ApiSecretkeyIR = companyDetails.ApiSecretkeyIR;
+
+                }
+            }
+
+            _context.SaveChanges();
         }
     }
 

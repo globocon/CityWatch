@@ -620,7 +620,9 @@ namespace CityWatch.Web.Services
                     company.IRMail,
                     company.KPIMail,
                     company.FusionMail,
-                    company.TimesheetsMail
+                    company.TimesheetsMail,
+                    company.ApiProviderIR,
+                    company.ApiSecretkeyIR
 
 
                 });

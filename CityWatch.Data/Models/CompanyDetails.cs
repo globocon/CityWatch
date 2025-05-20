@@ -49,5 +49,7 @@ namespace CityWatch.Data.Models
         public string KPIMail { get; set; }
         public string FusionMail { get; set; }
         public string TimesheetsMail { get; set; }
+        public string ApiProviderIR { get; set; }
+        public string ApiSecretkeyIR { get; set; }
     }
 }
