@@ -338,7 +338,7 @@ namespace CityWatch.Data.Models
         [Display(Name = "")]
         public bool DropboxScheduleisActive { get; set; } = true;
 
-        [ForeignKey("ClientSiteId")]
+        [NotMapped]
         public ClientSiteMobileAppSettings clientSiteMobileAppSettings { get; set; }
 
     }
