@@ -128,7 +128,8 @@ namespace CityWatch.Web.Services
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" });
             // Retrieve and filter the log books to upload only once.
-            var yesterday = DateTime.Now.AddDays(-1).Date;
+            //var yesterday = DateTime.Now.AddDays(-1).Date;
+            var yesterday = DateTime.Now.AddDays(-5).Date;
             var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
             .Where(z =>
                 (z.ClientSite.UploadGuardLog || z.ClientSite.UploadFusionLog) // OR condition
