@@ -2652,5 +2652,119 @@ namespace CityWatch.RadioCheck.Pages.Radio
             
             return new JsonResult(data);
         }
+        public JsonResult OnPostSaveActionListLater(RCActionListMessages objforMessage,  int[] ClientType, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs)
+        {
+            var success = true;
+            var message = "Success";
+            
+            try
+            {
+
+                objGuardLogs.GuardId= HttpContext.Session.GetInt32("GuardId") ?? 0;
+
+                if (clientSiteId.Length == 0)
+                {
+                    //var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x => x.Name).FirstOrDefault();
+
+                     clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x=>x.Id).ToArray();
+
+                  
+
+                }
+                objforMessage.IsState = false;
+                objforMessage.IsNational = false;
+                objforMessage.IsClientType = false;
+                objforMessage.IsSMSPersonal = false;
+                objforMessage.IsSMSSmartWand = false;
+                objforMessage.IsPersonalEmail = false;
+
+                int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+                if (id != 0)
+                {
+                    
+                    _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
+                    objGuardLogs.RCActionListMessagesId = id;
+                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
+                }
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostSaveGlobalNotificationTestMessagesLater(bool checkedState, string state, string Notifications, string Subject,
+           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime messagetime)
+        {
+            var success = true;
+            var message = "success";
+
+
+            try
+            {
+                if (checkedState == true)
+                {
+                    clientSiteId = _guardLogDataProvider.GetClientSitesForState(state).Select(x => x.Id).ToArray();
+                   
+
+                }
+                if (chkClientType == true)
+                {
+                    if (clientSiteId.Length == 0)
+                    {
+
+                        clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x => x.Id).ToArray();
+                        
+
+                    }
+                   
+                }
+                if (chkNationality == true)
+                {
+                    clientSiteId = _guardLogDataProvider.GetAllClientSites().Select(x => x.Id).ToArray();
+
+
+                }
+                RCActionListMessages objforMessage = new RCActionListMessages();
+                objforMessage.Id = 0;
+                objforMessage.Notifications = Notifications ;
+                objforMessage.Subject = Subject;
+                objforMessage.IsState = checkedState;
+                objforMessage.IsNational = chkNationality;
+                objforMessage.IsClientType = chkClientType;
+                objforMessage.IsSMSPersonal = checkedSMSPersonal;
+                objforMessage.IsSMSSmartWand = checkedSMSSmartWand;
+                objforMessage.IsPersonalEmail = chkGlobalPersonalEmail;
+                objforMessage.messagetime = messagetime;
+                objforMessage.IsDeleted = false;
+                objGuardLogs.GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+                if (id != 0)
+                {
+
+                    _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
+                    objGuardLogs.RCActionListMessagesId = id;
+                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    objGuardLogs.RemoteIPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+
+
     }
 }
