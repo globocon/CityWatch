@@ -170,9 +170,11 @@ namespace CityWatch.Web.Services
         public List<DropdownItem> GetUserClientTypesWithId(int? userId);
         public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
 
-        public List<DropdownItem> GetDressAppFields(int type);
+        public List<ActivityModel> GetDressAppFields(int type);
 
         public List<Mp3File> GetDressAppFieldsAudio(int type);
+
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -2170,15 +2172,16 @@ namespace CityWatch.Web.Services
             return items;
         }
 
-        public List<DropdownItem> GetDressAppFields(int type)
+        public List<ActivityModel> GetDressAppFields(int type)
         {
             var hrGroups = _guardLogDataProvider.GetDuressAppFields(type);
 
             // Convert the list of DuressAppField to DropdownItem
-            return hrGroups.Select(x => new DropdownItem
+            return hrGroups.Select(x => new ActivityModel
             {
                 Id = x.Id,
-                Name = x.Name // Assuming DuressAppField has a 'Name' property
+                Name = x.Name ,
+                Label=x.Label
             }).ToList();
         }
 
@@ -2273,7 +2276,10 @@ namespace CityWatch.Web.Services
         }
 
 
-
+        public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
+        {
+            return _configDataProvider.GetCrowdSettingForSite(siteId);
+        }
 
 
 
@@ -2293,6 +2299,15 @@ namespace CityWatch.Web.Services
         public int Id { get; set; }
         public string Name { get; set; }
     }
+
+    public class ActivityModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public string Label { get; set; }
+    }
+
     public class Mp3File
     {
         public string Label { get; set; }

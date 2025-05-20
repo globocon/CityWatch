@@ -1,4 +1,6 @@
-﻿using ClosedXML.Excel;
+﻿using CityWatch.RadioCheck.Helpers;
+using ClosedXML.Excel;
+using ClosedXML.Excel.Drawings;
 using Dropbox.Api.FileProperties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -6,12 +8,18 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Data;
+using DocumentFormat.OpenXml.Wordprocessing;
+using CityWatch.RadioCheck.Models;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -131,6 +139,8 @@ namespace CityWatch.RadioCheck.API
         private readonly IConfiguration _configuration;
         private string templateFileName;
         private string jsonMappingFile;
+        private string jsonImageToFolderMappingFile;
+        private string uploadFolder;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
         //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
         public WebhookController(IConfiguration configuration)
@@ -139,6 +149,8 @@ namespace CityWatch.RadioCheck.API
             _configuration = configuration;
             templateFileName = "Template.xlsx";
             jsonMappingFile = "form_fields_mapping.json";
+            jsonImageToFolderMappingFile = "image_folder_mapping.json";
+            uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform");
         }
 
         [HttpPost("jotform")]
@@ -179,14 +191,14 @@ namespace CityWatch.RadioCheck.API
                 string formName = await GetFormNameFromJotForm(formID);
                 //string workOrder = webhookData != null && webhookData.ContainsKey("q3_workOrder") ? webhookData["q3_workOrder"].ToString() : "UnknownWorkOrder";
                 string workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
-                string submissionFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName, workOrder);
-                string templateFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", formName);
+                string submissionFolder = Path.Combine(uploadFolder, formName, workOrder);
+                string templateFolder = Path.Combine(uploadFolder, formName);
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
                 string logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(submissionFolder, "webhook_data.xlsx");
+                string excelFilePath = Path.Combine(submissionFolder, $"{formName}_{workOrder}_Output_data.xlsx");
                 string jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
@@ -195,19 +207,22 @@ namespace CityWatch.RadioCheck.API
                 if (webhookData != null)
                 {
                     await DownloadAllFiles(webhookData, submissionFolder, logFilePath);
+                    // Save JSON to a file
+                    string jsonOutput = GetImageNamesAndCaptionsJson(webhookData, logFilePath);
+                    await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
+                    // Compress image files
+                    ImageZipper.CreateImageZip(submissionFolder, $"{submissionFolder}\\Compressed_Images", $"{workOrder}_images.zip");
                     if (DoesTemplateExists(templateFolder))
                     {
                         //CreateExcelInTemplateFormat(excelFilePath, webhookData);
                         UpdateTemplateUsingJsonMapping(templateFolder, excelFilePath, webhookData);
+                        //insert images in the excel file.
+                        CheckAndInsertImageInExcel(templateFolder, excelFilePath, workOrder, "image_captions.json");
                     }
                     else
                     {
                         AppendToExcel(excelFilePath, webhookData);
                     }
-                    
-                    // Save JSON to a file
-                    string jsonOutput = GetImageNamesAndCaptionsJson(webhookData, logFilePath);
-                    await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
                 }
 
                 return Ok(new { message = $"Webhook received. Files saved in uploads/jotform/{formName}/{workOrder}/" });
@@ -242,46 +257,7 @@ namespace CityWatch.RadioCheck.API
                 return "UnknownForm";
             }
         }
-
-
-        //private async Task DownloadAllFiles(Dictionary<string, object> webhookData, string saveDirectory, string logFilePath)
-        //{
-        //    foreach (var key in webhookData.Keys)
-        //    {
-        //        if (webhookData[key] is JArray fileArray)
-        //        {
-        //            var fileUrls = fileArray.ToObject<List<string>>();
-        //            foreach (var fileUrl in fileUrls)
-        //            {
-        //                if (Uri.IsWellFormedUriString(fileUrl, UriKind.Absolute))
-        //                {
-        //                    await DownloadAndSaveFile(fileUrl, saveDirectory, logFilePath);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-
-        //private async Task DownloadAllFiles(Dictionary<string, object> webhookData, string saveDirectory, string logFilePath)
-        //{
-        //    foreach (var entry in webhookData)
-        //    {
-        //        if (entry.Value is JArray fileArray) // Check if value is a JArray (list of URLs)
-        //        {
-        //            await ProcessFileArray(fileArray, saveDirectory, logFilePath);
-        //        }
-        //        else if (entry.Value is JObject nestedObject) // Check for nested JSON objects
-        //        {
-        //            await DownloadAllFiles(nestedObject.ToObject<Dictionary<string, object>>(), saveDirectory, logFilePath);
-        //        }
-        //        else if (entry.Value is Dictionary<string, object> nestedDict) // Check for nested Dictionary
-        //        {
-        //            await DownloadAllFiles(nestedDict, saveDirectory, logFilePath);
-        //        }
-        //    }
-        //}
-
+                       
         private async Task DownloadAllFiles(Dictionary<string, object> webhookData, string saveDirectory, string logFilePath)
         {
             foreach (var entry in webhookData)
@@ -311,27 +287,7 @@ namespace CityWatch.RadioCheck.API
                 }
             }
         }
-
-        /// <summary>
-        /// Old Code its working but replace to handle the file url 
-        /// </summary>
-        /// <param name="fileArray"></param>
-        /// <param name="saveDirectory"></param>
-        /// <param name="logFilePath"></param>
-        /// <returns></returns>
-        //private async Task ProcessFileArray(JArray fileArray, string saveDirectory, string logFilePath)
-        //{
-        //    var fileUrls = fileArray.ToObject<List<string>>();
-        //    foreach (var fileUrl in fileUrls)
-        //    {
-        //        if (Uri.IsWellFormedUriString(fileUrl, UriKind.Absolute))
-        //        {
-        //            await DownloadAndSaveFile(fileUrl, saveDirectory, logFilePath);
-        //        }
-        //    }
-        //}
-
-
+                
         private async Task ProcessFileArray(JArray fileArray, string saveDirectory, string logFilePath)
         {
             var fileUrls = fileArray.ToObject<List<string>>();
@@ -426,45 +382,6 @@ namespace CityWatch.RadioCheck.API
         }
 
 
-        private void CreateExcelInTemplateFormat(string excelFilePath, Dictionary<string, object> webhookData)
-        {
-            bool fileExists = System.IO.File.Exists(excelFilePath);
-            using (var workbook = fileExists ? new XLWorkbook(excelFilePath) : new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("WebhookData");
-
-                // Determine the last used row (or set to 1 if empty)
-                int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-
-                // If file does not exist, write the headers
-                if (!fileExists)
-                {
-                    int colIndex = 1;
-                    foreach (var key in webhookData.Keys)
-                    {
-                        worksheet.Cell(1, colIndex).Value = key;
-                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
-                        colIndex++;
-                    }
-                }
-
-                // Append the new data row
-                int newRow = lastUsedRow + 1;
-                int col = 1;
-                foreach (var value in webhookData.Values)
-                {
-                    worksheet.Cell(newRow, col).Value = value?.ToString();
-                    col++;
-                }
-
-                // Auto-fit columns for better readability
-                worksheet.Columns().AdjustToContents();
-
-                // Save the workbook
-                workbook.SaveAs(excelFilePath);
-            }
-        }
-
         private void UpdateTemplateUsingJsonMapping(string TemplateFolder, string excelFilePath, Dictionary<string, object> webhookData)
         {
             // Load field mappings: ExcelHeader -> WebhookDataKey
@@ -521,94 +438,10 @@ namespace CityWatch.RadioCheck.API
 
                     col++;
                 }
-                                
+
                 workbook.Save();
             }
         }
-
-
-
-        //public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
-        //{
-        //    var imagesWithCaptions = new List<object>();
-
-        //    try
-        //    {
-        //        System.IO.File.AppendAllText(logFilePath, "Processing Webhook Data...\n");
-
-        //        foreach (var kvp in webhookData)
-        //        {
-        //            System.IO.File.AppendAllText(logFilePath, $"Processing key: {kvp.Key}\n");
-
-        //            if (kvp.Key.Contains("_Photo") && kvp.Value is object value)
-        //            {
-        //                if (value is JArray array) // If multiple images exist
-        //                {
-        //                    int index = 1;
-        //                    foreach (var item in array)
-        //                    {
-        //                        string imageUrl = item.ToString();
-        //                        string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
-
-        //                        // Find the matching caption key
-        //                        string captionKey = FindMatchingCaptionKey(webhookData, index, logFilePath);
-        //                        string caption = webhookData.ContainsKey(captionKey) ? webhookData[captionKey].ToString() : "No caption";
-
-        //                        // Log the caption status
-        //                        System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
-
-        //                        imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
-        //                        index++;
-        //                    }
-        //                }
-        //                else if (value is string imageUrl) // If a single image exists
-        //                {
-        //                    string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
-
-        //                    // Find the matching caption key
-        //                    string captionKey = FindMatchingCaptionKey(webhookData, 1, logFilePath); // Use index 1 for the first image
-        //                    string caption = webhookData.ContainsKey(captionKey) ? webhookData[captionKey].ToString() : "No caption";
-
-        //                    // Log the caption status
-        //                    System.IO.File.AppendAllText(logFilePath, $"Image: {imageName}, Caption Key: {captionKey}, Caption: {caption}\n");
-
-        //                    imagesWithCaptions.Add(new { ImageName = imageName, Caption = caption });
-        //                }
-        //            }
-        //        }
-
-        //        string jsonOutput = JsonConvert.SerializeObject(imagesWithCaptions, Formatting.Indented);
-        //        System.IO.File.AppendAllText(logFilePath, "Final JSON Output:\n" + jsonOutput + "\n");
-
-        //        return jsonOutput;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.IO.File.AppendAllText(logFilePath, "Error: " + ex.Message + "\n");
-        //        return "Error occurred. Check log file.";
-        //    }
-        //}
-        //private string FindMatchingCaptionKey(Dictionary<string, object> webhookData, int photoIndex, string logFilePath)
-        //{
-        //    // Construct the caption key based on the index
-        //    string captionKey = $"_photoCaption{photoIndex}";
-
-        //    // Log the key checking process
-        //    System.IO.File.AppendAllText(logFilePath, $"Checking Caption Key: {captionKey}\n");
-
-        //    // Iterate over each key in the webhookData
-        //    foreach (var key in webhookData.Keys)
-        //    {
-        //        // Check if the key ends with the constructed captionKey (suffix match)
-        //        if (key.EndsWith(captionKey, StringComparison.OrdinalIgnoreCase))
-        //        {
-        //            return key;  // Return the valid caption key
-        //        }
-        //    }
-
-        //    // Return null if no matching key found
-        //    return null;
-        //}
 
 
         public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
@@ -712,6 +545,181 @@ namespace CityWatch.RadioCheck.API
                 return false;
             }
             return true;
+        }
+
+        private void CheckAndInsertImageInExcel(string TemplateFolder, string excelFilePath, string workOrderId,string image_captions_List_jsonFileName)
+        {
+            string jsonImageMappingFileWithPath = Path.Combine(TemplateFolder, jsonImageToFolderMappingFile);
+            if (!System.IO.File.Exists(jsonImageMappingFileWithPath))
+                return;
+
+            using (var workbook = new XLWorkbook(excelFilePath))
+            {
+                var worksheet = workbook.Worksheet("Result");
+                var mappingJson = System.IO.File.ReadAllText(jsonImageMappingFileWithPath);
+                var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
+                string startColumnLetter = "C";
+                string endColumnLetter = "AC";
+                foreach (var kvp in fieldMappings)
+                {
+                    string _Headingkey = kvp.Key;
+                    string _Foldervalue = kvp.Value;
+
+                    // write the heading to the cell (heading) and border it
+                    int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+                    int headingRow = lastUsedRow + 1;
+
+                    // Get starting and ending column numbers from letters
+                    int startCol = XLHelper.GetColumnNumberFromLetter(startColumnLetter);
+                    int endCol = XLHelper.GetColumnNumberFromLetter(endColumnLetter);
+
+                    //worksheet.Cell(headingRow, 3).Value = _Headingkey;
+                    var headerCellRange = worksheet.Range(headingRow, startCol, headingRow, endCol);
+                    headerCellRange.Merge().Value = _Headingkey;
+                    // Apply borders on all sides
+                    headerCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    headerCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    headerCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    headerCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    headerCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    headerCellRange.Style.Font.Bold = true;
+
+                    // read json file for image and caption from the folder in value
+                    string _folderToSearchImage = Path.Combine(uploadFolder, _Foldervalue, workOrderId);
+                    string _file_image_caption = Path.Combine(_folderToSearchImage, image_captions_List_jsonFileName);
+                    if (System.IO.File.Exists(_file_image_caption))
+                    {
+                        try
+                        {
+                            string jsonData = System.IO.File.ReadAllText(_file_image_caption);
+                            List<ImageCaptionModel> captionsList = JsonConvert.DeserializeObject<List<ImageCaptionModel>>(jsonData);
+                            if(captionsList != null  && captionsList.Count > 0)
+                            {
+                                foreach(var f in  captionsList)
+                                {
+                                    Image img = null;
+                                    string _imageFileToread = Path.Combine(_folderToSearchImage, f.ImageName);
+                                    if (System.IO.File.Exists(_imageFileToread))
+                                    {
+                                        img = Image.FromFile(_imageFileToread);
+                                    }                                       
+
+                                    InsertImageWithCaption(ref worksheet, f.Caption, img, 670, startColumnLetter, endColumnLetter);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error reading JSON file {_file_image_caption}.  Error: {ex.Message}");
+                        }
+                    }
+                }
+
+
+                workbook.Save();
+            }
+
+                
+        }
+
+        private static void InsertImageWithCaption(ref IXLWorksheet worksheet, string caption, Image image, int maxImageWidth, string startColumnLetter, string endColumnLetter)
+        {
+            if (worksheet == null)
+                throw new ArgumentNullException(nameof(worksheet));
+                        
+            //var worksheet = workbook.Worksheet(worksheetName);
+
+            // Find the last used row (or 1 if empty)
+            int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+            int imageRow = lastUsedRow + 1;
+            int captionRow = imageRow + 1;
+
+            // Get starting and ending column numbers from letters
+            int startCol = XLHelper.GetColumnNumberFromLetter(startColumnLetter);
+            int endCol = XLHelper.GetColumnNumberFromLetter(endColumnLetter);
+
+            // Merge the range for the image
+            var imageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
+            imageCellRange.Merge();
+            imageCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+            imageCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            imageCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            imageCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+            //imageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            imageCellRange.Style.Font.Bold = true;
+
+            if (image != null)
+            {
+                // Resize image if it exceeds max width
+                if (image.Width > maxImageWidth)
+                {
+                    float scale = (float)maxImageWidth / image.Width;
+                    int newWidth = maxImageWidth;
+                    int newHeight = (int)(image.Height * scale);
+
+                    var resized = new Bitmap(newWidth, newHeight);
+                    using (var g = Graphics.FromImage(resized))
+                    {
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.DrawImage(image, 0, 0, newWidth, newHeight);
+                    }
+                    image.Dispose();
+                    image = resized;
+                }
+
+                // Save to memory stream
+                using (var ms = new MemoryStream())
+                {
+                    image.Save(ms, ImageFormat.Png); // PNG for better quality
+                    ms.Seek(0, SeekOrigin.Begin);
+
+                    // Adjust row height to fit image (approximate conversion)
+                    float rowHeight = image.Height * 0.78f;
+                    worksheet.Row(imageRow).Height = rowHeight;
+
+                    // Add picture to sheet 
+                    var picture = worksheet.AddPicture(ms)
+                                           .MoveTo(worksheet.Cell(imageRow, startCol));                                           
+                                           //.WithPlacement(XLPicturePlacement.FreeFloating);                    
+                }
+            }
+            else
+            {                
+                var noimageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
+                noimageCellRange.Merge().Value = "No image";
+                noimageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+
+            // Write caption in the row below image, merging the same column range
+            var captionCellRange = worksheet.Range(captionRow, startCol, captionRow, endCol);
+            captionCellRange.Merge().Value = caption;
+            // Enable text wrapping
+            captionCellRange.Style.Alignment.WrapText = true;
+            double totalColWidth = 0;
+            for (int col = startCol; col <= endCol; col++)
+            {
+                totalColWidth += worksheet.Column(col).Width;
+            }
+
+            // Estimate characters that fit in one line (Excel assumes ~1 char per width unit)
+            int charsPerLine = (int)(totalColWidth * 1.5); // can fine-tune multiplier if needed
+
+            // Estimate how many lines needed
+            int estimatedLineCount = (int)Math.Ceiling((double)caption.Length / charsPerLine);
+
+            // Set estimated row height (approx. 15 units per line is common in Excel)
+            worksheet.Row(captionRow).Height = estimatedLineCount * 15;
+            
+            // Auto-adjust row height to fit content
+            //worksheet.Row(captionRow).AdjustToContents(startCol, endCol);
+            //worksheet.Row(captionRow).ClearHeight();
+            captionCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+            captionCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            captionCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+            captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+
         }
     }
 

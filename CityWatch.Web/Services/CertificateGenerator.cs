@@ -38,11 +38,14 @@ using System.ComponentModel;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using static Dropbox.Api.TeamLog.LoginMethod;
 using static Dropbox.Api.FileProperties.PropertiesSearchMode;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using DocumentFormat.OpenXml.Bibliography;
 namespace CityWatch.Web.Services
 {
     public interface ICertificateGenerator
     {
         string GeneratePdf(int guardId, int hrSettingsId,string hashCode,bool isCertificateHold,bool isCertificatewithQADump,bool isCertificateExpiry);
+        string GenerateGuardFeedbackPdf(int guardId, int hrSettingsId);
 
     }
     public class CertificateGenerator : ICertificateGenerator
@@ -489,6 +492,173 @@ namespace CityWatch.Web.Services
         }
 
 
+        public string GenerateGuardFeedbackPdf(int guardId, int hrSettingsId)
+        {
+            var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            var reportPdf = GetReportPdfFilePath(guardId, hrSettingsId,version);
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
 
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(15f, 30f, 40f, 30f);
+            doc.SetLeftMargin(PDF_DOC_MARGIN);
+            doc.SetRightMargin(PDF_DOC_MARGIN);
+            doc.Add(new Paragraph("Feedback Question And Answers")
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontSize(20)
+                .SetBold()
+                .SetMarginBottom(20));
+            //int questionno = 1;
+           
+                int questionno = 1;
+                
+                var attendedQuestions = _configDataProvider.GetGuardAttendedFeedBackQuestionsAndanswers(guardId,hrSettingsId);
+                if (attendedQuestions.Count() > 0)
+                {
+                    //int questionno = 1;
+                    foreach (var attendedquestion in attendedQuestions)
+                    {
+                        int numberOfDigits = questionno / 10 + 1;
+                        string Qno = string.Empty;
+                        if (numberOfDigits == 1)
+                        {
+
+                            Qno = "0" + questionno.ToString();
+                        }
+                        var question = new Paragraph("Q." + Qno + "  " + attendedquestion.TrainingTestFeedbackQuestions.Question).SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK)).SetFontSize(16)
+                        .SetBold();
+                        //question.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
+                        doc.Add(question);
+                       
+                        
+
+                        var answer = attendedquestion.TrainingTestFeedbackQuestionsAnswers.Options;
+
+                        doc.Add(new Paragraph()
+                       .Add(new Text("Answer: ").SetBold().SetFontSize(14)) // Bold only for the label
+                       .Add(new Text(answer).SetFontSize(12)) // Normal text for the answer
+                       .SetTextAlignment(TextAlignment.LEFT)
+                       .SetMarginTop(30));
+                        //    doc.Add(new Paragraph("Student Answer")
+                        //.SetTextAlignment(TextAlignment.LEFT)
+                        //.SetFontSize(14)
+                        //.SetBold()
+                        //.SetMarginTop(30));
+
+                        //question.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
+                        //doc.Add(new Paragraph(answer)
+                        //         .SetMarginLeft(20)
+                        //         .SetFontSize(12));
+
+                        questionno++;
+                    }
+                }
+
+
+            
+
+            //var headerTable = CreateReportHeaderTable( guardId,  hrSettingsId);
+            //doc.Add(headerTable);
+
+            //var reportSummaryTable = CreateReportDataTable(keyVehicleLogs);
+            //doc.Add(reportSummaryTable);
+
+            //var totalEventCountTable = CreateEventCountTable(keyVehicleLogs.Count());
+            //doc.Add(totalEventCountTable);
+
+
+            doc.Close();
+            pdfDoc.Close();
+
+            return IO.Path.GetFileName(reportPdf);
+        }
+        
+        private string GetReportPdfFilePath(int guardId, int hrSettingsId, string version)
+        {
+            var securitylicense = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault().SecurityNo;
+            var courseDetails = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
+            //if (!Directory.Exists(reportPdfPath))
+            //{
+            //    Directory.CreateDirectory(reportPdfPath);
+            //}
+            if (!Directory.Exists(IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense)))
+                Directory.CreateDirectory(IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense));
+            var reportPdfPath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense, courseDetails.Description + " - " + DateTime.Now.Date.ToString("dd-MMM-yyy") + ".pdf");
+
+            //if (IO.File.Exists(reportPdfPath))
+            //    IO.File.Delete(reportPdfPath);
+
+            return reportPdfPath;
+        }
+        private Table CreateReportHeaderTable(int guardId, int hrSettingsId)
+        {
+            var guarddetails = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault();
+            var courseDetails = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 10, 10, 25, 10, 25, 10, 5 })).UseAllAvailableWidth();
+
+            
+
+            headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var columnName = new Cell()
+                .Add(new Paragraph().Add(new Text("Guard Name:")))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+            headerTable.AddCell(columnName);
+
+            var guardName = new Cell()
+                .Add(new Paragraph().Add(new Text(guarddetails.Name)
+                .SetFont(PdfHelper.GetPdfFont())))
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+            headerTable.AddCell(guardName);
+
+            var columnCourse = new Cell()
+                .Add(new Paragraph().Add(new Text("Course:")))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+            headerTable.AddCell(columnCourse);
+
+            var courseDone = new Cell()
+                .Add(new Paragraph().Add(new Text(courseDetails.Description)))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+            headerTable.AddCell(courseDone);
+
+            var columnCourseCompletedDate = new Cell()
+               .Add(new Paragraph().Add(new Text("Date:")))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.CENTER)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetBackgroundColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+            headerTable.AddCell(columnCourseCompletedDate);
+
+            var courseCompletedDate = new Cell()
+                .Add(new Paragraph().Add(new Text(courseDetails.Description)))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+            headerTable.AddCell(courseCompletedDate);
+
+
+
+
+
+            return headerTable;
+        }
     }
 }
