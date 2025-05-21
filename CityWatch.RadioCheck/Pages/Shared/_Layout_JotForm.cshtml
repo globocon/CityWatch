@@ -1,0 +1,39 @@
+﻿
+@* @model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel; *@
+@{
+
+    
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link href="~/lib/notify/css/notify.css" rel="stylesheet" />
+    <link href="~/lib/notify/css/prettify.css" rel="stylesheet" />
+</head>
+<body class="d-flex flex-column">
+    <header>
+    </header>
+
+    <div class="container-fluid flex-fill">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>  
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> 
+    <script src="~/lib/notify/js/notify.js"></script>
+    <script src="~/lib/notify/js/prettify.js"></script>
+    <script src="~/jsJotform/excelupload.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using System.Data;
 using DocumentFormat.OpenXml.Wordprocessing;
 using CityWatch.RadioCheck.Models;
+using Microsoft.AspNetCore.Http;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -138,9 +140,14 @@ namespace CityWatch.RadioCheck.API
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private string templateFileName;
-        private string jsonMappingFile;
+        private string download_jsonMappingFile;
+        private string deliveries_jsonMappingFile;
+        private string execution_jsonMappingFile;
+        private string deliveries_DataFile;
+        private string execution_DataFile;
         private string jsonImageToFolderMappingFile;
         private string uploadFolder;
+        private string logFilePath;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
         //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
         public WebhookController(IConfiguration configuration)
@@ -148,8 +155,13 @@ namespace CityWatch.RadioCheck.API
             _httpClient = new HttpClient();
             _configuration = configuration;
             templateFileName = "Template.xlsx";
-            jsonMappingFile = "form_fields_mapping.json";
+            download_jsonMappingFile = "download_form_fields_mapping.json";
+            deliveries_jsonMappingFile = "deliveries_form_fields_mapping.json";
+            execution_jsonMappingFile = "execution_form_fields_mapping.json";
             jsonImageToFolderMappingFile = "image_folder_mapping.json";
+            deliveries_DataFile = "Delivery Data.xlsx";
+            execution_DataFile = "Execution Data.xlsx";
+            logFilePath = "";
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform");
         }
 
@@ -196,19 +208,19 @@ namespace CityWatch.RadioCheck.API
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
-                string logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
+                logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_test.txt");
                 string excelFilePath = Path.Combine(submissionFolder, $"{formName}_{workOrder}_Output_data.xlsx");
                 string jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
-                WriteLog(logFilePath, $"Webhook received. Data saved for Submission ID: {submissionID}");
+                WriteLog($"Webhook received. Data saved for Submission ID: {submissionID}");
 
                 if (webhookData != null)
                 {
-                    await DownloadAllFiles(webhookData, submissionFolder, logFilePath);
+                    await DownloadAllFiles(webhookData, submissionFolder);
                     // Save JSON to a file
-                    string jsonOutput = GetImageNamesAndCaptionsJson(webhookData, logFilePath);
+                    string jsonOutput = GetImageNamesAndCaptionsJson(webhookData);
                     await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
                     // Compress image files
                     ImageZipper.CreateImageZip(submissionFolder, $"{submissionFolder}\\Compressed_Images", $"{workOrder}_images.zip");
@@ -223,6 +235,19 @@ namespace CityWatch.RadioCheck.API
                     {
                         AppendToExcel(excelFilePath, webhookData);
                     }
+
+                    if (DoesDataFileExists(templateFolder, deliveries_DataFile, deliveries_jsonMappingFile))
+                    {
+                        string _datafileName = Path.Combine(templateFolder, deliveries_DataFile);
+                        string _mappingJsonfileName = Path.Combine(templateFolder, deliveries_jsonMappingFile);
+                        WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
+                    }
+                    if (DoesDataFileExists(templateFolder, execution_DataFile, execution_jsonMappingFile))
+                    {
+                        string _datafileName = Path.Combine(templateFolder, execution_DataFile);
+                        string _mappingJsonfileName = Path.Combine(templateFolder, execution_jsonMappingFile);
+                        WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
+                    }
                 }
 
                 return Ok(new { message = $"Webhook received. Files saved in uploads/jotform/{formName}/{workOrder}/" });
@@ -230,9 +255,65 @@ namespace CityWatch.RadioCheck.API
             catch (Exception ex)
             {
                 string logPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "webhook_log.txt");
-                WriteLog(logPath, $"Error: {ex.Message}");
+                WriteLog($"Error: {ex.Message}");
                 return StatusCode(500, $"Error: {ex.Message}");
             }
+        }
+
+
+        [HttpPost("exceldatafileupload")]
+        public async Task<IActionResult> UploadExcelFile(IFormFile file, [FromForm] string fileType, [FromForm] string formName)
+        {
+            var status = true;
+            var message = "File uploaded successfully !!!";
+            string filenameToUpload;
+            var allowedExtensions = new[] { ".xls", ".xlsx" };
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+            
+            var extension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest("Invalid file type. Only Excel files are allowed.");
+
+            if (string.IsNullOrEmpty(formName))
+                return BadRequest("Invalid form name.");
+                        
+
+            if (!string.IsNullOrEmpty(fileType))
+            {
+                if (fileType.Equals("DeliveriesExcel"))
+                {
+                    filenameToUpload = deliveries_DataFile;
+                }
+                else if (fileType.Equals("ExecutionExcel"))
+                {
+                    filenameToUpload = execution_DataFile;
+                }
+                else
+                {
+                    return BadRequest("Invalid upload file type. Only predefined Excel files are allowed.");
+                }
+            }
+            else
+            {
+                return BadRequest("Invalid upload file type. Only predefined Excel files are allowed.");
+            }
+
+            string uploadsPath = Path.Combine(uploadFolder, formName);            
+
+            if (!Directory.Exists(uploadsPath))
+                Directory.CreateDirectory(uploadsPath);
+
+            var filePath = Path.Combine(uploadsPath, filenameToUpload);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            //return Ok("File uploaded successfully.");
+            return Ok(new { status = status, message = message });
         }
 
         private async Task<string> GetFormNameFromJotForm(string formID)
@@ -257,20 +338,20 @@ namespace CityWatch.RadioCheck.API
                 return "UnknownForm";
             }
         }
-                       
-        private async Task DownloadAllFiles(Dictionary<string, object> webhookData, string saveDirectory, string logFilePath)
+
+        private async Task DownloadAllFiles(Dictionary<string, object> webhookData, string saveDirectory)
         {
             foreach (var entry in webhookData)
             {
-                WriteLog(logFilePath, $"Processing key: {entry.Key}");
+                WriteLog($"Processing key: {entry.Key}");
 
                 if (entry.Value is JArray fileArray) // Direct file list
                 {
-                    await ProcessFileArray(fileArray, saveDirectory, logFilePath);
+                    await ProcessFileArray(fileArray, saveDirectory);
                 }
                 else if (entry.Value is JObject nestedObject) // Nested JSON object
                 {
-                    await DownloadAllFiles(nestedObject.ToObject<Dictionary<string, object>>(), saveDirectory, logFilePath);
+                    await DownloadAllFiles(nestedObject.ToObject<Dictionary<string, object>>(), saveDirectory);
                 }
                 else if (entry.Value is Dictionary<string, object> nestedDict) // Nested Dictionary
                 {
@@ -279,16 +360,16 @@ namespace CityWatch.RadioCheck.API
                     {
                         if (subEntry.Value is JArray subFileArray)
                         {
-                            await ProcessFileArray(subFileArray, saveDirectory, logFilePath);
+                            await ProcessFileArray(subFileArray, saveDirectory);
                         }
                     }
                     // Then, recursively process the nested dictionary
-                    await DownloadAllFiles(nestedDict, saveDirectory, logFilePath);
+                    await DownloadAllFiles(nestedDict, saveDirectory);
                 }
             }
         }
-                
-        private async Task ProcessFileArray(JArray fileArray, string saveDirectory, string logFilePath)
+
+        private async Task ProcessFileArray(JArray fileArray, string saveDirectory)
         {
             var fileUrls = fileArray.ToObject<List<string>>();
             foreach (var fileUrl in fileUrls)
@@ -297,17 +378,17 @@ namespace CityWatch.RadioCheck.API
 
                 if (Uri.IsWellFormedUriString(normalizedUrl, UriKind.Absolute))
                 {
-                    await DownloadAndSaveFile(normalizedUrl, saveDirectory, logFilePath);
+                    await DownloadAndSaveFile(normalizedUrl, saveDirectory);
                 }
                 else
                 {
-                    WriteLog(logFilePath, $"Invalid URL: {fileUrl}");
+                    WriteLog($"Invalid URL: {fileUrl}");
                 }
             }
         }
 
 
-        private async Task DownloadAndSaveFile(string fileUrl, string saveDirectory, string logFilePath)
+        private async Task DownloadAndSaveFile(string fileUrl, string saveDirectory)
         {
             try
             {
@@ -318,15 +399,15 @@ namespace CityWatch.RadioCheck.API
                 string filePath = Path.Combine(saveDirectory, fileName);
 
                 await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
-                WriteLog(logFilePath, $"File downloaded: {fileName} from {fileUrl}");
+                WriteLog($"File downloaded: {fileName} from {fileUrl}");
             }
             catch (Exception ex)
             {
-                WriteLog(logFilePath, $"Error downloading file from {fileUrl}: {ex.Message}");
+                WriteLog($"Error downloading file from {fileUrl}: {ex.Message}");
             }
         }
 
-        private void WriteLog(string logFilePath, string logMessage)
+        private void WriteLog(string logMessage)
         {
             try
             {
@@ -386,7 +467,7 @@ namespace CityWatch.RadioCheck.API
         {
             // Load field mappings: ExcelHeader -> WebhookDataKey
             string templateFileWithPath = Path.Combine(TemplateFolder, templateFileName);
-            string jsonMappingFileWithPath = Path.Combine(TemplateFolder, jsonMappingFile);
+            string jsonMappingFileWithPath = Path.Combine(TemplateFolder, download_jsonMappingFile);
 
             var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
             var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
@@ -439,12 +520,106 @@ namespace CityWatch.RadioCheck.API
                     col++;
                 }
 
+                workbook.CalculationOnSave = true;
                 workbook.Save();
+                workbook.Dispose();
             }
         }
 
+        private void WriteToDataFileUsingJsonMapping(string DataFileNameWithPath, string jsonMappingFileNameWithPath, string workOrderId, Dictionary<string, object> webhookData)
+        {
+            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileNameWithPath);
+            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
 
-        public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData, string logFilePath)
+
+            using (var workbook = new XLWorkbook(DataFileNameWithPath))
+            {
+                var worksheet = workbook.Worksheet(1);
+
+                int headerRow = 1;
+                int dataRow = -1;
+                int col = 1;
+                int workOrderColumnIndex = -1;
+
+
+
+                // find work order column index             
+                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
+                {
+                    string header = worksheet.Cell(headerRow, col).GetString();                    
+                    if (header.ToLower().Equals("work order"))
+                    {
+                        workOrderColumnIndex = col;
+                        break;
+                    }
+                    col++;
+                }
+
+                if (workOrderColumnIndex == -1)
+                {
+                    WriteLog($"Column \"work order\" not found in file {DataFileNameWithPath} \n");
+                    return;
+                }
+
+                // Search for an existing row with the given WorkOrderId
+                int existingRow = -1;
+                for (int row = headerRow + 1; row <= worksheet.LastRowUsed().RowNumber(); row++)
+                {
+                    var cellValue = worksheet.Cell(row, workOrderColumnIndex).GetString();
+                    if (cellValue == workOrderId)
+                    {
+                        existingRow = row;
+                        break;
+                    }
+                }
+
+                // If no existing row, add a new row at the end
+                dataRow = existingRow != -1 ? existingRow : worksheet.LastRowUsed().RowNumber() + 1;
+
+
+                col = 1;
+                // Traverse headers in row
+                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
+                {
+                    string excelHeader = worksheet.Cell(headerRow, col).GetString();
+
+                    // Find webhook key where value in the mapping matches Excel header
+                    var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Key == excelHeader);
+                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
+                    {
+                        object cellValue = null;
+
+                        if (rawValue is JObject dateObj &&
+                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
+                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
+                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
+                            int.TryParse(dateObj["year"]?.ToString(), out int year))
+                        {
+                            // Format date to dd/MM/yyyy or as DateTime
+                            DateTime date = new DateTime(year, month, day);
+                            cellValue = date.ToString("dd/MM/yyyy");
+                        }
+                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
+                        {
+                            cellValue = rawValue.ToString();
+                        }
+
+                        // Write to Excel only if there's a value
+                        if (cellValue != null)
+                        {
+                            worksheet.Cell(dataRow, col).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
+                        }
+                    }
+
+                    col++;
+                }
+                workbook.CalculationOnSave = true;
+                workbook.Save();
+                workbook.Dispose();
+            }
+        }
+
+        public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData)
         {
             var imagesWithCaptions = new List<object>();
 
@@ -466,7 +641,7 @@ namespace CityWatch.RadioCheck.API
                                 string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
 
                                 // Find the matching caption key
-                                string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key, logFilePath);
+                                string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key);
                                 string caption = captionKey != null && webhookData.ContainsKey(captionKey)
                                     ? webhookData[captionKey].ToString()
                                     : "No caption";
@@ -482,7 +657,7 @@ namespace CityWatch.RadioCheck.API
                             string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
 
                             // Find the matching caption key
-                            string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key, logFilePath);
+                            string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key);
                             string caption = captionKey != null && webhookData.ContainsKey(captionKey)
                                 ? webhookData[captionKey].ToString()
                                 : "No caption";
@@ -507,7 +682,7 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
-        private string FindMatchingCaptionKey(Dictionary<string, object> webhookData, string photoKey, string logFilePath)
+        private string FindMatchingCaptionKey(Dictionary<string, object> webhookData, string photoKey)
         {
             // Extract the number from the _Photo key (e.g., "01TrackInspector_ExpectedMaterial_Photo2" -> "2")
             var match = Regex.Match(photoKey, @"\d+$");
@@ -539,7 +714,7 @@ namespace CityWatch.RadioCheck.API
         {
             // Check for Template.xlsx specifically
             string templatePath = Path.Combine(TemplateFolder, templateFileName);
-            string jsonMappingPath = Path.Combine(TemplateFolder, jsonMappingFile);
+            string jsonMappingPath = Path.Combine(TemplateFolder, download_jsonMappingFile);
             if (!System.IO.File.Exists(templatePath) && !System.IO.File.Exists(jsonMappingPath))
             {
                 return false;
@@ -547,7 +722,19 @@ namespace CityWatch.RadioCheck.API
             return true;
         }
 
-        private void CheckAndInsertImageInExcel(string TemplateFolder, string excelFilePath, string workOrderId,string image_captions_List_jsonFileName)
+        private bool DoesDataFileExists(string DataFileFolder, string DataFileName, string DataJsonMappingFileName)
+        {
+            // Check for Template.xlsx specifically
+            string templatePath = Path.Combine(DataFileFolder, DataFileName);
+            string jsonMappingPath = Path.Combine(DataFileFolder, DataJsonMappingFileName);
+            if (!System.IO.File.Exists(templatePath) && !System.IO.File.Exists(jsonMappingPath))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private void CheckAndInsertImageInExcel(string TemplateFolder, string excelFilePath, string workOrderId, string image_captions_List_jsonFileName)
         {
             string jsonImageMappingFileWithPath = Path.Combine(TemplateFolder, jsonImageToFolderMappingFile);
             if (!System.IO.File.Exists(jsonImageMappingFileWithPath))
@@ -593,16 +780,16 @@ namespace CityWatch.RadioCheck.API
                         {
                             string jsonData = System.IO.File.ReadAllText(_file_image_caption);
                             List<ImageCaptionModel> captionsList = JsonConvert.DeserializeObject<List<ImageCaptionModel>>(jsonData);
-                            if(captionsList != null  && captionsList.Count > 0)
+                            if (captionsList != null && captionsList.Count > 0)
                             {
-                                foreach(var f in  captionsList)
+                                foreach (var f in captionsList)
                                 {
                                     Image img = null;
                                     string _imageFileToread = Path.Combine(_folderToSearchImage, f.ImageName);
                                     if (System.IO.File.Exists(_imageFileToread))
                                     {
                                         img = Image.FromFile(_imageFileToread);
-                                    }                                       
+                                    }
 
                                     InsertImageWithCaption(ref worksheet, f.Caption, img, 670, startColumnLetter, endColumnLetter);
                                 }
@@ -615,18 +802,19 @@ namespace CityWatch.RadioCheck.API
                     }
                 }
 
-
+                workbook.CalculationOnSave = true;
                 workbook.Save();
+                workbook.Dispose();
             }
 
-                
+
         }
 
         private static void InsertImageWithCaption(ref IXLWorksheet worksheet, string caption, Image image, int maxImageWidth, string startColumnLetter, string endColumnLetter)
         {
             if (worksheet == null)
                 throw new ArgumentNullException(nameof(worksheet));
-                        
+
             //var worksheet = workbook.Worksheet(worksheetName);
 
             // Find the last used row (or 1 if empty)
@@ -679,12 +867,12 @@ namespace CityWatch.RadioCheck.API
 
                     // Add picture to sheet 
                     var picture = worksheet.AddPicture(ms)
-                                           .MoveTo(worksheet.Cell(imageRow, startCol));                                           
-                                           //.WithPlacement(XLPicturePlacement.FreeFloating);                    
+                                           .MoveTo(worksheet.Cell(imageRow, startCol));
+                    //.WithPlacement(XLPicturePlacement.FreeFloating);                    
                 }
             }
             else
-            {                
+            {
                 var noimageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
                 noimageCellRange.Merge().Value = "No image";
                 noimageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -709,7 +897,7 @@ namespace CityWatch.RadioCheck.API
 
             // Set estimated row height (approx. 15 units per line is common in Excel)
             worksheet.Row(captionRow).Height = estimatedLineCount * 15;
-            
+
             // Auto-adjust row height to fit content
             //worksheet.Row(captionRow).AdjustToContents(startCol, endCol);
             //worksheet.Row(captionRow).ClearHeight();
