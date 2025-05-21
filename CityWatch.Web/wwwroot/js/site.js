@@ -7431,7 +7431,66 @@ $("#btnDownloadClientSiteExcel").click(async function () {
 });
 
 
+$('#btnAIButton').on('click', function () {
+    if ($('#Report_Feedback').val() != '') {
+        const userInput = $("#Report_Feedback").val();
+        var obj = {
+            Text: userInput
+        }
+        //$.ajax({
+        //    url: "https://api.languagetool.org/v2/check",
+        //    method: "POST",
+        //    data: {
+        //        text: userInput,
+        //        language: "en-US"
+        //    },
+        //    success: function (data) {
+        //        //console.log(data.matches);
+        //        if (data.matches.length > 0) { 
+        //            let originalText = userInput;
+        //            $.each(data.matches, function (index, item) {
 
+
+
+        //            let correctedText = originalText;
+        //            // Apply the first correction from LanguageTool
+        //            let match = item;
+        //            let start = match.offset;
+        //            let length = match.length;
+        //            let replacement = match.replacements[0].value;
+        //            // Replace the incorrect part with the suggested correction
+        //            correctedText =
+        //                correctedText.substring(0, start) +
+        //                replacement +
+        //                    correctedText.substring(start + length);
+        //                originalText = correctedText;
+        //            });
+        //            $("#Report_Feedback").val(originalText);
+        //            }
+        //    }
+        //});
+        $.ajax({
+            url: "/Incident/Register?handler=AiButton", // Your C# endpoint
+            method: "GET",
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            contentType: "application/json",
+            data: { 'textToCheck': userInput },
+            success: function (response) {
+                const correctedText = response.truckConfigText.result;
+                $("#Report_Feedback").val(correctedText);
+
+            },
+            error: function (xhr, status, error) {
+                console.error("Error:", status, error);
+                $("#correctedOutput").text("An error occurred.");
+            }
+        });
+    } else {
+        alert("Please Enter The Truck Registration Number")
+    }
+});
 
 
 

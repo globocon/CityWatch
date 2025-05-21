@@ -1613,6 +1613,15 @@ namespace CityWatch.Web.Pages.Incident
 
             return defaultValue;
         }
+
+  public JsonResult OnGetAiButton(string textToCheck)
+        {
+
+
+            var TruckConfigText = CorrectGrammar(textToCheck);
+
+            return new JsonResult(new { TruckConfigText });
+        }
         public async Task<string> CorrectGrammar(string textToCheck)
         {
             var companydetail = _userDataProvider.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
@@ -1695,5 +1704,6 @@ namespace CityWatch.Web.Pages.Incident
     {
         [JsonPropertyName("value")]
         public string Value { get; set; }
+
     }
 }
