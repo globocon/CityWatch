@@ -1610,5 +1610,13 @@ namespace CityWatch.Web.Pages.Incident
 
             return defaultValue;
         }
+        public JsonResult OnGetAiButton(string textToCheck)
+        {
+
+
+            var TruckConfigText = CorrectGrammar(textToCheck);
+
+            return new JsonResult(new { TruckConfigText });
+        }
     }
 }
