@@ -36,7 +36,8 @@ document.getElementById('excelFile').addEventListener('change', function (event)
     const formData = new FormData();
     formData.append("file", file);
     formData.append("fileType", fileType); // Add file type info to request
-
+    formData.append("formName", form_Name); // Add file type info to request
+    const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
         url: '/api/webhook/exceldatafileupload',
         type: 'POST',

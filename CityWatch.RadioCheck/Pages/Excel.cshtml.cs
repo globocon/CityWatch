@@ -89,6 +89,36 @@ namespace CityWatch.RadioCheck.Pages
                         {
                             Console.WriteLine("Template.xlsx not found.");
                         }
+
+                        // Check for Delivery Data.xlsx specifically
+                        string deliveriesExcelDataPath = Path.Combine(folderPath, "Delivery Data.xlsx");
+                        if (System.IO.File.Exists(deliveriesExcelDataPath))
+                        {
+                            // Construct the downloadable URL
+                            string downloadUrl = Path.Combine("/uploads/jotform", FormName, "Delivery Data.xlsx").Replace("\\", "/");
+                            Console.WriteLine($"Deliveries Excel Data file found. Download URL: {downloadUrl}");
+
+                            DeliveriesExcelDataUrl = downloadUrl;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Delivery Data.xlsx not found.");
+                        }
+
+                        // Check for Delivery Data.xlsx specifically
+                        string executionExcelDataPath = Path.Combine(folderPath, "Execution Data.xlsx");
+                        if (System.IO.File.Exists(executionExcelDataPath))
+                        {
+                            // Construct the downloadable URL
+                            string downloadUrl = Path.Combine("/uploads/jotform", FormName, "Execution Data.xlsx").Replace("\\", "/");
+                            Console.WriteLine($"Execution Excel Data file found. Download URL: {downloadUrl}");
+
+                            ExecutionExcelDataUrl = downloadUrl;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Execution Data.xlsx not found.");
+                        }
                     }
                     catch (Exception ex)
                     {

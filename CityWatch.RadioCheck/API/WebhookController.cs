@@ -266,24 +266,20 @@ namespace CityWatch.RadioCheck.API
         {
             var status = true;
             var message = "File uploaded successfully !!!";
+            string filenameToUpload;
+            var allowedExtensions = new[] { ".xls", ".xlsx" };
 
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
-
-            var allowedExtensions = new[] { ".xls", ".xlsx" };
+            
             var extension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(extension))
                 return BadRequest("Invalid file type. Only Excel files are allowed.");
 
-
-            string uploadsPath = Path.Combine(uploadFolder, formName);
-            string filenameToUpload;
-
             if (string.IsNullOrEmpty(formName))
-            {
                 return BadRequest("Invalid form name.");
-            }
+                        
 
             if (!string.IsNullOrEmpty(fileType))
             {
@@ -305,6 +301,8 @@ namespace CityWatch.RadioCheck.API
                 return BadRequest("Invalid upload file type. Only predefined Excel files are allowed.");
             }
 
+            string uploadsPath = Path.Combine(uploadFolder, formName);            
+
             if (!Directory.Exists(uploadsPath))
                 Directory.CreateDirectory(uploadsPath);
 
@@ -315,7 +313,7 @@ namespace CityWatch.RadioCheck.API
             }
 
             //return Ok("File uploaded successfully.");
-            return Ok(new JsonResult(new { status = status, message = message }));
+            return Ok(new { status = status, message = message });
         }
 
         private async Task<string> GetFormNameFromJotForm(string formID)
@@ -522,7 +520,9 @@ namespace CityWatch.RadioCheck.API
                     col++;
                 }
 
+                workbook.CalculationOnSave = true;
                 workbook.Save();
+                workbook.Dispose();
             }
         }
 
@@ -543,16 +543,14 @@ namespace CityWatch.RadioCheck.API
 
 
 
-                // Create a map of header names to column indices
-                Dictionary<string, int> headerToColIndex = new Dictionary<string, int>();
+                // find work order column index             
                 while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
                 {
-                    string header = worksheet.Cell(headerRow, col).GetString();
-                    headerToColIndex[header] = col;
-                    //Work Order
+                    string header = worksheet.Cell(headerRow, col).GetString();                    
                     if (header.ToLower().Equals("work order"))
                     {
                         workOrderColumnIndex = col;
+                        break;
                     }
                     col++;
                 }
@@ -587,7 +585,7 @@ namespace CityWatch.RadioCheck.API
 
                     // Find webhook key where value in the mapping matches Excel header
                     var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Key == excelHeader);
-                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Key, out var rawValue))
+                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
                     {
                         object cellValue = null;
 
@@ -615,8 +613,9 @@ namespace CityWatch.RadioCheck.API
 
                     col++;
                 }
-
+                workbook.CalculationOnSave = true;
                 workbook.Save();
+                workbook.Dispose();
             }
         }
 
@@ -803,8 +802,9 @@ namespace CityWatch.RadioCheck.API
                     }
                 }
 
-
+                workbook.CalculationOnSave = true;
                 workbook.Save();
+                workbook.Dispose();
             }
 
 

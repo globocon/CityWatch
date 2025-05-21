@@ -8,8 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uploaded Files</title>
-    <link href="~/lib/notify/css/notify.css" rel="stylesheet" />
-    <link href="~/lib/notify/css/prettify.css" rel="stylesheet" />
+    
 
     <style>
         /* General Page Styling */
@@ -167,13 +166,13 @@
             }
     </style>
     @{
-        Layout = "_Plain"; // Set a different layout file
+        Layout = "_Layout_JotForm"; // Set a different layout file
     }
 
 </head>
 
 <body>
-
+    @Html.AntiForgeryToken()
     <div style="display: flex; flex-wrap: wrap; align-items: center; position: relative; margin-bottom: 30px; min-height: 60px;">
         <!-- Logo on the left -->
         <div style="flex: 0 0 auto;">
@@ -199,16 +198,13 @@
             </a>
         </div>
     }
-    <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" />
+    
     @if (!string.IsNullOrEmpty(Model.DeliveriesExcelDataUrl))
     {
         <div class="file-list">
             <a href="@Model.DeliveriesExcelDataUrl" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Deliveries Excel data
             </a>
-            <button type="button" class="btn btn-success" data-exceluploadfiletype="DeliveriesExcel" data-exceluploadformName="@Model.FormName">
-                <i class="fa fa-cloud-upload mr-2" aria-hidden="true"></i>Upload Deliveries Excel Data
-            </button>
         </div>
     }
     @if (!string.IsNullOrEmpty(Model.ExecutionExcelDataUrl))
@@ -217,6 +213,23 @@
             <a href="@Model.ExecutionExcelDataUrl" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Execution Excel Data
             </a>
+        </div>
+    }
+
+    @* File Uploads *@
+
+    <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" />
+    @if (!string.IsNullOrEmpty(Model.DeliveriesExcelDataUrl))
+    {
+        <div class="file-list">            
+            <button type="button" class="btn btn-success" data-exceluploadfiletype="DeliveriesExcel" data-exceluploadformName="@Model.FormName">
+                <i class="fa fa-cloud-upload mr-2" aria-hidden="true"></i>Upload Deliveries Excel Data
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ExecutionExcelDataUrl))
+    {
+        <div class="file-list">            
             <button type="button" class="btn btn-success" data-exceluploadfiletype="ExecutionExcel" data-exceluploadformName="@Model.FormName">
                 <i class="fa fa-cloud-upload mr-2" aria-hidden="true"></i>Upload Execution Excel Data
             </button>
@@ -255,10 +268,6 @@
     }
 
 
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="~/lib/notify/js/notify.js"></script>
-    <script src="~/lib/notify/js/prettify.js"></script>
-    <script src="~/jsJotform/excelupload.js" asp-append-version="true"></script>
+    
 </body>
 </html>
