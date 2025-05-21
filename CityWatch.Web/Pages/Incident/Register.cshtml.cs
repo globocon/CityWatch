@@ -1642,5 +1642,30 @@ namespace CityWatch.Web.Pages.Incident
 
             return correctedText;
         }
+        static string ApplyCorrections(string originalText, List<Match> matches)
+        {
+            var corrected = originalText;
+            int offsetAdjustment = 0;
+
+            // Sort by offset to avoid overlapping replacements
+            matches.Sort((a, b) => a.Offset.CompareTo(b.Offset));
+
+            foreach (var match in matches)
+            {
+                if (match.Replacements.Count == 0) continue;
+
+                int start = match.Offset + offsetAdjustment;
+                int length = match.Length;
+                string replacement = match.Replacements[0].Value;
+
+                corrected = corrected.Substring(0, start) +
+                            replacement +
+                            corrected.Substring(start + length);
+
+                offsetAdjustment += replacement.Length - length;
+            }
+
+            return corrected;
+        }
     }
 }
