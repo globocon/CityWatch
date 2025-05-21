@@ -22,8 +22,9 @@ namespace CityWatch.RadioCheck.Pages
         public List<string> Files { get; set; } = new List<string>();
         public string FormName { get; set; } = string.Empty;
         public string WorkOrder { get; set; } = string.Empty;
-
         public string TemplateUrl { get; set; } = string.Empty;
+        public string DeliveriesExcelDataUrl { get; set; } = string.Empty;
+        public string ExecutionExcelDataUrl { get; set; } = string.Empty;
 
         public void OnGet()
         {

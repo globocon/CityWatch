@@ -5,6 +5,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+	  <Content Remove="wwwroot\jsJotform\excelupload.js" />
 	  <Content Remove="wwwroot\js\radiocheck.js~RF45fa00.TMP" />
 	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
@@ -40,6 +41,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="wwwroot\jsJotform\script.js" />
+	  <None Include="wwwroot\jsJotform\excelupload.js" />
 	  <None Include="wwwroot\jsJotform\service-worker.js" />
 	  <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
