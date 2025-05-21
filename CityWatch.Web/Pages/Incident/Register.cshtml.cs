@@ -22,6 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -1609,6 +1611,36 @@ namespace CityWatch.Web.Pages.Incident
             }
 
             return defaultValue;
+        }
+        public async Task<string> CorrectGrammar(string textToCheck)
+        {
+            var companydetail = _userDataProvider.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+            var apiKey = companydetail.ApiSecretkeyIR;  // Replace with your key
+            var apiUrl = "https://api.languagetool.org/v2/check";
+
+            using var client = new HttpClient();
+
+            // If your provider requires Authorization header (check your docs)
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+
+            // Prepare form content
+            var content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("text", textToCheck),
+                new KeyValuePair<string, string>("language", "en-US"),
+                new KeyValuePair<string, string>("enabledOnly", "false")
+                // Add other parameters if needed like "enabledOnly", "level", etc.
+            });
+
+            var response = await client.PostAsync(apiUrl, content);
+            var json = await response.Content.ReadAsStringAsync();
+
+            var result = System.Text.Json.JsonSerializer.Deserialize<LanguageToolResponse>(json);
+
+            string correctedText = ApplyCorrections(textToCheck, result.Matches);
+
+            return correctedText;
         }
     }
 }
