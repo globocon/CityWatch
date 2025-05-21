@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -1667,5 +1668,32 @@ namespace CityWatch.Web.Pages.Incident
 
             return corrected;
         }
+    }
+    public class GrammarRequest
+    {
+        public string Text { get; set; }
+    }
+    public class LanguageToolResponse
+    {
+        [JsonPropertyName("matches")]
+        public List<Match> Matches { get; set; }
+    }
+
+    public class Match
+    {
+        [JsonPropertyName("offset")]
+        public int Offset { get; set; }
+
+        [JsonPropertyName("length")]
+        public int Length { get; set; }
+
+        [JsonPropertyName("replacements")]
+        public List<Replacement> Replacements { get; set; }
+    }
+
+    public class Replacement
+    {
+        [JsonPropertyName("value")]
+        public string Value { get; set; }
     }
 }
