@@ -3792,6 +3792,8 @@
                 $("#txt_IR").val(data[i].irMail);
                 $("#txt_Fusion").val(data[i].fusionMail);
                 $("#txt_Timesheet").val(data[i].timesheetsMail);
+                $("#txt_APIProviderForIR").val(data[i].apiProviderIR);
+                $("#txt_APIsecretkeyForIR").val(data[i].apiSecretkeyIR)
 
             }
 
@@ -3916,9 +3918,9 @@
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
                 HyperlinkColour: $("#txt_HyperlinkColor").val(),
                 LogoHyperlink: $("#txt_LogoHyplerLink").val(),
-                ApiProvider: $("#txt_APIProvider").val(),
-                ApiSecretkey: $("#txt_APIsecretkey").val(),
+                
                 //p1-225 Core Settings-end
+                
             }
             $.ajax({
                 url: '/Admin/Settings?handler=CompanyDetails',
@@ -3971,6 +3973,39 @@
                 if (result.message !== '') {
                     getC4Settings();
                     showStatusNotification(true, 'Mail details modified successfully');
+                }
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        }).fail(function () {
+            alert("An error occurred while saving Mail details.");
+        });
+
+        // Prevent any default action (like a form submission) that might reload the page
+        return false;
+    });
+    $("#btn_CompanyAPISave").on("click", function () {
+        var companyId = parseInt($("#txt_CompanyId").val());
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        var ss = $("#txt_Timesheet").val();
+        var obj = {
+            Id: companyId,
+            ApiProvider: $("#txt_APIProvider").val(),
+            ApiSecretkey: $("#txt_APIsecretkey").val(),
+            ApiProviderIR: $("#txt_APIProviderForIR").val(),
+            ApiSecretkeyIR: $("#txt_APIsecretkeyForIR").val(),
+        };
+
+        $.ajax({
+            url: '/Admin/Settings?handler=CompanyAPIDetails',
+            data: { 'company': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                    getC4Settings();
+                    showStatusNotification(true, 'API details modified successfully');
                 }
             } else {
                 displayGuardValidationSummary(result.message);

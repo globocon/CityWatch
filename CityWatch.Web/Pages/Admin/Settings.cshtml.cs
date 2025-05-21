@@ -3078,7 +3078,23 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(_configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsid).FirstOrDefault());
         }
-        
+        public JsonResult OnPostCompanyAPIDetails(Data.Models.CompanyDetails company)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.SaveCompanyAPIDetails(company);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
 
     }
     public class helpDocttype

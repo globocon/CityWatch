@@ -583,11 +583,16 @@
                                             </select>
                                             @*Template type is directly taken from database -jisha-end*@
                                         </div>
-                                        <div class="col-md-8">
+                                        <div class="col-md-7">
                                             @*<select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>*@
                                             @*Template type is directly taken from database -jisha-start*@
                                             <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.FeedBackTemplates" asp-for="@Model.Report.FeedbackTemplates"></select>
                                             @*Template type is directly taken from database -jisha-end*@
+                                        </div>
+                                        <div class="col-md-1">
+                                            @*P1-Issue-13-AI-Button -jisha-start*@
+                                            <button type="button" class="btn btn-outline-danger mb-2" id="btnAIButton">Ai</button>
+                                            @*P1-Issue-13-AI-Button -jisha-end*@
                                         </div>
                                     </div>
                                 </div>
@@ -1396,6 +1401,7 @@
     document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
 
     document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
+    document.getElementById("btnAIButton").addEventListener('click', onbtnAIButtonClick);
     //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
 
     function kvlListPlatesChange() {
