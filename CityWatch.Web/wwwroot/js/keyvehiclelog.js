@@ -5680,48 +5680,85 @@ $(function () {
     /*to Off Duty stop*/
 
 
-    var tId = 0;
-    $("#kv_duress_btn").mousedown(function () {
-        tId = setTimeout(GFG_Fun, 2500);
-        return false;
+    function showDuressCountdownPopup() {
+        if ($("#duress_status").text() === "Active") return;
+
+        countdownValue = 5;
+        $('#duress_countdown').text(countdownValue);
+        $('#duress_modal_overlay').show();
+        $('#duress_confirm_popup').show();
+        
+        countdownId = setInterval(function () {
+            countdownValue--;
+            $('#duress_countdown').text(countdownValue);
+
+            if (countdownValue <= 0) {
+                clearInterval(countdownId);
+                
+                $('#duress_modal_overlay').hide();
+                $('#duress_confirm_popup').hide();
+                GFG_Fun(); // trigger duress activation
+            }
+        }, 1000);
+    }
+
+    function cancelDuressCountdown() {
+        clearInterval(countdownId);
+        $('#duress_modal_overlay').hide();
+        $('#duress_confirm_popup').hide();
+        
+    }
+
+    $("#kv_duress_btn").on("click", function () {
+        showDuressCountdownPopup();
     });
-    $("#kv_duress_btn").mouseup(function () {
-        clearTimeout(tId);
+
+    $("#cancel_duress").on("click", function () {
+        cancelDuressCountdown();
     });
 
-
-    /*for touch devices Start */
-    var touchTimer = 0;
-    $('#kv_duress_btn').on('touchstart', function (e) {
-        // Prevent the default behavior
-        e.preventDefault();
-
-        if ($("#duress_status").text() !== "Active") {
-            console.log('click');
-            /*timer pause while editing*/
-            isPaused = true;
-            touchTimer = setTimeout(GFG_Fun, 2500);
-            console.log(isPaused);
-            console.log(touchTimer);
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-        }
-        return false;
-    });
-
-    //$('#duress_btn').on('touchend', function () {
-    console.log('stoped');
-    // If there is any movement or the touch ends, clear the timer
-    //clearTimeout(touchTimer);
-    //isPaused = false;
+    //var tId = 0;
+    //$("#kv_duress_btn").mousedown(function () {
+    //    tId = setTimeout(GFG_Fun, 2500);
+    //    return false;
+    //});
+    //$("#kv_duress_btn").mouseup(function () {
+    //    clearTimeout(tId);
     //});
 
-    $('#kv_duress_btn').on('pointerup', function (event) {
-        // Your logic
-        console.log('stoped2');
-        clearTimeout(touchTimer);
-        isPaused = false;
-    });
+
+    ///*for touch devices Start */
+    //var touchTimer = 0;
+    //$('#kv_duress_btn').on('touchstart', function (e) {
+    //    // Prevent the default behavior
+    //    e.preventDefault();
+
+    //    if ($("#duress_status").text() !== "Active") {
+    //        console.log('click');
+    //        /*timer pause while editing*/
+    //        isPaused = true;
+    //        touchTimer = setTimeout(GFG_Fun, 2500);
+    //        console.log(isPaused);
+    //        console.log(touchTimer);
+    //        gridGuardLog.clear();
+    //        gridGuardLog.reload();
+    //    }
+    //    return false;
+    //});
+
+    ////$('#duress_btn').on('touchend', function () {
+    //console.log('stoped');
+    //// If there is any movement or the touch ends, clear the timer
+    ////clearTimeout(touchTimer);
+    ////isPaused = false;
+    ////});
+
+    //$('#kv_duress_btn').on('pointerup', function (event) {
+    //    // Your logic
+    //    console.log('stoped2');
+    //    clearTimeout(touchTimer);
+    //    isPaused = false;
+    //});
 
     /*for touch devices end */
 
