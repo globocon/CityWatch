@@ -148,6 +148,7 @@ namespace CityWatch.RadioCheck.API
         private string jsonImageToFolderMappingFile;
         private string uploadFolder;
         private string logFilePath;
+        private string compressed_image_folder_name;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
         //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
         public WebhookController(IConfiguration configuration)
@@ -161,6 +162,7 @@ namespace CityWatch.RadioCheck.API
             jsonImageToFolderMappingFile = "image_folder_mapping.json";
             deliveries_DataFile = "Delivery Data.xlsx";
             execution_DataFile = "Execution Data.xlsx";
+            compressed_image_folder_name = "Compressed_Images";
             logFilePath = "";
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform");
         }
@@ -223,7 +225,9 @@ namespace CityWatch.RadioCheck.API
                     string jsonOutput = GetImageNamesAndCaptionsJson(webhookData);
                     await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
                     // Compress image files
-                    ImageZipper.CreateImageZip(submissionFolder, $"{submissionFolder}\\Compressed_Images", $"{workOrder}_images.zip");
+                    //ImageZipper.CreateImageZip(submissionFolder, $"{submissionFolder}\\Compressed_Images", $"{workOrder}_images.zip");
+                    ImageZipper.CreateCompressedImage(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");
+                    //ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\Compressed_Images");
                     if (DoesTemplateExists(templateFolder))
                     {
                         //CreateExcelInTemplateFormat(excelFilePath, webhookData);
@@ -782,10 +786,15 @@ namespace CityWatch.RadioCheck.API
                             List<ImageCaptionModel> captionsList = JsonConvert.DeserializeObject<List<ImageCaptionModel>>(jsonData);
                             if (captionsList != null && captionsList.Count > 0)
                             {
+                                string _destinationFolder = Path.Combine(TemplateFolder, compressed_image_folder_name, _Foldervalue);
+                                ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
+                                //ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
+
                                 foreach (var f in captionsList)
                                 {
                                     Image img = null;
-                                    string _imageFileToread = Path.Combine(_folderToSearchImage, f.ImageName);
+                                    //string _imageFileToread = Path.Combine(_folderToSearchImage, f.ImageName);
+                                    string _imageFileToread = Path.Combine(_destinationFolder, f.ImageName);
                                     if (System.IO.File.Exists(_imageFileToread))
                                     {
                                         img = Image.FromFile(_imageFileToread);
