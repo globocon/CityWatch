@@ -510,6 +510,39 @@ else
 </div>
 
 
+<!-- Small Duress Confirmation Modal -->
+<div id="duress_modal_overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9998;"></div>
+
+<div id="duress_confirm_popup" style="
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    background:#fff;
+    padding:20px 25px;
+    border-radius:10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align:center;
+    width:320px;
+    z-index:9999;
+">
+    <p style="margin-bottom:10px; font-size:16px; white-space:nowrap;">
+        Activating duress in <span id="duress_countdown">5</span> seconds
+    </p>
+    <button id="cancel_duress" style="
+        padding:6px 12px;
+        background:red;
+        color:#fff;
+        border:none;
+        border-radius:5px;
+        cursor:pointer;
+    ">
+        Cancel
+    </button>
+</div>
+
+
 <div class="modal" tabindex="-1" role="dialog" id="kvl-trailer_profiles-modal" data-backdrop="static" data-keyboard="false">
    
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">

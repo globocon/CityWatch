@@ -36,8 +36,9 @@ namespace CityWatch.RadioCheck.Services
         }
         public void SendActionListLater()
         {
-            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x=>x.messagetime.ToString("dd-MM-yyyy HH:mm") == DateTime.Now.ToString("dd-MM-yyyy  HH:mm"));
-            foreach(var message in messagelist)
+            //var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x=>x.messagetime.ToString("dd-MM-yyyy HH:mm") == DateTime.Now.ToString("dd-MM-yyyy  HH:mm"));
+            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.messagetime <= DateTime.Now);
+            foreach (var message in messagelist)
             {
                 var ActionListMessage = (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
                 var rcguardlogs = _guardLogDataProvider.GetRCActionListMessagesGuardLogs().Where(x => x.RCActionListMessagesId == message.Id).FirstOrDefault();

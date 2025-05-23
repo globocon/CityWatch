@@ -7819,57 +7819,92 @@ $(function () {
 
 
 
+    function showDuressCountdownPopup() {
+        if ($("#duress_status").text() === "Active") return;
 
+        countdownValue = 5;
+        $('#duress_countdown').text(countdownValue);
+        $('#duress_modal_overlay').show();
+        $('#duress_confirm_popup').show();
+        isPaused = true;
+        countdownId = setInterval(function () {
+            countdownValue--;
+            $('#duress_countdown').text(countdownValue);
 
-    var tId = 0;
-    $("#duress_btn").mousedown(function () {
-        if ($("#duress_status").text() !== "Active") {
-            /*timer pause while editing*/
-            isPaused = true;
-            tId = setTimeout(GFG_Fun, 2500);
+            if (countdownValue <= 0) {
+                clearInterval(countdownId);
+                isPaused = false;
+                $('#duress_modal_overlay').hide();
+                $('#duress_confirm_popup').hide();
+                GFG_Fun(); // trigger duress activation
+            }
+        }, 1000);
+    }
 
-        }
-        return false;
+    function cancelDuressCountdown() {
+        clearInterval(countdownId);
+        $('#duress_modal_overlay').hide();
+        $('#duress_confirm_popup').hide();
+        isPaused = false;
+    }
+
+    $("#duress_btn").on("click", function () {
+        showDuressCountdownPopup();
     });
-    $("#duress_btn").mouseup(function () {
-        clearTimeout(tId);
+
+    $("#cancel_duress").on("click", function () {
+        cancelDuressCountdown();
     });
+
+    //var tId = 0;
+    //$("#duress_btn").mousedown(function () {
+    //    if ($("#duress_status").text() !== "Active") {
+    //        /*timer pause while editing*/
+    //        isPaused = true;
+    //        tId = setTimeout(GFG_Fun, 2500);
+
+    //    }
+    //    return false;
+    //});
+    //$("#duress_btn").mouseup(function () {
+    //    clearTimeout(tId);
+    //});
 
 
 
 
     /*for touch devices Start */
-    var touchTimer = 0;
-    $('#duress_btn').on('touchstart', function (e) {
-        // Prevent the default behavior
-        e.preventDefault();
+    //var touchTimer = 0;
+    //$('#duress_btn').on('touchstart', function (e) {
+    //    // Prevent the default behavior
+    //    e.preventDefault();
 
-        if ($("#duress_status").text() !== "Active") {
-            console.log('click');
-            /*timer pause while editing*/
-            isPaused = true;
-            touchTimer = setTimeout(GFG_Fun, 2500);
-            console.log(isPaused);
-            console.log(touchTimer);
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-        }
-        return false;
-    });
-
-    //$('#duress_btn').on('touchend', function () {
-    console.log('stoped');
-    // If there is any movement or the touch ends, clear the timer
-    //clearTimeout(touchTimer);
-    //isPaused = false;
+    //    if ($("#duress_status").text() !== "Active") {
+    //        console.log('click');
+    //        /*timer pause while editing*/
+    //        isPaused = true;
+    //        touchTimer = setTimeout(GFG_Fun, 2500);
+    //        console.log(isPaused);
+    //        console.log(touchTimer);
+    //        gridGuardLog.clear();
+    //        gridGuardLog.reload();
+    //    }
+    //    return false;
     //});
 
-    $('#duress_btn').on('pointerup', function (event) {
-        // Your logic
-        console.log('stoped2');
-        clearTimeout(touchTimer);
-        isPaused = false;
-    });
+    //$('#duress_btn').on('touchend', function () {
+    //console.log('stoped');
+    //// If there is any movement or the touch ends, clear the timer
+    ////clearTimeout(touchTimer);
+    ////isPaused = false;
+    ////});
+
+    //$('#duress_btn').on('pointerup', function (event) {
+    //    // Your logic
+    //    console.log('stoped2');
+    //    clearTimeout(touchTimer);
+    //    isPaused = false;
+    //});
 
     /*for touch devices end */
 
