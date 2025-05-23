@@ -7488,7 +7488,7 @@ $('#btnAIButton').on('click', function () {
             }
         });
     } else {
-        alert("Please Enter The Truck Registration Number")
+        alert("Please Enter The Feedback")
     }
 });
 
