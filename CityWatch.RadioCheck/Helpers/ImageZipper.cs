@@ -71,7 +71,7 @@ namespace CityWatch.RadioCheck.Helpers
                 Directory.CreateDirectory(destinationFolder);
             }
 
-            double scaleFactor = 0.5;
+            double scaleFactor = 0.25;
             string[] imageFiles = Directory.GetFiles(sourceImageFolder, "*.*")
                         ?? Array.Empty<string>();
 
@@ -87,9 +87,9 @@ namespace CityWatch.RadioCheck.Helpers
                         var newHeight = (int)(image.Height * scaleFactor);
                         var thumbnailImg = new Bitmap(newWidth, newHeight);
                         var thumbGraph = Graphics.FromImage(thumbnailImg);
-                        thumbGraph.CompositingQuality = CompositingQuality.HighQuality;
-                        thumbGraph.SmoothingMode = SmoothingMode.HighQuality;
-                        thumbGraph.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        thumbGraph.CompositingQuality = CompositingQuality.HighSpeed;
+                        thumbGraph.SmoothingMode = SmoothingMode.HighSpeed;
+                        thumbGraph.InterpolationMode = InterpolationMode.Bicubic;
                         var imageRectangle = new Rectangle(0, 0, newWidth, newHeight);
                         thumbGraph.DrawImage(image, imageRectangle);
                         var targetfilewithPath = Path.Combine(destinationFolder, fileName);
@@ -116,8 +116,8 @@ namespace CityWatch.RadioCheck.Helpers
             string[] imageFiles = Directory.GetFiles(sourceImageFolder, "*.*")
                         ?? Array.Empty<string>();
 
-            int thumbWidth = 150;
-            int thumbHeight = 150;
+            int thumbWidth = 120;
+            int thumbHeight = 120;
             foreach (var file in imageFiles)
             {
                 string extension = Path.GetExtension(file).ToLower();
@@ -132,7 +132,8 @@ namespace CityWatch.RadioCheck.Helpers
 
                         // Save the thumbnail as a JPEG (can be PNG, BMP, etc.)
                         var targetfilewithPath = Path.Combine(destinationFolder, fileName);
-                        thumbnail.Save(targetfilewithPath, ImageFormat.Jpeg);
+                        //thumbnail.Save(targetfilewithPath, ImageFormat.Jpeg);
+                        thumbnail.Save(targetfilewithPath);
                         Console.WriteLine("Thumbnail saved to: " + destinationFolder);
                     }
                 }

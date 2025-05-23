@@ -786,9 +786,9 @@ namespace CityWatch.RadioCheck.API
                             List<ImageCaptionModel> captionsList = JsonConvert.DeserializeObject<List<ImageCaptionModel>>(jsonData);
                             if (captionsList != null && captionsList.Count > 0)
                             {
-                                string _destinationFolder = Path.Combine(TemplateFolder, compressed_image_folder_name, _Foldervalue);
-                                ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
-                                //ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
+                                string _destinationFolder = Path.Combine(TemplateFolder, workOrderId, compressed_image_folder_name, _Foldervalue);
+                               //ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
+                               ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
 
                                 foreach (var f in captionsList)
                                 {
@@ -838,6 +838,8 @@ namespace CityWatch.RadioCheck.API
             // Merge the range for the image
             var imageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
             imageCellRange.Merge();
+            imageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            imageCellRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             imageCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
             imageCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             imageCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
@@ -875,9 +877,39 @@ namespace CityWatch.RadioCheck.API
                     worksheet.Row(imageRow).Height = rowHeight;
 
                     // Add picture to sheet 
+                    //var picture = worksheet.AddPicture(ms);
+                    //                       //.MoveTo(worksheet.Cell(imageRow, startCol));
+
                     var picture = worksheet.AddPicture(ms)
-                                           .MoveTo(worksheet.Cell(imageRow, startCol));
-                    //.WithPlacement(XLPicturePlacement.FreeFloating);                    
+                                .MoveTo(imageCellRange.FirstCell().CellRight(10));
+
+
+
+
+                    ////// Get width of merged columns (approximate pixels)
+                    ////double totalWidth = 0;
+                    ////for (int col = imageCellRange.FirstColumn().ColumnNumber(); col <= imageCellRange.LastColumn().ColumnNumber(); col++)
+                    ////{
+                    ////    totalWidth += (worksheet.Column(col).Width - 1) * 7 + 12; // To convert column width in pixel unit.
+                    ////}
+
+                    ////// Get height of merged rows (approximate pixels)
+                    //////double totalHeight = 0;
+                    //////for (int row = imageCellRange.FirstRow().RowNumber(); row <= imageCellRange.LastRow().RowNumber(); row++)
+                    //////{
+                    //////    totalHeight += worksheet.Row(row).Height; // 1 Excel row height unit = 1 pixel (approx)
+                    //////}
+
+                    ////// Calculate offsets to center the image
+                    ////double xOffset = (totalWidth - picture.Width) / 2;
+                    ////double yOffset = 0; // (totalHeight - picture.Height) / 2;
+
+                    ////// Convert pixels to EMUs (1 pixel = 9525 EMUs)
+                    ////int xOffsetEmu = (int)(xOffset * 800);
+                    ////int yOffsetEmu = (int)(yOffset * 9525);
+
+                    ////// Move image to top-left cell of merged range with offset
+                    ////picture.MoveTo(imageCellRange.FirstCell().CellRight(10), (int)xOffsetEmu, (int)yOffsetEmu);
                 }
             }
             else
