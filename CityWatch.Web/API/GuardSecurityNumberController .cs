@@ -44,8 +44,9 @@ namespace CityWatch.Web.API
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IConfiguration _configuration;
+        public readonly IConfigDataProvider _configDataProvider;
         private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration)
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -56,7 +57,9 @@ namespace CityWatch.Web.API
             _WebHostEnvironment = webHostEnvironment;
             _smsSenderProvider = smsSenderProvider;
             _emailOptions = emailOptions.Value;
-            _configuration= configuration;
+            _configuration = configuration;
+            _configDataProvider = configDataProvider;
+
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -803,7 +806,12 @@ namespace CityWatch.Web.API
             }
         }
 
-
+        [HttpGet("GetStaffDocuments")]
+        public IActionResult GetStaffDocuments(int type, string query = "")
+        {
+            var result = _configDataProvider.GetStaffDocumentsUsingType(type, query);
+            return Ok(result);
+        }
 
 
 
