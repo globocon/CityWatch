@@ -117,7 +117,7 @@ namespace CityWatch.RadioCheck.Helpers
                         ?? Array.Empty<string>();
 
             int thumbWidth = 200;
-            int thumbHeight = 200;
+            int thumbHeight = 180;
             foreach (var file in imageFiles)
             {
                 string extension = Path.GetExtension(file).ToLower();
