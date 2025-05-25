@@ -116,8 +116,8 @@ namespace CityWatch.RadioCheck.Helpers
             string[] imageFiles = Directory.GetFiles(sourceImageFolder, "*.*")
                         ?? Array.Empty<string>();
 
-            int thumbWidth = 200;
-            int thumbHeight = 180;
+            int thumbWidth = 350;
+            int thumbHeight = 200;
             foreach (var file in imageFiles)
             {
                 string extension = Path.GetExtension(file).ToLower();

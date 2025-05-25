@@ -880,10 +880,12 @@ namespace CityWatch.RadioCheck.API
                     //                       //.MoveTo(worksheet.Cell(imageRow, startCol));
 
                     var picture = worksheet.AddPicture(ms)
-                                .MoveTo(imageCellRange.FirstCell().CellRight(10)) ;
+                                .MoveTo(imageCellRange.FirstCell().CellRight(5), 10, 5) ;
 
+                    //var currentX = picture.Left;
+                    //var currentY = picture.Top + 20;
 
-
+                    //picture.MoveTo(currentX, currentY);
 
                     ////// Get width of merged columns (approximate pixels)
                     ////double totalWidth = 0;
