@@ -224,9 +224,8 @@ namespace CityWatch.RadioCheck.API
                     // Save JSON to a file
                     string jsonOutput = GetImageNamesAndCaptionsJson(webhookData);
                     await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
-                    // Compress image files
-                    //ImageZipper.CreateImageZip(submissionFolder, $"{submissionFolder}\\Compressed_Images", $"{workOrder}_images.zip");
-                    ImageZipper.CreateCompressedImage(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");
+                    // Compress image files                   
+                    ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");
                     //ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\Compressed_Images");
                     if (DoesTemplateExists(templateFolder))
                     {

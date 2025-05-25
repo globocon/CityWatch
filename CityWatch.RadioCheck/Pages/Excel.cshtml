@@ -198,7 +198,7 @@
     @if (!string.IsNullOrEmpty(Model.TemplateUrl))
     {
         <div class="file-list">
-            <a href="@(Uri.EscapeDataString($"{Model.TemplateUrl}?t={timestamp}"))" target="_blank">
+            <a href="@($"{Model.TemplateUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download printable Excel template
             </a>
         </div>
@@ -207,7 +207,7 @@
     @if (!string.IsNullOrEmpty(Model.DeliveriesExcelDataUrl))
     {
         <div class="file-list">
-            <a href="@Uri.EscapeDataString($"{Model.DeliveriesExcelDataUrl}?t={timestamp}"))" target="_blank">
+            <a href="@($"{Model.DeliveriesExcelDataUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Deliveries Excel data
             </a>
         </div>
@@ -215,7 +215,7 @@
     @if (!string.IsNullOrEmpty(Model.ExecutionExcelDataUrl))
     {
         <div class="file-list">
-            <a href="@Uri.EscapeDataString($"{Model.ExecutionExcelDataUrl}?t={timestamp}"))" target="_blank">
+            <a href="@($"{Model.ExecutionExcelDataUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Execution Excel Data
             </a>
         </div>
@@ -247,14 +247,14 @@
             @for (int i = 0; i < Model.Files.Count; i++)
             {
                 var fileName = Model.Files[i];
-                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}";
+                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}?t={timestamp}";
                 string fileExtension = System.IO.Path.GetExtension(fileName)?.ToLower();
 
                 <div class="image-card">
                     @*  <p class="file-name">@fileName</p> *@ <!-- Show file name above thumbnail -->
 
                     <div class="file-list">
-                        <a href="@Uri.EscapeDataString(fileUrl)" target="_blank" class="btn btn-success">
+                        <a href="@fileUrl" target="_blank" class="btn btn-success">
                             <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Excel
                         </a>
                     </div>
