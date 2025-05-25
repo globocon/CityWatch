@@ -872,7 +872,7 @@ namespace CityWatch.RadioCheck.API
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // Adjust row height to fit image (approximate conversion)
-                    float rowHeight = image.Height * 0.78f;
+                    float rowHeight = image.Height * 0.79f;
                     worksheet.Row(imageRow).Height = rowHeight;
 
                     // Add picture to sheet 
@@ -880,7 +880,7 @@ namespace CityWatch.RadioCheck.API
                     //                       //.MoveTo(worksheet.Cell(imageRow, startCol));
 
                     var picture = worksheet.AddPicture(ms)
-                                .MoveTo(imageCellRange.FirstCell().CellRight(10));
+                                .MoveTo(imageCellRange.FirstCell().CellRight(10)) ;
 
 
 
