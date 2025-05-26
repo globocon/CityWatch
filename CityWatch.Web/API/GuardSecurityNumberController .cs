@@ -813,6 +813,22 @@ namespace CityWatch.Web.API
             return Ok(result);
         }
 
+        [HttpGet("GetStaffTools")]
+        public IActionResult GetStaffTools(string type)
+        {
+            if (string.IsNullOrWhiteSpace(type))
+                return BadRequest("Type parameter is required.");
+
+            var trimmedType = type.Trim();
+            var id = _clientDataProvider.GetSiteLinksTypeUsingTypeText(trimmedType);
+
+            if (id <= 0)
+                return NotFound($"No link type found for '{trimmedType}'.");
+
+            var result = _clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(id);
+
+            return Ok(result);
+        }
 
 
     }

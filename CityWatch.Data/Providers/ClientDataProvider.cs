@@ -267,6 +267,8 @@ namespace CityWatch.Data.Providers
         public string GetGuardCRMSupplier(int GuardID);
         public GuardLog GetGuardLogs(int Id);
         void SaveCompanyAPIDetails(CompanyDetails companyDetails);
+
+        public int GetSiteLinksTypeUsingTypeText(string typeText);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2141,6 +2143,13 @@ namespace CityWatch.Data.Providers
 
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
+
+        public int GetSiteLinksTypeUsingTypeText(string  typeText)
+        {
+
+            return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == typeText.Trim()).Id;
+        }
+
 
         public List<IncidentReportsPlatesLoaded> GetPlateLoadedEntry(int? userId)
         {
