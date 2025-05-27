@@ -831,6 +831,27 @@ namespace CityWatch.Web.API
         }
 
 
+        [HttpGet("GetStaffDocumentSOP")]
+        public IActionResult GetStaffDocumentSOP([FromQuery] int clientSiteId)
+        {
+            if (clientSiteId <= 0)
+            {
+                return BadRequest("Invalid client site ID.");
+            }
+
+            var result = _configDataProvider.GetStaffDocumentSOPDocDetails(clientSiteId);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound("No SOP documents found for the given client site.");
+            }
+
+            return Ok(result);
+        }
+
+
+
+
     }
 
     public class GuardLogDto
