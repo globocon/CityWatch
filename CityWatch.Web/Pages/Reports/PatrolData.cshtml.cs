@@ -1,3 +1,4 @@
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -9,6 +10,9 @@ using CityWatch.Web.Services;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using iText.Kernel.Pdf;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,8 +23,12 @@ using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CityWatch.Web.Pages.Reports
@@ -36,6 +44,8 @@ namespace CityWatch.Web.Pages.Reports
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly string _downloadsFolderPath;
+
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
@@ -50,6 +60,7 @@ namespace CityWatch.Web.Pages.Reports
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
+            _downloadsFolderPath = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
         }
 
         [BindProperty]
@@ -1480,6 +1491,80 @@ namespace CityWatch.Web.Pages.Reports
 
             return groupedByYear;
         }
+        public async Task<IActionResult> OnPostGenerateBulkIRReportAsync()
+        {
+            string zipFileName = string.Empty;
+            try
+            {
+                var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+                var results = patrolDataReport.Results;
+
+                string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
+                string zipFolderPath = GetZipFolderPath();
+                string workingDirectory = Path.Combine(zipFolderPath, $"{DateTime.Today:yyyyMMdd}_IncidentReports_Bulk_SN");
+
+                if (!Directory.Exists(workingDirectory))
+                    Directory.CreateDirectory(workingDirectory);
+
+                foreach (var item in results)
+                {
+                    string subFolder = Path.Combine(workingDirectory, item.fileNametodownload.Substring(0, 8));
+                    if (!Directory.Exists(subFolder))
+                        Directory.CreateDirectory(subFolder);
+
+                    string fileUrl = $"{baseUrl}{item.fileNametodownload.Substring(0, 8)}/{item.fileNametodownload}";
+                    string outputFile = Path.Combine(subFolder, item.fileNametodownload);
+
+                    using (HttpClient client = new HttpClient())
+                    {
+                        var response = await client.GetAsync(fileUrl);
+                        response.EnsureSuccessStatusCode();
+
+                        using (var fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            await response.Content.CopyToAsync(fs);
+                        }
+                    }
+                }
+
+                // Create the zip file
+                 zipFileName = GetZipFileName(zipFolderPath, ReportRequest.FromDate, ReportRequest.ToDate, $"{DateTime.Today:yyyyMMdd}_IncidentReports_Bulk_SN.zip");
+                if (System.IO.File.Exists(System.IO.Path.Combine(_downloadsFolderPath, zipFileName)))
+                    System.IO.File.Delete(System.IO.Path.Combine(_downloadsFolderPath, zipFileName)); // Overwrite if exists
+
+                ZipFile.CreateFromDirectory(workingDirectory, System.IO.Path.Combine(_downloadsFolderPath, zipFileName));
+                if (Directory.Exists(workingDirectory))
+                    Directory.Delete(workingDirectory, recursive: true);
+
+            }
+            catch(Exception ex)
+            {
+
+            }
+            return new JsonResult(new { zipFile = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+            //return new JsonResult(new { results, zipFile = zipFileName });
+        }
+       
+        private string GetZipFolderPath()
+        {
+            var zipFolderPath = System.IO.Path.Combine(_downloadsFolderPath);
+            if (!Directory.Exists(zipFolderPath))
+                Directory.CreateDirectory(zipFolderPath);
+            return zipFolderPath;
+        }
+        private string GetZipFileName(string zipFolderPath, DateTime logFromDate, DateTime logToDate, string fileNamePart)
+        {
+            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}";
+
+
+            //if (System.IO.File.Exists(System.IO.Path.Combine(_downloadsFolderPath, zipFileName)))
+            //    System.IO.File.Delete(System.IO.Path.Combine(_downloadsFolderPath, zipFileName));
+            //ZipFile.CreateFromDirectory(zipFolderPath, System.IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
+            //if (Directory.Exists(zipFolderPath))
+            //    Directory.Delete(zipFolderPath, true);
+            return  zipFileName;
+        }
+
     }
 
 
