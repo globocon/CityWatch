@@ -2,6 +2,7 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 //using iText.Kernel.Geom;
 using iText.Layout;
@@ -24,6 +25,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 
 
 namespace CityWatch.Web.API
@@ -832,23 +834,96 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("GetStaffDocumentSOP")]
-        public IActionResult GetStaffDocumentSOP([FromQuery] int clientSiteId)
+        public IActionResult GetStaffDocumentSOP(int clientSiteId)
         {
-            if (clientSiteId <= 0)
-            {
-                return BadRequest("Invalid client site ID.");
-            }
-
             var result = _configDataProvider.GetStaffDocumentSOPDocDetails(clientSiteId);
 
-            if (result == null || !result.Any())
-            {
-                return NotFound("No SOP documents found for the given client site.");
-            }
-
-            return Ok(result);
+            // Ensure it's always a list
+            return Ok(result ?? new List<StaffDocument>());
         }
 
+
+
+
+
+        [HttpGet("UpdateOffDuty")]
+        public IActionResult UpdateOffDuty(int guardId, int clientsiteId, int userId)
+        {
+            var status = true;
+            var message = "Success";
+            var now = DateTime.Now;
+
+            try
+            {
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+
+                var logBookType = LogBookType.DailyGuardLog;
+                var clientSiteLogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+                if (clientSiteLogBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                var guardLoginId = GetGuardLoginId(clientSiteLogBookId, guardId, clientsiteId, userId);
+
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+
+                AuthUserHelper.IsAdminPowerUser = false;
+                AuthUserHelper.IsAdminGlobal = false;
+
+                var signOffEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = clientSiteLogBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = now,
+                    Notes = "Guard Off Duty (Logbook Signout)",
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute()
+                };
+
+                _guardLogDataProvider.SaveGuardLog(signOffEntry);
+                _guardDataProvider.UpdateGuardOffDuty(guardLoginId, now);
+
+                var guardlogins = _guardLogDataProvider.GetGuardLogins(guardLoginId);
+                foreach (var item in guardlogins)
+                {
+                    var activityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails()
+                        .Where(x => x.GuardId == item.GuardId && x.ClientSiteId == item.ClientSiteId && x.GuardLoginTime != null);
+
+                    foreach (var activity in activityDetails)
+                    {
+                        activity.GuardLogoutTime = now;
+                        _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(activity);
+                    }
+                }
+
+                var firstLogin = guardlogins?.FirstOrDefault();
+                if (firstLogin != null)
+                {
+                    _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(new ClientSiteRadioCheck
+                    {
+                        ClientSiteId = firstLogin.ClientSiteId,
+                        GuardId = firstLogin.GuardId,
+                        Status = "Off Duty",
+                        RadioCheckStatusId = 1,
+                        CheckedAt = now,
+                        Active = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error: " + ex.Message;
+            }
+
+            return Ok(new { status, message });
+        }
 
 
 
