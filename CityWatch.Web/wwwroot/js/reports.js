@@ -5816,3 +5816,31 @@ function formatDate(dateStr) {
 
     return `${day}/${month}/${year}`;
 }
+$('#btnPatrolIncidentReportBatchDownload').on('click', function () {
+    $('#loader-p').show();
+    $.ajax({
+        url: '/Reports/PatrolData?handler=GenerateBulkIRReport',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#frm_patrol_report_request').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        $('#loader-p').hide();
+        $('#download_IncidentReportBatch').attr('href', response.zipFile);
+        $('#download_IncidentReportBatch').trigger('click');
+        downloadZipViaAjax(response.zipFile);
+    });
+})
+function downloadZipViaAjax(url, fileName = url.split('/').pop()) {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        })
+        .catch(err => console.error("Download failed", err));
+}
