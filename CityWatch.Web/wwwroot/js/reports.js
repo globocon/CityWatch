@@ -5825,10 +5825,11 @@ $('#btnPatrolIncidentReportBatchDownload').on('click', function () {
         data: $('#frm_patrol_report_request').serialize(),
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
-        $('#loader-p').hide();
+        
         $('#download_IncidentReportBatch').attr('href', response.zipFile);
         $('#download_IncidentReportBatch').trigger('click');
         downloadZipViaAjax(response.zipFile);
+        $('#loader-p').hide();
     });
 })
 function downloadZipViaAjax(url, fileName = url.split('/').pop()) {
