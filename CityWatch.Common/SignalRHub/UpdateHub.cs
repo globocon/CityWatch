@@ -14,5 +14,6 @@ namespace CityWatch.Common.Models
         {
             await Clients.All.SendAsync("ReceiveDuressAlarmAlert");
         }
+                
     }
 }

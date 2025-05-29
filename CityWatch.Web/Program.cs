@@ -138,4 +138,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 // Configure the HTTP request pipeline.
 app.MapHub<UpdateHub>("/updateHub");
+app.MapHub<MobileAppSignalRHub>("/MobileAppSignalRHub");
 app.Run();

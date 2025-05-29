@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Threading.Tasks;
 using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
 using static Dropbox.Api.Files.SearchMatchType;
@@ -50,7 +51,7 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
-         void SaveCompanyMailDetails(CompanyDetails companyDetails);
+        void SaveCompanyMailDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report, int Count);
@@ -241,10 +242,10 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLogin> GetGuardDetailsAllTimesheetList(int[] clientSiteIds, DateTime startdate, DateTime endDate);
         //p1-287 A to E-start
-         List<LanguageMaster> GetLanguages();
+        List<LanguageMaster> GetLanguages();
         //p1-287 A to E-end
         public List<ClientSiteSmartWand> GetClientSmartWand();
-        public IncidentReport GetLastIncidentReportsByGuardId( int guardId);
+        public IncidentReport GetLastIncidentReportsByGuardId(int guardId);
         public KPITelematicsField GetKPITelematicsDetails(int? Id);
 
         public string ValidDateTimeADHOC(ClientSiteKpiSetting setting);
@@ -267,6 +268,10 @@ namespace CityWatch.Data.Providers
         public string GetGuardCRMSupplier(int GuardID);
         public GuardLog GetGuardLogs(int Id);
         void SaveCompanyAPIDetails(CompanyDetails companyDetails);
+        public Task<ClientSiteMobileCrowdControl> UpdateCrowdControlCount(ClientSiteMobileCrowdControlData CountData);
+        public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+        public Task<ClientSiteMobileCrowdControl> ResetSiteCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+        public Task<ClientSiteMobileCrowdControl> ResetGuardCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
 
         public int GetSiteLinksTypeUsingTypeText(string typeText);
     }
@@ -353,7 +358,7 @@ namespace CityWatch.Data.Providers
 
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
-                .Include(x => x.ClientType)                
+                .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
@@ -439,8 +444,8 @@ namespace CityWatch.Data.Providers
                     LandLine = "+61 (3)",
                     DataCollectionEnabled = true,
                     IsActive = true,
-                    IsDosDontList= clientSite.IsDosDontList,
-                    UploadFusionLog= clientSite.UploadFusionLog,
+                    IsDosDontList = clientSite.IsDosDontList,
+                    UploadFusionLog = clientSite.UploadFusionLog,
                 });
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -616,7 +621,7 @@ namespace CityWatch.Data.Providers
 
             if (guardLogin != null && guardLogin.Guard != null)
             {
-                
+
                 return guardLogin.Guard.State;
             }
             else
@@ -656,7 +661,7 @@ namespace CityWatch.Data.Providers
         public GuardLog GetGuardLogs(int Id)
         {
             return _context.GuardLogs
-                .Where(z => z.GuardLoginId== Id && z.IsSystemEntry==false)
+                .Where(z => z.GuardLoginId == Id && z.IsSystemEntry == false)
                 .Include(z => z.ClientSiteLogBook)
                 .Include(z => z.GuardLogin.Guard)
                 .OrderBy(z => z.Id)
@@ -893,7 +898,7 @@ namespace CityWatch.Data.Providers
         public int? GetRadioCheckStatus(int? StatusID)
         {
             return _context.RadioCheckStatus
-                     .Where(z => z.Id == StatusID).FirstOrDefault().RadioCheckStatusColorId; 
+                     .Where(z => z.Id == StatusID).FirstOrDefault().RadioCheckStatusColorId;
 
         }
         public List<GlobalDuressEmail> GetGlobalDuressEmail()
@@ -1033,7 +1038,7 @@ namespace CityWatch.Data.Providers
 
                 }
             }
-           
+
             _context.SaveChanges();
         }
 
@@ -1170,7 +1175,7 @@ namespace CityWatch.Data.Providers
                     }
 
 
-                   
+
                 }
 
             }
@@ -1259,19 +1264,19 @@ namespace CityWatch.Data.Providers
                          .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActiveADHOC, setting.ScheduleisActiveADHOC)
                          );
 
-                     //   _context.ClientSiteKpiSettings
-                     // .Where(u => u.Id == setting.Id)
-                     //  .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
-                     //  );
+                        //   _context.ClientSiteKpiSettings
+                        // .Where(u => u.Id == setting.Id)
+                        //  .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
+                        //  );
 
-                     //   TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
-                     //   string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
-                     //   string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
-                     //   string utcOffset = $"{sign}{offset}";
-                     //   _context.ClientSiteKpiSettings
-                     //.Where(u => u.Id == setting.Id)
-                     // .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
-                     // );
+                        //   TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
+                        //   string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+                        //   string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
+                        //   string utcOffset = $"{sign}{offset}";
+                        //   _context.ClientSiteKpiSettings
+                        //.Where(u => u.Id == setting.Id)
+                        // .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
+                        // );
 
                     }
                     catch
@@ -2426,7 +2431,7 @@ namespace CityWatch.Data.Providers
 
 
         }
-        public void AddHyperLinks(string Email,string TvNews,string wether)
+        public void AddHyperLinks(string Email, string TvNews, string wether)
         {
             var HyperLinkUpdate = _context.HyperLinks.Where(x => x.Id != 0).FirstOrDefault();
             if (HyperLinkUpdate != null)
@@ -2548,8 +2553,8 @@ namespace CityWatch.Data.Providers
                 {
 
                     EmailUpdate.KPIMail = Email;
-                        _context.SaveChanges();
-                    
+                    _context.SaveChanges();
+
                 }
                 /*Remove all the rows */
 
@@ -3067,7 +3072,7 @@ namespace CityWatch.Data.Providers
               .SingleOrDefault(x => x.Id == documentId);
             return AudioDoc;
         }
-            public void DeleteRCLinkedDuress(int id)
+        public void DeleteRCLinkedDuress(int id)
         {
             var recordToDelete = _context.RCLinkedDuressMaster.SingleOrDefault(x => x.Id == id);
             if (recordToDelete == null)
@@ -3172,7 +3177,7 @@ namespace CityWatch.Data.Providers
                     recordToUpdate.KpiTelematicsAndStatistics = record.KpiTelematicsAndStatistics;
                     recordToUpdate.SmartWandPatrolReports = record.SmartWandPatrolReports;
                     recordToUpdate.MonthlyClientReport = record.MonthlyClientReport;
-                    recordToUpdate.DropboxScheduleisActive= record.DropboxScheduleisActive;
+                    recordToUpdate.DropboxScheduleisActive = record.DropboxScheduleisActive;
                     _context.SaveChanges();
                 }
                 else
@@ -3376,7 +3381,7 @@ namespace CityWatch.Data.Providers
 
         }
         /* update Status for a site */
-        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid,int? KPITelematicsFieldID)
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid, int? KPITelematicsFieldID)
         {
             // Fetch the client site to update
             var updateClientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
@@ -3416,7 +3421,7 @@ namespace CityWatch.Data.Providers
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
-                      
+
                         var clientSite = _context.ClientSites.SingleOrDefault(z => z.Id == clientSiteId);
                         if (clientSite != null)
                         {
@@ -3450,13 +3455,13 @@ namespace CityWatch.Data.Providers
         //p1-287 A to E-start
         public List<LanguageMaster> GetLanguages()
         {
-            return _context.LanguageMaster.Where(x=>x.IsDeleted==false).OrderBy(x => x.Language).ToList();
+            return _context.LanguageMaster.Where(x => x.IsDeleted == false).OrderBy(x => x.Language).ToList();
         }
         //p1-287 A to E-end
         public IncidentReport GetLastIncidentReportsByGuardId(int guardId)
         {
             return _context.IncidentReports
-                .Where(x => x.GuardId == guardId ).OrderByDescending(z => z.CreatedOn)
+                .Where(x => x.GuardId == guardId).OrderByDescending(z => z.CreatedOn)
                 .FirstOrDefault();
         }
         public KPITelematicsField GetKPITelematicsDetails(int? Id)
@@ -3499,6 +3504,240 @@ namespace CityWatch.Data.Providers
 
             _context.SaveChanges();
         }
+
+        public async Task<ClientSiteMobileCrowdControl> UpdateCrowdControlCount(ClientSiteMobileCrowdControlData CountData)
+        {
+            var currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == CountData.ClientSiteId).FirstOrDefaultAsync();
+            if (currentCount != null)
+            {
+                if (CountData.AddCount)
+                {
+                    currentCount.Tcount += CountData.Count;
+                    currentCount.Ccount += CountData.Count;
+                    currentCount.LastUpdateTime = DateTime.UtcNow;
+                    currentCount.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+                else
+                {
+                    if (currentCount.Ccount > 0)
+                    {
+                        currentCount.Ccount -= CountData.Count;
+                    }
+                    currentCount.LastUpdateTime = DateTime.UtcNow;
+                    currentCount.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+            }
+            else
+            {
+                ClientSiteMobileCrowdControl newcount = new ClientSiteMobileCrowdControl();
+                if (CountData.AddCount)
+                {
+                    newcount.ClientSiteId = CountData.ClientSiteId;
+                    newcount.Ccount = CountData.Count;
+                    newcount.Tcount = CountData.Count;
+                    newcount.LastUpdateTime = DateTime.UtcNow;
+                    newcount.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+                else
+                {
+                    newcount.ClientSiteId = CountData.ClientSiteId;
+                    newcount.Ccount = 0;
+                    newcount.Tcount = 0;
+                    newcount.LastUpdateTime = DateTime.UtcNow;
+                    newcount.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+                _context.Add(newcount);
+            }
+
+            // Save Site Count
+            await _context.SaveChangesAsync();
+
+            ClientSiteMobileCrowdControlGuards GuardCountToUpdate;
+            var GuardCountData = CountData.ClientSiteCrowdControlGuards.FirstOrDefault();
+            GuardCountToUpdate = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == CountData.ClientSiteId &&
+            x.GuardId == GuardCountData.GuardId && x.UserId == GuardCountData.UserId).FirstOrDefaultAsync();
+            if (GuardCountToUpdate != null)
+            {
+                if (CountData.AddCount)
+                {
+                    GuardCountToUpdate.Pcount += GuardCountData.Pcount;
+                    GuardCountToUpdate.GuardLastUpdateTime = DateTime.UtcNow;
+                    GuardCountToUpdate.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+                else
+                {
+                    if (GuardCountToUpdate.Pcount > 0)
+                    {
+                        GuardCountToUpdate.Pcount -= GuardCountData.Pcount;
+                    }
+                    GuardCountToUpdate.GuardLastUpdateTime = DateTime.UtcNow;
+                    GuardCountToUpdate.CrowdControlDate = DateTime.UtcNow.Date;
+                }
+            }
+            else
+            {
+                ClientSiteMobileCrowdControlGuards NewGuardSignin;
+                if (CountData.AddCount)
+                {
+                    NewGuardSignin = new ClientSiteMobileCrowdControlGuards()
+                    {
+                        ClientSiteId = currentCount.ClientSiteId,
+                        UserId = GuardCountData.UserId,
+                        GuardId = GuardCountData.GuardId,
+                        CrowdControlDate = currentCount.CrowdControlDate,
+                        CrowdControlId = currentCount.Id,
+                        GuardLastUpdateTime = DateTime.UtcNow,
+                        Pcount = GuardCountData.Pcount,
+                        Id = 0
+                    };
+
+                }
+                else
+                {
+                    NewGuardSignin = new ClientSiteMobileCrowdControlGuards()
+                    {
+                        ClientSiteId = currentCount.ClientSiteId,
+                        UserId = GuardCountData.UserId,
+                        GuardId = GuardCountData.GuardId,
+                        CrowdControlDate = currentCount.CrowdControlDate,
+                        CrowdControlId = currentCount.Id,
+                        GuardLastUpdateTime = DateTime.UtcNow,
+                        Pcount = 0,
+                        Id = 0
+                    };
+                }
+                _context.Add(NewGuardSignin);
+            }
+
+
+            // Save Guard Count
+            await _context.SaveChangesAsync();
+
+
+            currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == CountData.ClientSiteId).FirstOrDefaultAsync();
+            currentCount.ClientSiteCrowdControlGuards = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == CountData.ClientSiteId).ToListAsync();
+            return currentCount;
+        }
+
+        public async Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
+        {
+            ClientSiteMobileCrowdControl currentCount;
+            currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).FirstOrDefaultAsync();
+            if (currentCount == null)
+            {
+                currentCount = new ClientSiteMobileCrowdControl();
+
+                currentCount.ClientSiteId = JoinGaurd.ClientSiteId;
+                currentCount.Ccount = 0;
+                currentCount.Tcount = 0;
+                currentCount.LastUpdateTime = DateTime.UtcNow;
+                currentCount.CrowdControlDate = DateTime.UtcNow.Date;
+
+                _context.Add(currentCount);
+                await _context.SaveChangesAsync();
+            }
+
+            ClientSiteMobileCrowdControlGuards NewGuardSignin;
+            NewGuardSignin = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId &&
+            x.GuardId == JoinGaurd.GuardId && x.UserId == JoinGaurd.UserId).FirstOrDefaultAsync();
+            if (NewGuardSignin == null)
+            {
+                NewGuardSignin = new ClientSiteMobileCrowdControlGuards()
+                {
+                    ClientSiteId = JoinGaurd.ClientSiteId,
+                    UserId = JoinGaurd.UserId,
+                    GuardId = JoinGaurd.GuardId,
+                    CrowdControlDate = currentCount.CrowdControlDate,
+                    CrowdControlId = currentCount.Id,
+                    GuardLastUpdateTime = DateTime.UtcNow,
+                    Pcount = 0,
+                    Id = 0
+                };
+                _context.Add(NewGuardSignin);
+                await _context.SaveChangesAsync();
+            }
+
+            currentCount.ClientSiteCrowdControlGuards = new List<ClientSiteMobileCrowdControlGuards>() { NewGuardSignin };
+            return currentCount;
+        }
+
+        public async Task<ClientSiteMobileCrowdControl> ResetSiteCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
+        {
+            DateTime ct = DateTime.UtcNow;
+            ClientSiteMobileCrowdControl currentCount;
+            currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).FirstOrDefaultAsync();
+            if (currentCount == null)
+            {
+                currentCount = new ClientSiteMobileCrowdControl();
+
+                currentCount.ClientSiteId = JoinGaurd.ClientSiteId;
+                currentCount.Ccount = 0;
+                currentCount.Tcount = 0;
+                currentCount.LastUpdateTime = ct;
+                currentCount.CrowdControlDate = ct.Date;
+
+                _context.Add(currentCount);
+            }
+            else
+            {
+                currentCount.Ccount = 0;
+                currentCount.Tcount = 0;
+                currentCount.LastUpdateTime = ct;
+                currentCount.CrowdControlDate = ct.Date;
+            }
+
+            var g = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
+
+            if (g != null)
+            {
+                foreach (var c in g)
+                {
+                    c.CrowdControlDate = ct.Date;
+                    c.GuardLastUpdateTime = ct;
+                    c.Pcount = 0;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).FirstOrDefaultAsync();
+            currentCount.ClientSiteCrowdControlGuards = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
+            return currentCount;
+
+        }
+
+        public async Task<ClientSiteMobileCrowdControl> ResetGuardCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
+        {
+            var currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).FirstOrDefaultAsync();
+            ClientSiteMobileCrowdControlGuards NewGuardSignin;
+            NewGuardSignin = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId &&
+            x.GuardId == JoinGaurd.GuardId && x.UserId == JoinGaurd.UserId).FirstOrDefaultAsync();
+            if (NewGuardSignin == null)
+            {
+                NewGuardSignin = new ClientSiteMobileCrowdControlGuards()
+                {
+                    ClientSiteId = JoinGaurd.ClientSiteId,
+                    UserId = JoinGaurd.UserId,
+                    GuardId = JoinGaurd.GuardId,
+                    CrowdControlDate = currentCount.CrowdControlDate,
+                    CrowdControlId = currentCount.Id,
+                    GuardLastUpdateTime = DateTime.UtcNow,
+                    Pcount = 0,
+                    Id = 0
+                };
+                _context.Add(NewGuardSignin);
+                
+            }
+            else
+            {
+                NewGuardSignin.GuardLastUpdateTime = DateTime.UtcNow;
+                NewGuardSignin.Pcount = 0;
+            }
+
+            await _context.SaveChangesAsync();
+            currentCount.ClientSiteCrowdControlGuards = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
+            return currentCount;
+        }
+
     }
 
 
