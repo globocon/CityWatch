@@ -272,6 +272,8 @@ namespace CityWatch.Data.Providers
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         public Task<ClientSiteMobileCrowdControl> ResetSiteCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         public Task<ClientSiteMobileCrowdControl> ResetGuardCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+
+        public int GetSiteLinksTypeUsingTypeText(string typeText);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2146,6 +2148,13 @@ namespace CityWatch.Data.Providers
 
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
+
+        public int GetSiteLinksTypeUsingTypeText(string  typeText)
+        {
+
+            return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == typeText.Trim()).Id;
+        }
+
 
         public List<IncidentReportsPlatesLoaded> GetPlateLoadedEntry(int? userId)
         {

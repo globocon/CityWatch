@@ -1,14 +1,16 @@
 ﻿@page
 @model CityWatch.RadioCheck.Pages.ExcelModel
 @using System.IO
-
+@{
+    var timestamp = DateTime.UtcNow.Ticks;
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uploaded Files</title>
-    
+
 
     <style>
         /* General Page Styling */
@@ -173,6 +175,7 @@
 
 <body>
     @Html.AntiForgeryToken()
+
     <div style="display: flex; flex-wrap: wrap; align-items: center; position: relative; margin-bottom: 30px; min-height: 60px;">
         <!-- Logo on the left -->
         <div style="flex: 0 0 auto;">
@@ -189,20 +192,22 @@
     <!-- Display Form Name and Work Order -->
     <h5>Form Name: @Model.FormName</h5>
     <h5>Work Order: @Model.WorkOrder</h5>
+    <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" />
+
 
     @if (!string.IsNullOrEmpty(Model.TemplateUrl))
     {
         <div class="file-list">
-            <a href="@Model.TemplateUrl" target="_blank">
+            <a href="@($"{Model.TemplateUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download printable Excel template
             </a>
         </div>
     }
-    
+
     @if (!string.IsNullOrEmpty(Model.DeliveriesExcelDataUrl))
     {
         <div class="file-list">
-            <a href="@Model.DeliveriesExcelDataUrl" target="_blank">
+            <a href="@($"{Model.DeliveriesExcelDataUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Deliveries Excel data
             </a>
         </div>
@@ -210,7 +215,7 @@
     @if (!string.IsNullOrEmpty(Model.ExecutionExcelDataUrl))
     {
         <div class="file-list">
-            <a href="@Model.ExecutionExcelDataUrl" target="_blank">
+            <a href="@($"{Model.ExecutionExcelDataUrl}?t={timestamp}")" target="_blank">
                 <i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Execution Excel Data
             </a>
         </div>
@@ -218,10 +223,10 @@
 
     @* File Uploads *@
 
-    <input type="file" id="excelFile" accept=".xls,.xlsx" style="display:none" />
+    
     @if (!string.IsNullOrEmpty(Model.DeliveriesExcelDataUrl))
     {
-        <div class="file-list">            
+        <div class="file-list">
             <button type="button" class="btn btn-success" data-exceluploadfiletype="DeliveriesExcel" data-exceluploadformName="@Model.FormName">
                 <i class="fa fa-cloud-upload mr-2" aria-hidden="true"></i>Upload Deliveries Excel Data
             </button>
@@ -229,7 +234,7 @@
     }
     @if (!string.IsNullOrEmpty(Model.ExecutionExcelDataUrl))
     {
-        <div class="file-list">            
+        <div class="file-list">
             <button type="button" class="btn btn-success" data-exceluploadfiletype="ExecutionExcel" data-exceluploadformName="@Model.FormName">
                 <i class="fa fa-cloud-upload mr-2" aria-hidden="true"></i>Upload Execution Excel Data
             </button>
@@ -242,7 +247,7 @@
             @for (int i = 0; i < Model.Files.Count; i++)
             {
                 var fileName = Model.Files[i];
-                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}";
+                string fileUrl = $"/uploads/jotform/{Model.FormName}/{Model.WorkOrder}/{fileName}?t={timestamp}";
                 string fileExtension = System.IO.Path.GetExtension(fileName)?.ToLower();
 
                 <div class="image-card">
@@ -268,6 +273,6 @@
     }
 
 
-    
+
 </body>
 </html>
