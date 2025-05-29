@@ -14,23 +14,6 @@ namespace CityWatch.Common.Models
         {
             await Clients.All.SendAsync("ReceiveDuressAlarmAlert");
         }
-
-
-
-        #region "MobileApplication"
-
-        public Task JoinGroup(int SiteId)
-        {
-            return Groups.AddToGroupAsync(Context.ConnectionId, SiteId.ToString());
-        }
-
-        public Task UpdateCrowdControlCountToMobileSiteGroup(int SiteId, int count, bool AddCount)
-        {
-
-            return Clients.Group(SiteId.ToString()).SendAsync("UpdateCrowdControl", )
-
-        }
-
-        #endregion "MobileApplication"
+                
     }
 }
