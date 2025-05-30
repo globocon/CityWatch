@@ -391,24 +391,147 @@ namespace CityWatch.RadioCheck.API
         }
 
 
+        //private async Task DownloadAndSaveFile(string fileUrl, string saveDirectory)
+        //{
+        //    try
+        //    {
+        //        using var httpClient = new HttpClient();
+        //        var fileBytes = await httpClient.GetByteArrayAsync(fileUrl);
+
+        //        string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
+        //        string filePath = Path.Combine(saveDirectory, fileName);
+
+        //        await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
+        //        WriteLog($"File downloaded: {fileName} from {fileUrl}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        WriteLog($"Error downloading file from {fileUrl}: {ex.Message}");
+        //    }
+        //}
+
+        //private async Task<bool> DownloadAndSaveFile(string fileUrl, string saveDirectory)
+        //{
+            // Claude Code
+        //    try
+        //    {
+        //        // Validate inputs
+        //        if (string.IsNullOrWhiteSpace(fileUrl) || string.IsNullOrWhiteSpace(saveDirectory))
+        //        {
+        //            WriteLog("Invalid file URL or save directory provided");
+        //            return false;
+        //        }
+
+        //        // Ensure directory exists
+        //        if (!Directory.Exists(saveDirectory))
+        //        {
+        //            Directory.CreateDirectory(saveDirectory);
+        //            WriteLog($"Created directory: {saveDirectory}");
+        //        }
+
+        //        using var httpClient = new HttpClient();
+
+        //        // Set timeout and headers for better reliability
+        //        httpClient.Timeout = TimeSpan.FromMinutes(10);
+        //        httpClient.DefaultRequestHeaders.Add("User-Agent",
+        //            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+
+        //        // Get file name from URL or generate one
+        //        string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
+        //        string filePath = Path.Combine(saveDirectory, fileName);
+
+        //        WriteLog($"Starting download: {fileUrl}");
+
+        //        // Download with progress tracking
+        //        using var response = await httpClient.GetAsync(fileUrl, HttpCompletionOption.ResponseHeadersRead);
+        //        response.EnsureSuccessStatusCode();
+
+        //        var totalBytes = response.Content.Headers.ContentLength ?? 0;
+        //        WriteLog($"File size: {totalBytes} bytes");
+
+        //        using var contentStream = await response.Content.ReadAsStreamAsync();
+        //        using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+        //        var buffer = new byte[8192];
+        //        long totalBytesRead = 0;
+        //        int bytesRead;
+
+        //        while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+        //        {
+        //            await fileStream.WriteAsync(buffer, 0, bytesRead);
+        //            totalBytesRead += bytesRead;
+
+        //            // Optional: Log progress for large files
+        //            if (totalBytes > 0 && totalBytesRead % (1024 * 1024) == 0) // Every MB
+        //            {
+        //                var progress = (double)totalBytesRead / totalBytes * 100;
+        //                WriteLog($"Download progress: {progress:F1}%");
+        //            }
+        //        }
+
+        //        await fileStream.FlushAsync();
+
+        //        // Verify file was completely downloaded
+        //        var fileInfo = new FileInfo(filePath);
+        //        if (totalBytes > 0 && fileInfo.Length != totalBytes)
+        //        {
+        //            WriteLog($"Warning: Expected {totalBytes} bytes, but downloaded {fileInfo.Length} bytes");
+        //            return false;
+        //        }
+
+        //        WriteLog($"File successfully downloaded: {fileName} ({fileInfo.Length} bytes) from {fileUrl}");
+        //        return true;
+        //    }
+        //    catch (HttpRequestException ex)
+        //    {
+        //        WriteLog($"HTTP error downloading file from {fileUrl}: {ex.Message}");
+        //        return false;
+        //    }
+        //    catch (TaskCanceledException ex)
+        //    {
+        //        WriteLog($"Download timeout from {fileUrl}: {ex.Message}");
+        //        return false;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        WriteLog($"Error downloading file from {fileUrl}: {ex.Message}");
+        //        return false;
+        //    }
+        //}
+
+
         private async Task DownloadAndSaveFile(string fileUrl, string saveDirectory)
         {
+            // Chat GPT Code
             try
             {
                 using var httpClient = new HttpClient();
-                var fileBytes = await httpClient.GetByteArrayAsync(fileUrl);
 
+                // Send HTTP GET request and ensure the response is successful
+                using var response = await httpClient.GetAsync(fileUrl, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                // Get the filename from the URL
                 string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
                 string filePath = Path.Combine(saveDirectory, fileName);
 
-                await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
-                WriteLog($"File downloaded: {fileName} from {fileUrl}");
+                // Create the directory if it doesn't exist
+                Directory.CreateDirectory(saveDirectory);
+
+                // Stream the content directly to the file
+                await using var inputStream = await response.Content.ReadAsStreamAsync();
+                await using var outputStream = System.IO.File.Create(filePath);
+                await inputStream.CopyToAsync(outputStream);
+
+                WriteLog($"Image downloaded: {fileName} from {fileUrl}");
             }
             catch (Exception ex)
             {
-                WriteLog($"Error downloading file from {fileUrl}: {ex.Message}");
+                WriteLog($"Error downloading image from {fileUrl}: {ex.Message}");
             }
         }
+
+
 
         private void WriteLog(string logMessage)
         {
@@ -550,7 +673,7 @@ namespace CityWatch.RadioCheck.API
                 while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
                 {
                     string header = worksheet.Cell(headerRow, col).GetString();                    
-                    if (header.ToLower().Equals("work order"))
+                    if (header.Replace(" ","").Trim().ToLower().Equals("workorder"))
                     {
                         workOrderColumnIndex = col;
                         break;
@@ -634,8 +757,9 @@ namespace CityWatch.RadioCheck.API
                 {
                     System.IO.File.AppendAllText(logFilePath, $"Processing key: {kvp.Key}\n");
 
-                    if (kvp.Key.Contains("_Photo") && kvp.Value is object value)
+                    if (kvp.Key.ToLower().Contains("_photo") && kvp.Value is object value)
                     {
+                        System.IO.File.AppendAllText(logFilePath, $"Processing Image key: {kvp.Key}\n");
                         if (value is JArray array) // If multiple images exist
                         {
                             foreach (var item in array)
@@ -657,7 +781,16 @@ namespace CityWatch.RadioCheck.API
                         }
                         else if (value is string imageUrl) // If a single image exists
                         {
-                            string imageName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
+                            string imageName = string.Empty;
+
+                            if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult) &&
+                                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                            {
+                                imageName = Path.GetFileName(uriResult.AbsolutePath);
+                            }
+
+                            if (string.IsNullOrEmpty(imageName))
+                                continue;
 
                             // Find the matching caption key
                             string captionKey = FindMatchingCaptionKey(webhookData, kvp.Key);
