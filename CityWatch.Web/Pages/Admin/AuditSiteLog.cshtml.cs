@@ -464,7 +464,7 @@ namespace CityWatch.Web.Pages.Admin
             var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs);
             foreach (var guardlog in dailyGuardLogs)
             {
-                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)guardlog.LBId);
                 
 
                 foreach (var guardLogImage in guardlogImages)

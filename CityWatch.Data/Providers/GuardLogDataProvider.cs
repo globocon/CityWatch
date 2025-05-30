@@ -5837,7 +5837,8 @@ namespace CityWatch.Data.Providers
                 .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
                             z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
                             z.ClientSiteLogBook.Date >= logFromDate &&
-                            z.ClientSiteLogBook.Date <= logToDate)
+                            z.ClientSiteLogBook.Date <= logToDate &&
+                            (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
                 .Include(z => z.GuardLogin)
                 .Include(z => z.GuardLogin.Guard)
                 .Include(z => z.GuardLogin.ClientSiteLogBook)
@@ -5865,6 +5866,7 @@ namespace CityWatch.Data.Providers
           {
               ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
               NotificationCreatedTime = log.EventDateTime,
+              LBId=log.Id,
               Notes = log.Notes,
               ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
               SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
