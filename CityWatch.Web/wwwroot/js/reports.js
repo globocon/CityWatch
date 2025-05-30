@@ -5030,18 +5030,25 @@ function drawPieChartUsingChartJsChartYearOfOnBoarding(dataValue) {
 function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.key;
+        return e.status;
     });
-    var data2 = dataValue.map(function (e) {
-        return e.value;
+    var count2 = dataValue.map(function (e) {
+        return e.count;
+    });
+    var percentage2 = dataValue.map(function (e) {
+        return e.percentage;
     });
     // Data for the pie chart
     const data = {
         labels: labels,
         datasets: [{
-            data: data2, // Values for each slice
+            count: count2, // Values for each slice
+            
 
         },
+            {
+                percentage: percentage2,
+            },
         ],
         datalabels: {
             // display labels for this specific dataset
@@ -5063,7 +5070,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                 labels: labels,
                 datasets: [{
                     label: '# of Votes',
-                    data: data2,
+                    data: count2,
                     backgroundColor: getColors(15),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
@@ -5117,7 +5124,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -5138,7 +5145,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value + '%';
+                            return args.percentage + '%';
 
                         },
 
@@ -5168,7 +5175,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                 labels: labels,
                 datasets: [{
                     label: '# of Votes',
-                    data: data2,
+                    data: count2,
                     backgroundColor: getColors(15),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
@@ -5242,7 +5249,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value + '%';
+                            return args.percentage + '%';
 
                         },
                         position: 'outside',
