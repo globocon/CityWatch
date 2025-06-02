@@ -1423,25 +1423,53 @@ namespace CityWatch.Web.Pages.Reports
             return groupedByYear;
         }
 
-        public IEnumerable<KeyValuePair<string, double>> GetActiveAndInactiveGuardHrReport()
+        //public IEnumerable<KeyValuePair<string, double>> GetActiveAndInactiveGuardHrReport()
+        //{
+        //    var guards = _guardDataProvider.GetGuards();
+
+        //    int totalGuards = guards.Count();
+
+        //    if (totalGuards == 0)
+        //        return Enumerable.Empty<KeyValuePair<string, double>>();
+
+        //    // Group, count, and calculate percentages for active and inactive guards
+        //    //var groupedByStatus = guards
+        //    //    .GroupBy(g => g.IsActive ? "Active" : "Inactive") // Group by IsActive field
+        //    //    .Select(g => new KeyValuePair<string, double>(
+        //    //        g.Key,
+        //    //        Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+        //    //    ))
+        //    //    .OrderBy(kvp => kvp.Key); // Sort alphabetically (Active first)
+
+        //    var groupedByStatus = guards
+        //    .GroupBy(g => g.IsActive ? "Active" : "Inactive")
+        //    .Select(g => new
+        //    {
+        //        Status = g.Key,
+        //        Count = g.Count(),
+        //        Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2)// Calculate percentage and round to 2 decimals
+        //    })
+        //    .OrderBy(result => result.Status);
+
+        //    return groupedByStatus;
+        //}
+        public IEnumerable<GuardStatusReport> GetActiveAndInactiveGuardHrReport()
         {
             var guards = _guardDataProvider.GetGuards();
-
             int totalGuards = guards.Count();
 
             if (totalGuards == 0)
-                return Enumerable.Empty<KeyValuePair<string, double>>();
+                return Enumerable.Empty<GuardStatusReport>();
 
-            // Group, count, and calculate percentages for active and inactive guards
-            var groupedByStatus = guards
-                .GroupBy(g => g.IsActive ? "Active" : "Inactive") // Group by IsActive field
-                .Select(g => new KeyValuePair<string, double>(
-                    g.Key,
-                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
-                ))
-                .OrderBy(kvp => kvp.Key); // Sort alphabetically (Active first)
-
-            return groupedByStatus;
+            return guards
+                .GroupBy(g => g.IsActive ? "Active" : "Inactive")
+                .Select(g => new GuardStatusReport
+                {
+                    Status = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2)
+                })
+                .OrderBy(g => g.Status);
         }
 
 
@@ -1566,9 +1594,14 @@ namespace CityWatch.Web.Pages.Reports
         }
 
     }
+    public class GuardStatusReport
+    {
+        public string Status { get; set; }      // "Active" or "Inactive"
+        public int Count { get; set; }          // Number of guards
+        public double Percentage { get; set; }  // e.g. 88.24
+    }
 
 
-   
 
 
 
