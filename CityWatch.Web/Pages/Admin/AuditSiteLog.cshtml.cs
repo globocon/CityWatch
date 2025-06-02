@@ -464,21 +464,25 @@ namespace CityWatch.Web.Pages.Admin
             var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs);
             foreach (var guardlog in dailyGuardLogs)
             {
-                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)guardlog.LBId);
-                
-
-                foreach (var guardLogImage in guardlogImages)
+                if (guardlog.LBId != null)
                 {
-                    if (guardLogImage.IsRearfile == true)
-                    {
-                        guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
-                    }
-                    if (guardLogImage.IsTwentyfivePercentfile == true)
-                    {
+                    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)guardlog.LBId);
 
-                        guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
 
-                       
+
+                    foreach (var guardLogImage in guardlogImages)
+                    {
+                        if (guardLogImage.IsRearfile == true)
+                        {
+                            guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        }
+                        if (guardLogImage.IsTwentyfivePercentfile == true)
+                        {
+
+                            guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+
+
+                        }
                     }
                 }
             }
