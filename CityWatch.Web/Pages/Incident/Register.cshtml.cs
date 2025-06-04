@@ -630,13 +630,28 @@ namespace CityWatch.Web.Pages.Incident
 
             var toAddressData = string.Empty;
             var thirpartyemail = getClientEmailId();
+            var messageHtml = string.Empty; ;
             if (thirpartyemail != string.Empty)
             {
                 toAddressData = thirpartyemail + '|' + ToAddreddAppset[1];
+                var host = HttpContext.Request.Host.Host;
+                var hostParts = host.Split('.');
+
+                // Extract the client name
+                string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                ? hostParts[1]
+                : hostParts[0];
+                var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                if(domain != null)
+                {
+                    
+                    messageHtml = "Dear "+ CapitalizeFirstLetter(domain.Domain) +" Client; < br >< br > Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.< br >< br > Sites with access to the cloud file server will also have a copy stored in the relevant folder.< br >< br > Any concerns, please contact your relevant "+ CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:"+thirpartyemail+"' > "+thirpartyemail+" </ a >";
+                }
             }
             else
             {
                 toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+                messageHtml = _EmailOptions.Message;
             }
             
 
@@ -648,7 +663,7 @@ namespace CityWatch.Web.Pages.Incident
             string emailAddress = null;
             foreach (var incidentReportField in incidentReportFields)
             {
-                 emailAddress = incidentReportField.Name;
+                emailAddress = incidentReportField.Name;
                                                                  
             }
             string[] ccAddress = new string[] { };
@@ -657,22 +672,19 @@ namespace CityWatch.Web.Pages.Incident
                 ccAddress = emailAddress.Split(',');
             }
             var subject = _EmailOptions.Subject;
-            var messageHtml = _EmailOptions.Message;
-
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             foreach (var address in GetToEmailAddressList(toAddress))
                 message.To.Add(address);
-
             if (Report.DateLocation.ReimbursementYes)
-                {
-                    foreach (var address in ccAddress)
+            {
+                foreach (var address in ccAddress)
                     message.Cc.Add(new MimeKit.MailboxAddress(String.Empty, address));
-                }
-            
+            }
+
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-           // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
 
@@ -684,52 +696,52 @@ namespace CityWatch.Web.Pages.Incident
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
-            if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) { 
-            string colorcodes = _ViewDataService.GetFeedbackTemplatesByTypeByColor(3,Convert.ToInt32(Report.SiteColourCodeId));
+            if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) {
+                string colorcodes = _ViewDataService.GetFeedbackTemplatesByTypeByColor(3,Convert.ToInt32(Report.SiteColourCodeId));
                 //for DESCRIBING color codes-start
-               //if(colorcodes.Contains("Code ORANGE"))
-               // { 
-               //         Report.SiteColourCode = "Code ORANGE Event";
-               // }
-               //else if(colorcodes.Contains("Code BLUE"))
-               // {
-               //     Report.SiteColourCode = "Code BLUE Event";
-               // }
-               // else if (colorcodes.Contains("Code PINK"))
-               // {
-               //     Report.SiteColourCode = "Code PINK Event";
-               // }
-               // else if (colorcodes.Contains("Code PURPLE"))
-               // {
-               //     Report.SiteColourCode = "Code PURPLE Event";
-               // }
-               // else if (colorcodes.Contains("Code BLACK"))
-               // {
-               //     Report.SiteColourCode = "Code BLACK Event";
-               // }
-               // else if (colorcodes.Contains("Code YELLOW"))
-               // {
-               //     Report.SiteColourCode = "Code YELLOW Event";
-               // }
-               // else if (colorcodes.Contains("Code BROWN"))
-               // {
-               //     Report.SiteColourCode = "Code BROWN Event";
-               // }
-               // else if (colorcodes.Contains("Code GREY"))
-               // {
-               //     Report.SiteColourCode = "Code GREY Event";
-               // }
-               //else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
-               // {
-               //     Report.SiteColourCode = "Code GREY Event";
-               // }
-               
-               // else if (colorcodes.Contains("Code RED"))
-               // {
-               //     Report.SiteColourCode = "Code RED Event";
-               // }
-               
-               // else
+                //if(colorcodes.Contains("Code ORANGE"))
+                // { 
+                //         Report.SiteColourCode = "Code ORANGE Event";
+                // }
+                //else if(colorcodes.Contains("Code BLUE"))
+                // {
+                //     Report.SiteColourCode = "Code BLUE Event";
+                // }
+                // else if (colorcodes.Contains("Code PINK"))
+                // {
+                //     Report.SiteColourCode = "Code PINK Event";
+                // }
+                // else if (colorcodes.Contains("Code PURPLE"))
+                // {
+                //     Report.SiteColourCode = "Code PURPLE Event";
+                // }
+                // else if (colorcodes.Contains("Code BLACK"))
+                // {
+                //     Report.SiteColourCode = "Code BLACK Event";
+                // }
+                // else if (colorcodes.Contains("Code YELLOW"))
+                // {
+                //     Report.SiteColourCode = "Code YELLOW Event";
+                // }
+                // else if (colorcodes.Contains("Code BROWN"))
+                // {
+                //     Report.SiteColourCode = "Code BROWN Event";
+                // }
+                // else if (colorcodes.Contains("Code GREY"))
+                // {
+                //     Report.SiteColourCode = "Code GREY Event";
+                // }
+                //else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
+                // {
+                //     Report.SiteColourCode = "Code GREY Event";
+                // }
+
+                // else if (colorcodes.Contains("Code RED"))
+                // {
+                //     Report.SiteColourCode = "Code RED Event";
+                // }
+
+                // else
                 //{
                     Report.SiteColourCode = colorcodes;
                 //}
@@ -800,7 +812,13 @@ namespace CityWatch.Web.Pages.Incident
 
 
 
+        public static string CapitalizeFirstLetter(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
 
+            return char.ToUpper(input[0]) + input.Substring(1);
+        }
 
 
 

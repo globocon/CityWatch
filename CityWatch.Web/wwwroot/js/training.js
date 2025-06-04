@@ -290,6 +290,7 @@ $('#tbl_courseDocumentFiles').on('click', '.delete_course_file_sop', function ()
                 gridCourseDocumentFiles.clear();
                 gridCourseDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
             }
+            ShowStatusColorForCourse();
         }).fail(function () {
             console.log('error')
         });
@@ -918,6 +919,7 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
 
             showStatusNotification(data.success, data.message);
         }
+        ShowStatusColorForCourse();
     }).fail(function () {
         showStatusNotification(false, 'Something went wrong');
     });
@@ -1087,7 +1089,7 @@ $('#btn_save_trainingassessment_settings').on("click", function (e) {
             alert("Saved Successfully");
         }
         LoadTQSettings();
-
+        ShowStatusColorForCourse();
 
 
         //$.each(item1 in result)
@@ -1394,7 +1396,7 @@ $('#btn_save_trainingassessment_testquestions').on("click", function (e) {
             }
         }
         $('#loader').hide();
-
+        ShowStatusColorForCourse();
 
         //$.each(item1 in result)
         //{
@@ -1428,7 +1430,7 @@ $('#btn_delete_trainingassessment_testquestions').on("click", function (e) {
             
         }
         $('#loader').hide();
-
+        ShowStatusColorForCourse();
 
         //$.each(item1 in result)
         //{
@@ -1845,6 +1847,7 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
             else {
                 $('#btn_delete_trainingassessment_feedbackquestions').attr('disabled', 'disabled');
             }
+            ShowStatusColorForCourse();
         }
         $('#loader').hide();
 
@@ -1885,7 +1888,7 @@ $('#btn_delete_trainingassessment_feedbackquestions').on("click", function (e) {
         }
         $('#loader').hide();
 
-
+        ShowStatusColorForCourse();
         //$.each(item1 in result)
         //{
         //    '< option value = "' + item.name + '" >' + item.name +'</option >'
@@ -2128,6 +2131,7 @@ function uploadCourseCertificateDocUsingHR(uploadCtrl, edit = false) {
 
             showStatusNotification(data.success, data.message);
         }
+        ShowStatusColorForCourse();
     }).fail(function () {
         showStatusNotification(false, 'Something went wrong');
     });
@@ -2154,7 +2158,7 @@ $('#tbl_certificateDocumentFiles').on('click', '.delete_certificate_file_sop', f
                 gridCertificatesDocumentFiles.clear();
                 gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
             }
-           
+            ShowStatusColorForCourse();
         }).fail(function () {
             console.log('error')
         });

@@ -978,12 +978,56 @@ namespace CityWatch.Web.Services
                             .SetFontColor(ColorConstants.BLUE);
                         notesParagraph.Add(link);
                     }
+                    Paragraph notesParagraphnew = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                    Paragraph notesParagraphImage = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                    if (entry.LBId != null)
+                    {
+                        var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)entry.LBId);
+                        
+                        foreach (var guardLogImage in guardlogImages)
+                        {
+                            var reportDataTablenew = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
+                            Paragraph notesParagraphnew1 = new Paragraph("See ").SetFontSize(CELL_FONT_SIZE);
+                            if (guardLogImage.IsRearfile == true)
+                            {
 
+                                string baseUrl = guardLogImage.ImagePath;
+                                string url = $"{baseUrl}";
+                                string linkText = IO.Path.GetFileName(guardLogImage.ImagePath);
+
+
+                                //var link = new Link(linkText, PdfAction.CreateURI(url))
+                                //.SetFontColor(DeviceGray.BLACK)
+                                //.SetFontColor(ColorConstants.BLUE);
+
+                                //notesParagraphnew1.Add(link);
+                                notesParagraphnew1.Add(linkText + " attached to this document");
+
+                                notesParagraphnew.Add(notesParagraphnew1);
+
+
+
+                            }
+                            if (guardLogImage.IsTwentyfivePercentfile == true)
+                            {
+                                var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
+                               .SetWidth(UnitValue.CreatePercentValue(27));
+                                logimage.SetTextAlignment(TextAlignment.RIGHT);
+                                logimage.SetMarginTop(10);
+                                logimage.SetMarginLeft(10);
+                                notesParagraphImage.Add(logimage);
+
+                            }
+                        }
+                    }
                     reportDataTable.AddCell(new Cell()
                      .SetKeepTogether(true)
                      .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
                      .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
-                     .Add(notesParagraph));
+                     .Add(notesParagraph)
+                     .Add(notesParagraphnew)
+                     .Add(notesParagraphImage)
+                     );
 
 
 

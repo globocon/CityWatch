@@ -6632,7 +6632,7 @@ $('#btnGeneratefusionAuditReport').on('click', function () {
         clientSiteIds: $('#fusionClientSiteId').val().join(';'),
         logFromDate: $('#fusionAudtitFromDate').val(),
         logToDate: $('#fusionAudtitToDate').val(),
-        excludeSystemLogs: 0
+        excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked")
     });
      GetRCCharts();
 });
