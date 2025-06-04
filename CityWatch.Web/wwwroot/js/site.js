@@ -5953,6 +5953,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
 
         });
         $("#clientSitesDocHrDoc").multiselect("refresh");
+        ShowStatusColorForCourse();
     }).always(function () {
         $('#loader').hide();
     });
