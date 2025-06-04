@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using Dropbox.Api.Users;
+using iText.Commons.Actions.Contexts;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -209,6 +210,11 @@ namespace CityWatch.Data.Providers
         public void SaveDefaultEmailThirdPartyDomains(string defaultEmail, int domainId, string fileName);
         List<TrainingTestQuestions> GetTrainingTestQuestionsColor(int hrsettingsId);
         List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetGuardAttendedFeedBackQuestionsAndanswers(int guardId, int hrsettingsId);
+        public Task<List<ClientSiteMobileAppSettings>> GetAllCrowdControlSite();
+        public Task<List<ClientSiteMobileAppTimeZoneDTO>> GetClientSitesTimeZones();
+        public Task<List<ClientSiteMobileCrowdControl>> GetAllCurrentCrowdControlData();
+        public Task SaveCrowdControlHistory(ClientSiteMobileCrowdControlHistory history);
+        public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);
 
     }
 
@@ -997,7 +1003,7 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 3-start
         public List<HrSettings> GetHRSettings()
         {
-            return _context.HrSettings.Where(x=>x.IsDeleted ==false).Include(z => z.HRGroups)
+            return _context.HrSettings.Where(x => x.IsDeleted == false).Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .Include(z => z.hrSettingsClientStates)
@@ -1368,7 +1374,7 @@ namespace CityWatch.Data.Providers
             var courseDocList = _context.TrainingCourses
                 .Include(x => x.TQNumber)
                 .Where(x => x.HRSettingsId == type)
-                .OrderBy(x=>x.TQNumberId)
+                .OrderBy(x => x.TQNumberId)
                 .ToList();
             foreach (var item in courseDocList)
             {
@@ -1671,7 +1677,7 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
 
-           return courseDocList;
+            return courseDocList;
         }
         public void SaveTrainingCourseCertificate(TrainingCourseCertificate trainingCourseCertificate)
         {
@@ -1721,17 +1727,17 @@ namespace CityWatch.Data.Providers
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
             var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
 
-        //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
-        //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
-        //    && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
-        //    && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
-        //    (!_context.TrainingTestQuestionSettings
-        //    .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
-        //    .Any() ||
-        //    _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
-        //)
-        //    )
-        //    ).ToList();
+            //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
+            //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
+            //    && (_context.TrainingTestQuestions.Any(tq => tq.HRSettingsId == x.HRSettingsId))
+            //    && (_context.TrainingCourseCertificate.Any(tq => tq.HRSettingsId == x.HRSettingsId)) &&
+            //    (!_context.TrainingTestQuestionSettings
+            //    .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+            //    .Any() ||
+            //    _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+            //)
+            //    )
+            //    ).ToList();
 
             // return _context.RadioCheckStatus.ToList();
             var trainingCoursesHRSettingsId = trainigCourses.Select(x => x.HRSettingsId);
@@ -2118,8 +2124,8 @@ namespace CityWatch.Data.Providers
         }
 
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
-        {            
-            return _context.ClientSiteMobileAppSettings.AsNoTracking().FirstOrDefault(d => d.ClientSiteId == siteId); 
+        {
+            return _context.ClientSiteMobileAppSettings.AsNoTracking().FirstOrDefault(d => d.ClientSiteId == siteId);
         }
 
         public ClientSiteMobileAppSettings SaveCrowdSettingForSite(ClientSiteMobileAppSettings csmacs)
@@ -2130,7 +2136,7 @@ namespace CityWatch.Data.Providers
         }
 
         public ClientSiteMobileAppSettings UpdateCrowdSettingForSite(ClientSiteMobileAppSettings csmacs)
-        { 
+        {
             var existingRecord = _context.ClientSiteMobileAppSettings.FirstOrDefault(d => d.ClientSiteId == csmacs.ClientSiteId);
             existingRecord.IsCrowdCountEnabled = csmacs.IsCrowdCountEnabled;
             existingRecord.IsDoorEnabled = csmacs.IsDoorEnabled;
@@ -2193,7 +2199,7 @@ namespace CityWatch.Data.Providers
 
 
             var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
-            
+
             return result;
 
         }
@@ -2211,7 +2217,7 @@ namespace CityWatch.Data.Providers
         public List<TrainingTestQuestions> GetTrainingTestQuestionsColor(int hrsettingsId)
         {
 
-            var trainigCourses = _context.TrainingTestQuestions.Include(x=>x.TQNumbers).Where(x => x.HRSettingsId==hrsettingsId
+            var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId
             && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) &&
             (!_context.TrainingTestQuestionSettings
             .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
@@ -2221,7 +2227,7 @@ namespace CityWatch.Data.Providers
             )
             ).ToList();
 
-            return trainigCourses; 
+            return trainigCourses;
 
         }
         public List<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GetGuardAttendedFeedBackQuestionsAndanswers(int guardId, int hrsettingsId)
@@ -2230,6 +2236,100 @@ namespace CityWatch.Data.Providers
             return correctQuestions;
         }
 
+        public async Task<List<ClientSiteMobileAppSettings>> GetAllCrowdControlSite()
+        {
+            return await _context.ClientSiteMobileAppSettings.AsNoTracking().Where(x => x.IsCrowdCountEnabled == true).ToListAsync();
+        }
+
+        public async Task<List<ClientSiteMobileCrowdControl>> GetAllCurrentCrowdControlData()
+        {
+            // Step 1: Get all enabled site IDs
+            var enabledSiteIds = await _context.ClientSiteMobileAppSettings
+                .AsNoTracking()
+                .Where(x => x.IsCrowdCountEnabled == true)
+                .Select(x => x.ClientSiteId)
+                .ToListAsync();
+
+            // Step 2: Get only crowd control data for enabled sites
+            var result = await _context.ClientSiteMobileCrowdControl
+                .AsNoTracking()
+                .Where(x => enabledSiteIds.Contains(x.ClientSiteId))
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<ClientSiteMobileAppTimeZoneDTO>> GetClientSitesTimeZones()
+        {
+            var result = await _context.ClientSiteKpiSettings
+                .Select(x => new ClientSiteMobileAppTimeZoneDTO
+                {
+                    ClientSiteId = x.ClientSiteId,
+                    TimezoneString = x.TimezoneString,
+                    UTC = x.UTC
+                }).ToListAsync();
+
+            return result;
+
+        }
+
+        public async Task SaveCrowdControlHistory(ClientSiteMobileCrowdControlHistory history)
+        {
+            _context.Add(history);
+            await _context.SaveChangesAsync();
+        }
+        public async Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode)
+        {
+            var r = await _context.ClientSiteMobileCrowdControl.Where(x => x.Id == csmcc.Id).FirstOrDefaultAsync();
+            if (r != null)
+            {
+                r.CrowdControlDate = csmcc.CrowdControlDate;
+                r.Tcount = csmcc.Tcount;
+                r.Ccount = csmcc.Ccount;
+                r.LastUpdateTime = csmcc.LastUpdateTime;
+            }
+            else
+            {
+                _context.Add(csmcc);
+            }
+
+            //Check and reset each gaurd count
+            var g = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == csmcc.ClientSiteId).ToListAsync();
+            if (g != null)
+            {
+                List<ClientSiteMobileCrowdControlGuardsHistory> _csmccgh_list = new List<ClientSiteMobileCrowdControlGuardsHistory>();
+                foreach (var c in g)
+                {
+                    //Create Guard count history
+
+                    ClientSiteMobileCrowdControlGuardsHistory _csmccgh = new ClientSiteMobileCrowdControlGuardsHistory()
+                    {
+                        Id = c.Id,
+                        CrowdControlId = c.CrowdControlId,
+                        ClientSiteId = c.ClientSiteId,
+                        UserId = c.UserId,
+                        GuardId = c.GuardId,
+                        Pcount = c.Pcount,
+                        CrowdControlDate = c.CrowdControlDate,
+                        GuardLastUpdateTime = c.GuardLastUpdateTime,
+                        ArchivedOn = ArchivedOn,
+                        ArchivedMode = ArchivedMode
+
+                    };
+                    _csmccgh_list.Add(_csmccgh);
+
+
+                    c.CrowdControlDate = csmcc.CrowdControlDate;
+                    c.GuardLastUpdateTime = csmcc.LastUpdateTime;
+                    c.Pcount = 0;
+                }
+
+                if (_csmccgh_list != null && _csmccgh_list.Any())
+                    _context.AddRange(_csmccgh_list);
+            }
+
+            await _context.SaveChangesAsync();
+        }
 
     }
 

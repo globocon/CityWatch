@@ -272,6 +272,7 @@ namespace CityWatch.Data.Providers
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         public Task<ClientSiteMobileCrowdControl> ResetSiteCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         public Task<ClientSiteMobileCrowdControl> ResetGuardCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+        public Task SaveMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al);
 
         public int GetSiteLinksTypeUsingTypeText(string typeText);
     }
@@ -2149,7 +2150,7 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
 
-        public int GetSiteLinksTypeUsingTypeText(string  typeText)
+        public int GetSiteLinksTypeUsingTypeText(string typeText)
         {
 
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == typeText.Trim()).Id;
@@ -3507,15 +3508,17 @@ namespace CityWatch.Data.Providers
 
         public async Task<ClientSiteMobileCrowdControl> UpdateCrowdControlCount(ClientSiteMobileCrowdControlData CountData)
         {
+            DateTime _CrowdControlDate = DateTime.UtcNow.Date;
+            DateTime _Ct = DateTime.UtcNow;
             var currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == CountData.ClientSiteId).FirstOrDefaultAsync();
             if (currentCount != null)
             {
+                _CrowdControlDate = currentCount.CrowdControlDate.HasValue ? (DateTime)currentCount.CrowdControlDate : DateTime.UtcNow.Date;
                 if (CountData.AddCount)
                 {
                     currentCount.Tcount += CountData.Count;
                     currentCount.Ccount += CountData.Count;
-                    currentCount.LastUpdateTime = DateTime.UtcNow;
-                    currentCount.CrowdControlDate = DateTime.UtcNow.Date;
+                    currentCount.LastUpdateTime = _Ct;
                 }
                 else
                 {
@@ -3523,8 +3526,7 @@ namespace CityWatch.Data.Providers
                     {
                         currentCount.Ccount -= CountData.Count;
                     }
-                    currentCount.LastUpdateTime = DateTime.UtcNow;
-                    currentCount.CrowdControlDate = DateTime.UtcNow.Date;
+                    currentCount.LastUpdateTime = _Ct;
                 }
             }
             else
@@ -3535,16 +3537,16 @@ namespace CityWatch.Data.Providers
                     newcount.ClientSiteId = CountData.ClientSiteId;
                     newcount.Ccount = CountData.Count;
                     newcount.Tcount = CountData.Count;
-                    newcount.LastUpdateTime = DateTime.UtcNow;
-                    newcount.CrowdControlDate = DateTime.UtcNow.Date;
+                    newcount.LastUpdateTime = _Ct;
+                    newcount.CrowdControlDate = _CrowdControlDate;
                 }
                 else
                 {
                     newcount.ClientSiteId = CountData.ClientSiteId;
                     newcount.Ccount = 0;
                     newcount.Tcount = 0;
-                    newcount.LastUpdateTime = DateTime.UtcNow;
-                    newcount.CrowdControlDate = DateTime.UtcNow.Date;
+                    newcount.LastUpdateTime = _Ct;
+                    newcount.CrowdControlDate = _CrowdControlDate;
                 }
                 _context.Add(newcount);
             }
@@ -3561,8 +3563,8 @@ namespace CityWatch.Data.Providers
                 if (CountData.AddCount)
                 {
                     GuardCountToUpdate.Pcount += GuardCountData.Pcount;
-                    GuardCountToUpdate.GuardLastUpdateTime = DateTime.UtcNow;
-                    GuardCountToUpdate.CrowdControlDate = DateTime.UtcNow.Date;
+                    GuardCountToUpdate.GuardLastUpdateTime = _Ct;
+                    GuardCountToUpdate.CrowdControlDate = _CrowdControlDate;
                 }
                 else
                 {
@@ -3570,8 +3572,8 @@ namespace CityWatch.Data.Providers
                     {
                         GuardCountToUpdate.Pcount -= GuardCountData.Pcount;
                     }
-                    GuardCountToUpdate.GuardLastUpdateTime = DateTime.UtcNow;
-                    GuardCountToUpdate.CrowdControlDate = DateTime.UtcNow.Date;
+                    GuardCountToUpdate.GuardLastUpdateTime = _Ct;
+                    GuardCountToUpdate.CrowdControlDate = _CrowdControlDate;
                 }
             }
             else
@@ -3584,9 +3586,9 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = currentCount.ClientSiteId,
                         UserId = GuardCountData.UserId,
                         GuardId = GuardCountData.GuardId,
-                        CrowdControlDate = currentCount.CrowdControlDate,
+                        CrowdControlDate = _CrowdControlDate,
                         CrowdControlId = currentCount.Id,
-                        GuardLastUpdateTime = DateTime.UtcNow,
+                        GuardLastUpdateTime = _Ct,
                         Pcount = GuardCountData.Pcount,
                         Id = 0
                     };
@@ -3599,9 +3601,9 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = currentCount.ClientSiteId,
                         UserId = GuardCountData.UserId,
                         GuardId = GuardCountData.GuardId,
-                        CrowdControlDate = currentCount.CrowdControlDate,
+                        CrowdControlDate = _CrowdControlDate,
                         CrowdControlId = currentCount.Id,
-                        GuardLastUpdateTime = DateTime.UtcNow,
+                        GuardLastUpdateTime = _Ct,
                         Pcount = 0,
                         Id = 0
                     };
@@ -3680,10 +3682,33 @@ namespace CityWatch.Data.Providers
             }
             else
             {
+
+                var _guardDetails = await _context.Guards.FirstOrDefaultAsync(x => x.Id == JoinGaurd.GuardId);
+                string _guard = "guard";
+                if (_guardDetails != null)
+                    _guard = $"guard {_guardDetails.Name}, {_guardDetails.Initial}";
+                // Move to history
+                var history = new ClientSiteMobileCrowdControlHistory
+                {
+                    Id = currentCount.Id,
+                    ClientSiteId = currentCount.ClientSiteId,
+                    Tcount = currentCount.Tcount,
+                    Ccount = currentCount.Ccount,
+                    CrowdControlDate = currentCount.CrowdControlDate,
+                    LastUpdateTime = currentCount.LastUpdateTime,
+                    ArchivedOn = ct,
+                    ArchivedMode = $"Reset by {_guard}.",
+                    ArchivedGuardId = JoinGaurd.GuardId,
+                    ArchivedUserId = JoinGaurd.UserId,
+                };
+
+                _context.Add(history);
+
+
                 currentCount.Ccount = 0;
                 currentCount.Tcount = 0;
                 currentCount.LastUpdateTime = ct;
-                currentCount.CrowdControlDate = ct.Date;
+                //currentCount.CrowdControlDate = ct.Date;
             }
 
             var g = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
@@ -3699,6 +3724,12 @@ namespace CityWatch.Data.Providers
             }
 
             await _context.SaveChangesAsync();
+            var al = new ClientSiteMobileCrowdControlAuditLog()
+            {
+                ClientSiteId = JoinGaurd.ClientSiteId,
+                ActionDescription = $"Site Count has been reset by Guard Id: {JoinGaurd.GuardId}."
+            };
+            await SaveMobileCrowdControlAuditLog(al);
             currentCount = await _context.ClientSiteMobileCrowdControl.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).FirstOrDefaultAsync();
             currentCount.ClientSiteCrowdControlGuards = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
             return currentCount;
@@ -3725,17 +3756,49 @@ namespace CityWatch.Data.Providers
                     Id = 0
                 };
                 _context.Add(NewGuardSignin);
-                
+
             }
             else
             {
+                ClientSiteMobileCrowdControlGuardsHistory _csmccgh = new ClientSiteMobileCrowdControlGuardsHistory()
+                {
+                    Id = NewGuardSignin.Id,
+                    CrowdControlId = NewGuardSignin.CrowdControlId,
+                    ClientSiteId = NewGuardSignin.ClientSiteId,
+                    UserId = NewGuardSignin.UserId,
+                    GuardId = NewGuardSignin.GuardId,
+                    Pcount = NewGuardSignin.Pcount,
+                    CrowdControlDate = NewGuardSignin.CrowdControlDate,
+                    GuardLastUpdateTime = NewGuardSignin.GuardLastUpdateTime,
+                    ArchivedOn = DateTime.UtcNow,
+                    ArchivedMode = "Reset by Guard.",
+                    ArchivedGuardId = JoinGaurd.GuardId,
+                    ArchivedUserId = JoinGaurd.UserId
+
+                };
+                _context.Add(_csmccgh);
+
                 NewGuardSignin.GuardLastUpdateTime = DateTime.UtcNow;
                 NewGuardSignin.Pcount = 0;
             }
 
             await _context.SaveChangesAsync();
+
+            var al = new ClientSiteMobileCrowdControlAuditLog()
+            {
+                ClientSiteId = JoinGaurd.ClientSiteId,
+                ActionDescription = $"Guard Count reset by Guard Id: {JoinGaurd.GuardId}."
+            };
+            await SaveMobileCrowdControlAuditLog(al);
+
             currentCount.ClientSiteCrowdControlGuards = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.ClientSiteId == JoinGaurd.ClientSiteId).ToListAsync();
             return currentCount;
+        }
+
+        public async Task SaveMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al)
+        {
+            _context.Add(al);
+            await _context.SaveChangesAsync();
         }
 
     }

@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
@@ -175,6 +177,7 @@ namespace CityWatch.Web.Services
         public List<Mp3File> GetDressAppFieldsAudio(int type);
 
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
+        public Task ResetAllSiteCrowdCountControl();
     }
 
     public class ViewDataService : IViewDataService
@@ -562,7 +565,7 @@ namespace CityWatch.Web.Services
                     ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
                     ClientSiteCsv = GetFormattedClientSites(currUserAccess),
                     ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
-            });
+                });
             }
             var filteredResults = results;
 
@@ -695,7 +698,7 @@ namespace CityWatch.Web.Services
         public List<ClientType> GetUserClientTypesHavingAccessThird(int? userId)
         {
             var results = new List<ClientType>();
-            
+
             var allClientSitesGrouped = _clientDataProvider.GetClientSites(null)
                 .GroupBy(x => new { x.ClientType.Name, x.ClientType.Id });
 
@@ -706,13 +709,13 @@ namespace CityWatch.Web.Services
                     Name = item.Key.Name,
                     Id = item.Key.Id,
                     IsSubDomainEnabled = false,  // Default to false
-                    
+
                 });
             }
 
             return results;
         }
-            public int GetClientTypeCount(int? typeId)
+        public int GetClientTypeCount(int? typeId)
         {
             var result = _clientDataProvider.GetClientSite(typeId);
             return result;
@@ -2182,8 +2185,8 @@ namespace CityWatch.Web.Services
             return hrGroups.Select(x => new ActivityModel
             {
                 Id = x.Id,
-                Name = x.Name ,
-                Label=x.Label
+                Name = x.Name,
+                Label = x.Label
             }).ToList();
         }
 
@@ -2206,10 +2209,10 @@ namespace CityWatch.Web.Services
 
             if (type == 3)
             {
-                 baseUrl = "https://cws-ir.com/DuressAppMultimedia/"; // Your base URL
+                baseUrl = "https://cws-ir.com/DuressAppMultimedia/"; // Your base URL
 
             }
-            
+
 
             return audio.Select(x => new Mp3File
             {
@@ -2220,7 +2223,7 @@ namespace CityWatch.Web.Services
         }
 
 
-       
+
 
 
 
@@ -2283,7 +2286,176 @@ namespace CityWatch.Web.Services
             return _configDataProvider.GetCrowdSettingForSite(siteId);
         }
 
+        public async Task ResetAllSiteCrowdCountControl()
+        {
+            try
+            {
 
+
+                var al = new ClientSiteMobileCrowdControlAuditLog()
+                {
+                    ActionDescription = $"Scheduler started for all site count reset."
+                };
+                await WriteToMobileCrowdControlAuditLog(al);
+                string _ArchivedMode = "Reset by auto scheduler";
+                var _crowdControlSitesList = await _configDataProvider.GetAllCrowdControlSite();
+                var _allCrowdControlData = await _configDataProvider.GetAllCurrentCrowdControlData();
+                if (_crowdControlSitesList != null)
+                {
+                    al = new ClientSiteMobileCrowdControlAuditLog()
+                    {
+                        ActionDescription = $"Total crowd control sites found: {_crowdControlSitesList.Count}."
+                    };
+                    await WriteToMobileCrowdControlAuditLog(al);
+
+                    var _siteTimeZone = await _configDataProvider.GetClientSitesTimeZones();
+                    foreach (var site in _crowdControlSitesList)
+                    {
+                        string utcOffsetString = "10:00";
+                        if (_siteTimeZone != null)
+                        {
+                            utcOffsetString = _siteTimeZone.FirstOrDefault(x => x.ClientSiteId == site.ClientSiteId)?.UTC ?? "10:00";
+                        }
+
+                        // Remove '+' sign if present; leave '-' intact
+                        if (utcOffsetString.StartsWith("+"))
+                            utcOffsetString = utcOffsetString.Substring(1);
+
+                        // Parse offset and calculate local time
+                        TimeSpan offset = TimeSpan.Parse(utcOffsetString.Replace("UTC", "").Trim());
+                        DateTime utcNow = DateTime.UtcNow;
+                        DateTime localNow = utcNow.Add(offset);
+
+                        // Time window check: Only between 03:00 and 20:00
+                        if (localNow.Hour >= 3 && localNow.Hour < 20)
+                        {
+                            var siteCrowdData = _allCrowdControlData.FirstOrDefault(x => x.ClientSiteId == site.ClientSiteId);
+
+                            if (siteCrowdData != null && siteCrowdData.LastUpdateTime.HasValue)
+                            {
+                                DateTime lastUpdateLocal = siteCrowdData.LastUpdateTime.Value.Add(offset);
+                                TimeSpan inactivity = localNow - lastUpdateLocal;
+
+                                // Check for 12+ hours of inactivity and that we haven't already reset
+                                if (inactivity.TotalHours >= 12 &&
+                                    (siteCrowdData.Tcount > 0 || siteCrowdData.Ccount > 0))
+                                {
+                                    // Move to history
+                                    var history = new ClientSiteMobileCrowdControlHistory
+                                    {
+                                        Id = siteCrowdData.Id,
+                                        ClientSiteId = siteCrowdData.ClientSiteId,
+                                        Tcount = siteCrowdData.Tcount,
+                                        Ccount = siteCrowdData.Ccount,
+                                        CrowdControlDate = siteCrowdData.CrowdControlDate,
+                                        LastUpdateTime = siteCrowdData.LastUpdateTime,
+                                        ArchivedOn = utcNow,
+                                        ArchivedMode = _ArchivedMode
+                                    };
+
+                                    await _configDataProvider.SaveCrowdControlHistory(history);
+
+                                    // Reset current data
+                                    siteCrowdData.Tcount = 0;
+                                    siteCrowdData.Ccount = 0;
+                                    siteCrowdData.CrowdControlDate = utcNow.Date;
+                                    siteCrowdData.LastUpdateTime = utcNow;
+
+                                    await _configDataProvider.ResetSiteAndGuardCrowdControlData(siteCrowdData, utcNow, _ArchivedMode);
+
+                                    //Console.WriteLine($"Site {site.ClientSiteId} reset due to 12h inactivity at {localNow} (UTC {utcNow}).");
+                                    al = new ClientSiteMobileCrowdControlAuditLog()
+                                    {
+                                        ClientSiteId = site.ClientSiteId,
+                                        ActionTimeUTC = utcNow,
+                                        ActionTimeLocal = localNow,
+                                        TimeUTC = utcOffsetString,
+                                        ActionDescription = $"Site count has been reset."
+                                    };
+                                    await WriteToMobileCrowdControlAuditLog(al);
+                                }
+                                else
+                                {
+                                    //Console.WriteLine($"Skipping reset for site {site.ClientSiteId} — due to 12h inactivity at {localNow} (UTC {utcNow}).");
+                                    al = new ClientSiteMobileCrowdControlAuditLog()
+                                    {
+                                        ClientSiteId = site.ClientSiteId,
+                                        ActionTimeUTC = utcNow,
+                                        ActionTimeLocal = localNow,
+                                        TimeUTC = utcOffsetString,
+                                        ActionDescription = $"Skipping reset for site due to: Inactivity Hours: {inactivity.TotalHours.Hours().Hours}hr, Tcount:{siteCrowdData.Tcount}, Ccount:{siteCrowdData.Ccount}."
+                                    };
+                                    await WriteToMobileCrowdControlAuditLog(al);
+                                }
+                            }
+                            else
+                            {
+                                if (siteCrowdData == null)
+                                {
+                                    al = new ClientSiteMobileCrowdControlAuditLog()
+                                    {
+                                        ClientSiteId = site.ClientSiteId,
+                                        ActionTimeUTC = utcNow,
+                                        ActionTimeLocal = localNow,
+                                        TimeUTC = utcOffsetString,
+                                        ActionDescription = $"Skipping reset for site due to no crowd control data found."
+                                    };
+                                    await WriteToMobileCrowdControlAuditLog(al);
+                                }
+                                else if (!siteCrowdData.LastUpdateTime.HasValue)
+                                {
+                                    al = new ClientSiteMobileCrowdControlAuditLog()
+                                    {
+                                        ClientSiteId = site.ClientSiteId,
+                                        ActionTimeUTC = utcNow,
+                                        ActionTimeLocal = localNow,
+                                        TimeUTC = utcOffsetString,
+                                        ActionDescription = $"Skipping reset for site due to no Last Update Time found in crowd control data."
+                                    };
+                                    await WriteToMobileCrowdControlAuditLog(al);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Console.WriteLine($"Skipping reset for site {site.ClientSiteId} — outside reset window: {localNow.Hour}:00");
+                            al = new ClientSiteMobileCrowdControlAuditLog()
+                            {
+                                ClientSiteId = site.ClientSiteId,
+                                ActionTimeUTC = utcNow,
+                                ActionTimeLocal = localNow,
+                                TimeUTC = utcOffsetString,
+                                ActionDescription = $"Skipping reset for site — outside reset window local time: {localNow}"
+                            };
+                            await WriteToMobileCrowdControlAuditLog(al);
+                        }
+                    }
+                }
+                else
+                {
+                    al = new ClientSiteMobileCrowdControlAuditLog()
+                    {
+                        ActionDescription = $"No Mobile Crowd Control sites found. Exiting Scheduler."
+                    };
+                    await WriteToMobileCrowdControlAuditLog(al);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ClientSiteMobileCrowdControlAuditLog al = new ClientSiteMobileCrowdControlAuditLog()
+                {
+                    ActionDescription = $"An error has occured in server:\nError Details:- InnerException:{ex.InnerException}\nStackTrace:{ex.StackTrace}\nMessage:{ex.Message}"
+                };
+                await WriteToMobileCrowdControlAuditLog(al);
+                throw;
+            }
+        }
+
+        private async Task WriteToMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al)
+        {
+            await _clientDataProvider.SaveMobileCrowdControlAuditLog(al);
+        }
 
     }
 
