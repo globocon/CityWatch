@@ -58,7 +58,7 @@ namespace CityWatch.Data.Services
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
             var currentCount = await _clientDataProvider.ResetSiteCrowdControlCount(JoinGaurd);
-            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetSiteCrowdControlCount", currentCount);
+            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetSiteCrowdControlCount", currentCount);            
             return;
         }
 
@@ -66,9 +66,9 @@ namespace CityWatch.Data.Services
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
             var currentCount = await _clientDataProvider.ResetGuardCrowdControlCount(JoinGaurd);
-            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetGuardCrowdControlCount", currentCount);
+            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetGuardCrowdControlCount", currentCount);            
             return;
-        }
+        }               
 
         #endregion "MobileCrowdControl"
     }

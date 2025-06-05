@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 namespace CityWatch.Web.API
 {
     [Route("api/[controller]")]
@@ -35,6 +36,20 @@ namespace CityWatch.Web.API
                 }                    
 
                 return Ok(clientSiteMobileAppSettings);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+        [HttpGet("ResetCrowdCountControl")]
+        public async Task<IActionResult> ResetCrowdCountControl()
+        {
+            try
+            {
+                await _viewDataService.ResetAllSiteCrowdCountControl();                                
+                return Ok("Ok");
             }
             catch (Exception ex)
             {

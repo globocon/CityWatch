@@ -235,6 +235,9 @@ namespace CityWatch.Data
         public DbSet<ClientSiteMobileAppSettings> ClientSiteMobileAppSettings { get; set; }
         public DbSet<ClientSiteMobileCrowdControl> ClientSiteMobileCrowdControl { get; set; }
         public DbSet<ClientSiteMobileCrowdControlGuards> ClientSiteMobileCrowdControlGuards { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlHistory> ClientSiteMobileCrowdControlHistory { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlGuardsHistory> ClientSiteMobileCrowdControlGuardsHistory { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlAuditLog> ClientSiteMobileCrowdControlAuditLog { get; set; }
 
 
     }
