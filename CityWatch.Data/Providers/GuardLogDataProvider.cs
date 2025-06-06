@@ -381,6 +381,8 @@ namespace CityWatch.Data.Providers
         void UpdateRCActionListMessagesClientSites(int id);
         void UpdateRCActionListMessages(int id);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientsiteId, LogBookType type, DateTime logbookDate);
+
+        public List<FeedbackTemplateViewModel> GetFeedbackTemplates();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6796,6 +6798,50 @@ namespace CityWatch.Data.Providers
         }
 
 
+
+        public List<FeedbackTemplateViewModel> GetFeedbackTemplates()
+        {
+             var result = _context.FeedbackTemplates
+        .Where(x => x.DeleteStatus == 0)
+        .OrderBy(x => x.Name)
+        .GroupJoin(
+            _context.FeedbackType,
+            template => template.Type,
+            type => type.Id,
+            (template, typeGroup) => new { template, typeGroup }
+        )
+        .SelectMany(
+            tg => tg.typeGroup.DefaultIfEmpty(),
+            (tg, type) => new FeedbackTemplateViewModel
+            {
+                TemplateId = tg.template.Id,
+                TemplateName = tg.template.Name,
+                Text = tg.template.Text,
+                Type = tg.template.Type,
+                FeedbackTypeName = type != null ? type.Name : null,
+                BackgroundColour = tg.template.BackgroundColour,
+                TextColor = tg.template.TextColor,
+                DeleteStatus = tg.template.DeleteStatus,
+                SendtoRC = tg.template.SendtoRC
+            }
+        )
+        .ToList();
+            return result;
+        }
+    }
+
+
+    public class FeedbackTemplateViewModel
+    {
+        public int TemplateId { get; set; }
+        public string TemplateName { get; set; }
+        public string Text { get; set; }
+        public int? Type { get; set; }
+        public string FeedbackTypeName { get; set; }
+        public string BackgroundColour { get; set; }
+        public string TextColor { get; set; }
+        public int DeleteStatus { get; set; }
+        public bool SendtoRC { get; set; }
     }
 
 
