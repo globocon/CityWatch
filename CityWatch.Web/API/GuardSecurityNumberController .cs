@@ -931,7 +931,7 @@ namespace CityWatch.Web.API
         [HttpGet("GetFeedbackTemplates")]
         public IActionResult GetFeedbackTemplates()
         {
-            var result = _configDataProvider.GetFeedbackTemplates(); 
+            var result = _guardLogDataProvider.GetFeedbackTemplates(); 
             return Ok(result); 
         }
 
