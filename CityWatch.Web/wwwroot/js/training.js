@@ -3250,7 +3250,7 @@ function GetGuardMarks() {
                 $('#resultHeading').html('Congratulations !');
                 $('#ResultIconTrophy').attr('hidden', false);
                 $('#ResultIconCross').hide();
-                message = 'You have successfully passed the test.Please press Continue for your results to be submitted.'
+                message = 'You have successfully passed the test. Please press Continue for your results to be submitted.'
                 $('#btnContinueTest').attr('hidden', false);
                 $('#btnRetryTest').hide();
                 $('#btnExitTest').hide();
@@ -3260,7 +3260,7 @@ function GetGuardMarks() {
                 $('#resultHeading').html('Requirement not met');
                 $('#ResultIconCross').attr('hidden', false);
                 $('#ResultIconTrophy').hide();
-                message = 'You have not passed the test.Please press Retry to try again or Exit to try again in a later date.'
+                message = 'You have not passed the test. Please press Retry to try again or Exit to try again at a later date.'
                 $('#btnContinueTest').hide();
                 $('#btnRetryTest').attr('hidden', false);
                 $('#btnExitTest').attr('hidden', false);
