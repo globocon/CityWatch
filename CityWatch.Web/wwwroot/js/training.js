@@ -3172,8 +3172,9 @@ function GetQuestionCountForGuard(question) {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions );
-           // $('#QuestionNo').html('Q.' + result.qno);
-            $('#GuardTestQuestions').html('Q.' + result.qno + "  " + question);
+            // $('#QuestionNo').html('Q.' + result.qno);
+            $('#QuestionNo').html('Q.' + result.qno);
+            $('#GuardTestQuestions').html(question);
         }
         else {
             //alert('Something Wrong')
@@ -3589,13 +3590,7 @@ function GetCertificateAndFeedBackStatus(guardid,hrsettingsid) {
         if (result.getcertificateSatus.isAnonymousFeedback == true) {
             GetFeedbackQuestionsForGuard();
             
-            $('#cardFrontPage').hide();
-
-            $('#cardCoursePdf').hide();
-            $('#cardTestFrontPage').hide();
-            $('#cardTestPage').hide();
-            $('#cardResultPage').hide();
-            $('#cardFeedbackPage').attr('hidden', false);
+            
 
         }
         if ((result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == true || result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == false)  && result.getcertificateSatus.isAnonymousFeedback == false) {
@@ -3684,7 +3679,13 @@ function GetFeedbackQuestionsForGuard() {
             $('#txtGuardFeedbacktQuestionId').val(result.id);
             GetFeedbackOptionsForGuard();
             GetFeedbackQuestionCountForGuard(result.question);
+            $('#cardFrontPage').hide();
 
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').hide();
+            $('#cardFeedbackPage').attr('hidden', false);
         }
         else {
             $('#cardFrontPage').hide();
@@ -3820,8 +3821,8 @@ function GetFeedbackQuestionCountForGuard(feedbackquestions) {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions);
-            //$('#FeedbackQuestionNo').html('Q.' + result.qno);
-            $('#GuardFeedbackQuestions').html('Q.' + result.qno + ' ' + feedbackquestions);
+            $('#FeedbackQuestionNo').html('Q.' + result.qno);
+            $('#GuardFeedbackQuestions').html(feedbackquestions);
 
         }
         else {
