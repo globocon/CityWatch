@@ -22,6 +22,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using CityWatch.RadioCheck.Models;
 using Microsoft.AspNetCore.Http;
 using DocumentFormat.OpenXml.Spreadsheet;
+using CityWatch.Data.Models;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -274,7 +275,7 @@ namespace CityWatch.RadioCheck.API
 
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
-            
+
             var extension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(extension))
@@ -282,7 +283,7 @@ namespace CityWatch.RadioCheck.API
 
             if (string.IsNullOrEmpty(formName))
                 return BadRequest("Invalid form name.");
-                        
+
 
             if (!string.IsNullOrEmpty(fileType))
             {
@@ -304,7 +305,7 @@ namespace CityWatch.RadioCheck.API
                 return BadRequest("Invalid upload file type. Only predefined Excel files are allowed.");
             }
 
-            string uploadsPath = Path.Combine(uploadFolder, formName);            
+            string uploadsPath = Path.Combine(uploadFolder, formName);
 
             if (!Directory.Exists(uploadsPath))
                 Directory.CreateDirectory(uploadsPath);
@@ -412,7 +413,7 @@ namespace CityWatch.RadioCheck.API
 
         //private async Task<bool> DownloadAndSaveFile(string fileUrl, string saveDirectory)
         //{
-            // Claude Code
+        // Claude Code
         //    try
         //    {
         //        // Validate inputs
@@ -672,8 +673,8 @@ namespace CityWatch.RadioCheck.API
                 // find work order column index             
                 while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
                 {
-                    string header = worksheet.Cell(headerRow, col).GetString();                    
-                    if (header.Replace(" ","").Trim().ToLower().Equals("workorder"))
+                    string header = worksheet.Cell(headerRow, col).GetString();
+                    if (header.Replace(" ", "").Trim().ToLower().Equals("workorder"))
                     {
                         workOrderColumnIndex = col;
                         break;
@@ -919,8 +920,8 @@ namespace CityWatch.RadioCheck.API
                             if (captionsList != null && captionsList.Count > 0)
                             {
                                 string _destinationFolder = Path.Combine(TemplateFolder, workOrderId, compressed_image_folder_name, _Foldervalue);
-                               //ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
-                               ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
+                                //ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
+                                ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
 
                                 foreach (var f in captionsList)
                                 {
@@ -1013,7 +1014,7 @@ namespace CityWatch.RadioCheck.API
                     //                       //.MoveTo(worksheet.Cell(imageRow, startCol));
 
                     var picture = worksheet.AddPicture(ms)
-                                .MoveTo(imageCellRange.FirstCell().CellRight(5), 10, 5) ;
+                                .MoveTo(imageCellRange.FirstCell().CellRight(5), 10, 5);
 
                     //var currentX = picture.Left;
                     //var currentY = picture.Top + 20;
@@ -1084,7 +1085,8 @@ namespace CityWatch.RadioCheck.API
 
 
         }
-    }
 
+                
+    }
 
 }
