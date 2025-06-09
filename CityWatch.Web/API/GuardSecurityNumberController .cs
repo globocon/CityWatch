@@ -927,6 +927,15 @@ namespace CityWatch.Web.API
 
 
 
+
+        [HttpGet("GetFeedbackTemplates")]
+        public IActionResult GetFeedbackTemplates()
+        {
+            var result = _guardLogDataProvider.GetFeedbackTemplates(); 
+            return Ok(result); 
+        }
+
+
     }
 
     public class GuardLogDto
@@ -960,5 +969,19 @@ namespace CityWatch.Web.API
         public string status { get; set; }
         public List<GeocodeResult> results { get; set; }
     }
+
+    public class FeedbackTemplateViewModel
+    {
+        public int TemplateId { get; set; }
+        public string TemplateName { get; set; }
+        public string Text { get; set; }
+        public int? Type { get; set; }
+        public string FeedbackTypeName { get; set; }
+        public string BackgroundColour { get; set; }
+        public string TextColor { get; set; }
+        public int DeleteStatus { get; set; }
+        public bool SendtoRC { get; set; }
+    }
+
 
 }
