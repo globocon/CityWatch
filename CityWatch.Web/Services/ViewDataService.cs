@@ -178,6 +178,7 @@ namespace CityWatch.Web.Services
 
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
         public Task ResetAllSiteCrowdCountControl();
+        public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
     }
 
     public class ViewDataService : IViewDataService
@@ -2455,6 +2456,12 @@ namespace CityWatch.Web.Services
         private async Task WriteToMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al)
         {
             await _clientDataProvider.SaveMobileCrowdControlAuditLog(al);
+        }
+              
+
+        public async Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG)
+        {
+            await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
         }
 
     }

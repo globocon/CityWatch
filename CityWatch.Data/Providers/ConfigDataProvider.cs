@@ -214,7 +214,7 @@ namespace CityWatch.Data.Providers
         public Task<List<ClientSiteMobileAppTimeZoneDTO>> GetClientSitesTimeZones();
         public Task<List<ClientSiteMobileCrowdControl>> GetAllCurrentCrowdControlData();
         public Task SaveCrowdControlHistory(ClientSiteMobileCrowdControlHistory history);
-        public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);
+        public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);        
 
     }
 
@@ -2310,6 +2310,7 @@ namespace CityWatch.Data.Providers
                         UserId = c.UserId,
                         GuardId = c.GuardId,
                         Pcount = c.Pcount,
+                        Location = null,
                         CrowdControlDate = c.CrowdControlDate,
                         GuardLastUpdateTime = c.GuardLastUpdateTime,
                         ArchivedOn = ArchivedOn,
@@ -2331,6 +2332,7 @@ namespace CityWatch.Data.Providers
             await _context.SaveChangesAsync();
         }
 
+       
     }
 
 

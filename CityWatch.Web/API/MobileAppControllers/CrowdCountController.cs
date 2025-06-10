@@ -4,6 +4,7 @@ using CityWatch.Data.Services;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
@@ -15,11 +16,11 @@ namespace CityWatch.Web.API
     [Route("api/[controller]")]
     [ApiController]
     public class CrowdCountController : ControllerBase
-    {        
+    {
         private readonly IViewDataService _viewDataService;
 
         public CrowdCountController(IViewDataService viewDataService)
-        {            
+        {
             _viewDataService = viewDataService;
         }
 
@@ -27,13 +28,13 @@ namespace CityWatch.Web.API
         public IActionResult GetCrowdCountControlSettings(int siteId)
         {
             try
-            {                
+            {
                 var clientSiteMobileAppSettings = _viewDataService.GetCrowdSettingForSite(siteId);
 
                 if (clientSiteMobileAppSettings == null)
                 {
                     clientSiteMobileAppSettings = new ClientSiteMobileAppSettings() { ClientSiteId = siteId, IsCrowdCountEnabled = false };
-                }                    
+                }
 
                 return Ok(clientSiteMobileAppSettings);
             }
@@ -48,13 +49,20 @@ namespace CityWatch.Web.API
         {
             try
             {
-                await _viewDataService.ResetAllSiteCrowdCountControl();                                
+                await _viewDataService.ResetAllSiteCrowdCountControl();
                 return Ok("Ok");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
+        }
+
+        [HttpPost("SaveGuardLocation")]
+        public async Task<IActionResult> SaveGuardLocation([FromBody] MobileCrowdControlGuard MCCG)
+        {
+            await _viewDataService.SaveCrowdControlGuardLocation(MCCG);
+            return Ok("Ok");
         }
 
     }
