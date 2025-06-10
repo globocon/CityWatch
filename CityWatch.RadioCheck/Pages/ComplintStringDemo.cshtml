@@ -1,0 +1,626 @@
+﻿@page
+@model CityWatch.RadioCheck.Pages.ComplintStringDemo
+@using System.IO
+@{
+    Layout = "_Plain"; // You can keep or remove layout if minimal view is needed
+}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en" class="supernova isDefault">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="alternate" type="application/json+oembed" href="https://www.jotform.com/oembed/?format=json&amp;url=https%3A%2F%2Fform.jotform.com%2F251600949831459" title="oEmbed Form">
+    <link rel="alternate" type="text/xml+oembed" href="https://www.jotform.com/oembed/?format=xml&amp;url=https%3A%2F%2Fform.jotform.com%2F251600949831459" title="oEmbed Form">
+    <meta property="og:title" content="Compliant Strings Demo">
+   
+    <meta property="og:description" content="Please click the link to complete this form.">
+    <meta name="slack-app-id" content="AHNMASS8M">
+    <meta property="og:image" content="https://www.jotform.com/uploads/FortescueMetalGroup/form_files/fotescue_logo.675a0423b91669.13220682.jpg" />
+    <link rel="shortcut icon" href="https://cdn.jotfor.ms/assets/img/favicons/favicon-2021-light%402x.png">
+    <link rel="apple-touch-icon" href="https://cdn.jotfor.ms/assets/img/favicons/favicon-2021-light%402x.png">
+   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=1" />
+    <meta name="HandheldFriendly" content="true" />
+    <title>Compliant Strings Demo</title>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/stylebuilder/static/form-common.css?v=da2db26
+" />
+   
+    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/themes/CSS/5e6b428acc8c4e222d1beb91.css?v=3.3.63483&themeRevisionID=65660e4b326633110492e01a" />
+    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_styles.css?3.3.63483" />
+    <link type="text/css" rel="stylesheet" href="https://cdn.jotfor.ms/css/styles/payment/payment_feature.css?3.3.63483" />
+    <style type="text/css" id="form-designer-style">
+        /* Injected CSS Code */
+        /* Begining of advanced designer */
+
+        /* 17 - INPUT WIDTHS */
+        /*  20 - FORM PADDING */
+        ul.form-section {
+            padding: 0px 38px;
+        }
+        /* Heights */
+        .form-label {
+            margin-bottom: 3px;
+            margin-right: 0;
+        }
+        /* 11 - LINE PADDING */
+        .form-line {
+            padding: 5px 4px;
+        }
+        /* LABEL STYLE */
+        /* 12 - ROUNDED INPUTS */
+        .form-radio-item,
+        .form-checkbox-item {
+            padding-bottom: 0px;
+        }
+
+            .form-radio-item:last-child,
+            .form-checkbox-item:last-child {
+                padding-bottom: 0;
+            }
+
+            .form-checkbox-item .form-checkbox + label,
+            .form-checkbox-item .form-checkbox + span {
+                padding-left: 30px;
+            }
+
+            .form-radio-item .form-radio + label,
+            .form-radio-item .form-radio + span {
+                padding-left: 30px;
+            }
+
+        .form-single-column .form-checkbox-item,
+        .form-single-column .form-radio-item {
+            width: 100%;
+        }
+
+        .form-checkbox-item .editor-container div,
+        .form-radio-item .editor-container div {
+            position: relative;
+        }
+
+            .form-checkbox-item .editor-container div:before,
+            .form-radio-item .editor-container div:before {
+                display: inline-block;
+                vertical-align: middle;
+                left: 0;
+                width: 20px;
+                height: 20px;
+            }
+
+        .form-checkbox-item input,
+        .form-radio-item input {
+            margin-top: 2px;
+        }
+
+        .form-checkbox:checked + label:before,
+        .form-checkbox:checked + span:before {
+            background-color: #2e69ff;
+            border-color: #2e69ff;
+        }
+
+        .form-radio:checked + label:before,
+        .form-radio:checked + span:before {
+            border-color: #2e69ff;
+        }
+
+        .form-radio:checked + label:after,
+        .form-radio:checked + span:after {
+            background-color: #2e69ff;
+        }
+
+        .form-checkbox:hover + label:before,
+        .form-checkbox:hover + span:before,
+        .form-radio:hover + label:before,
+        .form-radio:hover + span:before {
+            border-color: rgba(46, 105, 255, 0.5);
+            box-shadow: 0 0 0 2px rgba(46, 105, 255, 0.25);
+        }
+
+        .form-checkbox:focus + label:before,
+        .form-checkbox:focus + span:before,
+        .form-radio:focus + label:before,
+        .form-radio:focus + span:before {
+            border-color: #2e69ff;
+            box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.25);
+        }
+
+        .submit-button {
+            font-size: 13px;
+            font-weight: normal;
+            font-family: inherit;
+        }
+
+        .submit-button {
+            min-width: 180px;
+        }
+
+        .form-all .form-pagebreak-back,
+        .form-all .form-pagebreak-next {
+            font-family: "Inter", sans-serif;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .form-all .form-pagebreak-back,
+        .form-all .form-pagebreak-next {
+            min-width: 128px;
+        }
+
+        li[data-type="control_image"] div {
+            text-align: left;
+        }
+
+        li[data-type="control_image"] img {
+            border: none;
+            border-width: 0px !important;
+            border-style: solid !important;
+            border-color: false !important;
+        }
+
+        .supernova {
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            background-position: center top;
+            background-attachment: fixed;
+            background-size: auto;
+            background-size: cover;
+        }
+
+        .supernova {
+            background-image: none;
+        }
+
+        #stage {
+            background-image: none;
+        }
+        /* | */
+        .form-all {
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            background-position: center top;
+            background-size: cover;
+        }
+
+        .form-header-group {
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            background-position: center top;
+        }
+
+        .header-large h1.form-header {
+            font-size: 2em;
+        }
+
+        .header-large h2.form-header {
+            font-size: 1.5em;
+        }
+
+        .header-large h3.form-header {
+            font-size: 1.17em;
+        }
+
+        .header-large h1 + .form-subHeader {
+            font-size: 1em;
+        }
+
+        .header-large h2 + .form-subHeader {
+            font-size: .875em;
+        }
+
+        .header-large h3 + .form-subHeader {
+            font-size: .75em;
+        }
+
+        .header-default h1.form-header {
+            font-size: 2em;
+        }
+
+        .header-default h2.form-header {
+            font-size: 1.5em;
+        }
+
+        .header-default h3.form-header {
+            font-size: 1.17em;
+        }
+
+        .header-default h1 + .form-subHeader {
+            font-size: 1em;
+        }
+
+        .header-default h2 + .form-subHeader {
+            font-size: .875em;
+        }
+
+        .header-default h3 + .form-subHeader {
+            font-size: .75em;
+        }
+
+        .header-small h1.form-header {
+            font-size: 2em;
+        }
+
+        .header-small h2.form-header {
+            font-size: 1.5em;
+        }
+
+        .header-small h3.form-header {
+            font-size: 1.17em;
+        }
+
+        .header-small h1 + .form-subHeader {
+            font-size: 1em;
+        }
+
+        .header-small h2 + .form-subHeader {
+            font-size: .875em;
+        }
+
+        .header-small h3 + .form-subHeader {
+            font-size: .75em;
+        }
+
+        .form-header-group {
+            text-align: left;
+        }
+
+        div.form-header-group.header-large,
+        div.form-header-group.hasImage {
+            margin: 0px -38px;
+        }
+
+        div.form-header-group.header-large,
+        div.form-header-group.hasImage {
+            padding: 40px 52px;
+        }
+
+        .form-header-group .form-header,
+        .form-header-group .form-subHeader {
+            color: #2c3344;
+        }
+
+        .form-line-error {
+            -webkit-transition-property: none;
+            -moz-transition-property: none;
+            -ms-transition-property: none;
+            -o-transition-property: none;
+            transition-property: none;
+            -webkit-transition-duration: 0.3s;
+            -moz-transition-duration: 0.3s;
+            -ms-transition-duration: 0.3s;
+            -o-transition-duration: 0.3s;
+            transition-duration: 0.3s;
+            -webkit-transition-timing-function: ease;
+            -moz-transition-timing-function: ease;
+            -ms-transition-timing-function: ease;
+            -o-transition-timing-function: ease;
+            transition-timing-function: ease;
+            background-color: #ffd6d6;
+        }
+
+            .form-line-error .form-error-message {
+                background-color: #f23a3c;
+                clear: both;
+                float: none;
+            }
+
+                .form-line-error .form-error-message .form-error-arrow {
+                    border-bottom-color: #f23a3c;
+                }
+
+            .form-line-error input:not(#coupon-input),
+            .form-line-error textarea,
+            .form-line-error .form-validation-error {
+                border: 1px solid #f23a3c;
+                box-shadow: 0 0 3px #f23a3c;
+            }
+
+        .form-line-error {
+            -webkit-transition-property: none;
+            -moz-transition-property: none;
+            -ms-transition-property: none;
+            -o-transition-property: none;
+            transition-property: none;
+            -webkit-transition-duration: 0.3s;
+            -moz-transition-duration: 0.3s;
+            -ms-transition-duration: 0.3s;
+            -o-transition-duration: 0.3s;
+            transition-duration: 0.3s;
+            -webkit-transition-timing-function: ease;
+            -moz-transition-timing-function: ease;
+            -ms-transition-timing-function: ease;
+            -o-transition-timing-function: ease;
+            transition-timing-function: ease;
+            background-color: #ffd6d6;
+        }
+
+        .form-header-group .form-header,
+        .form-header-group .form-subHeader {
+            color: #2c3344;
+        }
+
+        .form-line-active {
+            background-color: #f1f5ff;
+        }
+        /* 29 - FORM COLUMNS */
+
+        /*PREFERENCES STYLE*/
+        .form-all {
+            font-family: Inter, sans-serif;
+        }
+
+
+
+        .form-line {
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+
+        .form-all {
+            max-width: 752px;
+            width: 100%;
+        }
+
+        .form-label.form-label-left,
+        .form-label.form-label-right,
+        .form-label.form-label-left.form-label-auto,
+        .form-label.form-label-right.form-label-auto {
+            width: 230px;
+        }
+
+        .form-all {
+            font-size: 13px
+        }
+
+        .supernova .form-all, .form-all {
+            background-color: #bad5f5;
+        }
+
+        .form-all {
+            color: #2c3344;
+        }
+
+        .form-header-group .form-header {
+            color: #2c3344;
+        }
+
+        .form-header-group .form-subHeader {
+            color: #2c3344;
+        }
+
+        .form-label-top,
+        .form-label-left,
+        .form-label-right,
+        .form-html,
+        .form-checkbox-item label,
+        .form-radio-item label,
+        span.FITB .qb-checkbox-label,
+        span.FITB .qb-radiobox-label,
+        span.FITB .form-radio label,
+        span.FITB .form-checkbox label,
+        [data-blotid][data-type=checkbox] [data-labelid],
+        [data-blotid][data-type=radiobox] [data-labelid],
+        span.FITB-inptCont[data-type=checkbox] label,
+        span.FITB-inptCont[data-type=radiobox] label {
+            color: #2c3344;
+        }
+
+        .form-sub-label {
+            color: #464d5e;
+        }
+
+        .supernova {
+            background-color: undefined;
+        }
+
+            .supernova body {
+                background: transparent;
+            }
+
+        .form-textbox,
+        .form-textarea,
+        .form-dropdown,
+        .form-radio-other-input,
+        .form-checkbox-other-input,
+        .form-captcha input,
+        .form-spinner input {
+            background-color: undefined;
+        }
+
+
+        .supernova {
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center top;
+        }
+
+        .supernova, #stage {
+            background-image: none;
+        }
+
+        .form-all {
+            background-image: none;
+        }
+        /*PREFERENCES STYLE*/ /*__INSPECT_SEPERATOR__*/
+        .form-textbox[readonly], .form-textarea[readonly], .form-select[readonly] {
+            background-color: #E8E8E8;
+        }
+
+        input[readonly], textarea[readonly] {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            font-weight: 600;
+            font-size: 14px; /* Smaller text size for readability */
+            color: #0D47A1; /* Dark blue color for the text */
+            pointer-events: none;
+            width: 100%; /* Ensures consistency in width */
+            display: block;
+            padding: 6px 0; /* More vertical spacing */
+            margin-left: 4px; /* Increased left spacing */
+            line-height: 1.5; /* Improves readability */
+            resize: none; /* Prevents textarea resizing */
+            overflow: hidden; /* Keeps content clean */
+            white-space: pre-wrap; /* Ensures text wraps properly */
+        }
+
+        .form-label.form-label-auto {
+            display: block;
+            float: none;
+            text-align: left;
+            width: 100%;
+        }
+        /* Injected CSS Code */
+    </style>
+    <style>
+        .table thead th {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+
+        .table tbody tr:hover {
+            background-color: #e6f7ff;
+            transition: background-color 0.3s ease;
+        }
+
+        .table td,
+        .table th {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .table input[type="text"] {
+            padding: 4px 8px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+    </style>
+
+    
+</head>
+<body>
+   
+      
+        <div id="formCoverLogo" style="margin-bottom:32px" class="form-cover-wrapper form-has-cover form-page-cover-image-align-left">
+            <div class="form-page-cover-image-wrapper" style="max-width:752px"><img src="https://www.jotform.com/uploads/FortescueMetalGroup/form_files/fotescue_logo.675a0423b91669.13220682.jpg" class="form-page-cover-image" width="170" height="57" alt="Compliant Strings Demo Logo" style="aspect-ratio:170/57" /></div>
+        </div>
+        <div role="main" class="form-all">
+            <ul class="form-section page-section" role="presentation">
+                <li class="form-line" data-type="control_text" id="id_1274">
+                    <div id="cid_1274" class="form-input-wide" data-layout="full">
+                        <div id="text_1274" class="form-html" data-component="text" tabindex="-1">
+                            <p style="font-family: Arial, sans-serif; margin: 0;"> </p>
+                            <p style="font-family: Arial, sans-serif; margin: 0;"><span style="display: flex; flex-wrap: wrap; gap: 6px;"><a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="https://form.jotform.com/251403231104336" rel="nofollow">Daily Welding Report</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="https://form.jotform.com/251460800346450" rel="nofollow">Daily Weld Return</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="https://form.jotform.com/251460794328462" rel="nofollow">Daily Inspect and Measurements</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="https://www.jotform.com/build/251491353305452" rel="nofollow">Rail Heat Number Record - RAF</a> <br /> <a style="background-color: #0056b3; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="https://www.jotform.com/build/251492785928473" rel="nofollow">Compliant Strings</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="#" rel="nofollow">Quarantined String</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="#" rel="nofollow">Rectified Strings</a> <br /> <a style="background-color: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;" href="#" rel="nofollow">RFID Register</a> <br /> </span></p>
+                        </div>
+                    </div>
+                </li>
+                <li class="form-line" data-type="control_divider" id="id_1275">
+                    <div id="cid_1275" class="form-input-wide" data-layout="full">
+                        <div class="divider" data-component="divider" style="border-bottom-width:1px;border-bottom-style:solid;border-color:#e6e6e6;height:1px;margin-left:0px;margin-right:0px;margin-top:5px;margin-bottom:5px"></div>
+                    </div>
+                </li>
+                <li id="cid_1" class="form-input-wide" data-type="control_head">
+                    <div class="form-header-group  header-large">
+                        <div class="header-text httal htvam">
+                            <h1 id="header_1" class="form-header" data-component="header">Compliant Strings</h1>
+                        </div>
+                    </div>
+                </li>
+               
+                <li class="form-line" data-type="control_widget" id="id_1297">
+                    <label class="form-label form-label-top form-label-auto" id="label_1297" for="input_1297" aria-hidden="true"> </label>
+                    <div id="cid_1297" class="form-input-wide" data-layout="full">
+                    @if (Model.TableData != null)
+                    {
+                        <div style="width:100%;text-align:Left;overflow-x:auto">
+                            <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+                                <thead style="background-color: #f2f2f2;">
+                                    <tr style="background-color: #003366; color: white;">
+                                        
+                                        <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
+                                            Compliant Strings Ready for Loading
+                                        </th>
+                                        <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
+                                            Strings On Train
+                                        </th>
+                                        <th rowspan="1" style="text-align:center; border: 1px solid #ddd;">
+                                           
+                                        </th>
+                                    </tr>
+
+                                    <tr>
+                                        @foreach (var header in Model.TableData[0])
+                                        {
+                                            <th style="padding: 8px; border: 1px solid #ddd;">@header</th>
+                                        }
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 1; i < Model.TableData.Count; i++)
+                                    {
+                                        <tr>
+                                            @foreach (var cell in Model.TableData[i])
+                                            {
+                                                <td>@cell</td>
+                                            }
+                                            <td>
+                                                <form method="post" asp-page-handler="DeleteRow" style="display:inline;">
+                                                    <input type="hidden" name="rowIndex" value="@i" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+
+                                    <!-- ADD ROW FORM (Only One Form Allowed in Table) -->
+                                    <tr style="background:#A9A9A9;">
+                                        <form method="post" asp-page-handler="AddRow">
+                                            @for (int col = 0; col < Model.TableData[0].Count; col++)
+                                            {
+                                            <td>
+                                                <input type="text" name="NewRowData[@col]" class="form-control form-control-sm" />
+                                            </td>
+                                            }
+                                        <td>
+                                            <button type="submit" class="btn btn-success btn-sm">Add</button>
+                                        </td>
+                                        </form>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>No data found or file missing.</p>
+                    }
+
+
+
+                       
+                    </div>
+                </li>
+               
+            </ul>
+        </div>
+       
+   
+    <link id=color-scheme-style href="https://cdn.jotfor.ms/stylebuilder/static/color-scheme.css?v=3.3.63483" type="text/css" rel="stylesheet" />
+</body>
+</html>
