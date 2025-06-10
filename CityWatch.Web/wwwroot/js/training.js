@@ -3994,6 +3994,10 @@ $('#btnSavePracticalDetails').on('click', function () {
     }).done(function (result) {
         if (result.success) {
             GetHoldCertificate(result.hrsettingsId);
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardLicensesAndLicence.clear().draw();
+            gridGuardLicensesAndLicence.ajax.reload();
             $('#practicalDetailsModal').modal('hide');
             
 
@@ -4004,6 +4008,10 @@ $('#btnSavePracticalDetails').on('click', function () {
         }
     }).always(function () {
         $('#loader').hide();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardLicensesAndLicence.ajax.reload();
     });
 
 
@@ -4035,7 +4043,10 @@ function GetHoldCertificate(hrSettingsId) {
             return;
         }
 
-
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardLicensesAndLicence.ajax.reload();
 
     }).fail(function () {
         console.log('error');
@@ -4058,8 +4069,8 @@ function UpdateCourseStatusToComplete(hrSettingsId) {
            
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-            //gridGuardLicensesAndLicence.clear().draw();
-            //gridGuardLicensesAndLicence.ajax.reload();
+            gridGuardLicensesAndLicence.clear().draw();
+            gridGuardLicensesAndLicence.ajax.reload();
         }
         else {
             return;
