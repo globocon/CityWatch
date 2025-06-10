@@ -45,7 +45,7 @@ namespace CityWatch.RadioCheck.API
             _httpClient = new HttpClient();
             _configuration = configuration;
             templateFileName = "Template.xlsx";
-            _excelfileendname = "_Output_data.xlsx";
+            _excelfileendname = "LWRReport.xlsx";
             dailyWeldingReport_jsonMappingFile = "daily_welding_report_fields_mapping.json";
             logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt", "webhook_log.txt"); ;
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt");
@@ -148,7 +148,7 @@ namespace CityWatch.RadioCheck.API
 
                 logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(submissionFolder, $"{DateWiseFolder}_{supervisor}{_excelfileendname}");
+                string excelFilePath = Path.Combine(submissionFolder, $"{DateWiseFolder}_{supervisor}_{_excelfileendname}");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
                 WriteLog($"Webhook received. Data saved for Submission ID: {submissionID}");
@@ -174,7 +174,7 @@ namespace CityWatch.RadioCheck.API
         {
 
             string submissionFolder = Path.Combine(uploadFolder, folder_Name, supervisor_Name);
-            string fileName = $"{folder_Name}_{supervisor_Name}{_excelfileendname}";
+            string fileName = $"{folder_Name}_{supervisor_Name}_{_excelfileendname}";
             string excelFilePath = Path.Combine(submissionFolder, fileName);
             
 
