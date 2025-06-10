@@ -3988,7 +3988,8 @@ $('#btnSavePracticalDetails').on('click', function () {
             'courseId': $('#txtPrcticalCourseId').val(),
             'practicalLocationId': $('#ddlPracticalCourseLocation').val(),
             'instructorId': $('#ddlPracticalCourseInstructorsignOff').val(),
-            'practicalDate': $('#Practical_Date_completed').val()
+            'practicalDate': $('#Practical_Date_completed').val(),
+            'FileName': $('#GuardCertificateHold_FileName1').val()
         },
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -4334,4 +4335,74 @@ $('#btn_save_PersonalTraining').on('click', function () {
             displayGuardValidationSummary('glValidationSummary', result.message);
         }
     });
+});
+$('#upload_certificatehold_file').on('change', function () {
+    const file = $(this).get(0).files; //.item(0); 
+    FileuploadFileChangedForCertificateFile(file);
+});
+
+FileuploadFileChangedForCertificateFile = function (allfile) {
+    const file = allfile.item(0); // allfile.get(0).files.item(0);
+    const fileExtn = "." + file.name.split('.').pop().toLowerCase();
+    console.log('fileExtn: ' + fileExtn);
+    if (!fileExtn || '.pdf,.jpg'.indexOf(fileExtn.toLowerCase()) < 0) {
+        alert('Please select a valid file type with extension of pdf or jpg');
+        return false;
+    }
+
+   
+   
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append('guardId', $('#txtPrcticalGuardId').val());
+    formData.append('courseId', $('#txtPrcticalCourseId').val());
+   
+    
+        fileprocess(allfile);
+
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=UploadGuardAttachmentForCertificates',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            $('#GuardCertificateHold_FileName1').val(data.fileName);
+            $('#guardCertificateHold_fileName1').text(data.fileName ? data.fileName : 'None');
+        }).fail(function () {
+        }).always(function () {
+            $('#upload_certificatehold_file').val('');
+        });
+    
+
+}
+$('#delete_certificatehold_file').on('click', function () {
+    const practicalGuardId = $('#txtPrcticalGuardId').val();
+    if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+        return false;
+
+    if (confirm('Are you sure want to remove the attachment')) {
+        $('#GuardCertificateHold_FileName1').val('');
+        $('#GuardCertificateHold_FileName1').text('None');
+        //$.ajax({
+        //    url: '/Admin/GuardSettings?handler=DeleteGuardCertificateAttachment',
+        //    type: 'POST',
+        //    data: {
+        //        id: guardComplianceandlicenseId,
+        //        name: $('#GuardCertificateHold_FileName1').val()
+        //    },
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) {
+        //    if (result.status) {
+        //        $('#GuardCertificateHold_FileName1').val('');
+        //        $('#GuardCertificateHold_FileName1').text('None');
+        //        gridGuardCompliances.ajax.reload();
+        //    }
+        //    else {
+        //        displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
+        //    }
+        //});
+    }
 });

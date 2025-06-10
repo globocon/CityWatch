@@ -2537,6 +2537,94 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
         }
+        public JsonResult OnPostUploadGuardAttachmentForCertificates()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+
+            var guardId = Request.Form["guardId"];
+            int courseId = Convert.ToInt32(Request.Form["courseId"]);
+          
+            var fileName = string.Empty;
+            
+            int hrIdInt= _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
+
+            var LicenseNo = _guardDataProvider.GetActiveGuards().Where(x => x.Id == Convert.ToInt32(guardId)).FirstOrDefault().SecurityNo;
+
+            var coursename = _configDataProvider.GetHrSettingById(hrIdInt).Description;
+
+            try
+            {
+                if (files.Count == 1 )
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+
+
+                    string extension = ""; string newFileName = ""; var formattedDate = "";
+
+                    extension = Path.GetExtension(fileName).ToLower();
+                 
+
+
+                    //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                    //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
+
+
+
+
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo,"CertificateDocuments", coursename);
+
+                    if (!Directory.Exists(guardUploadDir))
+                        Directory.CreateDirectory(guardUploadDir);
+
+                    string filePath = Path.Combine(guardUploadDir, fileName);
+                    if (System.IO.File.Exists(filePath))
+                    {
+
+                        System.IO.File.Delete(filePath);
+
+                    }
+                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                    file.CopyTo(stream);
+
+
+
+                }
+
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return new JsonResult(new { success, fileName });
+        }
+        //public JsonResult OnPostDeleteGuardCertificateAttachment(int id, string   FileName)
+        //{
+        //    var status = true;
+
+        //    try
+        //    {
+        //        if (type == 'c')
+        //        {
+        //            var compliance = _guardDataProvider.GetGuardComplianceFile(id);
+        //            if (compliance != null)
+        //            {
+        //                compliance.FileName = string.Empty;
+        //                _guardDataProvider.SaveGuardComplianceandlicanse(compliance);
+        //            }
+
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        status = false;
+        //    }
+
+        //    return new JsonResult(new { status });
+        //}
+
     }
 
 
