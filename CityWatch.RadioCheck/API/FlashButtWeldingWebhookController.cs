@@ -179,13 +179,13 @@ namespace CityWatch.RadioCheck.API
             string fileName = $"{folder_Name}_{supervisor_Name}_{_excelfileendname}";
             string excelFilePath = Path.Combine(submissionFolder, fileName);
 
-            // ## This is for Testing 
-            string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_test.txt");
-            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            CopyTemplateToFolder(uploadFolder, excelFilePath);
-            await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
-            // ## This is for Testing
+            //// ## This is for Testing 
+            //string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_test.txt");
+            //string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+            //var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+            //CopyTemplateToFolder(uploadFolder, excelFilePath);
+            //await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
+            //// ## This is for Testing
 
 
 
@@ -336,7 +336,7 @@ namespace CityWatch.RadioCheck.API
         private void Update_Daily_Weld_Return_Data_in_Template(ref IXLWorksheet worksheet, string JsonMappingFileFolder, Dictionary<string, object> webhookData)
         {
             // Load field mappings: ExcelHeader -> WebhookDataKey            
-            string jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldingReport_jsonMappingFile);
+            string jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldReturn_jsonMappingFile);
 
             var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
             var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
@@ -372,25 +372,26 @@ namespace CityWatch.RadioCheck.API
                         row++;
                         int start_row = row;
                         int current_row = row;
-                        object cellValue = null;
-                        var data = JObject.Parse(rawValue.ToString());
-                        int column = 2; // Start from column B
-                        foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
+                        if (!string.IsNullOrWhiteSpace(rawValue?.ToString()))
                         {
-                            var rowValues = (JObject)item.Value;
-                            for (int i = 0; i < data.Count - 2; i++)
+                            var data = JObject.Parse(rawValue.ToString());
+                            int column = 2; // Start from column B
+                            foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
                             {
-                                string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
-                                worksheet.Cell(row, column).Value = value;
-                                current_row = row;
-                                row++;
+                                var rowValues = (JObject)item.Value;
+                                for (int i = 0; i < data.Count - 2; i++)
+                                {
+                                    string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
+                                    worksheet.Cell(row, column).Value = value;
+                                    row++;
+                                }
+                                current_row = rowValues.Count;
+                                column++;
+                                row = start_row;
                             }
-                            column++;
-                            row = start_row;
-                        }
-                        row = current_row;
+                            row = current_row + start_row - 1;
+                        }                        
                     }
-
                 }
                 else
                 {
