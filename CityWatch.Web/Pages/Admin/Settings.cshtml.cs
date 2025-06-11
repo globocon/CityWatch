@@ -2915,7 +2915,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(fields);
 
         }
-        public JsonResult OnPostSaveGuardTrainingPracticalDetails(int guardId,int courseId,int practicalLocationId, int instructorId,DateTime practicalDate)
+        public JsonResult OnPostSaveGuardTrainingPracticalDetails(int guardId,int courseId,int practicalLocationId, int instructorId,DateTime practicalDate,string FileName)
         {
             var success = false;
             var message = string.Empty;
@@ -2932,7 +2932,8 @@ namespace CityWatch.Web.Pages.Admin
                     HRSettingsId = hrsettingsId,
                     PracticalocationlId = practicalLocationId,
                     PracticalDate=practicalDate,
-                    InstructorId=instructorId
+                    InstructorId=instructorId,
+                    FileName= FileName
 
                 });
                

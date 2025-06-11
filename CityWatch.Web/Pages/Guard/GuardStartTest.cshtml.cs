@@ -377,7 +377,23 @@ namespace CityWatch.Web.Pages.Guard
                     isDeleted = true
                 });
             }
+            var courses= _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId);
+            foreach (var item in courses)
+            {
+                var report = _configDataProvider.ReturnCourseTestStatusTostart(guardId, item.Id);
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = report.Id,
+                    GuardId = guardId,
+                    TrainingCourseId = report.TrainingCourseId,
+                    TrainingCourseStatusId = 4,
+                    Description = report.Description,
+                    HRGroupId = report.HRGroupId
+                    //,
+                    //IsCompleted = true
 
+                });
+            }
             var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
             SendEmailNew(emailBody);
 

@@ -706,7 +706,7 @@
 
                                 <div class="form-group mb-1">
                                     <label>Date Practical Completed</label>
-                                    <div class="pr-3"><input type="date" class="form-control" id="Practical_Date_completed" min="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
+                                    <div class="pr-3"><input type="date" class="form-control" id="Practical_Date_completed" max="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
 
                                 </div>
 
@@ -723,8 +723,47 @@
                                 </div>
 
                             </div>
+                            <div class="form-row">
+                            <div class="form-group col-md-12 mt-1">
+                                <label class="form-label">Compliance Document: <span id="guardCertificateHold_fileName1">None</span></label>
+                            </div>
+                            <div class="form-group col-md-8">
+                                <div id="fileUpload" class="file-container">
+                                    <label for="upload_certificatehold_file" class="file-upload">
+                                        <div class="m-2 p-1">
+                                            <div class="border-0">
+                                                <i class="fa fa-cloud-upload fa-lg text-primary"></i>
+                                                <small style="line-height: 5px; font-size:11px;">
+                                                    Drag and drop files here or click here to select a file with extension .jpg, .pdf
+                                                    <small>
+                                                    </small>
+                                                </small>
+                                            </div><small style="line-height: 5px; font-size:11px;">
+                                                <small>
+                                                </small>
+                                            </small>
+                                        </div><small style="line-height: 5px; font-size:11px;">
+                                            <small>
+                                                <input type="file" id="upload_certificatehold_file" accept=".jpg, .pdf" name="[]" hidden="">
+                                            </small>
+                                        </small>
+                                    </label><small style="line-height: 5px; font-size:11px;">
+                                        <small>
+                                        </small>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <button type="button" class="btn btn-outline-danger w-100" style="height:60px" id="delete_certificatehold_file"><i class="fa fa-trash fa-lg mr-2"></i>Delete</button>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <input type="hidden" id="GuardCertificateHold_FileName1" value="">
+                                
+                            </div>
+                            </div>
                         </div>
-                    </div>
+                        </div>
+                    
                     @*<div class="row">
                     <div class="col-md-12">
                     <ul id="sch-modal-validation" class="text-danger hide"></ul>

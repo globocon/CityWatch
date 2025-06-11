@@ -6379,126 +6379,7 @@ $(function () {
         },
     });
 
-    //Gurad License and Compliance Form start
-    let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTable({
-        autoWidth: false,
-        ordering: false,
-        searching: false,
-        paging: false,
-        info: false,
-        ajax: {
-            url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
-            data: function (d) {
-                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
-            },
-            dataSrc: ''
-        },
-        columns: [
-            { data: 'hrGroupText', width: "12%" },
-            { data: 'description', width: "27%" },
-            {
-                data: 'expiryDate',
-                width: '14%',
-                orderable: true,
-
-            },
-            { data: 'fileName', width: '30%' },
-            { data: 'status', width: "4%" },
-            {
-                targets: -1,
-                data: null,
-                render: function (data, type, row, meta) {
-                    if (data.isLogin=='Guard') {
-                        if (data.hrBanEdit) {
-
-                            return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                                '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
-                        } else {
-
-                            return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                                '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
-                        }
-                    }
-                    
-                    
-                },
-                defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                    '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
-                width: '13%'
-            }],
-        columnDefs: [{
-          
-            targets: 3,
-            data: 'fileName',
-            render: function (data, type, row, meta) {
-                if (data)
-                    return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
-                return '-';
-            },
-
-        },
-        {
-            targets: 4,
-            data: 'status',
-            render: function (data, type, row, meta) {
-                var currentDate = new Date();
-                var ExpiryDate = new Date(row.expiryDate);
-                var timeDifference = ExpiryDate - currentDate;
-                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                var statusColor = 'green';
-
-
-                if (row.dateType == true) {
-                    statusColor = 'green';
-                }
-                else if (row.expiryDate != null) {
-                    if (daysDifference <= 45) {
-                        statusColor = 'yellow';
-                    }
-
-                    if (ExpiryDate < currentDate && row.dateType != true) {
-                        statusColor = 'red';
-                    }
-                }
-
-
-                return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
-            }
-        }
-
-        ],
-        'createdRow': function (row, data, index) {
-            if (data.expiryDate !== null) {
-                var formattedDate = getFormattedDate(new Date(data.expiryDate), null, ' ');
-                if (data.dateType === true) {
-                    formattedDate = formattedDate + '  (I)';
-                    $('td', row).eq(2).html(formattedDate);
-                }
-                else {
-                    $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
-                }
-
-            }
-        },
-    });
     
-    gridGuardLicensesAndLicence.on('draw.dt', function () {
-        var tbody = $('#tbl_guard_licensesAndCompliance tbody');
-        var rows = tbody.find('tr');
-        var lastGroupValue = null;
-
-        rows.each(function (index, row) {
-            var currentGroupValue = $(row).find('td:eq(0)').text();
-
-            if (currentGroupValue !== lastGroupValue) {
-                lastGroupValue = currentGroupValue;
-
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
-                headerRow.css('background-color', '#CCCCCC');
-                $(row).before(headerRow);
-            }
-        });
-    });
     //To get the data in description dropdown start
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
@@ -9048,7 +8929,126 @@ $(function () {
 
 
 });
+//Gurad License and Compliance Form start
+let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTable({
+    autoWidth: false,
+    ordering: false,
+    searching: false,
+    paging: false,
+    info: false,
+    ajax: {
+        url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
+        data: function (d) {
+            d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'hrGroupText', width: "12%" },
+        { data: 'description', width: "27%" },
+        {
+            data: 'expiryDate',
+            width: '14%',
+            orderable: true,
 
+        },
+        { data: 'fileName', width: '30%' },
+        { data: 'status', width: "4%" },
+        {
+            targets: -1,
+            data: null,
+            render: function (data, type, row, meta) {
+                if (data.isLogin == 'Guard') {
+                    if (data.hrBanEdit) {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance" disabled><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance" disabled><i class="fa fa-trash"></i></button>';
+                    } else {
+
+                        return '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                            '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
+                    }
+                }
+
+
+            },
+            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
+                '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
+            width: '13%'
+        }],
+    columnDefs: [{
+
+        targets: 3,
+        data: 'fileName',
+        render: function (data, type, row, meta) {
+            if (data)
+                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+            return '-';
+        },
+
+    },
+    {
+        targets: 4,
+        data: 'status',
+        render: function (data, type, row, meta) {
+            var currentDate = new Date();
+            var ExpiryDate = new Date(row.expiryDate);
+            var timeDifference = ExpiryDate - currentDate;
+            var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            var statusColor = 'green';
+
+
+            if (row.dateType == true) {
+                statusColor = 'green';
+            }
+            else if (row.expiryDate != null) {
+                if (daysDifference <= 45) {
+                    statusColor = 'yellow';
+                }
+
+                if (ExpiryDate < currentDate && row.dateType != true) {
+                    statusColor = 'red';
+                }
+            }
+
+
+            return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+        }
+    }
+
+    ],
+    'createdRow': function (row, data, index) {
+        if (data.expiryDate !== null) {
+            var formattedDate = getFormattedDate(new Date(data.expiryDate), null, ' ');
+            if (data.dateType === true) {
+                formattedDate = formattedDate + '  (I)';
+                $('td', row).eq(2).html(formattedDate);
+            }
+            else {
+                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+            }
+
+        }
+    },
+});
+
+gridGuardLicensesAndLicence.on('draw.dt', function () {
+    var tbody = $('#tbl_guard_licensesAndCompliance tbody');
+    var rows = tbody.find('tr');
+    var lastGroupValue = null;
+
+    rows.each(function (index, row) {
+        var currentGroupValue = $(row).find('td:eq(0)').text();
+
+        if (currentGroupValue !== lastGroupValue) {
+            lastGroupValue = currentGroupValue;
+
+            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
+            headerRow.css('background-color', '#CCCCCC');
+            $(row).before(headerRow);
+        }
+    });
+});
 $('#btnTimesheetConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 

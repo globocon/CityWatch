@@ -3172,8 +3172,9 @@ function GetQuestionCountForGuard(question) {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions );
-           // $('#QuestionNo').html('Q.' + result.qno);
-            $('#GuardTestQuestions').html('Q.' + result.qno + "  " + question);
+            // $('#QuestionNo').html('Q.' + result.qno);
+            $('#QuestionNo').html('Q.' + result.qno);
+            $('#GuardTestQuestions').html(question);
         }
         else {
             //alert('Something Wrong')
@@ -3250,7 +3251,7 @@ function GetGuardMarks() {
                 $('#resultHeading').html('Congratulations !');
                 $('#ResultIconTrophy').attr('hidden', false);
                 $('#ResultIconCross').hide();
-                message = 'You have successfully passed the test.Please press Continue for your results to be submitted.'
+                message = 'You have successfully passed the test. Please press Continue for your results to be submitted.'
                 $('#btnContinueTest').attr('hidden', false);
                 $('#btnRetryTest').hide();
                 $('#btnExitTest').hide();
@@ -3260,7 +3261,7 @@ function GetGuardMarks() {
                 $('#resultHeading').html('Requirement not met');
                 $('#ResultIconCross').attr('hidden', false);
                 $('#ResultIconTrophy').hide();
-                message = 'You have not passed the test.Please press Retry to try again or Exit to try again in a later date.'
+                message = 'You have not passed the test. Please press Retry to try again or Exit to try again at a later date.'
                 $('#btnContinueTest').hide();
                 $('#btnRetryTest').attr('hidden', false);
                 $('#btnExitTest').attr('hidden', false);
@@ -3589,13 +3590,7 @@ function GetCertificateAndFeedBackStatus(guardid,hrsettingsid) {
         if (result.getcertificateSatus.isAnonymousFeedback == true) {
             GetFeedbackQuestionsForGuard();
             
-            $('#cardFrontPage').hide();
-
-            $('#cardCoursePdf').hide();
-            $('#cardTestFrontPage').hide();
-            $('#cardTestPage').hide();
-            $('#cardResultPage').hide();
-            $('#cardFeedbackPage').attr('hidden', false);
+            
 
         }
         if ((result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == true || result.getcertificateSatus.isCertificateHoldUntilPracticalTaken == false)  && result.getcertificateSatus.isAnonymousFeedback == false) {
@@ -3684,7 +3679,13 @@ function GetFeedbackQuestionsForGuard() {
             $('#txtGuardFeedbacktQuestionId').val(result.id);
             GetFeedbackOptionsForGuard();
             GetFeedbackQuestionCountForGuard(result.question);
+            $('#cardFrontPage').hide();
 
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').hide();
+            $('#cardTestPage').hide();
+            $('#cardResultPage').hide();
+            $('#cardFeedbackPage').attr('hidden', false);
         }
         else {
             $('#cardFrontPage').hide();
@@ -3820,8 +3821,8 @@ function GetFeedbackQuestionCountForGuard(feedbackquestions) {
     }).done(function (result) {
         if (result != null) {
             $('#QuestionCounts').html('Question ' + result.countid + ' of ' + result.totalQuestions);
-            //$('#FeedbackQuestionNo').html('Q.' + result.qno);
-            $('#GuardFeedbackQuestions').html('Q.' + result.qno + ' ' + feedbackquestions);
+            $('#FeedbackQuestionNo').html('Q.' + result.qno);
+            $('#GuardFeedbackQuestions').html(feedbackquestions);
 
         }
         else {
@@ -3987,13 +3988,18 @@ $('#btnSavePracticalDetails').on('click', function () {
             'courseId': $('#txtPrcticalCourseId').val(),
             'practicalLocationId': $('#ddlPracticalCourseLocation').val(),
             'instructorId': $('#ddlPracticalCourseInstructorsignOff').val(),
-            'practicalDate': $('#Practical_Date_completed').val()
+            'practicalDate': $('#Practical_Date_completed').val(),
+            'FileName': $('#GuardCertificateHold_FileName1').val()
         },
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
         if (result.success) {
             GetHoldCertificate(result.hrsettingsId);
+            gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+            gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+            gridGuardLicensesAndLicence.clear().draw();
+            gridGuardLicensesAndLicence.ajax.reload();
             $('#practicalDetailsModal').modal('hide');
             
 
@@ -4004,6 +4010,10 @@ $('#btnSavePracticalDetails').on('click', function () {
         }
     }).always(function () {
         $('#loader').hide();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardLicensesAndLicence.ajax.reload();
     });
 
 
@@ -4035,7 +4045,10 @@ function GetHoldCertificate(hrSettingsId) {
             return;
         }
 
-
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardLicensesAndLicence.ajax.reload();
 
     }).fail(function () {
         console.log('error');
@@ -4058,8 +4071,8 @@ function UpdateCourseStatusToComplete(hrSettingsId) {
            
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-            //gridGuardLicensesAndLicence.clear().draw();
-            //gridGuardLicensesAndLicence.ajax.reload();
+            gridGuardLicensesAndLicence.clear().draw();
+            gridGuardLicensesAndLicence.ajax.reload();
         }
         else {
             return;
@@ -4333,4 +4346,74 @@ $('#btn_save_PersonalTraining').on('click', function () {
             displayGuardValidationSummary('glValidationSummary', result.message);
         }
     });
+});
+$('#upload_certificatehold_file').on('change', function () {
+    const file = $(this).get(0).files; //.item(0); 
+    FileuploadFileChangedForCertificateFile(file);
+});
+
+FileuploadFileChangedForCertificateFile = function (allfile) {
+    const file = allfile.item(0); // allfile.get(0).files.item(0);
+    const fileExtn = "." + file.name.split('.').pop().toLowerCase();
+    console.log('fileExtn: ' + fileExtn);
+    if (!fileExtn || '.pdf,.jpg'.indexOf(fileExtn.toLowerCase()) < 0) {
+        alert('Please select a valid file type with extension of pdf or jpg');
+        return false;
+    }
+
+   
+   
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append('guardId', $('#txtPrcticalGuardId').val());
+    formData.append('courseId', $('#txtPrcticalCourseId').val());
+   
+    
+        fileprocess(allfile);
+
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=UploadGuardAttachmentForCertificates',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            $('#GuardCertificateHold_FileName1').val(data.fileName);
+            $('#guardCertificateHold_fileName1').text(data.fileName ? data.fileName : 'None');
+        }).fail(function () {
+        }).always(function () {
+            $('#upload_certificatehold_file').val('');
+        });
+    
+
+}
+$('#delete_certificatehold_file').on('click', function () {
+    const practicalGuardId = $('#txtPrcticalGuardId').val();
+    if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+        return false;
+
+    if (confirm('Are you sure want to remove the attachment')) {
+        $('#GuardCertificateHold_FileName1').val('');
+        $('#GuardCertificateHold_FileName1').text('None');
+        //$.ajax({
+        //    url: '/Admin/GuardSettings?handler=DeleteGuardCertificateAttachment',
+        //    type: 'POST',
+        //    data: {
+        //        id: guardComplianceandlicenseId,
+        //        name: $('#GuardCertificateHold_FileName1').val()
+        //    },
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) {
+        //    if (result.status) {
+        //        $('#GuardCertificateHold_FileName1').val('');
+        //        $('#GuardCertificateHold_FileName1').text('None');
+        //        gridGuardCompliances.ajax.reload();
+        //    }
+        //    else {
+        //        displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
+        //    }
+        //});
+    }
 });

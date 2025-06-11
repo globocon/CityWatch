@@ -39,11 +39,12 @@ namespace CityWatch.Data.Models
         [ForeignKey("InstructorId")]
         public TrainingInstructor TrainingInstructor { get; set; }
 
-        
-        
-  
-	
-	
+        public string FileName { get; set; }
+
+
+
+
+
 
     }
 }

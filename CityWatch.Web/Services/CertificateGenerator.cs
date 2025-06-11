@@ -40,6 +40,7 @@ using static Dropbox.Api.TeamLog.LoginMethod;
 using static Dropbox.Api.FileProperties.PropertiesSearchMode;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using DocumentFormat.OpenXml.Bibliography;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 namespace CityWatch.Web.Services
 {
     public interface ICertificateGenerator
@@ -247,6 +248,35 @@ namespace CityWatch.Web.Services
             
 
             acroForm.FlattenFields();
+            if(isCertificateHold==true)
+            {
+                if(practicalresult !=null && practicalresult.FileName != null)
+                {
+                    if (GetAttachmentType(IO.Path.GetExtension(practicalresult.FileName)) == AttachmentType.Pdf)
+                    {
+                        var uploadPdfName = IO.Path.Combine(_UploadRootDir, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName);
+                        var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
+                        uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
+                        //var standardPageSize = pdfDocument.GetPage(1).GetPageSize();
+
+                        //for (int i =  1; i <= pdfDocument.GetNumberOfPages(); i++)
+                        //{
+                        //    var page = pdfDocument.GetPage(i);
+                        //    page.SetMediaBox(standardPageSize); // Resize the media box to match
+                        //    page.SetCropBox(standardPageSize);  // (Optional) Set crop box if needed
+                        //}
+                        uploadDoc.Close();
+                    }
+                    if (GetAttachmentType(IO.Path.GetExtension(practicalresult.FileName)) == AttachmentType.Image)
+                    {
+                        var doc = new Document(pdfDocument);
+                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, IO.Path.Combine(_UploadRootDir, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName));
+                        //paraName.SetFixedPosition(index, 5, 0, 400);
+                        doc.Add(image);
+                    }
+                }
+
+            }
             if (certificateRPL.Count() == 0)
             {
                 AttachScoreCard(pdfDocument, guardId, hrSettingsId, certificateName);
@@ -660,5 +690,49 @@ namespace CityWatch.Web.Services
 
             return headerTable;
         }
+        private AttachmentType GetAttachmentType(string extn)
+        {
+            if (".jpg,.jpeg,.png,.bmp".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Image;
+
+            if (".pdf".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Pdf;
+
+            // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
+            if (".mp4,.avi,.mp3".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Multimedia;
+
+            // Added by binoy 0n 03-06-2024 under task P1 #215
+            if (".xlsx".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Excel;
+
+            return AttachmentType.Unknown;
+        }
+        private Image AttachImageToPdf(PdfDocument pdfDocument, int index, string imagePath)
+        {
+            var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+            pdfDocument.AddNewPage(index, pageSize);
+            var imageData = ImageDataFactory.Create(imagePath);
+            var image = new Image(imageData);
+            bool rotateImage = image.GetImageWidth() > image.GetImageHeight();
+            bool scaleImage = image.GetImageWidth() > MAX_IMAGE_WIDTH || image.GetImageHeight() > MAX_IMAGE_HEIGHT;
+
+            if (rotateImage)
+            {
+                image.SetRotationAngle(ROTATION_ANGLE_DEG * (Math.PI / 180));
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetHeight() * SCALE_FACTOR, PageSize.A4.GetWidth() * SCALE_FACTOR);
+            }
+            else
+            {
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetWidth() * SCALE_FACTOR, PageSize.A4.GetHeight() * SCALE_FACTOR);
+            }
+
+            var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
+            image.SetFixedPosition(index, 0, bottom);
+            return image;
+        }
+
     }
 }
