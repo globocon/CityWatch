@@ -172,6 +172,11 @@ namespace CityWatch.Web.Pages.Guard
                     countid = countid + 1;
                     Qno = "0" + countid.ToString();
                 }
+                else
+                {
+                    countid = countid + 1;
+                    Qno =  countid.ToString();
+                }
             }
             return new JsonResult(new { TotalQuestions, Qno , countid });
         }

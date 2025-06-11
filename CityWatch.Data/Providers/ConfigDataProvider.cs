@@ -1488,7 +1488,7 @@ namespace CityWatch.Data.Providers
         {
             int LastTQuestionNumber = 0;
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             if (result.Count == 0)
             {
                 LastTQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
@@ -1505,7 +1505,7 @@ namespace CityWatch.Data.Providers
         {
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
 
             return result.Count;
@@ -1517,7 +1517,7 @@ namespace CityWatch.Data.Providers
 
             int LastTQNumber = 0;
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             if (result.Count > 0)
             {
                 LastTQNumber = result.LastOrDefault().TQNumberId;
@@ -1530,7 +1530,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.QuestionNoId == questionumberId).OrderBy(x => x.Id).FirstOrDefault();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.QuestionNoId == questionumberId && x.IsDeleted == false).OrderBy(x => x.Id).FirstOrDefault();
 
             return result;
 
@@ -1540,7 +1540,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == id).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == id && x.IsDeleted==false).OrderBy(x => x.Id).ToList();
 
             return result;
 
@@ -1550,7 +1550,7 @@ namespace CityWatch.Data.Providers
 
             int LastFeedbackQuestionNumber = 0;
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             if (result.Count == 0)
             {
                 LastFeedbackQuestionNumber = _context.TrainingTestQuestionNumbers.FirstOrDefault().Id;
@@ -1568,7 +1568,7 @@ namespace CityWatch.Data.Providers
         {
 
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
 
             return result.Count;
@@ -1579,7 +1579,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.QuestionNoId == questionumberId).OrderBy(x => x.Id).FirstOrDefault();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.QuestionNoId == questionumberId && x.IsDeleted == false).OrderBy(x => x.Id).FirstOrDefault();
 
             return result;
 
@@ -1589,7 +1589,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == id).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == id && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return result;
 
@@ -1848,13 +1848,13 @@ namespace CityWatch.Data.Providers
             var questions = new TrainingTestQuestions();
             if (result.Count == 0)
             {
-                questions = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).FirstOrDefault();
+                questions = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).FirstOrDefault();
 
             }
             if (result.Count > 0)
             {
                 int[] questionnumbers = result.Select(x => x.TrainingTestQuestionsId).ToArray();
-                questions = _context.TrainingTestQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).FirstOrDefault();
+                questions = _context.TrainingTestQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).FirstOrDefault();
 
             }
 
@@ -1863,7 +1863,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingTestQuestionsAnswers> GetGuardOptions(int questionId)
         {
-            var Options = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId).OrderBy(x => x.Id).ToList();
+            var Options = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
 
             return Options;
@@ -1892,7 +1892,7 @@ namespace CityWatch.Data.Providers
         }
         public int GetQuestionCount(int hrSettingsId, int tqNumberId)
         {
-            var course = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return course.Count;
 
@@ -2031,7 +2031,7 @@ namespace CityWatch.Data.Providers
             if (result.Count > 0)
             {
                 int[] questionnumbers = result.Select(x => x.TrainingTestFeedbackQuestionsId).ToArray();
-                questions = _context.TrainingTestFeedbackQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.HRSettingsId == hrSettingsId).FirstOrDefault();
+                questions = _context.TrainingTestFeedbackQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.HRSettingsId == hrSettingsId && x.IsDeleted == false).FirstOrDefault();
 
             }
 
@@ -2040,7 +2040,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingTestFeedbackQuestionsAnswers> GetGuardFeedbackOptions(int questionId)
         {
-            var Options = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == questionId).OrderBy(x => x.Id).ToList();
+            var Options = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == questionId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
 
             return Options;
@@ -2048,7 +2048,7 @@ namespace CityWatch.Data.Providers
         }
         public int GetFeedbackQuestionCount(int hrSettingsId)
         {
-            var course = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingTestFeedbackQuestions.Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return course.Count;
 
@@ -2198,7 +2198,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return result;
 
@@ -2208,7 +2208,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsid && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return result;
 
@@ -2217,12 +2217,12 @@ namespace CityWatch.Data.Providers
         public List<TrainingTestQuestions> GetTrainingTestQuestionsColor(int hrsettingsId)
         {
 
-            var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId
+            var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
             && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) &&
             (!_context.TrainingTestQuestionSettings
             .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
             .Any() ||
-            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId)
+            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
         )
             )
             ).ToList();
