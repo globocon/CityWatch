@@ -645,7 +645,7 @@ namespace CityWatch.Web.Pages.Incident
                 if(domain != null)
                 {
                     
-                    messageHtml = "Dear "+ CapitalizeFirstLetter(domain.Domain) +" Client; < br >< br > Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.< br >< br > Sites with access to the cloud file server will also have a copy stored in the relevant folder.< br >< br > Any concerns, please contact your relevant "+ CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:"+thirpartyemail+"' > "+thirpartyemail+" </ a >";
+                    messageHtml = "Dear "+ CapitalizeFirstLetter(domain.Domain) + " Client; <br /><br /> Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.<br /><br /> Sites with access to the cloud file server will also have a copy stored in the relevant folder.<br /><br /> Any concerns, please contact your relevant " + CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:"+thirpartyemail+"' > "+thirpartyemail+" </ a >";
                 }
             }
             else
