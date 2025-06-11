@@ -1,44 +1,98 @@
 ﻿@page
 @model CityWatch.RadioCheck.Pages.testPageModel
 @{
+    Layout = "_Plain"; // You can keep or remove layout if minimal view is needed
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data from mobile App</title>
+    <title>Compliant Strings</title>
+
 </head>
-<body>
+<body style="background-color: #bad5f5;">
 
-    <h2>User Inputs</h2>
 
-    @if (Model.UserInputs.Any())
+    <button type="button" class="btn btn-success pb-2" onclick="location.reload();">
+    <i class="fa fa-refresh"></i> Refresh Page
+</button>
+
+    @if (Model.TableData != null)
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Text</th>
-                    <th>Updated Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var input in Model.UserInputs)
-                {
-                    <tr>
-                        <td>@input.Id</td>
-                        <td>@input.Text</td>
-                        <td>@input.UpdatedDate</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                                <div style="width:100%;text-align:Left;overflow-x:auto">
+                                            <table class="table table-bordered table-striped table-hover" style="width: 100%; border-collapse: collapse;">
+                                        <thead style="background-color: #f2f2f2;">
+                                            <tr style="background-color: #003366; color: white;">
+
+                                                <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
+                                                    Compliant Strings Ready for Loading
+                                                </th>
+                                                <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
+                                                    Strings On Train
+                                                </th>
+                                                <th rowspan="1" style="text-align:center; border: 1px solid #ddd;">
+
+                                                </th>
+                                            </tr>
+
+                                            <tr>
+                        @foreach (var header in Model.TableData[0])
+                        {
+                                                            <th style="padding: 8px; border: 1px solid #ddd;">@header</th>
+                        }
+                                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                    @for (int i = 1; i < Model.TableData.Count; i++)
+                    {
+                                                        <tr>
+                            @foreach (var cell in Model.TableData[i])
+                            {
+                                                                        <td>@cell</td>
+                            }
+                                                            <td>
+
+                                                                    <input type="hidden" name="rowIndex" value="@i" />
+                                                                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(@i)">Remove</button>
+
+                                                            </td>
+                                                        </tr>
+                    }
+
+                                            <!-- ADD ROW FORM (Only One Form Allowed in Table) -->
+
+                                        </tbody>
+                                    </table>
+                                </div>
     }
     else
     {
-        <p>No data available.</p>
+                                <p>No data found or file missing.</p>
     }
-   
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function deleteRow(rowIndex) {
+        if (!confirm("Are you sure you want to remove this row?")) return;
+        $.ajax({
+        url: 'testPage?handler=DeleteRow',
+        type: 'POST',
+        dataType: 'json',
+        data: { rowIndex: rowIndex },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response) {
+         $("button[onclick='deleteRow(" + rowIndex + ")']").closest("tr").remove();
+        }
+    });
+
+
+
+    }
+</script>
 </body>
+
 </html>
