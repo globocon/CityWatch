@@ -1280,6 +1280,12 @@ function GetAnswers() {
                 $('#' + hiddeninput).val(d.isAnswer);
 
             });
+            var totalCount = 6; // or any max count of fields you have
+            for (var k = j; k <= totalCount; k++) {
+                $('#txt_Option' + k).val('');
+                $('#cbIsOption' + k).prop('checked', false);
+                $('#IsOption' + k).val('');
+            }
             
 
 
@@ -1744,6 +1750,10 @@ function GetFeedbackAnswers() {
             $('#' + txtoptions).val(d.options);
 
         });
+        var totalCount = 6; // or any max count of fields you have
+        for (var k = j; k <= totalCount; k++) {
+            $('#txt_FeedbackOption' + k).val('');
+        }
 
 
 
