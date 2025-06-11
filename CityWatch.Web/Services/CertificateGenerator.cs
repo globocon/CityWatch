@@ -611,9 +611,9 @@ namespace CityWatch.Web.Services
             //{
             //    Directory.CreateDirectory(reportPdfPath);
             //}
-            if (!Directory.Exists(IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense)))
-                Directory.CreateDirectory(IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense));
-            var reportPdfPath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Feedback", securitylicense, courseDetails.Description + " - " + DateTime.Now.Date.ToString("dd-MMM-yyy") + ".pdf");
+            if (!Directory.Exists(IO.Path.Combine(_webHostEnvironment.WebRootPath, "TA", "Feedback", securitylicense)))
+                Directory.CreateDirectory(IO.Path.Combine(_webHostEnvironment.WebRootPath, "TA", "Feedback", securitylicense));
+            var reportPdfPath = IO.Path.Combine(_webHostEnvironment.WebRootPath,"TA","Feedback", securitylicense, courseDetails.Description + " - " + DateTime.Now.Date.ToString("dd-MMM-yyy") + ".pdf");
 
             //if (IO.File.Exists(reportPdfPath))
             //    IO.File.Delete(reportPdfPath);

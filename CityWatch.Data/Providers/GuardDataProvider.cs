@@ -688,7 +688,7 @@ namespace CityWatch.Data.Providers
 
 
             var hrSettingsDict = _context.HrSettings
-   .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()))
+   .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()) && h.IsDeleted==false)
     .ToDictionary(h => h.Description, h => h.HRBanEdit);
 
             foreach (var item in result)
