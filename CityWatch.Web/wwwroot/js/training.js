@@ -3965,7 +3965,11 @@ $('#btnExitCourse').on('click', function (e) {
     // Refresh the previous (parent) tab
     if (window.opener && !window.opener.closed) {
        
-        window.opener.location.reload();
+         window.opener.location.reload();
+        //gridGuardTrainingAndAssessment.clear().draw();
+        //gridGuardTrainingAndAssessment.ajax.reload();
+        //gridGuardLicensesAndLicenceKey.clear().draw();
+        //gridGuardLicensesAndLicenceKey.ajax.reload();
     }
     window.close();
 });
@@ -4391,12 +4395,12 @@ FileuploadFileChangedForCertificateFile = function (allfile) {
 }
 $('#delete_certificatehold_file').on('click', function () {
     const practicalGuardId = $('#txtPrcticalGuardId').val();
-    if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+    if (!practicalGuardId || parseInt(practicalGuardId) <= 0)
         return false;
 
     if (confirm('Are you sure want to remove the attachment')) {
         $('#GuardCertificateHold_FileName1').val('');
-        $('#GuardCertificateHold_FileName1').text('None');
+        $('#guardCertificateHold_fileName1').text('None');
         //$.ajax({
         //    url: '/Admin/GuardSettings?handler=DeleteGuardCertificateAttachment',
         //    type: 'POST',

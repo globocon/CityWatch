@@ -268,8 +268,8 @@ else
                                         
                                     </div>
                                     <div style="flex: 1 1 0%; min-width: 0;">
-                                    <p id="GuardTestQuestions"
-                                           style="font-size: 20px; font-weight: bold; margin: 0;text-align: center;">
+                                        <p id="GuardTestQuestions" class="center-or-justify"
+                                           style="font-size: 20px; font-weight: bold; margin: 0;text-align: justify; text-align-last: center;">
                                         
                                     </p>
                                     </div>
@@ -279,47 +279,89 @@ else
                         </div>
                         <!-- ANSWER OPTIONS -->
                         <div class="form-group row m-0 mb-3" id="GuardAnswersdivision">
-                            <div class="col-md-1 "></div>
-                            <!-- Column 1 -->
-                            <div class="col-sm-5">
-                                <ul class="list-unstyled" style="font-size: 18px;">
-                                    <li class="mb-3 d-flex align-items-start justify-content-end">
-                                        <input type="checkbox" id="chkGuardAnswer1" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer1"></label>
-                                        <input type="hidden" id="txtGuardAnswer1" />
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start justify-content-end">
-                                        <input type="checkbox" id="chkGuardAnswer3" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer3"></label>
-                                        <input type="hidden" id="txtGuardAnswer3" />
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start justify-content-end">
-                                        <input type="checkbox" id="chkGuardAnswer5" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer5"></label>
-                                        <input type="hidden" id="txtGuardAnswer5" />
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-1 "></div>
-                            <!-- Column 2 -->
-                            <div class="col-sm-5">
-                                <ul class="list-unstyled" style="font-size: 18px;">
-                                    <li class="mb-3 d-flex align-items-start">
-                                        <input type="checkbox" id="chkGuardAnswer2" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer2"></label>
-                                        <input type="hidden" id="txtGuardAnswer2" />
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start">
-                                        <input type="checkbox" id="chkGuardAnswer4" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer4"></label>
-                                        <input type="hidden" id="txtGuardAnswer4" />
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start">
-                                        <input type="checkbox" id="chkGuardAnswer6" class="mr-2 mt-2" />
-                                        <label for="chkGuardAnswer6"></label>
-                                        <input type="hidden" id="txtGuardAnswer6" />
-                                    </li>
-                                </ul>
+                            <div class="col-md-12">
+
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 1 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer1" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer1"></label>
+                                                <input type="hidden" id="txtGuardAnswer1" />
+                                            </li>
+                                           
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 2 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer2" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer2"></label>
+                                                <input type="hidden" id="txtGuardAnswer2" />
+                                            </li>
+                                           
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 1 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                            
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer3" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer3"></label>
+                                                <input type="hidden" id="txtGuardAnswer3" />
+                                            </li>
+                                           
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 2 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                          
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer4" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer4"></label>
+                                                <input type="hidden" id="txtGuardAnswer4" />
+                                            </li>
+                                           
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 1 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                           
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer5" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer5"></label>
+                                                <input type="hidden" id="txtGuardAnswer5" />
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-1 "></div>
+                                    <!-- Column 2 -->
+                                    <div class="col-sm-5">
+                                        <ul class="list-unstyled" style="font-size: 18px;">
+                                           
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardAnswer6" class="mr-2 mt-2" />
+                                                <label for="chkGuardAnswer6"></label>
+                                                <input type="hidden" id="txtGuardAnswer6" />
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
 
@@ -460,7 +502,7 @@ else
                                          style="font-size: 20px; font-weight: bold; padding: 1px 10px; margin-right: 30px;">
                                     </div>
                                     <div style="flex: 1 1 0%; min-width: 0;">
-                                        <p style="font-size: 20px; font-weight: bold; margin: 0;text-align: center;" id="GuardFeedbackQuestions">
+                                        <p style="font-size: 20px; font-weight: bold; margin: 0;text-align: justify; text-align-last: center;" class="center-or-justify" id="GuardFeedbackQuestions">
 
 
                                         </p>
@@ -470,60 +512,104 @@ else
                             </div>
                         </div>
                         <div class="form-group row m-0 mb-3" id="GuardFeedbackAnswersdivision">
-                            <div class="col-md-1"></div>
-                            <div class="col-sm-5 ">
+                            <div class="col-md-12">
+
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1"></div>
+                                    <div class="col-sm-5 ">
                                
-                                <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions1">
-                                    <li class="mb-3 d-flex align-items-start justify-content-end">
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions1">
+                                            <li class="mb-3 d-flex align-items-start justify-content-end">
                                         
-                                            <input type="checkbox" id="chkGuardFeedbackAnswer1" class="mr-2 mt-2" hidden />
+                                                    <input type="checkbox" id="chkGuardFeedbackAnswer1" class="mr-2 mt-2" hidden />
                                             
-                                            <input type="hidden" id="txtGuardFeedbackAnswer1" />
+                                                    <input type="hidden" id="txtGuardFeedbackAnswer1" />
                                         
-                                    </li>
-                                    <li class ="mb-3 d-flex align-items-start justify-content-end">
+                                            </li>
+                                            
+                                        </ul>
 
-                                        <input type="checkbox" id="chkGuardFeedbackAnswer3" class="mr-2 mt-2" hidden />
-                                            
-                                            <input type="hidden" id="txtGuardFeedbackAnswer3" />
-                                        
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start justify-content-end">
-                                        <input type="checkbox" id="chkGuardFeedbackAnswer5" class="mr-2 mt-2" hidden />
-                                            
-                                            <input type="hidden" id="txtGuardFeedbackAnswer5" />
-                                        
-                                    </li>
-                                </ul>
-
-                            </div>
-                            <div class="col-sm-1"></div>
-                            <div class="col-sm-5 ">
+                                    </div>
+                                    <div class="col-sm-1"></div>
+                                    <div class="col-sm-5 ">
                                 
-                                <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions2">
-                                    <li class="mb-3 d-flex align-items-start ">
-                                            <input type="checkbox" id="chkGuardFeedbackAnswer2" class="mr-2 mt-2" hidden />
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions2">
+                                            <li class="mb-3 d-flex align-items-start ">
+                                                    <input type="checkbox" id="chkGuardFeedbackAnswer2" class="mr-2 mt-2" hidden />
                                           
-                                            <input type="hidden" id="txtGuardFeedbackAnswer2" />
+                                                    <input type="hidden" id="txtGuardFeedbackAnswer2" />
                                        
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start">
+                                            </li>
+                                            
+                                        </ul>
+                                    </div>
 
-                                        <input type="checkbox" id="chkGuardFeedbackAnswer4" class="mr-2 mt-2" hidden />
+                                </div>
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1"></div>
+                                    <div class="col-sm-5 ">
+
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions1">
+                                           
+                                            <li class="mb-3 d-flex align-items-start justify-content-end">
+
+                                                <input type="checkbox" id="chkGuardFeedbackAnswer3" class="mr-2 mt-2" hidden />
+
+                                                <input type="hidden" id="txtGuardFeedbackAnswer3" />
+
+                                            </li>
                                             
-                                            <input type="hidden" id="txtGuardFeedbackAnswer4" />
-                                        
-                                    </li>
-                                    <li class="mb-3 d-flex align-items-start">
-                                        <input type="checkbox" id="chkGuardFeedbackAnswer6" class="mr-2 mt-2" hidden />
+                                        </ul>
+
+                                    </div>
+                                    <div class="col-sm-1"></div>
+                                    <div class="col-sm-5 ">
+
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions2">
+                                          
+                                            <li class="mb-3 d-flex align-items-start">
+
+                                                <input type="checkbox" id="chkGuardFeedbackAnswer4" class="mr-2 mt-2" hidden />
+
+                                                <input type="hidden" id="txtGuardFeedbackAnswer4" />
+
+                                            </li>
                                             
-                                            <input type="hidden" id="txtGuardFeedbackAnswer6" />
-                                        
-                                    </li>
-                                </ul>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-1"></div>
+                                    <div class="col-sm-5 ">
+
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions1">
+                                           
+                                            <li class="mb-3 d-flex align-items-start justify-content-end">
+                                                <input type="checkbox" id="chkGuardFeedbackAnswer5" class="mr-2 mt-2" hidden />
+
+                                                <input type="hidden" id="txtGuardFeedbackAnswer5" />
+
+                                            </li>
+                                        </ul>
+
+                                    </div>
+                                    <div class="col-sm-1"></div>
+                                    <div class="col-sm-5 ">
+
+                                        <ul class="list-unstyled" style="font-size: 18px;" id="listGuardFeedbackOptions2">
+                                           
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <input type="checkbox" id="chkGuardFeedbackAnswer6" class="mr-2 mt-2" hidden />
+
+                                                <input type="hidden" id="txtGuardFeedbackAnswer6" />
+
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                </div>
                             </div>
-                            
-
                         </div>
 
                     </form>
