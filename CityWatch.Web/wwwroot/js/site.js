@@ -6146,7 +6146,7 @@ function ShowStatusColorForCourse() {
 
             $('#statusCertificateColor').addClass('text-warning');
         }
-       
+        gridHrSettingswithCourseLibrary.reload();
     }).always(function () {
         $('#loader').hide();
     });
