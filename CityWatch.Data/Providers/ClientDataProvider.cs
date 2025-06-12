@@ -275,6 +275,7 @@ namespace CityWatch.Data.Providers
         public Task SaveMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al);
 
         public int GetSiteLinksTypeUsingTypeText(string typeText);
+        public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3798,6 +3799,17 @@ namespace CityWatch.Data.Providers
         public async Task SaveMobileCrowdControlAuditLog(ClientSiteMobileCrowdControlAuditLog al)
         {
             _context.Add(al);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG)
+        {
+            var gd = await _context.ClientSiteMobileCrowdControlGuards.Where(x => x.GuardId == MCCG.GuardId && x.ClientSiteId == MCCG.ClientSiteId && x.UserId == MCCG.UserId).FirstOrDefaultAsync();
+            if (gd != null)
+            {
+                gd.Location = MCCG.Location;
+            }
+
             await _context.SaveChangesAsync();
         }
 

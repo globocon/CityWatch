@@ -6435,12 +6435,14 @@ namespace CityWatch.Data.Providers
         }
         public void DeleteTestQuestionAnswers(int questionId)
         {
-            var guardLotesToDelete = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId).ToList();
+            var guardLotesToDelete = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == questionId && x.IsDeleted == false).ToList();
             if (guardLotesToDelete == null)
                 throw new InvalidOperationException();
             foreach (var item in guardLotesToDelete)
             {
-                _context.Remove(item);
+                item.IsDeleted = true;
+
+                //_context.Remove(item);
                 _context.SaveChanges();
             }
         }
@@ -6448,15 +6450,16 @@ namespace CityWatch.Data.Providers
         public void DeleteTestQuestions(int testQuestionId)
         {
 
-            var getTestQuestionAnsweres = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == testQuestionId).ToList();
+            var getTestQuestionAnsweres = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == testQuestionId && x.IsDeleted == false).ToList();
             if (getTestQuestionAnsweres.Count() > 0)
             {
                 DeleteTestQuestionAnswers(testQuestionId);
             }
-            var getTestQuestions = _context.TrainingTestQuestions.Where(x => x.Id == testQuestionId).ToList();
+            var getTestQuestions = _context.TrainingTestQuestions.Where(x => x.Id == testQuestionId ).ToList();
             foreach (var item in getTestQuestions)
             {
-                _context.Remove(item);
+                // _context.Remove(item);
+                item.IsDeleted = true;
                 _context.SaveChanges();
             }
 
@@ -6489,7 +6492,7 @@ namespace CityWatch.Data.Providers
         public void SaveFeedbackQuestionsAnswers(int feedbackQuestionId, List<TrainingTestFeedbackQuestionsAnswers> feedbackAnswers)
         {
 
-            var getFeedbackQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId).ToList();
+            var getFeedbackQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId && x.IsDeleted == false).ToList();
             if (getFeedbackQuestionAnsweres.Count() > 0)
             {
                 DeleteFeedbackQuestionAnswers(feedbackQuestionId);
@@ -6508,27 +6511,29 @@ namespace CityWatch.Data.Providers
         }
         public void DeleteFeedbackQuestionAnswers(int questionId)
         {
-            var guardLotesToDelete = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == questionId).ToList();
+            var guardLotesToDelete = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == questionId && x.IsDeleted == false).ToList();
             if (guardLotesToDelete == null)
                 throw new InvalidOperationException();
             foreach (var item in guardLotesToDelete)
             {
-                _context.Remove(item);
+                item.IsDeleted = true;
+                //_context.Remove(item);
                 _context.SaveChanges();
             }
         }
         public void DeleteFeedbanckQuestions(int feedbackQuestionId)
         {
 
-            var getTestQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId).ToList();
+            var getTestQuestionAnsweres = _context.TrainingTestFeedbackQuestionsAnswers.Where(x => x.TrainingTestFeedbackQuestionsId == feedbackQuestionId && x.IsDeleted==false).ToList();
             if (getTestQuestionAnsweres.Count() > 0)
             {
                 DeleteFeedbackQuestionAnswers(feedbackQuestionId);
             }
-            var getTestQuestions = _context.TrainingTestFeedbackQuestions.Where(x => x.Id == feedbackQuestionId).ToList();
+            var getTestQuestions = _context.TrainingTestFeedbackQuestions.Where(x => x.Id == feedbackQuestionId && x.IsDeleted == false).ToList();
             foreach (var item in getTestQuestions)
             {
-                _context.Remove(item);
+                item.IsDeleted = true;
+                //_context.Remove(item);
                 _context.SaveChanges();
             }
 
