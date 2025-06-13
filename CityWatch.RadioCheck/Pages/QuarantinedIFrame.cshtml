@@ -1,5 +1,5 @@
 ﻿@page
-@model CityWatch.RadioCheck.Pages.testPageModel
+@model CityWatch.RadioCheck.Pages.QuarantinedIFrame
 @{
     Layout = "_Plain"; // You can keep or remove layout if minimal view is needed
 }
@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compliant Strings</title>
+    <title>Quarantined Strings</title>
 
 </head>
 <body style="background-color: #bad5f5;">
@@ -21,25 +21,14 @@
     @if (Model.TableData != null)
     {
                                 <div style="width:100%;text-align:Left;overflow-x:auto">
-                                            <table class="table table-bordered table-striped table-hover" style="width: 100%; border-collapse: collapse;">
+            <table class="table table-primary table-striped table-sm table-hover table-bordered" style="width: 100%;border-collapse: collapse;font-size: x-small;">
                                         <thead style="background-color: #f2f2f2;">
-                                            <tr style="background-color: #003366; color: white;">
-
-                                                <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
-                                                    Compliant Strings Ready for Loading
-                                                </th>
-                                                <th colspan="2" style="text-align:center; border: 1px solid #ddd;">
-                                                    Strings On Train
-                                                </th>
-                                                <th rowspan="1" style="text-align:center; border: 1px solid #ddd;">
-
-                                                </th>
-                                            </tr>
+                                           
 
                                             <tr>
                         @foreach (var header in Model.TableData[0])
                         {
-                                                            <th style="padding: 8px; border: 1px solid #ddd;">@header</th>
+                                                <th style="padding: 8px; border: 1px solid #ddd;">@header</th>
                         }
                                                 <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
                                             </tr>
@@ -52,10 +41,10 @@
                             {
                                                                         <td>@cell</td>
                             }
-                                                            <td>
+                                                                    <td class="text-center">
 
                                                                     <input type="hidden" name="rowIndex" value="@i" />
-                                                                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(@i)">Remove</button>
+                                <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)"><i class="fa fa-trash" aria-hidden="true"></i></button>
 
                                                             </td>
                                                         </tr>
@@ -78,7 +67,7 @@
     function deleteRow(rowIndex) {
         if (!confirm("Are you sure you want to remove this row?")) return;
         $.ajax({
-        url: 'testPage?handler=DeleteRow',
+            url: 'QuarantinedIFrame?handler=DeleteRow',
         type: 'POST',
         dataType: 'json',
         data: { rowIndex: rowIndex },
