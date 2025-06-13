@@ -2206,7 +2206,8 @@ namespace CityWatch.Web.Pages.Admin
                                 FileName = file.FileName,
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
-                                TQNumberId = TQNumber
+                                TQNumberId = TQNumber,
+                                IsDeleted = false
 
                             });
                         }
@@ -2218,7 +2219,8 @@ namespace CityWatch.Web.Pages.Admin
                                 FileName = file.FileName,
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
-                                TQNumberId = TQNumbernew
+                                TQNumberId = TQNumbernew,
+                                IsDeleted = false
 
                             });
                         }
@@ -2496,7 +2498,8 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = record.FileName,
                             LastUpdated = DateTime.Now,
                             HRSettingsId = record.HRSettingsId,
-                            TQNumberId = TQNumbernew
+                            TQNumberId = TQNumbernew,
+                            IsDeleted = false
 
                         });
                         success = true;
@@ -2764,6 +2767,7 @@ namespace CityWatch.Web.Pages.Admin
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
                                 isRPLEnabled=false,
+                                IsDeleted=false
 
                             });
                         
@@ -3060,6 +3064,7 @@ namespace CityWatch.Web.Pages.Admin
                             LastUpdated = record.LastUpdated,
                             HRSettingsId = record.HRSettingsId,
                             isRPLEnabled = isRPLchecked,
+                            IsDeleted=false
 
                         });
 

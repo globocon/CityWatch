@@ -214,7 +214,9 @@ namespace CityWatch.Data.Providers
         public Task<List<ClientSiteMobileAppTimeZoneDTO>> GetClientSitesTimeZones();
         public Task<List<ClientSiteMobileCrowdControl>> GetAllCurrentCrowdControlData();
         public Task SaveCrowdControlHistory(ClientSiteMobileCrowdControlHistory history);
-        public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);        
+        public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);
+        public void DeleteTQSettings(int id);
+        List<TrainingTestQuestions> GetTrainingTestQuestionsWithHrSettings(int hrsettingsId);
 
     }
 
@@ -1373,7 +1375,7 @@ namespace CityWatch.Data.Providers
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourses
                 .Include(x => x.TQNumber)
-                .Where(x => x.HRSettingsId == type)
+                .Where(x => x.HRSettingsId == type && x.IsDeleted == false)
                 .OrderBy(x => x.TQNumberId)
                 .ToList();
             foreach (var item in courseDocList)
@@ -1440,13 +1442,14 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                var documentToUpdate = _context.TrainingCourses.SingleOrDefault(x => x.Id == trainingCourses.Id);
+                var documentToUpdate = _context.TrainingCourses.SingleOrDefault(x => x.Id == trainingCourses.Id && x.IsDeleted == false);
                 if (documentToUpdate != null)
                 {
                     documentToUpdate.FileName = trainingCourses.FileName;
                     documentToUpdate.LastUpdated = trainingCourses.LastUpdated;
                     documentToUpdate.TQNumberId = trainingCourses.TQNumberId;
                     documentToUpdate.HRSettingsId = trainingCourses.HRSettingsId;
+                    documentToUpdate.IsDeleted = trainingCourses.IsDeleted;
                 }
             }
             _context.SaveChanges();
@@ -1455,7 +1458,7 @@ namespace CityWatch.Data.Providers
         {
             int LastTQNumber = 0;
 
-            var result = _context.TrainingCourses.Where(x => x.HRSettingsId == hrsettingsid).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingCourses.Where(x => x.HRSettingsId == hrsettingsid && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             if (result.Count == 0)
             {
                 LastTQNumber = _context.TrainingTQNumbers.FirstOrDefault().Id;
@@ -1478,7 +1481,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Attempts)
                 .Include(x => x.CertificateExpiryYears)
 
-                .Where(x => x.HRSettingsId == hrSettingsId)
+                .Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted==false)
                 .ToList();
 
 
@@ -1596,15 +1599,16 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetCourseDocuments()
         {
-            return _context.TrainingCourses.OrderBy(x => x.FileName).ToList();
+            return _context.TrainingCourses.Where(x=> x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
         }
         public void DeleteCourseDocument(int id)
         {
-            var docToDelete = _context.TrainingCourses.SingleOrDefault(x => x.Id == id);
+            var docToDelete = _context.TrainingCourses.SingleOrDefault(x => x.Id == id && x.IsDeleted == false);
             if (docToDelete == null)
                 throw new InvalidOperationException();
 
-            _context.TrainingCourses.Remove(docToDelete);
+            docToDelete.IsDeleted = true;
+            //_context.TrainingCourses.Remove(docToDelete);
             _context.SaveChanges();
         }
 
@@ -1673,7 +1677,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificate
-                .Where(x => x.HRSettingsId == type)
+                .Where(x => x.HRSettingsId == type && x.IsDeleted==false)
                 .ToList();
 
 
@@ -1687,13 +1691,14 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                var documentToUpdate = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == trainingCourseCertificate.Id);
+                var documentToUpdate = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == trainingCourseCertificate.Id && x.IsDeleted == false);
                 if (documentToUpdate != null)
                 {
                     documentToUpdate.FileName = trainingCourseCertificate.FileName;
                     documentToUpdate.LastUpdated = trainingCourseCertificate.LastUpdated;
                     documentToUpdate.HRSettingsId = trainingCourseCertificate.HRSettingsId;
                     documentToUpdate.isRPLEnabled = trainingCourseCertificate.isRPLEnabled;
+                    documentToUpdate.IsDeleted = trainingCourseCertificate.IsDeleted;
                 }
             }
             _context.SaveChanges();
@@ -1725,7 +1730,7 @@ namespace CityWatch.Data.Providers
         {
 
             var hrsettingsid = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).Select(x => x.Id);
-            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)).ToList();
+            var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId) && x.IsDeleted == false).ToList();
 
             //    var trainigCourses = _context.TrainingCourses.Include(x => x.TQNumber).Where(x => hrsettingsid.Contains(x.HRSettingsId)
             //    && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId)
@@ -1811,15 +1816,16 @@ namespace CityWatch.Data.Providers
 
         public List<TrainingCourseCertificate> GetCourseCertificateDocuments()
         {
-            return _context.TrainingCourseCertificate.OrderBy(x => x.FileName).ToList();
+            return _context.TrainingCourseCertificate.Where(x =>  x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
         }
         public void DeleteCourseCertificateDocument(int id)
         {
-            var docToDelete = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == id);
+            var docToDelete = _context.TrainingCourseCertificate.SingleOrDefault(x => x.Id == id && x.IsDeleted == false);
             if (docToDelete == null)
                 throw new InvalidOperationException();
 
-            _context.TrainingCourseCertificate.Remove(docToDelete);
+            docToDelete.IsDeleted = true;
+            //_context.TrainingCourseCertificate.Remove(docToDelete);
             _context.SaveChanges();
         }
 
@@ -1842,7 +1848,7 @@ namespace CityWatch.Data.Providers
         }
         public TrainingTestQuestions GetGuardQuestions(int hrSettingsId, int tqNumberId, int guardId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             int[] courseid = course.Select(x => x.Id).ToArray();
             var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             var questions = new TrainingTestQuestions();
@@ -1899,7 +1905,7 @@ namespace CityWatch.Data.Providers
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetQuestionNumber(int hrSettingsId, int tqNumberId, int guardId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             int[] courseid = course.Select(x => x.Id).ToArray();
             var result = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => courseid.Contains(x.TrainingCourseId) && x.GuardId == guardId).OrderBy(x => x.Id).ToList();
             return result;
@@ -1907,7 +1913,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCourses(int hrSettingsId, int tqNumberId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted==false).OrderBy(x => x.Id).ToList();
             return course;
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardCorrectQuestions(int guardId, int trainingCourseId)
@@ -2010,7 +2016,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCoursesWithHrSettingsId(int hrSettingsId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             return course;
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardAttendedQuestionsAndanswers(int guardId, int trainingCourseId)
@@ -2150,7 +2156,7 @@ namespace CityWatch.Data.Providers
 
         public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
         {
-            var course = _context.TrainingCourses.Where(x => x.Id == courseId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.Id == courseId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             return course;
         }
         public void SaveGuardTrainingPracticalDetails(GuardTrainingAndAssessmentPractical trainingAssessment)
@@ -2184,7 +2190,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCoursesWithOnlyHrSettingsId(int hrSettingsId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             return course;
         }
 
@@ -2218,9 +2224,9 @@ namespace CityWatch.Data.Providers
         {
 
             var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
-            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) &&
+            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsDeleted == false) &&
             (!_context.TrainingTestQuestionSettings
-            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback)
+            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback && x.IsDeleted == false)
             .Any() ||
             _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
         )
@@ -2331,8 +2337,25 @@ namespace CityWatch.Data.Providers
 
             await _context.SaveChangesAsync();
         }
+        public void DeleteTQSettings(int id)
+        {
+            var docToDelete = _context.TrainingTestQuestionSettings.SingleOrDefault(x => x.Id == id && x.IsDeleted == false);
+            if (docToDelete == null)
+                throw new InvalidOperationException();
 
-       
+            docToDelete.IsDeleted = true;
+            //_context.TrainingCourses.Remove(docToDelete);
+            _context.SaveChanges();
+        }
+        public List<TrainingTestQuestions> GetTrainingTestQuestionsWithHrSettings(int hrsettingsId)
+        {
+
+            var trainigCourses = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false).ToList();
+
+            return trainigCourses;
+
+        }
+
     }
 
 
