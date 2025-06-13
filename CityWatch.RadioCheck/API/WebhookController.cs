@@ -1117,12 +1117,28 @@ namespace CityWatch.RadioCheck.API
 
                 if (webhookData != null)
                 {
+                    // Parse the date field
+                    string date = "";
+                    if (webhookData.TryGetValue("q1309_ComplintString_date", out var dateValue) && dateValue is JObject dateObj)
+                    {
+                        string day = dateObj["day"]?.ToString() ?? "";
+                        string month = dateObj["month"]?.ToString() ?? "";
+                        string year = dateObj["year"]?.ToString() ?? "";
+                        if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
+                        {
+                            date = new DateTime(y, m, d).ToString("dd/MM/yyyy");
+                        }
+                    }
+
                     var valuesToAdd = new List<string>
             {
-                webhookData.TryGetValue("q1301_numberOf", out var num1) ? num1?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1302_stringId", out var id1) ? id1?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1305_numberOf1305", out var num2) ? num2?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1306_stringId1306", out var id2) ? id2?.ToString() ?? "" : ""
+                date,
+                webhookData.TryGetValue("q1310_ComplintString_stringId", out var stringId) ? stringId?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectWeld) ? defectWeld?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeld) ? newWeld?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1313_ComplintString_eastRfid", out var eastRfid) ? eastRfid?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westRfid) ? westRfid?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1315_ComplintString_comments", out var comments) ? comments?.ToString() ?? "" : ""
             };
 
                     using (var workbook = System.IO.File.Exists(excelFilePath)
@@ -1133,15 +1149,110 @@ namespace CityWatch.RadioCheck.API
 
                         if (worksheet.LastRowUsed() == null)
                         {
-                            // Add header if sheet is empty
-                            worksheet.Cell(1, 1).Value = "Number of Strings";
+                            // Add header
+                            worksheet.Cell(1, 1).Value = "Date";
                             worksheet.Cell(1, 2).Value = "String ID";
-                            worksheet.Cell(1, 3).Value = "Number of Strings";
-                            worksheet.Cell(1, 4).Value = "String ID";
+                            worksheet.Cell(1, 3).Value = "Defect Weld ID";
+                            worksheet.Cell(1, 4).Value = "New Weld ID";
+                            worksheet.Cell(1, 5).Value = "EAST RFID (Last 10 digits)";
+                            worksheet.Cell(1, 6).Value = "WEST RFID (Last 10 digits)";
+                            worksheet.Cell(1, 7).Value = "Comments";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();
                         var newRow = worksheet.Row(lastRow + 1);
+                        for (int i = 0; i < valuesToAdd.Count; i++)
+                        {
+                            newRow.Cell(i + 1).Value = valuesToAdd[i];
+                        }
+
+                        workbook.SaveAs(excelFilePath);
+                    }
+                }
+
+                return Ok(new { message = "Webhook processed. Excel updated." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("QuarantinedStrings")]
+        public async Task<IActionResult> ReceiveWebhookQuarantinedStrings()
+        {
+            try
+            {
+                if (!Request.HasFormContentType)
+                    return BadRequest("Invalid form-data request");
+
+                var form = await Request.ReadFormAsync();
+                string submissionID = form["submissionID"].ToString();
+                if (string.IsNullOrEmpty(submissionID))
+                    submissionID = Guid.NewGuid().ToString();
+
+                string rawJson = form["rawRequest"];
+                var webhookData = !string.IsNullOrEmpty(rawJson)
+                    ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson)
+                    : null;
+
+                string baseFolder = Path.Combine("wwwroot", "uploads", "jotform", "QuarantinedStringsData");
+                Directory.CreateDirectory(baseFolder);
+
+                string logFilePath = Path.Combine(baseFolder, "webhook_log.txt");
+                string webhookFilePath = Path.Combine(baseFolder, "webhook_test.txt");
+                string excelFilePath = Path.Combine(baseFolder, "QuarantinedStringsData.xlsx");
+
+                await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
+                await System.IO.File.AppendAllTextAsync(logFilePath, $"[{DateTime.Now}] Webhook received. Submission ID: {submissionID}{Environment.NewLine}");
+
+                if (webhookData != null)
+                {
+                    // Parse date
+                    string date = "";
+                    if (webhookData.TryGetValue("q1309_QuarantinedString_date", out var dateValue) && dateValue is JObject dateObj)
+                    {
+                        string day = dateObj["day"]?.ToString() ?? "";
+                        string month = dateObj["month"]?.ToString() ?? "";
+                        string year = dateObj["year"]?.ToString() ?? "";
+                        if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
+                        {
+                            date = new DateTime(y, m, d).ToString("dd/MM/yyyy");
+                        }
+                    }
+
+                    var valuesToAdd = new List<string>
+            {
+                date,
+                webhookData.TryGetValue("q1318_QuarantinedString_stringTotal", out var stringTotal) ? stringTotal?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1319_QuarantinedString_quarantinedStringYard", out var stringYard) ? stringYard?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1320_QuarantinedString_Weld", out var weld) ? weld?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1321_QuarantinedString_Defect", out var defect) ? defect?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1322_QuarantinedString_location", out var location) ? location?.ToString() ?? "" : "",
+                webhookData.TryGetValue("q1315_QuarantinedString_comments", out var comments) ? comments?.ToString() ?? "" : ""
+            };
+
+                    using (var workbook = System.IO.File.Exists(excelFilePath)
+                        ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
+                        : new ClosedXML.Excel.XLWorkbook())
+                    {
+                        var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("Quarantined Strings");
+
+                        if (worksheet.LastRowUsed() == null)
+                        {
+                            // Add header row
+                            worksheet.Cell(1, 1).Value = "DATE";
+                            worksheet.Cell(1, 2).Value = "STRING TOTAL";
+                            worksheet.Cell(1, 3).Value = "Quarantined String ID's in Yard";
+                            worksheet.Cell(1, 4).Value = "WELD #";
+                            worksheet.Cell(1, 5).Value = "DEFECT";
+                            worksheet.Cell(1, 6).Value = "LOCATION";
+                            worksheet.Cell(1, 7).Value = "COMMENTS";
+                        }
+
+                        var lastRow = worksheet.LastRowUsed().RowNumber();
+                        var newRow = worksheet.Row(lastRow + 1);
+
                         for (int i = 0; i < valuesToAdd.Count; i++)
                         {
                             newRow.Cell(i + 1).Value = valuesToAdd[i];
