@@ -10,7 +10,7 @@ namespace CityWatch.Data.Models
     {
         [Key]
         public int Id { get; set; }
-        public int HRSettingsId { get; set; }
+        //public int HRSettingsId { get; set; }
         public int QuestionNoId { get; set; }
         public string Question { get; set; }
         public bool IsDeleted { get; set; }

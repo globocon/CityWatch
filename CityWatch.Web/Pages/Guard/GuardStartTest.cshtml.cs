@@ -557,7 +557,8 @@ namespace CityWatch.Web.Pages.Guard
         }
         public JsonResult OnGetGuardFeedbackQuestionCount(int hrSettingsId,int guardId)
         {
-            int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount(hrSettingsId);
+            //int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount(hrSettingsId);
+            int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount();
             var questionnumer = _configDataProvider.GetFeedbackQuestionNumber(hrSettingsId, guardId);
             var countid = questionnumer.Count();
             string Qno = string.Empty;

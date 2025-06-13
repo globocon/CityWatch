@@ -2406,11 +2406,13 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetLastFeedbackQNumber(int hrSettingsId)
         {
-            return new JsonResult(_configDataProvider.GetLastFeedbackQNumbers(hrSettingsId));
+            // return new JsonResult(_configDataProvider.GetLastFeedbackQNumbers(hrSettingsId));
+            return new JsonResult(_configDataProvider.GetLastFeedbackQNumbers());
         }
         public JsonResult OnGetFeedbackQuestionsCount(int hrSettingsId)
         {
-            return new JsonResult(_configDataProvider.GetFeedbackQuestionsCount(hrSettingsId));
+            //return new JsonResult(_configDataProvider.GetFeedbackQuestionsCount(hrSettingsId));
+            return new JsonResult(_configDataProvider.GetFeedbackQuestionsCount());
         }
         public JsonResult OnPostSaveFeedbackQAnswers(TrainingTestFeedbackQuestions feedbackquestions, List<TrainingTestFeedbackQuestionsAnswers> feedbackquestionanswers)
         {
@@ -2460,8 +2462,8 @@ namespace CityWatch.Web.Pages.Admin
         }
         public IActionResult OnGetFeedbackQuestionWithQuestionNumber(int hrSettingsId, int questionumberId)
         {
-            var Questions = _configDataProvider.GetFeedbackQuestions(hrSettingsId, questionumberId);
-
+            //var Questions = _configDataProvider.GetFeedbackQuestions(hrSettingsId, questionumberId);
+            var Questions = _configDataProvider.GetFeedbackQuestions(questionumberId);
 
             return new JsonResult(Questions);
         }
