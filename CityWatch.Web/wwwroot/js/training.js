@@ -1783,7 +1783,7 @@ $('#btn_save_trainingassessment_feedbackquestions').on("click", function (e) {
         Id: feedbackQuestionAnswersId,
         QuestionNoId: $("#ddlFeedbackQuestionNo").val(),
         Question: $("#txtFeedbackQuestion").val(),
-        HRSettingsId: $("#HrSettings_Id").val(),
+       // HRSettingsId: $("#HrSettings_Id").val(),
 
     }
     let objAnswers = [];
