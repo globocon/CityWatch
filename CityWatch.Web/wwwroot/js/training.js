@@ -2507,16 +2507,27 @@ function fetchURPLDeatils(Id,GuardId) {
                 //$.each(data, function (i,item) {
             if (data != null) {
 
-                    $('#rplDetailsModal').find('#rplCertificateId').val(Id)
-                    $('#rplDetailsModal').find('#rplId').val(data.id)
-            //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
-            getPracticalLocation(data.trainingPracticalLocationId);
-            $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
+                $('#rplDetailsModal').find('#rplCertificateId').val(Id)
+                $('#rplDetailsModal').find('#rplId').val(data.id)
+                //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
+                getPracticalLocation(data.trainingPracticalLocationId);
+                $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
                 $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
                 $('#rplDetailsModal').find('#rplGuardId').val(GuardId)
-            // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
+                // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
                 getRPLInstructorSignOff(data.trainingInstructorId)
 
+            }
+            else {
+                $('#rplDetailsModal').find('#rplCertificateId').val(Id)
+                $('#rplDetailsModal').find('#rplId').val(-1)
+                //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
+                getPracticalLocation('');
+                $('#rplDetailsModal').find('#RPL_DateAssessment_started').val('');
+                $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val('');
+                $('#rplDetailsModal').find('#rplGuardId').val(GuardId)
+                // $('#rplDetailsModal').find('#ddlRPLInstructorsignOff').val(data.trainingInstructorId);
+                getRPLInstructorSignOff('')
             }
                 //});
                
