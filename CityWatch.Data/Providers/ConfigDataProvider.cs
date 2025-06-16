@@ -2267,7 +2267,7 @@ namespace CityWatch.Data.Providers
         {
 
             var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
-<<<<<<< p5-Issue-11
+
             && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) 
             //&&
             //(!_context.TrainingTestQuestionSettings
@@ -2276,13 +2276,7 @@ namespace CityWatch.Data.Providers
             //.Any() 
             //||
             //_context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
-=======
-            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsDeleted == false) &&
-            (!_context.TrainingTestQuestionSettings
-            .Where(tq => tq.HRSettingsId == x.HRSettingsId && tq.IsAnonymousFeedback && x.IsDeleted == false)
-            .Any() ||
-            _context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
->>>>>>> master
+
         )
             //)
             ).ToList();
