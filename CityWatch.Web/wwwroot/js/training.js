@@ -912,7 +912,8 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
             if (data.success) {
             gridCourseDocumentFiles.reload();
 
-            showStatusNotification(data.success, data.message);
+                showStatusNotification(data.success, data.message);
+                LoadTQSettings();
             }
         else {
             gridCourseDocumentFiles.reload();

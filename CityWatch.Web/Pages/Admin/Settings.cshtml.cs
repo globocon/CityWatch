@@ -2209,6 +2209,7 @@ namespace CityWatch.Web.Pages.Admin
                                 TQNumberId = TQNumber
 
                             });
+                            
                         }
                         else
                         {
@@ -2219,6 +2220,27 @@ namespace CityWatch.Web.Pages.Admin
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
                                 TQNumberId = TQNumbernew
+
+                            });
+                        }
+                        var tqsettings = _configDataProvider.GetTQSettings(hrsettingsid).ToList();
+                        if (tqsettings.Count == 0)
+                        {
+                            _guardLogDataProvider.SaveTestQuestionSettings(new TrainingTestQuestionSettings()
+                            {
+                                Id = -1,
+                                HRSettingsId = hrsettingsid,
+                                CourseDurationId = 3,
+                                TestDurationId = 3,
+                                PassMarkId = 1,
+                                AttemptsId = 1,
+                                IsCertificateExpiry = false,
+                                CertificateExpiryId = null,
+                                IsCertificateWithQAndADump = false,
+                                IsCertificateHoldUntilPracticalTaken = false,
+                                IsAnonymousFeedback = false,
+                                IsDeleted = false
+
 
                             });
                         }

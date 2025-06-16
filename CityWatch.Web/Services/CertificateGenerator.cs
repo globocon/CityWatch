@@ -160,10 +160,15 @@ namespace CityWatch.Web.Services
             acroForm.GetField("Student").SetValue(guards.Name, true);
             if (guardsstarttest != null)
             {
+                if (acroForm.GetField("Location_theory") != null)
+                {
 
-
-                acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
-                acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
+                    acroForm.GetField("Location_theory").SetValue(guardsstarttest.TrainingLocation.Location, true);
+                }
+                if (acroForm.GetField("DOI_theory") != null)
+                {
+                    acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
+                }
             }
             var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
             if (practicalresult == null)
