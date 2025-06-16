@@ -1144,7 +1144,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificate
-                .Where(x => x.HRSettingsId == type)
+                .Where(x => x.HRSettingsId == type && x.IsDeleted == false)
                 .ToList();
 
 
@@ -1152,7 +1152,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCoursesWithCourseId(int courseId)
         {
-            var course = _context.TrainingCourses.Where(x => x.Id == courseId).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.Id == courseId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             return course;
         }
 
@@ -1219,7 +1219,7 @@ namespace CityWatch.Data.Providers
 
                 .Where(x => x.Id == id)
                 .FirstOrDefault().HRSettingsId;
-            var coursename = _context.HrSettings.Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
+            var coursename = _context.HrSettings.Where(x => x.Id == hrsettingsid && x.IsDeleted == false).FirstOrDefault().Description;
 
             return coursename;
         }

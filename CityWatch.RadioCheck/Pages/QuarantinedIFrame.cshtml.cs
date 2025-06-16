@@ -18,7 +18,7 @@ using System;
 namespace CityWatch.RadioCheck.Pages
 {
     [IgnoreAntiforgeryToken]
-    public class testPageModel : PageModel
+    public class QuarantinedIFrame : PageModel
     {
 
         private readonly CityWatchDbContext _context;
@@ -30,9 +30,9 @@ namespace CityWatch.RadioCheck.Pages
         private readonly IWebHostEnvironment _env;
         [BindProperty]
         public List<string> NewRowData { get; set; }
-        public testPageModel(CityWatchDbContext context)
+        public QuarantinedIFrame(CityWatchDbContext context)
         {
-            filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "CompliantStringsData", "CompliantStringsData.xlsx");
+            filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "QuarantinedStringsData", "QuarantinedStringsData.xlsx");
             _context = context;
         }
         public async Task OnGetAsync()

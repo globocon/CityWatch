@@ -30,7 +30,7 @@ if (excelButtons.length > 0) {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `${folder_Name}_${supervisor_Name}_Output_data.xlsx`;
+                    a.download = `${folder_Name}_${supervisor_Name}_LWRReport.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);

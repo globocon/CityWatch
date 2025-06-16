@@ -1,0 +1,87 @@
+﻿@page
+@model CityWatch.RadioCheck.Pages.ComplianStringsIFrame
+@{
+    Layout = "_Plain"; // You can keep or remove layout if minimal view is needed
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliant Strings</title>
+
+</head>
+<body style="background-color: #bad5f5;">
+
+
+    <button type="button" class="btn btn-success pb-2" onclick="location.reload();">
+    <i class="fa fa-refresh"></i> Refresh Page
+</button>
+
+    @if (Model.TableData != null)
+    {
+                                <div style="width:100%;text-align:Left;overflow-x:auto">
+            <table class="table table-primary table-striped table-sm table-hover table-bordered" style="width: 100%;border-collapse: collapse;font-size: x-small;">
+                                        <thead style="background-color: #f2f2f2;">
+                                           
+
+                                            <tr>
+                        @foreach (var header in Model.TableData[0])
+                        {
+                                                <th style="padding: 8px; border: 1px solid #ddd;">@header</th>
+                        }
+                                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                    @for (int i = 1; i < Model.TableData.Count; i++)
+                    {
+                                                        <tr>
+                            @foreach (var cell in Model.TableData[i])
+                            {
+                                                                        <td>@cell</td>
+                            }
+                                                                    <td class="text-center">
+
+                                                                    <input type="hidden" name="rowIndex" value="@i" />
+                                <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+
+                                                            </td>
+                                                        </tr>
+                    }
+
+                                            <!-- ADD ROW FORM (Only One Form Allowed in Table) -->
+
+                                        </tbody>
+                                    </table>
+                                </div>
+    }
+    else
+    {
+                                <p>No data found or file missing.</p>
+    }
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function deleteRow(rowIndex) {
+        if (!confirm("Are you sure you want to remove this row?")) return;
+        $.ajax({
+        url: 'ComplianStringsIFrame?handler=DeleteRow',
+        type: 'POST',
+        dataType: 'json',
+        data: { rowIndex: rowIndex },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response) {
+         $("button[onclick='deleteRow(" + rowIndex + ")']").closest("tr").remove();
+        }
+    });
+
+
+
+    }
+</script>
+</body>
+
+</html>

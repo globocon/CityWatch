@@ -21,6 +21,7 @@ namespace CityWatch.Data.Models
         public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } }
         //[NotMapped]
         public bool isRPLEnabled { get; set; }
-       
+        public bool IsDeleted { get; set; }
+
     }
 }

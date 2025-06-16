@@ -6455,7 +6455,7 @@ namespace CityWatch.Data.Providers
             {
                 DeleteTestQuestionAnswers(testQuestionId);
             }
-            var getTestQuestions = _context.TrainingTestQuestions.Where(x => x.Id == testQuestionId ).ToList();
+            var getTestQuestions = _context.TrainingTestQuestions.Where(x => x.Id == testQuestionId && x.IsDeleted==false).ToList();
             foreach (var item in getTestQuestions)
             {
                 // _context.Remove(item);
