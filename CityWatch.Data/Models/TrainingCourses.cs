@@ -23,6 +23,7 @@ namespace CityWatch.Data.Models
         [NotMapped]
         // public string TQNumberName { get { return TQNumber.Name; } }
         public string TQNumberName { get; set; }
+        public bool IsDeleted { get; set; }
 
     }
 }

@@ -33,6 +33,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Text;
 using Org.BouncyCastle.Crypto.Generators;
+using Microsoft.Office.Interop.PowerPoint;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -2624,6 +2625,114 @@ namespace CityWatch.Web.Pages.Admin
 
         //    return new JsonResult(new { status });
         //}
+        public JsonResult OnPostDeleteHRSettingsWithCourseLibrary(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                var courses = _configDataProvider.GetCourseDocsUsingSettingsId(id);
+                var hrsettinglist=_configDataProvider.GetHrSettingById(id);
+                var referenceNumber = _guardDataProvider.GetReferenceNoNumbers().Where(x=>x.Id==hrsettinglist.ReferenceNoNumberId && x.IsDeleted==false).FirstOrDefault().Name + _guardDataProvider.GetReferenceNoAlphabets().Where(x=>x.Id==hrsettinglist.ReferenceNoAlphabetId && x.IsDeleted==false).FirstOrDefault().Name;
+                var hrreferenceNumber = "HR" + referenceNumber;
+
+                if (courses != null) {
+                    foreach (var course in courses)
+                    {
+                        var document = _configDataProvider.GetCourseDocuments().SingleOrDefault(x => x.Id == course.Id);
+                        if (document != null)
+                        {
+                            var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course", document.FileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                            if (".ppt,.pptx".IndexOf(Path.GetExtension(document.FileName).ToLower()) > 0)
+                            {
+                                Application pptApplication = new Application();
+                                Presentation pptPresentation = null;
+
+                                string outputPath = Path.ChangeExtension(Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course", document.FileName), ".pdf");
+                                if (System.IO.File.Exists(outputPath))
+                                    System.IO.File.Delete(outputPath);
+                            }
+                            _configDataProvider.DeleteCourseDocument(course.Id);
+                            
+                        }
+                    }
+                    string folderPathnew = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
+                    if (Directory.Exists(folderPathnew))
+                    {
+                        bool isEmpty = !Directory.EnumerateFileSystemEntries(folderPathnew).Any();
+
+                        if (isEmpty)
+                            Directory.Delete(folderPathnew);
+
+                    }
+                }
+                var tqSettings = _configDataProvider.GetTQSettings(id).FirstOrDefault();
+                if(tqSettings!=null)
+                {
+                    _configDataProvider.DeleteTQSettings(tqSettings.Id);
+                }
+                var courseQuestions= _configDataProvider.GetTrainingTestQuestionsWithHrSettings(id);
+                if(courseQuestions!=null)
+                {
+                    foreach(var courseQuestion in courseQuestions)
+                    {
+                        _guardLogDataProvider.DeleteTestQuestions(courseQuestion.Id);
+                    }
+                }
+                var certificates = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(id);
+                if (certificates != null)
+                {
+                    foreach (var certificate in certificates)
+                    {
+                        var document = _configDataProvider.GetCourseCertificateDocuments().SingleOrDefault(x => x.Id == certificate.Id);
+                        if (document != null)
+                        {
+                            var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate", document.FileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                            if (".ppt,.pptx".IndexOf(Path.GetExtension(document.FileName).ToLower()) > 0)
+                            {
+                                Application pptApplication = new Application();
+                                Presentation pptPresentation = null;
+
+                                string outputPath = Path.ChangeExtension(Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate", document.FileName), ".pdf");
+                                if (System.IO.File.Exists(outputPath))
+                                    System.IO.File.Delete(outputPath);
+                            }
+                            _configDataProvider.DeleteCourseCertificateDocument(certificate.Id);
+                           
+                        }
+                    }
+                    string folderPathCertificate = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
+                    if (Directory.Exists(folderPathCertificate))
+                    {
+                        bool isEmpty = !Directory.EnumerateFileSystemEntries(folderPathCertificate).Any();
+
+                        if (isEmpty)
+                            Directory.Delete(folderPathCertificate);
+
+                    }
+                }
+                string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber);
+                if (Directory.Exists(folderPath))
+                {
+                    bool isEmpty = !Directory.EnumerateFileSystemEntries(folderPath).Any();
+
+                    if (isEmpty)
+                        Directory.Delete(folderPath);
+
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
 
     }
 

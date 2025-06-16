@@ -6152,11 +6152,13 @@ function ShowStatusColorForCourse() {
     });
 }
 $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', function () {
+    var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
+    var hrreferenceNumber = 'HR' + referenceNumber;
     // var data = keyVehicleLog.row($(this).parents('tr')).data();
     if (confirm('Are you sure want to delete this entry?')) {
         $.ajax({
             type: 'POST',
-            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettingsWithCourseLibrary',
             data: { 'id': $(this).attr('data-doc-id') },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
