@@ -557,7 +557,8 @@ namespace CityWatch.Web.Pages.Guard
         }
         public JsonResult OnGetGuardFeedbackQuestionCount(int hrSettingsId,int guardId)
         {
-            int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount(hrSettingsId);
+            //int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount(hrSettingsId);
+            int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount();
             var questionnumer = _configDataProvider.GetFeedbackQuestionNumber(hrSettingsId, guardId);
             var countid = questionnumer.Count();
             string Qno = string.Empty;
@@ -773,7 +774,8 @@ namespace CityWatch.Web.Pages.Guard
             //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             //string feedbackPath = filename.Substring(filename.IndexOf("Feedback"));
             var securitylicense = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault().SecurityNo;
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/Feedback/{securitylicense}/{filename}");
+
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/Feedback/{securitylicense}/{filename}");
             var dbxUploaded = true;
             dbxUploaded = UpoadDocumentToDropbox(filename, dbxFilePath);
 

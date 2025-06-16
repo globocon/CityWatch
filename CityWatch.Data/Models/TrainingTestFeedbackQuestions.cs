@@ -10,13 +10,13 @@ namespace CityWatch.Data.Models
     {
         [Key]
         public int Id { get; set; }
-        public int HRSettingsId { get; set; }
+        //public int HRSettingsId { get; set; }
         public int QuestionNoId { get; set; }
         public string Question { get; set; }
         public bool IsDeleted { get; set; }
 
-        [ForeignKey("HRSettingsId")]
-        public HrSettings HrSettings { get; set; }
+        //[ForeignKey("HRSettingsId")]
+        //public HrSettings HrSettings { get; set; }
         [ForeignKey("QuestionNoId")]
         public TrainingTestQuestionNumbers QuestionNumbers { get; set; }
         
