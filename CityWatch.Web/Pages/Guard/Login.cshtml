@@ -6,7 +6,7 @@
 @model CityWatch.Web.Pages.Guard.LoginModel
 @inject IConfiguration Configuration
 @{
-    ViewData["Title"] = "CityWatch Security | Guard Daily Log";
+    ViewData["Title"] = Model.ClientNameTitle + " | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;

@@ -7,7 +7,7 @@
 @inject IUserDataProvider viewDataService
 @model IndexModel
 @{
-    ViewData["Title"] = "CityWatch Security | Login";
+    ViewData["Title"] = Model.ClientNameTitle + " | Login";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Index;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
 }

@@ -27,7 +27,7 @@
 </style>
 
 @{
-    ViewData["Title"] = "CityWatch Security | Settings";
+    ViewData["Title"] = Model.ClientNameTitle + " | Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Settings;
 
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;

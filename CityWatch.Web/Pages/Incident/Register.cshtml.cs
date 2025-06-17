@@ -59,7 +59,7 @@ namespace CityWatch.Web.Pages.Incident
 
 
         public IViewDataService ViewDataService { get { return _ViewDataService; } }
-
+        public string ClientNameTitle { get; set; }
         public RegisterModel(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
             IViewDataService viewDataService,
@@ -101,9 +101,46 @@ namespace CityWatch.Web.Pages.Incident
             ////To get the Hash code 
             //string input = GenerateFormattedString();
             //string hashCode = GenerateHashCode(input);
+
             if (!string.IsNullOrEmpty(reuse))
             {
                 var httpContext = HttpContext;
+                var host = HttpContext.Request.Host.Host;
+                var hostParts = host.Split('.');
+
+                // Extract the client name
+                string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                    ? hostParts[1]
+                                    : hostParts[0];
+                if (!string.IsNullOrEmpty(clientName))
+                {
+                    if (
+                        clientName.Trim().ToLower() != "www" &&
+                        clientName.Trim().ToLower() != "cws-ir" &&
+                        clientName.Trim().ToLower() != "test"
+                        &&
+                        clientName.Trim().ToLower() != "localhost"
+                    )
+                    {
+                        int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                        if (domain != 0)
+                        {
+
+                            ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
+                        }
+                        else
+                        {
+
+                            ClientNameTitle = "Citywatch Security";
+                        }
+                    }
+                    else
+                    {
+
+                        ClientNameTitle = "Citywatch Security";
+                    }
+                }
+
                 // Check if the Referer header is present in the request
                 if (httpContext.Request.Headers.ContainsKey("Referer"))
                 {
@@ -258,7 +295,41 @@ namespace CityWatch.Web.Pages.Incident
             {
                 /*If it's Comming from any other page its clear session*/
                 HttpContext.Session.Remove("IRReport");
-                
+                var host = HttpContext.Request.Host.Host;
+                var hostParts = host.Split('.');
+
+                // Extract the client name
+                string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                    ? hostParts[1]
+                                    : hostParts[0];
+                if (!string.IsNullOrEmpty(clientName))
+                {
+                    if (
+                        clientName.Trim().ToLower() != "www" &&
+                        clientName.Trim().ToLower() != "cws-ir" &&
+                        clientName.Trim().ToLower() != "test"
+                        &&
+                        clientName.Trim().ToLower() != "localhost"
+                    )
+                    {
+                        int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                        if (domain != 0)
+                        {
+
+                            ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
+                        }
+                        else
+                        {
+
+                            ClientNameTitle = "Citywatch Security";
+                        }
+                    }
+                    else
+                    {
+
+                        ClientNameTitle = "Citywatch Security";
+                    }
+                }
                 Report = new IncidentRequest
                 {
                     //HASH = hashCode,
@@ -664,8 +735,8 @@ namespace CityWatch.Web.Pages.Incident
                     }
 
                     messageHtmlnew = string.Join(" ", sentences);
-                    wordToReplace = "<a href='mailto:control@citywatchsecurity.com.au'>control@citywatchsecurity.com.au</a>";
-                    replacementWord = "<a href='" + thirpartyemail + "'>" + thirpartyemail + "</a>";
+                    wordToReplace = "control@citywatchsecurity.com.au";
+                    replacementWord =  thirpartyemail ;
                     sentences = Regex.Split(messageHtmlnew, @"(?<=[.!?])\s+");
 
                     for (int i = 0; i < sentences.Length; i++)

@@ -12,7 +12,7 @@
 @inject IConfigDataProvider _configDataProvider
 @inject IUserDataProvider _userDataProvider
 @{
-    ViewData["Title"] = "CityWatch Security | Incident Report";
+    ViewData["Title"] = Model.ClientNameTitle + " | Incident Report";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Register;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;

@@ -13,17 +13,55 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly ILogger<RosterModel> _logger;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
+        public string ClientNameTitle { get; set; }
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider)
         {
             _logger = logger;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
+            _configDataProvider = configDataProvider;
         }
         public void OnGet()
         {
-        }
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                    &&
+                    clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
+                    }
+                    else
+                    {
+
+                        ClientNameTitle = "Citywatch Security";
+                    }
+                }
+                else
+                {
+
+                    ClientNameTitle = "Citywatch Security";
+                }
+            }
+            }
         public JsonResult OnGetGuardID(string LicenseNo)
         {
             var ddd = _guardDataProvider.GetGuardID(LicenseNo);

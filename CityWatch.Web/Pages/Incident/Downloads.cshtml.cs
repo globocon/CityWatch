@@ -14,18 +14,55 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ILogger<DownloadsModel> _logger;
-
+        private readonly IConfigDataProvider _configDataProvider;
+        public string ClientNameTitle { get; set; }
         public DownloadsModel(IGuardDataProvider guardDataProvider,
            IGuardLogDataProvider guardLogDataProvider,
-             ILogger<DownloadsModel> logger)
+             ILogger<DownloadsModel> logger, IConfigDataProvider configDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _logger = logger;
+            _configDataProvider = configDataProvider;
         }
 
         public void OnGet()
         {
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                &&
+                clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
+                    }
+                    else
+                    {
+
+                        ClientNameTitle = "Citywatch Security";
+                    }
+                }
+                else
+                {
+
+                    ClientNameTitle = "Citywatch Security";
+                }
+            }
         }
 
         public JsonResult OnPostCheckAndCreateDownloadAuditLog(string guardLicNo, string downloadCatg,string downloadFileName, GuardLog tmdata)

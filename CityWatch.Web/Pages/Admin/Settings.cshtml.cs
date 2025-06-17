@@ -115,7 +115,7 @@ namespace CityWatch.Web.Pages.Admin
         public GuardViewModel Guard { get; set; }
         
          public int ClientTypeId { get; set; }
-
+        public string ClientNameTitle { get; set; }
         public IActionResult OnGet()
         {
             string securityLicenseNonew = Request.Query["Sl"];
@@ -149,15 +149,22 @@ namespace CityWatch.Web.Pages.Admin
                     clientName.Trim().ToLower() != "localhost"
                 )
                 {
-                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    var domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
                     if (domain != 0)
                     {
                         ClientTypeId = domain;
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
                     }
                     else
                     {
                         ClientTypeId = 0;
+                        ClientNameTitle = "Citywatch Security";
                     }
+                }
+                else
+                {
+                    ClientTypeId = 0;
+                    ClientNameTitle = "Citywatch Security";
                 }
             }
                 if (GuardId != 0)

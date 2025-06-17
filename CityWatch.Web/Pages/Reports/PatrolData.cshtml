@@ -4,7 +4,7 @@
 @using CityWatch.Data.Enums;
 @model CityWatch.Web.Pages.Reports.PatrolDataModel
 @{
-    ViewData["Title"] = "CityWatch Security | Alarm Response";
+    ViewData["Title"] = Model.ClientNameTitle + " | Alarm Response";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.PatrolData;
     var colourcode = @Model.ConfigDataProiver.GetFeedbackTypesId("Colour Codes");
 }

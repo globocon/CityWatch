@@ -58,6 +58,7 @@ namespace CityWatch.Web.Pages.Guard
         public int ClientTypeId { get; set; }
         public string ClientTypeName { get; set; }
         public IViewDataService ViewDataService { get { return _viewDataService; } }
+        public string ClientNameTitle { get; set; }
 
         public void OnGet(string t)
         {
@@ -99,11 +100,17 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         ClientTypeId = domain;
                         ClientTypeName = _configDataProvider.GetClientTypeNameById(ClientTypeId);
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
                     }
                     else
                     {
                         ClientTypeId = 0;
+                        ClientNameTitle = "Citywatch Security";
                     }
+                }
+                else
+                {
+                    ClientNameTitle = "Citywatch Security";
                 }
             }
          }

@@ -14,7 +14,7 @@
 @inject IViewDataService viewDataServiceNew
 @inject IConfigDataProvider dataProvider
 @{
-    ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
+    ViewData["title"] = Model.ClientNameTitle + " | Vehicle And Key Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.VehicleAndKeyLog;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
