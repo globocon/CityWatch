@@ -20,6 +20,7 @@ namespace CityWatch.Web.Pages
     {
         private readonly IUserAuthenticationService _userAuthentication;
         private readonly IConfigDataProvider _dataProvider;
+        public string ClientNameTitle { get; set; }
         public LoginModel(IUserAuthenticationService userAuthentication, IConfigDataProvider dataProvider)
         {
             _userAuthentication = userAuthentication;
@@ -32,9 +33,30 @@ namespace CityWatch.Web.Pages
         public void OnGet()
         {
             LoginUser = new User();
+            ClientNameTitle = GetHostName();
 
         }
+        public string GetHostName()
+        {
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
 
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+            ? hostParts[1]
+            : hostParts[0];
+            var domain = _dataProvider.GetSubDomainDetails(clientName);
+            if(domain!=null)
+            {
+                return domain.Domain;
+
+            }
+            else
+            {
+                return "Citywatch Security";
+            }
+
+        }
         public IActionResult OnPost(string returnUrl)
         {
 

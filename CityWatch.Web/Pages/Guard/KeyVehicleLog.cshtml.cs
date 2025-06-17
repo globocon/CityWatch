@@ -67,7 +67,8 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly string _imageRootDir;
         private readonly ISmsSenderProvider _smsSenderProvider;
-
+        private readonly IConfigDataProvider _configDataProvider;
+        public string ClientNameTitle { get; set; }
 
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
@@ -81,7 +82,8 @@ namespace CityWatch.Web.Pages.Guard
             ILogger<KeyVehicleLogModel> logger,
             IAppConfigurationProvider appConfigurationProvider,
             ISiteEventLogDataProvider siteEventLogDataProvider,
-            ISmsSenderProvider smsSenderProvider
+            ISmsSenderProvider smsSenderProvider,
+            IConfigDataProvider configDataProvider
             )
         {
             _guardLogDataProvider = guardLogDataProvider;
@@ -98,6 +100,7 @@ namespace CityWatch.Web.Pages.Guard
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _smsSenderProvider = smsSenderProvider;
+            _configDataProvider = configDataProvider;
         }
 
         [BindProperty]
@@ -113,7 +116,42 @@ namespace CityWatch.Web.Pages.Guard
                                 .FirstOrDefault()?
                                 .ClientSiteId;
             ViewData["IsDuressEnabled"] = clientSiteId != null && _viewDataService.IsClientSiteDuressEnabled(clientSiteId.Value);
-        }
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                &&
+                clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
+                    }
+                    else
+                    {
+
+                        ClientNameTitle = "Citywatch Security";
+                    }
+                }
+                else
+                {
+
+                    ClientNameTitle = "Citywatch Security";
+                }
+            }
+            }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {

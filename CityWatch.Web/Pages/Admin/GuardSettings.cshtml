@@ -5,7 +5,7 @@
 @inject IViewDataService viewDataService
 @model CityWatch.Web.Pages.Admin.GuardSettingsModel
 @{
-    ViewData["Title"] = "CityWatch Security | Guard Settings";
+    ViewData["Title"] = Model.ClientNameTitle + " | Guard Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.GuardSettings;
 }
 @*----------------Hidden Inputs---------------------*@

@@ -27,7 +27,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
 
-
+        public string ClientNameTitle { get; set; }
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
@@ -87,10 +87,12 @@ namespace CityWatch.Web.Pages.Admin
                     if (domain != 0)
                     {
                         ClientTypeId = domain;
+                        ClientNameTitle = _configDataProvider.GetSubDomainDetails(clientName).Domain;
                     }
                     else
                     {
                         ClientTypeId = 0;
+                        ClientNameTitle = "Citywatch Security";
                     }
                 }
             }
