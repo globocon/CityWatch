@@ -1,8 +1,12 @@
-﻿using CityWatch.Data.Helpers;
+﻿using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
+using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
 //using iText.Kernel.Geom;
 using iText.Layout;
@@ -13,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
@@ -22,20 +27,24 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using CityWatch.Data.Enums;
 
 
 namespace CityWatch.Web.API
 {
 
-
+  
     [Route("api/[controller]")]
     [ApiController]
     public class GuardSecurityNumberController : ControllerBase
     {
+        public IncidentRequest Report { get; set; }
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
@@ -48,7 +57,14 @@ namespace CityWatch.Web.API
         private readonly IConfiguration _configuration;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider)
+        private readonly IIrDataProvider _irDataProvider;
+        private readonly ILogger<RegisterModel> _logger;
+        private readonly IUserDataProvider _userDataProvider;
+        private readonly IIncidentReportGenerator _incidentReportGenerator;
+        private readonly IAppConfigurationProvider _appConfigurationProvider;
+        const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
+       
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, IAppConfigurationProvider appConfigurationProvider)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -61,7 +77,12 @@ namespace CityWatch.Web.API
             _emailOptions = emailOptions.Value;
             _configuration = configuration;
             _configDataProvider = configDataProvider;
-
+            _irDataProvider = irDataProvider;
+            _logger = logger;
+            _userDataProvider = userDataProvider;
+            _incidentReportGenerator = incidentReportGenerator;
+            _appConfigurationProvider = appConfigurationProvider;
+           
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -936,6 +957,828 @@ namespace CityWatch.Web.API
         }
 
 
+
+       
+
+        [HttpPost("ProcessIrSubmit")]
+        public IActionResult ProcessIrSubmit([FromBody] IncidentRequest Report)
+        { 
+            var fileName = string.Empty;
+            var processResult = new SortedDictionary<int, IrProcessFailure>();
+            var reportGenerated = false;
+
+            string input = GenerateFormattedString();
+            string hashCode = GenerateHashCode(input);
+
+            var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+
+            // TODO: Remove session dependency on attachments
+            Report.ReportReference = HttpContext.Session.GetString("ReportReference");
+            if (string.IsNullOrEmpty(Report.ReportReference))
+                processResult.Add(9000, new IrProcessFailure("Session timeout due to user inactivity. Failed to attach files", string.Empty));
+
+            try
+            {
+                Report.HASH = hashCode;
+                Report.IP = remoteIpAddress;
+                Report.SerialNumber = GetIrSerialNumber(Report);
+            }
+            catch (Exception ex)
+            {
+                processResult.Add(9001, new IrProcessFailure($"Failed to get serial numbers. {ex.Message}", ex.StackTrace));
+            }
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
+            var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
+            var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
+
+            var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
+            //To get the clientType oF position stop
+            // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
+            try
+            {
+                /* Store the value of the Irresquest Object to seesion for create the Ir from the session start */
+                HttpContext.Session.SetString("IRReport", JsonSerializer.Serialize(Report));
+                /* Store the value of the Irresquest Object to seesion for create the Ir from the session end */
+                var templateFilename = CheckIfTheUrlIsAThirdPartyUrl();
+                fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite, templateFilename);
+                reportGenerated = true;
+                //TempData["ReportFileName"] = fileName;
+                // TODO: Remove - debug log of GPS issue
+                _logger.LogError($"IR GPS LOG | SN: {Report.SerialNumber} | 3b: {Report.WandScannedYes3b} | Show Inc Loc: {Report.DateLocation.ShowIncidentLocationAddress} | Gps: {Report.DateLocation.ClientSiteLiveGps} | Gps Deg: {Report.DateLocation.ClientSiteLiveGpsInDegrees}");
+            }
+            catch (Exception ex)
+            {
+                processResult.Add(9002, new IrProcessFailure($"Failed to generate Pdf report. {ex.Message}", ex.StackTrace));
+            }
+
+            var report = new IncidentReport()
+            {
+
+                FileName = fileName,
+                CreatedOn = DateTime.UtcNow,
+                ClientSiteId = clientSite?.Id,
+                ReportDateTime = Report.DateLocation.ReportDate,
+                IncidentDateTime = Report.DateLocation.IncidentDate,
+                JobNumber = Report.DateLocation.JobNumber,
+                JobTime = Report.DateLocation.JobTime,
+                CallSign = Report.Officer.CallSign,
+                NotifiedBy = Report.Officer.NotifiedBy,
+                Billing = Report.Officer.Billing,
+                IsEventFireOrAlarm = Report.EventType.AlarmActive || Report.EventType.AlarmDisabled || Report.EventType.Emergency,
+                OccurNo = Report.OccurrenceNo,
+                ActionTaken = Report.Feedback,
+                IsPatrol = Report.IsPositionPatrolCar,
+                Position = Report.Officer.Position,
+                ClientArea = Report.DateLocation.ClientArea,
+                SerialNo = Report.SerialNumber,
+                ColourCode = Report.SiteColourCodeId,
+                IsPlateLoaded = Report.PlateLoadedYes,
+                PlateId = 0,
+                VehicleRego = null,
+                LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
+                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
+                PSPFId = PSPFName.Id,
+                CreatedOnDateTimeLocal = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy -- Start
+                CreatedOnDateTimeLocalWithOffset = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocalWithOffset,
+                CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
+                CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
+                CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
+                HASH = hashCode,
+                ClientSitePositionId = clientSitePosition?.ClientsiteId//To get the Client Site Position 
+
+            };
+            if (HttpContext.Session.GetString("GuardId") != null)
+            {
+                report.GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId"));
+            }
+
+            if (!reportGenerated)
+            {
+                try
+                {
+                    string jsonString = JsonSerializer.Serialize(report);
+                    _logger.LogInformation(jsonString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("IR object serialization failed. " + ex.StackTrace);
+                }
+            }
+            else
+            {
+                try
+                {
+                    _irDataProvider.SaveReport(report);
+
+
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == report.GuardId && x.ClientSiteId == report.ClientSiteId && x.GuardLoginTime != null);
+                    foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                    {
+                        ClientSiteRadioChecksActivity.NotificationCreatedTime = DateTime.Now;
+                        _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                    }
+
+
+                    //for adding showing the IR information if an IR is created-start
+                    //if (HttpContext.Session.GetString("GuardId") != null)
+                    //{
+                    //    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                    //    {
+                    //        ClientSiteId = Convert.ToInt32(report.ClientSiteId),
+                    //        GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId")),
+                    //        LastIRCreatedTime = DateTime.Now,
+                    //        IRId = report.Id,
+                    //        ActivityType = "IR"
+                    //    };
+                    //    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                    //}
+
+                    //for adding showing the IR information if an IR is created-end
+                    HttpContext.Session.Remove("GuardId");
+                    if (report.IsPlateLoaded == true)
+                    {
+                        var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+                        var incidentreportsplateid = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+                        for (int i = 0; i < incidentreportsplateid.Count; i++)
+                        {
+                            _irDataProvider.UpdateReport(incidentreportid, Convert.ToInt32(incidentreportsplateid[i].Id));
+                        }
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    processResult.Add(9003, new IrProcessFailure($"Failed to save IR details. {ex.Message}", ex.StackTrace));
+                }
+
+                try
+                {
+                    if (report.ClientSiteId.HasValue)
+                        CreateGuardLogEntry(report);
+                    CreateControlRoomLogEntry(report);//To Save in the control room
+                    if (report.ClientSitePositionId.HasValue)
+                    {
+                        CreatePositionGuardLogEntry(report);
+                    }
+
+
+                }
+                catch (Exception ex)
+                {
+                    processResult.Add(9013, new IrProcessFailure($"Failed to save logbook entry. {ex.Message}", ex.StackTrace));
+                }
+
+                try
+                {
+                    if (!Convert.ToBoolean(Request.Form["Report.DisableEmail"]))
+                    {
+                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId = 0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId = GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated"
+                            }
+                         );
+                        /* Save log for duress button enable end*/
+                    }
+                    else
+                    {
+                        /* Store in Azure blobwithout mail send 06/032024 dileep*/
+                        AzureBlobUploadIrUploadWithOutMail(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId = 0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId = GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated without email"
+                            }
+                         );
+                        /* Save log for duress button enable end*/
+                    }
+                }
+                catch (Exception ex)
+                {
+                    processResult.Add(9004, new IrProcessFailure($"Failed to send email. {ex.Message}", ex.StackTrace));
+                }
+            }
+
+            //TempData["ReportGenerated"] = reportGenerated;
+            if (processResult.Count > 0)
+            {
+                //TempData["Error"] = string.Join(Environment.NewLine, processResult.Select(z => $"{z.Key} - {z.Value.ErrorMessage}"));
+                _logger.LogError(string.Join(Environment.NewLine, processResult.Select(z => z.Value.StackTrace)));
+            }
+
+
+            try
+            {
+                var folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "Uploads", Report.ReportReference);
+                if (Directory.Exists(folderPath))
+                    Directory.Delete(folderPath, true);
+
+                var filePath = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    var dropBoxFolderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "ToDropbox");
+                    if (!Directory.Exists(dropBoxFolderPath))
+                        Directory.CreateDirectory(dropBoxFolderPath);
+                    System.IO.File.Move(filePath, Path.Combine(dropBoxFolderPath, fileName), true);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+            }
+
+            return Ok(processResult);
+        }
+
+
+        private void CreatePositionGuardLogEntry(IncidentReport report)
+        {
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(report.ClientSitePositionId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var guardLog = new GuardLog()
+            {
+                ClientSiteLogBookId = logBookId,
+                EventDateTime = DateTime.Now,
+                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                IsSystemEntry = true,
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry = true
+            };
+            _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+        private void CreateControlRoomLogEntry(IncidentReport report)
+        {
+            var RadioCheckDetails = _guardLogDataProvider.GetRadiocheckLogbookDetails();
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+
+            var StampRcLogbook = _guardLogDataProvider.IsRClogbookStampRequired(report.NotifiedBy);
+
+            if (report.ColourCode != null || report.IsPatrol == true || StampRcLogbook)
+            {
+
+                if (report.ColourCode == null)
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = DateTime.Now,
+                        Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                        IsSystemEntry = true,
+                        IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                        EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                        EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                        EventDateTimeZone = report.CreatedOnDateTimeZone,
+                        EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                        IsIRReportTypeEntry = true,
+                        RcLogbookStamp = StampRcLogbook
+                    };
+                    _guardLogDataProvider.SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var feedbackTypes = _configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x => x.Id).FirstOrDefault();
+                    var feedbackTemplatesEnabledColourCodes = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes && x.SendtoRC == true);
+
+                    var CheckSttaus = feedbackTemplatesEnabledColourCodes.Where(x => x.Id == report.ColourCode).FirstOrDefault();
+                    if (CheckSttaus != null)
+                    {
+                        if (CheckSttaus.Id != 0)
+                        {
+
+                            var guardLog = new GuardLog()
+                            {
+                                ClientSiteLogBookId = logBookId,
+                                EventDateTime = DateTime.Now,
+                                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                                IsSystemEntry = true,
+                                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                                IsIRReportTypeEntry = true,
+                                RcLogbookStamp = StampRcLogbook
+                            };
+                            _guardLogDataProvider.SaveGuardLog(guardLog);
+
+                        }
+
+                    }
+                }
+
+
+            }
+
+        }
+
+        private void CreateGuardLogEntry(IncidentReport report)
+        {
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(report.ClientSiteId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var guardLog = new GuardLog()
+            {
+                ClientSiteLogBookId = logBookId,
+                EventDateTime = DateTime.Now,
+                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                IsSystemEntry = true,
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry = true
+            };
+            _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+        private bool SendEmailWithAzureBlob(string fileName)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+            var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
+
+            //var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+
+            var toAddressData = string.Empty;
+            var thirpartyemail = getClientEmailId();
+            var messageHtml = string.Empty; ;
+            if (thirpartyemail != string.Empty)
+            {
+                toAddressData = thirpartyemail + '|' + ToAddreddAppset[1];
+                var host = HttpContext.Request.Host.Host;
+                var hostParts = host.Split('.');
+
+                // Extract the client name
+                string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                ? hostParts[1]
+                : hostParts[0];
+                var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                if (domain != null)
+                {
+
+                    messageHtml = "Dear " + CapitalizeFirstLetter(domain.Domain) + " Client; < br >< br > Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.< br >< br > Sites with access to the cloud file server will also have a copy stored in the relevant folder.< br >< br > Any concerns, please contact your relevant " + CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:" + thirpartyemail + "' > " + thirpartyemail + " </ a >";
+                }
+            }
+            else
+            {
+                toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+                messageHtml = _emailOptions.Message;
+            }
+
+
+            var toAddress = toAddressData.Split('|');
+
+            //var toAddress = _EmailOptions.ToAddress.Split('|');
+            // var ccAddress = _EmailOptions.CcAddress.Split('|');
+            List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            string emailAddress = null;
+            foreach (var incidentReportField in incidentReportFields)
+            {
+                emailAddress = incidentReportField.Name;
+
+            }
+            string[] ccAddress = new string[] { };
+            if (!string.IsNullOrEmpty(emailAddress))
+            {
+                ccAddress = emailAddress.Split(',');
+            }
+            var subject = _emailOptions.Subject;
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            foreach (var address in GetToEmailAddressList(toAddress))
+                message.To.Add(address);
+            if (Report.DateLocation.ReimbursementYes)
+            {
+                foreach (var address in ccAddress)
+                    message.Cc.Add(new MimeKit.MailboxAddress(String.Empty, address));
+            }
+
+            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
+            var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
+
+            if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
+            {
+                foreach (var email in clientSite.Emails.Split(","))
+                {
+                    if (CommonHelper.IsValidEmail(email))
+                        message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                }
+            }
+            if (Report.SiteColourCodeId != 0 && Report.SiteColourCodeId != null)
+            {
+                string colorcodes = _viewDataService.GetFeedbackTemplatesByTypeByColor(3, Convert.ToInt32(Report.SiteColourCodeId));
+                //for DESCRIBING color codes-start
+                //if(colorcodes.Contains("Code ORANGE"))
+                // { 
+                //         Report.SiteColourCode = "Code ORANGE Event";
+                // }
+                //else if(colorcodes.Contains("Code BLUE"))
+                // {
+                //     Report.SiteColourCode = "Code BLUE Event";
+                // }
+                // else if (colorcodes.Contains("Code PINK"))
+                // {
+                //     Report.SiteColourCode = "Code PINK Event";
+                // }
+                // else if (colorcodes.Contains("Code PURPLE"))
+                // {
+                //     Report.SiteColourCode = "Code PURPLE Event";
+                // }
+                // else if (colorcodes.Contains("Code BLACK"))
+                // {
+                //     Report.SiteColourCode = "Code BLACK Event";
+                // }
+                // else if (colorcodes.Contains("Code YELLOW"))
+                // {
+                //     Report.SiteColourCode = "Code YELLOW Event";
+                // }
+                // else if (colorcodes.Contains("Code BROWN"))
+                // {
+                //     Report.SiteColourCode = "Code BROWN Event";
+                // }
+                // else if (colorcodes.Contains("Code GREY"))
+                // {
+                //     Report.SiteColourCode = "Code GREY Event";
+                // }
+                //else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
+                // {
+                //     Report.SiteColourCode = "Code GREY Event";
+                // }
+
+                // else if (colorcodes.Contains("Code RED"))
+                // {
+                //     Report.SiteColourCode = "Code RED Event";
+                // }
+
+                // else
+                //{
+                Report.SiteColourCode = colorcodes;
+                //}
+                //for DESCRIBING color codes - end
+
+                // Report.SiteColourCode = colorcodes;
+                //message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}" + " " +  colorcodes;
+                message.Subject = "Incident Report -" + " *** " + Report.SiteColourCode.ToUpper() + " *** - " + Report.DateLocation.ClientType + " - " + Report.DateLocation.ClientSite;
+            }
+            else
+            {
+                message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
+            }
+            /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
+            var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+            if (azureStorageConnectionString.Count > 0)
+            {
+                if (azureStorageConnectionString[0] != null)
+                {
+                    string connectionString = azureStorageConnectionString[0];
+                    string blobName = Path.GetFileName(fileName);
+                    string containerName = "irfiles";
+                    BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                    containerClient.CreateIfNotExists();
+                    /* The container Structure like irfiles/20230925*/
+                    BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
+                    using FileStream fs = System.IO.File.OpenRead(fileName);
+                    var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                    /*Commented for local testing ,uncomment when go on live*/
+                    blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                    fs.Close();
+                    messageHtml = messageHtml + "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. In this situation simply " +
+                    "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
+                    "click here</a> to download the Incident Report, which are unlimited in size.</p>";
+                    messageHtml = messageHtml + "<p>File name : " + blobName + "</p>";
+                }
+
+            }
+            /* azure blob Implementation 25-9-2023* End*/
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+            /* Add attachment (IR PDF) to mail if Size <=12 MB , the link to download always add to  mail body Start*/
+            FileInfo fileInfo = new FileInfo(fileName);
+            var fileSizeInMB = (fileInfo.Length) / 1048576d;
+            if (fileSizeInMB <= 12) // You can change this limit as needed
+            {
+                builder.Attachments.Add(fileName);
+
+            }
+            /* Add attachment to mail if Size <=12 MB end*/
+
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
+            return true;
+        }
+
+
+        private int GetLogBookId(int clientSiteId, int EventDateTimeUtcOffsetMinute)
+        {
+            int logBookId;
+
+            var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(EventDateTimeUtcOffsetMinute);
+            var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, localDateTime.Date);
+            if (logBook == null)
+            {
+                logBookId = _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
+                {
+                    ClientSiteId = clientSiteId,
+                    Type = LogBookType.DailyGuardLog,
+                    Date = localDateTime.Date,
+                });
+            }
+            else
+            {
+                logBookId = logBook.Id;
+            }
+
+            return logBookId;
+        }
+
+        public static string CapitalizeFirstLetter(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToUpper(input[0]) + input.Substring(1);
+        }
+        public string CheckIfTheUrlIsAThirdPartyUrl()
+        {
+            string defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                  .FirstOrDefault(x => x.SubDomainId == 0)
+                                                  ?.FileName ?? string.Empty;
+
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Exclude reserved keywords
+                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+                // var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
+                {
+                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+
+                        if (subDomainIrTemplate != null)
+                        {
+                            defaultValue = subDomainIrTemplate.FileName;
+                        }
+                    }
+                }
+            }
+
+            return defaultValue;
+        }
+
+        private bool AzureBlobUploadIrUploadWithOutMail(string fileName)
+        {
+
+            var status = true;
+            try
+            {
+                /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
+                var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+                if (azureStorageConnectionString.Count > 0)
+                {
+                    if (azureStorageConnectionString[0] != null)
+                    {
+                        string connectionString = azureStorageConnectionString[0];
+                        string blobName = Path.GetFileName(fileName);
+                        string containerName = "irfiles";
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                        containerClient.CreateIfNotExists();
+                        /* The container Structure like irfiles/20230925*/
+                        BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
+                        using FileStream fs = System.IO.File.OpenRead(fileName);
+                        var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                        /*Commented for local testing ,uncomment when go on live*/
+                        blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                        fs.Close();
+                    }
+
+                }
+                /* azure blob Implementation 25-9-2023* End*/
+
+
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+
+            }
+
+            return status;
+        }
+
+        public string getClientEmailId()
+        {
+            string defaultValue = string.Empty;
+
+            var host = HttpContext.Request.Host.Host;
+            var hostParts = host.Split('.');
+
+            // Extract the client name
+            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
+                                ? hostParts[1]
+                                : hostParts[0];
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Exclude reserved keywords
+                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
+                //var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
+                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
+                {
+                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+
+                        if (subDomainIrTemplate != null)
+                        {
+                            defaultValue = subDomainIrTemplate.DefaultEmail;
+                        }
+                    }
+                }
+            }
+
+            return defaultValue;
+        }
+        private string GetIrSerialNumber(IncidentRequest incidentRequest)
+        {
+            if (incidentRequest.PatrolType == PatrolType.Alarm)
+            {
+                var incidentReports = _irDataProvider.GetIncidentReportsByJobNumber(incidentRequest.DateLocation.JobNumber);
+                if (incidentReports.Any())
+                {
+                    var numberSuffix = GetJobNumberSuffix(incidentReports.Count - 1);
+                    return $"{incidentRequest.OccurrenceNo}-{numberSuffix}";
+                }
+
+                return incidentRequest.OccurrenceNo;
+            }
+
+            return GetNextIrSequenceNumber();
+        }
+
+        private string GenerateHashCode(string input)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+        private string GetJobNumberSuffix(int index)
+        {
+            const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var value = "";
+
+            if (index >= letters.Length)
+                value += letters[index / letters.Length - 1];
+            value += letters[index % letters.Length];
+
+            return value;
+        }
+
+        private string GetNextIrSequenceNumber()
+        {
+            var lastSequenceNumber = 0;
+            var configuration = _appConfigurationProvider.GetConfigurationByName(LAST_USED_IR_SEQ_NO_CONFIG_NAME);
+            if (configuration != null)
+            {
+                lastSequenceNumber = int.Parse(configuration.Value);
+                lastSequenceNumber++;
+                configuration.Value = lastSequenceNumber.ToString();
+                _appConfigurationProvider.SaveConfiguration(configuration);
+            }
+            return lastSequenceNumber.ToString().PadLeft(5, '0');
+        }
+        private string GenerateFormattedString()
+        {
+            string[] segments = new string[5];
+            Random random = new Random();
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        segments[i] = GenerateRandomAlphanumeric(5, random);
+                        break;
+                    case 1:
+                        segments[i] = GenerateRandomAlphanumeric(8, random);
+                        break;
+                    case 2:
+                        segments[i] = GenerateRandomAlphanumeric(7, random);
+                        break;
+                    case 3:
+                        segments[i] = "fjfjfjjfl9999";
+                        break;
+                    case 4:
+                        segments[i] = "3456";
+                        break;
+                }
+            }
+
+            return string.Join("-", segments);
+        }
+
+        private string GenerateRandomAlphanumeric(int length, Random random)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+       
     }
 
     public class GuardLogDto
