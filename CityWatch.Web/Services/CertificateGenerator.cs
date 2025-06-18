@@ -560,6 +560,10 @@ namespace CityWatch.Web.Services
 
                             Qno = "0" + questionno.ToString();
                         }
+                        else
+                        {
+                            Qno = questionno.ToString();
+                        }
                         var question = new Paragraph("Q." + Qno + "  " + attendedquestion.TrainingTestFeedbackQuestions.Question).SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK)).SetFontSize(16)
                         .SetBold();
                         //question.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);

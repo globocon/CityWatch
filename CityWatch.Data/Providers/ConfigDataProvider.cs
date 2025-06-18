@@ -2227,7 +2227,7 @@ namespace CityWatch.Data.Providers
         {
             var startTest = _context.GuardTrainingAndAssessmentPractical.Where(x => x.GuardId == guardId && x.HRSettingsId == hrsettingsId).
                 Include(x => x.TrainingLocation)
-
+                .Include(x=>x.TrainingInstructor)
                 .OrderBy(x => x.Id).ToList();
             return startTest;
         }
