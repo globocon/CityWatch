@@ -961,7 +961,7 @@ namespace CityWatch.Web.API
        
 
         [HttpPost("ProcessIrSubmit")]
-        public IActionResult ProcessIrSubmit([FromBody] IncidentRequest Report)
+        public IActionResult ProcessIrSubmit([FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
         { 
             var fileName = string.Empty;
             var processResult = new SortedDictionary<int, IrProcessFailure>();
@@ -970,10 +970,29 @@ namespace CityWatch.Web.API
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
 
-            var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+            var GuardDetails = _clientDataProvider.GetGuradName(IRguardId);
+
+            Report.Officer = new Officer
+            {
+                FirstName = GuardDetails.Name,
+                LastName = string.Empty,
+                Gender = GuardDetails.Gender,
+                Phone = GuardDetails.Mobile,
+                Position = string.Empty,
+                Email = GuardDetails.Email,
+                LicenseNumber = GuardDetails.SecurityNo,
+                LicenseState = GuardDetails.State,
+                CallSign = string.Empty,              
+                Billing = string.Empty,
+            };
+
+
+            var remoteIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+
 
             // TODO: Remove session dependency on attachments
-            Report.ReportReference = HttpContext.Session.GetString("ReportReference");
+            Report.ReportReference = Guid.NewGuid().ToString();
             if (string.IsNullOrEmpty(Report.ReportReference))
                 processResult.Add(9000, new IrProcessFailure("Session timeout due to user inactivity. Failed to attach files", string.Empty));
 
@@ -996,9 +1015,7 @@ namespace CityWatch.Web.API
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
-                /* Store the value of the Irresquest Object to seesion for create the Ir from the session start */
-                HttpContext.Session.SetString("IRReport", JsonSerializer.Serialize(Report));
-                /* Store the value of the Irresquest Object to seesion for create the Ir from the session end */
+              
                 var templateFilename = CheckIfTheUrlIsAThirdPartyUrl();
                 fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite, templateFilename);
                 reportGenerated = true;
@@ -1013,44 +1030,89 @@ namespace CityWatch.Web.API
 
             var report = new IncidentReport()
             {
-
                 FileName = fileName,
                 CreatedOn = DateTime.UtcNow,
                 ClientSiteId = clientSite?.Id,
-                ReportDateTime = Report.DateLocation.ReportDate,
-                IncidentDateTime = Report.DateLocation.IncidentDate,
-                JobNumber = Report.DateLocation.JobNumber,
-                JobTime = Report.DateLocation.JobTime,
-                CallSign = Report.Officer.CallSign,
-                NotifiedBy = Report.Officer.NotifiedBy,
-                Billing = Report.Officer.Billing,
-                IsEventFireOrAlarm = Report.EventType.AlarmActive || Report.EventType.AlarmDisabled || Report.EventType.Emergency,
-                OccurNo = Report.OccurrenceNo,
-                ActionTaken = Report.Feedback,
-                IsPatrol = Report.IsPositionPatrolCar,
-                Position = Report.Officer.Position,
-                ClientArea = Report.DateLocation.ClientArea,
-                SerialNo = Report.SerialNumber,
-                ColourCode = Report.SiteColourCodeId,
-                IsPlateLoaded = Report.PlateLoadedYes,
+                ReportDateTime = Report?.DateLocation?.ReportDate ?? DateTime.MinValue,
+                IncidentDateTime = Report?.DateLocation?.IncidentDate ?? DateTime.MinValue,
+                JobNumber = Report?.DateLocation?.JobNumber ?? string.Empty,
+                JobTime = Report?.DateLocation?.JobTime ?? string.Empty,
+                CallSign = Report?.Officer?.CallSign ?? string.Empty,
+                NotifiedBy = Report?.Officer?.NotifiedBy ?? string.Empty,
+                Billing = Report?.Officer?.Billing ?? string.Empty,
+                IsEventFireOrAlarm = (Report?.EventType?.AlarmActive ?? false) ||
+                         (Report?.EventType?.AlarmDisabled ?? false) ||
+                         (Report?.EventType?.Emergency ?? false),
+                OccurNo = Report?.OccurrenceNo ?? string.Empty,
+                ActionTaken = Report?.Feedback ?? string.Empty,
+                IsPatrol = Report?.IsPositionPatrolCar ?? false,
+                Position = Report?.Officer?.Position ?? string.Empty,
+                ClientArea = Report?.DateLocation?.ClientArea ?? string.Empty,
+                SerialNo = Report?.SerialNumber ?? string.Empty,
+                ColourCode = Report?.SiteColourCodeId,
+                IsPlateLoaded = Report?.PlateLoadedYes ?? false,
                 PlateId = 0,
                 VehicleRego = null,
-                LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
-                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
-                PSPFId = PSPFName.Id,
-                CreatedOnDateTimeLocal = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy -- Start
-                CreatedOnDateTimeLocalWithOffset = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocalWithOffset,
-                CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
-                CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
-                CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
-                HASH = hashCode,
-                ClientSitePositionId = clientSitePosition?.ClientsiteId//To get the Client Site Position 
+                LogId = IRguardId,
+                IncidentReportEventTypes = Report?.IrEventTypes?.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
+                               ?? new List<IncidentReportEventType>(),
+                PSPFId = PSPFName?.Id ?? 0,
 
+                // Time zone info (optional fallback)
+                CreatedOnDateTimeLocal = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeLocal ?? DateTime.UtcNow,
+                CreatedOnDateTimeLocalWithOffset = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeLocalWithOffset ?? DateTime.UtcNow,
+                CreatedOnDateTimeZone = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeZone ?? string.Empty,
+                CreatedOnDateTimeZoneShort = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeZoneShort ?? string.Empty,
+                CreatedOnDateTimeUtcOffsetMinute = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeUtcOffsetMinute ?? 0,
+
+                HASH = hashCode,
+                ClientSitePositionId = clientSitePosition?.ClientsiteId,
+                GuardId = IRguardId
             };
-            if (HttpContext.Session.GetString("GuardId") != null)
-            {
-                report.GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId"));
-            }
+
+
+
+            //var report = new IncidentReport()
+            //{
+
+            //    FileName = fileName,
+            //    CreatedOn = DateTime.UtcNow,
+            //    ClientSiteId = clientSite?.Id,
+            //    ReportDateTime = Report.DateLocation.ReportDate,
+            //    IncidentDateTime = Report.DateLocation.IncidentDate,
+            //    JobNumber = Report.DateLocation.JobNumber,
+            //    JobTime = Report.DateLocation.JobTime,
+            //    CallSign = Report.Officer.CallSign,
+            //    NotifiedBy = Report.Officer.NotifiedBy,
+            //    Billing = Report.Officer.Billing,
+            //    IsEventFireOrAlarm = Report.EventType.AlarmActive || Report.EventType.AlarmDisabled || Report.EventType.Emergency,
+            //    OccurNo = Report.OccurrenceNo,
+            //    ActionTaken = Report.Feedback,
+            //    IsPatrol = Report.IsPositionPatrolCar,
+            //    Position = Report.Officer.Position,
+            //    ClientArea = Report.DateLocation.ClientArea,
+            //    SerialNo = Report.SerialNumber,
+            //    ColourCode = Report.SiteColourCodeId,
+            //    IsPlateLoaded = Report.PlateLoadedYes,
+            //    PlateId = 0,
+            //    VehicleRego = null,
+            //    LogId = IRguardId,
+            //    IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
+            //    PSPFId = PSPFName.Id,
+            //    CreatedOnDateTimeLocal = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy -- Start
+            //    CreatedOnDateTimeLocalWithOffset = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocalWithOffset,
+            //    CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
+            //    CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
+            //    CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
+            //    HASH = hashCode,
+            //    ClientSitePositionId = clientSitePosition?.ClientsiteId,
+            //    GuardId = IRguardId
+
+            //};
+
+
+
+
 
             if (!reportGenerated)
             {
@@ -1097,8 +1159,8 @@ namespace CityWatch.Web.API
                     HttpContext.Session.Remove("GuardId");
                     if (report.IsPlateLoaded == true)
                     {
-                        var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
-                        var incidentreportsplateid = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+                        var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(IRguardId);
+                        var incidentreportsplateid = _clientDataProvider.GetIncidentDetailsKvlReport(IRguardId);
                         for (int i = 0; i < incidentreportsplateid.Count; i++)
                         {
                             _irDataProvider.UpdateReport(incidentreportid, Convert.ToInt32(incidentreportsplateid[i].Id));
@@ -1130,16 +1192,16 @@ namespace CityWatch.Web.API
 
                 try
                 {
-                    if (!Convert.ToBoolean(Request.Form["Report.DisableEmail"]))
+                    if (true)
                     {
                         SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
 
                         /* Save log for duress button enable Start 02032024 dileep*/
                         var guradDetailsName = "Admin";
                         var guardId = 0;
-                        if (HttpContext.Session.GetString("GuardId") != null)
+                        if (IRguardId != 0)
                         {
-                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            var GuradDetails = _clientDataProvider.GetGuradName(IRguardId);
                             guradDetailsName = GuradDetails.Name;
                             guardId = GuradDetails.Id;
                         }
@@ -1173,9 +1235,9 @@ namespace CityWatch.Web.API
                         /* Save log for duress button enable Start 02032024 dileep*/
                         var guradDetailsName = "Admin";
                         var guardId = 0;
-                        if (HttpContext.Session.GetString("GuardId") != null)
+                        if (IRguardId != 0)
                         {
-                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            var GuradDetails = _clientDataProvider.GetGuradName(IRguardId);
                             guradDetailsName = GuradDetails.Name;
                             guardId = GuradDetails.Id;
                         }
@@ -1236,7 +1298,12 @@ namespace CityWatch.Web.API
                 _logger.LogError(ex.StackTrace);
             }
 
-            return Ok(processResult);
+            return Ok(new
+            {
+                Success = processResult.Count == 0,
+                FileName = fileName,
+                Errors = processResult.Select(p => new { Code = p.Key, Message = p.Value.ErrorMessage })
+            });
         }
 
 
@@ -1778,8 +1845,68 @@ namespace CityWatch.Web.API
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
-       
+      
+        [HttpGet("GetClientSiteByName")]
+        public IActionResult GetClientSiteByName(string name)
+        {
+            var site = _clientDataProvider
+                .GetClientSites(null)
+                .FirstOrDefault(x => x.Name == name);
+
+            if (site == null)
+                return NotFound();
+
+            var dto = new ClientSiteDto
+            {
+                Id = site.Id,
+                Name = site.Name,
+                Address = site.Address,
+                State = site.State,
+                Gps = site.Gps,
+                Billing = site.Billing,
+                Status = site.Status,
+                StatusDate = site.StatusDate,
+                SiteEmail = site.SiteEmail,
+                LandLine = site.LandLine,
+                DuressEmail = site.DuressEmail,
+                DuressSms = site.DuressSms,
+                UploadGuardLog = site.UploadGuardLog,
+                UploadFusionLog = site.UploadFusionLog,
+                GuardLogEmailTo = site.GuardLogEmailTo,
+                DataCollectionEnabled = site.DataCollectionEnabled,
+                IsActive = site.IsActive,
+                IsDosDontList = site.IsDosDontList
+            };
+
+            return Ok(dto);
+        }
+
     }
+
+
+    // API Project - DTO
+    public class ClientSiteDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Address { get; set; }
+        public string State { get; set; }
+        public string Gps { get; set; }
+        public string Billing { get; set; }
+        public int Status { get; set; }
+        public DateTime? StatusDate { get; set; }
+        public string SiteEmail { get; set; }
+        public string LandLine { get; set; }
+        public string DuressEmail { get; set; }
+        public string DuressSms { get; set; }
+        public bool UploadGuardLog { get; set; }
+        public bool UploadFusionLog { get; set; }
+        public string GuardLogEmailTo { get; set; }
+        public bool DataCollectionEnabled { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsDosDontList { get; set; }
+    }
+
 
     public class GuardLogDto
     {
