@@ -27,7 +27,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 namespace CityWatch.RadioCheck.API
-{   
+{
 
     [Route("api/flashbuttwelding")]
     [ApiController]
@@ -40,6 +40,7 @@ namespace CityWatch.RadioCheck.API
         private string dailyWeldReturn_jsonMappingFile;
         private string dailyInspect_jsonMappingFile;
         private string railHeatNumberRecord_jsonMappingFile;
+        private string register_jsonMappingFile;
         private string uploadFolder;
         private string logFilePath;
         private string _excelfileendname;
@@ -53,6 +54,7 @@ namespace CityWatch.RadioCheck.API
             dailyWeldReturn_jsonMappingFile = "daily_weld_return_fields_mapping.json";
             dailyInspect_jsonMappingFile = "daily_inspect_fields_mapping.json";
             railHeatNumberRecord_jsonMappingFile = "rail_heat_number_record_fields_mapping.json";
+            register_jsonMappingFile = "register_path_mapping.json";
             logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt", "webhook_log.txt"); ;
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt");
         }
@@ -156,7 +158,7 @@ namespace CityWatch.RadioCheck.API
                 string webhookFilePath = Path.Combine(submissionFolder, "webhook_data.txt");
                 string excelFilePath = Path.Combine(submissionFolder, $"{DateWiseFolder}_{supervisor}_{_excelfileendname}");
 
-                await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
+                await System.IO.File.AppendAllTextAsync(webhookFilePath, Environment.NewLine + rawJson);
                 WriteLog($"Webhook received. Data saved for Submission ID: {submissionID}");
 
                 CopyTemplateToFolder(uploadFolder, excelFilePath);
@@ -183,13 +185,15 @@ namespace CityWatch.RadioCheck.API
             string fileName = $"{folder_Name}_{supervisor_Name}_{_excelfileendname}";
             string excelFilePath = Path.Combine(submissionFolder, fileName);
 
-            //// ## This is for Testing 
-            //string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
-            //string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            //var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            //CopyTemplateToFolder(uploadFolder, excelFilePath);
-            //await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
-            //// ## This is for Testing
+            ////// ## This is for Testing 
+            ////string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
+            ////string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+            ////var rawArray = rawJson.Split(Environment.NewLine);
+            ////rawJson = rawArray[rawArray.Length-1];
+            ////var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+            ////CopyTemplateToFolder(uploadFolder, excelFilePath);
+            ////await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
+            ////// ## This is for Testing
 
 
 
@@ -238,6 +242,23 @@ namespace CityWatch.RadioCheck.API
                     worksheet = workbook.Worksheet("Rail_Heat_Number_Record_Data");
                     jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, railHeatNumberRecord_jsonMappingFile);
                     Update_Rail_Heat_Number_Record_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
+
+                    //Registers
+                    jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, register_jsonMappingFile);                    
+                    var registerMappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
+                    var registerPathMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(registerMappingJson);
+                    foreach (var keyValue in registerPathMappings)
+                    {
+                        string ws_name = keyValue.Key;
+                        if (workbook.TryGetWorksheet(ws_name, out worksheet))
+                        {
+                            if (worksheet != null)
+                            {
+                                Copy_Register_Data_To_Template(ref worksheet, keyValue.Value);
+                            }
+                        }
+                    }
+
 
 
                 }
@@ -304,7 +325,7 @@ namespace CityWatch.RadioCheck.API
                                 string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
                                 worksheet.Cell(row, column).Value = value;
                                 current_row = row;
-                                row++;                                
+                                row++;
                             }
                             column++;
                             row = start_row;
@@ -401,7 +422,7 @@ namespace CityWatch.RadioCheck.API
                                 row = start_row;
                             }
                             row = current_row + start_row - 2;
-                        }                        
+                        }
                     }
                 }
                 else
@@ -458,10 +479,10 @@ namespace CityWatch.RadioCheck.API
 
                 //Check if Excel header is a table
                 if (excelHeader != null && excelHeader.StartsWith("#TABLE_"))
-                {                    
+                {
                     if (!string.IsNullOrEmpty(matchingMapping.Value) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
                     {
-                        row++;                       
+                        row++;
                         if (!string.IsNullOrWhiteSpace(rawValue?.ToString()))
                         {
                             var data = JObject.Parse(rawValue.ToString());
@@ -593,6 +614,38 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
+        private void Copy_Register_Data_To_Template(ref IXLWorksheet worksheet, string sourceFile)
+        {
+            string _sourceFileName = Path.Combine(Directory.GetCurrentDirectory(), sourceFile);
+            if (!System.IO.File.Exists(_sourceFileName))
+            {
+                WriteLog($"Source file {_sourceFileName} not found.");
+                return;
+            }
+
+            // Open the workbook
+            using (var sourceworkbook = new XLWorkbook(_sourceFileName))
+            {
+                var sourceSheet = sourceworkbook.Worksheet(1);
+
+                // Get the range of used cells (excluding the first row which is header)
+                var usedRange = sourceSheet.RangeUsed();
+
+                if (usedRange != null && usedRange.RowCount() > 1)
+                {
+                    // Exclude header (start from second row)
+                    var dataRange = sourceSheet.Range(
+                        usedRange.FirstCell().Address.RowNumber + 1,  // from row 2
+                        usedRange.FirstCell().Address.ColumnNumber,
+                        usedRange.LastCell().Address.RowNumber,
+                        usedRange.LastCell().Address.ColumnNumber
+                    );
+                                        
+                    // Paste into target sheet starting at cell A2
+                    dataRange.CopyTo(worksheet.Cell(3, 1));
+                }                
+            }
+        }
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)
         {
             string _sourceFileName = Path.Combine(_sourceFolder, templateFileName);
