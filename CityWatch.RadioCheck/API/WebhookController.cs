@@ -1086,7 +1086,6 @@ namespace CityWatch.RadioCheck.API
 
         }
 
-       
         [HttpPost("compliantstrings")]
         public async Task<IActionResult> ReceiveWebhookCompliantStrings()
         {
@@ -1117,28 +1116,52 @@ namespace CityWatch.RadioCheck.API
 
                 if (webhookData != null)
                 {
-                    // Parse the date field
-                    string date = "";
-                    if (webhookData.TryGetValue("q1309_ComplintString_date", out var dateValue) && dateValue is JObject dateObj)
+                    // Helper to convert date JObject to string
+                    string ParseDate(object obj)
                     {
-                        string day = dateObj["day"]?.ToString() ?? "";
-                        string month = dateObj["month"]?.ToString() ?? "";
-                        string year = dateObj["year"]?.ToString() ?? "";
-                        if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
+                        if (obj is JObject jObj)
                         {
-                            date = new DateTime(y, m, d).ToString("dd/MM/yyyy");
+                            string day = jObj["day"]?.ToString() ?? "";
+                            string month = jObj["month"]?.ToString() ?? "";
+                            string year = jObj["year"]?.ToString() ?? "";
+
+                            if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
+                                return new DateTime(y, m, d).ToString("dd/MM/yyyy");
                         }
+                        return "";
                     }
 
+                    // Date fields (with date parsing)
+                    string date = webhookData.TryGetValue("q1309_ComplintString_date", out var dateValue) ? ParseDate(dateValue) : "";
+                    string stringLoaded = webhookData.TryGetValue("q1317_stringLoaded", out var loadedVal) ? ParseDate(loadedVal) : "";
+                    string stringDropped = webhookData.TryGetValue("q1318_stringDropped", out var droppedVal) ? ParseDate(droppedVal) : "";
+
+                    // Text fields (standard pattern)
+                    string stringId = webhookData.TryGetValue("q1310_ComplintString_stringId", out var stringIdVal) ? stringIdVal?.ToString() ?? "" : "";
+                    string defectWeld = webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectVal) ? defectVal?.ToString() ?? "" : "";
+                    string newWeld = webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeldVal) ? newWeldVal?.ToString() ?? "" : "";
+                    string eastRfid = webhookData.TryGetValue("q1313_ComplintString_eastRfid", out var eastVal) ? eastVal?.ToString() ?? "" : "";
+                    string westRfid = webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westVal) ? westVal?.ToString() ?? "" : "";
+                    string comments = webhookData.TryGetValue("q1315_ComplintString_comments", out var commentVal) ? commentVal?.ToString() ?? "" : "";
+                    string dropLocationStart = webhookData.TryGetValue("q1319_dropLocation", out var dropStart) ? dropStart?.ToString() ?? "" : "";
+                    string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";
+                    string fy = webhookData.TryGetValue("q1321_fy", out var fyVal) ? fyVal?.ToString() ?? "" : "";
+
+                    // Collect all values in order
                     var valuesToAdd = new List<string>
             {
                 date,
-                webhookData.TryGetValue("q1310_ComplintString_stringId", out var stringId) ? stringId?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectWeld) ? defectWeld?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeld) ? newWeld?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1313_ComplintString_eastRfid", out var eastRfid) ? eastRfid?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westRfid) ? westRfid?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1315_ComplintString_comments", out var comments) ? comments?.ToString() ?? "" : ""
+                stringId,
+                defectWeld,
+                newWeld,
+                eastRfid,
+                westRfid,
+                comments,
+                stringLoaded,
+                stringDropped,
+                dropLocationStart,
+                dropLocationEnd,
+                fy
             };
 
                     using (var workbook = System.IO.File.Exists(excelFilePath)
@@ -1149,7 +1172,6 @@ namespace CityWatch.RadioCheck.API
 
                         if (worksheet.LastRowUsed() == null)
                         {
-                            // Add header
                             worksheet.Cell(1, 1).Value = "Date";
                             worksheet.Cell(1, 2).Value = "String ID";
                             worksheet.Cell(1, 3).Value = "Defect Weld ID";
@@ -1157,6 +1179,11 @@ namespace CityWatch.RadioCheck.API
                             worksheet.Cell(1, 5).Value = "EAST RFID (Last 10 digits)";
                             worksheet.Cell(1, 6).Value = "WEST RFID (Last 10 digits)";
                             worksheet.Cell(1, 7).Value = "Comments";
+                            worksheet.Cell(1, 8).Value = "String Loaded";
+                            worksheet.Cell(1, 9).Value = "String Dropped";
+                            worksheet.Cell(1, 10).Value = "Drop Location Start (KMs)";
+                            worksheet.Cell(1, 11).Value = "Drop Location End (KMs)";
+                            worksheet.Cell(1, 12).Value = "FY";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();
@@ -1177,6 +1204,11 @@ namespace CityWatch.RadioCheck.API
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
+
+
+
+
 
         [HttpPost("QuarantinedStrings")]
         public async Task<IActionResult> ReceiveWebhookQuarantinedStrings()
@@ -1208,7 +1240,7 @@ namespace CityWatch.RadioCheck.API
 
                 if (webhookData != null)
                 {
-                    // Parse date
+                    // Parse "Date Started"
                     string date = "";
                     if (webhookData.TryGetValue("q1309_QuarantinedString_date", out var dateValue) && dateValue is JObject dateObj)
                     {
@@ -1221,17 +1253,25 @@ namespace CityWatch.RadioCheck.API
                         }
                     }
 
+                    // Extract fields
+                    string stringId = webhookData.TryGetValue("q1319_QuarantinedString_quarantinedStringYard", out var stringYard) ? stringYard?.ToString() ?? "" : "";
+                    string weld = webhookData.TryGetValue("q1320_QuarantinedString_Weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
+                    string defect = webhookData.TryGetValue("q1321_QuarantinedString_Defect", out var defectVal) ? defectVal?.ToString() ?? "" : "";
+                    string location = webhookData.TryGetValue("q1322_QuarantinedString_location", out var locationVal) ? locationVal?.ToString() ?? "" : "";
+                    string comments = webhookData.TryGetValue("q1315_QuarantinedString_comments", out var commentsVal) ? commentsVal?.ToString() ?? "" : "";
+
+                    // Build row
                     var valuesToAdd = new List<string>
             {
+                stringId,
                 date,
-                webhookData.TryGetValue("q1318_QuarantinedString_stringTotal", out var stringTotal) ? stringTotal?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1319_QuarantinedString_quarantinedStringYard", out var stringYard) ? stringYard?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1320_QuarantinedString_Weld", out var weld) ? weld?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1321_QuarantinedString_Defect", out var defect) ? defect?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1322_QuarantinedString_location", out var location) ? location?.ToString() ?? "" : "",
-                webhookData.TryGetValue("q1315_QuarantinedString_comments", out var comments) ? comments?.ToString() ?? "" : ""
+                weld,
+                defect,
+                location,
+                comments
             };
 
+                    // Write to Excel
                     using (var workbook = System.IO.File.Exists(excelFilePath)
                         ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
                         : new ClosedXML.Excel.XLWorkbook())
@@ -1240,19 +1280,16 @@ namespace CityWatch.RadioCheck.API
 
                         if (worksheet.LastRowUsed() == null)
                         {
-                            // Add header row
-                            worksheet.Cell(1, 1).Value = "DATE";
-                            worksheet.Cell(1, 2).Value = "STRING TOTAL";
-                            worksheet.Cell(1, 3).Value = "Quarantined String ID's in Yard";
-                            worksheet.Cell(1, 4).Value = "WELD #";
-                            worksheet.Cell(1, 5).Value = "DEFECT";
-                            worksheet.Cell(1, 6).Value = "LOCATION";
-                            worksheet.Cell(1, 7).Value = "COMMENTS";
+                            worksheet.Cell(1, 1).Value = "STRING ID";
+                            worksheet.Cell(1, 2).Value = "DATE STARTED";
+                            worksheet.Cell(1, 3).Value = "WELD NUMBER";
+                            worksheet.Cell(1, 4).Value = "DEFECT";
+                            worksheet.Cell(1, 5).Value = "LOCATIONS";
+                            worksheet.Cell(1, 6).Value = "COMMENTS";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();
                         var newRow = worksheet.Row(lastRow + 1);
-
                         for (int i = 0; i < valuesToAdd.Count; i++)
                         {
                             newRow.Cell(i + 1).Value = valuesToAdd[i];
@@ -1269,6 +1306,7 @@ namespace CityWatch.RadioCheck.API
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
     }
 
