@@ -82,7 +82,15 @@ namespace CityWatch.RadioCheck.Pages
                     var rowData = new List<string>();
                     foreach (var cell in row.Cells())
                     {
-                        rowData.Add(cell.GetValue<string>());
+                        if (cell.DataType == XLDataType.DateTime)
+                        {
+                            var dateValue = cell.GetDateTime();
+                            rowData.Add(dateValue.ToString("dd/MM/yyyy")); // e.g., 13/06/2025
+                        }
+                        else
+                        {
+                            rowData.Add(cell.GetValue<string>());
+                        }
                     }
                     table.Add(rowData);
                 }
@@ -90,6 +98,7 @@ namespace CityWatch.RadioCheck.Pages
 
             return table;
         }
+
 
 
         public IActionResult OnPostAddRow()
