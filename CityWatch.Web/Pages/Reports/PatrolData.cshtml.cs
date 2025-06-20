@@ -1232,8 +1232,15 @@ namespace CityWatch.Web.Pages.Reports
         {
             //return new JsonResult(_viewDataService.GetUserClientSites(types).OrderBy(z => z.Text));
 
+            if (!System.String.IsNullOrEmpty(types))
+            {
+                var values = types.Split(';');
+
+
+                return new JsonResult(_viewDataService.GetUserClientSitesWithPatrolData(AuthUserHelper.LoggedInUserId, values).OrderBy(z => z.Text));
+            }
+
             return new JsonResult(_viewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, types).OrderBy(z => z.Text));
-            
         }
         public IActionResult OnPostGeneratePdfReport()
         {

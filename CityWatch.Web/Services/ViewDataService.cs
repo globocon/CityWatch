@@ -179,6 +179,7 @@ namespace CityWatch.Web.Services
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId);
         public Task ResetAllSiteCrowdCountControl();
         public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
+        List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type);
     }
 
     public class ViewDataService : IViewDataService
@@ -2462,6 +2463,24 @@ namespace CityWatch.Web.Services
         public async Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG)
         {
             await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
+        }
+        public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string []type)
+        {
+            var sites = new List<SelectListItem>();
+            var clientTypes = _clientDataProvider.GetClientTypes().Where(z => type.Contains(z.Name));
+            if (clientTypes != null)
+            {
+                foreach (var clientType in clientTypes)
+                {
+                    var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+                    foreach (var item in mapping)
+                    {
+                        sites.Add(new SelectListItem(item.Name, item.Name));
+                    }
+                }
+
+            }
+            return sites;
         }
 
     }
