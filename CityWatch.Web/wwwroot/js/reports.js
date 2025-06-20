@@ -5845,3 +5845,30 @@ function downloadZipViaAjax(url, fileName = url.split('/').pop()) {
         })
         .catch(err => console.error("Download failed", err));
 }
+$('#ReportRequest_IRSeriaNo').typeahead({
+    minLength: 3,
+    autoSelect: true,
+    source: function (request, response) {
+        $.ajax({
+            url: '/Reports/PatrolData?handler=IRSerialNumbers',
+            data: { snoPart: request },
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                items = [];
+                map = {};
+                $.each(data, function (i, item) {
+                    items.push(item);
+                });
+                response(items);
+            },
+            error: function (response) {
+                alert(response.responseText);
+            },
+            failure: function (response) {
+                alert(response.responseText);
+            }
+        });
+    }
+
+});

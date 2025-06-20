@@ -24,7 +24,11 @@
                 <label class="mx-1" asp-for="@Model.ReportRequest.DataFilter"></label>
                 <select class="form-control" asp-for="@Model.ReportRequest.DataFilter" asp-items="Html.GetEnumSelectList<PatrolDataFilter>()"></select>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-1">
+                <label class="mx-1" for="ReportRequest_IRSeriaNo">Serial Number</label>
+                <input type="text" class="form-control" data-val="true" id="ReportRequest_IRSeriaNo" asp-for="@Model.ReportRequest.SerialNo" value="">
+            </div>
+            <div class="form-group col-md-5">
                 <label class="mx-1">&nbsp;</label>
                 <div>
                     <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>

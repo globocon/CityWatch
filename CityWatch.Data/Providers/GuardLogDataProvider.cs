@@ -383,6 +383,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientsiteId, LogBookType type, DateTime logbookDate);
 
         public List<FeedbackTemplateViewModel> GetFeedbackTemplates();
+        List<string> GetIRSerialNumbers(string regoStart = null);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6832,6 +6833,17 @@ namespace CityWatch.Data.Providers
         )
         .ToList();
             return result;
+        }
+        public List<string> GetIRSerialNumbers(string irStart = null)
+        {
+            return _context.IncidentReports
+                .Where(z => string.IsNullOrEmpty(irStart) ||
+                            (!string.IsNullOrEmpty(z.SerialNo) &&
+                                z.SerialNo.Contains(irStart)))
+                .Select(z => z.SerialNo)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
         }
     }
 

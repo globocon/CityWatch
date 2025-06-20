@@ -1600,6 +1600,12 @@ namespace CityWatch.Web.Pages.Reports
             //    Directory.Delete(zipFolderPath, true);
             return  zipFileName;
         }
+        public JsonResult OnGetIRSerialNumbers(string snoPart)
+        {
+            
+            return new JsonResult(_guardLogDataProvider.GetIRSerialNumbers(snoPart).ToList());
+
+        }
 
     }
 
