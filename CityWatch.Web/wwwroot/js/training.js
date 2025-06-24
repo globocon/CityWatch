@@ -3430,14 +3430,14 @@ $('#btnSubmitTest').on('click', function (e) {
 $('#btnRetryTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(1);
-    
+    deleteGuardAttendedFeedbackQuestions(1);
     location.reload();
     
 });
 $('#btnExitTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(2);
-
+    deleteGuardAttendedFeedbackQuestions(2);
 
    
 
@@ -3457,6 +3457,31 @@ function deleteGuardAttendedQuestions(buttonmode) {
     }).done(function (result) {
         if (result.success) {
             deleteGuardScores(buttonmode);
+
+        }
+        else {
+            return;
+        }
+
+
+
+    }).fail(function () {
+        console.log('error');
+    })
+}
+function deleteGuardAttendedFeedbackQuestions(buttonmode) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/GuardStartTest?handler=DeleteGuardAttendedFeedbackQuestions',
+        data: {
+            'guardId': $('#txtguardIdForTest').val(),
+            'hrSettingsId': $("#txtGuardHRSettings").val(),
+        },
+        //data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
 
         }
         else {
@@ -4156,6 +4181,7 @@ $('#btnWarningContinueTest').on('click', function (e) {
 $('#btnWarningRetryTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(1);
+    
 
     location.reload();
 
