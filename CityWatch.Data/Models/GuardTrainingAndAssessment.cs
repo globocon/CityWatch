@@ -20,7 +20,7 @@ namespace CityWatch.Data.Models
         public int TrainingCourseId { get; set; }
         public int HRGroupId { get; set; }
 
-        
+        [NotMapped]
         public string Description { get; set; }
 
         public int TrainingCourseStatusId { get; set; }

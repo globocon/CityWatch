@@ -351,7 +351,8 @@ namespace CityWatch.Web.Pages.Guard
                 expirydate = DateTime.Now;
                 IsExpiry = true;
             }
-            var hrdesription = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().Description;
+            var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
+            var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name +" " + hrSettingsList.Description;
             var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
             _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
             {
@@ -400,7 +401,7 @@ namespace CityWatch.Web.Pages.Guard
                 });
             }
             var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
-            SendEmailNew(emailBody);
+            //SendEmailNew(emailBody);
 
             //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
 
@@ -800,6 +801,26 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return uploaded;
+        }
+        public JsonResult OnPostDeleteGuardAttendedFeedbackQuestions(int guardId, int hrSettingsId)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                int TotalQuestions = _configDataProvider.GetFeedbackQuestionCount();
+
+
+
+
+                _configDataProvider.DeleteGuardAttendedFeedbackQuestions(guardId, hrSettingsId);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
         }
     }
 

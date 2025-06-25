@@ -2957,9 +2957,9 @@ namespace CityWatch.Web.Pages.Admin
             int hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
             try
             {
+
+
                 
-
-
                 _configDataProvider.SaveGuardTrainingPracticalDetails(new GuardTrainingAndAssessmentPractical()
                 {
                     Id = 0,

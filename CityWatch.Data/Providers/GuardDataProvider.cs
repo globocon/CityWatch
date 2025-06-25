@@ -1106,6 +1106,7 @@ namespace CityWatch.Data.Providers
                 item.HrGroupText = item.HRGroups.Name;
                 item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
                 int hrSettingsId = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().HRSettingsId;
+                item.Description = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().FileName;
                 var certificatescount = GetCourseCertificateDocsUsingSettingsId(hrSettingsId);
                 if (certificatescount.Count() > 0)
                 { 

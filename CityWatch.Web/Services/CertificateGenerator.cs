@@ -41,6 +41,7 @@ using static Dropbox.Api.FileProperties.PropertiesSearchMode;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using DocumentFormat.OpenXml.Bibliography;
 using static Dropbox.Api.TeamLog.PaperDownloadFormat;
+using System.Text.RegularExpressions;
 namespace CityWatch.Web.Services
 {
     public interface ICertificateGenerator
@@ -141,6 +142,10 @@ namespace CityWatch.Web.Services
             int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, 1).FirstOrDefault().Id;
             var hrreferenceNumber = "HR" + jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name;
             var certificateName = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().FileName;
+            var extension = ".pdf";
+            
+            
+            
             string CertificateTemplatePath = IO.Path.Combine(_TemplatePdf, hrreferenceNumber, "Certificate", certificateName);
             var guardsstarttest = _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId).FirstOrDefault();
             int certificateId = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
@@ -152,6 +157,11 @@ namespace CityWatch.Web.Services
             if (!IO.Directory.Exists(IO.Path.Combine(_UploadRootDir)))
                 IO.Directory.CreateDirectory(IO.Path.Combine(_UploadRootDir));
             //string reportFileName = GetReportFileName(eventType);
+            if (!File.Exists(IO.Path.Combine(_UploadRootDir, certificateName)))
+            {
+                
+                File.Delete(IO.Path.Combine(_UploadRootDir, certificateName));
+            }
             var reportPdf = IO.Path.Combine(_UploadRootDir ,certificateName);
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(CertificateTemplatePath), new PdfWriter(reportPdf));
 
@@ -292,6 +302,59 @@ namespace CityWatch.Web.Services
             }
 
             pdfDocument.Close();
+            if (isCertificateExpiry)
+            {
+                var expiryyears = _configDataProvider.GetTQSettings(hrSettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;
+                string newexpiry = string.Empty;
+                if (expiryyears.Contains("year"))
+                    newexpiry = expiryyears.Replace("year", "");
+                if (expiryyears.Contains("years"))
+                    newexpiry = expiryyears.Replace("years", "");
+                DateTime currentdate = DateTime.Now;
+                DateTime futuredate = currentdate.AddYears(Convert.ToInt32(newexpiry));
+                // DateTime parsedDate = DateTime.Parse(futuredate);
+                var formattedDate = futuredate.ToString("dd MMM yy").ToUpper();
+                var newFileName = jresult.FirstOrDefault().Description + "-" + "exp " + formattedDate + extension;
+                var fileName = jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name + "_" + newFileName;
+                fileName = GetFilename(fileName);
+                reportPdf = IO.Path.Combine(_UploadRootDir, certificateName);
+                var destinationfilename= IO.Path.Combine(_UploadRootDir, fileName);
+                if (!File.Exists(destinationfilename))
+                {
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
+                else
+                {
+                    File.Delete(destinationfilename);
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
+                certificateName = fileName;
+            }
+            else
+            {
+                DateTime currentdate = DateTime.Now;
+                // DateTime parsedDate = DateTime.Parse(futuredate);
+                var formattedDate = currentdate.ToString("dd MMM yy").ToUpper();
+                var newFileName = jresult.FirstOrDefault().Description + "-" + "doi " + formattedDate + extension;
+                var fileName = jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name + "_" + newFileName;
+                fileName = GetFilename(fileName);
+                reportPdf = IO.Path.Combine(_UploadRootDir, certificateName);
+                var destinationfilename = IO.Path.Combine(_UploadRootDir, fileName);
+                if (!File.Exists(destinationfilename))
+                {
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
+                else
+                {
+                    File.Delete(destinationfilename);
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
+                certificateName = fileName;
+            }
             return certificateName;
         }
         private void AttachScoreCard(PdfDocument pdfDocument, int guardId, int hrSettingsId,string certificateName)
@@ -390,10 +453,15 @@ namespace CityWatch.Web.Services
                         {
                             Qno = questionno.ToString();
                         }
-                        var question= new Paragraph("Q." + Qno +  "  " + attendedquestion.TrainingTestQuestions.Question).SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK)).SetFontSize(16)
+                        var qnaBlock = new Div();
+                        qnaBlock.SetKeepTogether(true); // Keep the entire block on the same page
+
+
+                        var question = new Paragraph("Q." + Qno +  "  " + attendedquestion.TrainingTestQuestions.Question).SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK)).SetFontSize(16)
                         .SetBold();
+                        qnaBlock.Add(question);
                         //question.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
-                        doc.Add(question);
+                        //doc.Add(question);
                         var choices = _configDataProvider.GetTrainingQuestionsAnswers(attendedquestion.TrainingTestQuestionsId);
                         List bulletList = new List()
                         .SetSymbolIndent(12)
@@ -409,7 +477,7 @@ namespace CityWatch.Web.Services
                                .SetFontSize(12);
 
                         }
-                        doc.Add(bulletList);
+                        qnaBlock.Add(bulletList);
 
                         // Add list items
                         
@@ -429,7 +497,7 @@ namespace CityWatch.Web.Services
                         //.SetMarginTop(30)
                         ////.Add("\n") // Line break before the actual answer
                         //.Add(new Text(actualanswer).SetFontSize(12)));
-                        doc.Add(new Paragraph()
+                        qnaBlock.Add(new Paragraph()
                         .Add(new Text("Actual Answer: ").SetBold().SetFontSize(14)) // Bold only for the label
                         .Add(new Text(actualanswer).SetFontSize(12)) // Normal text for the answer
                         .SetTextAlignment(TextAlignment.LEFT)
@@ -437,7 +505,7 @@ namespace CityWatch.Web.Services
 
                         var answer = attendedquestion.TrainingTestQuestionsAnswers.Options;
 
-                        doc.Add(new Paragraph()
+                        qnaBlock.Add(new Paragraph()
                        .Add(new Text("Student Answer: ").SetBold().SetFontSize(14)) // Bold only for the label
                        .Add(new Text(answer).SetFontSize(12)) // Normal text for the answer
                        .SetTextAlignment(TextAlignment.LEFT)
@@ -452,7 +520,7 @@ namespace CityWatch.Web.Services
                         //doc.Add(new Paragraph(answer)
                         //         .SetMarginLeft(20)
                         //         .SetFontSize(12));
-
+                        doc.Add(qnaBlock);
                         questionno++;
                     }
                 }
@@ -745,6 +813,12 @@ namespace CityWatch.Web.Services
             var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
             image.SetFixedPosition(index, 0, bottom);
             return image;
+        }
+        public string GetFilename(string filename)
+        {
+            // Use Regex to replace problematic characters with an underscore
+            string newFilename = Regex.Replace(filename, @"[\/\\?%*:|""<>]", "_");
+            return newFilename;
         }
 
     }

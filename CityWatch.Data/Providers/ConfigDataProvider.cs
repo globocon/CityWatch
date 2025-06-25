@@ -221,6 +221,9 @@ namespace CityWatch.Data.Providers
         public Task ResetSiteAndGuardCrowdControlData(ClientSiteMobileCrowdControl csmcc, DateTime ArchivedOn, string ArchivedMode);
         public void DeleteTQSettings(int id);
         List<TrainingTestQuestions> GetTrainingTestQuestionsWithHrSettings(int hrsettingsId);
+        void DeleteGuardAttendedFeedbackQuestions(int guardId, int hrsettingsId);
+
+
 
     }
 
@@ -1833,7 +1836,7 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                var documentToUpdate = _context.GuardTrainingAndAssessment.SingleOrDefault(x => x.Id == trainingAssessment.Id);
+                var documentToUpdate = _context.GuardTrainingAndAssessment.SingleOrDefault(x => x.Id == trainingAssessment.Id && x.TrainingCourseStatusId != 4);
                 if (documentToUpdate != null)
                 {
                     documentToUpdate.GuardId = trainingAssessment.GuardId;
@@ -2402,6 +2405,19 @@ namespace CityWatch.Data.Providers
 
             return trainigCourses;
 
+        }
+        public void DeleteGuardAttendedFeedbackQuestions(int guardId, int hrsettingsId)
+        {
+
+            var report = _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.HrSettingsId == hrsettingsId).ToList(); ;
+            if (report.Count > 0)
+            {
+                foreach (var item in report)
+                {
+                    _context.GuardTrainingAttendedFeedbackQuestionsAndAnswers.Remove(item);
+                }
+            }
+            _context.SaveChanges();
         }
 
     }
