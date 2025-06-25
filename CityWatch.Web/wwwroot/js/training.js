@@ -4181,7 +4181,7 @@ $('#btnWarningContinueTest').on('click', function (e) {
 $('#btnWarningRetryTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(1);
-    
+    deleteGuardAttendedFeedbackQuestions(1);
 
     location.reload();
 
