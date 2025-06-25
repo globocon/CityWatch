@@ -354,19 +354,27 @@ namespace CityWatch.Web.Pages.Guard
             var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
             var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name +" " + hrSettingsList.Description;
             var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
-            _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
+            var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(guardId).Where(x => x.FileName == filename).FirstOrDefault();
+            int id = 0;
+            if(compliance != null)
             {
-                Id = 0,
-                GuardId = guardId,
-                Description = hrdesription,
-                CurrentDateTime = DateTime.Now.ToString(),
-                FileName = filename,
-                HrGroup = (HrGroup?)hrgroupid,
-                ExpiryDate = expirydate,
-                DateType = IsExpiry,
-                Reminder1 = 45,
-                Reminder2 = 7
-            });
+                id = compliance.Id;
+            }
+            
+                _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
+                {
+                    Id = id,
+                    GuardId = guardId,
+                    Description = hrdesription,
+                    CurrentDateTime = DateTime.Now.ToString(),
+                    FileName = filename,
+                    HrGroup = (HrGroup?)hrgroupid,
+                    ExpiryDate = expirydate,
+                    DateType = IsExpiry,
+                    Reminder1 = 45,
+                    Reminder2 = 7
+                });
+            
             var IsRPL = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault(); ;
             if(IsRPL.isRPLEnabled==true)
             {
