@@ -324,6 +324,12 @@ namespace CityWatch.Web.Services
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
                 }
+                else
+                {
+                    File.Delete(destinationfilename);
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
                 certificateName = fileName;
             }
             else
@@ -338,6 +344,12 @@ namespace CityWatch.Web.Services
                 var destinationfilename = IO.Path.Combine(_UploadRootDir, fileName);
                 if (!File.Exists(destinationfilename))
                 {
+                    File.Move(reportPdf, destinationfilename);
+                    File.Delete(reportPdf);
+                }
+                else
+                {
+                    File.Delete(destinationfilename);
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
                 }
