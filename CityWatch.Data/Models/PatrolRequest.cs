@@ -21,5 +21,6 @@ namespace CityWatch.Data.Models
         public string Position { get; set; }
 
         public int ColourCode { get; set; }
+        public string SerialNo { get; set; }
     }
 }

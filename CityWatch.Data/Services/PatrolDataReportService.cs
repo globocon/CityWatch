@@ -46,8 +46,10 @@ namespace CityWatch.Data.Services
                                 (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
                                 (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
                                 // New Code Added for ColourCode filter
-                                (patrolRequest.ColourCode ==0 || z.ColourCode == patrolRequest.ColourCode)
-                                
+                                (patrolRequest.ColourCode ==0 || z.ColourCode == patrolRequest.ColourCode) &&
+                                // New Code Added for Serial number
+                                (patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
+
                                 ));
             var clientSites = _clientDataProvider.GetClientSites(null);
             //var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == FeedbackType.ColourCodes);
