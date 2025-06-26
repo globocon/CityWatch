@@ -974,10 +974,14 @@ namespace CityWatch.Web.API
 
             var GuardDetails = _clientDataProvider.GetGuradName(IRguardId);
 
+            var nameParts = (GuardDetails.Name ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            string firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
+            string lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+
             Report.Officer = new Officer
             {
-                FirstName = GuardDetails.Name,
-                LastName = string.Empty,
+                FirstName = firstName,
+                LastName = lastName,
                 Gender = GuardDetails.Gender,
                 Phone = GuardDetails.Mobile,
                 Position = string.Empty,
