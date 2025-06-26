@@ -34,6 +34,8 @@ using System.Threading.Tasks;
 using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using CityWatch.Data.Enums;
+using ConvertApiDotNet;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 namespace CityWatch.Web.API
@@ -361,34 +363,34 @@ namespace CityWatch.Web.API
 
 
 
-        [HttpPost("UploadFile")]
-        public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
-        {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("No file uploaded.");
-                }
+        //[HttpPost("UploadFile")]
+        //public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
+        //{
+        //    try
+        //    {
+        //        if (file == null || file.Length == 0)
+        //        {
+        //            return BadRequest("No file uploaded.");
+        //        }
 
-                string fileExtension = Path.GetExtension(file.FileName);
-                string newFileName = $"{Guid.NewGuid()}{fileExtension}";
-                string filePath = Path.Combine(_uploadFolder, newFileName);
+        //        string fileExtension = Path.GetExtension(file.FileName);
+        //        string newFileName = $"{Guid.NewGuid()}{fileExtension}";
+        //        string filePath = Path.Combine(_uploadFolder, newFileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
+        //        using (var stream = new FileStream(filePath, FileMode.Create))
+        //        {
+        //            await file.CopyToAsync(stream);
+        //        }
 
-                string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{newFileName}";
+        //        string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{newFileName}";
 
-                return Ok(new { message = "File uploaded successfully!", fileUrl });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+        //        return Ok(new { message = "File uploaded successfully!", fileUrl });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Internal server error: {ex.Message}");
+        //    }
+        //}
 
 
         [HttpGet("SaveClientSiteDuress")]
@@ -984,15 +986,21 @@ namespace CityWatch.Web.API
                 LicenseState = GuardDetails.State,
                 CallSign = string.Empty,              
                 Billing = string.Empty,
+                GuardMonth= Report.Officer.GuardMonth
             };
 
 
             var remoteIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-
-
+            if (Report?.SiteColourCodeId != null)
+            {
+                Report.SiteColourCode = _viewDataService.GetFeedbackTemplatesByTypeByColor(
+                    3,
+                    Convert.ToInt32(Report.SiteColourCodeId)
+                );
+            }
             // TODO: Remove session dependency on attachments
-            Report.ReportReference = Guid.NewGuid().ToString();
+            //Report.ReportReference = Guid.NewGuid().ToString();
             if (string.IsNullOrEmpty(Report.ReportReference))
                 processResult.Add(9000, new IrProcessFailure("Session timeout due to user inactivity. Failed to attach files", string.Empty));
 
@@ -1881,6 +1889,142 @@ namespace CityWatch.Web.API
             return Ok(dto);
         }
 
+
+
+
+       
+       [HttpPost("UploadFile")]
+        public async Task<IActionResult> UploadFile([FromQuery] string reportReference, [FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { success = false, message = "No file provided." });
+
+            if (string.IsNullOrEmpty(reportReference))
+                return BadRequest(new { success = false, message = "Missing report reference." });
+
+            var uploadFileName = Path.GetFileName(file.FileName);
+            var folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "Uploads", reportReference);
+
+            try
+            {
+                Directory.CreateDirectory(folderPath);
+
+                var fullFilePath = Path.Combine(folderPath, uploadFileName);
+
+                using (var stream = new FileStream(fullFilePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Handle HEIC conversion
+                if (Path.GetExtension(uploadFileName).Equals(".heic", StringComparison.OrdinalIgnoreCase))
+                {
+                    var jpgPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(uploadFileName) + ".jpg");
+
+                    // Optional: implement HEIC-to-JPG conversion (ImageMagick or Magick.NET)
+                    await ConvertHeicToJpgAsync(fullFilePath, jpgPath);
+
+                    System.IO.File.Delete(fullFilePath);
+                    uploadFileName = Path.GetFileName(jpgPath);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    fileName = uploadFileName
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+
+        public async Task<string> ConvertHeicToJpgAsync(string heicFilePath, string outputDirectory)
+        {
+            try
+            {
+                var secretkey = string.Empty;
+                var companydetail = _userDataProvider.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+                if (companydetail != null)
+                {
+                    secretkey = companydetail.ApiSecretkey;
+                }
+                // Initialize ConvertAPI with your API secret key
+                var convertApi = new ConvertApi(secretkey);
+
+                // Check if the HEIC file exists
+                if (!System.IO.File.Exists(heicFilePath))
+                {
+                    throw new FileNotFoundException("The specified HEIC file does not exist.");
+                }
+
+                // Convert HEIC to JPG
+                var conversionResult = await convertApi.ConvertAsync("heic", "jpg", new ConvertApiFileParam(heicFilePath));
+
+                // Ensure the output directory exists
+                if (!Directory.Exists(outputDirectory))
+                {
+                    Directory.CreateDirectory(outputDirectory);
+                }
+
+                // Path to save the converted JPG file
+                //string jpgFilePath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(heicFilePath)}.jpg");
+
+                // Save the converted JPG file
+                await conversionResult.SaveFilesAsync(outputDirectory);
+
+                Console.WriteLine($"Conversion successful! JPG saved at: {outputDirectory}");
+                return outputDirectory;  // Return the path to the converted file
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during conversion: {ex.Message}");
+                throw;  // Rethrow the exception for further handling if needed
+            }
+        }
+
+        [HttpGet("areas")]
+        public IActionResult Areas([FromQuery] int clientSiteId)
+        {
+            
+
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            var clientArea = _configDataProvider.GetReportFieldsByType(ReportFieldType.ClientArea);
+            foreach (var item in clientArea)
+            {
+                if (!String.IsNullOrEmpty(item.ClientSiteIds))
+                {
+                    foreach (var clientsiteid in item.ClientSiteIdsNew)
+                    {
+                        if (clientsiteid.Equals(clientSiteId))
+                        {
+                            items.Add(new SelectListItem(item.Name, item.Name));
+                        }
+                    }
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+            }
+           
+
+            return Ok(items);
+        }
+
+
+
+
+    }
+
+
+    public class AreaDto
+    {
+        public string Text { get; set; }
+        public string Value { get; set; }
+        public bool Selected { get; set; }
     }
 
 
