@@ -1147,6 +1147,20 @@ namespace CityWatch.RadioCheck.API
                     string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";
                     string fy = webhookData.TryGetValue("q1321_fy", out var fyVal) ? fyVal?.ToString() ?? "" : "";
 
+                    // Additional new fields (parsed similarly)
+                    string weld = webhookData.TryGetValue("q1322_weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
+                    string defect = webhookData.TryGetValue("q1323_defect", out var defectTxt) ? defectTxt?.ToString() ?? "" : "";
+                    string locationOfDefect = webhookData.TryGetValue("q1324_locationOf", out var locationVal) ? locationVal?.ToString() ?? "" : "";
+
+                    string dateRectified = webhookData.TryGetValue("q1326_dateRectified", out var rectifiedVal) ? ParseDate(rectifiedVal) : "";
+                    string compliant = webhookData.TryGetValue("q1327_compliant", out var compliantVal) ? compliantVal?.ToString() ?? "" : "";
+                    string loadedOn = webhookData.TryGetValue("q1329_loadedOn", out var loadedVal2) ? loadedVal2?.ToString() ?? "" : "";
+                    string quarantinedComments = webhookData.TryGetValue("q1335_QuarantinedString_comments", out var qCommentsVal) ? qCommentsVal?.ToString() ?? "" : "";
+
+
+
+
+
                     // Collect all values in order
                     var valuesToAdd = new List<string>
             {
@@ -1161,7 +1175,14 @@ namespace CityWatch.RadioCheck.API
                 stringDropped,
                 dropLocationStart,
                 dropLocationEnd,
-                fy
+                fy,
+                weld,
+                defect,
+                locationOfDefect,
+                dateRectified,
+                compliant,
+                loadedOn,
+                quarantinedComments
             };
 
                     using (var workbook = System.IO.File.Exists(excelFilePath)
@@ -1184,6 +1205,14 @@ namespace CityWatch.RadioCheck.API
                             worksheet.Cell(1, 10).Value = "Drop Location Start (KMs)";
                             worksheet.Cell(1, 11).Value = "Drop Location End (KMs)";
                             worksheet.Cell(1, 12).Value = "FY";
+                            // New fields
+                            worksheet.Cell(1, 13).Value = "Weld #";
+                            worksheet.Cell(1, 14).Value = "Defect";
+                            worksheet.Cell(1, 15).Value = "Location of Defect";
+                            worksheet.Cell(1, 16).Value = "Date Rectified";
+                            worksheet.Cell(1, 17).Value = "Compliant";
+                            worksheet.Cell(1, 18).Value = "Loaded on Train";
+                            worksheet.Cell(1, 19).Value = "Quarantined Comments";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();

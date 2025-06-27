@@ -10,7 +10,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compliant Strings</title>
 
-    
+
+    <style>
+    /* Force table layout to fix column widths */
+    #compliantTable {
+        table-layout: fixed;
+        width: 100% !important;
+    }
+
+    /* Prevent text wrapping */
+    #compliantTable th,
+    #compliantTable td {
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Specific column widths */
+    #compliantTable th:nth-child(3),
+    #compliantTable td:nth-child(3) {
+        width: 100px !important; /* Defect Weld ID */
+    }
+
+    #compliantTable th:nth-child(4),
+    #compliantTable td:nth-child(4) {
+        width: 100px !important; /* New Weld ID */
+    }
+</style>
+
+
+  @*   <style>
+    #compliantTable th, #compliantTable td {
+        white-space: nowrap !important;
+    }
+
+    th:nth-child(3), td:nth-child(3) {
+        width: 100px !important; /* Defect Weld ID */
+    }
+
+    th:nth-child(4), td:nth-child(4) {
+        width: 100px !important; /* New Weld ID */
+    }
+</style> *@
     
 </head>
 <body style="background-color: #bad5f5; padding: 10px;">
@@ -87,36 +128,38 @@
         }
 
        $(document).ready(function () {
-    $('#compliantTable').DataTable({
-        dom: 'Bfrtip',
-        paging: false,
-        info: false,
-        scrollX: true,
-        responsive: true,
-        order: [[0, 'asc']],
-        columnDefs: [{
-            targets: -1,
-            orderable: false
-        }],
-        buttons: [
-            
-            {
-                extend: 'excel',
-                text: 'Export to Excel',
-                className: 'btn btn-success btn-sm me-1'
-            },
-            {
-                extend: 'pdf',
-                text: 'Export to PDF',
-                className: 'btn btn-danger btn-sm me-1'
-            },
-            {
-                extend: 'print',
-                text: 'Print',
-                className: 'btn btn-info btn-sm'
-            }
-        ]
-    });
+           $('#compliantTable').DataTable({
+            dom: 'Bfrtip',
+            paging: false,
+            info: false,
+            scrollX: true,
+            responsive: true,
+            autoWidth: false, // disables automatic column width detection
+                      order: [[0, 'asc']],
+            columnDefs: [
+                { targets: 2, width: '100px' }, // Defect Weld ID
+                { targets: 3, width: '100px' }, // New Weld ID
+                { targets: -1, orderable: false, width: '60px' } // Action column
+            ],
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: 'Export to Excel',
+                    className: 'btn btn-success btn-sm me-1'
+                },
+                {
+                    extend: 'pdf',
+                    text: 'Export to PDF',
+                    className: 'btn btn-danger btn-sm me-1'
+                },
+                {
+                    extend: 'print',
+                    text: 'Print',
+                    className: 'btn btn-info btn-sm'
+                }
+            ]
+        });
+
 });
 
     </script>
