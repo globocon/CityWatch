@@ -180,7 +180,7 @@ namespace CityWatch.Web.Services
                     acroForm.GetField("DOI_theory").SetValue(guardsstarttest.TestDate.ToString("dd-MMM-yyyy"), true);
                 }
             }
-            var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).FirstOrDefault();
+            var practicalresult= _configDataProvider.GetGuardTrainingPracticalDetails(guardId, hrSettingsId).LastOrDefault();
             if (practicalresult == null)
             {
                 if (acroForm.GetField("Location_practical") != null)
