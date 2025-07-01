@@ -4186,6 +4186,16 @@ $('#btnWarningRetryTest').on('click', function (e) {
     location.reload();
 
 });
+$('#btnWarningCancelTest').on('click', function (e) {
+    e.preventDefault();
+
+    if (window.opener && !window.opener.closed) {
+
+        window.opener.location.reload();
+    }
+    window.close();
+
+});
 $("#TrainingAndAssessmentBtnSettings").on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment');
     $('#txt_securityLicenseNoTrainingAndAssessment').val('');
