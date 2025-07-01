@@ -42,6 +42,10 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using DocumentFormat.OpenXml.Bibliography;
 using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 using System.Text.RegularExpressions;
+using CityWatch.Common.Models;
+using System.Threading.Tasks;
+using CityWatch.Common.Services;
+using static Dropbox.Api.Sharing.MemberSelector;
 namespace CityWatch.Web.Services
 {
     public interface ICertificateGenerator
@@ -101,6 +105,7 @@ namespace CityWatch.Web.Services
         private readonly IPatrolDataReportService _irChartDataService;
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
+        private readonly IDropboxService _dropboxUploadService;
         public CertificateGenerator(IWebHostEnvironment webHostEnvironment,
             IConfigDataProvider configDataProvider,
             IClientDataProvider clientDataProvider,
@@ -108,7 +113,7 @@ namespace CityWatch.Web.Services
             IConfiguration configuration,
             ILogger<IncidentReportGenerator> logger,
             IPatrolDataReportService irChartDataService,
-            CityWatchDbContext context, IGuardDataProvider guardDataProvider)
+            CityWatchDbContext context, IGuardDataProvider guardDataProvider, IDropboxService dropboxUploadService)
         {
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -132,6 +137,7 @@ namespace CityWatch.Web.Services
             //    throw new IO.FileNotFoundException("Template file not found");
             //_irChartDataService = irChartDataService;
             //_graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
+            _dropboxUploadService = dropboxUploadService;
         }
         public string GeneratePdf(int guardId, int hrSettingsId,string hashCode, bool isCertificateHold, bool isCertificatewithQADump, bool isCertificateExpiry)
 
@@ -319,16 +325,21 @@ namespace CityWatch.Web.Services
                 fileName = GetFilename(fileName);
                 reportPdf = IO.Path.Combine(_UploadRootDir, certificateName);
                 var destinationfilename= IO.Path.Combine(_UploadRootDir, fileName);
+                var DropboxDir = _guardDataProvider.GetDrobox();
                 if (!File.Exists(destinationfilename))
                 {
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
+                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guards, DropboxDir.DropboxDir)}/{fileName}");
+                    UpoadDocumentToDropbox(destinationfilename, dbxFilePath);
                 }
                 else
                 {
                     File.Delete(destinationfilename);
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
+                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guards, DropboxDir.DropboxDir)}/{fileName}");
+                    UpoadDocumentToDropbox(destinationfilename, dbxFilePath);
                 }
                 certificateName = fileName;
             }
@@ -346,12 +357,16 @@ namespace CityWatch.Web.Services
                 {
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
+                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guards)}/{fileName}");
+                    UpoadDocumentToDropbox(destinationfilename, dbxFilePath);
                 }
                 else
                 {
                     File.Delete(destinationfilename);
                     File.Move(reportPdf, destinationfilename);
                     File.Delete(reportPdf);
+                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guards)}/{fileName}");
+                    UpoadDocumentToDropbox(destinationfilename, dbxFilePath);
                 }
                 certificateName = fileName;
             }
@@ -819,6 +834,24 @@ namespace CityWatch.Web.Services
             // Use Regex to replace problematic characters with an underscore
             string newFilename = Regex.Replace(filename, @"[\/\\?%*:|""<>]", "_");
             return newFilename;
+        }
+        private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
         }
 
     }
