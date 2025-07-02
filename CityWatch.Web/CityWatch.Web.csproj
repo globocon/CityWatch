@@ -66,6 +66,8 @@
     <Folder Include="wwwroot\Pdf\Output\" />
     <Folder Include="wwwroot\Pdf\ToDropbox\" />
     <Folder Include="wwwroot\StaffDocs\" />
+    <Folder Include="wwwroot\TA\" />
+    <Folder Include="wwwroot\Uploads\Guards\License\" />
     <Folder Include="wwwroot\Uploads\License\" />
   </ItemGroup>
 
