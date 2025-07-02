@@ -3059,6 +3059,7 @@ namespace CityWatch.Web.Pages.Admin
             bool courseLength = false;
             bool testQuestionsLength = false;
             bool certificateLength = false;
+            bool instructorLength = false;
             var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).ToList();
             if(coursesList.Count()>0)
             {
@@ -3075,8 +3076,13 @@ namespace CityWatch.Web.Pages.Admin
             {
                 certificateLength = true;
             }
+            var courseInstructorList = _configDataProvider.GetCourseInstructor(hrSettingsid).ToList();
+            if (courseInstructorList.Count() > 0)
+            {
+                instructorLength = true;
+            }
 
-            return new JsonResult(new { courseLength, testQuestionsLength, certificateLength });
+            return new JsonResult(new { courseLength, testQuestionsLength, certificateLength, instructorLength });
 
         }
         public JsonResult OnPostSaveCourseCertificateIsRPL(int certificateId,bool isRPLchecked)

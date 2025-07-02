@@ -222,6 +222,8 @@ namespace CityWatch.Data.Providers
         public void DeleteTQSettings(int id);
         List<TrainingTestQuestions> GetTrainingTestQuestionsWithHrSettings(int hrsettingsId);
         void DeleteGuardAttendedFeedbackQuestions(int guardId, int hrsettingsId);
+        List<TrainingTestQuestions> GetTrainingTestQuestions();
+        List<TrainingCourseInstructor> GetCourseAllInstructor();
 
 
 
@@ -2269,9 +2271,10 @@ namespace CityWatch.Data.Providers
         public List<TrainingTestQuestions> GetTrainingTestQuestionsColor(int hrsettingsId)
         {
 
-            var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
+            //var trainigCourses = _context.TrainingTestQuestions.Include(x => x.TQNumbers).Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
+            var trainigCourses = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsId && x.IsDeleted == false
 
-            && (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) 
+            //&& (_context.TrainingTestQuestionSettings.Any(tq => tq.HRSettingsId == x.HRSettingsId) 
             //&&
             //(!_context.TrainingTestQuestionSettings
             //.Where(tq => tq.HRSettingsId == x.HRSettingsId )
@@ -2280,7 +2283,7 @@ namespace CityWatch.Data.Providers
             //||
             //_context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
 
-        )
+        //)
             //)
             ).ToList();
 
@@ -2418,6 +2421,24 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+        public List<TrainingTestQuestions> GetTrainingTestQuestions()
+        {
+
+            
+            var trainigCourses = _context.TrainingTestQuestions.Where(x =>  x.IsDeleted == false).ToList();
+
+            return trainigCourses;
+
+        }
+        public List<TrainingCourseInstructor> GetCourseAllInstructor()
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.TrainingCourseInstructor
+                .ToList();
+
+        
+            return courseDocList;
         }
 
     }
