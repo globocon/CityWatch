@@ -2726,6 +2726,15 @@ namespace CityWatch.Web.Pages.Admin
                         _guardLogDataProvider.DeleteTestQuestions(courseQuestion.Id);
                     }
                 }
+                var courseInstructors = _configDataProvider.GetCourseAllInstructor().Where(x => x.HRSettingsId == id).ToList();
+                if (courseInstructors.Count() > 0)
+                {
+                    foreach(var instructor in courseInstructors)
+                    {
+                        _guardLogDataProvider.DeleteTrainingCourseInstructor(instructor.Id);
+                    }
+                }
+                
                 var certificates = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(id);
                 if (certificates != null)
                 {
