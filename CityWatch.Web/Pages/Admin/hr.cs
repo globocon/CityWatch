@@ -2397,16 +2397,26 @@ namespace CityWatch.Web.Pages.Admin
             .ThenBy(x => x.referenceNo)
             .ThenBy(x => x.referenceNoAlphabetsName);
             
-            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
-            var newjResult = jresult.Where(x => hrSettingsIdWithCourses.Contains(x.Id)).ToList();
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Where(x => Path.HasExtension(x.FileName)).Select(x=>x.HRSettingsId).ToArray();
+            int[] hrSettingsIdWithQuestions = _configDataProvider.GetTrainingTestQuestions().Select(x => x.HRSettingsId).ToArray();
+            int[] hrSettingsIdWithCourseCertificates = _configDataProvider.GetCourseCertificateDocuments().Select(x => x.HRSettingsId).ToArray();
+            int[] hrSettingsIdWithCourseInstructors = _configDataProvider.GetCourseAllInstructor().Select(x => x.HRSettingsId).ToArray();
+            int[] hrSettingsIdAll = hrSettingsIdWithCourses
+                                    .Concat(hrSettingsIdWithQuestions)
+                                    .Concat(hrSettingsIdWithCourseCertificates)
+                                    .Concat(hrSettingsIdWithCourseInstructors)
+                                    .Distinct()
+                                    .ToArray();
+            var newjResult = jresult.Where(x => hrSettingsIdAll.Contains(x.Id)).ToList();
             foreach (var item in newjResult)
             {
-                var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).ToList();
+                var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).Where(x => Path.HasExtension(x.FileName)).ToList();
                 
                 var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(item.Id).ToList();
                 
                 var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.HRSettingsId == item.Id).ToList();
-                if (coursesList.Count() > 0 && testQuestionsSettingsList.Count() > 0 && courseCertificatesList.Count() > 0)
+                var courseInstructorList = _configDataProvider.GetCourseAllInstructor().Where(x => x.HRSettingsId == item.Id).ToList();
+                if (coursesList.Count() > 0 && testQuestionsSettingsList.Count() > 0 && courseCertificatesList.Count() > 0 && courseInstructorList.Count()>0)
                 {
                     item.CourseColour = "Green";
 

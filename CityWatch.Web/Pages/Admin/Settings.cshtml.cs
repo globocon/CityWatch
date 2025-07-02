@@ -2159,7 +2159,7 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetCourseDocsUsingSettingsId(int type)
         {
-            return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type));
+            return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type).Where(x=> Path.HasExtension(x.FileName)));
         }
         public JsonResult OnGetTQNumbers()
         {
@@ -2790,18 +2790,36 @@ namespace CityWatch.Web.Pages.Admin
                         var dbxUploaded = true;
                         dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName), dbxFilePath);
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                        
+                        bool isrpl = false;
+                        var rpldetails = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == documentId).FirstOrDefault();
+                        if(rpldetails != null)
+                        {
+                            isrpl = rpldetails.isRPLEnabled;
+                        }
                             _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
                             {
                                 Id = documentId,
                                 FileName = filename,
                                 LastUpdated = DateTime.Now,
                                 HRSettingsId = hrsettingsid,
-                                isRPLEnabled=false,
+                                isRPLEnabled= isrpl,
                                 IsDeleted=false
 
                             });
-                        
+                        var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrsettingsid).ToList();
+                        var hrdesc = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
+                        if(courses.Count()==0)
+                        {
+                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                            {
+                                Id = 0,
+                                FileName = hrdesc,
+                                HRSettingsId = hrsettingsid,
+                                LastUpdated = DateTime.Now,
+                                TQNumberId = 1,
+                                IsDeleted = false
+                            });
+                        }
 
                         success = true;
                     }
@@ -3059,7 +3077,8 @@ namespace CityWatch.Web.Pages.Admin
             bool courseLength = false;
             bool testQuestionsLength = false;
             bool certificateLength = false;
-            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).ToList();
+            bool instructorLength = false;
+            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).Where(x=>Path.HasExtension(x.FileName)).ToList();
             if(coursesList.Count()>0)
             {
                 courseLength = true;
@@ -3075,8 +3094,13 @@ namespace CityWatch.Web.Pages.Admin
             {
                 certificateLength = true;
             }
+            var courseInstructorList = _configDataProvider.GetCourseInstructor(hrSettingsid).ToList();
+            if (courseInstructorList.Count() > 0)
+            {
+                instructorLength = true;
+            }
 
-            return new JsonResult(new { courseLength, testQuestionsLength, certificateLength });
+            return new JsonResult(new { courseLength, testQuestionsLength, certificateLength, instructorLength });
 
         }
         public JsonResult OnPostSaveCourseCertificateIsRPL(int certificateId,bool isRPLchecked)
