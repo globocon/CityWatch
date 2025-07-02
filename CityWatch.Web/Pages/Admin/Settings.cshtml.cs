@@ -3078,7 +3078,7 @@ namespace CityWatch.Web.Pages.Admin
             bool testQuestionsLength = false;
             bool certificateLength = false;
             bool instructorLength = false;
-            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).ToList();
+            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).Where(x=>Path.HasExtension(x.FileName)).ToList();
             if(coursesList.Count()>0)
             {
                 courseLength = true;
