@@ -2397,7 +2397,7 @@ namespace CityWatch.Web.Pages.Admin
             .ThenBy(x => x.referenceNo)
             .ThenBy(x => x.referenceNoAlphabetsName);
             
-            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Select(x=>x.HRSettingsId).ToArray();
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Where(x => Path.HasExtension(x.FileName)).Select(x=>x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithQuestions = _configDataProvider.GetTrainingTestQuestions().Select(x => x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithCourseCertificates = _configDataProvider.GetCourseCertificateDocuments().Select(x => x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithCourseInstructors = _configDataProvider.GetCourseAllInstructor().Select(x => x.HRSettingsId).ToArray();
@@ -2410,7 +2410,7 @@ namespace CityWatch.Web.Pages.Admin
             var newjResult = jresult.Where(x => hrSettingsIdAll.Contains(x.Id)).ToList();
             foreach (var item in newjResult)
             {
-                var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).ToList();
+                var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).Where(x => Path.HasExtension(x.FileName)).ToList();
                 
                 var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(item.Id).ToList();
                 
