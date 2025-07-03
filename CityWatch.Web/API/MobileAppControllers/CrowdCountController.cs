@@ -44,6 +44,20 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpGet("GetCrowdCountControlDataAndSettings")]
+        public async Task<IActionResult> GetCrowdCountControlDataAndSettingsAsync(int siteId)
+        {
+            try
+            {
+                var cdto = await _viewDataService.GetCrowdCountControlDataAndSettings(siteId);                                
+                return Ok(cdto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
         [HttpGet("ResetCrowdCountControl")]
         public async Task<IActionResult> ResetCrowdCountControl()
         {

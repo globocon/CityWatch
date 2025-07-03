@@ -180,6 +180,7 @@ namespace CityWatch.Web.Services
         public Task ResetAllSiteCrowdCountControl();
         public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
         List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type);
+        public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -2288,6 +2289,82 @@ namespace CityWatch.Web.Services
             return _configDataProvider.GetCrowdSettingForSite(siteId);
         }
 
+        public async Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId)
+        {
+
+            ClientSiteMobileCrowdControlDTO cdto = new ClientSiteMobileCrowdControlDTO();
+            var Cs = _configDataProvider.GetCrowdSettingForSite(siteId);
+
+            if (Cs == null) return cdto;
+
+            if (Cs != null)
+            {
+                cdto.ClientSiteId = Cs.ClientSiteId;
+                cdto.IsCrowdCountEnabled = Cs.IsCrowdCountEnabled;
+                cdto.IsDoorEnabled = Cs.IsDoorEnabled;
+                cdto.IsGateEnabled = Cs.IsGateEnabled;
+                cdto.IsLevelFloorEnabled = Cs.IsLevelFloorEnabled;
+                cdto.IsRoomEnabled = Cs.IsRoomEnabled;
+                cdto.CounterQuantity = Cs.CounterQuantity;
+                cdto.IsGateEnabled = Cs.IsGateEnabled;
+                cdto.IsGateEnabled = Cs.IsGateEnabled;
+                cdto.IsGateEnabled = Cs.IsGateEnabled;
+
+            }
+
+            var histLocData = await _configDataProvider.GetCrowdControlHistoryDataForSite(siteId);
+            var locGuardData = await _configDataProvider.GetCrowdControlLocationDataForSite(siteId);
+            var currLocData = await _configDataProvider.GetCrowdControlDataForSite(siteId);
+
+            cdto.CurrentCount = currLocData?.Ccount ?? 0;
+            cdto.TotalCount = currLocData?.Tcount ?? 0;
+
+            cdto.TillDateCount = histLocData?.Sum(x => x.Ccount) ?? 0;
+            cdto.TillDateCount += currLocData?.Ccount ?? 0;
+            cdto.TillDate = (currLocData.CrowdControlDate.HasValue ? currLocData.CrowdControlDate.Value.ToString("dd MMM yyyy") : "");
+
+
+
+            if (Cs.IsDoorEnabled)
+            {
+                for (int i = 1; i <= Cs.CounterQuantity; i++)
+                {
+                    var locNme = $"Door {i:00}";
+                    var lccount = locGuardData?.Where(x => x.Location == locNme).Sum(x => x.Pcount) ?? 0;
+                    cdto.CounterNameAndCount.Add(locNme, lccount);
+                }
+            }
+            if (Cs.IsGateEnabled)
+            {
+                for (int i = 1; i <= Cs.CounterQuantity; i++)
+                {
+                    var locNme = $"Gate {i:00}";
+                    var lccount = locGuardData?.Where(x => x.Location == locNme).Sum(x => x.Pcount) ?? 0;
+                    cdto.CounterNameAndCount.Add(locNme, lccount);
+                }
+            }
+            if (Cs.IsRoomEnabled)
+            {
+                for (int i = 1; i <= Cs.CounterQuantity; i++)
+                {
+                    var locNme = $"Room {i:00}";
+                    var lccount = locGuardData?.Where(x => x.Location == locNme).Sum(x => x.Pcount) ?? 0;
+                    cdto.CounterNameAndCount.Add(locNme, lccount);
+                }
+            }
+            if (Cs.IsLevelFloorEnabled)
+            {
+                for (int i = 1; i <= Cs.CounterQuantity; i++)
+                {
+                    var locNme = $"Level(Floor) {i:00}";
+                    var lccount = locGuardData?.Where(x => x.Location == locNme).Sum(x => x.Pcount) ?? 0;
+                    cdto.CounterNameAndCount.Add(locNme, lccount);
+                }
+            }
+
+            return cdto;
+        }
+
         public async Task ResetAllSiteCrowdCountControl()
         {
             try
@@ -2458,13 +2535,13 @@ namespace CityWatch.Web.Services
         {
             await _clientDataProvider.SaveMobileCrowdControlAuditLog(al);
         }
-              
+
 
         public async Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG)
         {
             await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
         }
-        public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string []type)
+        public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type)
         {
             var sites = new List<SelectListItem>();
             var clientTypes = _clientDataProvider.GetClientTypes().Where(z => type.Contains(z.Name));
