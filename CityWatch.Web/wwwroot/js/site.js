@@ -6119,32 +6119,44 @@ function ShowStatusColorForCourse() {
         dataType: 'json',
     }).done(function (data) {
         if (data.courseLength == true) {
-            $('#statusCourseColor').removeClass('text-warning');
+            $('#statusCourseColor').removeClass('text-muted');
             $('#statusCourseColor').addClass('text-success');
         }
         else {
             $('#statusCourseColor').removeClass('text-success');
 
-            $('#statusCourseColor').addClass('text-warning');
+            $('#statusCourseColor').addClass('text-muted');
         }
         if (data.testQuestionsLength == true) {
-            $('#statusTestQuestionsColor').removeClass('text-warning');
+            $('#statusTestQuestionsColor').removeClass('text-muted');
             $('#statusTestQuestionsColor').addClass('text-success');
         }
         else {
             $('#statusTestQuestionsColor').removeClass('text-success');
 
-            $('#statusTestQuestionsColor').addClass('text-warning');
+            $('#statusTestQuestionsColor').addClass('text-muted');
         }
         
-        if (data.certificateLength == true) {
+        if (data.certificateLength == true && data.instructorLength == true) {
             $('#statusCertificateColor').removeClass('text-warning');
+            $('#statusCertificateColor').removeClass('text-muted');
             $('#statusCertificateColor').addClass('text-success');
+        }
+        else if (data.certificateLength == true && data.instructorLength == false) {
+            $('#statusCertificateColor').removeClass('text-success');
+            $('#statusCertificateColor').removeClass('text-muted');
+            $('#statusCertificateColor').addClass('text-warning');
+        }
+        else if (data.certificateLength == false && data.instructorLength == true) {
+            $('#statusCertificateColor').removeClass('text-success');
+            $('#statusCertificateColor').removeClass('text-muted');
+            $('#statusCertificateColor').addClass('text-warning');
         }
         else {
             $('#statusCertificateColor').removeClass('text-success');
+            $('#statusCertificateColor').removeClass('text-warning');
 
-            $('#statusCertificateColor').addClass('text-warning');
+            $('#statusCertificateColor').addClass('text-muted');
         }
         gridHrSettingswithCourseLibrary.reload();
     }).always(function () {

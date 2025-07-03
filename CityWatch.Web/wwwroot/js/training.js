@@ -2059,7 +2059,7 @@ if (gridCourseInstructorDetails) {
             if (result.success) {
 
                 gridCourseInstructorDetails.clear();
-                gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });;
+                gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() }); ShowStatusColorForCourse();
             }
             else {
                 alert(result.message);
@@ -2083,7 +2083,7 @@ if (gridCourseInstructorDetails) {
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
-                if (result.success) { gridCourseInstructorDetails.clear(); gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() });; }
+                if (result.success) { gridCourseInstructorDetails.clear(); gridCourseInstructorDetails.reload({ type: $('#HrSettings_Id').val() }); ShowStatusColorForCourse(); }
                 else alert(result.message);
             }).fail(function () {
                 console.log('error');
@@ -4184,6 +4184,16 @@ $('#btnWarningRetryTest').on('click', function (e) {
     deleteGuardAttendedFeedbackQuestions(1);
 
     location.reload();
+
+});
+$('#btnWarningCancelTest').on('click', function (e) {
+    e.preventDefault();
+
+    if (window.opener && !window.opener.closed) {
+
+        window.opener.location.reload();
+    }
+    window.close();
 
 });
 $("#TrainingAndAssessmentBtnSettings").on('click', function () {
