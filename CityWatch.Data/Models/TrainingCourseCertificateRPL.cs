@@ -23,6 +23,7 @@ namespace CityWatch.Data.Models
         public TrainingInstructor TrainingInstructor { get; set; }
         public bool isDeleted { get; set; }
         public int GuardId { get; set; }
+        public string FileName { get; set; }
 
 
     }

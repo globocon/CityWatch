@@ -51,6 +51,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using System.Text;
 using Org.BouncyCastle.Crypto.Generators;
 using static Dropbox.Api.Sharing.MemberSelector;
+using System.Security.Cryptography;
 
 
 
@@ -68,6 +69,8 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IDropboxService _dropboxUploadService;
         private readonly Helpers.Settings _settings;
+        private readonly ICertificateGenerator _certificateGenerator;
+        private readonly EmailOptions _EmailOptions;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -75,7 +78,8 @@ namespace CityWatch.Web.Pages.Admin
             IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator,IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
-             IDropboxService dropboxUploadService)
+             IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
+             IOptions<EmailOptions> emailOptions)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -87,6 +91,8 @@ namespace CityWatch.Web.Pages.Admin
             _guardDataProvider = guardDataProvider;
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
+            _certificateGenerator = certificateGenerator;
+            _EmailOptions = emailOptions.Value;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -2691,20 +2697,20 @@ namespace CityWatch.Web.Pages.Admin
                 
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
                 var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
-                bool selected = false;
+                //bool selected = false;
                 var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId);
                 var  trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
-                if (trainingSettings.Count==0 || trainingSettingsQuestions.Count==0)
-                {
-                    selected = false;
-                    message = "Training details for this course have not been saved. Please contact your administrator.";
-                }
-                else
-                {
-                    selected = true;
-                }
-                if (selected == true)
-                {
+                //if (trainingSettings.Count == 0 || trainingSettingsQuestions.Count==0)
+                //{
+                //    selected = false;
+                //    message = "Training details for this course have not been saved. Please contact your administrator.";
+                //}
+                //else
+                //{
+                //    selected = true;
+                //}
+                //if (selected == true)
+                //{
                     _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
                     {
                         Id = Id,
@@ -2720,7 +2726,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
                     success = true;
-                }
+                //}
             }
             catch (Exception ex)
             {
@@ -2914,7 +2920,54 @@ namespace CityWatch.Web.Pages.Admin
             {
 
                 _guardLogDataProvider.SaveTrainingCourseCertificateRPL(record);
+                string input = GenerateFormattedString();
+                string hashCode = GenerateHashCode(input);
+                int hrSettingsId = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == record.TrainingCourseCertificateId).FirstOrDefault().HRSettingsId;
+                var filename = _certificateGenerator.GeneratePdf(record.GuardId, hrSettingsId, hashCode, false, false, false);
+                var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(record.GuardId).Where(x => x.FileName == filename).FirstOrDefault();
+                int id = 0;
+                DateTime? expirydate = DateTime.Now;
+                bool IsExpiry = false;
+                if (compliance != null)
+                {
+                    id = compliance.Id;
+                }
+                var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
+                var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name + " " + hrSettingsList.Description;
+                var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
 
+                _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
+                {
+                    Id = id,
+                    GuardId = record.GuardId,
+                    Description = hrdesription,
+                    CurrentDateTime = DateTime.Now.ToString(),
+                    FileName = filename,
+                    HrGroup = (HrGroup?)hrgroupid,
+                    ExpiryDate = expirydate,
+                    DateType = IsExpiry,
+                    Reminder1 = 45,
+                    Reminder2 = 7
+                });
+                var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId);
+                foreach (var item in courses)
+                {
+                    var report = _configDataProvider.ReturnCourseTestStatusTostart(record.GuardId, item.Id);
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = report.Id,
+                        GuardId = record.GuardId,
+                        TrainingCourseId = report.TrainingCourseId,
+                        TrainingCourseStatusId = 4,
+                        Description = report.Description,
+                        HRGroupId = report.HRGroupId
+                        //,
+                        //IsCompleted = true
+
+                    });
+                }
+                var emailBody = GiveGuardCourseCompletedNotification(record.GuardId, hrdesription);
+                SendEmailNew(emailBody);
                 success = true;
             }
             catch (Exception ex)
@@ -3155,7 +3208,121 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        private string GenerateHashCode(string input)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+        private string GenerateFormattedString()
+        {
+            string[] segments = new string[5];
+            Random random = new Random();
 
+            for (int i = 0; i < segments.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        segments[i] = GenerateRandomAlphanumeric(5, random);
+                        break;
+                    case 1:
+                        segments[i] = GenerateRandomAlphanumeric(8, random);
+                        break;
+                    case 2:
+                        segments[i] = GenerateRandomAlphanumeric(7, random);
+                        break;
+                    case 3:
+                        segments[i] = "fjfjfjjfl9999";
+                        break;
+                    case 4:
+                        segments[i] = "3456";
+                        break;
+                }
+            }
+
+            return string.Join("-", segments);
+        }
+
+        private string GenerateRandomAlphanumeric(int length, Random random)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+        public string GiveGuardCourseCompletedNotification(int guardId, string hrdesription)
+        {
+            var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+            var sb = new StringBuilder();
+
+            var messageBody = string.Empty;
+            messageBody = $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Name of Guard</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.Name}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.SecurityNo}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardDetails.Provider}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Course</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{hrdesription}</td>";
+
+            sb.Append("Hi , <br/><br/>The following guard successfully completed a course <br/><br/>");
+            sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
+            sb.Append(" <tr><td style=\"width:2% ;border: 1px solid #000000;text-align:center \" colspan=\"2\"><b>Guard Details</b></td></tr>");
+            sb.Append(messageBody);
+            sb.Append("");
+
+
+            //mailBodyHtml.Append("");
+            return sb.ToString();
+        }
+        private void SendEmailNew(string mailBodyHtml)
+        {
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+
+
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+
+
+            message.Subject = "New Certificate Issued";
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = mailBodyHtml
+            };
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
+        }
 
     }
     public class helpDocttype

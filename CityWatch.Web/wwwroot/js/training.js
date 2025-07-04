@@ -612,12 +612,16 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
  
 
     var data = gridGuardTrainingAndAssessment.row($(this).parents('tr')).data();
+    
+    var courseStatus = 2;
+    UpdateCourseStatus(data.id, courseStatus,false);
+});
+function UpdateCourseStatus(id, courseStatus,isRPL) {
     const token = $('input[name="__RequestVerificationToken"]').val();
-    var courseStatus=2
     $.ajax({
         url: '/Admin/Settings?handler=UpdateCoursesStatus',
         data: {
-            'Id': data.id,
+            'Id': id,
             'TrainingCourseStatusId': courseStatus
         },
         // data: { id: record },
@@ -630,7 +634,9 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
             gridGuardTrainingAndAssessment.clear().draw();
             gridGuardTrainingAndAssessment.ajax.reload();
             GetClassroomLocation(1);
-            window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+            if (isRPL == false) {
+                window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+            }
 
         }
         else {
@@ -646,7 +652,7 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_start_g
     }).fail(function () {
         console.log('error');
     })
-});
+}
 $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_InProgress_guard_TrainingAndAssessment]', function () {
 
 
@@ -815,9 +821,9 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=bt
     var GuardId = $('#Guard_Id').val();
     $('#rplGuardId').val(GuardId);
     
-    fetchURPLDeatils(data.trainingCertificateId, GuardId);
+    var courseStatus = 2;
 
-
+    UpdateCourseStatus(data.id, courseStatus, true);
 });
 $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=btn_delete_TrainingAndAssessmentByAdmin]', function () {
     var data = gridGuardTrainingAndAssessmentByAdmin.row($(this).parents('tr')).data();
@@ -2620,7 +2626,8 @@ $('#btnSaveRPLDetails').on('click', function () {
         TrainingCourseCertificateId: $('#rplCertificateId').val(),
         TrainingInstructorId: $('#ddlRPLInstructorsignOff').val(),
         GuardId: $('#rplGuardId').val(),
-        isDeleted: false
+        isDeleted: false,
+        FileName: $('#GuardRPLCertificate_FileName1').val()
         }
    
 
@@ -2635,8 +2642,9 @@ $('#btnSaveRPLDetails').on('click', function () {
             }).done(function (result) {
                 if (result.success) {
                     $('#rplDetailsModal').modal('hide');
-                    gridCertificatesDocumentFiles.clear();
-                    gridCertificatesDocumentFiles.reload({ type: $('#HrSettings_Id').val() });
+                    
+                    gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+                    gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
 
                     
                 } else {
@@ -4477,5 +4485,60 @@ $('#delete_certificatehold_file').on('click', function () {
         //        displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
         //    }
         //});
+    }
+});
+
+
+$('#upload_rplcertificate_file').on('change', function () {
+    const file = $(this).get(0).files; //.item(0); 
+    FileuploadFileChangedForRPLCertificateFile(file);
+});
+
+FileuploadFileChangedForRPLCertificateFile = function (allfile) {
+    const file = allfile.item(0); // allfile.get(0).files.item(0);
+    const fileExtn = "." + file.name.split('.').pop().toLowerCase();
+    console.log('fileExtn: ' + fileExtn);
+    if (!fileExtn || '.pdf,.jpg'.indexOf(fileExtn.toLowerCase()) < 0) {
+        alert('Please select a valid file type with extension of pdf or jpg');
+        return false;
+    }
+
+
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append('guardId', $('#rplGuardId').val());
+    formData.append('certificateId', $('#rplCertificateId').val());
+
+
+    fileprocess(allfile);
+
+    $.ajax({
+        type: 'POST',
+        url: '/Admin/GuardSettings?handler=UploadGuardAttachmentForRPLCertificates',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        $('#GuardRPLCertificate_FileName1').val(data.fileName);
+        $('#guardRPLCertificate_fileName1').text(data.fileName ? data.fileName : 'None');
+    }).fail(function () {
+    }).always(function () {
+        $('#upload_rplcertificate_file').val('');
+    });
+
+
+}
+$('#delete_certificatehold_file').on('click', function () {
+    const practicalGuardId = $('#rplGuardId').val();
+    if (!practicalGuardId || parseInt(practicalGuardId) <= 0)
+        return false;
+
+    if (confirm('Are you sure want to remove the attachment')) {
+        $('#GuardRPLCertificate_FileName1').val('');
+        $('#guardRPLCertificate_fileName1').text('None');
+       
     }
 });
