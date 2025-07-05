@@ -1010,7 +1010,7 @@ namespace CityWatch.Web.API
 
             try
             {
-                Report.HASH = hashCode;
+                Report.HASH = hashCode+"app";
                 Report.IP = remoteIpAddress;
                 Report.SerialNumber = GetIrSerialNumber(Report);
             }
@@ -1046,7 +1046,7 @@ namespace CityWatch.Web.API
                 CreatedOn = DateTime.UtcNow,
                 ClientSiteId = clientSite?.Id,
                 ReportDateTime = Report?.DateLocation?.ReportDate ?? DateTime.MinValue,
-                IncidentDateTime = Report?.DateLocation?.IncidentDate ?? DateTime.MinValue,
+                IncidentDateTime = Report?.DateLocation?.IncidentDate,
                 JobNumber = Report?.DateLocation?.JobNumber ?? string.Empty,
                 JobTime = Report?.DateLocation?.JobTime ?? string.Empty,
                 CallSign = Report?.Officer?.CallSign ?? string.Empty,
@@ -1225,7 +1225,7 @@ namespace CityWatch.Web.API
                                 GuardName = guradDetailsName,
                                 SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
                                 ProjectName = "ClientPortal",
-                                ActivityType = "IR Generated",
+                                ActivityType = "IR Generated App",
                                 Module = "Incident",
                                 SubModule = "Register",
                                 GoogleMapCoordinates = "",
