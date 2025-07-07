@@ -3042,9 +3042,78 @@ namespace CityWatch.Web.Pages.Admin
                     FileName= FileName
 
                 });
-               
+                string input = GenerateFormattedString();
+                string hashCode = GenerateHashCode(input);
+                var getcertificateSatus = _configDataProvider.GetTQSettings(hrsettingsId).FirstOrDefault();
+                var filename = _certificateGenerator.GeneratePdf(guardId, hrsettingsId, hashCode, true, getcertificateSatus.IsCertificateWithQAndADump, getcertificateSatus.IsCertificateExpiry);
+                DateTime? expirydate = DateTime.Now;
+                bool IsExpiry = false;
+                if (getcertificateSatus.IsCertificateExpiry == true)
+                {
 
+                    var expiryyears = _configDataProvider.GetTQSettings(hrsettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;
+                    IsExpiry = false;
+                    string newexpiry = string.Empty;
+                    if (expiryyears.Contains("year"))
+                        newexpiry = expiryyears.Replace("year", "");
+                    if (expiryyears.Contains("years"))
+                        newexpiry = expiryyears.Replace("years", "");
+                    DateTime currentdate = DateTime.Now;
+                    expirydate = currentdate.AddYears(Convert.ToInt32(newexpiry));
+
+                }
+                else
+                {
+                    expirydate = DateTime.Now;
+                    IsExpiry = true;
+                }
+                var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsId).FirstOrDefault();
+                var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name + " " + hrSettingsList.Description;
+                var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsId).FirstOrDefault().HRGroupId;
+                var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(guardId).Where(x => x.FileName == filename).FirstOrDefault();
+                int id = 0;
+                if (compliance != null)
+                {
+                    id = compliance.Id;
+                }
+
+                _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
+                {
+                    Id = id,
+                    GuardId = guardId,
+                    Description = hrdesription,
+                    CurrentDateTime = DateTime.Now.ToString(),
+                    FileName = filename,
+                    HrGroup = (HrGroup?)hrgroupid,
+                    ExpiryDate = expirydate,
+                    DateType = IsExpiry,
+                    Reminder1 = 45,
+                    Reminder2 = 7
+                });
+
+
+                var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrsettingsId);
+                foreach (var item in courses)
+                {
+                    var report = _configDataProvider.ReturnCourseTestStatusTostart(guardId, item.Id);
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = report.Id,
+                        GuardId = guardId,
+                        TrainingCourseId = report.TrainingCourseId,
+                        TrainingCourseStatusId = 4,
+                        Description = report.Description,
+                        HRGroupId = report.HRGroupId
+                        //,
+                        //IsCompleted = true
+
+                    });
+                }
                 success = true;
+                var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
+                SendEmailNew(emailBody);
+
+               
             }
             catch (Exception ex)
             {

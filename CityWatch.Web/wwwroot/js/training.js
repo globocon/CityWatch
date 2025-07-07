@@ -4054,7 +4054,7 @@ $('#btnSavePracticalDetails').on('click', function () {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
         if (result.success) {
-            GetHoldCertificate(result.hrsettingsId);
+           // GetHoldCertificate(result.hrsettingsId);
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
             gridGuardLicensesAndLicence.clear().draw();
