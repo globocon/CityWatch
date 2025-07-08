@@ -2972,6 +2972,18 @@
     });
 
     $(".file-upload").change(function () {
+
+        const inputElement = $(this).get(0);
+        if (inputElement && inputElement.files && inputElement.files.length > 0) {
+            const file = inputElement.files.item(0);
+            // proceed with using `file`
+        } else {
+            return;
+        }
+
+
+
+
         const file = $(this).get(0).files.item(0);
         if (!file) return; // Prevent errors if no file is selected
         const fileExtn = file.name.split('.').pop().toLowerCase();
