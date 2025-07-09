@@ -97,6 +97,10 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
         });
 });
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 2147483648; // 2GB
+});
 
 //builder.Services.Configure<CookiePolicyOptions>(options =>
 //{
