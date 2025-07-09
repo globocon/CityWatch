@@ -16,6 +16,7 @@ namespace CityWatch.Data.Services
         PatrolDataReport GetDailyPatrolData(PatrolRequest patrolRequest);
         List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(PatrolRequest patrolRequest, DateTime FromDate, DateTime ToDate);
         List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid, DateTime FromDate, DateTime ToDate);
+        PatrolDataReport GetDailyPatrolDataNew(PatrolRequest patrolRequest);
     }
 
     public class PatrolDataReportService : IPatrolDataReportService
@@ -90,6 +91,42 @@ namespace CityWatch.Data.Services
             return dailyGuardLogGroups.ToList();
 
 
+        }
+        public PatrolDataReport GetDailyPatrolDataNew(PatrolRequest patrolRequest)
+        {
+           
+            IEnumerable<IncidentReport> incidentReports;
+            if (patrolRequest.SerialNo == null)
+            {
+                incidentReports = _irDataProvider.GetIncidentReports(patrolRequest.FromDate, patrolRequest.ToDate)
+               .Where(z => patrolRequest.DataFilter == PatrolDataFilter.All ||
+                           (patrolRequest.DataFilter == PatrolDataFilter.PatrolOnly && z.IsPatrol) ||
+                           (patrolRequest.DataFilter == PatrolDataFilter.Custom &&
+                               (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                               (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
+                               (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                               // New Code Added for ColourCode filter
+                               (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                                   // &&
+                                   // New Code Added for Serial number
+                                   //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
+
+                                   ));
+            }
+            else
+            {
+                incidentReports = _irDataProvider.GetIncidentReports()
+                .Where(z => z.SerialNo == patrolRequest.SerialNo);
+            }
+            var clientSites = _clientDataProvider.GetClientSites(null);
+            //var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == FeedbackType.ColourCodes);
+
+            //To get the feedback id for Colour Codes -start
+            var feedbackTypes = _configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x => x.Id).FirstOrDefault();
+            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes);
+            //To get the feedback id for Colour Codes -end
+
+            return new PatrolDataReport(patrolRequest.ClientSites, incidentReports.Select(x => new DailyPatrolData(x, clientSites, _configDataProvider)), feedbackTemplates);
         }
 
     }

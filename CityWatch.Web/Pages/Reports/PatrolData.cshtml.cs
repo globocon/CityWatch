@@ -126,7 +126,7 @@ namespace CityWatch.Web.Pages.Reports
 
         public IActionResult OnPostGenerateReport()
         {
-            var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+            var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -399,7 +399,7 @@ namespace CityWatch.Web.Pages.Reports
 
         public IActionResult OnPostGenerateReportGraphFirstTab()
         {
-            var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+            var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -920,7 +920,7 @@ namespace CityWatch.Web.Pages.Reports
 
         public IActionResult OnPostGenerateReportGraphThirdTab()
         {
-            var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+            var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -1539,7 +1539,7 @@ namespace CityWatch.Web.Pages.Reports
             string zipFileName = string.Empty;
             try
             {
-                var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+                var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
                 var results = patrolDataReport.Results;
 
                 string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
