@@ -822,6 +822,8 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=bt
     $('#rplCertificateId').val(data.trainingCertificateId);
     var GuardId = $('#Guard_Id').val();
     $('#rplGuardId').val(GuardId);
+    $('#GuardRPLCertificate_FileName1').val('');
+    $('#guardRPLCertificate_fileName1').text('None');
     
     var courseStatus = 2;
 
@@ -2653,7 +2655,6 @@ $('#btnSaveRPLDetails').on('click', function () {
                    
                     displayGuardValidationSummary('rplValidationSummary', result.message);
                 }
-            }).always(function () {
                 $('#loader').hide();
             });
 
