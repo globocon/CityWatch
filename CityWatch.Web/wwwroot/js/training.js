@@ -529,13 +529,15 @@ function renderGuardCouseStatusForGuard(value, type, data) {
                 if (data.isRPLEnabled == true && data.rplCount > 0)
                 {
                     cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment" disabled>Start</button>&nbsp;' +
-                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">' +
-                        '<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate">RPL</button>';
+                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">'
+                        //+
+                        //'<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate">RPL</button>';
                 }
                 else if (data.isRPLEnabled == true && data.rplCount == 0) {
                     cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment" disabled>Start</button>&nbsp;' +
-                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">' +
-                        '<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate" disabled>RPL</button>';
+                        '<input type="hidden" id="GuardCourseId" value="' + data.id + '">'
+                        //+
+                        //'<button type="button" class="btn btn-outline-danger  mr-2" name="btn_start_guard_TrainingAndAssessmentRPLCertificate" disabled>RPL</button>';
                 }
                 else {
                     cellValue = '<button type="button" class="btn btn-outline-primary mr-2" name="btn_start_guard_TrainingAndAssessment">Start</button>&nbsp;' +

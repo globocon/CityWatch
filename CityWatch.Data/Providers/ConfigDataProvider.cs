@@ -2024,7 +2024,7 @@ namespace CityWatch.Data.Providers
         {
 
             //var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
-            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).FirstOrDefault();
+            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.TrainingCourseStatusId != 4).FirstOrDefault();
             return report;
         }
         public void SaveGuardTrainingStartTest(GuardTrainingStartTest guardTrainingStartTest)
