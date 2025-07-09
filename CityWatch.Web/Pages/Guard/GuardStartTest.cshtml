@@ -81,13 +81,21 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="form-group row m-0 mb-3 justify-content-end">
-                                <button class="btn btn-primary col-md-2 " id="btnWarningContinueTest">Continue</button>
-                                <button class="btn btn-warning col-md-2 ml-2" id="btnWarningRetryTest">Retry</button>
-                                <button class="btn btn-success col-md-2 ml-2" id="btnWarningCancelTest">Cancel</button>
-                            </div>
-
+                            @if (@Model.GuardTrainingAttendedQuestionsAndAnswers.Count() == @Model.totalQuestions)
+                            {
+                                <div class="form-group row m-0 mb-3 justify-content-end">
+                                    <button class="btn btn-warning col-md-2 ml-2" id="btnWarningRetryTest">Retry</button>
+                                    <button class="btn btn-success col-md-2 ml-2" id="btnWarningCancelTestNew">Cancel</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="form-group row m-0 mb-3 justify-content-end">
+                                    <button class="btn btn-primary col-md-2 " id="btnWarningContinueTest">Continue</button>
+                                    <button class="btn btn-warning col-md-2 ml-2" id="btnWarningRetryTest">Retry</button>
+                                    <button class="btn btn-success col-md-2 ml-2" id="btnWarningCancelTest">Cancel</button>
+                                </div>
+                            }
 
                         </form>
                     </div>

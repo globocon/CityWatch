@@ -4204,6 +4204,12 @@ $('#btnWarningCancelTest').on('click', function (e) {
     window.close();
 
 });
+$('#btnWarningCancelTestNew').on('click', function (e) {
+    e.preventDefault();
+
+    PostGuardMarks();
+
+});
 $("#TrainingAndAssessmentBtnSettings").on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryTrainingAndAssessment');
     $('#txt_securityLicenseNoTrainingAndAssessment').val('');
