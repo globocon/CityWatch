@@ -637,7 +637,7 @@ function UpdateCourseStatus(id, courseStatus,isRPL) {
             gridGuardTrainingAndAssessment.ajax.reload();
             GetClassroomLocation(1);
             if (isRPL == false) {
-                window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
+                window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + id, "_blank");
             }
 
         }
