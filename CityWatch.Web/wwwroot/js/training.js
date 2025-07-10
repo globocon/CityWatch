@@ -2649,6 +2649,8 @@ $('#btnSaveRPLDetails').on('click', function () {
                     
                     gridGuardTrainingAndAssessmentByAdmin.clear().draw();
                     gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+                    gridGuardLicensesAndLicence.clear().draw();
+                    gridGuardLicensesAndLicence.ajax.reload();
 
                     
                 } else {
