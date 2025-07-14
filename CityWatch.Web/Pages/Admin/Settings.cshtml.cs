@@ -51,6 +51,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using System.Text;
 using Org.BouncyCastle.Crypto.Generators;
 using static Dropbox.Api.Sharing.MemberSelector;
+using ImageMagick;
 
 
 
@@ -2167,126 +2168,252 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         [RequestSizeLimit(1073741824)] // 100 MB
-        public JsonResult OnPostUploadCourseDocUsingHR()
+        [HttpPost]
+        public async Task<IActionResult> OnPostUploadCourseDocUsingHR(IFormFile chunk, string fileName, int chunkIndex, int totalChunks,int hrsettingsid, string hrreferenceNumber,int docid,int tqid)
         {
             var success = false;
-            var message = "Uploaded successfully";
-            var files = Request.Form.Files;
-            if (files.Count == 1)
+                var message = "Uploaded successfully";
+            
+            
+            try
             {
-                var file = files[0];
-                if (file.Length > 0)
+
+                var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
+                var tempFolder = Path.Combine(CourseDocsFolder, "UploadedChunks", fileName);
+
+                Directory.CreateDirectory(tempFolder);
+                if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, fileName)))
+                    //throw new ArgumentException("File Already Exists");
+                    System.IO.File.Delete(Path.Combine(CourseDocsFolder, fileName));
+
+                var chunkPath = Path.Combine(tempFolder, $"{chunkIndex}.part");
+
+                using (var stream = new FileStream(chunkPath, FileMode.Create))
                 {
-                    try
-                    {
-                        if (".pdf,.ppt,.pptx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
-                            throw new ArgumentException("Unsupported file type");
-                        var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
-                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
-                        var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
-                        if (!Directory.Exists(CourseDocsFolder))
-                            Directory.CreateDirectory(CourseDocsFolder);
-                        if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
-                            //throw new ArgumentException("File Already Exists");
-                            System.IO.File.Delete(Path.Combine(CourseDocsFolder, file.FileName));
-                        using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, file.FileName)))
-                        {
-                            file.CopyTo(stream);
-                        }
-                        var DropboxDir = _guardDataProvider.GetDrobox();
-                        //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
-                        var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{ file.FileName}");
-                        var dbxUploaded = true;
-                        dbxUploaded=UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName),  dbxFilePath);
-                    var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                        int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
-                        if (TQNumbernew == 0)
-                        {
-                            int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
-                            if (TQNumber == 0)
-                            {
-                                throw new ArgumentException("TQ Number only contains from 01 to 10");
-                            }
-                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
-                            {
-                                Id = documentId,
-                                FileName = file.FileName,
-                                LastUpdated = DateTime.Now,
-                                HRSettingsId = hrsettingsid,
-                                TQNumberId = TQNumber,
-                                IsDeleted = false
-
-                            });
-                            
-                        }
-                        else
-                        {
-                            _configDataProvider.SaveTrainingCourses(new TrainingCourses()
-                            {
-                                Id = documentId,
-                                FileName = file.FileName,
-                                LastUpdated = DateTime.Now,
-                                HRSettingsId = hrsettingsid,
-                                TQNumberId = TQNumbernew,
-                                IsDeleted = false
-
-                            });
-                        }
-                        var tqsettings = _configDataProvider.GetTQSettings(hrsettingsid).ToList();
-                        if (tqsettings.Count == 0)
-                        {
-                            _guardLogDataProvider.SaveTestQuestionSettings(new TrainingTestQuestionSettings()
-                            {
-                                Id = -1,
-                                HRSettingsId = hrsettingsid,
-                                CourseDurationId = 3,
-                                TestDurationId = 3,
-                                PassMarkId = 1,
-                                AttemptsId = 1,
-                                IsCertificateExpiry = false,
-                                CertificateExpiryId = null,
-                                IsCertificateWithQAndADump = false,
-                                IsCertificateHoldUntilPracticalTaken = false,
-                                IsAnonymousFeedback = false,
-                                IsDeleted = false
-
-
-                            });
-                        }
-
-                        success = true;
-                        if (".ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) > 0)
-                        {
-                            Application pptApplication = new Application();
-                            Presentation pptPresentation = null;
-
-                            string inputPath = Path.Combine(CourseDocsFolder, file.FileName);
-                            string outputPath = Path.ChangeExtension(Path.Combine(CourseDocsFolder, file.FileName), ".pdf");
-                            if (System.IO.File.Exists(outputPath))
-                                //throw new ArgumentException("File Already Exists");
-                                System.IO.File.Delete(outputPath);
-
-                            try
-                            {
-                                pptPresentation = pptApplication.Presentations.Open(inputPath, WithWindow: MsoTriState.msoFalse);
-                                pptPresentation.SaveAs(outputPath, PpSaveAsFileType.ppSaveAsPDF);
-                            }
-                            finally
-                            {
-                                pptPresentation?.Close();
-                                pptApplication.Quit();
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        message = ex.Message;
-                    }
+                    await chunk.CopyToAsync(stream);
                 }
+
+                // Optional: If all chunks received, combine them
+                if (Directory.GetFiles(tempFolder).Length == totalChunks)
+                {
+                    var finalpath= Path.Combine(CourseDocsFolder,fileName);
+
+
+                    using (var finalStream = new FileStream(finalpath, FileMode.Create))
+                    {
+                        //for (int i = 1; i <= totalChunks; i++)
+                        //{
+                        //    var partPath = Path.Combine(tempFolder, $"{i}.part");
+                        //    var bytes = await System.IO.File.ReadAllBytesAsync(partPath);
+                        //    await finalStream.WriteAsync(bytes, 0, bytes.Length);
+                        //    System.IO.File.Delete(partPath); // optional
+                        //}
+                        for (int i = 1; i <= totalChunks; i++)
+                        {
+                            var partPath = Path.Combine(tempFolder, $"{i}.part");
+                            using (var partStream = new FileStream(partPath, FileMode.Open, FileAccess.Read))
+                            {
+                                await partStream.CopyToAsync(finalStream);
+                            }
+                            System.IO.File.Delete(partPath);
+                        }
+                    }
+
+                    Directory.Delete(tempFolder);
+                    var DropboxDir = _guardDataProvider.GetDrobox();
+                    //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
+                    var dbxUploaded = true;
+                    dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                    int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
+                    if (TQNumbernew == 0)
+                    {
+                        int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
+                        if (TQNumber == 0)
+                        {
+                            throw new ArgumentException("TQ Number only contains from 01 to 10");
+                        }
+                        _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                        {
+                            Id = documentId,
+                            FileName = fileName,
+                            LastUpdated = DateTime.Now,
+                            HRSettingsId = hrsettingsid,
+                            TQNumberId = TQNumber,
+                            IsDeleted = false
+
+                        });
+
+                    }
+                    else
+                    {
+                        _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                        {
+                            Id = documentId,
+                            FileName = fileName,
+                            LastUpdated = DateTime.Now,
+                            HRSettingsId = hrsettingsid,
+                            TQNumberId = TQNumbernew,
+                            IsDeleted = false
+
+                        });
+                    }
+                    var tqsettings = _configDataProvider.GetTQSettings(hrsettingsid).ToList();
+                    if (tqsettings.Count == 0)
+                    {
+                        _guardLogDataProvider.SaveTestQuestionSettings(new TrainingTestQuestionSettings()
+                        {
+                            Id = -1,
+                            HRSettingsId = hrsettingsid,
+                            CourseDurationId = 3,
+                            TestDurationId = 3,
+                            PassMarkId = 1,
+                            AttemptsId = 1,
+                            IsCertificateExpiry = false,
+                            CertificateExpiryId = null,
+                            IsCertificateWithQAndADump = false,
+                            IsCertificateHoldUntilPracticalTaken = false,
+                            IsAnonymousFeedback = false,
+                            IsDeleted = false
+
+
+                        });
+                    }
+
+                    success = true;
+                }
+
             }
-            return new JsonResult(new { success, message });
+            catch(Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+             return new JsonResult(new { success, message }); ;
         }
-        
+
+        //public JsonResult OnPostUploadCourseDocUsingHR()
+        //{
+        //    var success = false;
+        //    var message = "Uploaded successfully";
+        //    var files = Request.Form.Files;
+        //    if (files.Count == 1)
+        //    {
+        //        var file = files[0];
+        //        if (file.Length > 0)
+        //        {
+        //            try
+        //            {
+        //                if (".pdf,.ppt,.pptx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+        //                    throw new ArgumentException("Unsupported file type");
+        //                var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
+        //                int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+        //                var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
+        //                if (!Directory.Exists(CourseDocsFolder))
+        //                    Directory.CreateDirectory(CourseDocsFolder);
+        //                if (System.IO.File.Exists(Path.Combine(CourseDocsFolder, file.FileName)))
+        //                    //throw new ArgumentException("File Already Exists");
+        //                    System.IO.File.Delete(Path.Combine(CourseDocsFolder, file.FileName));
+        //                using (var stream = System.IO.File.Create(Path.Combine(CourseDocsFolder, file.FileName)))
+        //                {
+        //                    file.CopyTo(stream);
+        //                }
+        //                var DropboxDir = _guardDataProvider.GetDrobox();
+        //                //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+        //                var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{ file.FileName}");
+        //                var dbxUploaded = true;
+        //                dbxUploaded=UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName),  dbxFilePath);
+        //            var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+        //                int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
+        //                if (TQNumbernew == 0)
+        //                {
+        //                    int TQNumber = _configDataProvider.GetLastTQNumber(hrsettingsid);
+        //                    if (TQNumber == 0)
+        //                    {
+        //                        throw new ArgumentException("TQ Number only contains from 01 to 10");
+        //                    }
+        //                    _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+        //                    {
+        //                        Id = documentId,
+        //                        FileName = file.FileName,
+        //                        LastUpdated = DateTime.Now,
+        //                        HRSettingsId = hrsettingsid,
+        //                        TQNumberId = TQNumber,
+        //                        IsDeleted = false
+
+        //                    });
+
+        //                }
+        //                else
+        //                {
+        //                    _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+        //                    {
+        //                        Id = documentId,
+        //                        FileName = file.FileName,
+        //                        LastUpdated = DateTime.Now,
+        //                        HRSettingsId = hrsettingsid,
+        //                        TQNumberId = TQNumbernew,
+        //                        IsDeleted = false
+
+        //                    });
+        //                }
+        //                var tqsettings = _configDataProvider.GetTQSettings(hrsettingsid).ToList();
+        //                if (tqsettings.Count == 0)
+        //                {
+        //                    _guardLogDataProvider.SaveTestQuestionSettings(new TrainingTestQuestionSettings()
+        //                    {
+        //                        Id = -1,
+        //                        HRSettingsId = hrsettingsid,
+        //                        CourseDurationId = 3,
+        //                        TestDurationId = 3,
+        //                        PassMarkId = 1,
+        //                        AttemptsId = 1,
+        //                        IsCertificateExpiry = false,
+        //                        CertificateExpiryId = null,
+        //                        IsCertificateWithQAndADump = false,
+        //                        IsCertificateHoldUntilPracticalTaken = false,
+        //                        IsAnonymousFeedback = false,
+        //                        IsDeleted = false
+
+
+        //                    });
+        //                }
+
+        //                success = true;
+        //                if (".ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) > 0)
+        //                {
+        //                    Application pptApplication = new Application();
+        //                    Presentation pptPresentation = null;
+
+        //                    string inputPath = Path.Combine(CourseDocsFolder, file.FileName);
+        //                    string outputPath = Path.ChangeExtension(Path.Combine(CourseDocsFolder, file.FileName), ".pdf");
+        //                    if (System.IO.File.Exists(outputPath))
+        //                        //throw new ArgumentException("File Already Exists");
+        //                        System.IO.File.Delete(outputPath);
+
+        //                    try
+        //                    {
+        //                        pptPresentation = pptApplication.Presentations.Open(inputPath, WithWindow: MsoTriState.msoFalse);
+        //                        pptPresentation.SaveAs(outputPath, PpSaveAsFileType.ppSaveAsPDF);
+        //                    }
+        //                    finally
+        //                    {
+        //                        pptPresentation?.Close();
+        //                        pptApplication.Quit();
+        //                    }
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                message = ex.Message;
+        //            }
+        //        }
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
+
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
         {
             var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
