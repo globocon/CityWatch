@@ -2844,6 +2844,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 var document = _configDataProvider.GetCourseCertificateDocuments().SingleOrDefault(x => x.Id == id);
+                int hrsettingsid = document.HRSettingsId;
                 if (document != null)
                 {
                     var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate", document.FileName);
@@ -2851,6 +2852,15 @@ namespace CityWatch.Web.Pages.Admin
                         System.IO.File.Delete(fileToDelete);
 
                     _configDataProvider.DeleteCourseCertificateDocument(id);
+                    var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrsettingsid).Where(x => !Path.HasExtension(x.FileName)).ToList();
+                    var questions = _configDataProvider.GetTrainingTestQuestions().Where(x => x.HRSettingsId == hrsettingsid).ToList();
+                    if (courses.Count()!= 0 && questions.Count() == 0)
+                    {
+                        foreach (var item in courses)
+                        {
+                            _configDataProvider.DeleteCourseDocument(item.Id);
+                        }
+                    }
                 }
 
 
