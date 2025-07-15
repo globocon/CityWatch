@@ -890,50 +890,117 @@ $('#add_course_document_files').on('change', function (e) {
     uploadCourseDocUsingHR($(this), false, 3);
 });
 function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
+    const CHUNK_SIZE = 1024 * 1024; // 1 MB
     var hrSettingsId = $('#HrSettings_Id').val();
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var hrreferenceNumber = 'HR' + referenceNumber;
     const file = uploadCtrl.get(0).files.item(0);
     const fileExtn = file.name.split('.').pop();
+    let lastProgressValue = 0;
+    document.getElementById("progressBar").value = lastProgressValue;
+    document.getElementById("status").innerText = `Uploaded ${lastProgressValue}%`;
     if (!fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
         showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
         return false;
     }
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    $('#uploadProgressModal').modal('show');
+    $('#uploadProgressModal').addClass('d-flex');
+    uploadFileInChunks(file, totalChunks, hrSettingsId, hrreferenceNumber, edit, uploadCtrl, CHUNK_SIZE);
+
+    //for (let chunkIndex = 1; chunkIndex <= totalChunks; chunkIndex++) {
+    //    const start = chunkIndex * CHUNK_SIZE;
+    //    const end = Math.min(start + CHUNK_SIZE, file.size);
+    //    const chunk = file.slice(start, end);
+    //    let percent = Math.round((chunkIndex / totalChunks) * 100);     
+
+    //    const fileForm = new FormData();
+    //    fileForm.append("chunk", chunk);
+    //    fileForm.append("fileName", file.name);
+    //    fileForm.append("chunkIndex", chunkIndex);
+    //    fileForm.append("totalChunks", totalChunks);
+
+
+    //    fileForm.append('hrsettingsid', hrSettingsId);
+    //    fileForm.append('hrreferenceNumber', hrreferenceNumber);
+
+
+    //    if (edit) {
+    //        fileForm.append('docid', uploadCtrl.attr('data-doc-id'));
+    //        fileForm.append('tqid', uploadCtrl.attr('tq-id'))
+    //    }
+        
+    //    $.ajax({
+    //        url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
+    //        type: 'POST',
+    //        data: fileForm,
+    //        processData: false,
+    //        contentType: false,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    //    }).done(function (data) {
+    //        if (data.success) {
+    //            document.getElementById("progressBar").value = percent;
+    //            document.getElementById("status").innerText = `Uploaded ${percent}%`;
+    //            gridCourseDocumentFiles.reload();
+
+    //            showStatusNotification(data.success, data.message);
+    //            LoadTQSettings();
+    //            $('#uploadProgressModal').removeClass('d-flex');
+    //            $('#uploadProgressModal').modal('hide');
+    //        }
+    //        else {
+    //            document.getElementById("progressBar").value = percent;
+    //            document.getElementById("status").innerText = `Uploaded ${percent}%`;
+    //        }
+    //        ShowStatusColorForCourse();
+    //    }).fail(function () {
+    //        showStatusNotification(false, 'Something went wrong');
+    //    });
+    //}
+}
+async function uploadFileInChunks(file, totalChunks, hrSettingsId, hrreferenceNumber, edit, uploadCtrl, CHUNK_SIZE) {
+    for (let chunkIndex = 1; chunkIndex <= totalChunks; chunkIndex++) {
+        const start = (chunkIndex - 1) * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        const percent = Math.round((chunkIndex / totalChunks) * 100);
 
         const fileForm = new FormData();
-    fileForm.append('file', file);
+        fileForm.append("chunk", chunk);
+        fileForm.append("fileName", file.name);
+        fileForm.append("chunkIndex", chunkIndex);
+        fileForm.append("totalChunks", totalChunks);
         fileForm.append('hrsettingsid', hrSettingsId);
         fileForm.append('hrreferenceNumber', hrreferenceNumber);
 
-
         if (edit) {
-            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
-        fileForm.append('tq-id', uploadCtrl.attr('tq-id'))
+            fileForm.append('docid', uploadCtrl.attr('data-doc-id'));
+            fileForm.append('tqid', uploadCtrl.attr('tq-id'));
         }
 
-    $.ajax({
-        url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
-        type: 'POST',
-        data: fileForm,
-        processData: false,
-        contentType: false,
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-    }).done(function (data) {
-            if (data.success) {
-            gridCourseDocumentFiles.reload();
+        await $.ajax({
+            url: '/Admin/Settings?handler=UploadCourseDocUsingHR',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            document.getElementById("progressBar").value = percent;
+            document.getElementById("status").innerText = `Uploaded ${percent}%`;
 
+            if (data.success && chunkIndex === totalChunks) {
+                gridCourseDocumentFiles.reload();
                 showStatusNotification(data.success, data.message);
                 LoadTQSettings();
+                $('#uploadProgressModal').removeClass('d-flex');
+                $('#uploadProgressModal').modal('hide');
             }
-        else {
-            gridCourseDocumentFiles.reload();
-
-            showStatusNotification(data.success, data.message);
-        }
-        ShowStatusColorForCourse();
-    }).fail(function () {
-        showStatusNotification(false, 'Something went wrong');
-    });
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        });
+    }
 }
 //const showStatusNotification = function (success, message) {
 //    if (success) {
