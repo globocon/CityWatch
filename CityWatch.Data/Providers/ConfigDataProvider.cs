@@ -1031,7 +1031,7 @@ namespace CityWatch.Data.Providers
 
 
             var result = _context.HrSettings
-       .Where(x => x.HRGroupId == hrgroupId)
+       .Where(x => x.HRGroupId == hrgroupId && x.IsDeleted == false)
        .Include(z => z.HRGroups)
        .Include(x => x.ReferenceNoNumbers)
        .Include(x => x.ReferenceNoAlphabets)
