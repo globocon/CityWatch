@@ -2542,12 +2542,14 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {
-            if (DescVal.hrBanEdit == true) {
+            if (DescVal?.hrBanEdit === true) {
                 HRBan = true;
-                displayGuardValidationSummary('compliancelicanseValidationSummary1', 'This description is restricted and cannot be added.');
-            }
-            else {
-                processFormSubmission()
+                displayGuardValidationSummary(
+                    'compliancelicanseValidationSummary1',
+                    'This description is restricted and cannot be added.'
+                );
+            } else {
+                processFormSubmission();
             }
 
         });

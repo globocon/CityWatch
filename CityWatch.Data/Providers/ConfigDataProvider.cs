@@ -222,10 +222,11 @@ namespace CityWatch.Data.Providers
         public void DeleteTQSettings(int id);
         List<TrainingTestQuestions> GetTrainingTestQuestionsWithHrSettings(int hrsettingsId);
         void DeleteGuardAttendedFeedbackQuestions(int guardId, int hrsettingsId);
+        public Task<List<ClientSiteMobileCrowdControlHistory>> GetCrowdControlHistoryDataForSite(int siteId);
+        public Task<List<ClientSiteMobileCrowdControlGuards>> GetCrowdControlLocationDataForSite(int siteId);
+        public Task<ClientSiteMobileCrowdControl> GetCrowdControlDataForSite(int siteId);
         List<TrainingTestQuestions> GetTrainingTestQuestions();
         List<TrainingCourseInstructor> GetCourseAllInstructor();
-
-
 
     }
 
@@ -1030,7 +1031,7 @@ namespace CityWatch.Data.Providers
 
 
             var result = _context.HrSettings
-       .Where(x => x.HRGroupId == hrgroupId)
+       .Where(x => x.HRGroupId == hrgroupId && x.IsDeleted == false)
        .Include(z => z.HRGroups)
        .Include(x => x.ReferenceNoNumbers)
        .Include(x => x.ReferenceNoAlphabets)
@@ -2023,7 +2024,7 @@ namespace CityWatch.Data.Providers
         {
 
             //var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCompleted==false).FirstOrDefault();
-            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).FirstOrDefault();
+            var report = _context.GuardTrainingAndAssessment.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.TrainingCourseStatusId != 4).FirstOrDefault();
             return report;
         }
         public void SaveGuardTrainingStartTest(GuardTrainingStartTest guardTrainingStartTest)
@@ -2180,6 +2181,22 @@ namespace CityWatch.Data.Providers
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
         {
             return _context.ClientSiteMobileAppSettings.AsNoTracking().FirstOrDefault(d => d.ClientSiteId == siteId);
+        }
+
+        public async Task<ClientSiteMobileCrowdControl> GetCrowdControlDataForSite(int siteId)
+        {
+            //ClientSiteMobileCrowdControl            
+            return await _context.ClientSiteMobileCrowdControl.AsNoTracking().FirstOrDefaultAsync(d => d.ClientSiteId == siteId);
+        }
+        public async Task<List<ClientSiteMobileCrowdControlGuards>> GetCrowdControlLocationDataForSite(int siteId)
+        {            
+            //ClientSiteMobileCrowdControlGuards
+            return await _context.ClientSiteMobileCrowdControlGuards.AsNoTracking().Where(d => d.ClientSiteId == siteId).ToListAsync();
+        }
+        public async Task<List<ClientSiteMobileCrowdControlHistory>> GetCrowdControlHistoryDataForSite(int siteId)
+        {
+            //ClientSiteMobileCrowdControlHistory
+            return await _context.ClientSiteMobileCrowdControlHistory.AsNoTracking().Where(d => d.ClientSiteId == siteId).ToListAsync();
         }
 
         public ClientSiteMobileAppSettings SaveCrowdSettingForSite(ClientSiteMobileAppSettings csmacs)

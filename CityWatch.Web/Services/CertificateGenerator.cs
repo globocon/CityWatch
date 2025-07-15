@@ -306,7 +306,34 @@ namespace CityWatch.Web.Services
                     AttachQuestionsAndAnswers(pdfDocument, guardId, hrSettingsId, certificateName);
                 }
             }
+            else
+            {
+                if (certificateRPL.LastOrDefault() != null && certificateRPL.LastOrDefault().FileName != null)
+                {
+                    if (GetAttachmentType(IO.Path.GetExtension(certificateRPL.LastOrDefault().FileName)) == AttachmentType.Pdf)
+                    {
+                        var uploadPdfName = IO.Path.Combine(_UploadRootDir, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName);
+                        var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
+                        uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
+                        //var standardPageSize = pdfDocument.GetPage(1).GetPageSize();
 
+                        //for (int i =  1; i <= pdfDocument.GetNumberOfPages(); i++)
+                        //{
+                        //    var page = pdfDocument.GetPage(i);
+                        //    page.SetMediaBox(standardPageSize); // Resize the media box to match
+                        //    page.SetCropBox(standardPageSize);  // (Optional) Set crop box if needed
+                        //}
+                        uploadDoc.Close();
+                    }
+                    if (GetAttachmentType(IO.Path.GetExtension(certificateRPL.LastOrDefault().FileName)) == AttachmentType.Image)
+                    {
+                        var doc = new Document(pdfDocument);
+                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, IO.Path.Combine(_UploadRootDir, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName));
+                        //paraName.SetFixedPosition(index, 5, 0, 400);
+                        doc.Add(image);
+                    }
+                }
+            }
             pdfDocument.Close();
             if (isCertificateExpiry)
             {

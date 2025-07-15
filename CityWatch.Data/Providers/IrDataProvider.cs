@@ -19,6 +19,7 @@ namespace CityWatch.Data.Providers
         void UpdateReport(int incidentreportid, int Id);
 
         public void UpdateTheSiteExpiringToExpired();
+        List<IncidentReport> GetIncidentReports();
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -149,6 +150,13 @@ namespace CityWatch.Data.Providers
             }
             _dbContext.SaveChanges();
 
+        }
+        public List<IncidentReport> GetIncidentReports()
+        {
+            return _dbContext.IncidentReports
+                .Include(n => n.IncidentReportEventTypes)
+              
+                .ToList();
         }
 
     }

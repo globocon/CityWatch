@@ -46,7 +46,7 @@ namespace CityWatch.Web.API
     [ApiController]
     public class GuardSecurityNumberController : ControllerBase
     {
-        public IncidentRequest Report { get; set; }
+        //public IncidentRequest Report { get; set; }
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
@@ -692,13 +692,55 @@ namespace CityWatch.Web.API
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
             var emailAddressList = new List<MailboxAddress>();
+
             foreach (var item in toAddress)
             {
-                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+                if (!string.IsNullOrWhiteSpace(item) && MailboxAddress.TryParse(item.Trim(), out var mailbox))
+                {
+                    emailAddressList.Add(mailbox);
+                }
+                
             }
 
+            return emailAddressList;
+        }
+
+
+        private List<MailboxAddress> GetToEmailAddressListIr(string[] toAddress, IncidentRequest Report)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+
+            
+            if (toAddress != null && toAddress.Length >= 2 &&
+                !string.IsNullOrWhiteSpace(toAddress[0]) &&
+                MailboxAddress.TryParse(toAddress[0].Trim(), out var mainMailbox))
+            {
+                emailAddressList.Add(new MailboxAddress(toAddress[1]?.Trim() ?? string.Empty, toAddress[0].Trim()));
+            }
+
+            var fields = _configDataProvider?.GetReportFields()?.ToList() ?? new List<IncidentReportField>();
+
+            
+            void AddIfValid(string email)
+            {
+                if (!string.IsNullOrWhiteSpace(email) &&
+                    MailboxAddress.TryParse(email.Trim(), out var mailbox))
+                {
+                    emailAddressList.Add(mailbox);
+                }
+            }
+
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.Position, Report?.Officer?.Position));
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.NotifiedBy, Report?.Officer?.NotifiedBy));
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report?.Officer?.CallSign));
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report?.DateLocation?.ClientArea));
 
             return emailAddressList;
+        }
+
+        private static string GetFieldEmailAddress(List<IncidentReportField> fields, ReportFieldType type, string fieldValue)
+        {
+            return fields.SingleOrDefault(x => x.TypeId == type && x.Name == fieldValue)?.EmailTo;
         }
 
         [HttpGet("GetDuressStatus")]
@@ -794,15 +836,24 @@ namespace CityWatch.Web.API
                         }
                     }
 
-                    // Create response DTO
-                    var localTime = TimeZoneInfo.ConvertTimeFromUtc(guardlog.EventDateTime, TimeZoneInfo.Local);
-                    var offset = TimeZoneInfo.Local.GetUtcOffset(guardlog.EventDateTime);
+                    string formattedDisplayTime = string.Empty;
 
-                    var offsetSign = offset.TotalMinutes >= 0 ? "+" : "-";
-                    var formattedOffset = $"{offsetSign}{offset:hh\\:mm}";
-                    var timeZoneShort = $"GMT{formattedOffset}";
+                    if (guardlog.EventDateTimeLocalWithOffset.HasValue)
+                    {
+                        var dateandOffset = guardlog.EventDateTimeLocalWithOffset.Value;
 
-                    var formattedDisplayTime = localTime.ToString("HH:mm") + " Hrs " + timeZoneShort;
+                        var offsetSign = dateandOffset.Offset.TotalMinutes >= 0 ? "+" : "-";
+                        var formattedOffset = offsetSign + dateandOffset.Offset.ToString(@"hh\:mm");
+
+                        formattedDisplayTime = dateandOffset.ToString("HH:mm") + " Hrs GMT" + formattedOffset;
+                    }
+                    else
+                    {
+                        // fallback if value is null
+                        formattedDisplayTime = "N/A";
+                    }
+
+
 
                     var dto = new GuardLogDto
                     {
@@ -811,7 +862,8 @@ namespace CityWatch.Web.API
                         EventDateTimeLocal = formattedDisplayTime, 
                         Notes = notes,
                         ImageUrls = imageUrls,
-                        GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A"
+                        GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A",
+                        IrEntryType = guardlog.IrEntryType== IrEntryType.Normal ? true : false,
                     };
 
 
@@ -963,7 +1015,7 @@ namespace CityWatch.Web.API
        
 
         [HttpPost("ProcessIrSubmit")]
-        public IActionResult ProcessIrSubmit([FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
+        public IActionResult ProcessIrSubmit([FromQuery] string gps,[FromQuery] int UserId, [FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
         { 
             var fileName = string.Empty;
             var processResult = new SortedDictionary<int, IrProcessFailure>();
@@ -1010,7 +1062,7 @@ namespace CityWatch.Web.API
 
             try
             {
-                Report.HASH = hashCode;
+                Report.HASH = hashCode+"app";
                 Report.IP = remoteIpAddress;
                 Report.SerialNumber = GetIrSerialNumber(Report);
             }
@@ -1046,7 +1098,7 @@ namespace CityWatch.Web.API
                 CreatedOn = DateTime.UtcNow,
                 ClientSiteId = clientSite?.Id,
                 ReportDateTime = Report?.DateLocation?.ReportDate ?? DateTime.MinValue,
-                IncidentDateTime = Report?.DateLocation?.IncidentDate ?? DateTime.MinValue,
+                IncidentDateTime = Report?.DateLocation?.IncidentDate,
                 JobNumber = Report?.DateLocation?.JobNumber ?? string.Empty,
                 JobTime = Report?.DateLocation?.JobTime ?? string.Empty,
                 CallSign = Report?.Officer?.CallSign ?? string.Empty,
@@ -1071,15 +1123,16 @@ namespace CityWatch.Web.API
                 PSPFId = PSPFName?.Id ?? 0,
 
                 // Time zone info (optional fallback)
-                CreatedOnDateTimeLocal = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeLocal ?? DateTime.UtcNow,
-                CreatedOnDateTimeLocalWithOffset = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeLocalWithOffset ?? DateTime.UtcNow,
-                CreatedOnDateTimeZone = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeZone ?? string.Empty,
-                CreatedOnDateTimeZoneShort = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeZoneShort ?? string.Empty,
-                CreatedOnDateTimeUtcOffsetMinute = Report?.ReportCreatedLocalTimeZone?.CreatedOnDateTimeUtcOffsetMinute ?? 0,
 
+                CreatedOnDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                CreatedOnDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                CreatedOnDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                CreatedOnDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                CreatedOnDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                 HASH = hashCode,
                 ClientSitePositionId = clientSitePosition?.ClientsiteId,
-                GuardId = IRguardId
+                GuardId = IRguardId,
+                
             };
 
 
@@ -1188,7 +1241,7 @@ namespace CityWatch.Web.API
                 try
                 {
                     if (report.ClientSiteId.HasValue)
-                        CreateGuardLogEntry(report);
+                        CreateGuardLogEntry(report,IRguardId, UserId,gps);
                     CreateControlRoomLogEntry(report);//To Save in the control room
                     if (report.ClientSitePositionId.HasValue)
                     {
@@ -1206,7 +1259,7 @@ namespace CityWatch.Web.API
                 {
                     if (true)
                     {
-                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report);
 
                         /* Save log for duress button enable Start 02032024 dileep*/
                         var guradDetailsName = "Admin";
@@ -1225,7 +1278,7 @@ namespace CityWatch.Web.API
                                 GuardName = guradDetailsName,
                                 SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
                                 ProjectName = "ClientPortal",
-                                ActivityType = "IR Generated",
+                                ActivityType = "IR Generated App",
                                 Module = "Incident",
                                 SubModule = "Register",
                                 GoogleMapCoordinates = "",
@@ -1409,13 +1462,15 @@ namespace CityWatch.Web.API
 
         }
 
-        private void CreateGuardLogEntry(IncidentReport report)
+        private void CreateGuardLogEntry(IncidentReport report,int Guardid,int UserId,string gps)
         {
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(report.ClientSiteId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var guardLoginId = GetGuardLoginId(logBookId, Guardid, report.ClientSiteId.Value, UserId);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
+                
                 ClientSiteLogBookId = logBookId,
                 EventDateTime = DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
@@ -1426,11 +1481,13 @@ namespace CityWatch.Web.API
                 EventDateTimeZone = report.CreatedOnDateTimeZone,
                 EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                 EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
-                IsIRReportTypeEntry = true
+                IsIRReportTypeEntry = true,
+                GuardLoginId= guardLoginId,
+                GpsCoordinates= gps
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
-        private bool SendEmailWithAzureBlob(string fileName)
+        private bool SendEmailWithAzureBlob(string fileName, IncidentRequest Report )
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
             var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
@@ -1483,7 +1540,7 @@ namespace CityWatch.Web.API
             var subject = _emailOptions.Subject;
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-            foreach (var address in GetToEmailAddressList(toAddress))
+            foreach (var address in GetToEmailAddressListIr(toAddress,Report))
                 message.To.Add(address);
             if (Report.DateLocation.ReimbursementYes)
             {
@@ -1492,7 +1549,8 @@ namespace CityWatch.Web.API
             }
 
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
-            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "addileepsebastian@gmail.com"));
             // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
@@ -2066,6 +2124,7 @@ namespace CityWatch.Web.API
         public string Notes { get; set; }
         public List<string> ImageUrls { get; set; }
         public string GuardInitials { get; set; }
+        public bool? IrEntryType { get; set; }
     }
     public class DuressRequest
     {
