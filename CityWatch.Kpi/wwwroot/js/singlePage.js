@@ -1491,10 +1491,11 @@ $(function () {
 
     $('#save_site_dropboxsettings').on('click', function () {
         const token = $('input[name="__RequestVerificationToken"]').val();
+        var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
         const dt = {
             Id: $('#Id').val(),
             ClientSiteId: $('#gl_client_site_id').val(),
-            DropboxImagesDir: $('#DropboxImagesDir').val(),
+            DropboxImagesDir: _dropboxImagesDir, //DropboxImagesDir_DropboxSettings
             IsThermalCameraSite: $('#IsThermalCameraSite').is(":checked"),
             IsWeekendOnlySite: $('#IsWeekendOnlySite').is(":checked"),
             KpiTelematicsAndStatistics: $('#KpiTelematicsAndStatistics').is(":checked"),
@@ -1502,6 +1503,10 @@ $(function () {
             MonthlyClientReport: $('#MonthlyClientReport').is(":checked"),
             DropboxScheduleisActive: $('#DropboxScheduleisActive').is(":checked")
         };
+
+        // Changes made by binoy due to mail on 13 Jul 2025, 21:49 related to Telematics - KV - Dropbox ERROR
+        //Refer site.js [[$('#div_site_settings').on('click', '#save_site_settings', function ()]] for DropboxImagesDir issue
+        $('#DropboxImagesDir').val(_dropboxImagesDir);
 
         $.ajax({
             url: '/admin/settings?handler=SaveDropboxSettings',
