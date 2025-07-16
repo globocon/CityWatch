@@ -2818,6 +2818,7 @@ function RunCourses() {
         $('#coursePdfPrev').show();
         $('#coursePdfNext').show();
         $('#couseVideo').hide();
+        $('#coursePresentation').hide();
         ctx = canvas.getContext('2d')
 
 
@@ -2831,7 +2832,7 @@ function RunCourses() {
         $('#coursePdfPrev').hide();
         $('#coursePdfNext').hide();
         $('#couseVideo').show();
-
+        $('#coursePresentation').hide();
         $('#couseVideoSource').attr('src', pdfUrl);
         $('#couseVideo')[0].load();
         video = document.getElementById("couseVideo");
