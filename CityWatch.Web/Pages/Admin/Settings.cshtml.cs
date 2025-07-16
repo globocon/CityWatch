@@ -2454,15 +2454,7 @@ namespace CityWatch.Web.Pages.Admin
                     var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber,"Course", document.FileName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
-                    if (".ppt,.pptx".IndexOf(Path.GetExtension(document.FileName).ToLower()) > 0)
-                    {
-                        Application pptApplication = new Application();
-                        Presentation pptPresentation = null;
-
-                        string outputPath = Path.ChangeExtension(Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course", document.FileName), ".pdf");
-                        if (System.IO.File.Exists(outputPath))
-                            System.IO.File.Delete(outputPath);
-                    }
+                  
                         _configDataProvider.DeleteCourseDocument(id);
                 }
 
