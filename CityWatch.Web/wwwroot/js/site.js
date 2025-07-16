@@ -6668,13 +6668,13 @@ $('#add_hr_settings').on('click', function () {
         $('#hrSettingsModal').modal('show');
 
         //$('#statusCourseColor').removeClass('text-warning');
-        $('#statusCourseColor').addClass('text-warning');
+        $('#statusCourseColor').addClass('text-muted');
 
         //$('#statusTestQuestionsColor').removeClass('text-warning');
-        $('#statusTestQuestionsColor').addClass('text-warning');
+        $('#statusTestQuestionsColor').addClass('text-muted');
 
         //$('#statusCertificateColor').removeClass('text-warning');
-        $('#statusCertificateColor').addClass('text-warning');
+        $('#statusCertificateColor').addClass('text-muted');
 
     }
     if ($('#hr_settings_fields_types').val() == 2) {

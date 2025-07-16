@@ -178,7 +178,12 @@ else
 <div class="card" id="cardCoursePdf" hidden>
     <input type="hidden" id="txtCourseTimerStart" asp-for="@Model.TrainingTestQuestionSettings.CourseDuration.Name" />
     <span id="courseTimerStart" hidden></span>
+    <video id="couseVideo" controls>
+        <source src="" id="couseVideoSource" type="video/mp4">
+    </video>
 
+
+    <iframe id="coursePresentation" ></iframe>
     <canvas id="canvasCousePdf" ></canvas>
         @* <button class="btn" id="coursePdfPrev" hidden>Prev</button>
         <button class="btn" id="coursePdfNext" hidden>Next</button> *@

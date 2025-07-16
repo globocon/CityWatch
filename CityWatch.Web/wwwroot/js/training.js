@@ -2804,28 +2804,75 @@ function StartCourse() {
 var pdfUrl;
 var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
 function RunCourses() {
-    canvas = document.getElementById("canvasCousePdf");
-    ctx = canvas.getContext('2d')
+
     const fileExtn = $('#txtCoursefilename').val().split('.').pop();
+    canvas = document.getElementById("canvasCousePdf");
+
     //if (fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
     //    showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
     //    return false;
     //}
+    pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val();
     if ('.pdf'.indexOf(fileExtn.toLowerCase()) > 0) {
+        $('#canvasCousePdf').show();
+        $('#coursePdfPrev').show();
+        $('#coursePdfNext').show();
+        $('#couseVideo').hide();
+        $('#coursePresentation').hide();
+        ctx = canvas.getContext('2d')
 
 
+        pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
+            pdfDoc = pdf;
+            renderPage(pageNum);
+        });
+    }
+    else if ('.mp4'.indexOf(fileExtn.toLowerCase()) > 0) {
+        $('#canvasCousePdf').hide();
+        $('#coursePdfPrev').hide();
+        $('#coursePdfNext').hide();
+        $('#couseVideo').show();
+        $('#coursePresentation').hide();
+        $('#couseVideoSource').attr('src', pdfUrl);
+        $('#couseVideo')[0].load();
+        video = document.getElementById("couseVideo");
+        video.addEventListener('play', function () {
+            function drawFrame() {
+                if (!video.paused && !video.ended) {
+                    //canvas.width = video.videoWidth;
+                    //canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, 0, 0);
+                    requestAnimationFrame(drawFrame);
+                }
 
-        pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val();
+            }
+            drawFrame();
+        });
+        video.addEventListener('ended', function () {
+            isPausedForCourseDuration = true;
+            /* getGuardCourseSpentTimeDetails();*/
+            $('#cardFrontPage').hide();
+            $('#cardCoursePdf').hide();
+            $('#cardTestFrontPage').attr('hidden', false);
+        });
+
     }
     else {
-        pdfUrl = '/TA/' + $('#txthrreferencenumber').val() + '/Course/' + $('#txtCoursefilename').val().replace(/\.(pptx|ppt)$/i, '.pdf');
-       
+        $('#canvasCousePdf').hide();
+        $('#coursePdfPrev').hide();
+        $('#coursePdfNext').hide();
+        $('#couseVideo').hide();
+        if (('.ppt'.indexOf(fileExtn.toLowerCase()) > 0) || ('.pptx'.indexOf(fileExtn.toLowerCase()) > 0)) {
+
+            //var pptURL = 'https://docs.google.com/gview?url=https://cws-ir.com/' + pdfUrl + '&embedded=true';
+            var pptURL = 'https://docs.google.com/gview?url=http://test.c4i-system.com/' + pdfUrl + '&embedded=true';
+            $('#coursePresentation').attr('src', pptURL);
+
+
+        }
     }
-    pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
-        pdfDoc = pdf;
-        renderPage(pageNum);
-    });
-    
+
+
     //else if ('.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0)
 }
 
