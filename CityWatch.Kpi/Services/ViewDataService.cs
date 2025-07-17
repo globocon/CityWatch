@@ -443,7 +443,7 @@ namespace CityWatch.Kpi.Services
             .Include(z => z.ReferenceNoNumbers)
             .Include(z => z.ReferenceNoAlphabets)
             .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-            ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRID).ToList();
+            ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRID && z.IsDeleted == false).ToList();
 
 
         }
