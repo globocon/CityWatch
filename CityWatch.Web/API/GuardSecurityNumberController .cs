@@ -1043,7 +1043,8 @@ namespace CityWatch.Web.API
                 LicenseState = GuardDetails.State,
                 CallSign = string.Empty,
                 Billing = string.Empty,
-                GuardMonth = Report.Officer.GuardMonth
+                GuardMonth = Report.Officer.GuardMonth,
+                NotifiedBy= Report.Officer.NotifiedBy
             };
 
 
