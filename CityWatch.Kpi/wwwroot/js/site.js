@@ -1567,6 +1567,13 @@ $(function () {
     });
 
     $('#div_site_settings').on('click', '#save_site_settings', function () {
+        // Changes made by binoy due to mail on 13 Jul 2025, 21:49 related to Telematics - KV - Dropbox ERROR
+        // Issue: There were one hidden fields with the same name (DropboxImagesDir), which caused issues when trying to save the value.
+        //Solution: The name in the drop box settings "DropboxImagesDir" was changed to "DropboxImagesDir_DropboxSettings" to avoid conflicts.
+        //and the value is set to the hidden field "DropboxImagesDir" before saving. (Refer singlePage.js function  $('#save_site_dropboxsettings').on('click', function ())
+        var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
+        $('#DropboxImagesDir').val(_dropboxImagesDir);
+
         $.ajax({
             url: '/admin/settings?handler=ClientSiteKpiSettings',
             type: 'POST',
