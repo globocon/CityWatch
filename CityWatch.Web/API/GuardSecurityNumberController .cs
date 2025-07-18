@@ -36,6 +36,7 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using CityWatch.Data.Enums;
 using ConvertApiDotNet;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Text.RegularExpressions;
 
 
 namespace CityWatch.Web.API
@@ -1522,7 +1523,39 @@ namespace CityWatch.Web.API
                 if (domain != null)
                 {
 
-                    messageHtml = "Dear " + CapitalizeFirstLetter(domain.Domain) + " Client; < br >< br > Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.< br >< br > Sites with access to the cloud file server will also have a copy stored in the relevant folder.< br >< br > Any concerns, please contact your relevant " + CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:" + thirpartyemail + "' > " + thirpartyemail + " </ a >";
+                    string messageHtmlnew = _emailOptions.Message;
+                    string wordToReplace = "Citywatch Security";
+                    string replacementWord = CapitalizeFirstLetter(domain.Domain);
+
+                    // Regex to split into sentences based on punctuation (., !, ?)
+                    string[] sentences = Regex.Split(messageHtmlnew, @"(?<=[.!?])\s+");
+
+                    for (int i = 0; i < sentences.Length; i++)
+                    {
+                        // Replace whole word only (case-insensitive)
+                        sentences[i] = Regex.Replace(
+                            sentences[i],
+                            $@"\b{Regex.Escape(wordToReplace)}\b",
+                            replacementWord,
+                            RegexOptions.IgnoreCase);
+                    }
+
+                    messageHtmlnew = string.Join(" ", sentences);
+                    wordToReplace = "control@citywatchsecurity.com.au";
+                    replacementWord = thirpartyemail;
+                    sentences = Regex.Split(messageHtmlnew, @"(?<=[.!?])\s+");
+
+                    for (int i = 0; i < sentences.Length; i++)
+                    {
+                        // Replace whole word only (case-insensitive)
+                        sentences[i] = Regex.Replace(
+                            sentences[i],
+                            $@"\b{Regex.Escape(wordToReplace)}\b",
+                            replacementWord,
+                            RegexOptions.IgnoreCase);
+                    }
+                    messageHtmlnew = string.Join(" ", sentences);
+                    messageHtml = messageHtmlnew;
                 }
             }
             else
