@@ -2824,6 +2824,7 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
     var selectedPosition = $('#positionfilterPatrolCarDuressApp_Pertrol').val();
     var siteDuressNumber = $('#siteDuressNumber').val();
     var clientSiteIdDuress = $('#clientSiteIdDuress').val(); // Get value from hidden input
+    var _profileId = $('#selectLogActivityProfile').val();
 
 
     // ✅ Clear previous error messages
@@ -2847,6 +2848,11 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
         isValid = false;
     }
 
+    if (!_profileId) {
+        $('#selectLogActivityProfile').after('<span class="text-danger error-message">Please select a log profile.</span>');
+        isValid = false;
+    }
+
     // ❌ Stop AJAX call if validation fails
     if (!isValid) return;
     $.ajax({
@@ -2857,7 +2863,8 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
             selectedPosition: selectedPosition,
             siteDuressNumber: siteDuressNumber,
             clientSiteIdDuress: clientSiteIdDuress,
-            duressAppId: $('#duressAppId').val()
+            duressAppId: $('#duressAppId').val(),
+            logProfileId: _profileId,
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -2921,6 +2928,7 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
             $('#siteDuressNumber').val(result.data.siteDuressNumber);
             $('#duressAppId').val(result.data.id);
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
+            $('#selectLogActivityProfile').val(result.data.logProfileId);
             var qrText = result.data.id; // Change this to any text or URL
             var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+qrText;
 
@@ -2990,6 +2998,7 @@ function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
             $('#siteDuressNumber').val(result.data.siteDuressNumber);
             $('#duressAppId').val(result.data.id);
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
+            $('#selectLogActivityProfile').val(result.data.logProfileId);
             var qrText = result.data.id; // Change this to any text or URL
             var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + qrText;
             $("#QrCode").attr("src", qrImagePath).show(); // Hide initially

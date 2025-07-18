@@ -10,6 +10,7 @@
 @inject IConfiguration Configuration;
 @inject IViewDataService viewDataServiceNew
 @inject IClientDataProvider clientDataProvider
+@inject IGuardLogDataProvider guardLogDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -313,7 +314,7 @@
                                     </div>
                                 </div>
                                 <div class="form-row mt-3">
-                                    <button type="button" id="btnSaveGuardSiteSettings" class="btn btn-primary">Save</button>
+                                    <button type="button" id="btnSaveGuardSiteSettings" class="btn btn-success">Save Settings</button>
                                 </div>
                             </form>
                         </div>
@@ -2195,7 +2196,7 @@
 
                     </form>
                     <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
-                    <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
+                    <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save Settings</button>
                 </div>
                 @*New Tab for contracted-manning end*@
             </div>
@@ -2244,6 +2245,19 @@
                                     <select id="positionfilterPatrolCarDuressApp_Pertrol" name="positionfilterPatrolCarDuressApp_Pertrol" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
                                 </div>
                             </div>
+                             <!-- Log Activity Profile -->
+                            <div class="form-group">
+                                <label class="form-label">Log Activity Profile</label>
+                                <select id="selectLogActivityProfile" name="selectLogActivityProfile" class="form-control">
+                                    <option value="">Select Log Activity Profile</option>
+                                    @foreach (var item in guardLogDataProvider.GetMobileLogActivityProfiles())
+                                    {
+                                        //var selected = item.Id == selectedProfileId ? "selected" : "";
+                                        //@(item.Id == selectedProfileId ? "selected" : "")
+                                        <option value="@item.Id">@item.ProfileName</option>
+                                    }
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Right 50%: QR Code -->
@@ -2254,12 +2268,8 @@
 
                     <!-- Buttons -->
                     <div class="pt-3">
-                        <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp">
-                            <i class="fa fa-trash mr-2"></i>Delete
-                        </button>
-                        <button type="button" class="btn btn-success" id="save_DuressApp">
-                            <i class="fa fa-save mr-2"></i>Save RC Action List
-                        </button>
+                        <button type="button" class="btn btn-outline-danger mr-2" id="delete_DuressApp"><i class="fa fa-trash mr-2"></i>Delete</button>
+                        <button type="button" class="btn btn-success" id="save_DuressApp"><i class="fa fa-save mr-2"></i>Save Settings</button>
                     </div>
                 </div>
 

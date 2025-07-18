@@ -1,5 +1,9 @@
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
+using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -11,50 +15,42 @@ using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Word;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Dropbox.Api.Files;
+using Dropbox.Api.Users;
+using ImageMagick;
+using MailKit.Net.Smtp;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Office.Core;
+using Microsoft.Office.Interop.PowerPoint;
+using MimeKit;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Macs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.FileRequests.GracePeriod;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using static Dropbox.Api.Sharing.MemberSelector;
+using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
-
-using Microsoft.Office.Interop.PowerPoint;
-using Microsoft.Office.Core;
-
-using CityWatch.Common.Helpers;
-using CityWatch.Common.Models;
-using CityWatch.Common.Services;
-using CityWatch.Data.Enums;
-
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MimeKit;
-using Org.BouncyCastle.Crypto.Macs;
-using System.Net.Http.Headers;
-using MailKit.Net.Smtp;
-using System.Text.RegularExpressions;
-using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
-using static Dropbox.Api.Team.GroupSelector;
-using System.Text;
-using Org.BouncyCastle.Crypto.Generators;
-using static Dropbox.Api.Sharing.MemberSelector;
-
-using ImageMagick;
-
-using System.Security.Cryptography;
 
 
 
@@ -81,7 +77,7 @@ namespace CityWatch.Web.Pages.Admin
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
-             ITimesheetReportGenerator TimesheetReportGenerator,IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
+             ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
              IOptions<EmailOptions> emailOptions)
         {
@@ -108,6 +104,8 @@ namespace CityWatch.Web.Pages.Admin
         public IUserDataProvider UserDataProvider { get { return _userDataProvider; } }
 
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
+               
+        public IGuardLogDataProvider GuardLogDataProvider { get { return _guardLogDataProvider; } }
 
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
@@ -123,8 +121,8 @@ namespace CityWatch.Web.Pages.Admin
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
-        
-         public int ClientTypeId { get; set; }
+
+        public int ClientTypeId { get; set; }
         public string ClientNameTitle { get; set; }
         public IActionResult OnGet()
         {
@@ -177,12 +175,12 @@ namespace CityWatch.Web.Pages.Admin
                     ClientNameTitle = "Citywatch Security";
                 }
             }
-                if (GuardId != 0)
+            if (GuardId != 0)
             {
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
 
             }
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminThirdPartyAccess)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminThirdPartyAccess)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
             }
@@ -191,9 +189,9 @@ namespace CityWatch.Web.Pages.Admin
 
                 ReportTemplate = _configDataProvider.GetReportTemplate();
                 SecurityLicenseNo = securityLicenseNonew;
-                
+
                 loggedInUserId = luid;
-                
+
                 return Page();
 
             }
@@ -465,7 +463,7 @@ namespace CityWatch.Web.Pages.Admin
             var files = Request.Form.Files;
             var domainName = Request.Form.ContainsKey("domain") ? Request.Form["domain"].ToString() : "Unknown";
             var domainId = Request.Form.ContainsKey("domainId") ? Request.Form["domainId"].ToString() : "Unknown";
-            if (files.Count == 1 && domainId!=string.Empty)
+            if (files.Count == 1 && domainId != string.Empty)
             {
                 var file = files[0];
                 if (file.Length > 0)
@@ -475,14 +473,14 @@ namespace CityWatch.Web.Pages.Admin
                         if (Path.GetExtension(file.FileName) != ".pdf")
                             throw new ArgumentException("Unsupported file type");
 
-                        var fileName = domainId == "0" ? "IR_Form_Template.pdf" : "IR_Form_Template_"+domainName.Trim()+".pdf";
+                        var fileName = domainId == "0" ? "IR_Form_Template.pdf" : "IR_Form_Template_" + domainName.Trim() + ".pdf";
                         var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Template");
                         using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, fileName)))
                         {
                             file.CopyTo(stream);
                         }
-                         
-                        _configDataProvider.SaveDefaultEmailThirdPartyDomains(string.Empty,int.Parse(domainId), fileName);
+
+                        _configDataProvider.SaveDefaultEmailThirdPartyDomains(string.Empty, int.Parse(domainId), fileName);
                         success = true;
                     }
                     catch (Exception ex)
@@ -576,7 +574,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
         }
-        
+
         public JsonResult OnPostUploadStaffDoc()
         {
             var success = false;
@@ -942,7 +940,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetHrSettingsClientSiteLockStatus(hrSttingsId));
         }
 
-        public JsonResult OnPostClientAccessByUserId(int userId, int[] selectedSites,int ClientTypeId)
+        public JsonResult OnPostClientAccessByUserId(int userId, int[] selectedSites, int ClientTypeId)
         {
             var status = true;
             var message = "Success";
@@ -952,7 +950,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     ClientSiteId = x,
                     UserId = userId,
-                    ThirdPartyID= ClientTypeId
+                    ThirdPartyID = ClientTypeId
                 }).ToList();
                 _userDataProvider.SaveUserClientSiteAccess(userId, clientSiteAccess, ClientTypeId);
             }
@@ -965,13 +963,13 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
-        public JsonResult OnPostHrSettingsLockedClientSites(int hrSttingsId, int[] selectedSites,int enableStatus)
+        public JsonResult OnPostHrSettingsLockedClientSites(int hrSttingsId, int[] selectedSites, int enableStatus)
         {
             var status = true;
             var message = "Success";
             try
             {
-                _guardLogDataProvider.UpdateHRLockSettings(hrSttingsId,Convert.ToBoolean(enableStatus));
+                _guardLogDataProvider.UpdateHRLockSettings(hrSttingsId, Convert.ToBoolean(enableStatus));
                 var clientSiteAccess = selectedSites.Select(x => new HrSettingsLockedClientSites()
                 {
                     ClientSiteId = x,
@@ -995,7 +993,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 _guardLogDataProvider.UpdateHRBanSettings(hrSttingsId, Convert.ToBoolean(enableStatus));
-               
+
             }
             catch (Exception ex)
             {
@@ -1676,7 +1674,7 @@ namespace CityWatch.Web.Pages.Admin
             }
 
         }
-       
+
         // To download Timesheet-Task 212
         //public IActionResult OnGetDownloadTimesheet(string startdate, string endDate, string frequency, int guradid)
         //{
@@ -1746,7 +1744,7 @@ namespace CityWatch.Web.Pages.Admin
 
                     // Calculate the end date as the last day of the last month
                     endDate = startDate.AddMonths(1).AddDays(-1);
-                    
+
                 }
                 else if (frequency == "Last2weeks")
                 {
@@ -1962,10 +1960,10 @@ namespace CityWatch.Web.Pages.Admin
                         if (!Directory.Exists(staffDocsFolder))
                             Directory.CreateDirectory(staffDocsFolder);
 
-                       
+
 
                         // Generate URL to the StaffDocs folder
-                       
+
 
                         using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
                         {
@@ -2000,7 +1998,7 @@ namespace CityWatch.Web.Pages.Admin
                     DocumentType = type,
                     SOP = SOP,
                     ClientSite = ClientSite,
-                    FilePath= staffDocsUrl
+                    FilePath = staffDocsUrl
                 });
 
                 success = true;
@@ -2084,7 +2082,7 @@ namespace CityWatch.Web.Pages.Admin
             var checkDomainStatus = Convert.ToBoolean(Request.Form["checkDomainStatus"]);
             if (newFileName == string.Empty)
             {
-               newFileName = Request.Form["filename"];
+                newFileName = Request.Form["filename"];
 
             }
             var domainId = int.Parse(Request.Form["domainId"]);
@@ -2092,7 +2090,7 @@ namespace CityWatch.Web.Pages.Admin
             {
 
 
-             var status=_configDataProvider.SaveSubDomain(new SubDomain()
+                var status = _configDataProvider.SaveSubDomain(new SubDomain()
                 {
                     Id = domainId,
                     Domain = domainName,
@@ -2109,7 +2107,7 @@ namespace CityWatch.Web.Pages.Admin
                 else
                 {
                     success = false;
-                    message = "Domain Name '"+domainName+"' already exist.";
+                    message = "Domain Name '" + domainName + "' already exist.";
 
                 }
             }
@@ -2125,7 +2123,7 @@ namespace CityWatch.Web.Pages.Admin
         public IActionResult OnGetClientSiteLastIncidentReportHistory(int guardId)
         {
 
-            var clientIncidentReports = _guardLogDataProvider.GetActiveGuardIncidentReportHistoryForAdmin( guardId);
+            var clientIncidentReports = _guardLogDataProvider.GetActiveGuardIncidentReportHistoryForAdmin(guardId);
 
             return new JsonResult(clientIncidentReports);
         }
@@ -2169,7 +2167,7 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetCourseDocsUsingSettingsId(int type)
         {
-            return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type).Where(x=> Path.HasExtension(x.FileName)));
+            return new JsonResult(_configDataProvider.GetCourseDocsUsingSettingsId(type).Where(x => Path.HasExtension(x.FileName)));
         }
         public JsonResult OnGetTQNumbers()
         {
@@ -2178,12 +2176,12 @@ namespace CityWatch.Web.Pages.Admin
 
         [RequestSizeLimit(1073741824)] // 100 MB
         [HttpPost]
-        public async Task<IActionResult> OnPostUploadCourseDocUsingHR(IFormFile chunk, string fileName, int chunkIndex, int totalChunks,int hrsettingsid, string hrreferenceNumber,int docid,int tqid)
+        public async Task<IActionResult> OnPostUploadCourseDocUsingHR(IFormFile chunk, string fileName, int chunkIndex, int totalChunks, int hrsettingsid, string hrreferenceNumber, int docid, int tqid)
         {
             var success = false;
-                var message = "Uploaded successfully";
-            
-            
+            var message = "Uploaded successfully";
+
+
             try
             {
 
@@ -2205,7 +2203,7 @@ namespace CityWatch.Web.Pages.Admin
                 // Optional: If all chunks received, combine them
                 if (Directory.GetFiles(tempFolder).Length == totalChunks)
                 {
-                    var finalpath= Path.Combine(CourseDocsFolder,fileName);
+                    var finalpath = Path.Combine(CourseDocsFolder, fileName);
 
 
                     using (var finalStream = new FileStream(finalpath, FileMode.Create))
@@ -2294,13 +2292,13 @@ namespace CityWatch.Web.Pages.Admin
                 }
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 success = false;
                 message = ex.Message;
             }
 
-             return new JsonResult(new { success, message }); ;
+            return new JsonResult(new { success, message }); ;
         }
 
         //public JsonResult OnPostUploadCourseDocUsingHR()
@@ -2442,7 +2440,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return uploaded;
         }
-        public JsonResult OnPostDeleteCourseDocUsingHR(int id,string hrreferenceNumber)
+        public JsonResult OnPostDeleteCourseDocUsingHR(int id, string hrreferenceNumber)
         {
             var status = true;
             var message = "Success";
@@ -2451,7 +2449,7 @@ namespace CityWatch.Web.Pages.Admin
                 var document = _configDataProvider.GetCourseDocuments().SingleOrDefault(x => x.Id == id);
                 if (document != null)
                 {
-                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber,"Course", document.FileName);
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course", document.FileName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
                     if (".ppt,.pptx".IndexOf(Path.GetExtension(document.FileName).ToLower()) > 0)
@@ -2463,7 +2461,7 @@ namespace CityWatch.Web.Pages.Admin
                         if (System.IO.File.Exists(outputPath))
                             System.IO.File.Delete(outputPath);
                     }
-                        _configDataProvider.DeleteCourseDocument(id);
+                    _configDataProvider.DeleteCourseDocument(id);
                 }
 
 
@@ -2482,7 +2480,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                if(record.CertificateExpiryId==0)
+                if (record.CertificateExpiryId == 0)
                 {
                     record.CertificateExpiryId = null;
                 }
@@ -2506,11 +2504,11 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                
-               int id= _guardLogDataProvider.SaveTestQuestions(testquestions);
-                if(id!=0)
+
+                int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (id != 0)
                 {
-                    foreach(var item in testquestionanswers)
+                    foreach (var item in testquestionanswers)
                     {
                         item.TrainingTestQuestionsId = id;
                     }
@@ -2534,7 +2532,7 @@ namespace CityWatch.Web.Pages.Admin
                 //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
                 if (Id != 0)
                 {
-                   
+
                     _guardLogDataProvider.DeleteTestQuestions(Id);
                 }
                 success = true;
@@ -2545,7 +2543,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId,int tqNumberId)
+        public JsonResult OnGetNextQuestionWithinSameTQNumber(int hrSettingsId, int tqNumberId)
         {
             return new JsonResult(_configDataProvider.GetNextQuestionWithinSameTQNumber(hrSettingsId, tqNumberId));
         }
@@ -2567,7 +2565,7 @@ namespace CityWatch.Web.Pages.Admin
         public IActionResult OnGetQuestionAndAnswersWithQuestionNumber(int questionId)
         {
             var Answers = _configDataProvider.GetTrainingQuestionsAnswers(questionId);
-            
+
             return new JsonResult(Answers);
         }
 
@@ -2640,20 +2638,20 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(Answers);
         }
-        public JsonResult OnPostUpdateDocumentTQNumber(int id,string name,TrainingCourses record)
+        public JsonResult OnPostUpdateDocumentTQNumber(int id, string name, TrainingCourses record)
         {
             var success = false;
             var message = "Updated successfully";
-            
-                    try
-                    {
+
+            try
+            {
 
                 int TQNumbernew = _configDataProvider.GetTQNumbers().Where(x => x.Name == name).FirstOrDefault().Id;
 
-                        if (TQNumbernew != 0)
-                        {
-                           
-                       
+                if (TQNumbernew != 0)
+                {
+
+
 
 
                     var courseswithSameTQNumber = _configDataProvider.GetTrainingCoursesWithHrSettingsId(record.HRSettingsId).Where(x => x.TQNumberId == TQNumbernew);
@@ -2679,12 +2677,12 @@ namespace CityWatch.Web.Pages.Admin
                 }
 
 
-                }
-                    catch (Exception ex)
-                    {
-                        message = ex.Message;
-                    }
-                
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
             return new JsonResult(new { success, message });
         }
 
@@ -2692,14 +2690,14 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields());
         }
-        
+
         public JsonResult OnGetCourseInstructor(int type)
         {
             return new JsonResult(_configDataProvider.GetCourseInstructor(type));
         }
         public JsonResult OnGetInstructorAndPositionWithId(string Id)
         {
-            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x=>x.Id== Convert.ToInt32(Id)).FirstOrDefault());
+            return new JsonResult(_guardLogDataProvider.GetTrainingInstructorNameandPositionFields().Where(x => x.Id == Convert.ToInt32(Id)).FirstOrDefault());
         }
         public JsonResult OnPostSaveTrainingCourseInstructor(int id, int? instructorId, int hrsettingsId)
         {
@@ -2708,20 +2706,20 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-               
+
                 if (id == -1)
                 {
                     id = 0;
                 }
 
-                    _configDataProvider.SaveTrainingCourseInstructor(new TrainingCourseInstructor()
-                    {
-                        Id = id,
-                        TrainingInstructorId = instructorId,
-                        HRSettingsId = hrsettingsId
+                _configDataProvider.SaveTrainingCourseInstructor(new TrainingCourseInstructor()
+                {
+                    Id = id,
+                    TrainingInstructorId = instructorId,
+                    HRSettingsId = hrsettingsId
 
-                    });
-                    success = true;
+                });
+                success = true;
 
             }
             catch (Exception ex)
@@ -2744,9 +2742,9 @@ namespace CityWatch.Web.Pages.Admin
         //{
         //    return new JsonResult(_configDataProvider.GetTrainingCoursesStatusWithOutcome(groupid));
         //}
-        public JsonResult OnPostSaveGuardTrainingAndAssessmentTab(int HRSettingsId, int GuardId,int TrainingCourseStatusId)
+        public JsonResult OnPostSaveGuardTrainingAndAssessmentTab(int HRSettingsId, int GuardId, int TrainingCourseStatusId)
         {
-        
+
             var success = false;
             var message = string.Empty;
             try
@@ -2797,14 +2795,14 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 if (Id == -1)
-            {
-                Id = 0;
-            }
-            if (Id != 0)
-            {
+                {
+                    Id = 0;
+                }
+                if (Id != 0)
+                {
 
-                _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
-            }
+                    _guardLogDataProvider.DeleteTrainingCourseInstructor(Id);
+                }
                 success = true;
             }
             catch (Exception ex)
@@ -2822,14 +2820,14 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
 
-               
 
-                
+
+
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
                 var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
                 //bool selected = false;
                 var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId);
-                var  trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
+                var trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
                 //if (trainingSettings.Count == 0 || trainingSettingsQuestions.Count==0)
                 //{
                 //    selected = false;
@@ -2841,21 +2839,21 @@ namespace CityWatch.Web.Pages.Admin
                 //}
                 //if (selected == true)
                 //{
-                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
-                    {
-                        Id = Id,
-                        GuardId = result.GuardId,
-                        TrainingCourseId = result.TrainingCourseId,
-                        TrainingCourseStatusId = TrainingCourseStatusId,
-                        Description = result.Description,
-                        HRGroupId = result.HRGroupId
-                        //,
-                        //IsCompleted = false
+                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                {
+                    Id = Id,
+                    GuardId = result.GuardId,
+                    TrainingCourseId = result.TrainingCourseId,
+                    TrainingCourseStatusId = TrainingCourseStatusId,
+                    Description = result.Description,
+                    HRGroupId = result.HRGroupId
+                    //,
+                    //IsCompleted = false
 
-                    });
+                });
 
 
-                    success = true;
+                success = true;
                 //}
             }
             catch (Exception ex)
@@ -2884,7 +2882,7 @@ namespace CityWatch.Web.Pages.Admin
             //                item.isRPLEnabled = false;
             //            }
             //        }
-                    
+
             //    }
             //    else
             //    {
@@ -2928,23 +2926,23 @@ namespace CityWatch.Web.Pages.Admin
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                         bool isrpl = false;
                         var rpldetails = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == documentId).FirstOrDefault();
-                        if(rpldetails != null)
+                        if (rpldetails != null)
                         {
                             isrpl = rpldetails.isRPLEnabled;
                         }
-                            _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
-                            {
-                                Id = documentId,
-                                FileName = filename,
-                                LastUpdated = DateTime.Now,
-                                HRSettingsId = hrsettingsid,
-                                isRPLEnabled= isrpl,
-                                IsDeleted=false
+                        _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
+                        {
+                            Id = documentId,
+                            FileName = filename,
+                            LastUpdated = DateTime.Now,
+                            HRSettingsId = hrsettingsid,
+                            isRPLEnabled = isrpl,
+                            IsDeleted = false
 
-                            });
+                        });
                         var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrsettingsid).ToList();
                         var hrdesc = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsid).FirstOrDefault().Description;
-                        if(courses.Count()==0)
+                        if (courses.Count() == 0)
                         {
                             _configDataProvider.SaveTrainingCourses(new TrainingCourses()
                             {
@@ -2984,7 +2982,7 @@ namespace CityWatch.Web.Pages.Admin
                     _configDataProvider.DeleteCourseCertificateDocument(id);
                     var courses = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrsettingsid).Where(x => !Path.HasExtension(x.FileName)).ToList();
                     var questions = _configDataProvider.GetTrainingTestQuestions().Where(x => x.HRSettingsId == hrsettingsid).ToList();
-                    if (courses.Count()!= 0 && questions.Count() == 0)
+                    if (courses.Count() != 0 && questions.Count() == 0)
                     {
                         foreach (var item in courses)
                         {
@@ -3047,10 +3045,10 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetRPLDetails(int id,int guardid)
+        public JsonResult OnGetRPLDetails(int id, int guardid)
         {
             var success = false;
-             return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).Where(x=> x.GuardId==guardid).FirstOrDefault());
+            return new JsonResult(_configDataProvider.GetCourseCertificateRPLUsingId(id).Where(x => x.GuardId == guardid).FirstOrDefault());
         }
         public JsonResult OnPostSaveRPLDetails(TrainingCourseCertificateRPL record)
         {
@@ -3117,7 +3115,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        
+
         public JsonResult OnPostDeleteRPLDetails(int id)
         {
             var success = false;
@@ -3139,11 +3137,11 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetClientTypesThirdParty(int UserID)
         {
-            
+
             var clienttypes = _viewDataService.GetUserClientTypesHavingAccessThird(UserID);
             foreach (var item in clienttypes)
             {
-               
+
                 var result = _userDataProvider.GetDomainDeatils(item.Id);
                 if (result != null)
                 {
@@ -3152,16 +3150,16 @@ namespace CityWatch.Web.Pages.Admin
             }
             var ClientTypesThirdParty = clienttypes.Where(x => x.IsSubDomainEnabled == true).ToList();
             return new JsonResult(ClientTypesThirdParty);
-            
+
         }
-        public JsonResult OnGetDuressAppDetails(int typeId)
+        public JsonResult OnGetDuressAppDetails(int typeId, int? profileid = null)
         {
-            var fields = _configDataProvider.GetDuressAppByType(typeId);
+            var fields = _configDataProvider.GetDuressAppByType(typeId, profileid);
 
             return new JsonResult(fields);
 
         }
-        public JsonResult OnPostSaveGuardTrainingPracticalDetails(int guardId,int courseId,int practicalLocationId, int instructorId,DateTime practicalDate,string FileName)
+        public JsonResult OnPostSaveGuardTrainingPracticalDetails(int guardId, int courseId, int practicalLocationId, int instructorId, DateTime practicalDate, string FileName)
         {
             var success = false;
             var message = string.Empty;
@@ -3170,16 +3168,16 @@ namespace CityWatch.Web.Pages.Admin
             {
 
 
-                
+
                 _configDataProvider.SaveGuardTrainingPracticalDetails(new GuardTrainingAndAssessmentPractical()
                 {
                     Id = 0,
                     GuardId = guardId,
                     HRSettingsId = hrsettingsId,
                     PracticalocationlId = practicalLocationId,
-                    PracticalDate=practicalDate,
-                    InstructorId=instructorId,
-                    FileName= FileName
+                    PracticalDate = practicalDate,
+                    InstructorId = instructorId,
+                    FileName = FileName
 
                 });
                 string input = GenerateFormattedString();
@@ -3253,13 +3251,13 @@ namespace CityWatch.Web.Pages.Admin
                 var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
                 SendEmailNew(emailBody);
 
-               
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
-            return new JsonResult(new { success, message , hrsettingsId });
+            return new JsonResult(new { success, message, hrsettingsId });
         }
         public JsonResult OnPostUpdateCourseStatusToComplete(int guardId, int hrSettingsId)
         {
@@ -3324,7 +3322,7 @@ namespace CityWatch.Web.Pages.Admin
                 if (Id != 0)
                 {
 
-                    _guardLogDataProvider.DeleteGuardCourseByAdmin( Id);
+                    _guardLogDataProvider.DeleteGuardCourseByAdmin(Id);
                 }
                 success = true;
             }
@@ -3340,18 +3338,18 @@ namespace CityWatch.Web.Pages.Admin
             bool testQuestionsLength = false;
             bool certificateLength = false;
             bool instructorLength = false;
-            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).Where(x=>Path.HasExtension(x.FileName)).ToList();
-            if(coursesList.Count()>0)
+            var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsid).Where(x => Path.HasExtension(x.FileName)).ToList();
+            if (coursesList.Count() > 0)
             {
                 courseLength = true;
-                
+
             }
             var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(hrSettingsid).ToList();
             if (testQuestionsSettingsList.Count() > 0)
             {
                 testQuestionsLength = true;
             }
-            var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x=>x.HRSettingsId== hrSettingsid).ToList();
+            var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.HRSettingsId == hrSettingsid).ToList();
             if (courseCertificatesList.Count() > 0)
             {
                 certificateLength = true;
@@ -3365,34 +3363,34 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { courseLength, testQuestionsLength, certificateLength, instructorLength });
 
         }
-        public JsonResult OnPostSaveCourseCertificateIsRPL(int certificateId,bool isRPLchecked)
+        public JsonResult OnPostSaveCourseCertificateIsRPL(int certificateId, bool isRPLchecked)
         {
             var success = false;
             var message = "Saved successfully";
-           
-                    try
-                    {
 
-                        var record = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == certificateId).FirstOrDefault();
-                        _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
-                        {
-                            Id = record.Id,
-                            FileName = record.FileName,
-                            LastUpdated = record.LastUpdated,
-                            HRSettingsId = record.HRSettingsId,
-                            isRPLEnabled = isRPLchecked,
-                            IsDeleted=false
+            try
+            {
 
-                        });
+                var record = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == certificateId).FirstOrDefault();
+                _configDataProvider.SaveTrainingCourseCertificate(new TrainingCourseCertificate()
+                {
+                    Id = record.Id,
+                    FileName = record.FileName,
+                    LastUpdated = record.LastUpdated,
+                    HRSettingsId = record.HRSettingsId,
+                    isRPLEnabled = isRPLchecked,
+                    IsDeleted = false
+
+                });
 
 
-                        success = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        message = ex.Message;
-                    }
-                
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
             return new JsonResult(new { success, message });
         }
         public JsonResult OnGetCertificateIsRPL(int courseId)
@@ -3533,11 +3531,110 @@ namespace CityWatch.Web.Pages.Admin
             return emailAddressList;
         }
 
+        public JsonResult OnGetLogActivityProfilesList()
+        {
+            List<MobileLogActivityProfile> logActivityProfiles = new List<MobileLogActivityProfile>();
+            logActivityProfiles = _guardLogDataProvider.GetMobileLogActivityProfiles();
+
+            return new JsonResult(logActivityProfiles);
+        }
+
+        public JsonResult OnPostAddLogActivityProfile(string ProfileName)
+        {
+            var status = true;
+            var message = "Success: ";
+            MobileLogActivityProfile _profile = null;
+            try
+            {
+                if(string.IsNullOrEmpty(ProfileName))
+                {
+                    status = false;
+                    message = "Error: Profile name cannot be empty.";
+                    return new JsonResult(new { success = status, message = message });
+                }
+                _profile = _guardLogDataProvider.SaveLogActivityProfile(ProfileName,out string msg);
+                if (_profile!= null)
+                {
+                    message += msg;
+                }
+                else
+                {
+                    status = false;
+                    message = $"Error: {msg}";
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = $"Error: {ex.Message}";
+            }
+            return new JsonResult(new { success = status, message = message, id = _profile?.Id, name= _profile?.ProfileName });
+        }
+        public JsonResult OnPostUpdateLogActivityProfile(MobileLogActivityProfile _Profile)
+        {
+            var status = true;
+            var message = "Success: ";
+            MobileLogActivityProfile _rtnProfile = null;
+            try
+            {
+                if(_Profile == null || string.IsNullOrEmpty(_Profile.ProfileName))
+                {
+                    status = false;
+                    message = "Error: Invalid profile.";
+                    return new JsonResult(new { success = status, message = message });
+                }
+                _rtnProfile = _guardLogDataProvider.UpdateLogActivityProfile(_Profile, out string msg);
+                if (_rtnProfile != null)
+                {
+                    message += msg;
+                }
+                else
+                {
+                    status = false;
+                    message = $"Error: {msg}";
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = $"Error: {ex.Message}";
+            }
+            return new JsonResult(new { success = status, message = message, id = _rtnProfile?.Id, name = _rtnProfile?.ProfileName });
+        }
+        public JsonResult OnPostDeleteLogActivityProfile(int _Profile)
+        {
+            var status = true;
+            var message = "Profile deleted successfully.";
+            try
+            {
+                if(_Profile <= 0)
+                {
+                    status = false;
+                    message = "Error: Invalid profile.";
+                    return new JsonResult(new { success = status, message = message });
+                }
+
+                status = _guardLogDataProvider.DeleteLogActivityProfile(_Profile, out string msg);
+                if (status) { 
+                    message = msg;
+                }
+                else
+                {                    
+                    message = $"Error: {msg}";
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = $"Error: {ex.Message}";
+            }
+            return new JsonResult(new { success = status, message = message });
+        }
     }
     public class helpDocttype
     {
         public string Id { get; set; }
         public string Name { get; set; }
     }
-    
+
 }

@@ -155,6 +155,7 @@ namespace CityWatch.Data
 
         public DbSet<DuressSetting> DuressSettings { get; set; }
         public DbSet<HandoverNotes> HandoverNotes { get; set; }
+        public DbSet<MobileLogActivityProfile> MobileLogActivityProfile { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

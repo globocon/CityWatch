@@ -54,6 +54,8 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
+        public IGuardLogDataProvider GuardLogDataProvider { get { return _guardLogDataProvider; } }
+
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
         public int GuardId { get; set; }
         public int userId { get; set; }
@@ -2090,7 +2092,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
 
-        public JsonResult OnPostSaveDuressApp(int duressAppId, string positionFilter, int selectedPosition, int siteDuressNumber, int clientSiteIdDuress)
+        public JsonResult OnPostSaveDuressApp(int duressAppId, string positionFilter, int selectedPosition, int siteDuressNumber, int clientSiteIdDuress, int? logProfileId)
         {
             var success = false;
             string message = "Failed to save data.";
@@ -2106,7 +2108,8 @@ namespace CityWatch.Kpi.Pages.Admin
                         ClientSiteId = clientSiteIdDuress,
                         PositionFilter = positionFilter,
                         SelectedPosition = selectedPosition,
-                        SiteDuressNumber = siteDuressNumber
+                        SiteDuressNumber = siteDuressNumber,
+                        LogProfileId = logProfileId
                     };
                     success = _configDataProvider.AddDuressSetting(setting);
                     if (success)
@@ -2124,6 +2127,7 @@ namespace CityWatch.Kpi.Pages.Admin
                             existingSetting.PositionFilter = positionFilter;
                             existingSetting.SelectedPosition = selectedPosition;
                             existingSetting.SiteDuressNumber = siteDuressNumber;
+                            existingSetting.LogProfileId = logProfileId;
                             success = _configDataProvider.UpdateDuressSetting(existingSetting);
                             if (success)
                                 message = "Duress settings updated successfully.";
@@ -2138,7 +2142,8 @@ namespace CityWatch.Kpi.Pages.Admin
                                 ClientSiteId = clientSiteIdDuress,
                                 PositionFilter = positionFilter,
                                 SelectedPosition = selectedPosition,
-                                SiteDuressNumber = siteDuressNumber
+                                SiteDuressNumber = siteDuressNumber,
+                                LogProfileId = logProfileId
                             };
                             success = _configDataProvider.AddDuressSetting(setting);
                             if (success)
@@ -2152,7 +2157,8 @@ namespace CityWatch.Kpi.Pages.Admin
                             ClientSiteId = clientSiteIdDuress,
                             PositionFilter = positionFilter,
                             SelectedPosition = selectedPosition,
-                            SiteDuressNumber = siteDuressNumber
+                            SiteDuressNumber = siteDuressNumber,
+                            LogProfileId = logProfileId
                         };
                         success = _configDataProvider.AddDuressSetting(setting);
                         if (success)

@@ -13,6 +13,7 @@
 @inject IClientDataProvider clientDataProvider
 @inject IClientSiteViewDataService clientViewDataService
 @inject IGuardDataProvider guarddataProvider
+@inject IGuardLogDataProvider guardlogdataProvider
 @inject IUserDataProvider userDataProvider
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
@@ -625,6 +626,21 @@
                         </select>
                     </div>
                 </div>
+                 <div class="form-group row" id="div_selectProfile">
+                            <label class="col-form-label col-md-3" id="lblSelectProfile">Select Profile</label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="LogActivity_profile_types">
+                                    <option value="">None</option>
+                                    @foreach (var item in guardlogdataProvider.GetMobileLogActivityProfiles())
+                                    {
+                                        <option value="@item.Id">@item.ProfileName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-success mb-3" id="add_LogActivity_profile_settings">Add Edit Profile</button>
+                            </div>
+                        </div>
                 <div class="row" id="fieldSettings">
                     <div class="col-md-12">
                         <div class="text-right">
@@ -3276,15 +3292,6 @@
                         <div class="form-group row">
                             <label class="col-form-label col-md-3" id="lblFieldType">Select a field type</label>
                             <div class="col-md-4">
-                                @*         <select class="form-control" id="report_field_types"  onchange="sortSelect()">
-                    <option value="">None</option>
-                    <option value="1">Position</option>
-                    <option value="2">Notified By</option>
-                    <option value="3">Callsign</option>
-                    <option value="4">Area/Ward</option>
-                    <option value="5">PSPF</option>
-                    <option value="6">Financial Reimbursement</option>
-                    </select> *@
                                 <select class="form-control" id="report_field_types">
                                     <option value="">None</option>
                                     <option value="4">Area/Ward</option>
@@ -3316,6 +3323,21 @@
                                     <option value="1">Audio</option>
                                     <option value="2">Log Activity</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="form-group row" id="div_selectProfile">
+                            <label class="col-form-label col-md-3" id="lblSelectProfile">Select Profile</label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="LogActivity_profile_types">
+                                    <option value="">None</option>
+                                    @foreach (var item in guardlogdataProvider.GetMobileLogActivityProfiles())
+                                    {
+                                        <option value="@item.Id">@item.ProfileName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-success mb-3" id="add_LogActivity_profile_settings"><i class="fa fa-plus mr-2"></i>Add Edit Profile</button>
                             </div>
                         </div>
                         <div class="row" id="fieldSettings">
@@ -4977,109 +4999,45 @@
     </div>
 </div>
 
-@*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
+<div class="modal" tabindex="-1" role="dialog" id="addEditViewProfileModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header col-md-12">
-
-                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
+                <h5 class="modal-title col-md-8">Add Edit Profile</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form id="form_new_ir_settings">
-                    <input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />
-                    <div class="form-row">
-                        <div class="col-md-4">
-                            <label>Name</label>
-                            <input type="text" class="form-control" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />
-                        </div>
-                        <div class="col-md-8">
-                            <label>Site Allocation</label>
-
-                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds" multiple>
-                                @foreach (var item in clientViewDataService.GetClientSites())
-                                {
-                                    <option value="@item.Value">@item.Text</option>
-                                }
-                            </select>
-
-                        </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <form id="form_addEditLogProfile">
+                            <div class="form-group row mb-1">
+                                <label for="txtProfileName" class="col-md-12">Profile Name</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" id="txtProfileName" name="txtProfileName" placeholder="Enter Profile Name" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" id="btnSaveNewLogActivityProfile" class="btn btn-success"><i class="fa fa-save mr-2"></i>Save Profile</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-row">
-                        <div class="col-md-12">
-                            <label>Special Email Condition</label>
-                            <input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
-                        </div>
-
-
+                    <div class="col-md-12">
+                        <table id="tbladdEditViewProfileModal" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Profile Name</th>
+                                </tr>
+                            </thead>
+                        </table>
                     </div>
-                    <div asp-validation-summary="All" id="irsettings-field-validation"></div>
-                </form>
-            </div>
-            <div class="modal-footer justify-content-start">
-                <button type="button" class="btn btn-primary" id="btn_save_ir_settings">Save</button>
+                </div>
             </div>
         </div>
-
-
     </div>
-</div>*@
-@*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header col-md-12">
-
-                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="form_new_ir_settings">
-                    <input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />
-                    <input type="hidden" asp-for="@Model.IncidentReportField.TypeId" id="Irfieldtype_Id" />
-                    <div class="form-row">
-                        <div class="col-md-12">
-                        <div class="col-md-4">
-                            <label>Name</label>
-                            @*<select class="form-control" id="list_hrGroups" asp-for="@Model.HrSettings.HRGroupId" asp-items="@viewDataServiceNew.GetHRGroups( true)"></select>*@
-@*<input type="text" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />
-                        </div>
-                        <div class="col-md-4">
-                            <label>Site Allocation</label>
-
-                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds"  multiple>
-                                @foreach (var item in clientViewDataService.GetClientSites())
-                                {
-                                    <option value="@item.Value">@item.Text</option>
-                                }
-                            </select>
-
-
-                        </div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-md-12">
-                            <label>Special Email Condition</label>
-                            <input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
-                        </div>
-
-
-                    </div>
-                    <div asp-validation-summary="All" id="irsettings-field-validation"></div>
-                </form>
-            </div>
-            <div class="modal-footer justify-content-start">
-                <button type="button" class="btn btn-primary" id="btn_save_ir_settings">Save</button>
-            </div>
-        </div>
-
-
-    </div>
-</div>*@
+</div>
 
 <partial name="_SettingsPopup" />
 <partial name="_CriticaldocumentPopup" />
