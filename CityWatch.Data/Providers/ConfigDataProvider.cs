@@ -187,7 +187,7 @@ namespace CityWatch.Data.Providers
 
         public SubDomain GetSubDomainID(int? TypeID);
         public List<DuressAppField> GetDuressAppFields();
-        List<DuressAppField> GetDuressAppByType(int type);
+        List<DuressAppField> GetDuressAppByType(int type, int? profileId = null);
         public bool AddDuressSetting(DuressSetting setting);
         DuressSetting GetDuressSetting(int clientSiteId, int siteDuressNumber);
         public DuressSetting GetDuressSettingById(int duressAppId);
@@ -2137,10 +2137,23 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-        public List<DuressAppField> GetDuressAppByType(int type)
+        public List<DuressAppField> GetDuressAppByType(int type, int? profileId = null)
         {
-            return GetDuressAppFields().Where(x => x.TypeId == type).OrderBy(x => x.Label).ToList();
+            var r = GetDuressAppFields()
+                        .Where(x => x.TypeId == type &&
+                                    (!profileId.HasValue || x.ProfileId == profileId))
+                        .OrderBy(x => x.Label)
+                        .ToList();
+
+            foreach (var item in r)
+            {
+                if (item.ProfileId.HasValue)
+                    item.Profile = _context.MobileLogActivityProfile.FirstOrDefault(x => x.Id == item.ProfileId);
+            }
+
+            return r;
         }
+
 
 
         // ✅ Insert New Record

@@ -9,6 +9,8 @@ namespace CityWatch.Data.Models
         public string PositionFilter { get; set; } = string.Empty;
         public int SelectedPosition { get; set; }
         public int SiteDuressNumber { get; set; }
+        public int? LogProfileId { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
     }

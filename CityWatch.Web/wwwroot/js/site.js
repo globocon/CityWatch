@@ -789,18 +789,26 @@
     let gridDuressAppLogFields;
     let isDuressAppFieldAdding = false;
     gridDuressAppLogFields = $('#tbl_duressapp_fields').grid({
-        dataSource: '/Admin/Settings?handler=DuressAppDetails',
+        dataSource: {
+            url: '/Admin/Settings?handler=DuressAppDetails',
+            data: function () {
+                return {
+                    typeId: $('#duressapp_types').val(),
+                    profileid: $('#LogActivity_profile_types').val()
+                };
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
-        /*selectionType: 'multiple',*/
         button: true,
         inlineEditing: { mode: 'command' },
 
         columns: [
+            { title: 'Profile', width: '100%', editor: false, renderer: function (value, record) { return record.profile ? record.profile.profileName : ''; } },
+            { title: 'ProfileID', hidden: true, width: '100%', editor: false, renderer: function (value, record) { return record.profile ? record.profile.id : ''; } },
             { field: 'label', title: 'Label', width: '100%', editor: true },
-            { field: 'name', title: 'Text to Stamp into LB', width: '100%', editor: true },
-            
+            { field: 'name', title: 'Text to Stamp into LB', width: '100%', editor: true },            
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -978,10 +986,13 @@
         if (selKvlFieldTypeId == 2) {
             $('#add_duressappMultimedia_fields').hide();
             $('#add_duressapp_fields').show();
+            $('#div_selectProfile').show();
+            $('#LogActivity_profile_types').val('');
+            $('#LogActivity_profile_types').trigger('change');
             gridDuressAppAudioFields.hide();
-            gridDuressAppLogFields.show();
-            gridDuressAppLogFields.clear();
-            gridDuressAppLogFields.reload({ typeId: selKvlFieldTypeId });
+            //gridDuressAppLogFields.show();
+            //gridDuressAppLogFields.clear();
+            //gridDuressAppLogFields.reload({ typeId: selKvlFieldTypeId });
             $('#add_DuressAppAudio').hide();
             gridDuressAppMultimediaFields.hide();
 
@@ -989,6 +1000,7 @@
         else if (selKvlFieldTypeId == 1) {
             $('#add_duressappMultimedia_fields').hide();
             $('#add_duressapp_fields').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.show();
             gridDuressAppAudioFields.clear();
@@ -1002,6 +1014,7 @@
             $('#add_duressappMultimedia_fields').show();
             $('#add_duressapp_fields').hide();
             $('#add_DuressAppAudio').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppAudioFields.hide();
             gridDuressAppLogFields.hide();
             gridDuressAppMultimediaFields.show();
@@ -1010,15 +1023,29 @@
         }
         else {
             $('#add_duressapp_fields').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
             $('#add_duressappMultimedia_fields').hide();
             $('#add_DuressAppAudio').hide();
             gridDuressAppMultimediaFields.hide();
-        }
-
-        
+        }        
     });
+
+    $('#LogActivity_profile_types').on('change', function () {
+        var _typeid = $('#duressapp_types').val();
+        var _profileid = $('#LogActivity_profile_types').val();
+        if (!_profileid) {
+            gridDuressAppLogFields.show();
+            gridDuressAppLogFields.clear();
+            return;
+        }
+        gridDuressAppLogFields.show();
+        gridDuressAppLogFields.clear();
+        gridDuressAppLogFields.reload({ typeId: _typeid, profileid: _profileid });
+    });
+
+
     let isDuressFieldAdding = false;
     $('#add_duressapp_fields').on('click', function () {
         const selFieldTypeId = $('#duressapp_types').val();
@@ -1042,12 +1069,18 @@
             if (selFieldTypeId == 2) {
                 if (isDuressAppFieldAdding) {
                     alert('Unsaved changes in the grid. Refresh the page');
-                } else {
+                } else {                    
+                    const _profileid = $('#LogActivity_profile_types').val(); 
+                    if (!_profileid) {
+                        alert('Please select a profile.');
+                        return;
+                    }
                     isDuressFieldAdding = true;
                     gridDuressAppLogFields.addRow({
                         'id': -1,
                         'typeId': selFieldTypeId,
                         'name': '',
+                        'profileId': _profileid
                     }).edit(-1);
                 }
             }
@@ -4695,6 +4728,7 @@
         $('#ta_field_types').hide();
         $('#add_ta_fields').hide();
         $('#duressapp_types').hide();
+        $('#div_selectProfile').hide();
         gridDuressAppLogFields.hide();
         gridDuressAppAudioFields.hide();
         gridDuressAppMultimediaFields.hide();
@@ -4707,6 +4741,7 @@
     }
 
     $('#report_module_types').on('change', function () {
+        $('#div_selectProfile').hide();
         if ($('#report_module_types').val() == 1) {
 
             $('#fieldSettings').show();
@@ -4752,6 +4787,7 @@
             $('#kvl_fields_types').show();
 
             $('#duressapp_types').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
             gridDuressAppMultimediaFields.hide();
@@ -4788,6 +4824,7 @@
             $('#kvl_fields_types').hide();
 
             $('#duressapp_types').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
             gridDuressAppMultimediaFields.hide();
@@ -4825,6 +4862,7 @@
             $('#kvl_fields_types').hide();
 
             $('#duressapp_types').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
             gridDuressAppMultimediaFields.hide();
@@ -4874,6 +4912,7 @@
             // gridTAFields.reload();
 
             $('#duressapp_types').hide();
+            $('#div_selectProfile').hide();
             gridDuressAppLogFields.hide();
             gridDuressAppAudioFields.hide();
             gridDuressAppMultimediaFields.hide();
@@ -7517,6 +7556,116 @@ $('#btnAIButton').on('click', function () {
     } else {
         alert("Please Enter The Feedback")
     }
+});
+
+
+
+let gridLogActivityProfiles;
+
+gridLogActivityProfiles = $('#tbladdEditViewProfileModal').grid({
+    dataSource: '/Admin/Settings?handler=LogActivityProfilesList',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', title: 'ID', width: 50, editor: false },
+        { field: 'profileName', title: 'Profile Name', width: 400, editor: true}
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridLogActivityProfiles) {
+
+    gridLogActivityProfiles.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=UpdateLogActivityProfile',
+            data: { _Profile: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.success == false) {
+                alert(result.message);
+                return;
+            } else {
+                $('#LogActivity_profile_types').find('option[value="' + data.id + '"]').text(data.name);
+                gridLogActivityProfiles.clear();
+                gridLogActivityProfiles.reload();
+                alert(result.message);
+            }
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            
+        });
+    });
+
+    gridLogActivityProfiles.on('rowRemoving', function (e, id, record) {  
+        if (confirm('Are you sure to delete this profile ?')) {            
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteLogActivityProfile',
+                data: { _Profile: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                if (result.success == false) {
+                    alert(result.message);
+                    return;
+                } else {
+                    $('#LogActivity_profile_types').find('option[value="' + record + '"]').remove();
+                    gridLogActivityProfiles.clear();
+                    gridLogActivityProfiles.reload();
+                    $('#LogActivity_profile_types').val('');
+                    $('#LogActivity_profile_types').trigger('change');
+                    alert(result.message);
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                
+            });
+        }
+    });
+}
+
+
+$('#add_LogActivity_profile_settings').on('click', function () {    
+    $("#txtProfileName").val('');
+    //Reload grid
+    gridLogActivityProfiles.reload();
+    $('#addEditViewProfileModal').modal('show');
+});
+
+$('#btnSaveNewLogActivityProfile').on('click', function () {
+    var pn = $("#txtProfileName").val();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=AddLogActivityProfile',
+        data: { profileName: pn },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (data) {
+        if (data.success) {
+            $('#LogActivity_profile_types').append('<option value="' + data.id + '">' + data.name + '</option>');
+            $("#txtProfileName").val();            
+            gridLogActivityProfiles.reload();
+            alert(data.message);
+        }
+        else {
+            alert(data.message);
+        }
+        
+    }).fail(function () {
+        console.log('error');
+    }).always(function () {
+
+    });    
 });
 
 

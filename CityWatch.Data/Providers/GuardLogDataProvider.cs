@@ -384,6 +384,11 @@ namespace CityWatch.Data.Providers
 
         public List<FeedbackTemplateViewModel> GetFeedbackTemplates();
         List<string> GetIRSerialNumbers(string regoStart = null);
+
+        public MobileLogActivityProfile SaveLogActivityProfile(string profileName, out string msg);
+        public List<MobileLogActivityProfile> GetMobileLogActivityProfiles();
+        public MobileLogActivityProfile UpdateLogActivityProfile(MobileLogActivityProfile _profile, out string msg);
+        public bool DeleteLogActivityProfile(int profileId, out string msg);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5337,6 +5342,8 @@ namespace CityWatch.Data.Providers
                     duressappUpdate.Label = duressapp.Label;
                    
                     duressappUpdate.TypeId = duressapp.TypeId;
+
+                    duressappUpdate.ProfileId = duressapp.ProfileId;
                 }
             }
             _context.SaveChanges();
@@ -6845,6 +6852,65 @@ namespace CityWatch.Data.Providers
                 .Distinct()
                 .OrderBy(z => z)
                 .ToList();
+        }
+
+        public MobileLogActivityProfile SaveLogActivityProfile(string profileName,out string msg)
+        {
+            var _existing = _context.MobileLogActivityProfile.FirstOrDefault(x => x.ProfileName.ToLower() == profileName.ToLower());
+            if(_existing != null)
+            {
+                msg = "Profile name already exists.";
+                return new MobileLogActivityProfile(); // Profile name already exists
+            }
+            var newProfile = new MobileLogActivityProfile
+            {
+                ProfileName = profileName
+            };
+            _context.MobileLogActivityProfile.Add(newProfile);
+            _context.SaveChanges();
+            msg = "Profile created successfully.";
+            return newProfile; // Return the newly created profile
+        }
+
+        public List<MobileLogActivityProfile> GetMobileLogActivityProfiles()
+        {
+            return _context.MobileLogActivityProfile.ToList();
+        }
+
+        public MobileLogActivityProfile UpdateLogActivityProfile(MobileLogActivityProfile _profile, out string msg)
+        {
+            var _existing = _context.MobileLogActivityProfile.FirstOrDefault(x => x.ProfileName.ToLower() == _profile.ProfileName.ToLower() && x.Id != _profile.Id);
+            if (_existing != null)
+            {
+                msg = "Profile name already exists.";
+                return new MobileLogActivityProfile(); // Profile name already exists
+            }
+            _existing = _context.MobileLogActivityProfile.FirstOrDefault(x => x.Id == _profile.Id);
+            _existing.ProfileName = _profile.ProfileName;
+            _context.SaveChanges();
+            msg = "Profile updated successfully.";
+            return _existing; // Return the updated profile
+        }
+
+        public bool DeleteLogActivityProfile(int profileId, out string msg)
+        {
+            var _existing = _context.MobileLogActivityProfile.FirstOrDefault(x => x.Id == profileId);
+            if (_existing == null)
+            {
+                msg = "Profile not found.";
+                return false; // Profile not found
+            }
+            var linkedrecords = _context.DuressAppField.Where(x=> x.ProfileId == profileId).ToList();
+            if (linkedrecords.Any())
+            {
+                msg = "Profile cannot be deleted as it is linked to existing records.";
+                return false; // Profile cannot be deleted due to linked records
+            }
+
+            _context.MobileLogActivityProfile.Remove(_existing);
+            _context.SaveChanges();
+            msg = "Profile deleted successfully.";
+            return true;
         }
     }
 
