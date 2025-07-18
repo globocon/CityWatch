@@ -36,12 +36,13 @@ using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using CityWatch.Data.Enums;
 using ConvertApiDotNet;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Text.RegularExpressions;
 
 
 namespace CityWatch.Web.API
 {
 
-  
+
     [Route("api/[controller]")]
     [ApiController]
     public class GuardSecurityNumberController : ControllerBase
@@ -64,9 +65,10 @@ namespace CityWatch.Web.API
         private readonly IUserDataProvider _userDataProvider;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
+        private readonly IUserAuthenticationService _userAuthentication;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
-       
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, IAppConfigurationProvider appConfigurationProvider)
+
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -84,7 +86,7 @@ namespace CityWatch.Web.API
             _userDataProvider = userDataProvider;
             _incidentReportGenerator = incidentReportGenerator;
             _appConfigurationProvider = appConfigurationProvider;
-           
+            _userAuthentication = userAuthentication;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -162,7 +164,7 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("EnterGuardLogin")]
-        public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId,string gps)
+        public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId, string gps)
         {
             try
             {
@@ -309,7 +311,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString,string gps)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps)
         {
             try
             {
@@ -330,7 +332,7 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Guard login failed." });
 
                 // Default GPS coordinates (should be replaced with actual values if available)
-               var gpsCoordinates = gps;
+                var gpsCoordinates = gps;
 
                 // Create a log entry
                 var signInEntry = new GuardLog
@@ -394,7 +396,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("SaveClientSiteDuress")]
-        public async Task<IActionResult> SaveClientSiteDuress(int guardId, int clientsiteId, int userId,string gps)
+        public async Task<IActionResult> SaveClientSiteDuress(int guardId, int clientsiteId, int userId, string gps)
         {
             try
             {
@@ -415,17 +417,17 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Guard login failed." });
 
                 // Validate request parameters
-                if (clientsiteId <= 0 || guardId <= 0 || guardLoginId <= 0 || logBookId <= 0 )
+                if (clientsiteId <= 0 || guardId <= 0 || guardLoginId <= 0 || logBookId <= 0)
                 {
                     return BadRequest(new { message = "Invalid input parameters." });
                 }
 
-               
+
                 var gpsCoordinates = gps;
                 var enabledAddress = string.Empty;
                 var status = true;
                 var message = "Success";
-              
+
 
                 if (!string.IsNullOrEmpty(gpsCoordinates) && gpsCoordinates.Contains(","))
                 {
@@ -437,7 +439,7 @@ namespace CityWatch.Web.API
                     {
                         string address = await GetAddressFromCoordinatesAsync(lat, lng);
 
-                        enabledAddress= address;
+                        enabledAddress = address;
                         // Use the address as needed
                         Console.WriteLine(address);
                     }
@@ -452,7 +454,7 @@ namespace CityWatch.Web.API
                 }
 
 
-                
+
 
 
                 var tmdata = new GuardLog()
@@ -467,7 +469,7 @@ namespace CityWatch.Web.API
                     EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
                     EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
                     EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                  
+
                 };
 
 
@@ -602,7 +604,7 @@ namespace CityWatch.Web.API
             {
                 return StatusCode(500, new { message = "An error occurred.", error = ex.Message });
             }
-           
+
         }
 
 
@@ -699,7 +701,7 @@ namespace CityWatch.Web.API
                 {
                     emailAddressList.Add(mailbox);
                 }
-                
+
             }
 
             return emailAddressList;
@@ -710,7 +712,7 @@ namespace CityWatch.Web.API
         {
             var emailAddressList = new List<MailboxAddress>();
 
-            
+
             if (toAddress != null && toAddress.Length >= 2 &&
                 !string.IsNullOrWhiteSpace(toAddress[0]) &&
                 MailboxAddress.TryParse(toAddress[0].Trim(), out var mainMailbox))
@@ -720,7 +722,7 @@ namespace CityWatch.Web.API
 
             var fields = _configDataProvider?.GetReportFields()?.ToList() ?? new List<IncidentReportField>();
 
-            
+
             void AddIfValid(string email)
             {
                 if (!string.IsNullOrWhiteSpace(email) &&
@@ -859,11 +861,11 @@ namespace CityWatch.Web.API
                     {
                         Id = guardlog.Id,
                         EventDateTime = guardlog.EventDateTime,
-                        EventDateTimeLocal = formattedDisplayTime, 
+                        EventDateTimeLocal = formattedDisplayTime,
                         Notes = notes,
                         ImageUrls = imageUrls,
                         GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A",
-                        IrEntryType = guardlog.IrEntryType== IrEntryType.Normal ? true : false,
+                        IrEntryType = guardlog.IrEntryType == IrEntryType.Normal ? true : false,
                     };
 
 
@@ -1006,17 +1008,17 @@ namespace CityWatch.Web.API
         [HttpGet("GetFeedbackTemplates")]
         public IActionResult GetFeedbackTemplates()
         {
-            var result = _guardLogDataProvider.GetFeedbackTemplates(); 
-            return Ok(result); 
+            var result = _guardLogDataProvider.GetFeedbackTemplates();
+            return Ok(result);
         }
 
 
 
-       
+
 
         [HttpPost("ProcessIrSubmit")]
-        public IActionResult ProcessIrSubmit([FromQuery] string gps,[FromQuery] int UserId, [FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
-        { 
+        public IActionResult ProcessIrSubmit([FromQuery] string gps, [FromQuery] int UserId, [FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
+        {
             var fileName = string.Empty;
             var processResult = new SortedDictionary<int, IrProcessFailure>();
             var reportGenerated = false;
@@ -1025,7 +1027,7 @@ namespace CityWatch.Web.API
             string hashCode = GenerateHashCode(input);
 
             var GuardDetails = _clientDataProvider.GetGuradName(IRguardId);
-
+            var domain = IsThirdParty(UserId);
             var nameParts = (GuardDetails.Name ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
             string firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
             string lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
@@ -1040,9 +1042,10 @@ namespace CityWatch.Web.API
                 Email = GuardDetails.Email,
                 LicenseNumber = GuardDetails.SecurityNo,
                 LicenseState = GuardDetails.State,
-                CallSign = string.Empty,              
+                CallSign = string.Empty,
                 Billing = string.Empty,
-                GuardMonth= Report.Officer.GuardMonth
+                GuardMonth = Report.Officer.GuardMonth,
+                NotifiedBy= Report.Officer.NotifiedBy
             };
 
 
@@ -1062,7 +1065,7 @@ namespace CityWatch.Web.API
 
             try
             {
-                Report.HASH = hashCode+"app";
+                Report.HASH = hashCode + "app";
                 Report.IP = remoteIpAddress;
                 Report.SerialNumber = GetIrSerialNumber(Report);
             }
@@ -1079,8 +1082,8 @@ namespace CityWatch.Web.API
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
-              
-                var templateFilename = CheckIfTheUrlIsAThirdPartyUrl();
+               
+                var templateFilename = CheckIfTheUrlIsAThirdPartyUrl(domain);
                 fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite, templateFilename);
                 reportGenerated = true;
                 //TempData["ReportFileName"] = fileName;
@@ -1132,7 +1135,7 @@ namespace CityWatch.Web.API
                 HASH = hashCode,
                 ClientSitePositionId = clientSitePosition?.ClientsiteId,
                 GuardId = IRguardId,
-                
+
             };
 
 
@@ -1241,7 +1244,7 @@ namespace CityWatch.Web.API
                 try
                 {
                     if (report.ClientSiteId.HasValue)
-                        CreateGuardLogEntry(report,IRguardId, UserId,gps);
+                        CreateGuardLogEntry(report, IRguardId, UserId, gps);
                     CreateControlRoomLogEntry(report);//To Save in the control room
                     if (report.ClientSitePositionId.HasValue)
                     {
@@ -1259,7 +1262,8 @@ namespace CityWatch.Web.API
                 {
                     if (true)
                     {
-                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report);
+                        
+                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report,domain);
 
                         /* Save log for duress button enable Start 02032024 dileep*/
                         var guradDetailsName = "Admin";
@@ -1362,11 +1366,12 @@ namespace CityWatch.Web.API
             {
                 _logger.LogError(ex.StackTrace);
             }
-
+            
             return Ok(new
             {
                 Success = processResult.Count == 0,
                 FileName = fileName,
+                Domin = domain?.Domain ?? string.Empty, 
                 Errors = processResult.Select(p => new { Code = p.Key, Message = p.Value.ErrorMessage })
             });
         }
@@ -1462,7 +1467,7 @@ namespace CityWatch.Web.API
 
         }
 
-        private void CreateGuardLogEntry(IncidentReport report,int Guardid,int UserId,string gps)
+        private void CreateGuardLogEntry(IncidentReport report, int Guardid, int UserId, string gps)
         {
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(report.ClientSiteId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
@@ -1470,7 +1475,7 @@ namespace CityWatch.Web.API
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
-                
+
                 ClientSiteLogBookId = logBookId,
                 EventDateTime = DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
@@ -1482,12 +1487,26 @@ namespace CityWatch.Web.API
                 EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                 EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
                 IsIRReportTypeEntry = true,
-                GuardLoginId= guardLoginId,
-                GpsCoordinates= gps
+                GuardLoginId = guardLoginId,
+                GpsCoordinates = gps
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
-        private bool SendEmailWithAzureBlob(string fileName, IncidentRequest Report )
+
+
+        public SubDomain IsThirdParty(int userId)
+        {
+            var access = _userAuthentication.GetUserClientSiteAccessThirdParty(userId);
+
+            if (access?.ThirdPartyID != null && access.ThirdPartyID != 0)
+            {
+                var subDomain = _configDataProvider.GetSubDomainID(access.ThirdPartyID);
+                return subDomain;
+            }
+
+            return null;
+        }
+        private bool SendEmailWithAzureBlob(string fileName, IncidentRequest Report, SubDomain domain)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
             var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
@@ -1495,23 +1514,48 @@ namespace CityWatch.Web.API
             //var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
 
             var toAddressData = string.Empty;
-            var thirpartyemail = getClientEmailId();
+            var thirpartyemail = getClientEmailId(domain);
             var messageHtml = string.Empty; ;
             if (thirpartyemail != string.Empty)
             {
                 toAddressData = thirpartyemail + '|' + ToAddreddAppset[1];
-                var host = HttpContext.Request.Host.Host;
-                var hostParts = host.Split('.');
-
-                // Extract the client name
-                string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
-                ? hostParts[1]
-                : hostParts[0];
-                var domain = _configDataProvider.GetSubDomainDetails(clientName);
+               
                 if (domain != null)
                 {
 
-                    messageHtml = "Dear " + CapitalizeFirstLetter(domain.Domain) + " Client; < br >< br > Please find attached Incident Report. This initial<q>v1.0 </ q > report has automatically been sent<q>live</ q > from the field.Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number.< br >< br > Sites with access to the cloud file server will also have a copy stored in the relevant folder.< br >< br > Any concerns, please contact your relevant " + CapitalizeFirstLetter(domain.Domain) + " Account Manager, or email<a href = 'mailto:" + thirpartyemail + "' > " + thirpartyemail + " </ a >";
+                    string messageHtmlnew = _emailOptions.Message;
+                    string wordToReplace = "Citywatch Security";
+                    string replacementWord = CapitalizeFirstLetter(domain.Domain);
+
+                    // Regex to split into sentences based on punctuation (., !, ?)
+                    string[] sentences = Regex.Split(messageHtmlnew, @"(?<=[.!?])\s+");
+
+                    for (int i = 0; i < sentences.Length; i++)
+                    {
+                        // Replace whole word only (case-insensitive)
+                        sentences[i] = Regex.Replace(
+                            sentences[i],
+                            $@"\b{Regex.Escape(wordToReplace)}\b",
+                            replacementWord,
+                            RegexOptions.IgnoreCase);
+                    }
+
+                    messageHtmlnew = string.Join(" ", sentences);
+                    wordToReplace = "control@citywatchsecurity.com.au";
+                    replacementWord = thirpartyemail;
+                    sentences = Regex.Split(messageHtmlnew, @"(?<=[.!?])\s+");
+
+                    for (int i = 0; i < sentences.Length; i++)
+                    {
+                        // Replace whole word only (case-insensitive)
+                        sentences[i] = Regex.Replace(
+                            sentences[i],
+                            $@"\b{Regex.Escape(wordToReplace)}\b",
+                            replacementWord,
+                            RegexOptions.IgnoreCase);
+                    }
+                    messageHtmlnew = string.Join(" ", sentences);
+                    messageHtml = messageHtmlnew;
                 }
             }
             else
@@ -1540,7 +1584,7 @@ namespace CityWatch.Web.API
             var subject = _emailOptions.Subject;
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-            foreach (var address in GetToEmailAddressListIr(toAddress,Report))
+            foreach (var address in GetToEmailAddressListIr(toAddress, Report))
                 message.To.Add(address);
             if (Report.DateLocation.ReimbursementYes)
             {
@@ -1709,43 +1753,29 @@ namespace CityWatch.Web.API
 
             return char.ToUpper(input[0]) + input.Substring(1);
         }
-        public string CheckIfTheUrlIsAThirdPartyUrl()
+        public string CheckIfTheUrlIsAThirdPartyUrl(SubDomain domain)
         {
-            string defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
-                                                  .FirstOrDefault(x => x.SubDomainId == 0)
-                                                  ?.FileName ?? string.Empty;
+            // Fallback default (when SubDomainId == 0 or domain is null)
+            var defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                .FirstOrDefault(x => x.SubDomainId == 0)
+                                                ?.FileName ?? string.Empty;
 
-            var host = HttpContext.Request.Host.Host;
-            var hostParts = host.Split('.');
-
-            // Extract the client name
-            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
-                                ? hostParts[1]
-                                : hostParts[0];
-
-            if (!string.IsNullOrEmpty(clientName))
+            // If a valid domain is provided, try to get its specific template
+            if (domain != null)
             {
-                // Exclude reserved keywords
-                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
-                // var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
-                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
-                {
-                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
-                    if (domain != null)
-                    {
-                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
-                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+                var domainTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                      .FirstOrDefault(x => x.SubDomainId == domain.Id);
 
-                        if (subDomainIrTemplate != null)
-                        {
-                            defaultValue = subDomainIrTemplate.FileName;
-                        }
-                    }
+                if (domainTemplate != null && !string.IsNullOrEmpty(domainTemplate.FileName))
+                {
+                    return domainTemplate.FileName;
                 }
             }
 
+            // Return default if no domain-specific template was found
             return defaultValue;
         }
+
 
         private bool AzureBlobUploadIrUploadWithOutMail(string fileName)
         {
@@ -1789,36 +1819,17 @@ namespace CityWatch.Web.API
             return status;
         }
 
-        public string getClientEmailId()
+        public string getClientEmailId(SubDomain domain)
         {
             string defaultValue = string.Empty;
-
-            var host = HttpContext.Request.Host.Host;
-            var hostParts = host.Split('.');
-
-            // Extract the client name
-            string clientName = hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www"
-                                ? hostParts[1]
-                                : hostParts[0];
-
-            if (!string.IsNullOrEmpty(clientName))
+            if (domain != null)
             {
-                // Exclude reserved keywords
-                var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
-                //var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" };
-                if (!reservedKeywords.Contains(clientName.Trim().ToLower()))
-                {
-                    var domain = _configDataProvider.GetSubDomainDetails(clientName);
-                    if (domain != null)
-                    {
-                        var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
-                                                                   .FirstOrDefault(x => x.SubDomainId == domain.Id);
+                var subDomainIrTemplate = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
+                                                           .FirstOrDefault(x => x.SubDomainId == domain.Id);
 
-                        if (subDomainIrTemplate != null)
-                        {
-                            defaultValue = subDomainIrTemplate.DefaultEmail;
-                        }
-                    }
+                if (subDomainIrTemplate != null)
+                {
+                    defaultValue = subDomainIrTemplate.DefaultEmail;
                 }
             }
 
@@ -1915,7 +1926,7 @@ namespace CityWatch.Web.API
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
-      
+
         [HttpGet("GetClientSiteByName")]
         public IActionResult GetClientSiteByName(string name)
         {
@@ -1954,8 +1965,8 @@ namespace CityWatch.Web.API
 
 
 
-       
-       [HttpPost("UploadFile")]
+
+        [HttpPost("UploadFile")]
         public async Task<IActionResult> UploadFile([FromQuery] string reportReference, [FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -2050,7 +2061,7 @@ namespace CityWatch.Web.API
         [HttpGet("areas")]
         public IActionResult Areas([FromQuery] int clientSiteId)
         {
-            
+
 
             var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
             var clientArea = _configDataProvider.GetReportFieldsByType(ReportFieldType.ClientArea);
@@ -2071,12 +2082,25 @@ namespace CityWatch.Web.API
                     items.Add(new SelectListItem(item.Name, item.Name));
                 }
             }
-           
+
 
             return Ok(items);
         }
 
+        [HttpGet("GetNotifiedByList")]
+        public IActionResult GetNotifiedByList()
+        {
+            var notifiedBy = _configDataProvider.GetReportFieldsByType(ReportFieldType.NotifiedBy);
 
+            // Extract just the names
+            var result = notifiedBy
+                .Select(item => item.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct()
+                .ToList();
+
+            return Ok(result);
+        }
 
 
     }
