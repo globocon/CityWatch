@@ -32,7 +32,7 @@ namespace CityWatch.RadioCheck.Pages
         public List<string> NewRowData { get; set; }
         public ComplianStringsIFrame(CityWatchDbContext context)
         {
-            filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "CompliantStringsData", "CompliantStringsData.xlsx");
+            filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "StringsData", "StringsData.xlsx");
             _context = context;
         }
         public async Task OnGetAsync()
