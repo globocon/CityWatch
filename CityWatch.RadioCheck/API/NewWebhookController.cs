@@ -1,13 +1,14 @@
-﻿using CityWatch.Data.Models;
-using CityWatch.RadioCheck.Helpers;
+﻿using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Models;
 using ClosedXML.Excel;
-using Dropbox.Api.FileProperties;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -20,7 +21,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CityWatch.RadioCheck.API
-{   
+{
 
     [Route("api/newwebhook")]
     [ApiController]
@@ -30,8 +31,6 @@ namespace CityWatch.RadioCheck.API
         private readonly IConfiguration _configuration;
         private string templateFileName;
         private string download_jsonMappingFile;
-        private string deliveries_jsonMappingFile;
-        private string execution_jsonMappingFile;
         private string deliveries_DataFile;
         private string execution_DataFile;
         private string jsonImageToFolderMappingFile;
@@ -53,8 +52,6 @@ namespace CityWatch.RadioCheck.API
             _configuration = configuration;
             templateFileName = "Fortescue_Rerail_Scoping_Desktop.xlsx";
             download_jsonMappingFile = "download_form_fields_mapping.json";
-            deliveries_jsonMappingFile = "deliveries_form_fields_mapping.json";
-            execution_jsonMappingFile = "execution_form_fields_mapping.json";
             jsonImageToFolderMappingFile = "image_folder_mapping.json";
             deliveries_DataFile = "Delivery Data.xlsx";
             execution_DataFile = "Execution Data.xlsx";
@@ -68,6 +65,12 @@ namespace CityWatch.RadioCheck.API
             submissionFolder = "";
             formName = "";
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform");
+        }
+
+        [HttpGet("formsubmit")]
+        public async Task<IActionResult> ReceiveTest()
+        {
+            return Ok(new { message = $"Api call success..." });
         }
 
         [HttpPost("formsubmit")]
@@ -107,7 +110,7 @@ namespace CityWatch.RadioCheck.API
 
                 formName = await GetFormNameFromJotForm(formID);
                 //string workOrder = webhookData != null && webhookData.ContainsKey("q3_workOrder") ? webhookData["q3_workOrder"].ToString() : "UnknownWorkOrder";
-                workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.Contains("_workOrder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
+                workOrder = webhookData != null ? webhookData.FirstOrDefault(kvp => kvp.Key.ToLower().Contains("_workorder")).Value?.ToString() ?? "UnknownWorkOrder" : "UnknownWorkOrder";
                 submissionFolder = Path.Combine(uploadFolder, formName, workOrder);
                 templateFolder = Path.Combine(uploadFolder, formName);
                 if (!Directory.Exists(submissionFolder))
@@ -121,20 +124,55 @@ namespace CityWatch.RadioCheck.API
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, Environment.NewLine + rawJson);
                 WriteLog($"Webhook received. Data saved for Submission ID: {submissionID}");
 
-                CopyTemplateToFolder(uploadFolder, excelFilePath);
-                await CreateExcelReportFile(excelFilePath, uploadFolder, submissionFolder, webhookData);
+                CopyTemplateToFolder(templateFolder, excelFilePath);
+                await CreateExcelReportFile(webhookData);
 
 
                 WriteLog($"Exiting From webhook.\n######################################################################\n\n\n");
 
                 return Ok(new { message = $"Webhook received. Files saved in uploads/jotform/{formName}/{workOrder}/" });
-                                
+
             }
             catch (Exception ex)
             {
                 string logPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "webhook_log.txt");
                 WriteLog($"Error: {ex.Message}");
                 return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("exceldatadownload")]
+        public async Task<IActionResult> DownloadExcelFile([FromForm] string formName, [FromForm] string workOrder)
+        {
+
+            submissionFolder = Path.Combine(uploadFolder, formName, workOrder);
+            templateFolder = Path.Combine(uploadFolder, formName);
+            string fileName = $"{formName}_{workOrder}_Output_data.xlsx";
+            excelFilePath = Path.Combine(submissionFolder, fileName);
+            logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
+            jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
+
+            // ## This is for Testing 
+            string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
+            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+            var rawArray = rawJson.Split(Environment.NewLine);
+            rawJson = rawArray[rawArray.Length - 1];
+            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+            CopyTemplateToFolder(templateFolder, excelFilePath);
+            await CreateExcelReportFile(webhookData);
+            // ## This is for Testing
+
+
+
+            // 🔸 Return file as response
+            if (!System.IO.File.Exists(excelFilePath))
+            {
+                return BadRequest("File does not Exists !!!");
+            }
+            else
+            {
+                var stream = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read);
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
         }
 
@@ -194,11 +232,12 @@ namespace CityWatch.RadioCheck.API
             return Ok(new { status = status, message = message });
         }
 
-        private async Task CreateExcelReportFile(string _excelReportFileName, string JsonMappingFileFolder, string submissionFolder, Dictionary<string, object> webhookData)
+        private async Task CreateExcelReportFile(Dictionary<string, object> webhookData)
         {
-            if (!System.IO.File.Exists(_excelReportFileName))
+            string JsonMappingFileFolder = uploadFolder;
+            if (!System.IO.File.Exists(excelFilePath))
             {
-                string log = $"Error: File {_excelReportFileName} not found for generating report.\n";
+                string log = $"Error: File {excelFilePath} not found for generating report.\n";
                 log += $"Exiting From webhook.\n######################################################################\n\n\n";
                 throw new Exception(message: log, innerException: null);
             }
@@ -213,95 +252,281 @@ namespace CityWatch.RadioCheck.API
                 // Compress image files                   
                 ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");
                 //ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\Compressed_Images");
-                if (DoesTemplateExists(templateFolder))
-                {
-                    //CreateExcelInTemplateFormat(excelFilePath, webhookData);
-                    UpdateTemplateUsingJsonMapping(templateFolder, excelFilePath, webhookData);
-                    //insert images in the excel file.
-                    CheckAndInsertImageInExcel(templateFolder, excelFilePath, workOrder, "image_captions.json");
-                }
-                else
-                {
-                    AppendToExcel(excelFilePath, webhookData);
-                }
+                //if (DoesTemplateExists(templateFolder))
+                //{
+                //    //CreateExcelInTemplateFormat(excelFilePath, webhookData);
+                //    UpdateTemplateUsingJsonMapping(templateFolder, excelFilePath, webhookData);
+                //    //insert images in the excel file.
+                //    CheckAndInsertImageInExcel(templateFolder, excelFilePath, workOrder, "image_captions.json");
+                //}
+                //else
+                //{
+                //    AppendToExcel(excelFilePath, webhookData);
+                //}
 
-                if (DoesDataFileExists(templateFolder, deliveries_DataFile, deliveries_jsonMappingFile))
-                {
-                    string _datafileName = Path.Combine(templateFolder, deliveries_DataFile);
-                    string _mappingJsonfileName = Path.Combine(templateFolder, deliveries_jsonMappingFile);
-                    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
-                }
-                if (DoesDataFileExists(templateFolder, execution_DataFile, execution_jsonMappingFile))
-                {
-                    string _datafileName = Path.Combine(templateFolder, execution_DataFile);
-                    string _mappingJsonfileName = Path.Combine(templateFolder, execution_jsonMappingFile);
-                    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
-                }
+                //if (DoesDataFileExists(templateFolder, deliveries_DataFile, deliveries_jsonMappingFile))
+                //{
+                //    string _datafileName = Path.Combine(templateFolder, deliveries_DataFile);
+                //    string _mappingJsonfileName = Path.Combine(templateFolder, deliveries_jsonMappingFile);
+                //    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
+                //}
+                //if (DoesDataFileExists(templateFolder, execution_DataFile, execution_jsonMappingFile))
+                //{
+                //    string _datafileName = Path.Combine(templateFolder, execution_DataFile);
+                //    string _mappingJsonfileName = Path.Combine(templateFolder, execution_jsonMappingFile);
+                //    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
+                //}
             }
 
 
+            FileInfo fileinfo = new FileInfo(excelFilePath);
+            //ExcelPackage workbook = new ExcelPackage(fileinfo);                   
+
+            using (var workbook = new ExcelPackage(fileinfo))
+            {
+                try
+                {
+                    //string jsonMappingFileWithPath = "";
+                    //Main_Scope_Data
+                    var worksheet = workbook.Workbook.Worksheets["Main_Scope_Data"];
+                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyWeldingReport_jsonMappingFile);
+                    Update_Data_in_Template(ref worksheet, webhookData);
+
+                    //Resources_Equipment_Data
+                    worksheet = workbook.Workbook.Worksheets["Resources_Equipment_Data"];
+                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyWeldReturn_jsonMappingFile);
+                    Update_Data_in_Template(ref worksheet, webhookData);
+
+                    //Site_Photos_Data
+                    worksheet = workbook.Workbook.Worksheets["Site_Photos_Data"];
+                    var imagedestworksheet = workbook.Workbook.Worksheets["Site Photos"];
+                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyInspect_jsonMappingFile);
+                    Update_Image_in_Template(ref worksheet, ref imagedestworksheet, webhookData);
+
+
+                    ////Registers
+                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, register_jsonMappingFile);
+                    //var registerMappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
+                    //var registerPathMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(registerMappingJson);
+                    //foreach (var keyValue in registerPathMappings)
+                    //{
+                    //    string ws_name = keyValue.Key;
+                    //    if (workbook.TryGetWorksheet(ws_name, out worksheet))
+                    //    {
+                    //        if (worksheet != null)
+                    //        {
+                    //            Copy_Register_Data_To_Template(ref worksheet, keyValue.Value);
+                    //        }
+                    //    }
+                    //}
 
 
 
+                }
+                catch (Exception ex)
+                {
 
-            //using (var workbook = new XLWorkbook(_excelReportFileName))
-            //{
-            //    try
-            //    {
-            //        //string jsonMappingFileWithPath = "";
-            //        ////Daily_Welding_Report_Data
-            //        //var worksheet = workbook.Worksheet("Daily_Welding_Report_Data");
-            //        //jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldingReport_jsonMappingFile);
-            //        //Update_Daily_Welding_Report_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
+                    string log = $"Error: Unable to create excel report file: {ex.Message}\n";
+                    log += $"Exiting From webhook.\n######################################################################\n\n\n";
+                    throw new Exception(message: log, innerException: ex.InnerException);
+                }
+                finally
+                {
+                    //workbook.CalculationOnSave = true;
+                    workbook.Save();
+                    workbook.Dispose();
+                }
+            }
+        }
 
-            //        ////Daily_Weld_Return_Data
-            //        //worksheet = workbook.Worksheet("Daily_Weld_Return_Data");
-            //        //jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldReturn_jsonMappingFile);
-            //        //Update_Daily_Weld_Return_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
+        private void Update_Data_in_Template(ref ExcelWorksheet worksheet, Dictionary<string, object> webhookData)
+        {
+            int headerCol = 1;
+            int dataCol = 3;
+            int lastUsedRow = worksheet.Dimension.End.Row == 0 ? 1 : worksheet.Dimension.End.Row;
 
-            //        ////Daily_Inspect_Data
-            //        //worksheet = workbook.Worksheet("Daily_Inspect_Data");
-            //        //jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyInspect_jsonMappingFile);
-            //        //Update_Daily_Inspect_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
-
-            //        ////Rail_Heat_Number_Record_Data
-            //        //worksheet = workbook.Worksheet("Rail_Heat_Number_Record_Data");
-            //        //jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, railHeatNumberRecord_jsonMappingFile);
-            //        //Update_Rail_Heat_Number_Record_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
-
-            //        ////Registers
-            //        //jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, register_jsonMappingFile);
-            //        //var registerMappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-            //        //var registerPathMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(registerMappingJson);
-            //        //foreach (var keyValue in registerPathMappings)
-            //        //{
-            //        //    string ws_name = keyValue.Key;
-            //        //    if (workbook.TryGetWorksheet(ws_name, out worksheet))
-            //        //    {
-            //        //        if (worksheet != null)
-            //        //        {
-            //        //            Copy_Register_Data_To_Template(ref worksheet, keyValue.Value);
-            //        //        }
-            //        //    }
-            //        //}
+            // Traverse headers in col 1
+            for (int row = 2; row <= lastUsedRow; row++)
+            {
+                string excelHeader = Convert.ToString(worksheet.GetValue(row, headerCol));
+                string jsonKeyInWebhook = Convert.ToString(worksheet.GetValue(row, headerCol + 1));
 
 
 
-            //    }
-            //    catch (Exception ex)
-            //    {
+                if (string.IsNullOrEmpty(jsonKeyInWebhook) || string.IsNullOrEmpty(excelHeader))
+                    continue;
 
-            //        string log = $"Error: Unable to create excel report file: {ex.Message}\n";
-            //        log += $"Exiting From webhook.\n######################################################################\n\n\n";
-            //        throw new Exception(message: log, innerException: ex.InnerException);
-            //    }
-            //    finally
-            //    {
-            //        workbook.CalculationOnSave = true;
-            //        workbook.Save();
-            //        workbook.Dispose();
-            //    }
-            //}
+                //Check if Excel header is a table
+                if (excelHeader != null && excelHeader.StartsWith("#TABLE_"))
+                {
+                    if (!string.IsNullOrEmpty(jsonKeyInWebhook) && webhookData.TryGetValue(jsonKeyInWebhook, out var rawValue))
+                    {
+                        row++;
+                        int start_row = row;
+                        int current_row = row;
+                        var data = JObject.Parse(rawValue.ToString());
+                        int column = 2; // Start from column B
+                        foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
+                        {
+                            var rowValues = (JObject)item.Value;
+                            for (int i = 0; i < data.Count - 2; i++)
+                            {
+                                string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
+                                worksheet.Cells[row, column].Value = value;
+                                current_row = row;
+                                row++;
+                            }
+                            column++;
+                            row = start_row;
+                        }
+                        row = current_row - 1;
+                    }
+
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(jsonKeyInWebhook) && webhookData.TryGetValue(jsonKeyInWebhook, out var rawValue))
+                    {
+                        object cellValue = null;
+
+                        if (rawValue is JObject dateObj &&
+                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
+                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
+                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
+                            int.TryParse(dateObj["year"]?.ToString(), out int year))
+                        {
+                            // Format date to dd/MM/yyyy or as DateTime
+                            DateTime date = new DateTime(year, month, day);
+                            cellValue = date.ToString("dd/MM/yyyy");
+                        }
+                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
+                        {
+                            cellValue = rawValue.ToString();
+                        }
+
+                        // Write to Excel only if there's a value
+                        if (cellValue != null)
+                        {
+                            worksheet.Cells[row, dataCol].Value = cellValue is DateTime dt ? dt : cellValue.ToString();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void Update_Image_in_Template(ref ExcelWorksheet worksheet, ref ExcelWorksheet DestWorkSheet, Dictionary<string, object> webhookData)
+        {
+            int headerCol = 1;
+            int dataCol = 3;
+            int lastUsedRow = worksheet.Dimension.End.Row == 0 ? 1 : worksheet.Dimension.End.Row;
+
+            // Traverse headers in col 1
+            for (int row = 2; row <= lastUsedRow; row++)
+            {
+                string excelHeader = Convert.ToString(worksheet.GetValue(row, headerCol));
+                string jsonKeyInWebhook = Convert.ToString(worksheet.GetValue(row, headerCol + 1));
+
+                string destrowstr = Convert.ToString(worksheet.GetValue(row, headerCol + 2));
+                string destcolstr = Convert.ToString(worksheet.GetValue(row, headerCol + 3));
+
+
+
+                if (string.IsNullOrEmpty(jsonKeyInWebhook) || string.IsNullOrEmpty(excelHeader) || string.IsNullOrEmpty(destrowstr) || string.IsNullOrEmpty(destcolstr))
+                    continue;
+
+                int.TryParse(destrowstr, out int destrow);
+                int.TryParse(destcolstr, out int destcol);
+
+
+                if (webhookData.TryGetValue(jsonKeyInWebhook, out var rawValue))
+                {
+                    object cellValue = null;
+
+                    if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
+                    {
+
+                        if (rawValue is JArray fileArray)
+                        {
+                            var fileUrls = fileArray.ToObject<List<string>>();
+                            foreach (var fileUrl in fileUrls)
+                            {
+                                string normalizedUrl = Regex.Unescape(fileUrl).Replace("\\", "/").Trim();  // Unescape JSON & fix slashes
+
+                                if (Uri.IsWellFormedUriString(normalizedUrl, UriKind.Absolute))
+                                {
+                                    // Get the filename from the URL
+                                    string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
+                                    string filePath = Path.Combine($"{submissionFolder}\\{compressed_image_folder_name}", fileName);
+
+                                    // Load the image from file
+                                    using (Image image = Image.FromFile(filePath))
+                                    {
+                                        var picture = DestWorkSheet.Drawings.AddPicture($"Image_{excelHeader}", image);
+
+                                        // Set image position to top-left corner of cell
+                                        picture.SetPosition(destrow - 1, 5, destcol - 1, 5);  // (rowIdx, rowOffsetPx, colIdx, colOffsetPx)
+
+
+
+                                        // Get cell size in pixels
+                                        double columnWidth = DestWorkSheet.Column(destcol).Width;
+                                        double rowHeight = DestWorkSheet.Row(destrow).Height;
+
+                                        int cellWidthPx = ExcelColumnWidthToPixels(columnWidth);
+                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight);
+
+                                        // Set image size to match cell
+                                        picture.SetSize(cellWidthPx, cellHeightPx);
+
+
+
+                                        ////// Optional: Resize image to fit cell
+                                        ////picture.SetSize(100); // scale percentage (100 = original size)
+
+                                        ////var imageHeight = image.Height;
+                                        ////var imageWidth = image.Width;
+
+
+                                        ////// Set row height (e.g., row 4)
+                                        ////float dpi = image.VerticalResolution; // usually 96
+                                        ////double rowHeight = (image.Height / dpi) * 72;
+                                        ////DestWorkSheet.Row(destrow).Height = rowHeight;
+
+                                        ////// Set column width (e.g., column B)
+                                        ////int imagePixelWidth = image.Width;
+                                        ////double columnWidth = imagePixelWidth / 7.0;
+                                        ////DestWorkSheet.Column(destcol).Width = columnWidth;
+
+                                        ////// Optional: Or resize to cell size
+                                        //////picture.SetSize((int)DestWorkSheet.Column(destcol).Width, (int)DestWorkSheet.Row(destrow).Height);
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog($"Invalid URL: {fileUrl}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cellValue = rawValue.ToString();
+                        }
+
+                    }                   
+                }
+            }
+        }
+
+        private int ExcelColumnWidthToPixels(double excelColumnWidth)
+        {
+            // Approximate formula for standard fonts (Calibri 11)
+            return (int)Math.Round(excelColumnWidth * 7); // 1 Excel width ≈ 7 pixels
+        }
+
+        private int ExcelRowHeightToPixels(double excelRowHeight)
+        {
+            // 1 point = 1/72 inch, 1 pixel ≈ 0.75 point (at 96 DPI)
+            return (int)Math.Round(excelRowHeight * 96 / 72) * 7;
         }
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)
         {
@@ -648,7 +873,7 @@ namespace CityWatch.RadioCheck.API
                 {
                     System.IO.File.AppendAllText(logFilePath, $"Processing key: {kvp.Key}\n");
 
-                    if (kvp.Key.ToLower().Contains("_photo") && kvp.Value is object value)
+                    if (kvp.Key.ToLower().Contains("sitephotos_") && kvp.Value is object value)
                     {
                         System.IO.File.AppendAllText(logFilePath, $"Processing Image key: {kvp.Key}\n");
                         if (value is JArray array) // If multiple images exist
@@ -974,252 +1199,6 @@ namespace CityWatch.RadioCheck.API
             captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
 
-        }
-
-        [HttpPost("compliantstrings")]
-        public async Task<IActionResult> ReceiveWebhookCompliantStrings()
-        {
-            try
-            {
-                if (!Request.HasFormContentType)
-                    return BadRequest("Invalid form-data request");
-
-                var form = await Request.ReadFormAsync();
-                string submissionID = form["submissionID"].ToString();
-                if (string.IsNullOrEmpty(submissionID))
-                    submissionID = Guid.NewGuid().ToString();
-
-                string rawJson = form["rawRequest"];
-                var webhookData = !string.IsNullOrEmpty(rawJson)
-                    ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson)
-                    : null;
-
-                string baseFolder = Path.Combine("wwwroot", "uploads", "jotform", "CompliantStringsData");
-                Directory.CreateDirectory(baseFolder);
-
-                string logFilePath = Path.Combine(baseFolder, "webhook_log.txt");
-                string webhookFilePath = Path.Combine(baseFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(baseFolder, "CompliantStringsData.xlsx");
-
-                await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
-                await System.IO.File.AppendAllTextAsync(logFilePath, $"[{DateTime.Now}] Webhook received. Submission ID: {submissionID}{Environment.NewLine}");
-
-                if (webhookData != null)
-                {
-                    // Helper to convert date JObject to string
-                    string ParseDate(object obj)
-                    {
-                        if (obj is JObject jObj)
-                        {
-                            string day = jObj["day"]?.ToString() ?? "";
-                            string month = jObj["month"]?.ToString() ?? "";
-                            string year = jObj["year"]?.ToString() ?? "";
-
-                            if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
-                                return new DateTime(y, m, d).ToString("dd/MM/yyyy");
-                        }
-                        return "";
-                    }
-
-                    // Date fields (with date parsing)
-                    string date = webhookData.TryGetValue("q1309_ComplintString_date", out var dateValue) ? ParseDate(dateValue) : "";
-                    string stringLoaded = webhookData.TryGetValue("q1317_stringLoaded", out var loadedVal) ? ParseDate(loadedVal) : "";
-                    string stringDropped = webhookData.TryGetValue("q1318_stringDropped", out var droppedVal) ? ParseDate(droppedVal) : "";
-
-                    // Text fields (standard pattern)
-                    string stringId = webhookData.TryGetValue("q1310_ComplintString_stringId", out var stringIdVal) ? stringIdVal?.ToString() ?? "" : "";
-                    string defectWeld = webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectVal) ? defectVal?.ToString() ?? "" : "";
-                    string newWeld = webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeldVal) ? newWeldVal?.ToString() ?? "" : "";
-                    string eastRfid = webhookData.TryGetValue("q1313_ComplintString_eastRfid", out var eastVal) ? eastVal?.ToString() ?? "" : "";
-                    string westRfid = webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westVal) ? westVal?.ToString() ?? "" : "";
-                    string comments = webhookData.TryGetValue("q1315_ComplintString_comments", out var commentVal) ? commentVal?.ToString() ?? "" : "";
-                    string dropLocationStart = webhookData.TryGetValue("q1319_dropLocation", out var dropStart) ? dropStart?.ToString() ?? "" : "";
-                    string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";
-                    string fy = webhookData.TryGetValue("q1321_fy", out var fyVal) ? fyVal?.ToString() ?? "" : "";
-
-                    // Additional new fields (parsed similarly)
-                    string weld = webhookData.TryGetValue("q1322_weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
-                    string defect = webhookData.TryGetValue("q1323_defect", out var defectTxt) ? defectTxt?.ToString() ?? "" : "";
-                    string locationOfDefect = webhookData.TryGetValue("q1324_locationOf", out var locationVal) ? locationVal?.ToString() ?? "" : "";
-
-                    string dateRectified = webhookData.TryGetValue("q1326_dateRectified", out var rectifiedVal) ? ParseDate(rectifiedVal) : "";
-                    string compliant = webhookData.TryGetValue("q1327_compliant", out var compliantVal) ? compliantVal?.ToString() ?? "" : "";
-                    string loadedOn = webhookData.TryGetValue("q1329_loadedOn", out var loadedVal2) ? loadedVal2?.ToString() ?? "" : "";
-                    string quarantinedComments = webhookData.TryGetValue("q1335_QuarantinedString_comments", out var qCommentsVal) ? qCommentsVal?.ToString() ?? "" : "";
-
-
-
-
-
-                    // Collect all values in order
-                    var valuesToAdd = new List<string>
-            {
-                date,
-                stringId,
-                defectWeld,
-                newWeld,
-                eastRfid,
-                westRfid,
-                comments,
-                stringLoaded,
-                stringDropped,
-                dropLocationStart,
-                dropLocationEnd,
-                fy,
-                weld,
-                defect,
-                locationOfDefect,
-                dateRectified,
-                compliant,
-                loadedOn,
-                quarantinedComments
-            };
-
-                    using (var workbook = System.IO.File.Exists(excelFilePath)
-                        ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
-                        : new ClosedXML.Excel.XLWorkbook())
-                    {
-                        var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("Compliant Strings");
-
-                        if (worksheet.LastRowUsed() == null)
-                        {
-                            worksheet.Cell(1, 1).Value = "Date";
-                            worksheet.Cell(1, 2).Value = "String ID";
-                            worksheet.Cell(1, 3).Value = "Defect Weld ID";
-                            worksheet.Cell(1, 4).Value = "New Weld ID";
-                            worksheet.Cell(1, 5).Value = "EAST RFID (Last 10 digits)";
-                            worksheet.Cell(1, 6).Value = "WEST RFID (Last 10 digits)";
-                            worksheet.Cell(1, 7).Value = "Comments";
-                            worksheet.Cell(1, 8).Value = "String Loaded";
-                            worksheet.Cell(1, 9).Value = "String Dropped";
-                            worksheet.Cell(1, 10).Value = "Drop Location Start (KMs)";
-                            worksheet.Cell(1, 11).Value = "Drop Location End (KMs)";
-                            worksheet.Cell(1, 12).Value = "FY";
-                            // New fields
-                            worksheet.Cell(1, 13).Value = "Weld #";
-                            worksheet.Cell(1, 14).Value = "Defect";
-                            worksheet.Cell(1, 15).Value = "Location of Defect";
-                            worksheet.Cell(1, 16).Value = "Date Rectified";
-                            worksheet.Cell(1, 17).Value = "Compliant";
-                            worksheet.Cell(1, 18).Value = "Loaded on Train";
-                            worksheet.Cell(1, 19).Value = "Quarantined Comments";
-                        }
-
-                        var lastRow = worksheet.LastRowUsed().RowNumber();
-                        var newRow = worksheet.Row(lastRow + 1);
-                        for (int i = 0; i < valuesToAdd.Count; i++)
-                        {
-                            newRow.Cell(i + 1).Value = valuesToAdd[i];
-                        }
-
-                        workbook.SaveAs(excelFilePath);
-                    }
-                }
-
-                return Ok(new { message = "Webhook processed. Excel updated." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error: {ex.Message}");
-            }
-        }
-
-
-        [HttpPost("QuarantinedStrings")]
-        public async Task<IActionResult> ReceiveWebhookQuarantinedStrings()
-        {
-            try
-            {
-                if (!Request.HasFormContentType)
-                    return BadRequest("Invalid form-data request");
-
-                var form = await Request.ReadFormAsync();
-                string submissionID = form["submissionID"].ToString();
-                if (string.IsNullOrEmpty(submissionID))
-                    submissionID = Guid.NewGuid().ToString();
-
-                string rawJson = form["rawRequest"];
-                var webhookData = !string.IsNullOrEmpty(rawJson)
-                    ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson)
-                    : null;
-
-                string baseFolder = Path.Combine("wwwroot", "uploads", "jotform", "QuarantinedStringsData");
-                Directory.CreateDirectory(baseFolder);
-
-                string logFilePath = Path.Combine(baseFolder, "webhook_log.txt");
-                string webhookFilePath = Path.Combine(baseFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(baseFolder, "QuarantinedStringsData.xlsx");
-
-                await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
-                await System.IO.File.AppendAllTextAsync(logFilePath, $"[{DateTime.Now}] Webhook received. Submission ID: {submissionID}{Environment.NewLine}");
-
-                if (webhookData != null)
-                {
-                    // Parse "Date Started"
-                    string date = "";
-                    if (webhookData.TryGetValue("q1309_QuarantinedString_date", out var dateValue) && dateValue is JObject dateObj)
-                    {
-                        string day = dateObj["day"]?.ToString() ?? "";
-                        string month = dateObj["month"]?.ToString() ?? "";
-                        string year = dateObj["year"]?.ToString() ?? "";
-                        if (int.TryParse(day, out var d) && int.TryParse(month, out var m) && int.TryParse(year, out var y))
-                        {
-                            date = new DateTime(y, m, d).ToString("dd/MM/yyyy");
-                        }
-                    }
-
-                    // Extract fields
-                    string stringId = webhookData.TryGetValue("q1319_QuarantinedString_quarantinedStringYard", out var stringYard) ? stringYard?.ToString() ?? "" : "";
-                    string weld = webhookData.TryGetValue("q1320_QuarantinedString_Weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
-                    string defect = webhookData.TryGetValue("q1321_QuarantinedString_Defect", out var defectVal) ? defectVal?.ToString() ?? "" : "";
-                    string location = webhookData.TryGetValue("q1322_QuarantinedString_location", out var locationVal) ? locationVal?.ToString() ?? "" : "";
-                    string comments = webhookData.TryGetValue("q1315_QuarantinedString_comments", out var commentsVal) ? commentsVal?.ToString() ?? "" : "";
-
-                    // Build row
-                    var valuesToAdd = new List<string>
-            {
-                stringId,
-                date,
-                weld,
-                defect,
-                location,
-                comments
-            };
-
-                    // Write to Excel
-                    using (var workbook = System.IO.File.Exists(excelFilePath)
-                        ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
-                        : new ClosedXML.Excel.XLWorkbook())
-                    {
-                        var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("Quarantined Strings");
-
-                        if (worksheet.LastRowUsed() == null)
-                        {
-                            worksheet.Cell(1, 1).Value = "STRING ID";
-                            worksheet.Cell(1, 2).Value = "DATE STARTED";
-                            worksheet.Cell(1, 3).Value = "WELD NUMBER";
-                            worksheet.Cell(1, 4).Value = "DEFECT";
-                            worksheet.Cell(1, 5).Value = "LOCATIONS";
-                            worksheet.Cell(1, 6).Value = "COMMENTS";
-                        }
-
-                        var lastRow = worksheet.LastRowUsed().RowNumber();
-                        var newRow = worksheet.Row(lastRow + 1);
-                        for (int i = 0; i < valuesToAdd.Count; i++)
-                        {
-                            newRow.Cell(i + 1).Value = valuesToAdd[i];
-                        }
-
-                        workbook.SaveAs(excelFilePath);
-                    }
-                }
-
-                return Ok(new { message = "Webhook processed. Excel updated." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error: {ex.Message}");
-            }
         }
 
     }
