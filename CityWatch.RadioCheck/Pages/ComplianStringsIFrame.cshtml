@@ -8,10 +8,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compliant Strings</title>
+    <title>Strings Register</title>
 
 
-    <style>
+   @*  <style>
     /* Force table layout to fix column widths */
     #compliantTable {
         table-layout: fixed;
@@ -36,7 +36,7 @@
     #compliantTable td:nth-child(4) {
         width: 100px !important; /* New Weld ID */
     }
-</style>
+</style> *@
 
 
   @*   <style>
@@ -54,13 +54,13 @@
 </style> *@
     
 </head>
-<body style="background-color: #bad5f5; padding: 10px;">
+<body>
 
     <button type="button" class="btn btn-success pb-2 mb-3" onclick="location.reload();">
         <i class="fa fa-refresh"></i> Refresh Page
     </button>
 
-    @if (Model.TableData != null)
+  @*   @if (Model.TableData != null)
     {
             <p>
                 <strong>Total number of strings:</strong>
@@ -103,7 +103,60 @@
     else
     {
             <p>No data found or file missing.</p>
+    } *@
+
+
+    @if (Model.TableData != null)
+    {
+        <p class="fw-bold" style="font-size: 0.8rem;">
+            Total number of strings:
+            <span class="text-primary fw-bold">@((Model.TableData.Count - 1))</span>
+        </p>
+
+        <div class="table-responsive" style="font-size: 0.72rem;">
+            <table id="compliantTable" class="table table-bordered table-striped table-hover table-sm bg-white text-dark">
+                <thead style="background-color: #ffffff; color: #000;">
+                    <tr>
+                        <th colspan="7" class="text-center fw-bold border">String Data</th>
+                        <th colspan="6" class="text-center fw-bold border">Defective and New Weld Data</th>
+                        <th colspan="6" class="text-center fw-bold border">Load and Drop Data</th>
+                        <th rowspan="2" class="text-center fw-bold border align-middle">Action</th>
+                    </tr>
+                    <tr>
+                        @foreach (var header in Model.TableData[0])
+                        {
+                                <th class="fw-bold border text-center">@header</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 1; i < Model.TableData.Count; i++)
+                    {
+                            <tr>
+                            @foreach (var cell in Model.TableData[i])
+                            {
+                                        <td class="border">@cell</td>
+                            }
+                                <td class="text-center border">
+                                    <input type="hidden" name="rowIndex" value="@i" />
+                                    <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
+    else
+    {
+        <p>No data found or file missing.</p>
+    }
+
+
+
+
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

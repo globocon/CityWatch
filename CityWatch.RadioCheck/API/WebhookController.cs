@@ -1104,12 +1104,12 @@ namespace CityWatch.RadioCheck.API
                     ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson)
                     : null;
 
-                string baseFolder = Path.Combine("wwwroot", "uploads", "jotform", "CompliantStringsData");
+                string baseFolder = Path.Combine("wwwroot", "uploads", "jotform", "StringsData");
                 Directory.CreateDirectory(baseFolder);
 
                 string logFilePath = Path.Combine(baseFolder, "webhook_log.txt");
                 string webhookFilePath = Path.Combine(baseFolder, "webhook_test.txt");
-                string excelFilePath = Path.Combine(baseFolder, "CompliantStringsData.xlsx");
+                string excelFilePath = Path.Combine(baseFolder, "StringsData.xlsx");
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, rawJson + Environment.NewLine);
                 await System.IO.File.AppendAllTextAsync(logFilePath, $"[{DateTime.Now}] Webhook received. Submission ID: {submissionID}{Environment.NewLine}");
@@ -1144,8 +1144,9 @@ namespace CityWatch.RadioCheck.API
                     string westRfid = webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westVal) ? westVal?.ToString() ?? "" : "";
                     string comments = webhookData.TryGetValue("q1315_ComplintString_comments", out var commentVal) ? commentVal?.ToString() ?? "" : "";
                     string dropLocationStart = webhookData.TryGetValue("q1319_dropLocation", out var dropStart) ? dropStart?.ToString() ?? "" : "";
-                    string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";
-                    string fy = webhookData.TryGetValue("q1321_fy", out var fyVal) ? fyVal?.ToString() ?? "" : "";
+                    string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";                  
+                    string fy = webhookData.TryGetValue("q1321_fyData", out var fyVal) ? fyVal?.ToString() ?? "" : "";
+
 
                     // Additional new fields (parsed similarly)
                     string weld = webhookData.TryGetValue("q1322_weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
@@ -1158,32 +1159,39 @@ namespace CityWatch.RadioCheck.API
                     string quarantinedComments = webhookData.TryGetValue("q1335_QuarantinedString_comments", out var qCommentsVal) ? qCommentsVal?.ToString() ?? "" : "";
 
 
+                    string contractor1 = webhookData.TryGetValue("q1341_contractor1341", out var contractor1Val) ? contractor1Val?.ToString() ?? "" : "";
+                    string typeOfDefect = webhookData.TryGetValue("q1323_typeOf", out var typeOfVal) ? typeOfVal?.ToString() ?? "" : "";
+                    string contractor2 = webhookData.TryGetValue("q1339_contractor", out var contractor2Val) ? contractor2Val?.ToString() ?? "" : "";
+                    string comment3 = webhookData.TryGetValue("q1340_comments", out var comment3Val) ? comment3Val?.ToString() ?? "" : "";
+
 
 
 
                     // Collect all values in order
                     var valuesToAdd = new List<string>
-            {
-                date,
-                stringId,
-                defectWeld,
-                newWeld,
-                eastRfid,
-                westRfid,
-                comments,
-                stringLoaded,
-                stringDropped,
-                dropLocationStart,
-                dropLocationEnd,
-                fy,
-                weld,
-                defect,
-                locationOfDefect,
-                dateRectified,
-                compliant,
-                loadedOn,
-                quarantinedComments
-            };
+                    {
+                        date,
+                        fy,
+                        stringId,
+                        eastRfid,
+                        westRfid,
+                        contractor1,           // q1341_contractor1341
+                        comments,              // q1315_ComplintString_comments
+                        defectWeld,
+                        typeOfDefect,          // q1323_typeOf
+                        locationOfDefect,
+                        newWeld,
+                        dateRectified,
+                        quarantinedComments,
+                        stringLoaded,              // q1329_loadedOn
+                        stringDropped,
+                        dropLocationStart,
+                        dropLocationEnd,
+                        contractor2,
+                        comment3
+
+                    };
+
 
                     using (var workbook = System.IO.File.Exists(excelFilePath)
                         ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
@@ -1194,25 +1202,24 @@ namespace CityWatch.RadioCheck.API
                         if (worksheet.LastRowUsed() == null)
                         {
                             worksheet.Cell(1, 1).Value = "Date";
-                            worksheet.Cell(1, 2).Value = "String ID";
-                            worksheet.Cell(1, 3).Value = "Defect Weld ID";
-                            worksheet.Cell(1, 4).Value = "New Weld ID";
-                            worksheet.Cell(1, 5).Value = "EAST RFID (Last 10 digits)";
-                            worksheet.Cell(1, 6).Value = "WEST RFID (Last 10 digits)";
+                            worksheet.Cell(1, 2).Value = "FY Data";
+                            worksheet.Cell(1, 3).Value = "String ID";
+                            worksheet.Cell(1, 4).Value = "EAST RFID (Last 10 digits)";
+                            worksheet.Cell(1, 5).Value = "WEST RFID (Last 10 digits)";
+                            worksheet.Cell(1, 6).Value = "Contractor";
                             worksheet.Cell(1, 7).Value = "Comments";
-                            worksheet.Cell(1, 8).Value = "String Loaded";
-                            worksheet.Cell(1, 9).Value = "String Dropped";
-                            worksheet.Cell(1, 10).Value = "Drop Location Start (KMs)";
-                            worksheet.Cell(1, 11).Value = "Drop Location End (KMs)";
-                            worksheet.Cell(1, 12).Value = "FY";
-                            // New fields
-                            worksheet.Cell(1, 13).Value = "Weld #";
-                            worksheet.Cell(1, 14).Value = "Defect";
-                            worksheet.Cell(1, 15).Value = "Location of Defect";
-                            worksheet.Cell(1, 16).Value = "Date Rectified";
-                            worksheet.Cell(1, 17).Value = "Compliant";
-                            worksheet.Cell(1, 18).Value = "Loaded on Train";
-                            worksheet.Cell(1, 19).Value = "Quarantined Comments";
+                            worksheet.Cell(1, 8).Value = "Defect Weld ID";
+                            worksheet.Cell(1, 9).Value = "Type of Defect";
+                            worksheet.Cell(1, 10).Value = "Location of Defect";
+                            worksheet.Cell(1, 11).Value = "New Weld ID";
+                            worksheet.Cell(1, 12).Value = "Date Rectified";
+                            worksheet.Cell(1, 13).Value = "Comments";
+                            worksheet.Cell(1, 14).Value = "String Loaded on Train";
+                            worksheet.Cell(1, 15).Value = "String Dropped";
+                            worksheet.Cell(1, 16).Value = "Drop Location Start (KMs)";
+                            worksheet.Cell(1, 17).Value = "Drop Location End (KMs)";
+                            worksheet.Cell(1, 18).Value = "Contractor";
+                            worksheet.Cell(1, 19).Value = "Comments";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();
@@ -1221,7 +1228,7 @@ namespace CityWatch.RadioCheck.API
                         {
                             newRow.Cell(i + 1).Value = valuesToAdd[i];
                         }
-
+                       
                         workbook.SaveAs(excelFilePath);
                     }
                 }
