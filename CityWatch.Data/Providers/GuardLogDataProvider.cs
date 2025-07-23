@@ -369,7 +369,7 @@ namespace CityWatch.Data.Providers
         void DeleteTrainingCourseCertificateRPL(int id);
         void SaveDuressApp(DuressAppField duressapp);
         public void DeleteDuressApp(int id);
-        public List<DuressAppField> GetDuressAppFields(int typeId);
+        public List<DuressAppField> GetDuressAppFields(int typeId, int? siteid = 0);
         public void DeleteGuardCourseByAdmin(int Id);
         List<GuardRCLoginDetail> GetGuardRCLoginDetails();
         int SaveRCActionListMessages(RCActionListMessages rcActionListMessages);
@@ -6649,10 +6649,18 @@ namespace CityWatch.Data.Providers
         }
 
 
-        public List<DuressAppField> GetDuressAppFields(int typeId)
+        public List<DuressAppField> GetDuressAppFields(int typeId, int? siteid = 0)
         {
             try
             {
+                if(typeId == 2 && siteid.HasValue && siteid > 0)
+                {
+                    var _profileId = _context.DuressSettings.Where(x => x.ClientSiteId == siteid).Select(x => x.LogProfileId).FirstOrDefault();
+                    if (_profileId.HasValue && _profileId > 0)
+                    {
+                        return _context.DuressAppField.Where(x => x.TypeId == typeId && x.ProfileId == _profileId).ToList();
+                    }
+                }
                 return _context.DuressAppField.Where(x => x.TypeId == typeId).ToList();
             }
             catch (Exception ex)

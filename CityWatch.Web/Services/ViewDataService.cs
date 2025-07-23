@@ -172,7 +172,7 @@ namespace CityWatch.Web.Services
         public List<DropdownItem> GetUserClientTypesWithId(int? userId);
         public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
 
-        public List<ActivityModel> GetDressAppFields(int type);
+        public List<ActivityModel> GetDressAppFields(int type, int? siteid = 0);
 
         public List<Mp3File> GetDressAppFieldsAudio(int type);
 
@@ -2180,9 +2180,9 @@ namespace CityWatch.Web.Services
             return items;
         }
 
-        public List<ActivityModel> GetDressAppFields(int type)
+        public List<ActivityModel> GetDressAppFields(int type, int? siteid = 0)
         {
-            var hrGroups = _guardLogDataProvider.GetDuressAppFields(type);
+            var hrGroups = _guardLogDataProvider.GetDuressAppFields(type, siteid);
 
             // Convert the list of DuressAppField to DropdownItem
             return hrGroups.Select(x => new ActivityModel

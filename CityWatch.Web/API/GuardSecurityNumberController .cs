@@ -217,11 +217,11 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("GetActivities")]
-        public IActionResult GetActivities([FromQuery] int type)
+        public IActionResult GetActivities([FromQuery] int type, [FromQuery] int? siteid = 0)
         {
             try
             {
-                var activity = _viewDataService.GetDressAppFields(type);
+                var activity = _viewDataService.GetDressAppFields(type, siteid);
 
                 if (activity == null || !activity.Any())
                 {
