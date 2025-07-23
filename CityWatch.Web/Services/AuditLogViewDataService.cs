@@ -104,7 +104,9 @@ namespace CityWatch.Web.Services
                     (string.IsNullOrEmpty(kvlRequest.ClientSitePocIdNew) || kvlRequest.ClientSitePocIds.Contains(Convert.ToInt16(z.ClientSitePocId))) &&
                     (string.IsNullOrEmpty(kvlRequest.ClientSiteLocationIdNew) || kvlRequest.ClientSiteLocationIds.Contains(Convert.ToInt16(z.ClientSiteLocationId))) &&
                     (string.IsNullOrEmpty(kvlRequest.PersonOfInterest) || kvlRequest.PersonOfInterestIds.Contains(Convert.ToInt16(z.PersonOfInterest))) &&
-                    (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo))))
+                    (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo)))
+                    && (string.IsNullOrEmpty(kvlRequest.KeyVehicleDownselect) || (!string.IsNullOrEmpty(z.Notes) && z.Notes.Contains(kvlRequest.KeyVehicleDownselect, StringComparison.OrdinalIgnoreCase)))
+                    )
                 .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                 .ToList();
         }

@@ -130,12 +130,14 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public JsonResult OnGetDailyGuardSiteLogs(int pageNo, int limit, int clientSiteId,
-                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs,string keywordDownSelect)
         {
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).
+                Where(x=>string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
+                 x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase)));
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
-            return new JsonResult(new { records, total = dailyGuardLogs.Count });
+            return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }
 
         public IActionResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
@@ -448,7 +450,7 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, string clientSiteIds,
-                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs,string keywordDownSelect)
         {
             if (string.IsNullOrWhiteSpace(clientSiteIds))
             {
@@ -463,7 +465,7 @@ namespace CityWatch.Web.Pages.Admin
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs);
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))); ;
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
@@ -490,11 +492,11 @@ namespace CityWatch.Web.Pages.Admin
             }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
 
-            return new JsonResult(new { records, total = dailyGuardLogs.Count });
+            return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }
 
 
-        public JsonResult OnPostDownloadDailyFusionGuardLogZip(string clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyFusionGuardLogZip(string clientSiteId, DateTime logFromDate, DateTime logToDate, string keywordDownSelect)
         {
             var success = true;
             var message = string.Empty;
@@ -514,7 +516,7 @@ namespace CityWatch.Web.Pages.Admin
                .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
                .Select(z => int.Parse(z))
                .ToArray();
-                    zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+                    zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog, keywordDownSelect).Result;
                 }
             }
             catch (Exception ex)

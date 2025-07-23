@@ -98,7 +98,7 @@ namespace CityWatch.RadioCheck.Pages
         //}
         //fusion Start  New with Mulitiple Sites
         public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, string clientSiteIds,
-                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs,string keywordDownSelect)
         {
             if (string.IsNullOrWhiteSpace(clientSiteIds))
             {
@@ -112,7 +112,7 @@ namespace CityWatch.RadioCheck.Pages
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs);
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase)));
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
@@ -137,7 +137,7 @@ namespace CityWatch.RadioCheck.Pages
                 }
             }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
-            return new JsonResult(new { records, total = dailyGuardLogs.Count });
+            return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }
 
 
@@ -386,7 +386,7 @@ namespace CityWatch.RadioCheck.Pages
 
         }
 
-        public JsonResult OnPostDownloadDailyFusionGuardLogZip(string clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyFusionGuardLogZip(string clientSiteId, DateTime logFromDate, DateTime logToDate,string keywordDownSelect)
         {
             var success = true;
             var message = string.Empty;
@@ -406,7 +406,7 @@ namespace CityWatch.RadioCheck.Pages
                .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
                .Select(z => int.Parse(z))
                .ToArray();
-                    zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+                    zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog,keywordDownSelect).Result;
                 }
             }
             catch (Exception ex)

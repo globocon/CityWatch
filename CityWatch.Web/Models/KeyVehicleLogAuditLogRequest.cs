@@ -72,5 +72,7 @@ namespace CityWatch.Web.Models
         public string DateRange { get; set; }
         [NotMapped]
         public int RecordCount { get; set; }
+        [NotMapped]
+        public string  KeyVehicleDownselect { get; set; }
     }
 }
