@@ -6523,7 +6523,7 @@ gridsitefusionLog = $('#fusion_site_log').grid({
         { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
     ],
     paramNames: { page: 'pageNo' },
-    pager: { limit: 100, sizes: [10, 50, 100, 500] }
+    pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
 });
 
 
@@ -6632,7 +6632,8 @@ $('#btnGeneratefusionAuditReport').on('click', function () {
         clientSiteIds: $('#fusionClientSiteId').val().join(';'),
         logFromDate: $('#fusionAudtitFromDate').val(),
         logToDate: $('#fusionAudtitToDate').val(),
-        excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked")
+        excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked"),
+        keywordDownSelect: $('#FusionKeydownselect').val()
     });
      GetRCCharts();
 });
@@ -9114,7 +9115,8 @@ function downloadDailyGuardfusionLogZipFile() {
         data: {
             clientSiteId: $('#fusionClientSiteId').val().join(';'), 
             logFromDate: $('#fusionAudtitFromDate').val(),
-            logToDate: $('#fusionAudtitToDate').val()
+            logToDate: $('#fusionAudtitToDate').val(),
+            keywordDownSelect: $('#FusionKeydownselect').val()
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {

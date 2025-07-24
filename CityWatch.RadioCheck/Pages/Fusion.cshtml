@@ -33,7 +33,7 @@
             }
         </select>
     </div>
-    <div class="col-md-3">
+        <div class="col-auto">
         <label class="mx-1" for="fusionClientSiteId">Client Site</label>
             <select class="form-control mx-1" id="fusionClientSiteId" multiple="multiple"></select>
             <div class="form-check mt-1">
@@ -41,16 +41,20 @@
         <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
         </div>
     </div>
-    <div class="col-md-2">
+        <div class="col-auto">
+            <label class="mx-1" for="FusionKeydownselect">Keyword Downselect</label>
+            <input type="text" class="form-control" id="FusionKeydownselect" />
+        </div>
+        <div class="col-auto">
         <label class="mx-1" for="fusionAudtitFromDate">From Date</label>
         <input type="date" class="form-control" id="fusionAudtitFromDate" />
     </div>
-    <div class="col-md-2">
+        <div class="col-auto">
         <label class="mx-1" for="fusionAudtitToDate">To Date</label>
         <input type="hidden" id="fusionAudtitToDateVal" name="fusionAudtitToDateVal" value='@DateTime.Today.ToString("yyyy-MM-dd")'>
         <input type="date" class="form-control" id="fusionAudtitToDate">
     </div>
-    <div class="col-md-3">
+        <div class="col-auto">
         <label class="mx-1">&nbsp;</label>
         <div>
             <button type="button" class="btn btn-primary mx-1" id="btnGeneratefusionAuditReport">View Report</button>

@@ -71,16 +71,20 @@
                         <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
                     </div>
                 </div>
-                <div class="form-group col-md-2">
+                <div class="form-group col-auto">
+                    <label class="mx-1" for="GuardLogKeydownselect">Keyword Downselect</label>
+                    <input type="text" class="form-control" id="GuardLogKeydownselect" />
+                </div>
+                <div class="form-group col-auto">
                     <label class="mx-1" for="dglAudtitFromDate">From Date</label>
                     <input type="date" class="form-control" id="dglAudtitFromDate" />
                 </div>
-                <div class="form-group col-md-2">
+                <div class="form-group col-auto">
                     <label class="mx-1" for="dglAudtitToDate">To Date</label>
                     <input type="hidden" id="dglAudtitToDateVal" name="dglAudtitToDateVal" value='@DateTime.Today.ToString("yyyy-MM-dd")'>
                     <input type="date" class="form-control" id="dglAudtitToDate">
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-auto">
                     <label class="mx-1">&nbsp;</label>
                     <div>
                         <button type="button" class="btn btn-primary mx-1" id="btnGenerateDglAuditReport">View Report</button>

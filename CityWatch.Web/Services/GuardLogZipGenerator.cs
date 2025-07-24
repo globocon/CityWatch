@@ -19,7 +19,7 @@ namespace CityWatch.Web.Services
     public interface IGuardLogZipGenerator
     {
         Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType);
-        Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType);
+        Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType, string keywordDownSelect);
         string GenerateZipFile(KeyVehicleLogAuditLogRequest kvlAuditLogRequest);
     }
 
@@ -232,7 +232,7 @@ namespace CityWatch.Web.Services
 
 
         /* Fusion Report download */
-        public async Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType)
+        public async Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType, string keywordDownSelect)
         {
             if (clientSiteIds.Length <= 0)
             {
@@ -279,7 +279,7 @@ namespace CityWatch.Web.Services
             //Old Code end
             var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
             fileNamePart = clientSiteDetails[0].Name;
-            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false);
+            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))).ToList();
             CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
            
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);
