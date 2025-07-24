@@ -951,6 +951,7 @@ namespace CityWatch.Web.Services
         }
         public async Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
+
             var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
             dt.Columns.Add("Date", typeof(string)); // Use string to hold formatted date
@@ -976,34 +977,49 @@ namespace CityWatch.Web.Services
             dt.Columns.Add("Hash String");
             foreach (var data in dailyPatrolData)
             {
-                var row = dt.NewRow();
-                row["Day"] = data.NameOfDay;
-                row["Date"] = data.Date;
-                //row["IR S/No"] = data.SerialNo;
-                row["Control Room Job No."] = data.ControlRoomJobNo;
-                row["Site"] = data.SiteName;
-                row["Address"] = data.SiteAddress;
-                row["Desp. Time"] = data.DespatchTime;
-                row["Arrival"] = data.ArrivalTime;
-                row["Depart."] = data.DepartureTime;
-                row["CWS SNo."] = data.SerialNo;
-                row["Total mins on Site"] = data.TotalMinsOnsite;
-                row["Resp. Time"] = data.ResponseTime;
-                row["Alarm"] = data.Alarm;
-                row["Patrol Att."] = data.PatrolAttented;
-                row["Colour Code"] = data.ColorCodeStr;
-                row["Action Taken"] = data.ActionTaken;
-                row["Notified By"] = data.NotifiedBy;
-                row["Bill To:"] = data.Billing;
-                row["File Name"] = data.fileNametodownload;
-                row["PSPF"] = data.pspfname;
-                row["File Size(Kb)"] = await data.GetBlobSizeAsync();
-                row["Hash String"] = data.hashvalue;
-                dt.Rows.Add(row);
+
+                try
+                {
+                    var row = dt.NewRow();
+                    row["Day"] = data.NameOfDay;
+                    row["Date"] = data.Date;
+                    //row["IR S/No"] = data.SerialNo;
+                    row["Control Room Job No."] = data.ControlRoomJobNo;
+                    row["Site"] = data.SiteName;
+                    row["Address"] = data.SiteAddress;
+                    row["Desp. Time"] = NormalizeTime(data.DespatchTime);
+                    row["Arrival"] = NormalizeTime(data.ArrivalTime);
+                    row["Depart."] = NormalizeTime(data.DepartureTime);
+                    row["CWS SNo."] = data.SerialNo;
+                    row["Total mins on Site"] = data.TotalMinsOnsite;
+                    row["Resp. Time"] = NormalizeTime(data.ResponseTime);
+                    row["Alarm"] = data.Alarm;
+                    row["Patrol Att."] = data.PatrolAttented;
+                    row["Colour Code"] = data.ColorCodeStr;
+                    row["Action Taken"] = data.ActionTaken;
+                    row["Notified By"] = data.NotifiedBy;
+                    row["Bill To:"] = data.Billing;
+                    row["File Name"] = data.fileNametodownload;
+                    row["PSPF"] = data.pspfname;
+                    row["File Size(Kb)"] = await data.GetBlobSizeAsync();
+                    row["Hash String"] = data.hashvalue;
+                    dt.Rows.Add(row);
+
+                }
+                catch(Exception ex)
+                {
+
+                }
             }
 
             var sortedRows = dt.AsEnumerable()
-                      .OrderBy(row => DateTime.ParseExact(row.Field<string>("Date"), "dd MMM yyyy", null));
+                      .OrderBy(row =>
+                      {
+                          var dateStr = row.Field<string>("Date");
+                          return DateTime.TryParseExact(dateStr, "dd MMM yyyy", null, System.Globalization.DateTimeStyles.None, out var parsedDate)
+                              ? parsedDate
+                              : DateTime.MinValue;
+                      });
 
             // Create a new sorted DataTable
             DataTable sortedTable = sortedRows.Any() ? sortedRows.CopyToDataTable() : dt.Clone();
@@ -1012,6 +1028,24 @@ namespace CityWatch.Web.Services
             //return dt;
         }
 
+
+        private string NormalizeTime(object input)
+        {
+            if (input == null) return string.Empty;
+
+            string str = input.ToString()?.Trim();
+
+            if (string.IsNullOrWhiteSpace(str))
+                return string.Empty;
+
+            if (TimeSpan.TryParse(str, out var ts))
+                return ts.ToString(@"hh\:mm");
+
+            // Optional: log invalid value
+            Console.WriteLine($"Invalid time value: '{str}'");
+
+            return string.Empty;
+        }
         private string GetFormattedClientSites(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
         {
             var clientSites = userClientSiteAccess.Select(x => x.ClientSite.Name).OrderBy(x => x);

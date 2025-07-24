@@ -48,12 +48,22 @@ namespace CityWatch.Data.Models
             }
         }
 
+        //public Dictionary<string, double> AreaWardPercentage
+        //{
+        //    get
+        //    {
+        //        return _dailyPatrolData.GroupBy(n => n.ClientArea)
+        //           .ToDictionary(z => string.IsNullOrEmpty(z.Key) ? "N/A" : z.Key, z => Math.Round(z.Count() / _totalRecords * 100, 1));
+        //    }
+        //}
+
         public Dictionary<string, double> AreaWardPercentage
         {
             get
             {
-                return _dailyPatrolData.GroupBy(n => n.ClientArea)
-                   .ToDictionary(z => string.IsNullOrEmpty(z.Key) ? "N/A" : z.Key, z => Math.Round(z.Count() / _totalRecords * 100, 1));
+                return _dailyPatrolData
+                    .GroupBy(n => string.IsNullOrEmpty(n.ClientArea) ? "N/A" : n.ClientArea)
+                    .ToDictionary(g => g.Key, g => Math.Round((double)g.Count() / _totalRecords * 100, 1));
             }
         }
 

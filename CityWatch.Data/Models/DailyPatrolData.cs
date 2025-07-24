@@ -132,24 +132,48 @@ namespace CityWatch.Data.Models
             }
         }
 
+
+
         public string ResponseTime
         {
             get
             {
-                if (!string.IsNullOrEmpty(_incidentReport.JobTime) && _incidentReport.IncidentDateTime.HasValue)
+                if (!string.IsNullOrWhiteSpace(_incidentReport.JobTime) && _incidentReport.IncidentDateTime.HasValue)
                 {
-                    var tsJob = TimeSpan.Parse(_incidentReport.JobTime);
-                    var dtJob = new DateTime(_incidentReport.IncidentDateTime.Value.Year,
-                        _incidentReport.IncidentDateTime.Value.Month, _incidentReport.IncidentDateTime.Value.Day,
-                        tsJob.Hours, tsJob.Minutes, 0);
-                    if (dtJob > _incidentReport.IncidentDateTime.Value)
-                        dtJob = dtJob.AddDays(-1);
+                    if (TimeSpan.TryParse(_incidentReport.JobTime.Trim(), out var tsJob))
+                    {
+                        var incidentDate = _incidentReport.IncidentDateTime.Value;
+                        var dtJob = new DateTime(incidentDate.Year, incidentDate.Month, incidentDate.Day, tsJob.Hours, tsJob.Minutes, 0);
 
-                    return (_incidentReport.IncidentDateTime.Value - dtJob).TotalMinutes.ToString();
+                        if (dtJob > incidentDate)
+                            dtJob = dtJob.AddDays(-1);
+
+                        return (incidentDate - dtJob).TotalMinutes.ToString("0");
+                    }
                 }
+
                 return string.Empty;
             }
         }
+
+        //public string ResponseTime
+        //{
+        //    get
+        //    {
+        //        if (!string.IsNullOrEmpty(_incidentReport.JobTime) && _incidentReport.IncidentDateTime.HasValue)
+        //        {
+        //            var tsJob = TimeSpan.Parse(_incidentReport.JobTime);
+        //            var dtJob = new DateTime(_incidentReport.IncidentDateTime.Value.Year,
+        //                _incidentReport.IncidentDateTime.Value.Month, _incidentReport.IncidentDateTime.Value.Day,
+        //                tsJob.Hours, tsJob.Minutes, 0);
+        //            if (dtJob > _incidentReport.IncidentDateTime.Value)
+        //                dtJob = dtJob.AddDays(-1);
+
+        //            return (_incidentReport.IncidentDateTime.Value - dtJob).TotalMinutes.ToString();
+        //        }
+        //        return string.Empty;
+        //    }
+        //}
 
         public string Alarm
         {
