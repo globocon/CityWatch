@@ -3056,7 +3056,15 @@ namespace CityWatch.Web.Pages.Admin
                 var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(record.GuardId).Where(x => x.FileName == filename).FirstOrDefault();
                 int id = 0;
                 DateTime? expirydate = DateTime.Now;
-                bool IsExpiry = false;
+                bool IsExpiry = true;
+                var settings = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+                if(settings !=null )
+                {
+                    if (settings.IsCertificateExpiry == false)
+                        IsExpiry = true;
+                    else
+                        IsExpiry = false;
+                }
                 if (compliance != null)
                 {
                     id = compliance.Id;
