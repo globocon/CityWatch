@@ -2140,7 +2140,7 @@ $(function () {
             { field: 'guardInitials', title: 'Guard Initials', width: 60, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },
-        pager: { limit: 100, sizes: [10, 50, 100, 500,1000] }
+        pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
     });
     $('#dgl_site_log').parent().find('.gj-dropdown li').each(function () {
         if ($(this).text().trim() === '0') {
@@ -8519,7 +8519,7 @@ $(function () {
             { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },
-        pager: { limit: 100, sizes: [10, 50, 100, 500] }
+        pager: { limit: 100, sizes: [10, 50, 100, 500,1000,'All'] }
     });
 
 

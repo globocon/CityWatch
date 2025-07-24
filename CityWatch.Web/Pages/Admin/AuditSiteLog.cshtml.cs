@@ -136,7 +136,12 @@ namespace CityWatch.Web.Pages.Admin
             var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).
                 Where(x=>string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
                  x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase)));
+            if(limit == 0)
+            {
+                limit = dailyGuardLogs.Count();
+            }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
+            int total = dailyGuardLogs.Count();
             return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }
 
@@ -490,7 +495,12 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
             }
+            if (limit == 0)
+            {
+                limit = dailyGuardLogs.Count();
+            }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
+            
 
             return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }

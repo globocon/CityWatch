@@ -136,6 +136,10 @@ namespace CityWatch.RadioCheck.Pages
                     }
                 }
             }
+            if (limit == 0)
+            {
+                limit = dailyGuardLogs.Count();
+            }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
             return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }

@@ -6523,7 +6523,7 @@ gridsitefusionLog = $('#fusion_site_log').grid({
         { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
     ],
     paramNames: { page: 'pageNo' },
-    pager: { limit: 100, sizes: [10, 50, 100, 500] }
+    pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
 });
 
 
