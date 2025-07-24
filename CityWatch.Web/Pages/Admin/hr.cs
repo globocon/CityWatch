@@ -421,6 +421,10 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         guard.IsAdminGlobal = true;
                     }
+                    else if (val == 15)
+                    {
+                        guard.IsMobileAppAccess = true;
+                    }
                 }
             }
             if (!ModelState.IsValid)

@@ -140,5 +140,6 @@ namespace CityWatch.Data.Models
         public bool IsRCLiteAccess { get; set; }
 
         public bool IsTerminated { get; set; }
+        public bool IsMobileAppAccess { get; set; }
     }
 }
