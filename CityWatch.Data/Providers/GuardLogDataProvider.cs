@@ -4140,14 +4140,12 @@ namespace CityWatch.Data.Providers
 
                                 var latestRadioChecksActivityRecord = _context.ClientSiteRadioChecksActivityStatus
                                 .Where(x => x.ClientSiteId == clientSiteRadioCheck.ClientSiteId
-                                         && x.GuardId == clientSiteRadioCheck.GuardId
-                                         && x.ActivityType.Trim() == "LB")
-                                .OrderByDescending(x => x.LastLBCreatedTime) 
-                                .FirstOrDefault();
+                                         && x.GuardId == clientSiteRadioCheck.GuardId).ToList();
+                                
 
                                 if (latestRadioChecksActivityRecord != null)
                                 {
-                                    _context.ClientSiteRadioChecksActivityStatus.Remove(latestRadioChecksActivityRecord);
+                                    _context.ClientSiteRadioChecksActivityStatus.RemoveRange(latestRadioChecksActivityRecord);
                                 }
 
                             }
@@ -4896,13 +4894,13 @@ namespace CityWatch.Data.Providers
                                 var latestRadioChecksActivityRecord = _context.ClientSiteRadioChecksActivityStatus
                                  .Where(x => x.ClientSiteId == clientSiteRadioCheck.ClientSiteId
                                           && x.GuardId == clientSiteRadioCheck.GuardId
-                                          && x.ActivityType.Trim() == "LB")
-                                 .OrderByDescending(x => x.LastLBCreatedTime)
-                                 .FirstOrDefault();
+                                         ).ToList();
+                                 
+                                 
 
                                 if (latestRadioChecksActivityRecord != null)
                                 {
-                                    _context.ClientSiteRadioChecksActivityStatus.Remove(latestRadioChecksActivityRecord);
+                                    _context.ClientSiteRadioChecksActivityStatus.RemoveRange(latestRadioChecksActivityRecord);
                                 }
 
                             }
