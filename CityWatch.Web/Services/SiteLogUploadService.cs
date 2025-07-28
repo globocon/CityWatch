@@ -376,7 +376,7 @@ namespace CityWatch.Web.Services
             string fileName = string.Empty;
 
             if (logBook.Type == LogBookType.DailyGuardLog)
-                return _guardLogReportGenerator.GeneratePdfReport(logBook.Id);
+                return _guardLogReportGenerator.GeneratePdfReport(logBook.Id,null);
 
             if (logBook.Type == LogBookType.VehicleAndKeyLog)
                 return _keyVehicleLogReportGenerator.GeneratePdfReport(logBook.Id);

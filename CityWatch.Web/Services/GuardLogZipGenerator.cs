@@ -18,7 +18,7 @@ namespace CityWatch.Web.Services
 {
     public interface IGuardLogZipGenerator
     {
-        Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType);
+        Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate,string keywordDownSelect, LogBookType logBookType);
         Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType, string keywordDownSelect);
         string GenerateZipFile(KeyVehicleLogAuditLogRequest kvlAuditLogRequest);
     }
@@ -52,7 +52,7 @@ namespace CityWatch.Web.Services
             _downloadsFolderPath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
         }
 
-        public async Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType)
+        public async Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate,string keywordDownSelect, LogBookType logBookType)
         {
             if (clientSiteIds.Length <= 0)
             {
@@ -73,7 +73,7 @@ namespace CityWatch.Web.Services
                     if (!clientSiteLogBooks.Any())
                         continue;
                     var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReports(logbooksToCreate, zipFolderPath);
+                    CreateLogBookReports(logbooksToCreate, zipFolderPath, keywordDownSelect);
                 }
             }
             else
@@ -91,7 +91,7 @@ namespace CityWatch.Web.Services
                     }
 
                     var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReports(logbooksToCreate, zipFolderPath);
+                    CreateLogBookReports(logbooksToCreate, zipFolderPath, keywordDownSelect);
                 }
 
             }
@@ -179,11 +179,11 @@ namespace CityWatch.Web.Services
             return logBooksToCreate;
         }
 
-        private void CreateLogBookReports(List<ClientSiteLogBook> logBooksToCreate, string zipFolderPath)
+        private void CreateLogBookReports(List<ClientSiteLogBook> logBooksToCreate, string zipFolderPath,string keywordDownSelect)
         {
             foreach (var logBook in logBooksToCreate)
             {
-                var fileName = GetLogFileName(logBook);
+                var fileName = GetLogFileName(logBook, keywordDownSelect);
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     var reportFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
@@ -212,12 +212,12 @@ namespace CityWatch.Web.Services
             return $"{dropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{clientSiteLogBook.Date.Year}/{clientSiteLogBook.Date:yyyyMM} - {clientSiteLogBook.Date.ToString("MMMM").ToUpper()} DATA/{clientSiteLogBook.Date:yyyyMMdd}/{clientSiteLogBook.FileName}";
         }
 
-        private string GetLogFileName(ClientSiteLogBook logBook)
+        private string GetLogFileName(ClientSiteLogBook logBook,string keywordDownSelect)
         {
             string fileName = string.Empty;
 
             if (logBook.Type == LogBookType.DailyGuardLog)
-                return _guardLogReportGenerator.GeneratePdfReport(logBook.Id);
+                return _guardLogReportGenerator.GeneratePdfReport(logBook.Id, keywordDownSelect);
 
             if (logBook.Type == LogBookType.VehicleAndKeyLog)
                 return _keyVehicleLogReportGenerator.GeneratePdfReport(logBook.Id);
