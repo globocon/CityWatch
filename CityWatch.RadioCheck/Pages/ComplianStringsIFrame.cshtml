@@ -134,17 +134,12 @@
                 <div class="d-flex justify-content-between" style="min-width: 200px;">
                     <span>@item.FY</span>
                     <span class="ms-2">@item.Status</span>
-                    <span class="ms-2 fw-bold @(GetColor(item.Status))">@item.Count</span>
+                    <span class="ms-2 fw-bold">@item.Count</span>
                 </div>
             }
         </div>
 
-    string GetColor(string status) => status switch
-    {
-        "Compliant" => "text-success",
-        "Quarantine" => "text-danger",
-        _ => "text-secondary"
-    };
+   
 
 
         <p class="fw-bold" style="font-size: 0.8rem;">
@@ -159,10 +154,11 @@
                 <select id="fyFilter" class="form-select form-select-sm" style="width: auto; display: inline-block;">
                     <option value="">All</option>
                     <option value="FY25">FY25</option>
-                    <option value="FY27">FY26</option>
+                    <option value="FY26">FY26</option>
                     <option value="FY27">FY27</option>
-                    <option value="FY27">FY28</option>
-                    <option value="FY27">FY29</option>
+                    <option value="FY28">FY28</option>
+                    <option value="FY29">FY29</option>
+                    <option value="FY30">FY30</option>
                     <!-- Add more if needed -->
                 </select>
             </div>
@@ -270,14 +266,18 @@
                 table.columns.adjust().draw(false);
             }, 300);
 
-                $('#fyFilter').on('change', function () {
+                      $('#fyFilter').on('change', function () {
             let selectedFY = $(this).val();
 
-            // Apply filter (exact match if value selected, or clear if empty)
+            // Clear all existing filters first
+            table.search('').columns().search('');
+
             if (selectedFY) {
-                table.column(0).search('^' + selectedFY + '$', true, false).draw(); // exact match with regex
+                // Apply exact match filter to Build FY column
+                table.column(0).search('^' + selectedFY + '$', true, false).draw();
             } else {
-                table.column(0).search('').draw(); // clear filter
+                // Just draw the full table
+                table.draw();
             }
         });
 
