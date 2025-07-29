@@ -1116,7 +1116,6 @@ namespace CityWatch.RadioCheck.API
 
                 if (webhookData != null)
                 {
-                    // Helper to convert date JObject to string
                     string ParseDate(object obj)
                     {
                         if (obj is JObject jObj)
@@ -1131,67 +1130,36 @@ namespace CityWatch.RadioCheck.API
                         return "";
                     }
 
-                    // Date fields (with date parsing)
-                    string date = webhookData.TryGetValue("q1309_ComplintString_date", out var dateValue) ? ParseDate(dateValue) : "";
-                    string stringLoaded = webhookData.TryGetValue("q1317_stringLoaded", out var loadedVal) ? ParseDate(loadedVal) : "";
-                    string stringDropped = webhookData.TryGetValue("q1318_stringDropped", out var droppedVal) ? ParseDate(droppedVal) : "";
-
-                    // Text fields (standard pattern)
+                    // Extract only the fields from provided JSON
+                    string fy = webhookData.TryGetValue("q1321_buildFy", out var fyVal) ? fyVal?.ToString() ?? "" : "";
                     string stringId = webhookData.TryGetValue("q1310_ComplintString_stringId", out var stringIdVal) ? stringIdVal?.ToString() ?? "" : "";
-                    string defectWeld = webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectVal) ? defectVal?.ToString() ?? "" : "";
-                    string newWeld = webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeldVal) ? newWeldVal?.ToString() ?? "" : "";
+                    string contractor1 = webhookData.TryGetValue("q1341_contractor1341", out var contractor1Val) ? contractor1Val?.ToString() ?? "" : "";
                     string eastRfid = webhookData.TryGetValue("q1313_ComplintString_eastRfid", out var eastVal) ? eastVal?.ToString() ?? "" : "";
                     string westRfid = webhookData.TryGetValue("q1314_ComplintString_westRfid", out var westVal) ? westVal?.ToString() ?? "" : "";
-                    string comments = webhookData.TryGetValue("q1315_ComplintString_comments", out var commentVal) ? commentVal?.ToString() ?? "" : "";
-                    string dropLocationStart = webhookData.TryGetValue("q1319_dropLocation", out var dropStart) ? dropStart?.ToString() ?? "" : "";
-                    string dropLocationEnd = webhookData.TryGetValue("q1320_dropLocation1320", out var dropEnd) ? dropEnd?.ToString() ?? "" : "";                  
-                    string fy = webhookData.TryGetValue("q1321_fyData", out var fyVal) ? fyVal?.ToString() ?? "" : "";
-
-
-                    // Additional new fields (parsed similarly)
-                    string weld = webhookData.TryGetValue("q1322_weld", out var weldVal) ? weldVal?.ToString() ?? "" : "";
-                    string defect = webhookData.TryGetValue("q1323_defect", out var defectTxt) ? defectTxt?.ToString() ?? "" : "";
+                    string compliantYn = webhookData.TryGetValue("q1342_compliantYn", out var compVal) ? compVal?.ToString() ?? "" : "";
+                    string compliantDate = webhookData.TryGetValue("q1326_compliantDate", out var compliantDateVal) ? ParseDate(compliantDateVal) : "";
+                    string loadedOn = webhookData.TryGetValue("q1317_loadedOn", out var loadedOnVal) ? ParseDate(loadedOnVal) : "";
+                   
+                    string defectWeld = webhookData.TryGetValue("q1311_ComplintString_defectWeld", out var defectWeldVal) ? defectWeldVal?.ToString() ?? "" : "";
+                    string typeOfDefect = webhookData.TryGetValue("q1323_typeOf", out var typeOfDefectVal) ? typeOfDefectVal?.ToString() ?? "" : "";
                     string locationOfDefect = webhookData.TryGetValue("q1324_locationOf", out var locationVal) ? locationVal?.ToString() ?? "" : "";
+                    string newWeld = webhookData.TryGetValue("q1312_ComplintString_newWeld", out var newWeldVal) ? newWeldVal?.ToString() ?? "" : "";
 
-                    string dateRectified = webhookData.TryGetValue("q1326_dateRectified", out var rectifiedVal) ? ParseDate(rectifiedVal) : "";
-                    string compliant = webhookData.TryGetValue("q1327_compliant", out var compliantVal) ? compliantVal?.ToString() ?? "" : "";
-                    string loadedOn = webhookData.TryGetValue("q1329_loadedOn", out var loadedVal2) ? loadedVal2?.ToString() ?? "" : "";
-                    string quarantinedComments = webhookData.TryGetValue("q1335_QuarantinedString_comments", out var qCommentsVal) ? qCommentsVal?.ToString() ?? "" : "";
-
-
-                    string contractor1 = webhookData.TryGetValue("q1341_contractor1341", out var contractor1Val) ? contractor1Val?.ToString() ?? "" : "";
-                    string typeOfDefect = webhookData.TryGetValue("q1323_typeOf", out var typeOfVal) ? typeOfVal?.ToString() ?? "" : "";
-                    string contractor2 = webhookData.TryGetValue("q1339_contractor", out var contractor2Val) ? contractor2Val?.ToString() ?? "" : "";
-                    string comment3 = webhookData.TryGetValue("q1340_comments", out var comment3Val) ? comment3Val?.ToString() ?? "" : "";
-
-
-
-
-                    // Collect all values in order
                     var valuesToAdd = new List<string>
-                    {
-                        date,
-                        fy,
-                        stringId,
-                        eastRfid,
-                        westRfid,
-                        contractor1,           // q1341_contractor1341
-                        comments,              // q1315_ComplintString_comments
-                        defectWeld,
-                        typeOfDefect,          // q1323_typeOf
-                        locationOfDefect,
-                        newWeld,
-                        dateRectified,
-                        quarantinedComments,
-                        stringLoaded,              // q1329_loadedOn
-                        stringDropped,
-                        dropLocationStart,
-                        dropLocationEnd,
-                        contractor2,
-                        comment3
-
-                    };
-
+            {
+                fy,
+    stringId,
+    contractor1,
+    eastRfid,
+    westRfid,
+    compliantYn,
+    compliantDate,
+    loadedOn,
+    defectWeld,
+    typeOfDefect,
+    locationOfDefect,
+    newWeld
+            };
 
                     using (var workbook = System.IO.File.Exists(excelFilePath)
                         ? new ClosedXML.Excel.XLWorkbook(excelFilePath)
@@ -1201,25 +1169,18 @@ namespace CityWatch.RadioCheck.API
 
                         if (worksheet.LastRowUsed() == null)
                         {
-                            worksheet.Cell(1, 1).Value = "Date";
-                            worksheet.Cell(1, 2).Value = "FY Data";
-                            worksheet.Cell(1, 3).Value = "String ID";
-                            worksheet.Cell(1, 4).Value = "EAST RFID (Last 10 digits)";
-                            worksheet.Cell(1, 5).Value = "WEST RFID (Last 10 digits)";
-                            worksheet.Cell(1, 6).Value = "Contractor";
-                            worksheet.Cell(1, 7).Value = "Comments";
-                            worksheet.Cell(1, 8).Value = "Defect Weld ID";
-                            worksheet.Cell(1, 9).Value = "Type of Defect";
-                            worksheet.Cell(1, 10).Value = "Location of Defect";
-                            worksheet.Cell(1, 11).Value = "New Weld ID";
-                            worksheet.Cell(1, 12).Value = "Date Rectified";
-                            worksheet.Cell(1, 13).Value = "Comments";
-                            worksheet.Cell(1, 14).Value = "String Loaded on Train";
-                            worksheet.Cell(1, 15).Value = "String Dropped";
-                            worksheet.Cell(1, 16).Value = "Drop Location Start (KMs)";
-                            worksheet.Cell(1, 17).Value = "Drop Location End (KMs)";
-                            worksheet.Cell(1, 18).Value = "Contractor";
-                            worksheet.Cell(1, 19).Value = "Comments";
+                            worksheet.Cell(1, 1).Value = "Build FY";
+                            worksheet.Cell(1, 2).Value = "String ID";
+                            worksheet.Cell(1, 3).Value = "Contractor";
+                            worksheet.Cell(1, 4).Value = "EAST RFID";
+                            worksheet.Cell(1, 5).Value = "WEST RFID";
+                            worksheet.Cell(1, 6).Value = "Compliant Y/N";
+                            worksheet.Cell(1, 7).Value = "Compliant Date";
+                            worksheet.Cell(1, 8).Value = "Loaded on Train Insert Date";
+                            worksheet.Cell(1, 9).Value = "Defect Weld ID";
+                            worksheet.Cell(1, 10).Value = "Type of Defect";
+                            worksheet.Cell(1, 11).Value = "Location of Defect";
+                            worksheet.Cell(1, 12).Value = "New Weld ID";
                         }
 
                         var lastRow = worksheet.LastRowUsed().RowNumber();
@@ -1228,7 +1189,7 @@ namespace CityWatch.RadioCheck.API
                         {
                             newRow.Cell(i + 1).Value = valuesToAdd[i];
                         }
-                       
+
                         workbook.SaveAs(excelFilePath);
                     }
                 }
@@ -1240,6 +1201,7 @@ namespace CityWatch.RadioCheck.API
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
 
 

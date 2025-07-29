@@ -108,45 +108,98 @@
 
     @if (Model.TableData != null)
     {
+
+
+    var dataRows = Model.TableData.Skip(1); // Skip header
+
+    // Count for FY25 + Compliant
+    int fy25Compliant = dataRows.Count(row => row[0] == "FY25" && row[5].Equals("Yes", StringComparison.OrdinalIgnoreCase));
+
+    // Count for FY27 + Compliant
+    int fy27Compliant = dataRows.Count(row => row[0] == "FY27" && row[5].Equals("Yes", StringComparison.OrdinalIgnoreCase));
+
+    // Count for FY27 + Quarantine in Notes (assuming column 6)
+        int fy27Quarantine = dataRows.Count(row => row[0] == "FY27" && row[5].Equals("No", StringComparison.OrdinalIgnoreCase));
+
+    var summary = new[]
+    {
+        new { FY = "FY25", Status = "Compliant", Count = fy25Compliant },
+        new { FY = "FY27", Status = "Compliant", Count = fy27Compliant },
+        new { FY = "FY27", Status = "Quarantine", Count = fy27Quarantine }
+    };
+
+        <div class="d-flex flex-column gap-1" style="font-size: 0.75rem; background-color: #0d3f53; color: white; padding: 0.5rem; border-radius: 5px; width: fit-content;">
+            @foreach (var item in summary)
+            {
+                <div class="d-flex justify-content-between" style="min-width: 200px;">
+                    <span>@item.FY</span>
+                    <span class="ms-2">@item.Status</span>
+                    <span class="ms-2 fw-bold @(GetColor(item.Status))">@item.Count</span>
+                </div>
+            }
+        </div>
+
+    string GetColor(string status) => status switch
+    {
+        "Compliant" => "text-success",
+        "Quarantine" => "text-danger",
+        _ => "text-secondary"
+    };
+
+
         <p class="fw-bold" style="font-size: 0.8rem;">
             Total number of strings:
             <span class="text-primary fw-bold">@((Model.TableData.Count - 1))</span>
         </p>
 
-        <div class="table-responsive" style="font-size: 0.72rem;">
-            <table id="compliantTable" class="table table-bordered table-striped table-hover table-sm bg-white text-dark">
-                <thead style="background-color: #ffffff; color: #000;">
+        <div class="table-responsive" style="font-size: 0.72rem;width:98%">
+
+            <div class="mb-2">
+                <label class="fw-bold">Filter by Build FY: </label>
+                <select id="fyFilter" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                    <option value="">All</option>
+                    <option value="FY25">FY25</option>
+                    <option value="FY27">FY26</option>
+                    <option value="FY27">FY27</option>
+                    <option value="FY27">FY28</option>
+                    <option value="FY27">FY29</option>
+                    <!-- Add more if needed -->
+                </select>
+            </div>
+
+            <table id="compliantTable" class="table table-bordered table-striped table-hover table-sm bg-white text-dark" style="width: 100%;">
+                <thead class="bg-white text-dark">
                     <tr>
-                        <th colspan="7" class="text-center fw-bold border">String Data</th>
-                        <th colspan="6" class="text-center fw-bold border">Defective and New Weld Data</th>
-                        <th colspan="6" class="text-center fw-bold border">Load and Drop Data</th>
+                        <th colspan="8" class="text-center fw-bold border">STRING DATA</th>
+                        <th colspan="@(Model.TableData[0].Count - 8)" class="text-center fw-bold border">DEFECTIVE AND NEW WELD DATA</th>
                         <th rowspan="2" class="text-center fw-bold border align-middle">Action</th>
                     </tr>
                     <tr>
                         @foreach (var header in Model.TableData[0])
                         {
-                                <th class="fw-bold border text-center">@header</th>
+                            <th class="fw-bold border text-center">@header</th>
                         }
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-dark">
                     @for (int i = 1; i < Model.TableData.Count; i++)
                     {
-                            <tr>
+                        <tr>
                             @foreach (var cell in Model.TableData[i])
                             {
-                                        <td class="border">@cell</td>
+                                <td class="border text-center">@cell</td>
                             }
-                                <td class="text-center border">
-                                    <input type="hidden" name="rowIndex" value="@i" />
-                                    <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                            <td class="text-center border">
+                                <input type="hidden" name="rowIndex" value="@i" />
+                                <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
                     }
                 </tbody>
             </table>
+
         </div>
     }
     else
@@ -180,40 +233,60 @@
             });
         }
 
-       $(document).ready(function () {
-           $('#compliantTable').DataTable({
-            dom: 'Bfrtip',
-            paging: false,
-            info: false,
-            scrollX: true,
-            responsive: true,
-            autoWidth: false, // disables automatic column width detection
-                      order: [[0, 'asc']],
-            columnDefs: [
-                { targets: 2, width: '100px' }, // Defect Weld ID
-                { targets: 3, width: '100px' }, // New Weld ID
-                { targets: -1, orderable: false, width: '60px' } // Action column
-            ],
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    className: 'btn btn-success btn-sm me-1'
-                },
-                {
-                    extend: 'pdf',
-                    text: 'Export to PDF',
-                    className: 'btn btn-danger btn-sm me-1'
-                },
-                {
-                    extend: 'print',
-                    text: 'Print',
-                    className: 'btn btn-info btn-sm'
-                }
-            ]
+              $(document).ready(function () {
+            var table = $('#compliantTable').DataTable({
+                dom: 'Bfrtip',
+                paging: false,
+                info: false,
+                scrollX: true,
+                responsive: false, // ⚠️ turn off if multi-header table isn't aligning
+                autoWidth: false,
+                order: [[0, 'asc']],
+                columnDefs: [
+                    
+                    { targets: -1, orderable: false, width: '60px' } // Action column
+                ],
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        className: 'btn btn-success btn-sm me-1'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: 'Export to PDF',
+                        className: 'btn btn-danger btn-sm me-1'
+                    },
+                    {
+                        extend: 'print',
+                        text: 'Print',
+                        className: 'btn btn-info btn-sm'
+                    }
+                ]
+            });
+
+            // ✅ Force re-alignment after a short delay
+            setTimeout(() => {
+                table.columns.adjust().draw(false);
+            }, 300);
+
+                $('#fyFilter').on('change', function () {
+            let selectedFY = $(this).val();
+
+            // Apply filter (exact match if value selected, or clear if empty)
+            if (selectedFY) {
+                table.column(0).search('^' + selectedFY + '$', true, false).draw(); // exact match with regex
+            } else {
+                table.column(0).search('').draw(); // clear filter
+            }
         });
 
-});
+
+
+        });
+
+
+
 
     </script>
 </body>
