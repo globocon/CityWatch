@@ -16,6 +16,9 @@ namespace CityWatch.Data.Providers
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
         ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber,int id);
+        void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag);
+        void DeleteClientSiteSmartWandTags(int id);
+        List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -117,6 +120,53 @@ namespace CityWatch.Data.Providers
                 _dbContext.ClientSitePatrolCars.Remove(clientSitePatrolCarToDelete);
                 _dbContext.SaveChanges();
             }  
+        }
+        public List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags()
+        { 
+            var smartwandtags= _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted==false)
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.ClientSite)
+                .ToList();
+            foreach (var item in smartwandtags)
+            {
+                item.TagsType = item.SmartWandTagsType.value;
+            }
+            return smartwandtags;
+        }
+        public void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag)
+        {
+            if (clientSiteSmartWandTag == null)
+                throw new ArgumentNullException();
+
+            if (clientSiteSmartWandTag.Id == -1)
+            {
+                clientSiteSmartWandTag.Id = 0;
+                _dbContext.ClientSiteSmartWandTags.Add(clientSiteSmartWandTag);
+            }
+            else
+            {
+                var clientSiteSmartWandTagToUpdate = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == clientSiteSmartWandTag.Id);
+                if (clientSiteSmartWandTagToUpdate != null)
+                {
+                    clientSiteSmartWandTagToUpdate.UId = clientSiteSmartWandTag.UId;
+                    clientSiteSmartWandTagToUpdate.ClientSiteId = clientSiteSmartWandTag.ClientSiteId;
+                    clientSiteSmartWandTagToUpdate.TagsTypeId = clientSiteSmartWandTag.TagsTypeId;
+                    clientSiteSmartWandTagToUpdate.LabelDescription = clientSiteSmartWandTag.LabelDescription;
+                    clientSiteSmartWandTagToUpdate.IsDeleted = false;
+                }
+            }
+            _dbContext.SaveChanges();
+        }
+
+        public void DeleteClientSiteSmartWandTags(int id)
+        {
+            var deleteClientSiteSmartWandTags = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == id);
+            if (deleteClientSiteSmartWandTags != null)
+                deleteClientSiteSmartWandTags.IsDeleted = true;
+                //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
+
+            _dbContext.SaveChanges();
         }
     }   
 }

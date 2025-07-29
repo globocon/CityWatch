@@ -227,7 +227,7 @@ namespace CityWatch.Data.Providers
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlDataForSite(int siteId);
         List<TrainingTestQuestions> GetTrainingTestQuestions();
         List<TrainingCourseInstructor> GetCourseAllInstructor();
-
+        List<SmartWandTagsType> GetSmartWandTagsType();
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -2469,6 +2469,11 @@ namespace CityWatch.Data.Providers
 
         
             return courseDocList;
+        }
+        public List<SmartWandTagsType> GetSmartWandTagsType()
+        {
+            return _context.SmartWandTagsType.OrderBy(x => x.Id).ToList();
+
         }
 
     }

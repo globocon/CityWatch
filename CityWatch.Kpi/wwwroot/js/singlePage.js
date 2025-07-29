@@ -1816,6 +1816,115 @@ $(function () {
         }
 
     });
+    //wand tags-start
+    function tagsUIDEditor($editorContainer, value, record) {
+
+        var textAreaForNotes = $('<input type="text" maxlength="20" class="form-control" value="' + record.uId +'"/> ');
+            $editorContainer.append(textAreaForNotes);
+      
+
+    }
+    function tagsLabelEditor($editorContainer, value, record) {
+
+        var textAreaForNotes = $('<input type="text" minlength="50" class="form-control" value="' + record.labelDescription + '"/>');
+        $editorContainer.append(textAreaForNotes);
+
+
+    }
+    let gritdWandTags;
+    gritdWandTags = $('#cs-wand-tags').grid({
+        dataSource: '/admin/settings?handler=WandTagsSettings&&clientSiteId=' + $('#gl_client_site_id').val(),
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            {
+                width: '200', field: 'uId', title: 'UID', editor:tagsUIDEditor
+                //editor: {
+                //    create: function ($container, value) {
+                //        var $input = $('<input type="text" id="txt" class="form-control"/>')
+                //            .val(value)
+                //            .attr('maxlength', 20);
+                //        $container.append($input);
+                //        return $input;
+                //    }
+                //}
+                //editor: {
+                //    type: 'text',
+                //    attributes: { maxlength: 20 }  // 👈 sets the character limit
+                //}
+                },
+            { width: 100, field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TagType', valueField: 'value', textField: 'value' } },
+
+            {
+                width: '100%', field: 'labelDescription', title: 'Label',
+                
+                editor: tagsLabelEditor
+                
+            },
+        ],
+
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    let isWandTagsAdding = false;
+    if (gritdWandTags) {
+        gritdWandTags.on('rowDataChanged', function (e, id, record) {
+
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+
+            $.ajax({
+                url: '/admin/settings?handler=SmartWandTagsSettings',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isWandTagsAdding)
+                    isWandTagsAdding = false;
+            });
+
+
+
+        });
+
+        gritdWandTags.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this  wand tag details?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/admin/settings?handler=DeleteSmartWandTagSettings',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isSmartWandAdding)
+                        isSmartWandAdding = false;
+                });
+            }
+        });
+    }
+
+    $('#add_wand_tag').on('click', function () {
+
+        if (isWandTagsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isWandTagsAdding = true;
+            gritdWandTags.addRow({ 'id': -1, 'uId': '', tagsType: '', labelDescription: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+        }
+    });
+    //wand tags-end
 });
 
 

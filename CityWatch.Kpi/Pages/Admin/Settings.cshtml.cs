@@ -2268,6 +2268,50 @@ namespace CityWatch.Kpi.Pages.Admin
             }
         }
 
+        //wand tags-start
+        public JsonResult OnGetWandTagsSettings(int clientSiteId)
+        {
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandTags().Where(z => z.ClientSiteId == clientSiteId).ToList());
+        }
+        public JsonResult OnGetTagType()
+        {
+            return new JsonResult(_configDataProvider.GetSmartWandTagsType());
+        }
+        public JsonResult OnPostSmartWandTagsSettings(ClientSiteSmartWandTags record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                record.TagsTypeId = _configDataProvider.GetSmartWandTagsType().Where(x => x.value == record.TagsType).FirstOrDefault().Id;
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteSmartWandTagSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.DeleteClientSiteSmartWandTags(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        //wand tags-end
+
     }
 
 
