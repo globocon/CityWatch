@@ -36,7 +36,7 @@ namespace CityWatch.Web.Services
 
     public interface IGuardLogReportGenerator
     {
-        string GeneratePdfReport(int clientSiteLogBookId);
+        string GeneratePdfReport(int clientSiteLogBookId,string keywordDownSelect);
         public string GeneratePdfReportForFusion(List<ClientSiteRadioChecksActivityStatus_History> funsionLog);
         public Table CreateReportDataForFusionWithoutSiteName(List<ClientSiteRadioChecksActivityStatus_History> guardLog);
 
@@ -88,7 +88,7 @@ namespace CityWatch.Web.Services
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
         }
 
-        public string GeneratePdfReport(int clientSiteLogBookId)
+        public string GeneratePdfReport(int clientSiteLogBookId,string keywordDownSelect)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
 
@@ -97,112 +97,119 @@ namespace CityWatch.Web.Services
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
-            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date);
-
-            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
-            pdfDoc.SetDefaultPageSize(PageSize.A4);
-            var doc = new Document(pdfDoc);
-            doc.SetMargins(15f, 30f, 40f, 30f);
-
-            var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version);
-            doc.Add(headerTable);
-
-            doc.Add(new Paragraph("On-Duty Guard Details")
-                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
-                .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .SetMarginTop(5));
-
-            var guardDetails = CreateGuardDetails(clientsiteLogBook);
-            doc.Add(guardDetails);
-
-            doc.Add(new Paragraph("Log Book")
-                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
-                .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .SetMarginTop(5));
-
-            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
-            var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
-            if (customFieldLogs.Any() || patrolCarLogs.Any())
+            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
+ x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (_guardLogs.Count() > 0)
             {
-                var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
-                doc.Add(addlFieldLogs);
-            }
+                var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+                pdfDoc.SetDefaultPageSize(PageSize.A4);
+                var doc = new Document(pdfDoc);
+                doc.SetMargins(15f, 30f, 40f, 30f);
 
-            var tableData = CreateReportData(_guardLogs);
-            doc.Add(tableData);
+                var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version);
+                doc.Add(headerTable);
 
-            var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
-            doc.Add(logNotes);
+                doc.Add(new Paragraph("On-Duty Guard Details")
+                    .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                    .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                    .SetMarginTop(5));
 
-            var footer = CreateFooter();
-            pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
+                var guardDetails = CreateGuardDetails(clientsiteLogBook);
+                doc.Add(guardDetails);
 
-            //p6-102 Add photo -start Commented 19092024 Dileep Start
-            //var index = 1;
-            //foreach (var entry in _guardLogs)
-            //{
+                doc.Add(new Paragraph("Log Book")
+                    .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                    .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                    .SetMarginTop(5));
 
-
-            //    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
-            //    Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
-
-            //    foreach (var guardLogImage in guardlogImages)
-            //    {
-
-            //        if (guardLogImage.IsRearfile == true)
-            //        {
-            //            var docImage = new Document(pdfDoc);
-            //            var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
-            //            doc.Add(image);
-
-
-
-            //            var paraName = new Paragraph($"File Name: {IO.Path.GetFileName(guardLogImage.ImagePath)}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-            //            doc.Add(paraName);
-            //            docImage.Close();
-            //        }
-            //    }
-            //}
-            //p6-102 Add photo -end end 
-            //New Code fix the image bug start Dileep 
-
-            int lastPageIndex = pdfDoc.GetNumberOfPages();
-            var index = lastPageIndex + 1;
-            foreach (var entry in _guardLogs)
-            {
-                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
-                foreach (var guardLogImage in guardlogImages)
+                var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
+                var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
+                if (customFieldLogs.Any() || patrolCarLogs.Any())
                 {
+                    var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+                    doc.Add(addlFieldLogs);
+                }
 
-                    if (guardLogImage.IsRearfile == true)
+                var tableData = CreateReportData(_guardLogs);
+                doc.Add(tableData);
+
+                var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
+                doc.Add(logNotes);
+
+                var footer = CreateFooter();
+                pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
+
+                //p6-102 Add photo -start Commented 19092024 Dileep Start
+                //var index = 1;
+                //foreach (var entry in _guardLogs)
+                //{
+
+
+                //    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+                //    Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+
+                //    foreach (var guardLogImage in guardlogImages)
+                //    {
+
+                //        if (guardLogImage.IsRearfile == true)
+                //        {
+                //            var docImage = new Document(pdfDoc);
+                //            var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
+                //            doc.Add(image);
+
+
+
+                //            var paraName = new Paragraph($"File Name: {IO.Path.GetFileName(guardLogImage.ImagePath)}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                //            doc.Add(paraName);
+                //            docImage.Close();
+                //        }
+                //    }
+                //}
+                //p6-102 Add photo -end end 
+                //New Code fix the image bug start Dileep 
+
+                int lastPageIndex = pdfDoc.GetNumberOfPages();
+                var index = lastPageIndex + 1;
+                foreach (var entry in _guardLogs)
+                {
+                    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+                    foreach (var guardLogImage in guardlogImages)
                     {
-                        try
+
+                        if (guardLogImage.IsRearfile == true)
                         {
+                            try
+                            {
 
-                            AttachImageToPdf(pdfDoc, doc, index, guardLogImage.ImagePath);
-                            index++;
-                            // Add the image to the document
-                            //doc.Add(image);
-                            //var image = AttachImageToPdf(pdfDoc, index, guardLogImage.ImagePath);
-                            //doc.Add(image);
+                                AttachImageToPdf(pdfDoc, doc, index, guardLogImage.ImagePath);
+                                index++;
+                                // Add the image to the document
+                                //doc.Add(image);
+                                //var image = AttachImageToPdf(pdfDoc, index, guardLogImage.ImagePath);
+                                //doc.Add(image);
 
-                            //var paraName = new Paragraph($"File Name: {System.IO.Path.GetFileName(guardLogImage.ImagePath)}")
-                            //    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-                            //doc.Add(paraName);
+                                //var paraName = new Paragraph($"File Name: {System.IO.Path.GetFileName(guardLogImage.ImagePath)}")
+                                //    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                                //doc.Add(paraName);
 
-                        }
-                        catch (Exception ex)
-                        {
-                            // Log exception or handle it as needed
-                            Console.WriteLine($"Error attaching image: {ex.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log exception or handle it as needed
+                                Console.WriteLine($"Error attaching image: {ex.Message}");
+                            }
                         }
                     }
                 }
-            }
 
-            //New Code fix the image bug end 
-            doc.Close();
-            pdfDoc.Close();
+                //New Code fix the image bug end 
+                doc.Close();
+                pdfDoc.Close();
+            }
+            else
+            {
+                reportPdf = null;
+            }
 
             return IO.Path.GetFileName(reportPdf);
         }
