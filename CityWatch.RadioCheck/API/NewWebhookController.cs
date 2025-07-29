@@ -153,17 +153,19 @@ namespace CityWatch.RadioCheck.API
             logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
             jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
-            // ## This is for Testing 
-            string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
-            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            var rawArray = rawJson.Split(Environment.NewLine);
-            rawJson = rawArray[rawArray.Length - 1];
-            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            CopyTemplateToFolder(templateFolder, excelFilePath);
-            await CreateExcelReportFile(webhookData);
-            // ## This is for Testing
 
-
+            if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                // ## This is for Testing 
+                string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
+                string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+                var rawArray = rawJson.Split(Environment.NewLine);
+                rawJson = rawArray[rawArray.Length - 1];
+                var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+                CopyTemplateToFolder(templateFolder, excelFilePath);
+                await CreateExcelReportFile(webhookData);
+                // ## This is for Testing
+            }
 
             // 🔸 Return file as response
             if (!System.IO.File.Exists(excelFilePath))
@@ -434,10 +436,10 @@ namespace CityWatch.RadioCheck.API
                                         double rowHeight = DestWorkSheet.Row(destrow).Height;
 
                                         int cellWidthPx = ExcelColumnWidthToPixels(columnWidth);
-                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight);
+                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight) * 7;
 
                                         // Set image size to match cell
-                                        picture.SetSize(cellWidthPx, cellHeightPx);
+                                        picture.SetSize(cellWidthPx - 6, cellHeightPx - 6);
 
 
 
@@ -543,10 +545,10 @@ namespace CityWatch.RadioCheck.API
                                         double rowHeight = DestWorkSheet.Row(destrow).Height;
 
                                         int cellWidthPx = ExcelColumnWidthToPixels(columnWidth);
-                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight);
+                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight) * 60;
 
                                         // Set image size to match cell
-                                        picture.SetSize(cellWidthPx, cellHeightPx);
+                                        picture.SetSize(cellWidthPx - 6, cellHeightPx - 6);
 
 
 
@@ -596,7 +598,7 @@ namespace CityWatch.RadioCheck.API
         private int ExcelRowHeightToPixels(double excelRowHeight)
         {
             // 1 point = 1/72 inch, 1 pixel ≈ 0.75 point (at 96 DPI)
-            return (int)Math.Round(excelRowHeight * 96 / 72) * 7;
+            return (int)Math.Round(excelRowHeight * 96 / 72);
         }
 
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)
