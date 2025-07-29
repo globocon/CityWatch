@@ -17,7 +17,7 @@ if (rerailexcelButtons.length > 0) {
             const token = $('input[name="__RequestVerificationToken"]').val();
 
             $.ajax({
-                url: '/api/newwebhook/exceldatadownload',
+                url: '/api/retailscopingwebhook/exceldatadownload',
                 type: 'POST',
                 data: formData,
                 contentType: false,
