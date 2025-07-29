@@ -153,15 +153,15 @@ namespace CityWatch.RadioCheck.API
             logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
             jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
-            // ## This is for Testing 
-            string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
-            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            var rawArray = rawJson.Split(Environment.NewLine);
-            rawJson = rawArray[rawArray.Length - 1];
-            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            CopyTemplateToFolder(templateFolder, excelFilePath);
-            await CreateExcelReportFile(webhookData);
-            // ## This is for Testing
+            ////// ## This is for Testing 
+            ////string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
+            ////string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+            ////var rawArray = rawJson.Split(Environment.NewLine);
+            ////rawJson = rawArray[rawArray.Length - 1];
+            ////var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+            ////CopyTemplateToFolder(templateFolder, excelFilePath);
+            ////await CreateExcelReportFile(webhookData);
+            ////// ## This is for Testing
 
 
 
