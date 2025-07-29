@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 namespace CityWatch.RadioCheck.API
 {
 
-    [Route("api/newwebhook")]
+    [Route("api/retailscopingwebhook")]
     [ApiController]
-    public class NewWebhookController : ControllerBase
+    public class retailscopingwebhookController : ControllerBase
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
@@ -47,7 +47,7 @@ namespace CityWatch.RadioCheck.API
         private string formName;
 
 
-        public NewWebhookController(IConfiguration configuration)
+        public retailscopingwebhookController(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
             _configuration = configuration;
