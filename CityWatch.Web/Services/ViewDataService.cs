@@ -2353,8 +2353,8 @@ namespace CityWatch.Web.Services
             cdto.CurrentCount = currLocData?.Ccount ?? 0;
             cdto.TotalCount = currLocData?.Tcount ?? 0;
 
-            cdto.TillDateCount = histLocData?.Sum(x => x.Ccount) ?? 0;
-            cdto.TillDateCount += currLocData?.Ccount ?? 0;
+            cdto.TillDateCount = histLocData?.Sum(x => x.Tcount) ?? 0;
+            cdto.TillDateCount += currLocData?.Tcount ?? 0;
             cdto.TillDate = (currLocData.CrowdControlDate.HasValue ? currLocData.CrowdControlDate.Value.ToString("dd MMM yyyy") : "");
 
 
