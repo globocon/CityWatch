@@ -4141,7 +4141,7 @@ namespace CityWatch.Data.Providers
                                 var latestRadioChecksActivityRecord = _context.ClientSiteRadioChecksActivityStatus
                                 .Where(x => x.ClientSiteId == clientSiteRadioCheck.ClientSiteId
                                          && x.GuardId == clientSiteRadioCheck.GuardId).ToList();
-                                
+
 
                                 if (latestRadioChecksActivityRecord != null)
                                 {
@@ -4895,8 +4895,8 @@ namespace CityWatch.Data.Providers
                                  .Where(x => x.ClientSiteId == clientSiteRadioCheck.ClientSiteId
                                           && x.GuardId == clientSiteRadioCheck.GuardId
                                          ).ToList();
-                                 
-                                 
+
+
 
                                 if (latestRadioChecksActivityRecord != null)
                                 {
@@ -4918,7 +4918,7 @@ namespace CityWatch.Data.Providers
 
 
 
-                           
+
                         }
                         else
                         {
@@ -6880,7 +6880,11 @@ namespace CityWatch.Data.Providers
                             return _context.DuressAppField.Where(x => x.TypeId == typeId && x.ProfileId == _profileId).ToList();
                         }
                     }
-                    return _context.DuressAppField.Where(x => x.TypeId == typeId && x.ProfileId == null).ToList();
+                    var _defaultProfileId = _context.MobileLogActivityProfile
+                        .Where(x => x.IsDefault == true)?
+                        .Select(x => x.Id)?
+                        .FirstOrDefault() ?? 0;
+                    return _context.DuressAppField.Where(x => x.TypeId == typeId && x.ProfileId == _defaultProfileId).ToList();
                 }
 
                 return _context.DuressAppField.Where(x => x.TypeId == typeId).ToList();
@@ -7094,7 +7098,8 @@ namespace CityWatch.Data.Providers
             }
             var newProfile = new MobileLogActivityProfile
             {
-                ProfileName = profileName
+                ProfileName = profileName,
+                IsDefault = false
             };
             _context.MobileLogActivityProfile.Add(newProfile);
             _context.SaveChanges();
@@ -7129,6 +7134,14 @@ namespace CityWatch.Data.Providers
             {
                 msg = "Profile not found.";
                 return false; // Profile not found
+            }
+            else
+            {
+                if (_existing.IsDefault)
+                {
+                    msg = "Default profile cannot be deleted.";
+                    return false; // Default profile cannot be deleted
+                }
             }
             var linkedrecords = _context.DuressAppField.Where(x => x.ProfileId == profileId).ToList();
             if (linkedrecords.Any())
