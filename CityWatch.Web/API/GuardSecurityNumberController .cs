@@ -1047,6 +1047,10 @@ namespace CityWatch.Web.API
                 GuardMonth = Report.Officer.GuardMonth,
                 NotifiedBy= Report.Officer.NotifiedBy
             };
+            /* specific for mobile app Android*/
+            Report.WebVersion = false;
+            Report.Android = true;
+            Report.iOS = false;
 
 
             var remoteIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -1266,7 +1270,7 @@ namespace CityWatch.Web.API
                         SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report,domain);
 
                         /* Save log for duress button enable Start 02032024 dileep*/
-                        var guradDetailsName = "Admin";
+            var guradDetailsName = "Admin";
                         var guardId = 0;
                         if (IRguardId != 0)
                         {

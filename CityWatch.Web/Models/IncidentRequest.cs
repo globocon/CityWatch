@@ -66,7 +66,17 @@ namespace CityWatch.Web.Models
         public List<string> Attachments { get; set; }
 
         public bool IsPositionPatrolCar { get; set; }
-        
+
+
+        [Display(Name = "Web Version")]
+        public bool WebVersion { get; set; }
+
+        [Display(Name = "Android")]
+        public bool Android { get; set; }
+
+        [Display(Name = "iOS")]
+        public bool iOS { get; set; }
+
 
         public string OccurrenceNo
         {

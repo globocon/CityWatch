@@ -44,9 +44,19 @@ namespace CityWatch.Web.Helpers
                 new FormField("OTR", "EventType.Other", typeof(bool)),
                 new FormField("CC-List", "SiteColourCode", typeof(string)),
 
-                new FormField("IR-YES-3a", "WandScannedYes3a", typeof(bool)),
-                new FormField("IR-YES-3b", "WandScannedYes3b", typeof(bool)),
-                new FormField("IR-NO", "WandScannedNo", typeof(bool)),
+                //new FormField("IR-YES-3a", "WandScannedYes3a", typeof(bool)),
+                //new FormField("IR-YES-3b", "WandScannedYes3b", typeof(bool)),
+                //new FormField("IR-NO", "WandScannedNo", typeof(bool)),
+                //new 29072025 start
+
+                new FormField("IR-YES-3a", "WebVersion", typeof(bool)),
+                new FormField("IR-YES-3b", "Android", typeof(bool)),
+                new FormField("IR-NO", "iOS", typeof(bool)),
+                new FormField("IR-Web", "WebVersion", typeof(bool)),
+                new FormField("IR-Android", "Android", typeof(bool)),
+                new FormField("IR-iOS", "iOS", typeof(bool)),
+                //new 29072025 end
+
 
                 new FormField("IR-YES-BC", "BodyCameraYes", typeof(bool)),
                 new FormField("IR-NO-BC", "BodyCameraNo", typeof(bool)),
