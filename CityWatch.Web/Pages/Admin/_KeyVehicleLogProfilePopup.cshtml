@@ -90,7 +90,8 @@
                     <input type="hidden" asp-for="@Model.KeyVehicleLogProfile.Product" />
                     <input type="hidden" asp-for="@Model.IsBDM" />
                     <label>Product</label>
-                    <select class="form-control" id="list_product_profile" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
+                    <select class="form-control" id="list_product_profile" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType)"></select>
+                    @* <select class="form-control" id="list_product_profile" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select> *@
                 </div>
             </div>
             <ul class="nav nav-tabs" role="tablist">
