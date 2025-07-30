@@ -2551,7 +2551,7 @@ namespace CityWatch.Web.Services
                                 ActionTimeUTC = utcNow,
                                 ActionTimeLocal = localNow,
                                 TimeUTC = utcOffsetString,
-                                ActionDescription = $"Skipping reset for site [{_ClientSiteName}] — outside reset window [between 03:00 am - 20:00 pm], local time is: {localNow}"
+                                ActionDescription = $"Skipping reset for site [{_ClientSiteName}] — outside reset window [between 03:00 am - 20:00 pm], local time is: {localNow.ToString("dd-MM-yyyy HH:mm tt")}"
                             };
                             await WriteToMobileCrowdControlAuditLog(al);
                         }
