@@ -239,7 +239,9 @@ namespace CityWatch.Data
         public DbSet<ClientSiteMobileCrowdControlHistory> ClientSiteMobileCrowdControlHistory { get; set; }
         public DbSet<ClientSiteMobileCrowdControlGuardsHistory> ClientSiteMobileCrowdControlGuardsHistory { get; set; }
         public DbSet<ClientSiteMobileCrowdControlAuditLog> ClientSiteMobileCrowdControlAuditLog { get; set; }
-
+        public DbSet<ClientSiteSmartWandTags> ClientSiteSmartWandTags { get; set; }
+        public DbSet<SmartWandTagsType> SmartWandTagsType { get; set; }
+        
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
