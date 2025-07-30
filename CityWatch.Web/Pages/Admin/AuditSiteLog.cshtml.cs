@@ -267,7 +267,7 @@ namespace CityWatch.Web.Pages.Admin
             }
         */
 
-        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate,string keywordDownSelect)
         {
             var success = true;
             var message = string.Empty;
@@ -275,7 +275,7 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                zipFileName = _guardLogZipGenerator.GenerateZipFile(new int[] { clientSiteId }, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+                zipFileName = _guardLogZipGenerator.GenerateZipFile(new int[] { clientSiteId }, logFromDate, logToDate, keywordDownSelect, LogBookType.DailyGuardLog).Result;
             }
             catch (Exception ex)
             {

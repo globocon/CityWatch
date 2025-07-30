@@ -1,15 +1,7 @@
 ﻿using CityWatch.Data.Models;
-using CityWatch.Data.Providers;
-using CityWatch.Data.Services;
 using CityWatch.Web.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
-using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 namespace CityWatch.Web.API
 {

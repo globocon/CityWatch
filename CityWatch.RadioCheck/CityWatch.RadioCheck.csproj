@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<AssemblyVersion>2.57.0.0</AssemblyVersion>
+		<AssemblyVersion>2.58.0.1</AssemblyVersion>
 	</PropertyGroup>
 	
 	<ItemGroup>

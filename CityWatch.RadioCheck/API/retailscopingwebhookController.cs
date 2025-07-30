@@ -1,6 +1,7 @@
 ﻿using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Models;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -23,9 +24,9 @@ using System.Threading.Tasks;
 namespace CityWatch.RadioCheck.API
 {
 
-    [Route("api/newwebhook")]
+    [Route("api/retailscopingwebhook")]
     [ApiController]
-    public class NewWebhookController : ControllerBase
+    public class retailscopingwebhookController : ControllerBase
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
@@ -46,7 +47,7 @@ namespace CityWatch.RadioCheck.API
         private string formName;
 
 
-        public NewWebhookController(IConfiguration configuration)
+        public retailscopingwebhookController(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
             _configuration = configuration;
@@ -152,17 +153,19 @@ namespace CityWatch.RadioCheck.API
             logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
             jsonFilePath = Path.Combine(submissionFolder, "image_captions.json");
 
-            // ## This is for Testing 
-            string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
-            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            var rawArray = rawJson.Split(Environment.NewLine);
-            rawJson = rawArray[rawArray.Length - 1];
-            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            CopyTemplateToFolder(templateFolder, excelFilePath);
-            await CreateExcelReportFile(webhookData);
-            // ## This is for Testing
 
-
+            if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                // ## This is for Testing 
+                string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
+                string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+                var rawArray = rawJson.Split(Environment.NewLine);
+                rawJson = rawArray[rawArray.Length - 1];
+                var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+                CopyTemplateToFolder(templateFolder, excelFilePath);
+                await CreateExcelReportFile(webhookData);
+                // ## This is for Testing
+            }
 
             // 🔸 Return file as response
             if (!System.IO.File.Exists(excelFilePath))
@@ -250,32 +253,7 @@ namespace CityWatch.RadioCheck.API
                 string jsonOutput = GetImageNamesAndCaptionsJson(webhookData);
                 await System.IO.File.WriteAllTextAsync(jsonFilePath, jsonOutput);
                 // Compress image files                   
-                ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");
-                //ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\Compressed_Images");
-                //if (DoesTemplateExists(templateFolder))
-                //{
-                //    //CreateExcelInTemplateFormat(excelFilePath, webhookData);
-                //    UpdateTemplateUsingJsonMapping(templateFolder, excelFilePath, webhookData);
-                //    //insert images in the excel file.
-                //    CheckAndInsertImageInExcel(templateFolder, excelFilePath, workOrder, "image_captions.json");
-                //}
-                //else
-                //{
-                //    AppendToExcel(excelFilePath, webhookData);
-                //}
-
-                //if (DoesDataFileExists(templateFolder, deliveries_DataFile, deliveries_jsonMappingFile))
-                //{
-                //    string _datafileName = Path.Combine(templateFolder, deliveries_DataFile);
-                //    string _mappingJsonfileName = Path.Combine(templateFolder, deliveries_jsonMappingFile);
-                //    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
-                //}
-                //if (DoesDataFileExists(templateFolder, execution_DataFile, execution_jsonMappingFile))
-                //{
-                //    string _datafileName = Path.Combine(templateFolder, execution_DataFile);
-                //    string _mappingJsonfileName = Path.Combine(templateFolder, execution_jsonMappingFile);
-                //    WriteToDataFileUsingJsonMapping(_datafileName, _mappingJsonfileName, workOrder, webhookData);
-                //}
+                ImageZipper.CreateThumbnail(submissionFolder, $"{submissionFolder}\\{compressed_image_folder_name}");                
             }
 
 
@@ -285,42 +263,23 @@ namespace CityWatch.RadioCheck.API
             using (var workbook = new ExcelPackage(fileinfo))
             {
                 try
-                {
-                    //string jsonMappingFileWithPath = "";
+                {                    
                     //Main_Scope_Data
                     var worksheet = workbook.Workbook.Worksheets["Main_Scope_Data"];
-                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyWeldingReport_jsonMappingFile);
                     Update_Data_in_Template(ref worksheet, webhookData);
 
                     //Resources_Equipment_Data
                     worksheet = workbook.Workbook.Worksheets["Resources_Equipment_Data"];
-                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyWeldReturn_jsonMappingFile);
                     Update_Data_in_Template(ref worksheet, webhookData);
 
                     //Site_Photos_Data
                     worksheet = workbook.Workbook.Worksheets["Site_Photos_Data"];
                     var imagedestworksheet = workbook.Workbook.Worksheets["Site Photos"];
-                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, dailyInspect_jsonMappingFile);
                     Update_Image_in_Template(ref worksheet, ref imagedestworksheet, webhookData);
 
-
-                    ////Registers
-                    //jsonMappingFileWithPath = Path.Combine(uploadFolder, register_jsonMappingFile);
-                    //var registerMappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-                    //var registerPathMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(registerMappingJson);
-                    //foreach (var keyValue in registerPathMappings)
-                    //{
-                    //    string ws_name = keyValue.Key;
-                    //    if (workbook.TryGetWorksheet(ws_name, out worksheet))
-                    //    {
-                    //        if (worksheet != null)
-                    //        {
-                    //            Copy_Register_Data_To_Template(ref worksheet, keyValue.Value);
-                    //        }
-                    //    }
-                    //}
-
-
+                    //Images_Data
+                    worksheet = workbook.Workbook.Worksheets["Images_Data"];
+                    Update_Image_in_Template(ref worksheet, webhookData);
 
                 }
                 catch (Exception ex)
@@ -417,7 +376,6 @@ namespace CityWatch.RadioCheck.API
         private void Update_Image_in_Template(ref ExcelWorksheet worksheet, ref ExcelWorksheet DestWorkSheet, Dictionary<string, object> webhookData)
         {
             int headerCol = 1;
-            int dataCol = 3;
             int lastUsedRow = worksheet.Dimension.End.Row == 0 ? 1 : worksheet.Dimension.End.Row;
 
             // Traverse headers in col 1
@@ -458,6 +416,11 @@ namespace CityWatch.RadioCheck.API
                                     string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
                                     string filePath = Path.Combine($"{submissionFolder}\\{compressed_image_folder_name}", fileName);
 
+                                    if (!System.IO.File.Exists(filePath))
+                                    {
+                                        WriteLog($"File not found: {filePath}");
+                                        continue; // Skip if file does not exist
+                                    }
                                     // Load the image from file
                                     using (Image image = Image.FromFile(filePath))
                                     {
@@ -473,10 +436,10 @@ namespace CityWatch.RadioCheck.API
                                         double rowHeight = DestWorkSheet.Row(destrow).Height;
 
                                         int cellWidthPx = ExcelColumnWidthToPixels(columnWidth);
-                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight);
+                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight) * 7;
 
                                         // Set image size to match cell
-                                        picture.SetSize(cellWidthPx, cellHeightPx);
+                                        picture.SetSize(cellWidthPx - 6, cellHeightPx - 6);
 
 
 
@@ -517,6 +480,115 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
+        private void Update_Image_in_Template(ref ExcelWorksheet worksheet, Dictionary<string, object> webhookData)
+        {
+            int headerCol = 1;
+            int lastUsedRow = worksheet.Dimension.End.Row == 0 ? 1 : worksheet.Dimension.End.Row;
+
+            ExcelWorksheet DestWorkSheet;
+
+            // Traverse headers in col 1
+            for (int row = 2; row <= lastUsedRow; row++)
+            {
+                string excelSheet = Convert.ToString(worksheet.GetValue(row, headerCol));
+                string jsonKeyInWebhook = Convert.ToString(worksheet.GetValue(row, headerCol + 1));
+
+                string destrowstr = Convert.ToString(worksheet.GetValue(row, headerCol + 2));
+                string destcolstr = Convert.ToString(worksheet.GetValue(row, headerCol + 3));
+
+
+                if (string.IsNullOrEmpty(jsonKeyInWebhook) || string.IsNullOrEmpty(excelSheet) || string.IsNullOrEmpty(destrowstr) || string.IsNullOrEmpty(destcolstr))
+                    continue;
+
+                DestWorkSheet = worksheet.Workbook.Worksheets[excelSheet];
+                int.TryParse(destrowstr, out int destrow);
+                int.TryParse(destcolstr, out int destcol);
+
+
+                if (webhookData.TryGetValue(jsonKeyInWebhook, out var rawValue))
+                {
+                    object cellValue = null;
+
+                    if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
+                    {
+
+                        if (rawValue is JArray fileArray)
+                        {
+                            var fileUrls = fileArray.ToObject<List<string>>();
+                            foreach (var fileUrl in fileUrls)
+                            {
+                                string normalizedUrl = Regex.Unescape(fileUrl).Replace("\\", "/").Trim();  // Unescape JSON & fix slashes
+
+                                if (Uri.IsWellFormedUriString(normalizedUrl, UriKind.Absolute))
+                                {
+                                    // Get the filename from the URL
+                                    string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
+                                    string filePath = Path.Combine($"{submissionFolder}\\{compressed_image_folder_name}", fileName);
+
+                                    if(!System.IO.File.Exists(filePath))
+                                    {
+                                        WriteLog($"File not found: {filePath}");
+                                        continue; // Skip if file does not exist
+                                    }
+                                    // Load the image from file
+                                    using (Image image = Image.FromFile(filePath))
+                                    {
+                                        var picture = DestWorkSheet.Drawings.AddPicture($"Image_{excelSheet}", image);
+
+                                        // Set image position to top-left corner of cell
+                                        picture.SetPosition(destrow - 1, 5, destcol - 1, 5);  // (rowIdx, rowOffsetPx, colIdx, colOffsetPx)
+
+
+
+                                        // Get cell size in pixels
+                                        double columnWidth = DestWorkSheet.Column(destcol).Width;
+                                        double rowHeight = DestWorkSheet.Row(destrow).Height;
+
+                                        int cellWidthPx = ExcelColumnWidthToPixels(columnWidth);
+                                        int cellHeightPx = ExcelRowHeightToPixels(rowHeight) * 60;
+
+                                        // Set image size to match cell
+                                        picture.SetSize(cellWidthPx - 6, cellHeightPx - 6);
+
+
+
+                                        ////// Optional: Resize image to fit cell
+                                        ////picture.SetSize(100); // scale percentage (100 = original size)
+
+                                        ////var imageHeight = image.Height;
+                                        ////var imageWidth = image.Width;
+
+
+                                        ////// Set row height (e.g., row 4)
+                                        ////float dpi = image.VerticalResolution; // usually 96
+                                        ////double rowHeight = (image.Height / dpi) * 72;
+                                        ////DestWorkSheet.Row(destrow).Height = rowHeight;
+
+                                        ////// Set column width (e.g., column B)
+                                        ////int imagePixelWidth = image.Width;
+                                        ////double columnWidth = imagePixelWidth / 7.0;
+                                        ////DestWorkSheet.Column(destcol).Width = columnWidth;
+
+                                        ////// Optional: Or resize to cell size
+                                        //////picture.SetSize((int)DestWorkSheet.Column(destcol).Width, (int)DestWorkSheet.Row(destrow).Height);
+                                    }
+                                }
+                                else
+                                {
+                                    WriteLog($"Invalid URL: {fileUrl}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cellValue = rawValue.ToString();
+                        }
+
+                    }
+                }
+            }
+        }
+
         private int ExcelColumnWidthToPixels(double excelColumnWidth)
         {
             // Approximate formula for standard fonts (Calibri 11)
@@ -526,8 +598,9 @@ namespace CityWatch.RadioCheck.API
         private int ExcelRowHeightToPixels(double excelRowHeight)
         {
             // 1 point = 1/72 inch, 1 pixel ≈ 0.75 point (at 96 DPI)
-            return (int)Math.Round(excelRowHeight * 96 / 72) * 7;
+            return (int)Math.Round(excelRowHeight * 96 / 72);
         }
+
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)
         {
             string _sourceFileName = Path.Combine(_sourceFolder, templateFileName);
@@ -549,6 +622,7 @@ namespace CityWatch.RadioCheck.API
                 throw new Exception(message: log, innerException: ex.InnerException);
             }
         }
+
         private async Task<string> GetFormNameFromJotForm(string formID)
         {
             try
@@ -666,201 +740,6 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
-        private void AppendToExcel(string excelFilePath, Dictionary<string, object> webhookData)
-        {
-            bool fileExists = System.IO.File.Exists(excelFilePath);
-            using (var workbook = fileExists ? new XLWorkbook(excelFilePath) : new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.FirstOrDefault() ?? workbook.Worksheets.Add("WebhookData");
-
-                // Determine the last used row (or set to 1 if empty)
-                int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-
-                // If file does not exist, write the headers
-                if (!fileExists)
-                {
-                    int colIndex = 1;
-                    foreach (var key in webhookData.Keys)
-                    {
-                        worksheet.Cell(1, colIndex).Value = key;
-                        worksheet.Cell(1, colIndex).Style.Font.Bold = true;
-                        colIndex++;
-                    }
-                }
-
-                // Append the new data row
-                int newRow = lastUsedRow + 1;
-                int col = 1;
-                foreach (var value in webhookData.Values)
-                {
-                    worksheet.Cell(newRow, col).Value = value?.ToString();
-                    col++;
-                }
-
-                // Auto-fit columns for better readability
-                worksheet.Columns().AdjustToContents();
-
-                // Save the workbook
-                workbook.SaveAs(excelFilePath);
-            }
-        }
-
-        private void UpdateTemplateUsingJsonMapping(string TemplateFolder, string excelFilePath, Dictionary<string, object> webhookData)
-        {
-            // Load field mappings: ExcelHeader -> WebhookDataKey
-            string templateFileWithPath = Path.Combine(TemplateFolder, templateFileName);
-            string jsonMappingFileWithPath = Path.Combine(TemplateFolder, download_jsonMappingFile);
-
-            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
-
-            //Create a copy of template file in the new folder for export
-            System.IO.File.Copy(templateFileWithPath, excelFilePath, true);
-
-
-            using (var workbook = new XLWorkbook(excelFilePath))
-            {
-                var worksheet = workbook.Worksheet("OutputData");
-
-                int headerRow = 3;
-                int dataRow = 4;
-                int col = 1;
-
-                // Traverse headers in row 3
-                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
-                {
-                    string excelHeader = worksheet.Cell(headerRow, col).GetString();
-
-                    // Find webhook key where value in the mapping matches Excel header
-                    var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Value == excelHeader);
-                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Key, out var rawValue))
-                    {
-                        object cellValue = null;
-
-                        if (rawValue is JObject dateObj &&
-                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
-                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
-                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
-                            int.TryParse(dateObj["year"]?.ToString(), out int year))
-                        {
-                            // Format date to dd/MM/yyyy or as DateTime
-                            DateTime date = new DateTime(year, month, day);
-                            cellValue = date.ToString("dd/MM/yyyy");
-                        }
-                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
-                        {
-                            cellValue = rawValue.ToString();
-                        }
-
-                        // Write to Excel only if there's a value
-                        if (cellValue != null)
-                        {
-                            worksheet.Cell(dataRow, col).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
-                        }
-                    }
-
-                    col++;
-                }
-
-                workbook.CalculationOnSave = true;
-                workbook.Save();
-                workbook.Dispose();
-            }
-        }
-
-        private void WriteToDataFileUsingJsonMapping(string DataFileNameWithPath, string jsonMappingFileNameWithPath, string workOrderId, Dictionary<string, object> webhookData)
-        {
-            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileNameWithPath);
-            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
-
-
-            using (var workbook = new XLWorkbook(DataFileNameWithPath))
-            {
-                var worksheet = workbook.Worksheet(1);
-
-                int headerRow = 1;
-                int dataRow = -1;
-                int col = 1;
-                int workOrderColumnIndex = -1;
-
-
-
-                // find work order column index             
-                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
-                {
-                    string header = worksheet.Cell(headerRow, col).GetString();
-                    if (header.Replace(" ", "").Trim().ToLower().Equals("workorder"))
-                    {
-                        workOrderColumnIndex = col;
-                        break;
-                    }
-                    col++;
-                }
-
-                if (workOrderColumnIndex == -1)
-                {
-                    WriteLog($"Column \"work order\" not found in file {DataFileNameWithPath} \n");
-                    return;
-                }
-
-                // Search for an existing row with the given WorkOrderId
-                int existingRow = -1;
-                for (int row = headerRow + 1; row <= worksheet.LastRowUsed().RowNumber(); row++)
-                {
-                    var cellValue = worksheet.Cell(row, workOrderColumnIndex).GetString();
-                    if (cellValue == workOrderId)
-                    {
-                        existingRow = row;
-                        break;
-                    }
-                }
-
-                // If no existing row, add a new row at the end
-                dataRow = existingRow != -1 ? existingRow : worksheet.LastRowUsed().RowNumber() + 1;
-
-
-                col = 1;
-                // Traverse headers in row
-                while (!string.IsNullOrEmpty(worksheet.Cell(headerRow, col).GetString()))
-                {
-                    string excelHeader = worksheet.Cell(headerRow, col).GetString();
-
-                    // Find webhook key where value in the mapping matches Excel header
-                    var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Key == excelHeader);
-                    if (!string.IsNullOrEmpty(matchingMapping.Key) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
-                    {
-                        object cellValue = null;
-
-                        if (rawValue is JObject dateObj &&
-                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
-                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
-                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
-                            int.TryParse(dateObj["year"]?.ToString(), out int year))
-                        {
-                            // Format date to dd/MM/yyyy or as DateTime
-                            DateTime date = new DateTime(year, month, day);
-                            cellValue = date.ToString("dd/MM/yyyy");
-                        }
-                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
-                        {
-                            cellValue = rawValue.ToString();
-                        }
-
-                        // Write to Excel only if there's a value
-                        if (cellValue != null)
-                        {
-                            worksheet.Cell(dataRow, col).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
-                        }
-                    }
-
-                    col++;
-                }
-                workbook.CalculationOnSave = true;
-                workbook.Save();
-                workbook.Dispose();
-            }
-        }
-
         public string GetImageNamesAndCaptionsJson(Dictionary<string, object> webhookData)
         {
             var imagesWithCaptions = new List<object>();
@@ -962,245 +841,7 @@ namespace CityWatch.RadioCheck.API
             return null;
         }
 
-        private bool DoesTemplateExists(string TemplateFolder)
-        {
-            // Check for Template.xlsx specifically
-            string templatePath = Path.Combine(TemplateFolder, templateFileName);
-            string jsonMappingPath = Path.Combine(TemplateFolder, download_jsonMappingFile);
-            if (!System.IO.File.Exists(templatePath) && !System.IO.File.Exists(jsonMappingPath))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private bool DoesDataFileExists(string DataFileFolder, string DataFileName, string DataJsonMappingFileName)
-        {
-            // Check for Template.xlsx specifically
-            string templatePath = Path.Combine(DataFileFolder, DataFileName);
-            string jsonMappingPath = Path.Combine(DataFileFolder, DataJsonMappingFileName);
-            if (!System.IO.File.Exists(templatePath) && !System.IO.File.Exists(jsonMappingPath))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private void CheckAndInsertImageInExcel(string TemplateFolder, string excelFilePath, string workOrderId, string image_captions_List_jsonFileName)
-        {
-            string jsonImageMappingFileWithPath = Path.Combine(TemplateFolder, jsonImageToFolderMappingFile);
-            if (!System.IO.File.Exists(jsonImageMappingFileWithPath))
-                return;
-
-            using (var workbook = new XLWorkbook(excelFilePath))
-            {
-                var worksheet = workbook.Worksheet("Result");
-                var mappingJson = System.IO.File.ReadAllText(jsonImageMappingFileWithPath);
-                var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
-                string startColumnLetter = "C";
-                string endColumnLetter = "AC";
-                foreach (var kvp in fieldMappings)
-                {
-                    string _Headingkey = kvp.Key;
-                    string _Foldervalue = kvp.Value;
-
-                    // write the heading to the cell (heading) and border it
-                    int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-                    int headingRow = lastUsedRow + 1;
-
-                    // Get starting and ending column numbers from letters
-                    int startCol = XLHelper.GetColumnNumberFromLetter(startColumnLetter);
-                    int endCol = XLHelper.GetColumnNumberFromLetter(endColumnLetter);
-
-                    //worksheet.Cell(headingRow, 3).Value = _Headingkey;
-                    var headerCellRange = worksheet.Range(headingRow, startCol, headingRow, endCol);
-                    headerCellRange.Merge().Value = _Headingkey;
-                    // Apply borders on all sides
-                    headerCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    headerCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    headerCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    headerCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                    headerCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                    headerCellRange.Style.Font.Bold = true;
-
-                    // read json file for image and caption from the folder in value
-                    string _folderToSearchImage = Path.Combine(uploadFolder, _Foldervalue, workOrderId);
-                    string _file_image_caption = Path.Combine(_folderToSearchImage, image_captions_List_jsonFileName);
-                    if (System.IO.File.Exists(_file_image_caption))
-                    {
-                        try
-                        {
-                            string jsonData = System.IO.File.ReadAllText(_file_image_caption);
-                            List<ImageCaptionModel> captionsList = JsonConvert.DeserializeObject<List<ImageCaptionModel>>(jsonData);
-                            if (captionsList != null && captionsList.Count > 0)
-                            {
-                                string _destinationFolder = Path.Combine(TemplateFolder, workOrderId, compressed_image_folder_name, _Foldervalue);
-                                //ImageZipper.CreateCompressedImage(_folderToSearchImage, _destinationFolder);
-                                ImageZipper.CreateThumbnail(_folderToSearchImage, _destinationFolder);
-
-                                foreach (var f in captionsList)
-                                {
-                                    Image img = null;
-                                    //string _imageFileToread = Path.Combine(_folderToSearchImage, f.ImageName);
-                                    string _imageFileToread = Path.Combine(_destinationFolder, f.ImageName);
-                                    if (System.IO.File.Exists(_imageFileToread))
-                                    {
-                                        img = Image.FromFile(_imageFileToread);
-                                    }
-
-                                    InsertImageWithCaption(ref worksheet, f.Caption, img, 670, startColumnLetter, endColumnLetter);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error reading JSON file {_file_image_caption}.  Error: {ex.Message}");
-                        }
-                    }
-                }
-
-                workbook.CalculationOnSave = true;
-                workbook.Save();
-                workbook.Dispose();
-            }
-
-
-        }
-
-        private static void InsertImageWithCaption(ref IXLWorksheet worksheet, string caption, Image image, int maxImageWidth, string startColumnLetter, string endColumnLetter)
-        {
-            if (worksheet == null)
-                throw new ArgumentNullException(nameof(worksheet));
-
-            //var worksheet = workbook.Worksheet(worksheetName);
-
-            // Find the last used row (or 1 if empty)
-            int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-            int imageRow = lastUsedRow + 1;
-            int captionRow = imageRow + 1;
-
-            // Get starting and ending column numbers from letters
-            int startCol = XLHelper.GetColumnNumberFromLetter(startColumnLetter);
-            int endCol = XLHelper.GetColumnNumberFromLetter(endColumnLetter);
-
-            // Merge the range for the image
-            var imageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
-            imageCellRange.Merge();
-            imageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            imageCellRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            imageCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
-            imageCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-            imageCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-            imageCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            //imageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            imageCellRange.Style.Font.Bold = true;
-
-            if (image != null)
-            {
-                // Resize image if it exceeds max width
-                if (image.Width > maxImageWidth)
-                {
-                    float scale = (float)maxImageWidth / image.Width;
-                    int newWidth = maxImageWidth;
-                    int newHeight = (int)(image.Height * scale);
-
-                    var resized = new Bitmap(newWidth, newHeight);
-                    using (var g = Graphics.FromImage(resized))
-                    {
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.DrawImage(image, 0, 0, newWidth, newHeight);
-                    }
-                    image.Dispose();
-                    image = resized;
-                }
-
-                // Save to memory stream
-                using (var ms = new MemoryStream())
-                {
-                    image.Save(ms, ImageFormat.Png); // PNG for better quality
-                    ms.Seek(0, SeekOrigin.Begin);
-
-                    // Adjust row height to fit image (approximate conversion)
-                    float rowHeight = image.Height * 0.79f;
-                    worksheet.Row(imageRow).Height = rowHeight;
-
-                    // Add picture to sheet 
-                    //var picture = worksheet.AddPicture(ms);
-                    //                       //.MoveTo(worksheet.Cell(imageRow, startCol));
-
-                    var picture = worksheet.AddPicture(ms)
-                                .MoveTo(imageCellRange.FirstCell().CellRight(5), 10, 5);
-
-                    //var currentX = picture.Left;
-                    //var currentY = picture.Top + 20;
-
-                    //picture.MoveTo(currentX, currentY);
-
-                    ////// Get width of merged columns (approximate pixels)
-                    ////double totalWidth = 0;
-                    ////for (int col = imageCellRange.FirstColumn().ColumnNumber(); col <= imageCellRange.LastColumn().ColumnNumber(); col++)
-                    ////{
-                    ////    totalWidth += (worksheet.Column(col).Width - 1) * 7 + 12; // To convert column width in pixel unit.
-                    ////}
-
-                    ////// Get height of merged rows (approximate pixels)
-                    //////double totalHeight = 0;
-                    //////for (int row = imageCellRange.FirstRow().RowNumber(); row <= imageCellRange.LastRow().RowNumber(); row++)
-                    //////{
-                    //////    totalHeight += worksheet.Row(row).Height; // 1 Excel row height unit = 1 pixel (approx)
-                    //////}
-
-                    ////// Calculate offsets to center the image
-                    ////double xOffset = (totalWidth - picture.Width) / 2;
-                    ////double yOffset = 0; // (totalHeight - picture.Height) / 2;
-
-                    ////// Convert pixels to EMUs (1 pixel = 9525 EMUs)
-                    ////int xOffsetEmu = (int)(xOffset * 800);
-                    ////int yOffsetEmu = (int)(yOffset * 9525);
-
-                    ////// Move image to top-left cell of merged range with offset
-                    ////picture.MoveTo(imageCellRange.FirstCell().CellRight(10), (int)xOffsetEmu, (int)yOffsetEmu);
-                }
-            }
-            else
-            {
-                var noimageCellRange = worksheet.Range(imageRow, startCol, imageRow, endCol);
-                noimageCellRange.Merge().Value = "No image";
-                noimageCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            }
-
-            // Write caption in the row below image, merging the same column range
-            var captionCellRange = worksheet.Range(captionRow, startCol, captionRow, endCol);
-            captionCellRange.Merge().Value = caption;
-            // Enable text wrapping
-            captionCellRange.Style.Alignment.WrapText = true;
-            double totalColWidth = 0;
-            for (int col = startCol; col <= endCol; col++)
-            {
-                totalColWidth += worksheet.Column(col).Width;
-            }
-
-            // Estimate characters that fit in one line (Excel assumes ~1 char per width unit)
-            int charsPerLine = (int)(totalColWidth * 1.5); // can fine-tune multiplier if needed
-
-            // Estimate how many lines needed
-            int estimatedLineCount = (int)Math.Ceiling((double)caption.Length / charsPerLine);
-
-            // Set estimated row height (approx. 15 units per line is common in Excel)
-            worksheet.Row(captionRow).Height = estimatedLineCount * 15;
-
-            // Auto-adjust row height to fit content
-            //worksheet.Row(captionRow).AdjustToContents(startCol, endCol);
-            //worksheet.Row(captionRow).ClearHeight();
-            captionCellRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
-            captionCellRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-            captionCellRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-            captionCellRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            captionCellRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-
-
-        }
-
+       
     }
 
 }

@@ -1,30 +1,15 @@
-﻿using CityWatch.RadioCheck.Helpers;
-using ClosedXML.Excel;
-using ClosedXML.Excel.Drawings;
-using Dropbox.Api.FileProperties;
+﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Data;
-using DocumentFormat.OpenXml.Wordprocessing;
-using CityWatch.RadioCheck.Models;
-using Microsoft.AspNetCore.Http;
-using DocumentFormat.OpenXml.Spreadsheet;
-using CityWatch.Data.Models;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -640,10 +625,21 @@ namespace CityWatch.RadioCheck.API
                         usedRange.LastCell().Address.RowNumber,
                         usedRange.LastCell().Address.ColumnNumber
                     );
-                                        
+
                     // Paste into target sheet starting at cell A2
-                    dataRange.CopyTo(worksheet.Cell(4, 1));
-                }                
+                    dataRange.CopyTo(worksheet.Cell(8, 1));
+                    
+                    var style = dataRange.Cells().Style;
+                    style.Border.TopBorderColor = XLColor.Black;
+                    style.Border.SetBottomBorderColor(XLColor.Black);
+                    style.Border.SetLeftBorderColor(XLColor.Black);
+                    style.Border.SetRightBorderColor(XLColor.Black);
+                    
+                    style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    style.Border.RightBorder = XLBorderStyleValues.Thin;
+                }
             }
         }
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)

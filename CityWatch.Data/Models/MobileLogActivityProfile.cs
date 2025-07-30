@@ -7,5 +7,6 @@ namespace CityWatch.Data.Models
         [Key]
         public int Id { get; set; }
         public string ProfileName { get; set; }
+        public bool IsDefault { get; set; } = false;
     }
 }

@@ -2264,7 +2264,10 @@ $(function () {
             data: {
                 clientSiteId: $('#dglClientSiteId').val(),
                 logFromDate: $('#dglAudtitFromDate').val(),
-                logToDate: $('#dglAudtitToDate').val()
+                logToDate: $('#dglAudtitToDate').val(),
+
+                keywordDownSelect: $('#GuardLogKeydownselect').val()
+
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
@@ -2732,7 +2735,7 @@ $(function () {
         $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
         $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
         $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
-       /* $('#KeyVehicleLogAuditLogRequest_KeyVehicleDownselect').val($('#KeyVehicleKeydownselect').val());*/
+        //$('#KeyVehicleLogAuditLogRequest_KeyVehicleDownselect').val($('#KeyVehicleKeydownselect').val());
         $('#loader').show();
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',

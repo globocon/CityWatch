@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System;
+using Humanizer;
 
 namespace CityWatch.RadioCheck.Pages
 {
@@ -21,6 +22,7 @@ namespace CityWatch.RadioCheck.Pages
 
         public List<string> Files { get; set; } = new List<string>();        
         public string _dateWiseFolder { get; set; } = string.Empty;
+        public string _dateString { get; set; } = string.Empty;
         public string _supervisor { get; set; } = string.Empty;
         public string TemplateUrl { get; set; } = string.Empty;
         
@@ -34,6 +36,7 @@ namespace CityWatch.RadioCheck.Pages
 
             if (!string.IsNullOrEmpty(_dateWiseFolder) && !string.IsNullOrEmpty(_supervisor))
             {
+                _dateString = DateTime.ParseExact(_dateWiseFolder, "ddMMyyyy", null).ToString("dd-MM-yyyy");
                 // Construct folder path                
                 string folderPath = Path.Combine(_env.WebRootPath, "uploads", "jotform", "Flashbutt", _dateWiseFolder, _supervisor);
                 Console.WriteLine($"Checking folder path: {folderPath}");

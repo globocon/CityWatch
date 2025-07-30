@@ -72,7 +72,7 @@ namespace CityWatch.Web.Pages.Guard
         private string GeneratePdfReport(int id, string type, KvlStatusFilter kvlStatusFilter)
         {
             if (type == "gl")
-                return _guardLogReportGenerator.GeneratePdfReport(id);
+                return _guardLogReportGenerator.GeneratePdfReport(id,null);
             else if (type == "vl")
                 return _keyVehicleLogReportGenerator.GeneratePdfReport(id, kvlStatusFilter);
 
