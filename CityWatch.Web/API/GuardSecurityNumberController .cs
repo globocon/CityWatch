@@ -116,6 +116,11 @@ namespace CityWatch.Web.API
                 });
             }
 
+            if (!guard.IsMobileAppAccess)
+            {
+                return Unauthorized("Access denied !!!. Please contact admin.");
+            }
+
             return Ok(new
             {
                 GuardId = guard.Id,
