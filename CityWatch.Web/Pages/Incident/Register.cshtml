@@ -186,22 +186,22 @@
                 <h4 class="card-header">IoT</h4>
                 <div class="card-body" style="padding-top:0px">
                     <div class="form-row">
-                        <div class="col-4">
-                            <img src="~/images/smartWAND.jpg" alt="Smart WAND" class="img-fluid" max-height="150px">
+                        <div class="col-4 pt-2">
+                            <img src="~/images/smartWAND.png" alt="Smart WAND" class="img-fluid" max-height="150px">
                         </div>
-                        <div class="col-6">
-                            <h6 class="pt-lg-2">Was Smart WAND used to Create (3B) <u>or</u> <br />Register (3A) this IR?</h6>
+                        <div class="form-group col-6 col-md-8">
+                            <h6 class="pt-lg-2">Which App was used <br />to create this IR?</h6>
                             <div class="form-check pt-3">
-                                <input asp-for="@Model.Report.WandScannedYes3a" class="form-check-input">
-                                <label class="form-check-label fw-bold">YES (3a) <br />REGISTER</label>
+                                <input asp-for="Report.WebVersion" class="form-check-input" checked style="accent-color: #0d6efd;" onclick="return false;">
+                                <label class="form-check-label fw-bold" style="color: black;">Web Version</label>
                             </div>
                             <div class="form-check pt-3">
-                                <input asp-for="@Model.Report.WandScannedYes3b" class="form-check-input">
-                                <label class="form-check-label fw-bold">YES (3b) <br />CREATE</label>
+                                <input asp-for="@Model.Report.Android" class="form-check-input" disabled>
+                                <label class="form-check-label fw-bold" style="color: black;">Android</label>
                             </div>
                             <div class="form-check mt-3">
-                                <input asp-for="@Model.Report.WandScannedNo" class="form-check-input">
-                                <label class="form-check-label fw-bold">NO (n/a)</label>
+                                <input asp-for="@Model.Report.iOS" class="form-check-input" disabled>
+                                <label class="form-check-label fw-bold" style="color: black;">iOS</label>
                             </div>
                         </div>
                     </div>
@@ -211,7 +211,7 @@
                             <img src="~/images/bodyCamera.jpg" alt="Body Camera" class="img-body-cam">
                         </div>
                         <div class="form-group col-6 col-md-8">
-                            <h6>Does the BodyCamera, DashCAM, or other video footage part of this IR?</h6>
+                            <h6>Does the BodyCamera, DashCAM, or other video footage from part of this IR?</h6>
                             <div class="d-flex pt-3">
                                 <div class="form-check form-check-inline mr-3">
                                     <label class="form-check-label fw-bold mr-2">YES</label>
@@ -766,9 +766,9 @@
     window.addEventListener('load', onWindowLoad);
     document.getElementById("Report_Officer_Position").addEventListener('change', onReportOfficerPositionChange);
     document.getElementById("Report_Officer_Phone").addEventListener('blur', onPhoneNoBlur);
-    document.getElementById("Report_WandScannedYes3a").addEventListener('change', onWandScannedChange);
-    document.getElementById("Report_WandScannedYes3b").addEventListener('change', onWandScannedChange);
-    document.getElementById("Report_WandScannedNo").addEventListener('change', onWandScannedChange);
+    // document.getElementById("Report_WandScannedYes3a").addEventListener('change', onWandScannedChange);
+    // document.getElementById("Report_WandScannedYes3b").addEventListener('change', onWandScannedChange);
+    // document.getElementById("Report_WandScannedNo").addEventListener('change', onWandScannedChange);
     document.getElementById("Report_DateLocation_ReimbursementYes").addEventListener('change', onReimbursementChange);
     document.getElementById("Report_DateLocation_ReimbursementNo").addEventListener('change', onReimbursementChange);
     document.getElementById("Report_BodyCameraYes").addEventListener('change', onBodyCameraChange);
@@ -786,6 +786,8 @@
     document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_VehicleRego").addEventListener('change', onPlateLoadedChange);
+    /* load the current live location&* if client site selected its changes to currespoding*/
+    getLiveGpsCoordinates();
 
     function onWindowLoad(event) {
         setAllControlsForIrFromPreviousIR();
@@ -877,28 +879,28 @@
             console.log("Geolocation is not supported by this browser.");
     }
 
-    function onWandScannedChange(event) {
-        document.getElementById("liveGpsWrapper").innerHTML = "n/a";
-        document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = "";
+    // function onWandScannedChange(event) {
+    //     document.getElementById("liveGpsWrapper").innerHTML = "n/a";
+    //     document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = "";
 
-        if (this.id == "Report_WandScannedYes3a" && this.checked) {
-            document.getElementById("Report_WandScannedYes3b").checked = false;
-            document.getElementById("Report_WandScannedNo").checked = false;
-        }
+    //     if (this.id == "Report_WandScannedYes3a" && this.checked) {
+    //         document.getElementById("Report_WandScannedYes3b").checked = false;
+    //         document.getElementById("Report_WandScannedNo").checked = false;
+    //     }
 
-        if (this.id == "Report_WandScannedYes3b" && this.checked) {
-            document.getElementById("Report_WandScannedYes3a").checked = false;
-            document.getElementById("Report_WandScannedNo").checked = false;
+    //     if (this.id == "Report_WandScannedYes3b" && this.checked) {
+    //         document.getElementById("Report_WandScannedYes3a").checked = false;
+    //         document.getElementById("Report_WandScannedNo").checked = false;
 
-            getLiveGpsCoordinates();
-        }
+    //         getLiveGpsCoordinates();
+    //     }
 
-        if (this.id == "Report_WandScannedNo" && this.checked) {
-            new MessageModal({ message: "Only click N/A if you do not have a Smart WAND – are you sure you want to continue?" }).showWarning();
-            document.getElementById("Report_WandScannedYes3a").checked = false;
-            document.getElementById("Report_WandScannedYes3b").checked = false;
-        }
-    }
+    //     if (this.id == "Report_WandScannedNo" && this.checked) {
+    //         new MessageModal({ message: "Only click N/A if you do not have a Smart WAND – are you sure you want to continue?" }).showWarning();
+    //         document.getElementById("Report_WandScannedYes3a").checked = false;
+    //         document.getElementById("Report_WandScannedYes3b").checked = false;
+    //     }
+    // }
 
     function onEventTypeOtherChange(event) {
         if (this.id == "Report_EventType_Other" && this.checked) {
@@ -1037,9 +1039,9 @@
     }
 
     function smartWandScanned() {
-        const yes3aChecked = document.getElementById('Report_WandScannedYes3a').checked;
-        const yes3bChecked = document.getElementById('Report_WandScannedYes3b').checked;
-        const noChecked = document.getElementById('Report_WandScannedNo').checked;
+        const yes3aChecked = document.getElementById('Report_WebVersion').checked;
+        const yes3bChecked = document.getElementById('Report_Android').checked;
+        const noChecked = document.getElementById('Report_iOS').checked;
 
         if (yes3aChecked || yes3bChecked || noChecked)
             return true;

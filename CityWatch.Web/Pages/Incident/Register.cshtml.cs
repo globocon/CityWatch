@@ -178,6 +178,11 @@ namespace CityWatch.Web.Pages.Incident
                                 WandScannedYes3a = IrPreviousObject.WandScannedYes3a,
                                 WandScannedYes3b = IrPreviousObject.WandScannedYes3b,
                                 WandScannedNo = IrPreviousObject.WandScannedNo,
+
+                                WebVersion = IrPreviousObject.WebVersion,
+                                Android = IrPreviousObject.Android,
+                                iOS = IrPreviousObject.iOS,
+
                                 BodyCameraYes = IrPreviousObject.BodyCameraYes,
                                 BodyCameraNo = IrPreviousObject.BodyCameraNo,
                                 Officer = new Officer
