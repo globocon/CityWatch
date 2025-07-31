@@ -49,9 +49,9 @@ namespace CityWatch.Web.Helpers
                 //new FormField("IR-NO", "WandScannedNo", typeof(bool)),
                 //new 29072025 start
 
-                new FormField("IR-YES-3a", "WebVersion", typeof(bool)),
-                new FormField("IR-YES-3b", "Android", typeof(bool)),
-                new FormField("IR-NO", "iOS", typeof(bool)),
+                //new FormField("IR-YES-3a", "WebVersion", typeof(bool)),
+                //new FormField("IR-YES-3b", "Android", typeof(bool)),
+                //new FormField("IR-NO", "iOS", typeof(bool)),
                 new FormField("IR-Web", "WebVersion", typeof(bool)),
                 new FormField("IR-Android", "Android", typeof(bool)),
                 new FormField("IR-iOS", "iOS", typeof(bool)),
