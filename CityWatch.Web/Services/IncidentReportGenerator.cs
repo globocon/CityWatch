@@ -174,11 +174,27 @@ namespace CityWatch.Web.Services
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
 
-            acroForm.GetField("IR-NO9").SetValue("", false);
-            acroForm.GetField("IR-NO").SetValue("", false);
-            acroForm.GetField("IR-NO-BC").SetValue("", false);
+            //acroForm.GetField("IR-NO9").SetValue("", false);
+            //acroForm.GetField("IR-NO").SetValue("", false);
+            //acroForm.GetField("IR-NO-BC").SetValue("", false);
 
+            var field1 = acroForm.GetField("IR-NO9");
+            if (field1 != null)
+            {
+                field1.SetValue("", false);
+            }
 
+            var field2 = acroForm.GetField("IR-NO");
+            if (field2 != null)
+            {
+                field2.SetValue("", false);
+            }
+
+            var field3 = acroForm.GetField("IR-NO-BC");
+            if (field3 != null)
+            {
+                field3.SetValue("", false);
+            }
 
             foreach (var field in editableFields)
             {
