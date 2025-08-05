@@ -98,7 +98,9 @@ namespace CityWatch.Web.Services
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
             var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
- x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))).ToList();
+ x.Notes.Contains(keywordDownSelect)) 
+ 
+ ).ToList();
             if (_guardLogs.Count() > 0)
             {
                 var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
