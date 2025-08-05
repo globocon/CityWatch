@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Globalization
 @model CityWatch.RadioCheck.Pages.StringsRegisterBulkEditIFrame
 @{
     Layout = "_Plain";
@@ -276,10 +277,20 @@ table td {
                                         // For the first of the last 4 columns, render date input
                                         if (j == Model.TableData[i].Count - 4)
                                         {
-                                            DateTime parsedDate;
+                                            @* DateTime parsedDate;
                                             string formattedDate = DateTime.TryParse(value, out parsedDate)
                                             ? parsedDate.ToString("yyyy-MM-dd")
-                                            : "";
+                                            : ""; *@
+
+
+                                            DateTime parsedDate;
+                                            string formattedDate = DateTime.TryParseExact(
+                                            value,
+                                            "dd-MM-yyyy",
+                                            CultureInfo.InvariantCulture,
+                                            DateTimeStyles.None,
+                                            out parsedDate
+                                            ) ? parsedDate.ToString("yyyy-MM-dd") : "";
 
                                             <input type="date"
                                                    class="form-control form-control-sm text-center"
