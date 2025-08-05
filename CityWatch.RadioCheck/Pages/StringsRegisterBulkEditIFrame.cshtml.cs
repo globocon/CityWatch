@@ -168,40 +168,53 @@ namespace CityWatch.RadioCheck.Pages
 
             var rows = dropData.Split('|', StringSplitOptions.RemoveEmptyEntries);
 
+            if (!System.IO.File.Exists(filePath))
+            {
+                return new JsonResult(new { success = false, message = "Excel file not found." });
+            }
+
             try
             {
                 using var workbook = new XLWorkbook(filePath);
                 var worksheet = workbook.Worksheet(1);
 
-                var headerRow = worksheet.Row(1);
-
-                // Use column numbers directly
-                int colStringDropped = 13;         // "String Dropped"
-                int colDropStart = 14;             // "Drop Location Start (KM)"
-                int colDropEnd = 15;               // "Drop Location End(KM)"
-                int colContractorLast = 16;        // The last "Contractor"
+                int colStringDropped = 13;
+                int colDropStart = 14;
+                int colDropEnd = 15;
+                int colContractorLast = 16;
 
                 for (int i = 0; i < rows.Length; i++)
                 {
                     var cols = rows[i].Split(',', StringSplitOptions.None);
-                    if (cols.Length < 4) continue;
+                    int dataRow = i + 2;
 
-                    int dataRow = i + 2; // Assuming data starts at row 2
+                    // Use null-coalescing and conditional length checks
+                    var FistColumnData = cols.Length > 0 ? cols[0] : "";
+                    var SecondColumnData = cols.Length > 1 ? cols[1] : "";
+                    var ThirdColumnData = cols.Length > 2 ? cols[2] : "";
+                    var fourthColumnData = cols.Length > 3 ? cols[3] : "";
 
-                    worksheet.Cell(dataRow, colStringDropped).Value = cols[0]?.ToString();
-                    worksheet.Cell(dataRow, colStringDropped).Style.NumberFormat.Format = "@";
+                    worksheet.Cell(dataRow, colStringDropped).Value = ""; // Clear content
+                    worksheet.Cell(dataRow, colStringDropped).Style.NumberFormat.Format = "@"; // Set as string
+                    worksheet.Cell(dataRow, colStringDropped).Value = FistColumnData;
 
-                    worksheet.Cell(dataRow, colDropStart).Value = cols[1]?.ToString();
+                    worksheet.Cell(dataRow, colDropStart).Value = "";
                     worksheet.Cell(dataRow, colDropStart).Style.NumberFormat.Format = "@";
+                    worksheet.Cell(dataRow, colDropStart).Value = SecondColumnData;
 
-                    worksheet.Cell(dataRow, colDropEnd).Value = cols[2]?.ToString();
+                    worksheet.Cell(dataRow, colDropEnd).Value = "";
                     worksheet.Cell(dataRow, colDropEnd).Style.NumberFormat.Format = "@";
+                    worksheet.Cell(dataRow, colDropEnd).Value = ThirdColumnData;
 
-                    worksheet.Cell(dataRow, colContractorLast).Value = cols[3]?.ToString();
+                    worksheet.Cell(dataRow, colContractorLast).Value = "";
                     worksheet.Cell(dataRow, colContractorLast).Style.NumberFormat.Format = "@";
+                    worksheet.Cell(dataRow, colContractorLast).Value = fourthColumnData;
                 }
 
-                workbook.Save();
+
+                // Force overwrite
+                workbook.SaveAs(filePath);
+
                 return new JsonResult(new { success = true });
             }
             catch (Exception ex)
@@ -209,6 +222,51 @@ namespace CityWatch.RadioCheck.Pages
                 return new JsonResult(new { success = false, message = ex.Message });
             }
         }
+
+
+
+        public async Task<IActionResult> OnPostUpdateRowAsync(int rowIndex, string col1, string col2, string col3, string col4)
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                return new JsonResult(new { success = false, message = "Excel file not found." });
+            }
+
+            try
+            {
+                using var workbook = new XLWorkbook(filePath);
+                var worksheet = workbook.Worksheet(1);
+
+                // Adjust for Excel's 1-based index and header row
+                int dataRow = rowIndex + 1;
+
+                int colStringDropped = 13;
+                int colDropStart = 14;
+                int colDropEnd = 15;
+                int colContractorLast = 16;
+
+                worksheet.Cell(dataRow, colStringDropped).Style.NumberFormat.Format = "@";
+                worksheet.Cell(dataRow, colStringDropped).Value = col1 ?? "";
+
+                worksheet.Cell(dataRow, colDropStart).Style.NumberFormat.Format = "@";
+                worksheet.Cell(dataRow, colDropStart).Value = col2 ?? "";
+
+                worksheet.Cell(dataRow, colDropEnd).Style.NumberFormat.Format = "@";
+                worksheet.Cell(dataRow, colDropEnd).Value = col3 ?? "";
+
+                worksheet.Cell(dataRow, colContractorLast).Style.NumberFormat.Format = "@";
+                worksheet.Cell(dataRow, colContractorLast).Value = col4 ?? "";
+
+                workbook.SaveAs(filePath);
+
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
 
 
 

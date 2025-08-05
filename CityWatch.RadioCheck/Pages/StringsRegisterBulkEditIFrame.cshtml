@@ -116,11 +116,7 @@ table td {
         <i class="fa fa-refresh"></i> Refresh Page
     </button>
 
-    <div class="mb-2 text-end">
-        <button type="button" class="btn btn-success btn-sm" onclick="bulkUpdate()">
-            <i class="fa fa-save"></i> Bulk Update DROP DATA
-        </button>
-    </div>
+   
 
     @*   @if (Model.TableData != null)
     {
@@ -171,47 +167,59 @@ table td {
     @if (Model.TableData != null)
     {
    
-        var dataRows = Model.TableData.Skip(1);
 
-        int fy25Compliant = dataRows.Count(row => row[0] == "FY25" && row[5].Equals("Y", StringComparison.OrdinalIgnoreCase));
-        int fy27Compliant = dataRows.Count(row => row[0] == "FY27" && row[5].Equals("Y", StringComparison.OrdinalIgnoreCase));
-        int fy27Quarantine = dataRows.Count(row => row[0] == "FY27" && row[5].Equals("N", StringComparison.OrdinalIgnoreCase));
+        var dataRows = Model.TableData.Skip(1); // Skip header row
 
-        <div class="d-flex justify-content-start">
-            <div style="width: 25%; background-color: #104861; color: white; padding: 0.75rem; font-size: 0.9rem; ">
-                <div class="row mb-1 flex-nowrap">
-                    <div class="col-auto fw-bold">FY25</div>
-                    <div class="col">Compliant</div>
-                    <div class="col text-end fw-bold">@fy25Compliant</div>
+        // Group rows by FY and calculate Compliant and Quarantine counts
+        var fyGroups = dataRows
+        .GroupBy(row => row[0]) // Assuming FY is in column 0
+        .Select(g => new
+        {
+            FY = g.Key,
+            CompliantCount = g.Count(row => row[5].Equals("Y", StringComparison.OrdinalIgnoreCase)), // Column 5 for compliance
+            QuarantineCount = g.Count(row => row[5].Equals("N", StringComparison.OrdinalIgnoreCase))
+        })
+        .OrderBy(g => g.FY) // Optional: sort by FY
+        .ToList();
+
+        <div class="d-flex justify-content-between align-items-start" style="background-color: #104861; color: white; padding: 0.75rem; font-size: 0.9rem;">
+            <div class="container mt-3" style="width: 30%;">
+                <div class="row fw-bold text-white bg-primary py-2">
+                    <div class="col">FY</div>
+                    <div class="col text-center">Compliant</div>
+                    <div class="col text-center">Quarantine</div>
                 </div>
-                <div class="row mb-1 flex-nowrap">
-                    <div class="col-auto fw-bold">FY27</div>
-                    <div class="col">Compliant</div>
-                    <div class="col text-end fw-bold">@fy27Compliant</div>
-                </div>
-                <div class="row mb-1 flex-nowrap">
-                    <div class="col-auto fw-bold">FY27</div>
-                    <div class="col">Quarantine</div>
-                    <div class="col text-end fw-bold">@fy27Quarantine</div>
-                </div>
+
+                @foreach (var fy in fyGroups)
+                {
+                    <div class="row border-bottom py-2">
+                        <div class="col fw-bold">@fy.FY</div>
+                        <div class="col text-center">@fy.CompliantCount</div>
+                        <div class="col text-center">@fy.QuarantineCount</div>
+                    </div>
+                }
+            </div>
+            <div style="width: 50%;">
+            </div>
+            <!-- Right Side: Button -->
+            <div class="text-end" style="width: 20%;">
+                <button type="button" class="btn btn-success btn-sm" onclick="bulkUpdate()">
+                    <i class="fa fa-save"></i> Bulk Update DROP DATA
+                </button>
             </div>
         </div>
 
 
-
         <div class="table-responsive" style="font-size: 0.72rem;width:98%">
-
             <div class="d-flex justify-content-start">
                 <div style="width: 10%; background-color: #104861; color: white; padding: 0.5rem; font-size: 0.9rem; border-radius: 5px;">
                     <label class="fw-bold">Filter by Build FY:</label>
                     <select id="fyFilter" class="form-select form-select-sm w-100 mt-1">
                         <option value="">All</option>
-                        <option value="FY25">FY25</option>
-                        <option value="FY26">FY26</option>
-                        <option value="FY27">FY27</option>
-                        <option value="FY28">FY28</option>
-                        <option value="FY29">FY29</option>
-                        <option value="FY30">FY30</option>
+                        @foreach (var fy in Model.TableData.Skip(1).Select(row => row[0]).Distinct().OrderBy(fy => fy))
+                        {
+                            <option value="@fy">@fy</option>
+                        }
                     </select>
                 </div>
             </div>
@@ -298,6 +306,7 @@ table td {
 
                             <td class="text-center border">
                                 <input type="hidden" name="rowIndex" value="@i" />
+                                <button type="button" class="btn btn-sm btn-primary update-row-btn" data-row-index="@i"><i class="fa fa-pencil"></i></button>
                                 <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)">
                                     <i class="fa fa-trash"></i>
                                 </button>
@@ -406,25 +415,30 @@ table td {
             });
         });
 
-                window.bulkUpdate = function () {
-            const dropDataRows = [];
+               window.bulkUpdate = function () {
+        const dropDataRows = [];
 
-            $('#compliantTable tbody tr').each(function () {
-                const rowData = [];
+               $('#compliantTable tbody tr').each(function () {
+            const rowData = [];
 
-                $(this).find('input[type="text"]').each(function () {
-                    rowData.push($(this).val());
-                });
-
-                if (rowData.length > 0) {
-                    dropDataRows.push(rowData.join(','));
-                }
+            // Collect the first 4 input values regardless of type
+            $(this).find('input').slice(0, 4).each(function () {
+                rowData.push($(this).val()?.trim() || "");
             });
 
-            if (dropDataRows.length === 0) {
-                alert("No text inputs found for update.");
-                return;
+            // Ensure exactly 4 items (just in case)
+            while (rowData.length < 4) {
+                rowData.push("");
             }
+
+            dropDataRows.push(rowData.join(','));
+        });
+
+
+            if (dropDataRows.length === 0) {
+            alert("No text inputs found for update.");
+            return;
+        }
 
             const dropDataString = dropDataRows.join('|'); // Example: data11,data12|data21,data22|...
 
@@ -439,12 +453,53 @@ table td {
             .then(res => res.text())
             .then(response => {
                 alert("Bulk update successful");
+                location.reload();
             })
             .catch(error => {
                 console.error("Bulk update failed:", error);
             });
         };
 
+
+                $(document).on('click', '.update-row-btn', function () {
+              var $button = $(this);
+        var rowIndex = $button.data('row-index'); 
+
+        var $row = $button.closest('tr');
+        var rowData = [];
+
+        $row.find('input').slice(0, 4).each(function () {
+            rowData.push($(this).val()?.trim() || "");
+        });
+
+        rowData.push(rowIndex); // add rowIndex at end
+
+
+            $.ajax({
+                url: '?handler=UpdateRow',
+                method: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                data: {
+                    rowIndex: rowIndex,
+                    col1: rowData[0],
+                    col2: rowData[1],
+                    col3: rowData[2],
+                    col4: rowData[3]
+                },
+                success: function (response) {
+                    if (response.success) {
+                        alert("Row updated successfully.");
+                        location.reload();
+                    } else {
+                        alert("Update failed: " + response.message);
+                    }
+                },
+                error: function () {
+                    alert("Server error occurred.");
+                }
+            });
+        });
+               
         
     </script>
 
