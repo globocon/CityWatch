@@ -2865,9 +2865,10 @@ function RunCourses() {
         if (('.ppt'.indexOf(fileExtn.toLowerCase()) > 0) || ('.pptx'.indexOf(fileExtn.toLowerCase()) > 0)) {
 
 
-            var pptURL = 'https://view.officeapps.live.com/op/embed.aspx?src=' + window.location.origin + pdfUrl + '&embedded=true';
-            
-            $('#coursePresentation').attr('src', pptURL);
+            //var pptURL = 'https://view.officeapps.live.com/op/embed.aspx?src=' + window.location.origin + pdfUrl + '&embedded=true';
+
+            //$('#coursePresentation').attr('src', pptURL);
+            $('#coursePresentation').show();
 
 
         }
