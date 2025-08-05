@@ -18,7 +18,7 @@ using System;
 namespace CityWatch.RadioCheck.Pages
 {
     [IgnoreAntiforgeryToken]
-    public class ComplianStringsIFrame : PageModel
+    public class StringsRegisterBulkEditIFrame : PageModel
     {
 
         private readonly CityWatchDbContext _context;
@@ -30,7 +30,7 @@ namespace CityWatch.RadioCheck.Pages
         private readonly IWebHostEnvironment _env;
         [BindProperty]
         public List<string> NewRowData { get; set; }
-        public ComplianStringsIFrame(CityWatchDbContext context)
+        public StringsRegisterBulkEditIFrame(CityWatchDbContext context)
         {
             filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "StringsData", "StringsData.xlsx");
             _context = context;
@@ -77,58 +77,11 @@ namespace CityWatch.RadioCheck.Pages
                 var range = worksheet.RangeUsed();
                 if (range == null) return null;
 
-                var headerRow = range.FirstRowUsed();
-
-                var excludedHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "String Dropped",
-            "Drop Location Start (KM)",
-            "Drop Location End(KM)"
-        };
-
-                // Get trimmed headers with indexes
-                var headerCells = headerRow.Cells()
-                    .Select((cell, index) => new
-                    {
-                        Header = cell.GetValue<string>().Trim(),
-                        Index = index
-                    })
-                    .ToList();
-
-                // Find all indexes of "Contractor"
-                var contractorIndexes = headerCells
-                    .Where(h => string.Equals(h.Header, "Contractor", StringComparison.OrdinalIgnoreCase))
-                    .Select(h => h.Index)
-                    .ToList();
-
-                // Exclude the last Contractor
-                int contractorIndexToExclude = contractorIndexes.Count > 1 ? contractorIndexes.Last() : -1;
-
-                // Final included column indexes
-                var includedColumnIndexes = headerCells
-                    .Where(h =>
-                        !excludedHeaders.Contains(h.Header) &&
-                        !(string.Equals(h.Header, "Contractor", StringComparison.OrdinalIgnoreCase) && h.Index == contractorIndexToExclude)
-                    )
-                    .Select(h => h.Index)
-                    .ToList();
-
-                // Read data rows
                 foreach (var row in range.Rows())
                 {
                     var rowData = new List<string>();
-                    var cells = row.Cells().ToList();
-
-                    foreach (var colIndex in includedColumnIndexes)
+                    foreach (var cell in row.Cells())
                     {
-                        if (colIndex >= cells.Count)
-                        {
-                            rowData.Add("");
-                            continue;
-                        }
-
-                        var cell = cells[colIndex];
-
                         if (cell.DataType == XLDataType.DateTime)
                         {
                             var dateValue = cell.GetDateTime();
@@ -139,13 +92,13 @@ namespace CityWatch.RadioCheck.Pages
                             rowData.Add(cell.GetValue<string>());
                         }
                     }
-
                     table.Add(rowData);
                 }
             }
 
             return table;
         }
+
 
 
 
@@ -174,5 +127,92 @@ namespace CityWatch.RadioCheck.Pages
 
             return RedirectToPage();
         }
+
+
+        // DTO class
+        public class DropDataModel
+        {
+            public List<List<string>> DropData { get; set; }
+        }
+
+        [BindProperty]
+        public string DropData { get; set; }
+
+        //public async Task<IActionResult> OnPostBulkUpdateAsync()
+        //{
+        //    using var reader = new StreamReader(Request.Body);
+        //    var dropData = await reader.ReadToEndAsync();
+
+        //    if (string.IsNullOrWhiteSpace(dropData))
+        //    {
+        //        return new JsonResult("No data received");
+        //    }
+
+        //    // Now dropData is a string like: "data11,data12|data21,data22"
+        //    // Process it as needed...
+
+        //    return new JsonResult("Success");
+        //}
+
+
+
+        public async Task<IActionResult> OnPostBulkUpdateAsync()
+        {
+            using var reader = new StreamReader(Request.Body);
+            var dropData = await reader.ReadToEndAsync();
+
+            if (string.IsNullOrWhiteSpace(dropData))
+            {
+                return new JsonResult(new { success = false, message = "No data received" });
+            }
+
+            var rows = dropData.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+            try
+            {
+                using var workbook = new XLWorkbook(filePath);
+                var worksheet = workbook.Worksheet(1);
+
+                var headerRow = worksheet.Row(1);
+
+                // Use column numbers directly
+                int colStringDropped = 13;         // "String Dropped"
+                int colDropStart = 14;             // "Drop Location Start (KM)"
+                int colDropEnd = 15;               // "Drop Location End(KM)"
+                int colContractorLast = 16;        // The last "Contractor"
+
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    var cols = rows[i].Split(',', StringSplitOptions.None);
+                    if (cols.Length < 4) continue;
+
+                    int dataRow = i + 2; // Assuming data starts at row 2
+
+                    worksheet.Cell(dataRow, colStringDropped).Value = cols[0]?.ToString();
+                    worksheet.Cell(dataRow, colStringDropped).Style.NumberFormat.Format = "@";
+
+                    worksheet.Cell(dataRow, colDropStart).Value = cols[1]?.ToString();
+                    worksheet.Cell(dataRow, colDropStart).Style.NumberFormat.Format = "@";
+
+                    worksheet.Cell(dataRow, colDropEnd).Value = cols[2]?.ToString();
+                    worksheet.Cell(dataRow, colDropEnd).Style.NumberFormat.Format = "@";
+
+                    worksheet.Cell(dataRow, colContractorLast).Value = cols[3]?.ToString();
+                    worksheet.Cell(dataRow, colContractorLast).Style.NumberFormat.Format = "@";
+                }
+
+                workbook.Save();
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
     }
+
+
 }
