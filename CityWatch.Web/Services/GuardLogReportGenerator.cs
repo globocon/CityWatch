@@ -36,7 +36,7 @@ namespace CityWatch.Web.Services
 
     public interface IGuardLogReportGenerator
     {
-        string GeneratePdfReport(int clientSiteLogBookId,string keywordDownSelect);
+        string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect);
         public string GeneratePdfReportForFusion(List<ClientSiteRadioChecksActivityStatus_History> funsionLog);
         public Table CreateReportDataForFusionWithoutSiteName(List<ClientSiteRadioChecksActivityStatus_History> guardLog);
 
@@ -60,9 +60,11 @@ namespace CityWatch.Web.Services
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardLoginDetailService _guardLoginDetailService;
+        private readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
+        private readonly string _subDomainImageRootDir;
 
         //p6-102 Add photo -start
         private const float MAX_IMAGE_WIDTH = 600;
@@ -76,6 +78,7 @@ namespace CityWatch.Web.Services
             IClientSiteWandDataProvider clientSiteWandDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLoginDetailService guardLoginDetailService,
+            IConfigDataProvider configDataProvider,
             IOptions<Settings> settings)
 
         {
@@ -83,12 +86,14 @@ namespace CityWatch.Web.Services
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardLoginDetailService = guardLoginDetailService;
+            _configDataProvider = configDataProvider;
             _settings = settings.Value;
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _subDomainImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
         }
 
-        public string GeneratePdfReport(int clientSiteLogBookId,string keywordDownSelect)
+        public string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
 
@@ -136,7 +141,8 @@ namespace CityWatch.Web.Services
                 var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
                 doc.Add(logNotes);
 
-                var footer = CreateFooter();
+                int _clientTypeId = clientsiteLogBook.ClientSite.ClientType.Id;
+                var footer = CreateFooter(_clientTypeId);
                 pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
 
                 //p6-102 Add photo -start Commented 19092024 Dileep Start
@@ -736,39 +742,63 @@ namespace CityWatch.Web.Services
             return new string[]
             {
                 "NOTE:\n\n This log book covers a 24 hour period only; if your shift spans overnight, then you use a separate report for the new day; " +
-                "Please use Smart WAND to register shift change and meal breaks / rest (this is OH&S related and NOT " +
+                "Please register meal breaks / rest (this is OH&S related and NOT " +
                 "tied to renumeration so it does not need to be accurate).\n\n",
 
                 "Entries are to assist guards with notes during their shift, and for " +
                 "handover of the next guard. Do NOT write down anything related to sign-in or patrols times / frequency because they are automated and " +
                 "recorded separately (and more accurate) and it is a waste of an entry.\n\n" +
 
-                "Never leave more than 2 hours BLANK \n\n" +
+                "Never leave more than 2 hours BLANK"
+                //"Never leave more than 2 hours BLANK \n\n" +
 
-                "All incident reports are to be completed via  www.cws-ir.com ; of course mention them in here BUT only briefly describe them; All IR's" +
-                " need to be registered on the Smart WAND as an event (button 3A) unless generated from the Smart WAND (button 3B) as it will auto-register" +
-                " event.\n\n",
+                //"All incident reports are to be completed via  www.cws-ir.com ; of course mention them in here BUT only briefly describe them; All IR's" +
+                //" need to be registered on the Smart WAND as an event (button 3A) unless generated from the Smart WAND (button 3B) as it will auto-register" +
+                //" event.\n\n",
 
-                "Smart WAND is to be used on patrol for photos; such as critical infrastructure, alarm panel LED status, high risk areas, etc. – personal phone " +
-                "can be used as backup to reach KPI \n\n"+
+                //"Smart WAND is to be used on patrol for photos; such as critical infrastructure, alarm panel LED status, high risk areas, etc. – personal phone " +
+                //"can be used as backup to reach KPI \n\n"+
 
-                "Use USB cable to dump all photos within the \"Daily Photo's\" Folder ; where needed you can mention the photo in" +
-                "the log (ie: Store X accessed, photo of log taken) \n\n" +
+                //"Use USB cable to dump all photos within the \"Daily Photo's\" Folder ; where needed you can mention the photo in" +
+                //"the log (ie: Store X accessed, photo of log taken) \n\n" +
 
-                "24/7 sites should dump images (cut and paste) after midnight to dropbox – for each issued" +
-                " Smart WAND - even if images were created by another crew; Smart WAND should be EMPTY and CLEAR of images at midnight – ready for the next \"Day\")"
+                //"24/7 sites should dump images (cut and paste) after midnight to dropbox – for each issued" +
+                //" Smart WAND - even if images were created by another crew; Smart WAND should be EMPTY and CLEAR of images at midnight – ready for the next \"Day\")"
             };
         }
 
-        private Table CreateFooter()
+        private Table CreateFooter(int ClientTypeId)
         {
-            var footerTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 20, 60, 15 })).UseAllAvailableWidth();
 
-            var cwLogo = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png"))).SetHeight(20).SetHorizontalAlignment(HorizontalAlignment.CENTER);
+            Table footerTable;
+            string clientLogo = IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png"); // Default cws logo path
+
+            var domain = _configDataProvider.GetSubDomainID(ClientTypeId);
+            if (domain != null)
+            {
+                clientLogo = IO.Path.Combine(_subDomainImageRootDir, domain.Logo);
+            }
+
+
+            footerTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 20, 60, 15 })).UseAllAvailableWidth();
+
+            var cwLogo = new Image(ImageDataFactory.Create(clientLogo)).SetHeight(20).SetHorizontalAlignment(HorizontalAlignment.CENTER);
             footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(cwLogo));
 
-            var isoImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "ISOv3.jpg"))).SetHeight(20).SetHorizontalAlignment(HorizontalAlignment.CENTER);
-            footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(isoImage));
+            //var isoImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "ISOv3.jpg"))).SetHeight(20).SetHorizontalAlignment(HorizontalAlignment.CENTER);
+            //footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(isoImage));
+
+            // Add ISO image only if domain is not null, else add empty space
+            if (domain == null)
+            {
+                var isoImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "ISOv3.jpg"))).SetHeight(20).SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(isoImage));
+            }
+            else
+            {
+                // Add an empty cell for layout consistency
+                footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph("")));
+            }
 
             footerTable.AddCell(new Cell()
                 .SetBorder(Border.NO_BORDER)
@@ -776,7 +806,7 @@ namespace CityWatch.Web.Services
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetFontColor(WebColors.GetRGBColor(COLOR_GREY_DARK))
                 .SetFontSize(CELL_FONT_SIZE * 0.8f)
-                .Add(new Paragraph($"© {DateTime.Today:yyyy} - CityWatch Security (AUST) Pty. Ltd | ABN: 46 094 745 758 | Commercial-In-Confidence | [SEC=OFFICAL]")));
+                .Add(new Paragraph($"© {DateTime.Today:yyyy} - C4i System | Commercial-In-Confidence | [SEC=OFFICAL]")));
 
             footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph("")));
 
@@ -892,7 +922,8 @@ namespace CityWatch.Web.Services
                     doc.Add(logNotes);
                 }
 
-                var footer = CreateFooter();
+                int _clientTypeId = clientSiteLogBooks.FirstOrDefault().ClientSite.ClientType.Id;
+                var footer = CreateFooter(_clientTypeId);
                 pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
 
                 doc.Close();
@@ -990,7 +1021,7 @@ namespace CityWatch.Web.Services
                     if (entry.LBId != null)
                     {
                         var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)entry.LBId);
-                        
+
                         foreach (var guardLogImage in guardlogImages)
                         {
                             var reportDataTablenew = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
@@ -1297,8 +1328,8 @@ namespace CityWatch.Web.Services
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePathFusion(clientsiteLogBook, version);
-            int[] clientSiteId= { clientsiteLogBook.ClientSite.Id };
-            var _guardLogs=_guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
+            int[] clientSiteId = { clientsiteLogBook.ClientSite.Id };
+            var _guardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
             //var _guardLogs = _guardLogDataProvider.ClientSiteRadioChecksActivityStatus_History(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
@@ -1336,7 +1367,8 @@ namespace CityWatch.Web.Services
             var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
             doc.Add(logNotes);
 
-            var footer = CreateFooter();
+            int _clientTypeId = clientsiteLogBook.ClientSite.ClientType.Id;
+            var footer = CreateFooter(_clientTypeId);
             pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
 
             //p6-102 Add photo -start Commented 19092024 Dileep Start
@@ -1422,5 +1454,5 @@ namespace CityWatch.Web.Services
 
     }
 
-   
+
 }
