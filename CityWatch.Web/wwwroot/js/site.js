@@ -3148,7 +3148,10 @@
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
             data: function () {
-                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+                return {
+                    query: $('#searchBoxTempAndForms').val(),// Include query dynamically
+                    companyProfile: $('#report_company_Profile').val()
+                }; 
             }
         },
         uiLibrary: 'bootstrap4',
@@ -3241,7 +3244,9 @@
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
             data: function () {
-                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+                return {
+                    query: $('#searchBoxTempAndForms').val(),
+                    companyProfile: $('#report_training_Profile').val() }; // Include query dynamically
             }
         },
 
@@ -3334,7 +3339,7 @@
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
             data: function () {
-                return { query: $('#searchBoxTempAndForms').val() }; // Include query dynamically
+                return { query: $('#searchBoxTempAndForms').val(), companyProfile: $('#report_templatesandforms_Profile').val() }; // Include query dynamically
             }
         },
         uiLibrary: 'bootstrap4',
@@ -3534,6 +3539,18 @@
         const fileForm = new FormData();
         fileForm.append('file', file);
         fileForm.append('type', type);
+        if (type == 1) {
+            fileForm.append('profile', $('#report_company_Profile').val());
+        }
+        else if (type == 2) {
+            fileForm.append('profile', $('#report_training_Profile').val());
+        }
+        else if (type == 3) {
+            fileForm.append('profile', $('#report_templatesandforms_Profile').val());
+        }
+        else {
+            fileForm.append('profile', '');
+        }
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
@@ -5397,6 +5414,51 @@
 
 
     });
+    //p1-324-start
+    $('#report_company_Profile').on('change', function () {
+        const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
+
+
+        if ($('#report_module_types_irtemplate').val() == 2) {
+            gridStaffDocsTypeCompanySop.clear();
+            gridStaffDocsTypeCompanySop.reload({ companyProfile: $('#report_company_Profile').val() });
+
+        }
+      
+
+
+    });
+    $('#report_training_Profile').on('change', function () {
+        const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
+
+
+      
+        if ($('#report_module_types_irtemplate').val() == 3) {
+            gridStaffDocsTypeTraining.clear();
+            gridStaffDocsTypeTraining.reload({ companyProfile: $('#report_training_Profile').val() });
+        }
+        if ($('#report_module_types_irtemplate').val() == 4) {
+            gridStaffDocsTypeTemplatesAndForms.clear();
+            gridStaffDocsTypeTemplatesAndForms.reload({ companyProfile: $('#report_company_Profile').val() });
+        }
+
+
+    });
+    
+    $('#report_templatesandforms_Profile').on('change', function () {
+        const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
+
+
+
+       
+        if ($('#report_module_types_irtemplate').val() == 4) {
+            gridStaffDocsTypeTemplatesAndForms.clear();
+            gridStaffDocsTypeTemplatesAndForms.reload({ companyProfile: $('#report_templatesandforms_Profile').val() });
+        }
+
+
+    });
+    //p1-324-end
 
 });
 
@@ -6670,6 +6732,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#btnGroupAddon2').hide();
     }
 });
+
 $('#clientTypeNameDoc').multiselect({
     maxHeight: 400,
     buttonWidth: '100%',

@@ -234,7 +234,9 @@ namespace CityWatch.RadioCheck.Services
 
             var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
             fileNamePart = clientSiteDetails[0].Name;
-            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))).ToList();
+            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+                (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))
+            ).ToList();
             CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
 
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);

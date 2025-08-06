@@ -134,8 +134,9 @@ namespace CityWatch.Web.Pages.Admin
         {
             var start = (pageNo - 1) * limit;
             var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).
-                Where(x=>string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
-                 x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase)));
+                Where(x=>string.IsNullOrEmpty(keywordDownSelect) || 
+                (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+                (!string.IsNullOrEmpty(x.GuardInitials) && x.GuardInitials.Contains(keywordDownSelect)));
             if(limit == 0)
             {
                 limit = dailyGuardLogs.Count();
@@ -470,7 +471,8 @@ namespace CityWatch.Web.Pages.Admin
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))); ;
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))); ;
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
