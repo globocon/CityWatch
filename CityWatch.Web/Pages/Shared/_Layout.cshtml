@@ -95,7 +95,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewBag.Title</title>
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    @* <link rel="icon" type="image/x-icon" href="~/favicon.ico"> *@
+    @if (!string.IsNullOrEmpty(clientLogo))
+    {
+        <link rel="icon" type="image/png" sizes="16x16" href="@clientLogo" />
+    }
+    else
+    {
+        <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    }
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/jquery-editable-select/dist/jquery-editable-select.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" />
