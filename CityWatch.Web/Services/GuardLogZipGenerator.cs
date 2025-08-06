@@ -80,6 +80,7 @@ namespace CityWatch.Web.Services
             {
                 /* DropboxImagesDir set for these sites*/
                 fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
+                
                 foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
                 {
                     var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
@@ -279,7 +280,9 @@ namespace CityWatch.Web.Services
             //Old Code end
             var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
             fileNamePart = clientSiteDetails[0].Name;
-            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase))).ToList();
+            var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect))
+            ||
+                (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))).ToList();
             CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
            
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);

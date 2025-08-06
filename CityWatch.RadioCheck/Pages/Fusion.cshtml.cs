@@ -112,7 +112,8 @@ namespace CityWatch.RadioCheck.Pages
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect, StringComparison.OrdinalIgnoreCase)));
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+                (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)));
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
