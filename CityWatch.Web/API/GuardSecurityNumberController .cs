@@ -696,6 +696,37 @@ namespace CityWatch.Web.API
             return string.Empty;
         }
 
+
+
+        public (double? Latitude, double? Longitude) GetCoordinatesFromAddress(string address)
+        {
+            var mapSettings = _configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+            var apiKey = mapSettings.ApiKey;
+            string requestUri = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={apiKey}";
+
+            using (HttpClient client = new HttpClient())
+            {
+                var response = client.GetAsync(requestUri).GetAwaiter().GetResult();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    var result = JsonSerializer.Deserialize<GoogleGeocodeResponse2>(json);
+
+                    if (result != null && result.status == "OK" && result.results.Count > 0)
+                    {
+                        var location = result.results[0].geometry.location;
+                        return (location.lat, location.lng);
+                    }
+                }
+            }
+
+            return (null, null);
+        }
+
+
+
+
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
             var emailAddressList = new List<MailboxAddress>();
@@ -1024,6 +1055,11 @@ namespace CityWatch.Web.API
         [HttpPost("ProcessIrSubmit")]
         public IActionResult ProcessIrSubmit([FromQuery] string gps, [FromQuery] int UserId, [FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
         {
+
+          
+
+
+
             var fileName = string.Empty;
             var processResult = new SortedDictionary<int, IrProcessFailure>();
             var reportGenerated = false;
@@ -1087,6 +1123,24 @@ namespace CityWatch.Web.API
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
 
             var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
+
+
+            //live map settings 
+            if (Report?.DateLocation?.ShowIncidentLocationAddress == true &&
+  !string.IsNullOrWhiteSpace(Report.DateLocation.ClientAddress))
+            {
+                var result = GetCoordinatesFromAddress(Report.DateLocation.ClientAddress);
+                Report.DateLocation.ClientSiteLiveGps = result.Latitude + "," + result.Longitude;
+            }
+            else if(string.IsNullOrEmpty(clientSite.Gps))
+            {
+                //mobile app current location shows as the map
+                Report.DateLocation.ShowIncidentLocationAddress = true;
+                Report.DateLocation.ClientSiteLiveGps = gps;
+
+            }
+
+
             //To get the clientType oF position stop
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
@@ -2193,5 +2247,27 @@ namespace CityWatch.Web.API
         public bool SendtoRC { get; set; }
     }
 
+    public class GoogleGeocodeResponse2
+    {
+        public string status { get; set; }
+        public List<Result> results { get; set; }
+    }
+
+    public class Result
+    {
+        public Geometry geometry { get; set; }
+        public string formatted_address { get; set; }
+    }
+
+    public class Geometry
+    {
+        public Location location { get; set; }
+    }
+
+    public class Location
+    {
+        public double lat { get; set; }
+        public double lng { get; set; }
+    }
 
 }
