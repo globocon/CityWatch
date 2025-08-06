@@ -34,6 +34,7 @@ namespace CityWatch.Data.Models
 
 
         [NotMapped]
-        public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } } 
+        public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } }
+        public int SubDomainId { get; set; }
     }
 }
