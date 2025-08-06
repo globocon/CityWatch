@@ -542,6 +542,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.SOP = staffdocument.SOP;
                     documentToUpdate.ClientSite = staffdocument.ClientSite;
                     documentToUpdate.FilePath = staffdocument.FilePath;
+                   // documentToUpdate.SubDomainId = staffdocument.SubDomainId;
                 }
             }
             _context.SaveChanges();

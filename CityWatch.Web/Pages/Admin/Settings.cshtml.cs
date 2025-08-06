@@ -570,8 +570,12 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
         }
-        public JsonResult OnGetStaffDocsUsingType(int type, string query)
+        public JsonResult OnGetStaffDocsUsingType(int type, string query,string companyProfile)
         {
+            if(companyProfile!=null)
+            {
+                return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query).Where(x=>x.SubDomainId == Convert.ToInt32(companyProfile)));
+            }
             return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
         }
 
@@ -644,12 +648,19 @@ namespace CityWatch.Web.Pages.Admin
 
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                         var type = Convert.ToInt32(Request.Form["type"]);
+                        int subdomainid = 0;
+                        var domain = Request.Form["profile"].ToString();
+                        if (Request.Form["profile"].ToString()!=null && Request.Form["profile"].ToString() !="")
+                        {
+                            subdomainid = Convert.ToInt32(Request.Form["profile"]);
+                        }
                         _configDataProvider.SaveStaffDocument(new StaffDocument()
                         {
                             Id = documentId,
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
-                            DocumentType = type
+                            DocumentType = type,
+                            SubDomainId = subdomainid
 
                         });
 

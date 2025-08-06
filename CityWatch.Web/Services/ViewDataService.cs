@@ -181,6 +181,7 @@ namespace CityWatch.Web.Services
         public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
         List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type);
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
+        List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
     }
 
     public class ViewDataService : IViewDataService
@@ -2621,7 +2622,22 @@ namespace CityWatch.Web.Services
             }
             return sites;
         }
+        public List<SubDomain> GetUserSubDomainsHavingAccess(int? userId)
+        {
+            var subdomain = _clientDataProvider.GetSubDomains();
+            var clientTypes = _clientDataProvider.GetClientTypes();
+            if (userId == null)
+            {
+                var clientTypeIdsnew = clientTypes.Select(x => x.Id).Distinct().ToList();
+                
+                return subdomain.Where(x=>clientTypeIdsnew.Contains(x.TypeId)).ToList();
+            }
+                
 
+            var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+            var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+            return subdomain.Where(x => clientTypeIds.Contains(x.TypeId)).ToList();
+        }
     }
 
 
