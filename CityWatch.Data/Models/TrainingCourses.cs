@@ -24,6 +24,6 @@ namespace CityWatch.Data.Models
         // public string TQNumberName { get { return TQNumber.Name; } }
         public string TQNumberName { get; set; }
         public bool IsDeleted { get; set; }
-
+        public string EmbeddedCode { get; set; }
     }
 }
