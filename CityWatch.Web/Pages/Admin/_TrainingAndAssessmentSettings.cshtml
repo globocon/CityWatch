@@ -60,6 +60,7 @@
                                                     
                                                 </form>
                                             </label>
+                                            <button class="btn btn-primary mb-3" id="btnEmbedCodeForPPT" data-toggle="modal" data-target="#embedPPtUrlModal">Embed Url</button>
                                         </div>
 
                                         <div class="row mb-4">
@@ -820,3 +821,67 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
+<div class="modal  align-items-center justify-content-center" tabindex="-1" role="dialog" id="embedPPtUrlModal">
+    <div class="modal-dialog modal-dialog-centered modal-ml" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+                <h5 class="modal-title">Embeded Code</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_PracticalSettings" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="txtEmbedUrlCourseId">
+                    <input type="hidden" id="txtEmbedUrlTqSettingsId">
+                    <div class="row">
+
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label>File Name</label>
+
+                                <div class="pr-3"><input type="text" class="form-control" id="embeddedFileName"></div>
+
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="row">
+
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label>Embed Url</label>
+
+                                <div class="pr-3"><textarea type="text" class="form-control" id="URLEmbedded"></textarea></div>
+
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+
+                <button type="button" id="btnSaveEmbeddedCode" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
