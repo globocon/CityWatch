@@ -1460,6 +1460,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.LastUpdated = trainingCourses.LastUpdated;
                     documentToUpdate.TQNumberId = trainingCourses.TQNumberId;
                     documentToUpdate.HRSettingsId = trainingCourses.HRSettingsId;
+                    documentToUpdate.EmbeddedCode = trainingCourses.EmbeddedCode;
                     documentToUpdate.IsDeleted = trainingCourses.IsDeleted;
                 }
             }
