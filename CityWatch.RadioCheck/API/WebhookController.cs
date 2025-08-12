@@ -23,6 +23,7 @@ using CityWatch.RadioCheck.Models;
 using Microsoft.AspNetCore.Http;
 using DocumentFormat.OpenXml.Spreadsheet;
 using CityWatch.Data.Models;
+using CityWatch.RadioCheck.Services;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -139,7 +140,7 @@ namespace CityWatch.RadioCheck.API
     public class WebhookController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly IJotFormService _jotFormService;
         private string templateFileName;
         private string download_jsonMappingFile;
         private string deliveries_jsonMappingFile;
@@ -152,10 +153,10 @@ namespace CityWatch.RadioCheck.API
         private string compressed_image_folder_name;
         //private const string JotFormApiKey = "6a5b7d0e94fdac941d2f857a5f096e47";
         //private const string JotFormApiKey = "4a0a2fe279684c4953af50311f5a2a93";
-        public WebhookController(IConfiguration configuration)
+        public WebhookController(IJotFormService jotFormService)
         {
             _httpClient = new HttpClient();
-            _configuration = configuration;
+            _jotFormService = jotFormService;
             templateFileName = "Template.xlsx";
             download_jsonMappingFile = "download_form_fields_mapping.json";
             deliveries_jsonMappingFile = "deliveries_form_fields_mapping.json";
@@ -324,10 +325,7 @@ namespace CityWatch.RadioCheck.API
         {
             try
             {
-                var JotFormApiKey = _configuration["jotformSettings:ApiKey"];
-                string url = $"https://api.jotform.com/form/{formID}?apiKey={JotFormApiKey}";
-                var response = await _httpClient.GetStringAsync(url);
-                var formResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                var formResponse = await _jotFormService.GetFormNameFromJotForm(formID);
 
                 if (formResponse != null && formResponse.ContainsKey("content"))
                 {

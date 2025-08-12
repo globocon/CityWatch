@@ -1,15 +1,20 @@
-﻿using ClosedXML.Excel;
+﻿using CityWatch.RadioCheck.Models.JotForm;
+using CityWatch.RadioCheck.Services;
+using CityWatch.Web.Helpers;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Nancy.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Data;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -20,6 +25,7 @@ namespace CityWatch.RadioCheck.API
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly IJotFormService _jotFormService;
         private string templateFileName;
         private string dailyWeldingReport_jsonMappingFile;
         private string dailyWeldReturn_jsonMappingFile;
@@ -27,12 +33,29 @@ namespace CityWatch.RadioCheck.API
         private string railHeatNumberRecord_jsonMappingFile;
         private string register_jsonMappingFile;
         private string uploadFolder;
+        private string logFileName;
         private string logFilePath;
+        private string webhookoutputdataFilename;
         private string _excelfileendname;
-        public FlashButtWeldingWebhookController(IConfiguration configuration)
+
+        private string _WeldReturnRegister_XlSheetName;
+        private string _ComplianceRegister_XlSheetName;
+        private string _StringsRegister_XlSheetName;
+        private string _WeldReturnRegister_FormID;
+        private string _ComplianceRegister_FormID;
+        private string _StringsRegister_FormID;
+        private string _ComplianceRegisterDataFilePath;
+        private string _WeldReturnRegisterDataFilePath;
+        private string _StringsRegisterDataFilePath;
+        private string _ComplianceRegisterDataFileName;
+        private string _WeldReturnRegisterDataFileName;
+        private string _StringsRegisterDataFileName;
+
+        public FlashButtWeldingWebhookController(IConfiguration configuration, IJotFormService jotFormService)
         {
             _httpClient = new HttpClient();
             _configuration = configuration;
+            _jotFormService = jotFormService;
             templateFileName = "Template.xlsx";
             _excelfileendname = "LWRReport.xlsx";
             dailyWeldingReport_jsonMappingFile = "daily_welding_report_fields_mapping.json";
@@ -40,8 +63,23 @@ namespace CityWatch.RadioCheck.API
             dailyInspect_jsonMappingFile = "daily_inspect_fields_mapping.json";
             railHeatNumberRecord_jsonMappingFile = "rail_heat_number_record_fields_mapping.json";
             register_jsonMappingFile = "register_path_mapping.json";
-            logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt", "webhook_log.txt"); ;
+            webhookoutputdataFilename = "webhook_data.txt";
+            logFileName = "webhook_log.txt";
+            logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt", logFileName);
             uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "jotform", "Flashbutt");
+
+            _WeldReturnRegister_XlSheetName = "Weld Return Register";
+            _ComplianceRegister_XlSheetName = "Compliance Register";
+            _StringsRegister_XlSheetName = "Strings Register";
+
+            _StringsRegisterDataFileName = "Strings_Register_Data.txt";
+            _ComplianceRegisterDataFileName = "Compliance_Register_Data.txt";
+            _WeldReturnRegisterDataFileName = "Weld_Return_Register_Data.txt";
+
+            _ComplianceRegister_FormID = _configuration["jotformSettings:ComplianceRegisterFormID"];
+            _StringsRegister_FormID = _configuration["jotformSettings:StringsRegisterFormID"];
+            _WeldReturnRegister_FormID = _configuration["jotformSettings:WeldReturnRegisterFormID"];
+
         }
 
 
@@ -49,10 +87,7 @@ namespace CityWatch.RadioCheck.API
         {
             try
             {
-                var JotFormApiKey = _configuration["jotformSettings:ApiKey"];
-                string url = $"https://api.jotform.com/form/{formID}?apiKey={JotFormApiKey}";
-                var response = await _httpClient.GetStringAsync(url);
-                var formResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                var formResponse = await _jotFormService.GetFormNameFromJotForm(formID);
 
                 if (formResponse != null && formResponse.ContainsKey("content"))
                 {
@@ -139,9 +174,16 @@ namespace CityWatch.RadioCheck.API
                 if (!Directory.Exists(submissionFolder))
                     Directory.CreateDirectory(submissionFolder);
 
-                logFilePath = Path.Combine(submissionFolder, "webhook_log.txt");
-                string webhookFilePath = Path.Combine(submissionFolder, "webhook_data.txt");
+                logFilePath = Path.Combine(submissionFolder, logFileName);
+                string webhookFilePath = Path.Combine(submissionFolder, webhookoutputdataFilename);
+                _ComplianceRegisterDataFilePath = Path.Combine(submissionFolder, _ComplianceRegisterDataFileName);
+                _WeldReturnRegisterDataFilePath = Path.Combine(submissionFolder, _WeldReturnRegisterDataFileName);
+                _StringsRegisterDataFilePath = Path.Combine(submissionFolder, _StringsRegisterDataFileName);
                 string excelFilePath = Path.Combine(submissionFolder, $"{DateWiseFolder}_{supervisor}_{_excelfileendname}");
+
+                await GetDataFromJotFormTable(_ComplianceRegister_FormID, _ComplianceRegisterDataFilePath);
+                await GetDataFromJotFormTable(_WeldReturnRegister_FormID, _WeldReturnRegisterDataFilePath);
+                await GetDataFromJotFormTable(_StringsRegister_FormID, _StringsRegisterDataFilePath);
 
                 await System.IO.File.AppendAllTextAsync(webhookFilePath, Environment.NewLine + rawJson);
                 WriteLog($"Webhook received. Data saved for Submission ID: {submissionID}");
@@ -170,15 +212,26 @@ namespace CityWatch.RadioCheck.API
             string fileName = $"{folder_Name}_{supervisor_Name}_{_excelfileendname}";
             string excelFilePath = Path.Combine(submissionFolder, fileName);
 
-            ////// ## This is for Testing 
-            ////string jsonDataFileWithPath = Path.Combine(submissionFolder, "webhook_data.txt");
-            ////string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
-            ////var rawArray = rawJson.Split(Environment.NewLine);
-            ////rawJson = rawArray[rawArray.Length-1];
-            ////var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
-            ////CopyTemplateToFolder(uploadFolder, excelFilePath);
-            ////await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
-            ////// ## This is for Testing
+            // ## This is for Testing 
+            string jsonDataFileWithPath = Path.Combine(submissionFolder, webhookoutputdataFilename);
+            string rawJson = System.IO.File.ReadAllText(jsonDataFileWithPath);
+            var rawArray = rawJson.Split(Environment.NewLine);
+            rawJson = rawArray[rawArray.Length - 1];
+            var webhookData = !string.IsNullOrEmpty(rawJson) ? JsonConvert.DeserializeObject<Dictionary<string, object>>(rawJson) : null;
+
+            // Compliance Register
+            _ComplianceRegisterDataFilePath = Path.Combine(submissionFolder, _ComplianceRegisterDataFileName);
+
+            // Weld Return Register
+            _WeldReturnRegisterDataFilePath = Path.Combine(submissionFolder, _WeldReturnRegisterDataFileName);
+
+            // Strings Register
+            _StringsRegisterDataFilePath = Path.Combine(submissionFolder, _StringsRegisterDataFileName);
+
+
+            CopyTemplateToFolder(uploadFolder, excelFilePath);
+            await CreateExcelReportFile(excelFilePath, uploadFolder, webhookData);
+            // ## This is for Testing
 
 
 
@@ -213,38 +266,20 @@ namespace CityWatch.RadioCheck.API
                     jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldingReport_jsonMappingFile);
                     Update_Daily_Welding_Report_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
 
-                    //Daily_Weld_Return_Data
-                    worksheet = workbook.Worksheet("Daily_Weld_Return_Data");
-                    jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyWeldReturn_jsonMappingFile);
-                    Update_Daily_Weld_Return_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
-
-                    //Daily_Inspect_Data
-                    worksheet = workbook.Worksheet("Daily_Inspect_Data");
-                    jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, dailyInspect_jsonMappingFile);
-                    Update_Daily_Inspect_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
-
                     //Rail_Heat_Number_Record_Data
                     worksheet = workbook.Worksheet("Rail_Heat_Number_Record_Data");
                     jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, railHeatNumberRecord_jsonMappingFile);
                     Update_Rail_Heat_Number_Record_Data_in_Template(ref worksheet, jsonMappingFileWithPath, webhookData);
 
                     //Registers
-                    jsonMappingFileWithPath = Path.Combine(JsonMappingFileFolder, register_jsonMappingFile);                    
-                    var registerMappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-                    var registerPathMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(registerMappingJson);
-                    foreach (var keyValue in registerPathMappings)
-                    {
-                        string ws_name = keyValue.Key;
-                        if (workbook.TryGetWorksheet(ws_name, out worksheet))
-                        {
-                            if (worksheet != null)
-                            {
-                                Copy_Register_Data_To_Template(ref worksheet, keyValue.Value);
-                            }
-                        }
-                    }
+                    worksheet = workbook.Worksheet(_ComplianceRegister_XlSheetName);
+                    Write_ComplianceRegisterData_To_Template(ref worksheet, _ComplianceRegisterDataFilePath, _ComplianceRegister_XlSheetName);
 
+                    worksheet = workbook.Worksheet(_WeldReturnRegister_XlSheetName);
+                    Write_WeldReturnRegisterData_To_Template(ref worksheet, _WeldReturnRegisterDataFilePath, _WeldReturnRegister_XlSheetName);
 
+                    worksheet = workbook.Worksheet(_StringsRegister_XlSheetName);
+                    Write_StringsRegisterData_To_Template(ref worksheet, _StringsRegisterDataFilePath, _StringsRegister_XlSheetName);
 
                 }
                 catch (Exception ex)
@@ -304,13 +339,28 @@ namespace CityWatch.RadioCheck.API
                         int column = 2; // Start from column B
                         foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
                         {
-                            var rowValues = (JObject)item.Value;
-                            for (int i = 0; i < data.Count - 2; i++)
+                            if (item.Value is JObject jObject)
                             {
-                                string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
-                                worksheet.Cell(row, column).Value = value;
-                                current_row = row;
-                                row++;
+                                // Loop through JObject properties
+                                for (int i = 0; i < data.Count - 2; i++)
+                                {
+                                    string key = i.ToString();
+                                    string value = jObject[key]?.ToString() ?? "";
+                                    worksheet.Cell(row, column).Value = value;
+                                    current_row = row;
+                                    row++;
+                                }
+                            }
+                            else if (item.Value is JArray jArray)
+                            {
+                                // Loop through JArray elements
+                                for (int i = 0; i < jArray.Count; i++)
+                                {
+                                    string value = jArray[i]?.ToString() ?? "";
+                                    worksheet.Cell(row, column).Value = value;
+                                    current_row = row;
+                                    row++;
+                                }
                             }
                             column++;
                             row = start_row;
@@ -318,175 +368,6 @@ namespace CityWatch.RadioCheck.API
                         row = current_row - 1;
                     }
 
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(matchingMapping.Value) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
-                    {
-                        object cellValue = null;
-
-                        if (rawValue is JObject dateObj &&
-                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
-                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
-                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
-                            int.TryParse(dateObj["year"]?.ToString(), out int year))
-                        {
-                            // Format date to dd/MM/yyyy or as DateTime
-                            DateTime date = new DateTime(year, month, day);
-                            cellValue = date.ToString("dd/MM/yyyy");
-                        }
-                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
-                        {
-                            cellValue = rawValue.ToString();
-                        }
-
-                        // Write to Excel only if there's a value
-                        if (cellValue != null)
-                        {
-                            worksheet.Cell(row, dataCol).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
-                        }
-                    }
-                }
-
-
-            }
-        }
-
-        private void Update_Daily_Weld_Return_Data_in_Template(ref IXLWorksheet worksheet, string jsonMappingFileWithPath, Dictionary<string, object> webhookData)
-        {
-            // Load field mappings: ExcelHeader -> WebhookDataKey 
-            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
-
-
-            //int row = 1;   
-            int headerCol = 1;
-            int dataCol = 2;
-            int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-
-            // Traverse headers in col 1
-            for (int row = 1; row <= lastUsedRow; row++)
-            {
-                string excelHeader = worksheet.Cell(row, headerCol).GetString();
-                // Find webhook key where value in the mapping matches Excel header
-                var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Key == excelHeader);
-
-                //Check if Excel header is a table
-                if (excelHeader != null && excelHeader.StartsWith("#TABLE_"))
-                {
-                    //List<ExcelTableClass> xlTblClassList = new List<ExcelTableClass>();
-                    //for (int _currentRow = row + 1; _currentRow <= lastUsedRow; _currentRow++)
-                    //{
-                    //    string excelColHeader = worksheet.Cell(_currentRow, headerCol).GetString();
-                    //    if (excelColHeader != null && excelColHeader.Contains("#_TABLE_"))
-                    //    {
-                    //        xlTblClassList.Add(new ExcelTableClass() { _xlRowNum = _currentRow, _xlColName = excelColHeader });
-                    //    }
-                    //}
-
-                    if (!string.IsNullOrEmpty(matchingMapping.Value) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
-                    {
-                        row++;
-                        int start_row = row;
-                        int current_row = row;
-                        if (!string.IsNullOrWhiteSpace(rawValue?.ToString()))
-                        {
-                            var data = JObject.Parse(rawValue.ToString());
-                            int column = 2; // Start from column B
-                            foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
-                            {
-                                var rowValues = (JObject)item.Value;
-                                for (int i = 0; i < data.Count - 2; i++)
-                                {
-                                    string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
-                                    worksheet.Cell(row, column).Value = value;
-                                    row++;
-                                }
-                                current_row = rowValues.Count;
-                                column++;
-                                row = start_row;
-                            }
-                            row = current_row + start_row - 2;
-                        }
-                    }
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(matchingMapping.Value) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
-                    {
-                        object cellValue = null;
-
-                        if (rawValue is JObject dateObj &&
-                            dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
-                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
-                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
-                            int.TryParse(dateObj["year"]?.ToString(), out int year))
-                        {
-                            // Format date to dd/MM/yyyy or as DateTime
-                            DateTime date = new DateTime(year, month, day);
-                            cellValue = date.ToString("dd/MM/yyyy");
-                        }
-                        else if (rawValue != null && !string.IsNullOrWhiteSpace(rawValue.ToString()))
-                        {
-                            cellValue = rawValue.ToString();
-                        }
-
-                        // Write to Excel only if there's a value
-                        if (cellValue != null)
-                        {
-                            worksheet.Cell(row, dataCol).Value = cellValue is DateTime dt ? dt : cellValue.ToString();
-                        }
-                    }
-                }
-
-
-            }
-        }
-
-        private void Update_Daily_Inspect_Data_in_Template(ref IXLWorksheet worksheet, string jsonMappingFileWithPath, Dictionary<string, object> webhookData)
-        {
-            // Load field mappings: ExcelHeader -> WebhookDataKey 
-            var mappingJson = System.IO.File.ReadAllText(jsonMappingFileWithPath);
-            var fieldMappings = JsonConvert.DeserializeObject<Dictionary<string, string>>(mappingJson);
-
-
-            //int row = 1;   
-            int headerCol = 1;
-            int dataCol = 2;
-            int lastUsedRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-
-            // Traverse headers in col 1
-            for (int row = 1; row <= lastUsedRow; row++)
-            {
-                string excelHeader = worksheet.Cell(row, headerCol).GetString();
-                // Find webhook key where value in the mapping matches Excel header
-                var matchingMapping = fieldMappings.FirstOrDefault(kvp => kvp.Key == excelHeader);
-
-                //Check if Excel header is a table
-                if (excelHeader != null && excelHeader.StartsWith("#TABLE_"))
-                {
-                    if (!string.IsNullOrEmpty(matchingMapping.Value) && webhookData.TryGetValue(matchingMapping.Value, out var rawValue))
-                    {
-                        row++;
-                        if (!string.IsNullOrWhiteSpace(rawValue?.ToString()))
-                        {
-                            var data = JObject.Parse(rawValue.ToString());
-                            int column = 2; // Start from column B
-                            foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
-                            {
-                                column = 2;
-                                var rowValues = (JObject)item.Value;
-                                for (int i = 0; i < rowValues.Count; i++)
-                                {
-                                    string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
-                                    worksheet.Cell(row, column).Value = value;
-                                    column++;
-                                }
-                                row++;
-                            }
-                            row--;
-                        }
-                    }
                 }
                 else
                 {
@@ -553,13 +434,42 @@ namespace CityWatch.RadioCheck.API
                             foreach (var item in data.Properties().Where(p => p.Name.All(char.IsDigit)))
                             {
                                 column = 2;
-                                var rowValues = (JObject)item.Value;
-                                for (int i = 0; i < rowValues.Count; i++)
+
+                                if (item.Value is JObject jObject)
                                 {
-                                    string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
-                                    worksheet.Cell(row, column).Value = value;
-                                    column++;
+                                    // Loop through JObject properties
+                                    for (int i = 0; i < data.Count - 2; i++)
+                                    {
+                                        string key = i.ToString();
+                                        string value = jObject[key]?.ToString() ?? "";
+                                        worksheet.Cell(row, column).Value = value;
+                                        column++;
+                                    }
                                 }
+                                else if (item.Value is JArray jArray)
+                                {
+                                    // Loop through JArray elements
+                                    for (int i = 0; i < jArray.Count; i++)
+                                    {
+                                        string value = jArray[i]?.ToString() ?? "";
+                                        worksheet.Cell(row, column).Value = value;
+                                        column++;
+                                    }
+                                }
+
+
+                                //var rowValues = (JObject)item.Value;
+                                //for (int i = 0; i < rowValues.Count; i++)
+                                //{
+                                //    string value = rowValues[i.ToString()]?.ToString() ?? ""; // null-safe
+                                //    worksheet.Cell(row, column).Value = value;
+                                //    column++;
+                                //}
+
+
+
+
+
                                 row++;
                             }
                             row--;
@@ -599,49 +509,113 @@ namespace CityWatch.RadioCheck.API
             }
         }
 
-        private void Copy_Register_Data_To_Template(ref IXLWorksheet worksheet, string sourceFile)
+        private void Write_ComplianceRegisterData_To_Template(ref IXLWorksheet worksheet, string _ComplianceRegisterDataFilePath, string _ComplianceRegister_XlSheetName)
         {
-            string _sourceFileName = Path.Combine(Directory.GetCurrentDirectory(), sourceFile);
-            if (!System.IO.File.Exists(_sourceFileName))
+            if (!System.IO.File.Exists(_ComplianceRegisterDataFilePath))
             {
-                WriteLog($"Source file {_sourceFileName} not found.");
+                WriteLog($"Compliance Register data file {_ComplianceRegisterDataFilePath} not found.");
                 return;
             }
 
-            // Open the workbook
-            using (var sourceworkbook = new XLWorkbook(_sourceFileName))
+            WriteJsonRegisterDataToExcel(_ComplianceRegisterDataFilePath, "Compliance_Register_Mapping", ref worksheet, 3, 1);
+
+            //Formatting the Compliance Register data in the worksheet
+            var usedRange = worksheet.RangeUsed();
+            if (usedRange != null && usedRange.RowCount() > 1)
             {
-                var sourceSheet = sourceworkbook.Worksheet(1);
-
-                // Get the range of used cells (excluding the first row which is header)
-                var usedRange = sourceSheet.RangeUsed();
-
-                if (usedRange != null && usedRange.RowCount() > 1)
-                {
-                    // Exclude header (start from second row)
-                    var dataRange = sourceSheet.Range(
-                        usedRange.FirstCell().Address.RowNumber + 1,  // from row 2
-                        usedRange.FirstCell().Address.ColumnNumber,
-                        usedRange.LastCell().Address.RowNumber,
-                        usedRange.LastCell().Address.ColumnNumber
-                    );
-
-                    // Paste into target sheet starting at cell A2
-                    dataRange.CopyTo(worksheet.Cell(8, 1));
-                    
-                    var style = dataRange.Cells().Style;
-                    style.Border.TopBorderColor = XLColor.Black;
-                    style.Border.SetBottomBorderColor(XLColor.Black);
-                    style.Border.SetLeftBorderColor(XLColor.Black);
-                    style.Border.SetRightBorderColor(XLColor.Black);
-                    
-                    style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    style.Border.RightBorder = XLBorderStyleValues.Thin;
-                }
+                // Exclude header (start from second row)
+                var dataRange = worksheet.Range(
+                    usedRange.FirstCell().Address.RowNumber + 2,  // from row 2
+                    usedRange.FirstCell().Address.ColumnNumber,
+                    usedRange.LastCell().Address.RowNumber,
+                    usedRange.LastCell().Address.ColumnNumber
+                );
+                var style = dataRange.Cells().Style;
+                style.Border.TopBorderColor = XLColor.Black;
+                style.Border.SetBottomBorderColor(XLColor.Black);
+                style.Border.SetLeftBorderColor(XLColor.Black);
+                style.Border.SetRightBorderColor(XLColor.Black);
+                style.Border.TopBorder = XLBorderStyleValues.Thin;
+                style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                style.Border.RightBorder = XLBorderStyleValues.Thin;
             }
+
+
         }
+
+        private void Write_WeldReturnRegisterData_To_Template(ref IXLWorksheet worksheet, string _WeldReturnRegisterDataFilePath, string _WeldReturnRegister_XlSheetName)
+        {
+            if (!System.IO.File.Exists(_WeldReturnRegisterDataFilePath))
+            {
+                WriteLog($"Weld Return Register data file {_WeldReturnRegisterDataFilePath} not found.");
+                return;
+            }
+
+            WriteJsonRegisterDataToExcel(_WeldReturnRegisterDataFilePath, "Weld_Return_Register_Mapping", ref worksheet, 3, 1);
+
+            //Formatting the Weld Return Register data in the worksheet
+            var usedRange = worksheet.RangeUsed();
+            if (usedRange != null && usedRange.RowCount() > 1)
+            {
+                // Exclude header (start from second row)
+                var dataRange = worksheet.Range(
+                    usedRange.FirstCell().Address.RowNumber + 2,  // from row 2
+                    usedRange.FirstCell().Address.ColumnNumber,
+                    usedRange.LastCell().Address.RowNumber,
+                    usedRange.LastCell().Address.ColumnNumber
+                );
+                var style = dataRange.Cells().Style;
+                style.Border.TopBorderColor = XLColor.Black;
+                style.Border.SetBottomBorderColor(XLColor.Black);
+                style.Border.SetLeftBorderColor(XLColor.Black);
+                style.Border.SetRightBorderColor(XLColor.Black);
+                style.Border.TopBorder = XLBorderStyleValues.Thin;
+                style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                style.Border.RightBorder = XLBorderStyleValues.Thin;
+            }
+
+
+        }
+
+        private void Write_StringsRegisterData_To_Template(ref IXLWorksheet worksheet, string _StringsRegisterDataFilePath, string _StringsRegister_XlSheetName)
+        {
+            if (!System.IO.File.Exists(_StringsRegisterDataFilePath))
+            {
+                WriteLog($"Strings Register data file {_StringsRegisterDataFilePath} not found.");
+                return;
+            }
+
+            WriteJsonRegisterDataToExcel(_StringsRegisterDataFilePath, "Strings_Register_Mapping", ref worksheet, 8, 1);
+
+            //Formatting the Strings Register data in the worksheet
+            var usedRange = worksheet.RangeUsed();
+            if (usedRange != null && usedRange.RowCount() > 1)
+            {
+                // Exclude header (start from second row)
+                var dataRange = worksheet.Range(
+                    usedRange.FirstCell().Address.RowNumber + 7,  // from row 8
+                    usedRange.FirstCell().Address.ColumnNumber,
+                    usedRange.LastCell().Address.RowNumber,
+                    usedRange.LastCell().Address.ColumnNumber
+                );
+                var style = dataRange.Cells().Style;
+                style.Border.TopBorderColor = XLColor.Black;
+                style.Border.SetBottomBorderColor(XLColor.Black);
+                style.Border.SetLeftBorderColor(XLColor.Black);
+                style.Border.SetRightBorderColor(XLColor.Black);
+                style.Border.TopBorder = XLBorderStyleValues.Thin;
+                style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                style.Border.RightBorder = XLBorderStyleValues.Thin;
+            }
+
+
+        }
+
+
+
         private void CopyTemplateToFolder(string _sourceFolder, string _destinationFileName)
         {
             string _sourceFileName = Path.Combine(_sourceFolder, templateFileName);
@@ -663,12 +637,179 @@ namespace CityWatch.RadioCheck.API
                 throw new Exception(message: log, innerException: ex.InnerException);
             }
         }
-    }
 
-    //public class ExcelTableClass
-    //{
-    //    public int _xlRowNum { get; set; }
-    //    public string _xlColName { get; set; }
-    //}
+
+        private async Task GetDataFromJotFormTable(string _Register_FormID, string _OutPutJsonFile)
+        {
+            var formFields = await _jotFormService.GetFormFieldsAsync(_Register_FormID);
+            var formTableData = await _jotFormService.GetSubmissionsAsync(_Register_FormID);
+
+            // Filter valid fields (replace with your actual validation logic)
+            var keys = new List<string>();
+            List<JotFormField> formFieldsHeaderList = new List<JotFormField>();
+            foreach (var kvp in formFields)
+            {
+                string kvpValueJsonString = JsonConvert.SerializeObject(kvp.Value);
+                if (IsValidField(kvpValueJsonString))
+                {
+                    keys.Add(kvp.Key);
+                    JotFormField formField = JsonConvert.DeserializeObject<JotFormField>(kvpValueJsonString);
+                    formFieldsHeaderList.Add(formField);
+                }
+            }
+
+            // Build JSON-friendly structure
+            JotFormOutputExcelData outputData = new JotFormOutputExcelData
+            {
+                Headers = keys.ConvertAll(k => formFields[k].ToString()),
+                HeaderList = formFieldsHeaderList,
+                Rows = new List<Dictionary<string, object>>()
+            };
+
+            foreach (var sub in formTableData)
+            {
+                var row = new Dictionary<string, object>
+                    {
+                        { "Id", sub.id }
+                    };
+
+                foreach (var key in keys)
+                {
+                    JotFormField formField = new JotFormField()
+                    {
+                        text = formFields[key]?.ToString() ?? "",
+                        type = formFields[key]?.GetType().Name.ToLowerInvariant() ?? "unknown"
+                    };
+                    
+                    var field = formField;
+                    object value = sub.answers.ContainsKey(key) ? sub.answers[key] : "";
+
+                    //if (field.type == "control_datetime" && value is JObject dateObj &&
+                    //        dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
+                    //        int.TryParse(dateObj["day"]?.ToString(), out int day) &&
+                    //        int.TryParse(dateObj["month"]?.ToString(), out int month) &&
+                    //        int.TryParse(dateObj["year"]?.ToString(), out int year))
+                    //{
+                    //    // Format date to dd/MM/yyyy or as DateTime
+                    //    DateTime date = new DateTime(year, month, day);
+                    //    value = date.ToString("yyyy-MM-dd");
+                    //}
+                    //else if (value is DateTime dt2)
+                    //{
+                    //    value = dt2.ToString("yyyy-MM-dd");
+                    //}
+                    
+                    row[key] = value;
+                }
+
+                outputData.Rows.Add(row);
+            }
+
+            // Serialize to JSON    
+            var json = JsonConvert.SerializeObject(outputData, Formatting.Indented);
+
+            // Write to file
+            System.IO.File.WriteAllText(_OutPutJsonFile, json);
+
+            return;
+        }
+
+
+        static bool IsValidField(string field)
+        {
+            var validTypes = new HashSet<string>
+                {
+                    "control_textbox", "control_textarea", "control_number","control_time",
+                    "control_datetime", "control_radio", "control_checkbox", "control_dropdown"
+                };
+
+            // Now deserialize into your class
+            JotFormField jffield = JsonConvert.DeserializeObject<JotFormField>(field);
+            return validTypes.Contains(jffield.type);
+
+        }
+                
+        public void WriteJsonRegisterDataToExcel(string jsonFilePath, string xlJsonMappingSheet, ref IXLWorksheet excelWorksheet, int _dataStartRow, int _dataStartCol)
+        {
+            // Read JSON file
+            var jsonContent = System.IO.File.ReadAllText(jsonFilePath);
+            var selectedHeaders = new Dictionary<int, string>();
+
+            var mappingworksheet = excelWorksheet.Workbook.Worksheet(xlJsonMappingSheet);
+            int lastRow = mappingworksheet.LastRowUsed().RowNumber();
+            int j = 0;
+            for (int row = 2; row <= lastRow; row++) // Start from row 2 (skip header)
+            {
+                string fieldName = mappingworksheet.Cell(row, 2).GetString()?.Trim();
+                if (!string.IsNullOrWhiteSpace(fieldName))
+                {
+                    selectedHeaders.Add(j++, fieldName);
+                }
+            }
+
+            // Deserialize into object
+            var databeforesort = JsonConvert.DeserializeObject<JotFormOutputExcelData>(jsonContent);
+            List<JotFormField> data = new List<JotFormField>();
+
+            if (selectedHeaders.Count > 0)
+            {
+                foreach (var header in selectedHeaders)
+                {
+                    var res = databeforesort.HeaderList.Where(x => x.name == header.Value).ToList();
+                    if (res.Any())
+                    {
+                        data.AddRange(res);
+                    }
+                }
+
+                if (data.Any() && data.Count > 0)
+                {
+
+                    for (int r = 0; r < databeforesort.Rows.Count; r++)
+                    {
+                        var rowDict = databeforesort.Rows[r];
+                        int col = 0;
+                        foreach (var header in data)
+                        {
+                            string colheader = header.qid; 
+                            rowDict.TryGetValue(colheader, out var rawValue);
+                            object cellValue = null;
+                                                        
+                            if (rawValue is JObject jsonObj)
+                            {
+                                if(jsonObj.ContainsKey("answer") && jsonObj["answer"] is JObject dateObj)
+                                {
+                                    if (dateObj["day"] != null && dateObj["month"] != null && dateObj["year"] != null &&
+                                            int.TryParse(dateObj["day"]?.ToString(), out int day) &&
+                                            int.TryParse(dateObj["month"]?.ToString(), out int month) &&
+                                            int.TryParse(dateObj["year"]?.ToString(), out int year))
+                                    {
+                                        // Format date to dd/MM/yyyy or as DateTime
+                                        DateTime date = new DateTime(year, month, day);
+                                        cellValue = date.ToString("dd-MM-yyyy");
+                                    }
+                                    else if (dateObj["hourSelect"] != null && dateObj["minuteSelect"] != null &&
+                                            int.TryParse(dateObj["hourSelect"]?.ToString(), out int hour) &&
+                                            int.TryParse(dateObj["minuteSelect"]?.ToString(), out int min))
+                                    {
+                                        cellValue = hour.ToString("D2") + ":" + min.ToString("D2");
+                                    }
+                                }
+                                else if (jsonObj.ContainsKey("answer") && jsonObj["answer"]?.Type == JTokenType.String)
+                                {
+                                    cellValue = (string)jsonObj["answer"];
+                                }
+                            }
+                            
+                            excelWorksheet.Cell(_dataStartRow + r, _dataStartCol + col++).Value = cellValue?.ToString() ?? "";
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+    }
 
 }

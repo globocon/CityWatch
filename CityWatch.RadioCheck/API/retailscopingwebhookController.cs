@@ -1,5 +1,6 @@
 ﻿using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Models;
+using CityWatch.RadioCheck.Services;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +30,7 @@ namespace CityWatch.RadioCheck.API
     public class retailscopingwebhookController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly IJotFormService _jotFormService;
         private string templateFileName;
         private string download_jsonMappingFile;
         private string deliveries_DataFile;
@@ -47,10 +48,10 @@ namespace CityWatch.RadioCheck.API
         private string formName;
 
 
-        public retailscopingwebhookController(IConfiguration configuration)
+        public retailscopingwebhookController(IJotFormService jotFormService)
         {
             _httpClient = new HttpClient();
-            _configuration = configuration;
+            _jotFormService = jotFormService;
             templateFileName = "Fortescue_Rerail_Scoping_Desktop.xlsx";
             download_jsonMappingFile = "download_form_fields_mapping.json";
             jsonImageToFolderMappingFile = "image_folder_mapping.json";
@@ -627,10 +628,7 @@ namespace CityWatch.RadioCheck.API
         {
             try
             {
-                var JotFormApiKey = _configuration["jotformSettings:ApiKey"];
-                string url = $"https://api.jotform.com/form/{formID}?apiKey={JotFormApiKey}";
-                var response = await _httpClient.GetStringAsync(url);
-                var formResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                var formResponse = await _jotFormService.GetFormNameFromJotForm(formID);
 
                 if (formResponse != null && formResponse.ContainsKey("content"))
                 {
