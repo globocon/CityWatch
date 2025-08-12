@@ -4730,6 +4730,8 @@ $('#btnSaveEmbeddedCode').on("click", function (e) {
         if (result.success) {
             alert("Saved Successfully");
             $('#embedPPtUrlModal').modal('hide');
+            gridCourseDocumentFiles.clear();
+            gridCourseDocumentFiles.reload();
         }
         LoadTQSettings();
         ShowStatusColorForCourse();
