@@ -1392,6 +1392,10 @@ namespace CityWatch.Data.Providers
             foreach (var item in courseDocList)
             {
                 item.TQNumberName = item.TQNumber.Name;
+                if(item.EmbeddedCode==null)
+                {
+                    item.EmbeddedCode = string.Empty;
+                }
             }
 
             return courseDocList;
@@ -1460,6 +1464,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.LastUpdated = trainingCourses.LastUpdated;
                     documentToUpdate.TQNumberId = trainingCourses.TQNumberId;
                     documentToUpdate.HRSettingsId = trainingCourses.HRSettingsId;
+                    documentToUpdate.EmbeddedCode = trainingCourses.EmbeddedCode;
                     documentToUpdate.IsDeleted = trainingCourses.IsDeleted;
                 }
             }

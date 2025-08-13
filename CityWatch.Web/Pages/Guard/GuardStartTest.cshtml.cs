@@ -62,7 +62,7 @@ namespace CityWatch.Web.Pages.Guard
         public string Coursefilename;
         public string hrreferencenumber;
         public int totalQuestions;
-       
+        public string CourseEmbeddedCode;
 
         public GuardStartTestModel(IViewDataService viewDataService,
             IWebHostEnvironment webHostEnvironment,
@@ -100,6 +100,7 @@ namespace CityWatch.Web.Pages.Guard
                     CourseDocsPath = CourseDocsFolder;
                     hrreferencenumber = hrreferenceNumber;
                     Coursefilename = GuardTrainingAndAssessment.TrainingCourses.FileName;
+                    CourseEmbeddedCode = GuardTrainingAndAssessment.TrainingCourses.EmbeddedCode;
                     GuardTrainingAttendedQuestionsAndAnswers = _configDataProvider.GetGuardAttendedQuestionsAndanswers(GuardId, GuardTrainingAndAssessment.TrainingCourseId).ToList();
                     totalQuestions = _configDataProvider.GetTrainingQuestionsWithHRAndTQSettings(GuardTrainingAndAssessment.TrainingCourses.HRSettingsId, GuardTrainingAndAssessment.TrainingCourses.TQNumberId).Count;
 

@@ -3640,6 +3640,74 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success = status, message = message });
         }
+        public JsonResult OnPostUploadCoursePresentationDocUsingHR(int Id, int HRSettingsId, string FileName, string EmbeddedCode, int tqid)
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+
+
+            try
+            {
+
+
+                var documentId = Id;
+                int TQNumbernew = tqid;
+                if (TQNumbernew == 0)
+                {
+                    TQNumbernew = _configDataProvider.GetLastTQNumber(HRSettingsId);
+                    if (TQNumbernew == 0)
+                    {
+                        throw new ArgumentException("TQ Number only contains from 01 to 10");
+                    }
+                }
+                _configDataProvider.SaveTrainingCourses(new TrainingCourses()
+                {
+                    Id = documentId,
+                    FileName = FileName,
+                    EmbeddedCode = EmbeddedCode,
+                    LastUpdated = DateTime.Now,
+                    HRSettingsId = HRSettingsId,
+                    TQNumberId = TQNumbernew,
+                    IsDeleted = false
+
+                });
+
+
+
+                var tqsettings = _configDataProvider.GetTQSettings(HRSettingsId).ToList();
+                if (tqsettings.Count == 0)
+                {
+                    _guardLogDataProvider.SaveTestQuestionSettings(new TrainingTestQuestionSettings()
+                    {
+                        Id = -1,
+                        HRSettingsId = HRSettingsId,
+                        CourseDurationId = 3,
+                        TestDurationId = 3,
+                        PassMarkId = 1,
+                        AttemptsId = 1,
+                        IsCertificateExpiry = false,
+                        CertificateExpiryId = null,
+                        IsCertificateWithQAndADump = false,
+                        IsCertificateHoldUntilPracticalTaken = false,
+                        IsAnonymousFeedback = false,
+                        IsDeleted = false
+
+
+                    });
+                }
+
+                success = true;
+            }
+
+
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message }); ;
+        }
     }
     public class helpDocttype
     {

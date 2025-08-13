@@ -1,6 +1,11 @@
 ﻿$(function () {
     
 });
+const showModal = function (message) {
+
+    $('#msg-modal .modal-body p').html(message);
+    $('#msg-modal').modal();
+}
 //p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
@@ -111,15 +116,30 @@ var editTrainingCourseDocsButtonRendererSop;
 editTrainingCourseDocsButtonRendererSop = function (value, record, $cell, $displayEl, id, $grid) {
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
     var hrreferenceNumber = 'HR' + referenceNumber;
-    var data = $grid.data(),
-        $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_course_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx, .mp4" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
-            '</form></label>').attr('data-key', id),
-        $downlaod = $('<a href="/TA/' + hrreferenceNumber +'/Course/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
-        $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
-        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_course_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
-        $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
-        $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+    const fileExtn = record.fileName.split('.').pop();
+
+
+    if (!fileExtn || '.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0) {
+        var data = $grid.data(),
+            $replace = $('<button class="btn btn-success ml-2" id="btnReplaceCodeForPPT" data-doc-id="' + record.id + '" data-doc-tqid="' + record.tqNumberId + '" data-doc-filename="' + record.fileName + '" data-doc-embeddedcode="' + record.embeddedCode + '"><i class="fa fa-upload" aria-hidden="true"></i>Replace</button>').attr('data-key', id),
+            $downlaod = $('<a href="' + record.embeddedCode + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_course_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+    }
+    else {
+        var data = $grid.data(),
+            $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_course_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+                '<input type="file" name="upload_course_file_sop" accept=".pdf, .ppt, .pptx, .mp4" hidden data-doc-id="' + record.id + '" tq-id="' + record.tqNumberId + '">' +
+                '</form></label>').attr('data-key', id),
+            $downlaod = $('<a href="/TA/' + hrreferenceNumber + '/Course/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_course_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+
+    }
     $edit.on('click', function (e) {
         $grid.edit($(this).data('key'));
         $edit.hide();
@@ -270,6 +290,14 @@ if (gridCourseDocumentFiles) {
 
 }
 
+$('#tbl_courseDocumentFiles').on('click', '#btnReplaceCodeForPPT', function () {
+    $('#embedPPtUrlModal').modal('show');
+    $('#txtEmbedUrlCourseId').val($(this).attr('data-doc-id'));
+    $('#txtEmbedUrlTqSettingsId').val($(this).attr('data-doc-tqid'));
+    $('#embeddedFileName').val($(this).attr('data-doc-filename'));
+    $('#URLEmbedded').val($(this).attr('data-doc-embeddedcode'));
+
+})
 $('#tbl_courseDocumentFiles').on('change', 'input[name="upload_course_file_sop"]', function () {
     uploadCourseDocUsingHR($(this), true, 1);
 });
@@ -900,7 +928,14 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
     document.getElementById("progressBar").value = lastProgressValue;
     document.getElementById("status").innerText = `Uploaded ${lastProgressValue}%`;
     if (!fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
-        showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
+       
+       
+            showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
+        
+        return false;
+    }
+    if ('.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0) {
+        showModal('Files with type .ppt or .pptx can only be uploaded in EmbeddedCode');
         return false;
     }
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -2819,6 +2854,8 @@ function RunCourses() {
         $('#coursePdfNext').show();
         $('#couseVideo').hide();
         $('#coursePresentation').hide();
+        $('#presentationFinish').hide();
+        $('#divPresentationFinish').hide();
         ctx = canvas.getContext('2d')
 
 
@@ -2833,6 +2870,8 @@ function RunCourses() {
         $('#coursePdfNext').hide();
         $('#couseVideo').show();
         $('#coursePresentation').hide();
+        $('#presentationFinish').hide();
+        $('#divPresentationFinish').hide();
         $('#couseVideoSource').attr('src', pdfUrl);
         $('#couseVideo')[0].load();
         video = document.getElementById("couseVideo");
@@ -2864,9 +2903,11 @@ function RunCourses() {
         $('#couseVideo').hide();
         if (('.ppt'.indexOf(fileExtn.toLowerCase()) > 0) || ('.pptx'.indexOf(fileExtn.toLowerCase()) > 0)) {
 
-            var pptURL = 'https://docs.google.com/gview?url=https://cws-ir.com' + pdfUrl + '&embedded=true';
-            //var pptURL = 'https://docs.google.com/gview?url=http://test.c4i-system.com/' + pdfUrl + '&embedded=true';
+            var pptURL = $('#txtCourseEmbeddedCode').val();
+            //var pptURL = 'https://1drv.ms/p/c/08defe95fb6a3a66/IQTcGk7cszTiTIMR_G38i_BWAXphm2Zdtcdjy8MJR0ue4VU?em=2&amp;wdAr=1.7777777777777777';
             $('#coursePresentation').attr('src', pptURL);
+            $('#divPresentationFinish').show();
+            $('#presentationFinish').show();
 
 
         }
@@ -2941,7 +2982,7 @@ $("#coursePdfPrev, #coursePdfNext").on('mouseenter',
     }
 );
 document.addEventListener("keydown", function (event) {   
-
+    if (pdfDoc != null) { 
 
     if (event.key === "ArrowLeft") {
         if (pageNum > 1) {
@@ -2988,7 +3029,7 @@ document.addEventListener("keydown", function (event) {
         event.preventDefault();  // Disable Ctrl+C
         alert('Copying is disabled!');
     }*/
-    
+    }
 });
 
 
@@ -4667,3 +4708,77 @@ $('#delete_certificatehold_file').on('click', function () {
        
     }
 });
+
+
+$('#btnEmbedCodeForPPT').on("click", function (e) {
+    ClearEmbeddedFields();
+});
+$('#btnSaveEmbeddedCode').on("click", function (e) {
+    e.preventDefault();
+
+    if ($("#txtEmbedUrlCourseId").val() == '') {
+        $("#txtEmbedUrlCourseId").val(0);
+    }
+    if ($("#embeddedFileName").val() == '') {
+        alert('Please enter the filename.')
+        return;
+    }
+    if ($("#URLEmbedded").val() == '') {
+        alert('Please enter the Embedded Code.')
+        return;
+    }
+    var filename = $("#embeddedFileName").val();
+    if (!filename.includes('.') || filename.startsWith('.') || filename.endsWith('.')) {
+        // No extension found
+        $("#embeddedFileName").val(filename + '.pptx');
+    }
+    var docId = parseInt($("#txtEmbedUrlCourseId").val());
+
+
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=UploadCoursePresentationDocUsingHR',
+        data: {
+            Id: docId,
+            HRSettingsId: $("#HrSettings_Id").val(),
+            FileName: $('#embeddedFileName').val(),
+
+
+            EmbeddedCode: $('#URLEmbedded').val(),
+            tqid: $('#txtEmbedUrlTqSettingsId').val()
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success) {
+            alert("Saved Successfully");
+            $('#embedPPtUrlModal').modal('hide');
+            gridCourseDocumentFiles.clear();
+            gridCourseDocumentFiles.reload();
+        }
+        LoadTQSettings();
+        ShowStatusColorForCourse();
+
+        ClearEmbeddedFields();
+    }).fail(function () {
+        console.log('error');
+    })
+});
+function ClearEmbeddedFields() {
+    $('#txtEmbedUrlCourseId').val('');
+    $('#txtEmbedUrlTqSettingsId').val(0);
+    $('#embeddedFileName').val('');
+    $('#URLEmbedded').val('');
+}
+$("#presentationFinish").on('click', function (e) {
+    if (confirm('Have you finished reviewing the entire presentation?')) {
+        isPausedForCourseDuration = true;
+        /* getGuardCourseSpentTimeDetails();*/
+        $('#cardFrontPage').hide();
+        $('#cardCoursePdf').hide();
+        $('#cardTestFrontPage').attr('hidden', false);
+    }
+});
+

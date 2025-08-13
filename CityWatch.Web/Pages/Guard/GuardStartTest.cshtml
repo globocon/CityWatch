@@ -17,6 +17,7 @@
 <input type="hidden" id="txtCourseDocsPath" asp-for="@Model.CourseDocsPath" />
 <input type="hidden" id="txthrreferencenumber" asp-for="@Model.hrreferencenumber" />
 <input type="hidden" id="txtCoursefilename" asp-for="@Model.Coursefilename" />
+<input type="hidden" id="txtCourseEmbeddedCode" asp-for="@Model.CourseEmbeddedCode" />
 <input type="hidden" id="txtGuardHRSettings" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.HRSettingsId" />
 <input type="hidden" id="txtGuardTQNumberId" asp-for="@Model.GuardTrainingAndAssessment.TrainingCourses.TQNumberId" />
 @if(Model.GuardTrainingAttendedQuestionsAndAnswers.Count()>0)
@@ -184,6 +185,9 @@ else
 
 
     <iframe id="coursePresentation" height="500"></iframe>
+    <div class="col-md-12 text-right mt-3" id="divPresentationFinish">
+        <button class="btn btn-success " id="presentationFinish">Finish</button>
+    </div>
     <canvas id="canvasCousePdf" ></canvas>
         @* <button class="btn" id="coursePdfPrev" hidden>Prev</button>
         <button class="btn" id="coursePdfNext" hidden>Next</button> *@
