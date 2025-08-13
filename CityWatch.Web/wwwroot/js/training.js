@@ -1,6 +1,11 @@
 ﻿$(function () {
     
 });
+const showModal = function (message) {
+
+    $('#msg-modal .modal-body p').html(message);
+    $('#msg-modal').modal();
+}
 //p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
@@ -923,7 +928,14 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
     document.getElementById("progressBar").value = lastProgressValue;
     document.getElementById("status").innerText = `Uploaded ${lastProgressValue}%`;
     if (!fileExtn || '.pdf,.ppt,.pptx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
-        showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
+       
+       
+            showModal('Unsupported file type. Please upload a .pdf, .ppt, .pptx or .mp4 file');
+        
+        return false;
+    }
+    if ('.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0) {
+        showModal('Files with type .ppt or .pptx can only be uploaded in EmbeddedCode');
         return false;
     }
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -2970,7 +2982,7 @@ $("#coursePdfPrev, #coursePdfNext").on('mouseenter',
     }
 );
 document.addEventListener("keydown", function (event) {   
-
+    if (pdfDoc != null) { 
 
     if (event.key === "ArrowLeft") {
         if (pageNum > 1) {
@@ -3017,7 +3029,7 @@ document.addEventListener("keydown", function (event) {
         event.preventDefault();  // Disable Ctrl+C
         alert('Copying is disabled!');
     }*/
-    
+    }
 });
 
 
@@ -4706,6 +4718,19 @@ $('#btnSaveEmbeddedCode').on("click", function (e) {
 
     if ($("#txtEmbedUrlCourseId").val() == '') {
         $("#txtEmbedUrlCourseId").val(0);
+    }
+    if ($("#embeddedFileName").val() == '') {
+        alert('Please enter the filename.')
+        return;
+    }
+    if ($("#URLEmbedded").val() == '') {
+        alert('Please enter the Embedded Code.')
+        return;
+    }
+    var filename = $("#embeddedFileName").val();
+    if (!filename.includes('.') || filename.startsWith('.') || filename.endsWith('.')) {
+        // No extension found
+        $("#embeddedFileName").val(filename + '.pptx');
     }
     var docId = parseInt($("#txtEmbedUrlCourseId").val());
 
