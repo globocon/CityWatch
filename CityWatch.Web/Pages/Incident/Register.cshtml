@@ -650,21 +650,30 @@
         </a>
     </div>
 </div>
-<div class="row mt-3">
-    <div class="col">
-        <div style="color:red;">
-            <p class="mb-md-1">
-                Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />
-            </p>
-            <p class="mb-md-1">
-                A completed IR as a PDF (Offline) <u><b>OR</b></u> updates to the original IR can also be manually emailed to: <span style="color:#0366d6;"><b>cws-ir@citywatchsecurity.com.au</b></span> <br />
-            </p>
-            <p class="mb-md-1">
-                Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number
-            </p>
-        </div>
-    </div>
-</div>
+ @if (!string.IsNullOrEmpty(clientName))
+    {
+        // Exclude reserved keywords
+        var reservedKeywords = new HashSet<string>  { "www", "cws-ir", "test", "localhost" };
+    @* var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" }; *@
+        @if (reservedKeywords.Contains(clientName.Trim().ToLower()))
+        {
+            <div class="row mt-3">
+                <div class="col">
+                    <div style="color:red;">
+                        <p class="mb-md-1">
+                            Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />
+                        </p>
+                        <p class="mb-md-1">
+                            A completed IR as a PDF (Offline) <u><b>OR</b></u> updates to the original IR can also be manually emailed to: <span style="color:#0366d6;"><b>cws-ir@citywatchsecurity.com.au</b></span> <br />
+                        </p>
+                        <p class="mb-md-1">
+                            Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+    }
 @section PageHeader {
     <h3 class="text-center">INCIDENT REPORT & FEEDBACK FORM</h3>
 }
