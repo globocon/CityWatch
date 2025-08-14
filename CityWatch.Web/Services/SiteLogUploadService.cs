@@ -1,4 +1,6 @@
-﻿using CityWatch.Common.Models;
+﻿using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -13,6 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace CityWatch.Web.Services
 {
@@ -36,6 +39,7 @@ namespace CityWatch.Web.Services
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IConfiguration _configuration;
 
         public SiteLogUploadService(IClientDataProvider clientDataProvider,
             IGuardLogReportGenerator guardLogReportGenerator,
@@ -44,7 +48,9 @@ namespace CityWatch.Web.Services
             IOptions<EmailOptions> emailOptions,
             IWebHostEnvironment webHostEnvironment,
             ILogger<SiteLogUploadService> logger,
-            IOptions<Settings> settings)
+            IOptions<Settings> settings,
+             IConfiguration configuration
+            )
         {
             _clientDataProvider = clientDataProvider;
             _guardLogReportGenerator = guardLogReportGenerator;
@@ -55,6 +61,7 @@ namespace CityWatch.Web.Services
             _logger = logger;
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf");
+            _configuration = configuration;
         }
 
         public void ProcessDailyGuardLogs()
@@ -385,57 +392,144 @@ namespace CityWatch.Web.Services
             return fileName;
         }
 
+        //private void SendEmail(string fileName, ClientSiteLogBook siteLogBook)
+        //{
+        //    try
+        //    {
+
+
+        //        var fromAddress = _emailOptions.FromAddress.Split('|');
+        //        var subject = siteLogBook.Type.ToDisplayName();
+        //        var messageHtml = $"Dear Citywatch Security Client; <br><br>Please find attached {subject.ToLower()}.";
+        //        //to avoid duplicate emails sending-start
+        //        bool flag = false;
+        //        if (!flag)
+        //        {
+        //            //to avoid duplicate emails sending-end
+        //            var message = new MimeMessage();
+        //            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+        //            foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
+        //            {
+        //                if (CommonHelper.IsValidEmail(email))
+        //                    message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
+        //            }
+        //            /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 17,01,2024) */
+        //            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+        //            //  message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+        //            /* Mail Id added Bcc globoconsoftware end */
+        //            message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
+
+        //            var builder = new BodyBuilder()
+        //            {
+        //                HtmlBody = messageHtml
+        //            };
+        //            builder.Attachments.Add(fileName);
+        //            message.Body = builder.ToMessageBody();
+
+        //            using var client = new MailKit.Net.Smtp.SmtpClient();
+        //            client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+        //            if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+        //                !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+        //                client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+
+        //            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "mail to address" + message.To });
+        //            client.Send(message);
+        //            client.Disconnect(true);
+        //            //to avoid duplicate emails sending-start
+        //            flag = true;
+        //            //to avoid duplicate emails sending-end
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "Mail Issue" + ex.Message });
+        //        _logger.LogError($"Daily Guard Log Email | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+        //    }
+        //}
         private void SendEmail(string fileName, ClientSiteLogBook siteLogBook)
         {
             try
             {
+                bool bigSize = false;
+                FileInfo fileInfo = new FileInfo(fileName);
+                var fileSizeInMB = (fileInfo.Length) / 1048576d; // bytes to MB
+                if (fileSizeInMB > 12)
+                    bigSize = true;
 
-
+                // Common email details
                 var fromAddress = _emailOptions.FromAddress.Split('|');
                 var subject = siteLogBook.Type.ToDisplayName();
-                var messageHtml = $"Dear Citywatch Security Client; <br><br>Please find attached {subject.ToLower()}.";
-                //to avoid duplicate emails sending-start
-                bool flag = false;
-                if (!flag)
+                var messageHtml = $"Dear Citywatch Security Client;<br><br>Please find attached {subject.ToLower()}.";
+
+                // If large, upload to Azure and add link instead of attachment
+                if (bigSize)
                 {
-                    //to avoid duplicate emails sending-end
-                    var message = new MimeMessage();
-                    message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                    foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
+                    var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+                    if (azureStorageConnectionString.Count > 0 && azureStorageConnectionString[0] != null)
                     {
-                        if (CommonHelper.IsValidEmail(email))
-                            message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
+                        string connectionString = azureStorageConnectionString[0];
+                        string blobName = Path.GetFileName(fileName);
+                        string containerName = "irfiles";
+
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                        containerClient.CreateIfNotExists();
+
+                        // Folder structure: irfiles/yyyyMMdd
+                        string blobPath = DateTime.UtcNow.ToString("yyyyMMdd") + "/" + Uri.EscapeDataString(blobName);
+                        BlobClient blobClient = containerClient.GetBlobClient(blobPath);
+
+                        using (FileStream fs = File.OpenRead(fileName))
+                        {
+                            var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                            blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                        }
+
+                        messageHtml += "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. " +
+                                       "In this situation simply " +
+                                       $"<a href=\"https://c4istorage1.blob.core.windows.net/{containerName}/{blobPath}\" target=\"_blank\">" +
+                                       "click here</a> to download the Site log Report.</p>" +
+                                       $"<p>File name: {blobName}</p>";
                     }
-                    /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 17,01,2024) */
-                    message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-                    //  message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
-                    /* Mail Id added Bcc globoconsoftware end */
-                    message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
-
-                    var builder = new BodyBuilder()
-                    {
-                        HtmlBody = messageHtml
-                    };
-                    builder.Attachments.Add(fileName);
-                    message.Body = builder.ToMessageBody();
-
-                    using var client = new MailKit.Net.Smtp.SmtpClient();
-                    client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                    if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
-                        !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
-                        client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
-
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "mail to address" + message.To });
-                    client.Send(message);
-                    client.Disconnect(true);
-                    //to avoid duplicate emails sending-start
-                    flag = true;
-                    //to avoid duplicate emails sending-end
                 }
+
+                // Build email
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
+                {
+                    if (CommonHelper.IsValidEmail(email))
+                        message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
+                }
+                message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+                message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date:yyyyMMdd}";
+
+                var builder = new BodyBuilder() { HtmlBody = messageHtml };
+                if (!bigSize)
+                {
+                    builder.Attachments.Add(fileName); // Only attach if small
+                }
+                message.Body = builder.ToMessageBody();
+
+                using var client = new MailKit.Net.Smtp.SmtpClient();
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) && !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory
+                {
+                    LogDeatils = $"logBook : {siteLogBook.ClientSite.Name} mail to address {message.To}"
+                });
+
+                client.Send(message);
+                client.Disconnect(true);
             }
             catch (Exception ex)
             {
-                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "Mail Issue" + ex.Message });
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory
+                {
+                    LogDeatils = $"logBook : {siteLogBook.ClientSite.Name} Mail Issue {ex.Message}"
+                });
                 _logger.LogError($"Daily Guard Log Email | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
             }
         }
