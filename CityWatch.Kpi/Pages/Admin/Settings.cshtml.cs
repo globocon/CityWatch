@@ -2282,8 +2282,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var success = false;
             var message = string.Empty;
             try
-            {
-                record.TagsTypeId = _configDataProvider.GetSmartWandTagsType().Where(x => x.value == record.TagsType).FirstOrDefault().Id;
+            {               
                 _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record);
                 success = true;
             }
@@ -2292,7 +2291,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 message = ex.Message;
             }
 
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success= success, message= message });
         }
         public JsonResult OnPostDeleteSmartWandTagSettings(int id)
         {
