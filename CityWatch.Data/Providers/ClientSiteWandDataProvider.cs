@@ -15,7 +15,7 @@ namespace CityWatch.Data.Providers
         List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId);
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
-        ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber,int id);
+        ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber, int id);
         void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag);
         void DeleteClientSiteSmartWandTags(int id);
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
@@ -37,15 +37,15 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite)
                 .ToList();
         }
-        public ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber,int id)
+        public ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber, int id)
         {
             return _dbContext.ClientSiteSmartWands
                 .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
-                .Where(x=>x.PhoneNumber== PhoneNumber && x.Id!= id)
+                .Where(x => x.PhoneNumber == PhoneNumber && x.Id != id)
                 .FirstOrDefault();
         }
-        public List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms )
+        public List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms)
         {
             return _dbContext.ClientSiteSmartWands
                 .Include(x => x.ClientSite)
@@ -79,9 +79,9 @@ namespace CityWatch.Data.Providers
         public void DeleteClientSiteSmartWand(int id)
         {
             var deleteClientSiteSmartWand = _dbContext.ClientSiteSmartWands.SingleOrDefault(x => x.Id == id);
-            if(deleteClientSiteSmartWand != null)
+            if (deleteClientSiteSmartWand != null)
                 _dbContext.ClientSiteSmartWands.Remove(deleteClientSiteSmartWand);
-            
+
             _dbContext.SaveChanges();
         }
 
@@ -119,12 +119,12 @@ namespace CityWatch.Data.Providers
             {
                 _dbContext.ClientSitePatrolCars.Remove(clientSitePatrolCarToDelete);
                 _dbContext.SaveChanges();
-            }  
+            }
         }
         public List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags()
-        { 
-            var smartwandtags= _dbContext.ClientSiteSmartWandTags
-                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted==false)
+        {
+            var smartwandtags = _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .Include(x => x.SmartWandTagsType)
                 .Include(x => x.ClientSite)
                 .ToList();
@@ -139,13 +139,31 @@ namespace CityWatch.Data.Providers
             if (clientSiteSmartWandTag == null)
                 throw new ArgumentNullException();
 
+            if(clientSiteSmartWandTag.TagsType == null)
+                throw new ArgumentNullException("TagsType cannot be null. Please select a tag type.");
+
+            clientSiteSmartWandTag.TagsTypeId = _dbContext.SmartWandTagsType.Where(x => x.value == clientSiteSmartWandTag.TagsType).FirstOrDefault().Id;
+            var _existingTagUID = _dbContext.ClientSiteSmartWandTags.Where(x => x.UId == clientSiteSmartWandTag.UId
+                && x.ClientSite.IsActive == true && x.IsDeleted == false).ToList();
+
             if (clientSiteSmartWandTag.Id == -1)
             {
                 clientSiteSmartWandTag.Id = 0;
+
+                if (_existingTagUID != null || _existingTagUID.Any() || _existingTagUID.Count > 0)
+                {
+                    throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
+                }
                 _dbContext.ClientSiteSmartWandTags.Add(clientSiteSmartWandTag);
             }
             else
             {
+                bool isTagExists = _dbContext.ClientSiteSmartWandTags.Any(x => x.UId == clientSiteSmartWandTag.UId
+                        && x.Id != clientSiteSmartWandTag.Id && x.ClientSite.IsActive == true && x.IsDeleted == false);
+                if (isTagExists)
+                {
+                    throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
+                }
                 var clientSiteSmartWandTagToUpdate = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == clientSiteSmartWandTag.Id);
                 if (clientSiteSmartWandTagToUpdate != null)
                 {
@@ -164,9 +182,9 @@ namespace CityWatch.Data.Providers
             var deleteClientSiteSmartWandTags = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == id);
             if (deleteClientSiteSmartWandTags != null)
                 deleteClientSiteSmartWandTags.IsDeleted = true;
-                //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
+            //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
 
             _dbContext.SaveChanges();
         }
-    }   
+    }
 }

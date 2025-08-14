@@ -1831,44 +1831,27 @@ $(function () {
 
 
     }
+    
     let gritdWandTags;
+
+    
     gritdWandTags = $('#cs-wand-tags').grid({
-        dataSource: '/admin/settings?handler=WandTagsSettings&&clientSiteId=' + $('#gl_client_site_id').val(),
+        dataSource: '/admin/settings?handler=WandTagsSettings&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            {
-                width: '200', field: 'uId', title: 'UID', editor:tagsUIDEditor
-                //editor: {
-                //    create: function ($container, value) {
-                //        var $input = $('<input type="text" id="txt" class="form-control"/>')
-                //            .val(value)
-                //            .attr('maxlength', 20);
-                //        $container.append($input);
-                //        return $input;
-                //    }
-                //}
-                //editor: {
-                //    type: 'text',
-                //    attributes: { maxlength: 20 }  // 👈 sets the character limit
-                //}
-                },
+            { width: '200', field: 'uId', title: 'UID', editor: tagsUIDEditor },
             { width: 100, field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TagType', valueField: 'value', textField: 'value' } },
-
-            {
-                width: '100%', field: 'labelDescription', title: 'Label',
-                
-                editor: tagsLabelEditor
-                
-            },
+            { width: '100%', field: 'labelDescription', title: 'Label', editor: tagsLabelEditor},
         ],
 
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+        
     let isWandTagsAdding = false;
     if (gritdWandTags) {
         gritdWandTags.on('rowDataChanged', function (e, id, record) {
@@ -1882,8 +1865,14 @@ $(function () {
                 data: { record: data },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': token },
-            }).done(function () {
-                gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+            }).done(function (result) {
+                if (result.success) {
+                    gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                } else {
+                    gritdWandTags.edit(id);
+                    alert(result.message);
+                }
+                
             }).fail(function () {
                 console.log('error');
             }).always(function () {
