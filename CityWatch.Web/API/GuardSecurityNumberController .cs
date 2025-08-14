@@ -922,10 +922,31 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetStaffDocuments")]
-        public IActionResult GetStaffDocuments(int type, string query = "")
+        public IActionResult GetStaffDocuments(int type, int UserId, string query = "")
         {
-            var result = _configDataProvider.GetStaffDocumentsUsingType(type, query);
+            var domain = IsThirdParty(UserId);
+            var thirdpartyId = 0;
+
+            if (domain != null)
+            {
+                thirdpartyId = domain.Id;
+            }
+
+            IEnumerable<StaffDocument> result;
+
+            if (thirdpartyId != 0)
+            {
+                result = _configDataProvider
+                    .GetStaffDocumentsUsingType(type, query)
+                    .Where(x => x.SubDomainId == thirdpartyId);
+            }
+            else
+            {
+                result = _configDataProvider.GetStaffDocumentsUsingType(type, query);
+            }
+
             return Ok(result);
+
         }
 
         [HttpGet("GetStaffTools")]
@@ -1568,7 +1589,9 @@ namespace CityWatch.Web.API
             }
 
             return null;
-        }
+        }     
+
+
         private bool SendEmailWithAzureBlob(string fileName, IncidentRequest Report, SubDomain domain)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
