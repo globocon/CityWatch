@@ -62,8 +62,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public int ClientTypeId { get; set; }
         public int ClientSiteId { get; set; }
         public string ClientSiteName { get; set; }
-        //[BindProperty]
-        //public List<SmartWandTagsType> smartWandTagsType { get; set; }
+        
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IImportDataService importDataService,
@@ -100,8 +99,7 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
         public IActionResult OnGet()
-        {
-            //smartWandTagsType = _configDataProvider.GetSmartWandTagsType();
+        {            
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;

@@ -1819,20 +1819,11 @@ $(function () {
     });
     //wand tags-start
     function tagsUIDEditor($editorContainer, value, record) {
-
-        //var textAreaForNotes = $('<input type="text" maxlength="30" class="form-control" value="' + record.uId +'"/> ');
-        //$editorContainer.append(textAreaForNotes);
         var textAreaForNotes = $('<input type="text" maxlength="30" class="form-control"/>');
         textAreaForNotes.val(record.uId); // safe way to set value
         $editorContainer.append(textAreaForNotes);
-      
-
     }
     function tagsLabelEditor($editorContainer, value, record) {
-
-        //var textAreaForNotes = $('<input type="text" class="form-control" value="' + record.labelDescription + '"/>');
-        //$editorContainer.append(textAreaForNotes);
-
         var textAreaForNotes = $('<input type="text" class="form-control"/>');
         textAreaForNotes.val(record.labelDescription); // safe way to set value
         $editorContainer.append(textAreaForNotes);

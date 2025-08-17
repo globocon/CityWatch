@@ -341,6 +341,7 @@
                 <div class="tab-pane" id="KpiLBWandTagsTab" role="tabpanel" aria-labelledby="KpiLBWandTagsTab">
                     <div class="row m-0">
                         <div class="col-md-12 text-right pt-3">
+                            @* This is required to add Wand Tags to Smart Wands Gijgo grid. *@
                             <select id="wandTagTypeDDL" hidden>
                                 @foreach (var tagtype in configDataProvider.GetSmartWandTagsType())
                                 {
