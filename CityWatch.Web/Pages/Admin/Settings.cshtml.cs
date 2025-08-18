@@ -68,6 +68,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IMicrosoftOneDriveService _microsoftOneDriveService;
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
@@ -79,7 +80,7 @@ namespace CityWatch.Web.Pages.Admin
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions, IMicrosoftOneDriveService microsoftOneDriveService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -93,6 +94,7 @@ namespace CityWatch.Web.Pages.Admin
             _dropboxUploadService = dropboxUploadService;
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
+            _microsoftOneDriveService = microsoftOneDriveService;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -2243,6 +2245,8 @@ namespace CityWatch.Web.Pages.Admin
                     var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
                     var dbxUploaded = true;
                     dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    var oneDriveUploaded = true;
+                    oneDriveUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
                     var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                     int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
                     if (TQNumbernew == 0)
@@ -2433,6 +2437,25 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
+        }
+        private bool UpoadDocumentToOneDrive(string fileToUpload, string dbxFilePath)
         {
             var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
                                                         _settings.DropboxRefreshToken, _settings.DropboxUserEmail);

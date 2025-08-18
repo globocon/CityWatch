@@ -59,11 +59,12 @@ namespace CityWatch.Common.Services
             //    return Task.CompletedTask;
             //}));
 
-            string filePath = @"C:\Test\largefile.zip";
+            string filePath = dbxFilePath;
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 // STEP 1: Create an upload session
-                var uploadSession = await graphClient.Me.Drive.Root.ItemWithPath("largefile.zip").CreateUploadSession.PostAsync(new CreateUploadSessionPostRequestBody());
+                var meDrive = await graphClient.Me.Drive.GetAsync();
+                var uploadSession = await graphClient.Drives[meDrive.Id].Root.ItemWithPath(dbxFilePath).CreateUploadSession.PostAsync(new CreateUploadSessionPostRequestBody());
                 // STEP 2: Upload the file in chunks
                 int maxSliceSize = 320 * 1024; // 320KB per chunk (can be bigger, e.g., 5MB)
                 //var uploadProvider = new ChunkedUploadProvider(uploadSession, graphClient, fileStream, maxSliceSize);
