@@ -23,6 +23,9 @@
         <li style="display:none" class="nav-item" role="presentation">
             <a class="nav-link" id="service-log-tab" data-toggle="tab" href="#service-log" role="tab" aria-controls="service-log" aria-selected="true">Import Jobs</a>
         </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="kvschedule-tab" data-toggle="tab" href="#kvschedule" role="tab" aria-controls="kvschedule-tab" aria-selected="true">KV</a>
+        </li>
     </ul>
 
     <div class="tab-content p-3">
@@ -303,6 +306,22 @@
                     <div class="row">
                         <div class="col-md-12">
                             <table class="table" id="kpi_send_Timesheetschedules"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         <div class="tab-pane" id="kvschedule" role="tabpanel" aria-labelledby="kvschedule-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <div class="text-right pl-2 ">
+                            <button class="btn btn-success mb-3" id="add_kv_schedule" data-toggle="modal" data-target="#KVschedule-modal"><i class="fa fa-plus mr-2"></i>Add Schedule</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table" id="kpi_send_KVSchedules"></table>
                         </div>
                     </div>
                 </div>

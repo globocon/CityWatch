@@ -2311,7 +2311,31 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //wand tags-end
+        //kv-scheudle-start
+        public JsonResult OnGetKpiKVSchedules(int type, string searchTerm)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedules()
+                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
 
+            }
+            else
+            {
+
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedulesUisngGuardId(GuardId)
+                   .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+        //-kvscheudele-end
     }
 
 

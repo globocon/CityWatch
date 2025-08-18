@@ -342,6 +342,7 @@ $(function () {
     // Schedules
     let gridSchedules;
     let gridTimesheetSchedules;
+    let gridKVSchedules;
 
     function renderNextRunOn(value, record) {
         if (value === '9999-12-31T23:59:59.997') return 'n/a';
@@ -469,6 +470,49 @@ $(function () {
         buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#TimeSheetschedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
+    ///kv-schedule-start
+    gridKVSchedules = $('#kpi_send_KVSchedules').grid({
+        dataSource: '/Admin/Settings?handler=KpiKVSchedules',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'projectName', title: 'Project Name', width: 100 },
+            { title: 'Schedule', renderer: TimesheetscheduleRenderer, width: 120 },
+            { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 75 },
+            { field: 'emailTo', title: 'Email Recipients', width: 100 },
+            { width: 150, renderer: schButtonRendererTimesheet },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#btnSaveKVSchedule').on('click', function () {
+        $("input[name=clientSiteIds]").remove();
+        var options = $('#selectedSiteskv option');
+        options.each(function () {
+            const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+            $('#frm_kpi_kvschedule').append(elem);
+        });
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveKpiTimesheetSchedule',
+            type: 'POST',
+            data: $('#frm_kpi_Timesheetschedule').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#TimeSheetschedule-modal').modal('hide');
+                alert('Schedule saved successfully');
+                gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+            } else {
+                $('#sch-modal-validation1').html('');
+                data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
+                $('#sch-modal-validation1').show().delay(5000).fadeOut();
+            }
+        });
+    });
+    //kv-schedule-end
     $('#btnSaveTimesheetSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
         var options = $('#selectedSitesTimeSheet option');

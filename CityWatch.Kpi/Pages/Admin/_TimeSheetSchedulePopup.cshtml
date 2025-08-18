@@ -149,3 +149,130 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="KVschedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Manage KV Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <ul class="nav nav-tabs" id="scheduleEditTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="kvscheduleSettingsTab" data-toggle="tab" href="#kvScheduleSettings" role="tab" aria-controls="kvScheduleSettings" aria-selected="true">Schedules</a>
+                    </li>
+
+                </ul>
+                <div class="tab-content p-2">
+                    <div class="tab-pane active" id="kvScheduleSettings" role="tabpanel" aria-labelledby="kvschedulesTab">
+                        <form id="frm_kpi_kvschedule">
+                            <input type="hidden" id="kvscheduleId" name="id" value="0">
+                            <input type="hidden" id="kvnextRunOnTimesheet" name="nextRunOn" value="">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="clientTypeName">Client Type</label>
+                                        <select class="form-control" id="clientTypeNamekv" name="clientTypeName">
+                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientSites">Client Site</label>
+                                        <select class="form-control" id="clientSiteskv" name="clientSites">
+                                            <option>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCountkv">0</span></label>
+                                        <select class="form-control" id="selectedSiteskv" name="selectedSites" multiple style="height: 220px"></select>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="editSelectedSitekv" title="Edit selected sites from the list"><i class="fa fa-pencil mr-2"></i>Edit Site</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSiteskv" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="startDate">Start Date</label>
+                                        <input type="date" class="form-control" id="startDatekv" name="startDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="endDate">End Date</label>
+                                        <input type="date" class="form-control" id="endDatekv" name="endDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="frequency">Frequency</label>
+                                        <select class="form-control" id="frequencykv" name="frequency">
+                                            <option value="">Select</option>
+                                            <option value="0">Daily</option>
+                                            <option value="1">Weekly</option>
+                                            <option value="2">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kvtime">Exec. Time</label>
+                                        <input type="time" class="form-control" id="kvtime" name="time">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTokv">Email Recipients [CC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in CC"></i></label>
+                                        <textarea class="form-control" id="emailTokv" name="emailTo" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTo">Email Recipients [BCC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in BCC"></i></label>
+                                        <textarea class="form-control" id="emailBcckv" name="emailBcc" rows="3"></textarea>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="projectNamekv">Project Name</label>
+                                        <input type="text" class="form-control" id="projectNamekv" name="projectName" maxlength="50" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ID No. / Car or Truck Rego.</label>
+                                        <input type="text" class="form-control" id="VehicleRegokv" name="KeyVehicleLogAuditLogRequest.VehicleRego" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Company Name</label>
+                                        <select class="form-control" id="CompanyNamekv" name="KeyVehicleLogAuditLogRequest.CompanyName">
+                                            <option></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="mx-1">Site Location</label>
+                                        <select class="form-control" multiple="multiple" id="SiteLockv">
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="mx-1">Key #</label>
+                                        <select class="form-control" id="kvKeyNo"></select>
+                                        <input type="hidden" name="KeyVehicleLogAuditLogRequest.KeyNo" />
+                                    </div>
+                                </div>
+                               
+                               
+                                
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul id="kv-sch-modal-validation1" class="text-danger hide"></ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnSaveKVSchedule" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Schedule</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
