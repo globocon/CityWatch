@@ -182,6 +182,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type);
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
         List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
+        List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -302,6 +303,15 @@ namespace CityWatch.Web.Services
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId)
         {
             return _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList();
+        }
+
+        public List<string> GetSmartWandTagTypesForClientSite(int clientSiteId){
+           var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .Select(z => z.TagsType)
+                .Distinct()
+                .ToList();
+            return smartWandTags;
         }
 
         public List<SelectListItem> LicenseStates

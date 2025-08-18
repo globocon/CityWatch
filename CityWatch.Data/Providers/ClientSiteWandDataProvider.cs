@@ -150,7 +150,7 @@ namespace CityWatch.Data.Providers
             {
                 clientSiteSmartWandTag.Id = 0;
 
-                if (_existingTagUID != null || _existingTagUID.Any() || _existingTagUID.Count > 0)
+                if (_existingTagUID.Any() || _existingTagUID.Count > 0)
                 {
                     throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
                 }

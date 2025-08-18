@@ -11,6 +11,7 @@
 @inject IViewDataService viewDataServiceNew
 @inject IClientDataProvider clientDataProvider
 @inject IGuardLogDataProvider guardLogDataProvider
+@inject IConfigDataProvider configDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -205,6 +206,7 @@
 
     }
 
+    
 
 }
 
@@ -339,6 +341,14 @@
                 <div class="tab-pane" id="KpiLBWandTagsTab" role="tabpanel" aria-labelledby="KpiLBWandTagsTab">
                     <div class="row m-0">
                         <div class="col-md-12 text-right pt-3">
+                            @* This is required to add Wand Tags to Smart Wands Gijgo grid. *@
+                            <select id="wandTagTypeDDL" hidden>
+                                @foreach (var tagtype in configDataProvider.GetSmartWandTagsType())
+                                {
+                                    <option value="@tagtype.value">@tagtype.value</option>
+                                }
+                            </select>
+                            
                             <button class="btn btn-success mb-3" id="add_wand_tag"><i class="fa fa-plus mr-2"></i>Add Wand Tag</button>
                         </div>
                     </div>
