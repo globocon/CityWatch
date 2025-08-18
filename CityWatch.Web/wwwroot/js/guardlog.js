@@ -5228,6 +5228,12 @@ $(function () {
         if (data.isAdminThirdPartyAccess) {
             selectedValues.push(13);
         }
+
+        if (data.isMobileAppAccess) {
+            selectedValues.push(15);
+        }
+
+
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
