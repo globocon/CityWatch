@@ -1,6 +1,7 @@
 ﻿//p2-140 key photos  -start
 var FileuploadFileChanged = null;
 //p2-140 key photos  -end
+
 $(document).ready(function () {
        
 });
@@ -1818,23 +1819,28 @@ $(function () {
     });
     //wand tags-start
     function tagsUIDEditor($editorContainer, value, record) {
-
-        var textAreaForNotes = $('<input type="text" maxlength="20" class="form-control" value="' + record.uId +'"/> ');
-            $editorContainer.append(textAreaForNotes);
-      
-
+        var textAreaForNotes = $('<input type="text" maxlength="30" class="form-control"/>');
+        textAreaForNotes.val(record.uId); // safe way to set value
+        $editorContainer.append(textAreaForNotes);
     }
     function tagsLabelEditor($editorContainer, value, record) {
-
-        var textAreaForNotes = $('<input type="text" minlength="50" class="form-control" value="' + record.labelDescription + '"/>');
+        var textAreaForNotes = $('<input type="text" class="form-control"/>');
+        textAreaForNotes.val(record.labelDescription); // safe way to set value
         $editorContainer.append(textAreaForNotes);
-
-
     }
     
-    let gritdWandTags;
+    let gritdWandTags;    
+    //'/Admin/Settings?handler=TagType'
+   
+    let smartWandtagsListForDDL = [];
+    $('#wandTagTypeDDL option').each(function () {
+        var value = $(this).text();
+        var text = $(this).text();
 
-    
+        if (value) {
+            smartWandtagsListForDDL.push({ value: value, text: text });
+        }
+    });
     gritdWandTags = $('#cs-wand-tags').grid({
         dataSource: '/admin/settings?handler=WandTagsSettings&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
@@ -1842,9 +1848,9 @@ $(function () {
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: '200', field: 'uId', title: 'UID', editor: tagsUIDEditor },
-            { width: 100, field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=TagType', valueField: 'value', textField: 'value' } },
-            { width: '100%', field: 'labelDescription', title: 'Label', editor: tagsLabelEditor},
+            { width: '200', field: 'uId', title: 'UID', sortable: true, editor: tagsUIDEditor },
+            { width: '100', field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: smartWandtagsListForDDL, valueField: 'value', textField: 'value' } },
+            { width: '100%', field: 'labelDescription', title: 'Label', sortable: true, editor: tagsLabelEditor},
         ],
 
         initialized: function (e) {

@@ -62,6 +62,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public int ClientTypeId { get; set; }
         public int ClientSiteId { get; set; }
         public string ClientSiteName { get; set; }
+        
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IImportDataService importDataService,
@@ -98,7 +99,7 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
         public IActionResult OnGet()
-        {
+        {            
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
@@ -2271,7 +2272,7 @@ namespace CityWatch.Kpi.Pages.Admin
         //wand tags-start
         public JsonResult OnGetWandTagsSettings(int clientSiteId)
         {
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandTags().Where(z => z.ClientSiteId == clientSiteId).ToList());
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandTags().Where(z => z.ClientSiteId == clientSiteId).OrderBy(x=> x.LabelDescription).ToList());
         }
         public JsonResult OnGetTagType()
         {
