@@ -12,6 +12,7 @@
 	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.15.0" />
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
 		<PackageReference Include="Dropbox.Api" Version="6.25.0" />
 		<PackageReference Include="itext7" Version="7.2.0" />
@@ -27,6 +28,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Graph" Version="5.90.0" />
+		<PackageReference Include="Microsoft.Graph.Core" Version="3.2.4" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.74.1" />
 		<PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
 	</ItemGroup>
 	<ItemGroup>

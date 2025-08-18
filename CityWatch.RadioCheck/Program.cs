@@ -59,7 +59,7 @@ builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>(); 
 builder.Services.AddScoped<IPushNotificationServicecs, PushNotificationServicecs>();
-
+builder.Services.AddScoped<IMicrosoftOneDriveService, MicrosoftOneDriveService>();
 
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
