@@ -471,6 +471,23 @@ $(function () {
         buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
     ///kv-schedule-start
+    function KVscheduleRenderer(value, record) {
+        let scheduleHtml = '';
+        scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">To: ' + renderScheduleEndDate(record.endDate, record) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">' + renderScheduleFrequency(record.frequency, record) + ' @ ' + record.time + ' Hrs </span>';
+        scheduleHtml += '<span class="my-1 d-block">Status:' + renderIsPaused(record.isPaused);
+        return scheduleHtml;
+    }
+    function schButtonRendererKV(value, record) {
+        let buttonHtml = '';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal1" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#KVschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        buttonHtml += '<button class="btn btn-outline-danger del-schedule1 mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#KVschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
+    }
     gridKVSchedules = $('#kpi_send_KVSchedules').grid({
         dataSource: '/Admin/Settings?handler=KpiKVSchedules',
         uiLibrary: 'bootstrap4',
@@ -478,15 +495,163 @@ $(function () {
         primaryKey: 'id',
         columns: [
             { field: 'projectName', title: 'Project Name', width: 100 },
-            { title: 'Schedule', renderer: TimesheetscheduleRenderer, width: 120 },
+            { title: 'Schedule', renderer: KVscheduleRenderer, width: 120 },
             { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 75 },
             { field: 'emailTo', title: 'Email Recipients', width: 100 },
-            { width: 150, renderer: schButtonRendererTimesheet },
+            { width: 150, renderer: schButtonRendererKV },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    $('#kpi_send_KVSchedules').on('click', '.del-schedule1', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this KV schedule?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKpiSendScheduleKV',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridKVSchedules.reload();
+            });
+        }
+
+    });
+    function clearScheduleModalKV() {
+
+        $('#kvscheduleId').val('0');
+        $('#clientTypeNamekv').val('');
+        $('#clientSiteskv').html('<option value="">Select</option>');
+        $('#selectedSiteskv').html('');
+        updateSelectedSitesKVCount()
+        $('input:hidden[name="clientSiteIds"]').remove();
+        $('#clientTypeNamekv option:eq(0)').attr('selected', true);
+        $('#startDatekv').val('');
+        $('#startDatekv').removeAttr('min');
+        $('#endDatekv').val('');
+        $('#endDatekv').removeAttr('min');
+        $('#kvtime').val('');
+        $('#frequencykv option').removeAttr('selected');
+        $('#frequencykv').val('');
+        $('#kvnextRunOn').val('');
+        $('#sch-modal-validation').html('');
+        $('#emailTokv').val('');
+        $('#emailBcckv').val('');
+
+        $('#projectNamekv').val('');
+        $('#VehicleRegokv').val('');
+        $('#CompanyNamekv').val('');
+        $('#SiteLockv').val('');
+        kvSitesOptionAdded();
+        
+
+    }
+    function scheduleModalOnEditKV(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiKVSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+
+            $('#kvscheduleId').val(data.id);
+            $('#startDatekv').val(data.startDate.split('T')[0]);
+            if (data.endDate)
+                $('#endDatekv').val(data.endDate.split('T')[0]);
+            $('#endDatekv').attr('min', new Date().toISOString().split('T')[0]);
+            $('#frequencykv').val(data.frequency).change();
+            $('#frequencykv option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#kvtime').val(data.time);
+            $('#kvnextRunOn').val(data.nextRunOn);
+            $('#emailTokv').val(data.emailTo);
+            $('#emailBcckv').val(data.emailBcc)
+
+            $.each(data.kpiSendKVClientSites, function (index, item) {
+                $('#selectedSiteskv').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesKVCount();
+            });
+            kvSitesOptionAdded();
+            $('#projectNamekv').val(data.projectName);
+            $('#VehicleRegokv').val(data.vehicleRego);
+            $('#CompanyNamekv').val(data.companyName);
+            $('#SiteLockv').val(data.clientSiteLocationId);
+            
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+    function scheduleModalOnCopyKV1(scheduleId) {
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiKVSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDatekv').val(dateToday);
+            $('#startDatekv').attr('min', dateToday);
+            const dateEnd = '2100-01-01'
+            $('#endDatekv').val(dateEnd.split('T')[0]);
+
+            $('#kvscheduleId').val(data.id);
+            // $('#startDateTimesheet').val(data.startDate.split('T')[0]);
+            //if (data.endDate)
+            //    $('#endDateTimesheet').val(data.endDate.split('T')[0]);
+            //$('#endDateTimesheet').attr('min', new Date().toISOString().split('T')[0]);
+            $('#frequencykv').val(data.frequency).change();
+            $('#frequencykv option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#kvtime').val(data.time);
+            $('#kvnextRunOn').val(data.nextRunOn);
+            $('#emailTokv').val(data.emailTo);
+            $('#emailBcckv').val(data.emailBcc)
+
+            $.each(data.kpiSendKVClientSites, function (index, item) {
+                $('#selectedSiteskv').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesKVCount();
+            });
+            //$('#projectNameTimesheet').val(data.projectName);
+
+            kvSitesOptionAdded();
+            $('#projectNamekv').val(data.projectName);
+            $('#VehicleRegokv').val(data.vehicleRego);
+            $('#CompanyNamekv').val(data.companyName);
+            $('#SiteLockv').val(data.clientSiteLocationId);
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+    function scheduleModalOnAddKV() {
+        const dateToday = new Date().toISOString().split('T')[0];
+        $('#startDatekv').val(dateToday);
+        $('#startDatekv').attr('min', dateToday);
+        const dateEnd = '2100-01-01'
+        $('#endDatekv').val(dateEnd.split('T')[0]);
+
+        $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+
+    }
+    $('#KVschedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModalKV();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            scheduleModalOnEditKV(schId);
+        } else {
+            //P2-103 Duplicate Settings-start
+            const isCopy = button.data('action') !== undefined && button.data('action') === 'copySchedule1';
+            if (isCopy) {
+                schId = button.data('sch-id');
+                scheduleModalOnCopyKV1(schId);
+            } else {
+                scheduleModalOnAddTimesheet();
+            }
+            //P2-103 Duplicate Settings-end
+        }
+
+        // showHideSchedulePopupTabs(isEdit);
+    });
+
     $('#btnSaveKVSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
         var options = $('#selectedSiteskv option');
@@ -504,7 +669,7 @@ $(function () {
             if (data.success) {
                 $('#KVschedule-modal').modal('hide');
                 alert('Schedule saved successfully');
-                gridKVSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+                gridKVSchedules.reload();
             } else {
                 $('#sch-modal-validation1').html('');
                 data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
@@ -538,9 +703,15 @@ $(function () {
         const option = $('#selectedSiteskv option').map(function () {
             return $(this).val();
         }).get();
-        if (option === '') {
+         if (option.length == 0 ) {
             $('#SiteLockv').html('');
             $('#SiteLockv').append('<option value="">Select</option>');
+            $('#CompanyNamekv').html('');
+            $('#CompanyNamekv').append('<option value="">Select</option>');
+
+            $('#kvKeyNo').html('');
+             $('#kvKeyNo').append('<option value="">Select</option>');
+             return;
         }
 
         $.ajax({
@@ -605,6 +776,7 @@ $(function () {
     $('#removeSelectedSiteskv').on('click', function () {
         $('#selectedSiteskv option:selected').remove();
         updateSelectedSitesKVCount();
+        kvSitesOptionAdded();
     });
    
     //kv-schedule-end

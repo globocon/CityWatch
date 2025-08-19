@@ -2317,28 +2317,13 @@ namespace CityWatch.Kpi.Pages.Admin
         }
         //wand tags-end
         //kv-scheudle-start
-        public JsonResult OnGetKpiKVSchedules(int type, string searchTerm)
+        public JsonResult OnGetKpiKVSchedules()
         {
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
-            {
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedules()
-                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
-                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                    .OrderBy(x => x.ProjectName)
-                    .ThenBy(x => x.ClientTypes));
+            
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
+                    .OrderBy(x => x.ProjectName));
 
-            }
-            else
-            {
-
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedulesUisngGuardId(GuardId)
-                   .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
-                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                   .OrderBy(x => x.ProjectName)
-                   .ThenBy(x => x.ClientTypes));
-
-            }
+           
         }
         public JsonResult OnPostSaveKpiKVSchedule(KpiKVScheduleViewModel kpiSendKVViewModel)
         {
@@ -2382,6 +2367,28 @@ namespace CityWatch.Kpi.Pages.Admin
             var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeysFilter(arClientSiteIds).ToList();
             return new JsonResult(new { siteLocations, companyDetails, clientSiteKeys });
         }
+        public JsonResult OnGetKpiKVSchedule(int id)
+        {
+           
+            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules().Where(x=>x.Id==id).FirstOrDefault());
+        }
+        public JsonResult OnPostDeleteKpiSendScheduleKV(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteSendScheduleKV(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
         //-kvscheudele-end
     }
 
