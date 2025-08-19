@@ -118,10 +118,33 @@ $(function () {
     });
     $("#fileUpload").fileUpload();
 
+    $('#Guard_Rc_Access').on('change', function () {
+        var changeval = $(this).val();
+        if (changeval == '1') {
+            $('#btnGuardRcAccess').prop("disabled", false);
+            $('#btnGuardRcAccess').removeClass('bg-secondary').addClass('bg-transparent');
+        }
+        else {
+            $('#btnGuardRcAccess').prop("disabled", true);
+            $('#btnGuardRcAccess').removeClass('bg-transparent').addClass('bg-secondary');
+        }
+    });
+
+    $('#btnGuardRcAccess').on('click', function () {
+        $('#guard-Rc-client-access-modal').modal('show');
+    });
 
     /*P1-203 ADMIN USER PROFILE-START*/
     $('#Guard_Access').on('change', function () {
         var newval = $(this).val();
+
+        if (newval.includes('5') || newval.includes('6') || newval.includes('7') || newval.includes('8')) {
+            $('#Guard_Rc_Access').prop("disabled", false);
+        }
+        else {
+            $('#Guard_Rc_Access').prop("disabled", true);
+            $('#btnGuardRcAccess').prop("disabled", true);
+        }
         
         if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
                 //yourElement in yourArray
@@ -184,6 +207,9 @@ $(function () {
 
         }
         $('#Guard_Access').val(newval);
+
+        
+
     });
     //$('#Guard_Access').on('change', function () {
 
