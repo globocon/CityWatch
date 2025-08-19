@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace CityWatch.Data.Models
@@ -221,5 +222,101 @@ namespace CityWatch.Data.Models
         public ICollection<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
 
         
+    }
+    public class KpiSendKVSchedules
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public DateTime StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        [Required]
+        public SendSchdeuleFrequency Frequency { get; set; }
+        //public CoverSheetType CoverSheetType { get; set; }
+
+        [Required]
+        public string Time { get; set; }
+
+        public string EmailTo { get; set; }
+
+        public DateTime NextRunOn { get; set; }
+
+
+
+        public string ProjectName { get; set; }
+
+
+
+        public string EmailBcc { get; set; }
+
+
+
+        public string KeyNo { get; set; }
+
+        public string CompanyName { get; set; }
+        public string VehicleRego { get; set; }
+        public int? ClientSiteLocationId { get; set; }
+        [ForeignKey("ClientSiteLocationId")]
+        public ClientSiteLocation ClientSiteLocation { get; set; }
+        public ICollection<KpiSendKVClientSites> KpiSendKVClientSites { get; set; }
+
+
+    }
+    public static class KpiKVScheduleRunOnCalculator
+    {
+        public static DateTime GetNextRunOn(KpiSendKVSchedules sendSchedule)
+        {
+            DateTime calculatedNextRunOn;
+
+            // This a new schedule
+            if (sendSchedule.Id == 0 || sendSchedule.NextRunOn == DateTime.MinValue)
+            {
+                var firstRunOn = DateTime.Parse($"{sendSchedule.StartDate.ToShortDateString()} {sendSchedule.Time}");
+                calculatedNextRunOn = firstRunOn > DateTime.Now ? firstRunOn : GetFrequencyBasedNextRunOn(firstRunOn, sendSchedule.Frequency);
+            }
+            else
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(sendSchedule.NextRunOn, sendSchedule.Frequency);
+
+            if (calculatedNextRunOn <= DateTime.Now)
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(DateTime.Parse($"{DateTime.Today.ToShortDateString()} {sendSchedule.Time}"), sendSchedule.Frequency);
+
+            if (sendSchedule.EndDate.HasValue && calculatedNextRunOn > sendSchedule.EndDate.Value)
+                calculatedNextRunOn = DateTime.MaxValue;
+            return calculatedNextRunOn;
+        }
+
+
+        public static DateTime GetNextRunOnUpdate(KpiSendKVSchedules sendSchedule)
+        {
+            DateTime calculatedNextRunOn;
+
+            // This a new schedule
+            if (sendSchedule.Id != 0 || sendSchedule.NextRunOn == DateTime.MinValue)
+            {
+                var firstRunOn = DateTime.Parse($"{sendSchedule.StartDate.ToShortDateString()} {sendSchedule.Time}");
+                calculatedNextRunOn = firstRunOn > DateTime.Now ? firstRunOn : GetFrequencyBasedNextRunOn(firstRunOn, sendSchedule.Frequency);
+            }
+            else
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(sendSchedule.NextRunOn, sendSchedule.Frequency);
+
+            if (calculatedNextRunOn <= DateTime.Now)
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(DateTime.Parse($"{DateTime.Today.ToShortDateString()} {sendSchedule.Time}"), sendSchedule.Frequency);
+
+            if (sendSchedule.EndDate.HasValue && calculatedNextRunOn > sendSchedule.EndDate.Value)
+                calculatedNextRunOn = DateTime.MaxValue;
+            return calculatedNextRunOn;
+        }
+
+
+        private static DateTime GetFrequencyBasedNextRunOn(DateTime nextRunOn, SendSchdeuleFrequency frequency) => frequency switch
+        {
+            SendSchdeuleFrequency.Daily => nextRunOn.AddDays(1),
+            SendSchdeuleFrequency.Weekly => nextRunOn.AddDays(7),
+            SendSchdeuleFrequency.Monthly => nextRunOn.AddMonths(1),
+            _ => nextRunOn,
+        };
     }
 }

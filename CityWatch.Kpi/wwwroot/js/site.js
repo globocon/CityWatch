@@ -496,15 +496,15 @@ $(function () {
         });
 
         $.ajax({
-            url: '/Admin/Settings?handler=SaveKpiTimesheetSchedule',
+            url: '/Admin/Settings?handler=SaveKpiKVSchedule',
             type: 'POST',
-            data: $('#frm_kpi_Timesheetschedule').serialize(),
+            data: $('#frm_kpi_kvschedule').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success) {
-                $('#TimeSheetschedule-modal').modal('hide');
+                $('#KVschedule-modal').modal('hide');
                 alert('Schedule saved successfully');
-                gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+                gridKVSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
             } else {
                 $('#sch-modal-validation1').html('');
                 data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
@@ -512,6 +512,101 @@ $(function () {
             }
         });
     });
+    $('#clientTypeNamekv').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSiteskv').html('');
+            $('#clientSiteskv').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSiteskv').html('');
+            $('#clientSiteskv').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSiteskv').append('<option value="' + site.value + '">' + site.text + '</option>');
+               
+            });
+        });
+    });
+   
+     function kvSitesOptionAdded () {
+        //const option = $(this).val();
+        const option = $('#selectedSiteskv option').map(function () {
+            return $(this).val();
+        }).get();
+        if (option === '') {
+            $('#SiteLockv').html('');
+            $('#SiteLockv').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteLocationsAndCompanyDetails&clientSiteIds=' +  option.join(';'),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#SiteLockv').html('');
+            $('#SiteLockv').append('<option value="">Select</option>');
+            
+            $('#CompanyNamekv').html('');
+            $('#CompanyNamekv').append('<option value="">Select</option>');
+
+            $('#kvKeyNo').html('');
+            $('#kvKeyNo').append('<option value="">Select</option>');
+            data.siteLocations.map(function (loc) {
+                $('#SiteLockv').append('<option value="' + loc.value + '">' + loc.text + '</option>');
+            });
+            data.companyDetails.map(function (det) {
+                $('#CompanyNamekv').append('<option value="' + det + '">' + det + '</option>');
+            });
+            data.clientSiteKeys.map(function (key) {
+                $('#kvKeyNo').append('<option value="' + key.keyNo + '">' + key.keyNo + '</option>');
+            });
+        });
+    }
+    $('#clientSiteskv').on('change', function () {
+        const elem = $(this).find(":selected");
+        if (elem.val() !== '') {
+            const existing = $('#selectedSiteskv option[value="' + elem.val() + '"]');
+            if (existing.length === 0) {
+                $('#selectedSiteskv').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                updateSelectedSitesKVCount();
+                kvSitesOptionAdded();
+            }
+        }
+    });
+    function updateSelectedSitesKVCount() {
+        $('#selectedSitesCountkv').text($('#selectedSiteskv option').length);
+    }
+    $('#editSelectedSitekv').on('click', function () {
+        if ($('#editSiteTriggerkv').length === 1) {
+            $('#editSiteTriggerkv').remove()
+        }
+
+        const selectedOption = $('#selectedSiteskv option:selected');
+        if (selectedOption.length == 0) {
+            alert('Please select a site to edit');
+        } else if (selectedOption.length > 1) {
+            alert('Select only one site to edit');
+        } else {
+
+            let triggerButton = '<button type="button" id="editSiteTriggerkv" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+                //p1-139 change pop up start
+                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KV"></button>';
+            //p1-139 change pop up end
+            $(triggerButton).insertAfter($(this));
+            $('#editSiteTriggerkv').click();
+
+        }
+    });
+    $('#removeSelectedSiteskv').on('click', function () {
+        $('#selectedSiteskv option:selected').remove();
+        updateSelectedSitesKVCount();
+    });
+   
     //kv-schedule-end
     $('#btnSaveTimesheetSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();

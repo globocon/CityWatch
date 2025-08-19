@@ -31,6 +31,7 @@ namespace CityWatch.Data.Providers
         KpiSendTimesheetSchedules GetTimesheetScheduleById(int scheduleId);
         KpiSendTimesheetSchedules GetTimesheetScheduleByIdandGuardId(int scheduleId, int GuardId);
         public void RemoveAllKpiSendScheduleJobsOldNotComplete();
+        void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -401,6 +402,39 @@ namespace CityWatch.Data.Providers
                     LastUpdated = DateTime.Now
                 };
                 _context.KpiSendScheduleSummaryImages.Add(kpiSummaryImage);
+            }
+            _context.SaveChanges();
+        }
+        public void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false)
+        {
+            var schedule = _context.KpiSendKVSchedules.Include(z => z.KpiSendKVClientSites).SingleOrDefault(z => z.Id == sendSchedule.Id);
+            if (schedule == null)
+                _context.Add(sendSchedule);
+            else
+            {
+                if (updateClientSites)
+                {
+                    _context.KpiSendKVClientSites.RemoveRange(schedule.KpiSendKVClientSites);
+                    _context.SaveChanges();
+                }
+
+                schedule.StartDate = sendSchedule.StartDate;
+                schedule.EndDate = sendSchedule.EndDate;
+                schedule.Frequency = sendSchedule.Frequency;
+                schedule.Time = sendSchedule.Time;
+                schedule.EmailTo = sendSchedule.EmailTo;
+                schedule.NextRunOn = sendSchedule.NextRunOn;
+
+                schedule.ProjectName = sendSchedule.ProjectName;
+
+                schedule.EmailBcc = sendSchedule.EmailBcc;
+                schedule.CompanyName = sendSchedule.CompanyName;
+                schedule.VehicleRego = sendSchedule.VehicleRego;
+                schedule.KeyNo = sendSchedule.KeyNo;
+                schedule.ClientSiteLocationId = sendSchedule.ClientSiteLocationId;
+
+                if (updateClientSites)
+                    schedule.KpiSendKVClientSites = sendSchedule.KpiSendKVClientSites;
             }
             _context.SaveChanges();
         }

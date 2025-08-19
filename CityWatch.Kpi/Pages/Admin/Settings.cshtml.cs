@@ -27,6 +27,7 @@ using Microsoft.Extensions.Options;
 using CityWatch.Common.Services;
 using System.Security.Policy;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -47,6 +48,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IClientSiteViewDataService _clientViewDataService;
 
 
         [BindProperty]
@@ -57,6 +59,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public IGuardLogDataProvider GuardLogDataProvider { get { return _guardLogDataProvider; } }
 
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
+        public IClientSiteViewDataService ClientViewDataService { get { return _clientViewDataService; } }
         public int GuardId { get; set; }
         public int userId { get; set; }
         public int ClientTypeId { get; set; }
@@ -77,7 +80,8 @@ namespace CityWatch.Kpi.Pages.Admin
              IGuardDataProvider guardDataProvider,
              IConfigDataProvider configDataProvider,
              IOptions<Settings> settings,
-             IDropboxService dropboxUploadService
+             IDropboxService dropboxUploadService,
+             IClientSiteViewDataService clientViewDataService
              )
         {
             _webHostEnvironment = webHostEnvironment;
@@ -95,6 +99,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _configDataProvider = configDataProvider;
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
+            _clientViewDataService = clientViewDataService;
 
         }
 
@@ -2334,6 +2339,48 @@ namespace CityWatch.Kpi.Pages.Admin
                    .ThenBy(x => x.ClientTypes));
 
             }
+        }
+        public JsonResult OnPostSaveKpiKVSchedule(KpiKVScheduleViewModel kpiSendKVViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(kpiSendKVViewModel, new ValidationContext(kpiSendKVViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var kpiSendSchedule = KpiKVScheduleViewModel.ToDataModel(kpiSendKVViewModel);
+                if (kpiSendSchedule.Id == 0)
+                    kpiSendSchedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOn(kpiSendSchedule);
+                else
+                    kpiSendSchedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOnUpdate(kpiSendSchedule);
+                _kpiSchedulesDataProvider.SaveKVSchedule(kpiSendSchedule, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetKVCompanyDetails(string clientSiteIds, string searchKeyNo)
+        {
+            var arClientSiteIds = clientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds,""));
+
+        }
+        public JsonResult OnGetClientSiteLocationsAndCompanyDetails(string clientSiteIds)
+        {
+            var siteLocations = new List<SelectListItem>();
+         
+            var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
+
+            siteLocations = _clientViewDataService.GetClientSiteLocationsNew(arClientSiteIds);
+            var companyDetails = _configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds, "");
+            var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeysFilter(arClientSiteIds).ToList();
+            return new JsonResult(new { siteLocations, companyDetails, clientSiteKeys });
         }
         //-kvscheudele-end
     }

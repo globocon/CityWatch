@@ -10,7 +10,6 @@ GO
 
 CREATE TABLE [dbo].[KpiSendKVSchedules](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
-	[ClientSiteId] [int] NULL,
 	[StartDate] [date] NOT NULL,
 	[EndDate] [date] NULL,
 	[Frequency] [int] NOT NULL,
