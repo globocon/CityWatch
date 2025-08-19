@@ -370,7 +370,8 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.ClientSiteSmartWands
-        .ToList();
+                .Where(x => x.IsDeleted == false)
+                .ToList();
         }
 
         public IncidentReportPosition GetClientSitePosition(string Name)

@@ -14,6 +14,7 @@ namespace CityWatch.Data.Models
 
         public string PhoneNumber { get; set; }
         public string SIMProvider { get; set; }
+        public bool IsDeleted { get; set; }
 
         [NotMapped]
         public bool IsInUse { get; set; }

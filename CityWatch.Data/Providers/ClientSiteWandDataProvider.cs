@@ -33,14 +33,14 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWand> GetClientSiteSmartWands()
         {
             return _dbContext.ClientSiteSmartWands
-                .Where(x => x.ClientSite.IsActive == true)
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .Include(x => x.ClientSite)
                 .ToList();
         }
         public ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber, int id)
         {
             return _dbContext.ClientSiteSmartWands
-                .Where(x => x.ClientSite.IsActive == true)
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .Include(x => x.ClientSite)
                 .Where(x => x.PhoneNumber == PhoneNumber && x.Id != id)
                 .FirstOrDefault();
@@ -49,7 +49,7 @@ namespace CityWatch.Data.Providers
         {
             return _dbContext.ClientSiteSmartWands
                 .Include(x => x.ClientSite)
-                .Where(x => (string.IsNullOrEmpty(searchTerms) || x.PhoneNumber.Contains(searchTerms)) && x.ClientSite.IsActive == true)
+                .Where(x => (string.IsNullOrEmpty(searchTerms) || x.PhoneNumber.Contains(searchTerms)) && x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .ToList();
         }
 
@@ -61,6 +61,7 @@ namespace CityWatch.Data.Providers
             if (clientSiteSmartWand.Id == -1)
             {
                 clientSiteSmartWand.Id = 0;
+                clientSiteSmartWand.IsDeleted = false;
                 _dbContext.ClientSiteSmartWands.Add(clientSiteSmartWand);
             }
             else
@@ -80,7 +81,14 @@ namespace CityWatch.Data.Providers
         {
             var deleteClientSiteSmartWand = _dbContext.ClientSiteSmartWands.SingleOrDefault(x => x.Id == id);
             if (deleteClientSiteSmartWand != null)
-                _dbContext.ClientSiteSmartWands.Remove(deleteClientSiteSmartWand);
+            {
+                // Mark as deleted instead of removing it from the database
+                deleteClientSiteSmartWand.IsDeleted = true;
+            }
+            else
+            {
+                throw new ArgumentException($"No Smart Wand found with ID: {id}");
+            }
 
             _dbContext.SaveChanges();
         }

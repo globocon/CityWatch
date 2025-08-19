@@ -3386,7 +3386,8 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId)
         {
             return _context.ClientSiteSmartWands
-                .Where(x => (!clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value)) && x.ClientSite.IsActive == true)
+                .Where(x => (!clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value))
+                            && x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .Include(x => x.ClientSite)
                 .ToList();
         }
