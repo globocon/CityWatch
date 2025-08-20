@@ -3640,6 +3640,39 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success = status, message = message });
         }
+
+
+        public JsonResult OnGetRcClientAccessByGuardId(int guardId)
+        {
+            return new JsonResult(_viewDataService.GetGuardRcClientSiteAccess(guardId));
+        }
+        
+        public JsonResult OnPostRcClientAccessByGuardId(int guardId, int[] selectedSites)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var clientSiteAccess = selectedSites.Select(x => new GuardRcClientSiteAccess()
+                {
+                    ClientSiteId = x,
+                    GuardId = guardId
+                }).ToList();
+                _guardDataProvider.SaveGuardRcClientSiteAccess(guardId, clientSiteAccess);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+
+
+
+
     }
     public class helpDocttype
     {

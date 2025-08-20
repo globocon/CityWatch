@@ -4340,13 +4340,12 @@
                                 </div>
                                  <label class="form-check-label pl-3 pr-5">RC Filter</label>
                                 <div class="input-group" style="padding-left: 11px;width: 247px;">                                    
-                                    <select class="form-control" id="Guard_Rc_Access" name="Guard.GuardRCAccess">
+                                    <select class="form-control" id="Guard_Rc_Access" name="Guard.GuardRCAccess" disabled>
                                         <option selected="selected" value="">Select</option>
                                         <option value="0">Default - all</option>
                                         <option value="1">Custom</option>
                                     </select>
-                                    @* <span class="input-group-text bg-transparent btn" id="btnGuardRcAccess" disabled><i class="fa fa-eye text-primary" aria-hidden="true"></i></span> *@
-                                    <button type="button" class="input-group-text bg-secondary btn btn-sm" style="text-align: right;" title="Edit Access" id="btnGuardRcAccess">
+                                    <button type="button" class="input-group-text bg-secondary btn btn-sm" style="text-align: right;" title="Edit Access" id="btnGuardRcAccess" disabled>
                                         <i class="fa fa-eye text-primary" aria-hidden="true"></i>
                                     </button>                                   
                                 </div>
@@ -5199,13 +5198,13 @@
                 </button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="user-access-for-id" value="0" />
-                <button type="button" id="grantAllUserAccess" class="btn btn-light">Grant All</button>
-                <button type="button" id="revokeAllUserAccess" class="btn btn-light">Revoke All</button>
-                <button type="button" id="expandAllUserAccess" class="btn btn-light">Expand All</button>
-                <button type="button" id="collapseAllUserAccess" class="btn btn-light">Collapse All</button>
+                <input type="hidden" id="guard-rc-access-for-id" value="0" />
+                <button type="button" id="grantAllRcAccess" class="btn btn-light">Grant All</button>
+                <button type="button" id="revokeAllRcAccess" class="btn btn-light">Revoke All</button>
+                <button type="button" id="expandAllRcAccess" class="btn btn-light">Expand All</button>
+                <button type="button" id="collapseAllRcAccess" class="btn btn-light">Collapse All</button>
                 <hr />                
-                <div id="ucaTreeView"></div>
+                <div id="ucaRcTreeView"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnSaveGuardRcAccess" class="btn btn-outline-primary" data-dismiss="modal">Save</button>

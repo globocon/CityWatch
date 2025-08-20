@@ -112,6 +112,8 @@ namespace CityWatch.Data.Providers
         void SaveGuardMobileNo(int GuardID, string mobileNo);
         void SaveGuardRCLoginDetails(LoginUserRCHistory loginuserrc);
         List<TrainingCourseCertificateRPL> GetCourseCertificateRPL();
+        List<GuardRcClientSiteAccess> GetGuardRcClientSiteAccess(int? guardId);
+        void SaveGuardRcClientSiteAccess(int guardId, List<GuardRcClientSiteAccess> guardRcClientSiteAccess);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1268,6 +1270,24 @@ namespace CityWatch.Data.Providers
 
             _context.SaveChanges();
 
+        }
+
+        public List<GuardRcClientSiteAccess> GetGuardRcClientSiteAccess(int? guardId)
+        {
+            return _context.GuardRcClientSiteAccess
+                .Where(x => (!guardId.HasValue || guardId.HasValue && x.GuardId == guardId) && x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.Guard)
+                .ToList();
+        }
+
+        public void SaveGuardRcClientSiteAccess(int guardId, List<GuardRcClientSiteAccess> guardRcClientSiteAccess)
+        {
+            var currentAccess = _context.GuardRcClientSiteAccess.Where(x => x.GuardId == guardId).ToList();
+            _context.RemoveRange(currentAccess);
+            _context.AddRange(guardRcClientSiteAccess);
+            _context.SaveChanges();
         }
 
     }

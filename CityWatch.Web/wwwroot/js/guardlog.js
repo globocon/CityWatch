@@ -131,6 +131,8 @@ $(function () {
     });
 
     $('#btnGuardRcAccess').on('click', function () {
+        const guardId = $('#Guard_Id').val();
+        $('#guard-rc-access-for-id').val(guardId);
         $('#guard-Rc-client-access-modal').modal('show');
     });
 
@@ -211,92 +213,79 @@ $(function () {
         
 
     });
-    //$('#Guard_Access').on('change', function () {
 
-    //    var newval = $(this).val();
-    //    var selectrc = 0;
-    //    //var newval1 = newval[newval.length - 1];
-    //    var newval1 = $("#Guard_Access option:selected").last().val()
-    //    if ($.inArray(6, newval) ) {
-    //        //yourElement in yourArray
-    //        alert('hi')
+    //----****** Guard Access RC Client Sites Start *********----//
+    let ucaRcTree;
 
-    //    }
-    //    //if (parseInt(newval1) == 5) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
+    $('#guard-Rc-client-access-modal').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const guardId = $('#guard-rc-access-for-id').val();
+        if (ucaRcTree === undefined) {
+            ucaRcTree = $('#ucaRcTreeView').tree({
+                uiLibrary: 'bootstrap4',
+                checkboxes: true,
+                primaryKey: 'id',
+                dataSource: '/Admin/Settings?handler=RcClientAccessByGuardId',
+                autoLoad: false,
+                textField: 'name',
+                childrenField: 'clientSites',
+                checkedField: 'checked'
+            });
+        }
+        ucaRcTree.uncheckAll();
+        ucaRcTree.reload({ guardId: guardId });
+    });
 
-    //    //            if (parseInt(new1) == 6) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
+    $('#btnSaveGuardRcAccess').on('click', function () {
+        if (ucaRcTree) {
+            const guardId = $('#guard-rc-access-for-id').val();
+            let selectedSites = ucaRcTree.getCheckedNodes().filter(function (item) {
+                return item !== 'undefined';
+            });
+            $.ajax({
+                url: '/Admin/Settings?handler=RcClientAccessByGuardId',
+                data: {
+                    guardId: guardId,
+                    selectedSites: selectedSites
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                showStatusNotification(true, 'Saved successfully');
+            }).fail(function () {
+                console.log('error');
+            });
+        }
+    });
 
-    //    //    });
-    //    //}
-    //    if (parseInt(newval1) == 6) {
-    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //            var isChecked1 = $(this).is(':checked');
-    //            if (isChecked1 == true) {
-    //                var new1 = $(this).val();
+    $('#grantAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.checkAll();
+        }
+    });
 
-    //                if (parseInt(new1) == 5) {
-    //                     $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
-    //                       selectrc=1
-    //                    //newval = newval.filter(function (value) {
-    //                    //    return value !== new1;
-    //                    //});
-    //                }
-    //            }
+    $('#revokeAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined && confirm('Are you sure want to revoke all access?')) {
+            ucaRcTree.uncheckAll();
+        }
+    });
 
-    //        });
-    //    }
-        
-    //    //if (parseInt(newval1) == 2) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
+    $('#expandAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.expandAll();
+        }
+    });
 
-    //    //            if (parseInt(new1) == 3) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 3 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
+    $('#collapseAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.collapseAll();
+        }
+    });
+    //----****** Guard Access RC Client Sites End *********----//
 
-    //    //    });
-    //    //}
-    //    //if (parseInt(newval1) == 3) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
 
-    //    //            if (parseInt(new1) == 2) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 2 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
 
-    //    //    });
-    //    //}
-    //    if (selectrc == 1) {
-    //        alert('Please select only one option among RC or RC-Fusion')
-    //    }
-    //   // $("#Guard_Access").val(newval);
-    //    //$("#Guard_Access").multiselect();
-    //   // $("#Guard_Access").multiselect("refresh");
 
-    //});
-    /*P1-203 ADMIN USER PROFILE-END*/
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
