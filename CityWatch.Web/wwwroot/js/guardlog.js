@@ -122,15 +122,45 @@ $(function () {
         var changeval = $(this).val();
         if (changeval == '1') {
             $('#btnGuardRcAccess').prop("disabled", false);
-            $('#btnGuardRcAccess').removeClass('bg-secondary').addClass('bg-transparent');
+            $('#btnGuardRcAccess').addClass('bg-transparent');
         }
         else {
-            $('#btnGuardRcAccess').prop("disabled", true);
-            $('#btnGuardRcAccess').removeClass('bg-transparent').addClass('bg-secondary');
+            if (confirm("Guard will have access to all sites.Are you sure ?")) {
+                // ajax call to delete all the guard's access client sites
+                $.ajax({
+                    url: '/Admin/Settings?handler=ClearAllRcSiteAccessFromGuard',
+                    type: 'POST',
+                    data: {
+                        guardId: $('#Guard_Id').val()
+                    },
+                    success: function (response) {
+                        // Handle success
+                        if (response.status) {
+                            $('#btnGuardRcAccess').prop("disabled", true);
+                            $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
+                        } else {
+                            alert(response.message);
+                            $(this).val('1').trigger('change');
+                        }                        
+                    },
+                    error: function (error) {
+                        // Handle error
+                        alert('An error occurred while clearing access. Please try again.');
+                        $(this).val('1').trigger('change');
+                    }
+                });                
+            }
+            else {
+                // Revert the dropdown to '1' and re-trigger change event
+                $(this).val('1').trigger('change');
+            }
         }
     });
 
     $('#btnGuardRcAccess').on('click', function () {
+        if ($(this).prop('disabled')) {
+            return; // Exit early if the button is disabled
+        }
         const guardId = $('#Guard_Id').val();
         $('#guard-rc-access-for-id').val(guardId);
         $('#guard-Rc-client-access-modal').modal('show');
@@ -138,16 +168,7 @@ $(function () {
 
     /*P1-203 ADMIN USER PROFILE-START*/
     $('#Guard_Access').on('change', function () {
-        var newval = $(this).val();
-
-        if (newval.includes('5') || newval.includes('6') || newval.includes('7') || newval.includes('8')) {
-            $('#Guard_Rc_Access').prop("disabled", false);
-        }
-        else {
-            $('#Guard_Rc_Access').prop("disabled", true);
-            $('#btnGuardRcAccess').prop("disabled", true);
-        }
-        
+        var newval = $(this).val();                        
         if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
                 //yourElement in yourArray
             alert('Please select only one option among RC + HR or RC-Fusion or RC or RC (Lite)');
@@ -4857,7 +4878,7 @@ $(function () {
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
             { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-           
+            { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', width: "2%", visible: false, searchable: false },
 
         {
             targets: -1,
@@ -5288,6 +5309,15 @@ $(function () {
         $("#Guard_Lote").multiselect();
         $("#Guard_Lote").val(selectedlanguages);
         $("#Guard_Lote").multiselect("refresh");
+
+        if (data.guardRcSiteAccessCount > 0) {
+            $('#Guard_Rc_Access').val('1');
+            $('#btnGuardRcAccess').prop('disabled', false);
+        } else {
+            $('#Guard_Rc_Access').val('0');
+            $('#btnGuardRcAccess').prop('disabled', true);
+        }
+
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');

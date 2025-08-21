@@ -113,7 +113,9 @@ namespace CityWatch.Data.Providers
         void SaveGuardRCLoginDetails(LoginUserRCHistory loginuserrc);
         List<TrainingCourseCertificateRPL> GetCourseCertificateRPL();
         List<GuardRcClientSiteAccess> GetGuardRcClientSiteAccess(int? guardId);
+        List<GuardRcClientSiteAccess> GetAllGuardRcClientSiteAccess();
         void SaveGuardRcClientSiteAccess(int guardId, List<GuardRcClientSiteAccess> guardRcClientSiteAccess);
+        void RemoveGuardRcClientSiteAccess(int guardId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1282,11 +1284,26 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<GuardRcClientSiteAccess> GetAllGuardRcClientSiteAccess()
+        {
+            return _context.GuardRcClientSiteAccess
+                .Where(x => x.ClientSite.IsActive == true)                
+                .Include(x => x.Guard)
+                .ToList();
+        }
+
         public void SaveGuardRcClientSiteAccess(int guardId, List<GuardRcClientSiteAccess> guardRcClientSiteAccess)
         {
             var currentAccess = _context.GuardRcClientSiteAccess.Where(x => x.GuardId == guardId).ToList();
             _context.RemoveRange(currentAccess);
             _context.AddRange(guardRcClientSiteAccess);
+            _context.SaveChanges();
+        }
+
+        public void RemoveGuardRcClientSiteAccess(int guardId)
+        {
+            var currentAccess = _context.GuardRcClientSiteAccess.Where(x => x.GuardId == guardId).ToList();
+            _context.RemoveRange(currentAccess);
             _context.SaveChanges();
         }
 

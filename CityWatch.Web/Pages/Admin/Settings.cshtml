@@ -59,7 +59,8 @@
     .OrderBy(x => x.DomainId) // Place SubDomainId == 0 first
     .ToList();
 
-
+    var isRcSiteAccessEnabled= AuthUserHelper.DoseGuardHaveRcClientSitesControl ? "" : "disabled";
+    if(AuthUserHelper.IsAdminUserLoggedIn){ isRcSiteAccessEnabled = "";}
 }
 
 
@@ -4338,16 +4339,17 @@
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
-                                 <label class="form-check-label pl-3 pr-5">RC Filter</label>
+                                <label class="form-check-label pl-3 pr-5">RC Filter</label>
                                 <div class="input-group" style="padding-left: 11px;width: 247px;">                                    
-                                    <select class="form-control" id="Guard_Rc_Access" name="Guard.GuardRCAccess" disabled>
-                                        <option selected="selected" value="">Select</option>
-                                        <option value="0">Default - all</option>
-                                        <option value="1">Custom</option>
+                                    <select class="form-control" id="Guard_Rc_Access" name="Guard.GuardRCAccess" @isRcSiteAccessEnabled>                                        
+                                            <option value="0">Default - all</option>
+                                            <option value="1">Custom</option>  
                                     </select>
-                                    <button type="button" class="input-group-text bg-secondary btn btn-sm" style="text-align: right;" title="Edit Access" id="btnGuardRcAccess" disabled>
-                                        <i class="fa fa-eye text-primary" aria-hidden="true"></i>
-                                    </button>                                   
+                                    @if (AuthUserHelper.DoseGuardHaveRcClientSitesControl || AuthUserHelper.IsAdminUserLoggedIn){
+                                        <button type="button" class="input-group-text bg-secondary btn btn-sm" style="text-align: right;" title="Edit Access" id="btnGuardRcAccess">
+                                            <i class="fa fa-eye text-primary" aria-hidden="true"></i>
+                                        </button>    
+                                    }
                                 </div>
                                 
                             </div>

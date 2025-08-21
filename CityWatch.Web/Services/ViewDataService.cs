@@ -766,6 +766,7 @@ namespace CityWatch.Web.Services
             // Retrieve guard logins in one call
             var guardLogins = _guardDataProvider.GetGuardLogins(guardIds).ToList();
             var guardLotes = _guardDataProvider.GetGuardLotes(guardIds).ToList();
+            var guardRcSiteAccess = _guardDataProvider.GetAllGuardRcClientSiteAccess();  //GuardRcSiteAccessCount
             // Create GuardViewModel list in one query
             var guardViewModels = guards.Select(guard =>
                 new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList(), guardLotes.ToList())).ToList();
@@ -839,6 +840,8 @@ namespace CityWatch.Web.Services
                         guard.hr3Description = guard.hr3Description + desc.Description + " ";
                     }
                 }
+
+                guard.GuardRcSiteAccessCount = guardRcSiteAccess.Count(x => x.GuardId == guard.Id);
             }
 
             return guardViewModels;

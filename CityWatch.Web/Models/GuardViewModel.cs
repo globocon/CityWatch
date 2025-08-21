@@ -122,5 +122,7 @@ namespace CityWatch.Web.Models
                 return string.Join(",", _languageDetails.Where(x => x.GuardId == _guard.Id).Select(z => z.LanguageMaster.Language).Distinct().OrderBy(z => z));
             }
         }
+
+        public int GuardRcSiteAccessCount { get; set; }
     }
 }
