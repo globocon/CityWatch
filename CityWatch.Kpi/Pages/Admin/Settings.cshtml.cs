@@ -2388,6 +2388,47 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+        public JsonResult OnPostRunScheduleKV(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var success = false;
+            string message;
+            try
+            {
+                var schedule = _kpiSchedulesDataProvider.GetKVScheduleById(scheduleId);
+                if (schedule == null)
+                    throw new ArgumentException("Schedule not found");
+
+                var task = _sendScheduleService.ProcessKVSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+
+                message = task.Result;
+                success = !(message.Contains("Error") || message.Contains("Exception"));
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            if (!success)
+            {
+                _logger.LogError(message);
+            }
+
+            return new JsonResult(new { success });
+        }
+        public IActionResult OnGetDownloadPdfKV(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetKVScheduleById(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+            // Generate the PDF file
+            DateTime date = new DateTime(reportYear, reportMonth, 1);
+            string filename = $"{reportYear}{reportMonth.ToString("00")} - {FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Monthly Report - {date.ToString("MMM").ToUpper()} {reportYear}";
+            byte[] pdfBytes = _sendScheduleService.ProcessDownloadKVSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+            Response.Headers["Content-Disposition"] = $"inline; filename={filename}";
+            // Return the PDF file as a download
+            return File(pdfBytes, "application/pdf", filename + ".pdf");
+        }
+
 
         //-kvscheudele-end
     }

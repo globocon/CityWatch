@@ -481,7 +481,7 @@ $(function () {
     }
     function schButtonRendererKV(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal1" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal2" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
         buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#KVschedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
         buttonHtml += '<button class="btn btn-outline-danger del-schedule1 mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
@@ -503,6 +503,106 @@ $(function () {
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
+    });
+    $('#run-schedule-modal1').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const schId = button.data('sch-id');
+        $('#sch-id').val(schId);
+        $('#btnScheduleRunTime').prop('disabled', false);
+        $('#schRunStatus').html('');
+    });
+    $('#run-schedule-modal2').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const schId = button.data('sch-id');
+        $('#sch-id').val(schId);
+        $('#btnScheduleRunKV').prop('disabled', false);
+        $('#schRunStatus').html('');
+    });
+
+    $('#btnScheduleRunKV').on('click', function () {
+        $('#btnScheduleRunKV').prop('disabled', true);
+        $('#schRunStatusKV').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
+        $.ajax({
+            url: '/Admin/Settings?handler=RunScheduleKV',
+            type: 'POST',
+            data: {
+                scheduleId: $('#sch-id').val(),
+                reportYear: $('#schRunYear').val(),
+                reportMonth: $('#schRunMonth2').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsKV').is(':checked'),
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            $('#btnScheduleRunKV').prop('disabled', false);
+            const messageHtml = result.success ? '<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email' :
+                '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
+            $('#schRunStatusKV').html(messageHtml);
+        });
+    });
+
+
+    $('#btnScheduleDownload2').on('click', function () {
+        $('#btnScheduleDownload2').prop('disabled', true);
+        $('#schRunStatusKV').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
+        $.ajax({
+            type: 'GET',
+            url: '/Admin/Settings?handler=DownloadPdfKV',
+            data: {
+                scheduleId: $('#sch-id').val(),
+                reportYear: $('#schRunYear').val(),
+                reportMonth: $('#schRunMonth2').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsKV').is(':checked'),
+            },
+            xhrFields: {
+                responseType: 'blob' // For handling binary data
+            },
+            success: function (data, textStatus, request) {
+                var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                var matches = filenameRegex.exec(contentDispositionHeader);
+                var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+                // Create a Blob with the PDF data and initiate the download
+                var blob = new Blob([data], { type: 'application/pdf' });
+                // // Create a temporary anchor element to trigger the download
+                //var url = window.URL.createObjectURL(blob);
+                // // Open the PDF in a new tab
+                //var newTab = window.open(url, '_blank');
+
+                const URL = window.URL || window.webkitURL;
+                const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+                const bloburl = URL.createObjectURL(blob);
+                const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+                const windowUrl = window.location.origin; // + window.location.pathname;
+                const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+                var newTab = window.open(`${viewerUrl}${objectUrl}`);
+                if (!newTab) {
+                    // If the new tab was blocked, fallback to downloading the file
+                    var a = document.createElement('a');
+                    a.href = bloburl;
+                    a.download = downloadedFileName;
+                    a.click();
+                }
+
+                URL.revokeObjectURL(bloburl);
+                URL.revokeObjectURL(objectUrl);
+
+                //if (!newTab) {
+                //    // If the new tab was blocked, fallback to downloading the file
+                //    var a = document.createElement('a');
+                //    a.href = url;
+                //    a.download = downloadedFileName;
+                //    a.click();
+                //}
+                //window.URL.revokeObjectURL(url);                
+            },
+            error: function () {
+                alert('Error while downloading the PDF.');
+            }
+        }).done(function (result) {
+            $('#btnScheduleDownload2').prop('disabled', false);
+            const messageHtml = '';
+            $('#schRunStatusKV').html(messageHtml);
+        });
     });
     $('#kpi_send_KVSchedules').on('click', '.del-schedule1', function () {
         const idToDelete = $(this).attr('data-sch-id');
@@ -3005,7 +3105,7 @@ $('#btnScheduleRunTime').on('click', function () {
     $('#btnScheduleRunTime').prop('disabled', true);
     $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
     $.ajax({
-        url: '/Admin/Settings?handler=RunScheduleTimeSheet',
+        url: '/Admin/Settings?handler=RunScheduleKV',
         type: 'POST',
         data: {
             scheduleId: $('#sch-id').val(),

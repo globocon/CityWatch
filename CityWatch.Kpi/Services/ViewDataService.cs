@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using static Dropbox.Api.Files.WriteMode;
 
@@ -58,6 +59,7 @@ namespace CityWatch.Kpi.Services
         public string ClientSitesUsingId(int ClientSiteId);
         public List<SelectListItem> KPITelematicsList();
         public KPITelematicsField GetMobileNo(int Id);
+        IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
     }
 
     public class ViewDataService : IViewDataService
@@ -649,5 +651,22 @@ namespace CityWatch.Kpi.Services
         {
             return _configDataProvider.GetTelematicsMobileNo(Id);
         }
+        public IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference)
+        {
+            if (!string.IsNullOrEmpty(reportReference))
+            {
+                var folderPath = Path.Combine(uploadsDir, reportReference);
+                if (Directory.Exists(folderPath))
+                {
+                    var files = Directory.GetFiles(folderPath);
+                    if (files.Any())
+                    {
+                        return files.Select(z => Path.GetFileName(z));
+                    }
+                }
+            }
+            return Enumerable.Empty<string>();
+        }
+
     }
 }

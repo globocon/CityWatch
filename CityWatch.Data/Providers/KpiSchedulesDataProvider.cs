@@ -34,6 +34,7 @@ namespace CityWatch.Data.Providers
         void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false);
         List<KpiSendKVSchedules> GetAllKVSchedules();
         void DeleteSendScheduleKV(int id);
+        KpiSendKVSchedules GetKVScheduleById(int scheduleId);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -457,5 +458,15 @@ namespace CityWatch.Data.Providers
             _context.KpiSendKVSchedules.Remove(recordToDelete);
             _context.SaveChanges();
         }
+        public KpiSendKVSchedules GetKVScheduleById(int scheduleId)
+        {
+
+            return _context.KpiSendKVSchedules
+              .Include(z => z.KpiSendKVClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == scheduleId);
+        }
+
     }
 }
