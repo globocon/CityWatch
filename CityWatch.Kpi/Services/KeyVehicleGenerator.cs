@@ -186,8 +186,8 @@ namespace CityWatch.Kpi.Services
                     //  pdfDoc.AddNewPage();
                 }
                 var pageSize = new PageSize(pdfDoc.GetFirstPage().GetPageSize());
-                index = index + 1;
-                pdfDoc.AddNewPage(index, pageSize);
+                //index = index + 1;
+                //pdfDoc.AddNewPage(index, pageSize);
             }
             doc.Close();
             pdfDoc.Close();

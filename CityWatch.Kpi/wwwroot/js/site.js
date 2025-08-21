@@ -494,9 +494,9 @@ $(function () {
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'projectName', title: 'Project Name', width: 100 },
+            { field: 'projectName', title: 'Project Name', width: 150 },
             { title: 'Schedule', renderer: KVscheduleRenderer, width: 120 },
-            { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 75 },
+            { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 150 },
             { field: 'emailTo', title: 'Email Recipients', width: 100 },
             { width: 150, renderer: schButtonRendererKV },
         ],
