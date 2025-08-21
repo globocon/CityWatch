@@ -85,31 +85,48 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public IActionResult OnGet(string displayItem)
         {
             var guardId = User.FindFirst("ClientProfileId")?.Value;
+
+            List<int> allowedSiteIds = new List<int>();
+
             if (!string.IsNullOrEmpty(guardId))
             {
-                //var allowedSites = _context.Sites
-                //    .Where(s => s.GuardId == int.Parse(guardId))
-                //    .ToList();
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+                }
             }
             else
-
             {
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
 
-
-            //This Api call for update the values of the tables Start
+            // This Api call for update the values of the tables Start
             CallApi();
-            //This Api call for update the values of the tables end
+            // This Api call for update the values of the tables end
 
             DisplayItem = displayItem;
 
+            // Active guards
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                activeGuardDetails = activeGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
             ActiveGuardCount = activeGuardDetails.Count();
+
+            // Inactive guards
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                inActiveGuardDetails = inActiveGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
             InActiveGuardCount = inActiveGuardDetails.Count();
-            SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
@@ -264,7 +281,32 @@ namespace CityWatch.RadioCheck.Pages.Radio
         //code added to save the duress button stop
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
+            // 1. Get guardId from claims
+            var guardId = User.FindFirst("ClientProfileId")?.Value;
+
+            List<int> allowedSiteIds = new List<int>();
+
+            if (!string.IsNullOrEmpty(guardId))
+            {
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+                }
+            }
+
+            // 2. Fetch all active guards
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+
+            // 3. Apply allowed site filter if needed
+            if (allowedSiteIds.Any())
+            {
+                activeGuardDetails = activeGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+
+            // 4. Map to DTO
             var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
             {
                 ClientSiteId = detail.ClientSiteId,
@@ -272,26 +314,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 SiteName = detail.SiteName,
                 Address = detail.Address,
                 GPS = detail.GPS,
-                GuardName=detail.GuardName,
-                LogBook=detail.LogBook,
-                KeyVehicle=detail.KeyVehicle,
-                IncidentReport=detail.IncidentReport,
-                SmartWands=detail.SmartWands,
-                RcStatus=detail.RcStatus,
-                RcColor=detail.RcColor,
-                Status=detail.Status,
-                RcColorId=detail.RcColorId,
-                OnlySiteName=detail.OnlySiteName,
-                LatestDate=detail.LatestDate,
-                ShowColor=detail.ShowColor,
-                hasmartwand=detail.hasmartwand,
-                HR1= CalculateHr1GroupStatus(detail.GuardId),
-                HR2= CalculateHr2GroupStatus(detail.GuardId),
-                HR3= CalculateHr3GroupStatus(detail.GuardId)
-                // Map other properties as needed
+                GuardName = detail.GuardName,
+                LogBook = detail.LogBook,
+                KeyVehicle = detail.KeyVehicle,
+                IncidentReport = detail.IncidentReport,
+                SmartWands = detail.SmartWands,
+                RcStatus = detail.RcStatus,
+                RcColor = detail.RcColor,
+                Status = detail.Status,
+                RcColorId = detail.RcColorId,
+                OnlySiteName = detail.OnlySiteName,
+                LatestDate = detail.LatestDate,
+                ShowColor = detail.ShowColor,
+                hasmartwand = detail.hasmartwand,
+                HR1 = CalculateHr1GroupStatus(detail.GuardId),
+                HR2 = CalculateHr2GroupStatus(detail.GuardId),
+                HR3 = CalculateHr3GroupStatus(detail.GuardId)
             }).ToList();
 
-            // Clean SiteName for Active Guards
+            // 5. Clean SiteName
             foreach (var g in activeGuardDetailModels)
             {
                 if (!string.IsNullOrEmpty(g.SiteName))
@@ -301,7 +342,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
 
             return new JsonResult(activeGuardDetailModels);
-           
+
         }
         public IActionResult OnGetClientSiteActivityStatusState(string State)
         {
@@ -527,20 +568,43 @@ namespace CityWatch.RadioCheck.Pages.Radio
             public string ColourCodeStatus { get; set; }
         }
         //code added for HR LED Stop
+        
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
         {
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
-            
+            var guardId = User.FindFirst("ClientProfileId")?.Value;
 
+            // Fetch inactive guard details
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+
+            List<int> allowedSiteIds = new List<int>();
+
+            if (!string.IsNullOrEmpty(guardId))
+            {
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+
+                    // Filter inactive guards by allowed sites
+                    inActiveGuardDetails = inActiveGuardDetails
+                        .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                        .ToList();
+                }
+                // if no allowed sites, then return full list (no filtering)
+            }
+
+            // Clean SiteName (remove <a> and <i> tags)
             foreach (var g in inActiveGuardDetails)
             {
                 if (!string.IsNullOrEmpty(g.SiteName))
                 {
-                    // Remove all <a> and <i> tags
                     g.SiteName = Regex.Replace(g.SiteName, "<.*?>", string.Empty).Trim();
                 }
             }
+
             return new JsonResult(inActiveGuardDetails);
+        
+
         }
         public IActionResult OnGetClientSiteInActivityStatusState(string State)
         {
