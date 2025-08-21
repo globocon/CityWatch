@@ -274,7 +274,8 @@ $(function () {
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function () {
-                showStatusNotification(true, 'Saved successfully');
+                alert('Your custom settings were saved successfully.');
+                showStatusNotification(true, 'Your custom settings were saved successfully.');
             }).fail(function () {
                 console.log('error');
             });
