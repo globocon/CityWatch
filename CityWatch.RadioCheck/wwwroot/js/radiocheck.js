@@ -214,7 +214,8 @@ $(window).resize(function () {
 
 
 
-
+let currentUrl2 = window.location.pathname.toLowerCase();
+let showButtonsActive = currentUrl2.includes("radiocheckv2"); // only show buttons in RadioCheckV2
 const groupColumn = 1;
 const groupColumn2 = 2;
 const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
@@ -222,10 +223,18 @@ const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- adde
 var scrollPosition2;
 var rowIndex2;
 //var scrollY = ($(window).height() - 300);
+
+if (showButtonsActive) {
+    ajaxUrl2 = "/RadioCheckV2?handler=ClientSiteActivityStatus";
+}
+else {
+    ajaxUrl2 = "/ClientProfile?handler=ClientSiteActivityStatus";
+}
+
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
     dom: 'Bfrtip',
-    buttons: [
+    buttons: showButtonsActive ? [
 
 
         
@@ -463,7 +472,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             }
         }
 
-    ],
+    ] : [],
 
    
 
@@ -486,7 +495,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
     "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
-        url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
+        url: ajaxUrl2,
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -520,15 +529,32 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '15%',
             orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
-                if (data.isEnabled === 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
-                        '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
 
+                if (showButtonsActive) {
+                    if (data.isEnabled === 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                            '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
+
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
                 }
                 else {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled === 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '' +
+                            '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
+
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '';
+                    }
+
                 }
             }
         },
@@ -627,17 +653,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
-        {
-            targets: -1,
+        
+        (showButtonsActive ? {
             data: null,
             width: '5%',
             defaultContent: '',
             render: function (value, type, data) {
-
                 return '<button name="btnRadioCheckStatusActive" class="btn btn-outline-primary">Radio Check</button>';
-
             }
-        },
+        } : {
+            data: null,
+            width: '1%',
+            visible: false
+        }),
 
         {
             data: 'siteName',
@@ -854,13 +882,23 @@ function format_kvl_child_row(d) {
         '</table>'
     );
 }
+
+
 var scrollPosition;
 var clientSiteActiveGuardsscrollPosition;
 var rowIndex;
+let currentUrl3 = window.location.pathname.toLowerCase();
+let showButtonsInActive = currentUrl3.includes("radiocheckv2");
 
+if (showButtonsInActive) {
+    ajaxUrl = "/RadioCheckV2?handler=ClientSiteInActivityStatus";
+}
+else {
+    ajaxUrl = "/ClientProfile?handler=ClientSiteInActivityStatus";
+}
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     dom: 'Bfrtip',
-    buttons: [
+    buttons: showButtonsInActive ? [
 
 
         {
@@ -1103,7 +1141,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         }
 
 
-    ],
+    ] :[],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -1124,7 +1162,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     "stateSave": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
-        url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
+        url: ajaxUrl,
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -1168,23 +1206,34 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
             },
             render: function (value, type, data) {
+                if (showButtonsInActive) {
+                    if (data.notificationType != 1) {
 
-                if (data.notificationType != 1) {
+                        if (data.isEnabled != 1) {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                        }
+                        else {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                                '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" data-placement="right" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                        }
 
-                    if (data.isEnabled != 1) {
-                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
                     }
                     else {
-                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
-                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" data-placement="right" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
-                    }
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
 
+                    }
                 }
                 else {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
 
+                    if (data.notificationType != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName ;
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
+
+                    }
                 }
 
             }
@@ -1266,8 +1315,9 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 }
 
             },
-        },
-        {
+        },       
+
+        (showButtonsInActive ? {
             targets: -1,
             data: null,
             width: '1%',
@@ -1284,7 +1334,20 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">RC</button>';
 
             }
-        },
+        } : {
+              
+            data: null,
+            defaultContent: '',
+            width: '1%',
+                visible: false,
+                createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                    // Define your conditions to add a class
+                    if (rowData.isEnabled == 1) {
+                        cell.classList.add('bg-danger');
+                    }
+
+                },
+        }),
         {
             data: 'siteName',
             visible: false,
@@ -2893,14 +2956,38 @@ function clearGuardValidationSummary(validationControl) {
 }
 
 $('#openInActiveGuardInNewPage').on('click', function () {
-    let newTab = window.open();
-    newTab.location.href = "/InActiveGuardSinglePage";
+
+    let currentUrl2 = window.location.pathname.toLowerCase();
+    let showButtonsActive = currentUrl2.includes("radiocheckv2"); // only show buttons in RadioCheckV2
+
+    if (showButtonsActive) {
+        let newTab = window.open();
+        newTab.location.href = "/InActiveGuardSinglePage";
+        
+    }
+    else {
+        let newTab = window.open();
+        newTab.location.href = "/ClientProfileInActiveGuardSinglePage";
+    }
+   
 
 });
 
 $('#openActiveGuardInNewPage').on('click', function () {
-    let newTab = window.open();
-    newTab.location.href = "/ActiveGuardSinglePage";
+
+    let currentUrl2 = window.location.pathname.toLowerCase();
+    let showButtonsActive = currentUrl2.includes("radiocheckv2"); // only show buttons in RadioCheckV2
+
+    if (showButtonsActive) {
+        let newTab = window.open();
+        newTab.location.href = "/ActiveGuardSinglePage";
+
+    }
+    else {
+        let newTab = window.open();
+        newTab.location.href = "/ClientProfileActiveGuardSinglePage";
+    }
+   
 
 });
 /*code added for Global Messsage start*/
@@ -3508,11 +3595,19 @@ $('#chkClientType').change(function () {
 /*to get the client type and site as multiselect-end*/
 
 /* Single page Grid Start  */
+let currentUrlInActiveSingle = window.location.pathname.toLowerCase();
+let showButtonsInActiveSingle = (currentUrlInActiveSingle === "/inactiveguardsinglepage");
 
+if (showButtonsInActiveSingle) {
+    ajaxUrlInActiveSingle = "/RadioCheckV2?handler=ClientSiteInActivityStatus";
+}
+else {
+    ajaxUrlInActiveSingle = "/ClientProfile?handler=ClientSiteInActivityStatus";
+}
 
 let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage').DataTable({
     dom: 'Bfrtip',
-    buttons: [
+    buttons: showButtonsInActiveSingle? [
 
         {
             text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
@@ -3728,7 +3823,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
         }
 
 
-    ],
+    ] : [],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -3749,7 +3844,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     "stateSave": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
-        url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
+        url: ajaxUrlInActiveSingle,
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -3788,22 +3883,42 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 }
             },
             render: function (value, type, data) {
+                if (showButtonsInActiveSingle) {
+                    if (data.notificationType != 1) {
 
-                if (data.notificationType != 1) {
+                        if (data.isEnabled != 1) {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                        }
+                        else {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                                '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                        }
 
-                    if (data.isEnabled != 1) {
-                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
                     }
                     else {
-                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
-                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
-                    }
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
 
+                    }
                 }
                 else {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
+                    if (data.notificationType != 1) {
+
+                        if (data.isEnabled != 1) {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName;
+                                ;
+                        }
+                        else {
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +                               
+                                '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                        }
+
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
+
+                    }
 
                 }
 
@@ -3887,7 +4002,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
             },
         },
-        {
+        (showButtonsInActiveSingle ? {
             targets: -1,
             data: null,
             width: '1%',
@@ -3904,7 +4019,12 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">RC</button>';
 
             }
-        },
+        } : {
+            defaultContent: '',
+            data: null,
+            width: '1%',
+            visible: false
+            }),
         {
             data: 'siteName',
             visible: false,
@@ -4042,11 +4162,20 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
 
 
 
+let currentUrlsinglepage = window.location.pathname.toLowerCase();
+let showButtonsActivesinglepage = (currentUrlsinglepage === "/activeguardsinglepage");
+
+if (showButtonsActivesinglepage) {
+    ajaxUrl2singlepage = "/RadioCheckV2?handler=ClientSiteActivityStatus";
+}
+else {
+    ajaxUrl2singlepage = "/ClientProfile?handler=ClientSiteActivityStatus";
+}
 
 let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').DataTable({
 
     dom: 'Bfrtip',
-    buttons: [
+    buttons: showButtonsActivesinglepage ? [
 
 
         {
@@ -4270,7 +4399,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         }
 
 
-    ],
+    ]  : [],
 
 
 
@@ -4293,7 +4422,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
     "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
-        url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
+        url: ajaxUrl2singlepage,
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -4327,8 +4456,18 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             width: '20%',
             orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                if (showButtonsActivesinglepage) {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                }
+                else {
+
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName;
+                      
+
+                }
             }
         },
         {
@@ -4427,7 +4566,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
-        {
+        (showButtonsActivesinglepage ? {
             targets: -1,
             data: null,
             width: '5%',
@@ -4437,7 +4576,13 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 return '<button name="btnRadioCheckStatusActive" class="btn btn-outline-primary">Radio Check</button>';
 
             }
-        },
+        } : {
+            defaultContent: '',
+            data: null,
+            width: '5%',
+            visible: false
+        
+}),
 
         {
             data: 'siteName',
