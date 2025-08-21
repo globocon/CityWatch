@@ -122,7 +122,7 @@ $(function () {
         var changeval = $(this).val();
         if (changeval == '1') {
             $('#btnGuardRcAccess').prop("disabled", false);
-            $('#btnGuardRcAccess').addClass('bg-transparent');
+            $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
         }
         else {
             if (confirm("Guard will have access to all sites.Are you sure ?")) {
@@ -130,6 +130,7 @@ $(function () {
                 $.ajax({
                     url: '/Admin/Settings?handler=ClearAllRcSiteAccessFromGuard',
                     type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                     data: {
                         guardId: $('#Guard_Id').val()
                     },
@@ -138,6 +139,7 @@ $(function () {
                         if (response.status) {
                             $('#btnGuardRcAccess').prop("disabled", true);
                             $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
+                            alert(response.message);
                         } else {
                             alert(response.message);
                             $(this).val('1').trigger('change');
@@ -4878,7 +4880,6 @@ $(function () {
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
             { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-            { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', width: "2%", visible: false, searchable: false },
 
         {
             targets: -1,
@@ -4888,7 +4889,8 @@ $(function () {
             className: "text-center",
             width: "0%"
             },
-             { data: 'dateEnrolled', visible: false },
+            { data: 'dateEnrolled', visible: false },
+            { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
         ],
         initComplete: function (settings, json) {
             $('#chkbxfilterGuardActive').prop("disabled", false);
@@ -5313,9 +5315,11 @@ $(function () {
         if (data.guardRcSiteAccessCount > 0) {
             $('#Guard_Rc_Access').val('1');
             $('#btnGuardRcAccess').prop('disabled', false);
+            $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
         } else {
             $('#Guard_Rc_Access').val('0');
             $('#btnGuardRcAccess').prop('disabled', true);
+            $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
         }
 
     });
