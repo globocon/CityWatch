@@ -342,6 +342,7 @@ $(function () {
     // Schedules
     let gridSchedules;
     let gridTimesheetSchedules;
+    let gridKVSchedules;
 
     function renderNextRunOn(value, record) {
         if (value === '9999-12-31T23:59:59.997') return 'n/a';
@@ -469,6 +470,416 @@ $(function () {
         buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#TimeSheetschedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
+    ///kv-schedule-start
+    function KVscheduleRenderer(value, record) {
+        let scheduleHtml = '';
+        scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">To: ' + renderScheduleEndDate(record.endDate, record) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">' + renderScheduleFrequency(record.frequency, record) + ' @ ' + record.time + ' Hrs </span>';
+        scheduleHtml += '<span class="my-1 d-block">Status:' + renderIsPaused(record.isPaused);
+        return scheduleHtml;
+    }
+    function schButtonRendererKV(value, record) {
+        let buttonHtml = '';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal2" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#KVschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        buttonHtml += '<button class="btn btn-outline-danger del-schedule1 mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#KVschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
+    }
+    gridKVSchedules = $('#kpi_send_KVSchedules').grid({
+        dataSource: '/Admin/Settings?handler=KpiKVSchedules',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'projectName', title: 'Project Name', width: 150 },
+            { title: 'Schedule', renderer: KVscheduleRenderer, width: 120 },
+            { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 150 },
+            { field: 'emailTo', title: 'Email Recipients', width: 100 },
+            { width: 150, renderer: schButtonRendererKV },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#run-schedule-modal1').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const schId = button.data('sch-id');
+        $('#sch-id').val(schId);
+        $('#btnScheduleRunTime').prop('disabled', false);
+        $('#schRunStatus').html('');
+    });
+    $('#run-schedule-modal2').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const schId = button.data('sch-id');
+        $('#sch-id').val(schId);
+        $('#btnScheduleRunKV').prop('disabled', false);
+        $('#schRunStatus').html('');
+    });
+
+    $('#btnScheduleRunKV').on('click', function () {
+        $('#btnScheduleRunKV').prop('disabled', true);
+        $('#schRunStatusKV').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
+        $.ajax({
+            url: '/Admin/Settings?handler=RunScheduleKV',
+            type: 'POST',
+            data: {
+                scheduleId: $('#sch-id').val(),
+                reportYear: $('#schRunYear').val(),
+                reportMonth: $('#schRunMonth2').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsKV').is(':checked'),
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            $('#btnScheduleRunKV').prop('disabled', false);
+            const messageHtml = result.success ? '<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email' :
+                '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
+            $('#schRunStatusKV').html(messageHtml);
+        });
+    });
+
+
+    $('#btnScheduleDownload2').on('click', function () {
+        $('#btnScheduleDownload2').prop('disabled', true);
+        $('#schRunStatusKV').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
+        $.ajax({
+            type: 'GET',
+            url: '/Admin/Settings?handler=DownloadPdfKV',
+            data: {
+                scheduleId: $('#sch-id').val(),
+                reportYear: $('#schRunYear').val(),
+                reportMonth: $('#schRunMonth2').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsKV').is(':checked'),
+            },
+            xhrFields: {
+                responseType: 'blob' // For handling binary data
+            },
+            success: function (data, textStatus, request) {
+                var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                var matches = filenameRegex.exec(contentDispositionHeader);
+                var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+                // Create a Blob with the PDF data and initiate the download
+                var blob = new Blob([data], { type: 'application/pdf' });
+                // // Create a temporary anchor element to trigger the download
+                //var url = window.URL.createObjectURL(blob);
+                // // Open the PDF in a new tab
+                //var newTab = window.open(url, '_blank');
+
+                const URL = window.URL || window.webkitURL;
+                const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+                const bloburl = URL.createObjectURL(blob);
+                const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+                const windowUrl = window.location.origin; // + window.location.pathname;
+                const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+                var newTab = window.open(`${viewerUrl}${objectUrl}`);
+                if (!newTab) {
+                    // If the new tab was blocked, fallback to downloading the file
+                    var a = document.createElement('a');
+                    a.href = bloburl;
+                    a.download = downloadedFileName;
+                    a.click();
+                }
+
+                URL.revokeObjectURL(bloburl);
+                URL.revokeObjectURL(objectUrl);
+
+                //if (!newTab) {
+                //    // If the new tab was blocked, fallback to downloading the file
+                //    var a = document.createElement('a');
+                //    a.href = url;
+                //    a.download = downloadedFileName;
+                //    a.click();
+                //}
+                //window.URL.revokeObjectURL(url);                
+            },
+            error: function () {
+                alert('Error while downloading the PDF.');
+            }
+        }).done(function (result) {
+            $('#btnScheduleDownload2').prop('disabled', false);
+            const messageHtml = '';
+            $('#schRunStatusKV').html(messageHtml);
+        });
+    });
+    $('#kpi_send_KVSchedules').on('click', '.del-schedule1', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this KV schedule?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKpiSendScheduleKV',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridKVSchedules.reload();
+            });
+        }
+
+    });
+    function clearScheduleModalKV() {
+
+        $('#kvscheduleId').val('0');
+        $('#clientTypeNamekv').val('');
+        $('#clientSiteskv').html('<option value="">Select</option>');
+        $('#selectedSiteskv').html('');
+        updateSelectedSitesKVCount()
+        $('input:hidden[name="clientSiteIds"]').remove();
+        $('#clientTypeNamekv option:eq(0)').attr('selected', true);
+        $('#startDatekv').val('');
+        $('#startDatekv').removeAttr('min');
+        $('#endDatekv').val('');
+        $('#endDatekv').removeAttr('min');
+        $('#kvtime').val('');
+        $('#frequencykv option').removeAttr('selected');
+        $('#frequencykv').val('');
+        $('#kvnextRunOn').val('');
+        $('#sch-modal-validation').html('');
+        $('#emailTokv').val('');
+        $('#emailBcckv').val('');
+
+        $('#projectNamekv').val('');
+        $('#VehicleRegokv').val('');
+        $('#CompanyNamekv').val('');
+        $('#SiteLockv').val('');
+        kvSitesOptionAdded();
+        
+
+    }
+    function scheduleModalOnEditKV(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiKVSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+
+            $('#kvscheduleId').val(data.id);
+            $('#startDatekv').val(data.startDate.split('T')[0]);
+            if (data.endDate)
+                $('#endDatekv').val(data.endDate.split('T')[0]);
+            $('#endDatekv').attr('min', new Date().toISOString().split('T')[0]);
+            $('#frequencykv').val(data.frequency).change();
+            $('#frequencykv option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#kvtime').val(data.time);
+            $('#kvnextRunOn').val(data.nextRunOn);
+            $('#emailTokv').val(data.emailTo);
+            $('#emailBcckv').val(data.emailBcc)
+
+            $.each(data.kpiSendKVClientSites, function (index, item) {
+                $('#selectedSiteskv').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesKVCount();
+            });
+            kvSitesOptionAdded();
+            $('#projectNamekv').val(data.projectName);
+            $('#VehicleRegokv').val(data.vehicleRego);
+            $('#CompanyNamekv').val(data.companyName);
+            $('#SiteLockv').val(data.clientSiteLocationId);
+            
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+    function scheduleModalOnCopyKV1(scheduleId) {
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiKVSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDatekv').val(dateToday);
+            $('#startDatekv').attr('min', dateToday);
+            const dateEnd = '2100-01-01'
+            $('#endDatekv').val(dateEnd.split('T')[0]);
+
+            $('#kvscheduleId').val(data.id);
+            // $('#startDateTimesheet').val(data.startDate.split('T')[0]);
+            //if (data.endDate)
+            //    $('#endDateTimesheet').val(data.endDate.split('T')[0]);
+            //$('#endDateTimesheet').attr('min', new Date().toISOString().split('T')[0]);
+            $('#frequencykv').val(data.frequency).change();
+            $('#frequencykv option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#kvtime').val(data.time);
+            $('#kvnextRunOn').val(data.nextRunOn);
+            $('#emailTokv').val(data.emailTo);
+            $('#emailBcckv').val(data.emailBcc)
+
+            $.each(data.kpiSendKVClientSites, function (index, item) {
+                $('#selectedSiteskv').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesKVCount();
+            });
+            //$('#projectNameTimesheet').val(data.projectName);
+
+            kvSitesOptionAdded();
+            $('#projectNamekv').val(data.projectName);
+            $('#VehicleRegokv').val(data.vehicleRego);
+            $('#CompanyNamekv').val(data.companyName);
+            $('#SiteLockv').val(data.clientSiteLocationId);
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+    function scheduleModalOnAddKV() {
+        const dateToday = new Date().toISOString().split('T')[0];
+        $('#startDatekv').val(dateToday);
+        $('#startDatekv').attr('min', dateToday);
+        const dateEnd = '2100-01-01'
+        $('#endDatekv').val(dateEnd.split('T')[0]);
+
+        $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+
+    }
+    $('#KVschedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModalKV();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            scheduleModalOnEditKV(schId);
+        } else {
+            //P2-103 Duplicate Settings-start
+            const isCopy = button.data('action') !== undefined && button.data('action') === 'copySchedule1';
+            if (isCopy) {
+                schId = button.data('sch-id');
+                scheduleModalOnCopyKV1(schId);
+            } else {
+                scheduleModalOnAddTimesheet();
+            }
+            //P2-103 Duplicate Settings-end
+        }
+
+        // showHideSchedulePopupTabs(isEdit);
+    });
+
+    $('#btnSaveKVSchedule').on('click', function () {
+        $("input[name=clientSiteIds]").remove();
+        var options = $('#selectedSiteskv option');
+        options.each(function () {
+            const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+            $('#frm_kpi_kvschedule').append(elem);
+        });
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveKpiKVSchedule',
+            type: 'POST',
+            data: $('#frm_kpi_kvschedule').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#KVschedule-modal').modal('hide');
+                alert('Schedule saved successfully');
+                gridKVSchedules.reload();
+            } else {
+                $('#sch-modal-validation1').html('');
+                data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
+                $('#sch-modal-validation1').show().delay(5000).fadeOut();
+            }
+        });
+    });
+    $('#clientTypeNamekv').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSiteskv').html('');
+            $('#clientSiteskv').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSiteskv').html('');
+            $('#clientSiteskv').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSiteskv').append('<option value="' + site.value + '">' + site.text + '</option>');
+               
+            });
+        });
+    });
+   
+     function kvSitesOptionAdded () {
+        //const option = $(this).val();
+        const option = $('#selectedSiteskv option').map(function () {
+            return $(this).val();
+        }).get();
+         if (option.length == 0 ) {
+            $('#SiteLockv').html('');
+            $('#SiteLockv').append('<option value="">Select</option>');
+            $('#CompanyNamekv').html('');
+            $('#CompanyNamekv').append('<option value="">Select</option>');
+
+            $('#kvKeyNo').html('');
+             $('#kvKeyNo').append('<option value="">Select</option>');
+             return;
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteLocationsAndCompanyDetails&clientSiteIds=' +  option.join(';'),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#SiteLockv').html('');
+            $('#SiteLockv').append('<option value="">Select</option>');
+            
+            $('#CompanyNamekv').html('');
+            $('#CompanyNamekv').append('<option value="">Select</option>');
+
+            $('#kvKeyNo').html('');
+            $('#kvKeyNo').append('<option value="">Select</option>');
+            data.siteLocations.map(function (loc) {
+                $('#SiteLockv').append('<option value="' + loc.value + '">' + loc.text + '</option>');
+            });
+            data.companyDetails.map(function (det) {
+                $('#CompanyNamekv').append('<option value="' + det + '">' + det + '</option>');
+            });
+            data.clientSiteKeys.map(function (key) {
+                $('#kvKeyNo').append('<option value="' + key.keyNo + '">' + key.keyNo + '</option>');
+            });
+        });
+    }
+    $('#clientSiteskv').on('change', function () {
+        const elem = $(this).find(":selected");
+        if (elem.val() !== '') {
+            const existing = $('#selectedSiteskv option[value="' + elem.val() + '"]');
+            if (existing.length === 0) {
+                $('#selectedSiteskv').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                updateSelectedSitesKVCount();
+                kvSitesOptionAdded();
+            }
+        }
+    });
+    function updateSelectedSitesKVCount() {
+        $('#selectedSitesCountkv').text($('#selectedSiteskv option').length);
+    }
+    $('#editSelectedSitekv').on('click', function () {
+        if ($('#editSiteTriggerkv').length === 1) {
+            $('#editSiteTriggerkv').remove()
+        }
+
+        const selectedOption = $('#selectedSiteskv option:selected');
+        if (selectedOption.length == 0) {
+            alert('Please select a site to edit');
+        } else if (selectedOption.length > 1) {
+            alert('Select only one site to edit');
+        } else {
+
+            let triggerButton = '<button type="button" id="editSiteTriggerkv" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+                //p1-139 change pop up start
+                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KV"></button>';
+            //p1-139 change pop up end
+            $(triggerButton).insertAfter($(this));
+            $('#editSiteTriggerkv').click();
+
+        }
+    });
+    $('#removeSelectedSiteskv').on('click', function () {
+        $('#selectedSiteskv option:selected').remove();
+        updateSelectedSitesKVCount();
+        kvSitesOptionAdded();
+    });
+   
+    //kv-schedule-end
     $('#btnSaveTimesheetSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
         var options = $('#selectedSitesTimeSheet option');
@@ -2694,7 +3105,7 @@ $('#btnScheduleRunTime').on('click', function () {
     $('#btnScheduleRunTime').prop('disabled', true);
     $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
     $.ajax({
-        url: '/Admin/Settings?handler=RunScheduleTimeSheet',
+        url: '/Admin/Settings?handler=RunScheduleKV',
         type: 'POST',
         data: {
             scheduleId: $('#sch-id').val(),

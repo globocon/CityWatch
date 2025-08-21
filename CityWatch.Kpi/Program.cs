@@ -45,6 +45,8 @@ builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
 builder.Services.AddScoped<IGuardSettingsDataProvider, GuardSettingsDataProvider>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ITimesheetGenerator, TimeSheetGenerator>();
+builder.Services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService>();
+builder.Services.AddScoped<IKeyVehicleGenerator, KeyVehicleGenerator>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

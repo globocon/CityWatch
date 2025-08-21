@@ -34,6 +34,8 @@ namespace CityWatch.Data.Providers
         public List<ANPR> GetANPR(int clientSiteId);
         public void DeleteANPR(int id);
         public ANPR GetANPRCheckbox(int clientSiteId);
+        List<ClientSiteLocation> GetClientSiteLocations();
+        List<ClientSiteKey> GetClientSiteKeysFilter(int[] clientSiteIds);
     }
 
     public class GuardSettingsDataProvider : IGuardSettingsDataProvider
@@ -246,6 +248,21 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //p2-140 key photos  -end
+        public List<ClientSiteLocation> GetClientSiteLocations()
+        {
+            return _context.ClientSiteLocations
+                .Where(z => !z.IsDeleted)
+                .OrderBy(z => z.Name)
+                .ToList();
+        }
+        public List<ClientSiteKey> GetClientSiteKeysFilter(int[] clientSiteIds)
+        {
+            return _context.ClientSiteKeys
+                .Where(z => clientSiteIds.Contains(z.ClientSiteId) && z.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .OrderBy(z => z.KeyNo)
+                .ToList();
+        }
     }
 
 }
