@@ -31,6 +31,10 @@ namespace CityWatch.Data.Providers
         KpiSendTimesheetSchedules GetTimesheetScheduleById(int scheduleId);
         KpiSendTimesheetSchedules GetTimesheetScheduleByIdandGuardId(int scheduleId, int GuardId);
         public void RemoveAllKpiSendScheduleJobsOldNotComplete();
+        void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false);
+        List<KpiSendKVSchedules> GetAllKVSchedules();
+        void DeleteSendScheduleKV(int id);
+        KpiSendKVSchedules GetKVScheduleById(int scheduleId);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -404,5 +408,65 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
         }
+        public void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false)
+        {
+            var schedule = _context.KpiSendKVSchedules.Include(z => z.KpiSendKVClientSites).SingleOrDefault(z => z.Id == sendSchedule.Id);
+            if (schedule == null)
+                _context.Add(sendSchedule);
+            else
+            {
+                if (updateClientSites)
+                {
+                    _context.KpiSendKVClientSites.RemoveRange(schedule.KpiSendKVClientSites);
+                    _context.SaveChanges();
+                }
+
+                schedule.StartDate = sendSchedule.StartDate;
+                schedule.EndDate = sendSchedule.EndDate;
+                schedule.Frequency = sendSchedule.Frequency;
+                schedule.Time = sendSchedule.Time;
+                schedule.EmailTo = sendSchedule.EmailTo;
+                schedule.NextRunOn = sendSchedule.NextRunOn;
+
+                schedule.ProjectName = sendSchedule.ProjectName;
+
+                schedule.EmailBcc = sendSchedule.EmailBcc;
+                schedule.CompanyName = sendSchedule.CompanyName;
+                schedule.VehicleRego = sendSchedule.VehicleRego;
+                schedule.KeyNo = sendSchedule.KeyNo;
+                schedule.ClientSiteLocationId = sendSchedule.ClientSiteLocationId;
+
+                if (updateClientSites)
+                    schedule.KpiSendKVClientSites = sendSchedule.KpiSendKVClientSites;
+            }
+            _context.SaveChanges();
+        }
+        public List<KpiSendKVSchedules> GetAllKVSchedules()
+        {
+            return _context.KpiSendKVSchedules
+                .Include(z => z.KpiSendKVClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .ToList();
+        }
+        public void DeleteSendScheduleKV(int id)
+        {
+            var recordToDelete = _context.KpiSendKVSchedules.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.KpiSendKVSchedules.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+        public KpiSendKVSchedules GetKVScheduleById(int scheduleId)
+        {
+
+            return _context.KpiSendKVSchedules
+              .Include(z => z.KpiSendKVClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == scheduleId);
+        }
+
     }
 }

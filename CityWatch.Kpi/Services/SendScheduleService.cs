@@ -23,6 +23,10 @@ using CityWatch.Common.Helpers;
 using System.Security.Policy;
 using System.Globalization;
 using Dropbox.Api.Users;
+using CityWatch.Data.Enums;
+using CityWatch.Kpi.Models;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace CityWatch.Kpi.Services
 {
@@ -33,6 +37,8 @@ namespace CityWatch.Kpi.Services
         byte[] ProcessDownloadTimeSheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
         Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        Task<string> ProcessKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -49,6 +55,7 @@ namespace CityWatch.Kpi.Services
         private readonly ILogger<SendScheduleService> _logger;
         private readonly Settings _settings;
         private readonly ITimesheetGenerator _kpiTimesheetReportGenerator;
+        private readonly IKeyVehicleGenerator _kpiKVReportGenerator;
 
         public SendScheduleService(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
@@ -61,7 +68,7 @@ namespace CityWatch.Kpi.Services
             IClientDataProvider clientDataProvider,
             ILogger<SendScheduleService> logger,            
             IOptions<Settings> settings,
-            ITimesheetGenerator kpiTimesheetReportGenerator)
+            ITimesheetGenerator kpiTimesheetReportGenerator, IKeyVehicleGenerator kpiKVReportGenerator)
         {
             _webHostEnvironment = webHostEnvironment;
             _emailOptions = emailOptions.Value;
@@ -75,6 +82,7 @@ namespace CityWatch.Kpi.Services
             _logger = logger;
             _settings = settings.Value;
             _kpiTimesheetReportGenerator = kpiTimesheetReportGenerator;
+            _kpiKVReportGenerator = kpiKVReportGenerator;
         }
 
         public async Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
@@ -783,6 +791,256 @@ namespace CityWatch.Kpi.Services
             }
 
             return fileBytes;
+        }
+        public async Task<string> ProcessKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            var statusLog = new StringBuilder();
+            try
+            {
+                statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
+                var siteIds = schedule.KpiSendKVClientSites.Select(z => z.ClientSiteId).ToArray();
+                var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
+
+                var siteReportFileNames = new List<string>();
+
+                string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                string EndDate = "";
+                if (reportEndDate != null)
+                {
+                    EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                }
+               // _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
+
+                // Create Pdf Report
+                var fileName = "";
+                //if (schedule.KpiSendKVClientSites.Count()>0)
+                //{
+                //    var clientsiteids = schedule.KpiSendKVClientSites
+                //  .Select(x => x.ClientSiteId)
+                //  .ToArray();
+                //    fileName = _kpiKVReportGenerator.GeneratePdfKeyVehicleReportList(reportStartDate, reportEndDate, schedule);
+                //}
+                if (schedule.KpiSendKVClientSites.Count <= 0)
+                {
+                    return string.Empty;
+                }
+                var clientsiteids = schedule.KpiSendKVClientSites
+                  .Select(x => x.ClientSiteId)
+                  .ToArray();
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientsiteids).ToList();
+                if (!clientSiteKpiSettings.Any())
+                {
+                    return string.Empty;
+                }
+
+                 fileName = _kpiKVReportGenerator.GeneratePdfReport(clientSiteKpiSettings, schedule, reportStartDate,reportEndDate);
+               
+                // fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, _kpiKVReportGenerator);
+
+
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                    //continue;
+                }
+                var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+               SendEmailKV(reportFileName, schedule, reportStartDate, ignoreRecipients);
+
+                siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+
+
+
+
+                statusLog.AppendFormat("Schedule {0} - Completed. ", schedule.Id);
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendFormat("Schedule {0} - Exception - {1}", schedule.Id, ex.Message);
+            }
+
+            return statusLog.ToString();
+        }
+        private void SendEmailKV(string fileName, KpiSendKVSchedules schedule, DateTime reportDate, bool ignoreRecipients)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+
+
+            var subject = "Monthly KeyVehicle Report";
+            var messageHtml = "Dear Citywatch Security Client; <br><br>Please find attached KeyVehicle Records.</a>";
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            /*Default to adresss for kpi Schedule Start*/
+            //var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
+            //var emailAddresses = string.Join(",", Emails.Select(email => email.TimesheetsMail));
+            //if (emailAddresses != null && emailAddresses != "")
+            //{
+            //    var toAddressNew = emailAddresses.Split(',');
+            //    foreach (var address in GetToEmailAddressList(toAddressNew))
+            //        message.From.Add(address);
+            //}
+            /*Default to adresss for kpi Schedule end*/
+            /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
+
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
+            if (!ignoreRecipients)
+            {
+                if (!string.IsNullOrEmpty(schedule.EmailTo))
+                {
+                    foreach (var email in schedule.EmailTo.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(schedule.EmailBcc))
+                {
+                    foreach (var email in schedule.EmailBcc.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Bcc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+            }
+            message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+            builder.Attachments.Add(fileName);
+            message.Body = builder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
+
+        public byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            
+            var statusLog = new StringBuilder();
+            byte[] fileBytes = null;
+            try
+            {
+                statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
+                int[] siteIds = schedule.KpiSendKVClientSites.Select(z => z.ClientSiteId).ToArray();
+                var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
+
+                var siteReportFileNames = new List<string>();
+
+                string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                string EndDate = "";
+                if (reportEndDate != null)
+                {
+                    EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                }
+                var fileName = "";
+                // Create Pdf Report
+                //DateTime reportEndDate = DateTime.ParseExact("your_input_here", "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                var clientsiteids = schedule.KpiSendKVClientSites
+                  .Select(x => x.ClientSiteId)
+                  .ToArray();
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientsiteids).ToList();
+                
+
+                fileName = _kpiKVReportGenerator.GeneratePdfReport(clientSiteKpiSettings, schedule, reportStartDate, reportEndDate);
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                    //continue;
+                }
+
+                siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+
+
+                if (siteReportFileNames.Any())
+                {
+                    //schedule.ProjectName = GetSchduleIdentifierTimesheet(schedule);
+
+                    // Create summary page
+                    //var summaryFileName = CreateSummaryReportTimesheetNew(schedule, reportStartDate, reportEndDate, fileName);
+
+                    // Combine reports to a single pdf                    
+                    //var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KV Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                   var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                    //PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames, summaryFileName);
+
+                    //PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames,null);
+
+
+
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOn(schedule);
+                        // _kpiSchedulesDataProvider.SaveSendSchedule(schedule);
+
+                        if (!_webHostEnvironment.IsDevelopment())
+                            UploadReportKV(reportFileName, schedule, reportStartDate);
+                    }
+
+                    fileBytes = System.IO.File.ReadAllBytes(reportFileName);
+                    //// Cleanup files
+                    //foreach (var fileName1 in siteReportFileNames)
+                    //{
+                    //    if (File.Exists(fileName1))
+                    //        File.Delete(fileName1);
+                    //}
+
+                    //if (File.Exists(reportFileName))
+                    //    File.Delete(reportFileName);
+
+                    //if (File.Exists(summaryFileName))
+                    //    File.Delete(summaryFileName);
+                }
+
+                statusLog.AppendFormat("Schedule {0} - Completed. ", schedule.Id);
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendFormat("Schedule {0} - Exception - {1}", schedule.Id, ex.Message);
+            }
+
+            return fileBytes;
+        }
+        private bool UploadReportKV(string reportFileName, KpiSendKVSchedules schedule, DateTime reportDate)
+        {
+            var clientSiteIds = schedule.KpiSendKVClientSites.Select(z => z.ClientSiteId).ToArray();
+            var ClientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
+
+            var success = false;
+            foreach (var settings in ClientSiteKpiSettings)
+            {
+                if (settings.DropboxScheduleisActive)
+                {
+                    if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
+                    {
+                        try
+                        {
+                            var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
+                            success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
+                            _logger.LogError(ex.StackTrace);
+                        }
+                    }
+
+                }
+            }
+
+            return success;
         }
 
     }

@@ -27,6 +27,7 @@ using Microsoft.Extensions.Options;
 using CityWatch.Common.Services;
 using System.Security.Policy;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -47,6 +48,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IClientSiteViewDataService _clientViewDataService;
 
 
         [BindProperty]
@@ -57,6 +59,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public IGuardLogDataProvider GuardLogDataProvider { get { return _guardLogDataProvider; } }
 
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
+        public IClientSiteViewDataService ClientViewDataService { get { return _clientViewDataService; } }
         public int GuardId { get; set; }
         public int userId { get; set; }
         public int ClientTypeId { get; set; }
@@ -77,7 +80,8 @@ namespace CityWatch.Kpi.Pages.Admin
              IGuardDataProvider guardDataProvider,
              IConfigDataProvider configDataProvider,
              IOptions<Settings> settings,
-             IDropboxService dropboxUploadService
+             IDropboxService dropboxUploadService,
+             IClientSiteViewDataService clientViewDataService
              )
         {
             _webHostEnvironment = webHostEnvironment;
@@ -95,6 +99,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _configDataProvider = configDataProvider;
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
+            _clientViewDataService = clientViewDataService;
 
         }
 
@@ -2311,7 +2316,121 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //wand tags-end
+        //kv-scheudle-start
+        public JsonResult OnGetKpiKVSchedules()
+        {
+            
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
+                    .OrderBy(x => x.ProjectName));
 
+           
+        }
+        public JsonResult OnPostSaveKpiKVSchedule(KpiKVScheduleViewModel kpiSendKVViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(kpiSendKVViewModel, new ValidationContext(kpiSendKVViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var kpiSendSchedule = KpiKVScheduleViewModel.ToDataModel(kpiSendKVViewModel);
+                if (kpiSendSchedule.Id == 0)
+                    kpiSendSchedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOn(kpiSendSchedule);
+                else
+                    kpiSendSchedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOnUpdate(kpiSendSchedule);
+                _kpiSchedulesDataProvider.SaveKVSchedule(kpiSendSchedule, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetKVCompanyDetails(string clientSiteIds, string searchKeyNo)
+        {
+            var arClientSiteIds = clientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds,""));
+
+        }
+        public JsonResult OnGetClientSiteLocationsAndCompanyDetails(string clientSiteIds)
+        {
+            var siteLocations = new List<SelectListItem>();
+         
+            var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
+
+            siteLocations = _clientViewDataService.GetClientSiteLocationsNew(arClientSiteIds);
+            var companyDetails = _configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds, "");
+            var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeysFilter(arClientSiteIds).ToList();
+            return new JsonResult(new { siteLocations, companyDetails, clientSiteKeys });
+        }
+        public JsonResult OnGetKpiKVSchedule(int id)
+        {
+           
+            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules().Where(x=>x.Id==id).FirstOrDefault());
+        }
+        public JsonResult OnPostDeleteKpiSendScheduleKV(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteSendScheduleKV(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+        public JsonResult OnPostRunScheduleKV(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var success = false;
+            string message;
+            try
+            {
+                var schedule = _kpiSchedulesDataProvider.GetKVScheduleById(scheduleId);
+                if (schedule == null)
+                    throw new ArgumentException("Schedule not found");
+
+                var task = _sendScheduleService.ProcessKVSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+
+                message = task.Result;
+                success = !(message.Contains("Error") || message.Contains("Exception"));
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            if (!success)
+            {
+                _logger.LogError(message);
+            }
+
+            return new JsonResult(new { success });
+        }
+        public IActionResult OnGetDownloadPdfKV(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetKVScheduleById(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+            // Generate the PDF file
+            DateTime date = new DateTime(reportYear, reportMonth, 1);
+            string filename = $"{reportYear}{reportMonth.ToString("00")} - {FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Monthly Report - {date.ToString("MMM").ToUpper()} {reportYear}";
+            byte[] pdfBytes = _sendScheduleService.ProcessDownloadKVSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+            Response.Headers["Content-Disposition"] = $"inline; filename={filename}";
+            // Return the PDF file as a download
+            return File(pdfBytes, "application/pdf", filename + ".pdf");
+        }
+
+
+        //-kvscheudele-end
     }
 
 
