@@ -139,6 +139,7 @@ namespace CityWatch.Kpi.Services
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
             doc.SetMargins(15f, 30f, 40f, 30f);
+            //int index = 0 ;
             foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
             {
                 var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, LogBookType.VehicleAndKeyLog, reportStartDate, reportEndDate);
@@ -182,8 +183,11 @@ namespace CityWatch.Kpi.Services
                     doc.Add(totalEventCountTable);
 
                     //InsertAttachments(keyVehicleLogs, pdfDoc, doc);
-                    pdfDoc.AddNewPage();
+                    //  pdfDoc.AddNewPage();
                 }
+                var pageSize = new PageSize(pdfDoc.GetFirstPage().GetPageSize());
+                index = index + 1;
+                pdfDoc.AddNewPage(index, pageSize);
             }
             doc.Close();
             pdfDoc.Close();
