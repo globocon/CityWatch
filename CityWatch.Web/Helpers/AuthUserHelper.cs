@@ -68,6 +68,7 @@ namespace CityWatch.Web.Helpers
 
         public static bool IsAdminInvestigator { get; set; }
         public static bool IsAdminAuditor { get; set; }
+        public static bool DoseGuardHaveRcClientSitesControl { get; set; }
 
     }
 }

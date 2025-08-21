@@ -3640,6 +3640,64 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success = status, message = message });
         }
+
+
+        public JsonResult OnGetRcClientAccessByGuardId(int guardId)
+        {
+            return new JsonResult(_viewDataService.GetGuardRcClientSiteAccess(guardId));
+        }
+        
+        public JsonResult OnPostRcClientAccessByGuardId(int guardId, int[] selectedSites)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                if(guardId <= 0)
+                {
+                    status = false;
+                    message = "Error: Invalid guard ID.";
+                    return new JsonResult(new { status = status, message = message });
+                }
+
+
+                var clientSiteAccess = selectedSites.Select(x => new GuardRcClientSiteAccess()
+                {
+                    ClientSiteId = x,
+                    GuardId = guardId
+                }).ToList();
+                _guardDataProvider.SaveGuardRcClientSiteAccess(guardId, clientSiteAccess);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+        // ClearAllRcSiteAccessFromGuard
+        public JsonResult OnPostClearAllRcSiteAccessFromGuard(int guardId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {                
+                _guardDataProvider.RemoveGuardRcClientSiteAccess(guardId);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+
+
+
     }
     public class helpDocttype
     {

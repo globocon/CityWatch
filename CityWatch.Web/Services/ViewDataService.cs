@@ -183,6 +183,7 @@ namespace CityWatch.Web.Services
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
         List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
         List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
+        List<object> GetGuardRcClientSiteAccess(int guardId);
     }
 
     public class ViewDataService : IViewDataService
@@ -765,6 +766,7 @@ namespace CityWatch.Web.Services
             // Retrieve guard logins in one call
             var guardLogins = _guardDataProvider.GetGuardLogins(guardIds).ToList();
             var guardLotes = _guardDataProvider.GetGuardLotes(guardIds).ToList();
+            var guardRcSiteAccess = _guardDataProvider.GetAllGuardRcClientSiteAccess();  //GuardRcSiteAccessCount
             // Create GuardViewModel list in one query
             var guardViewModels = guards.Select(guard =>
                 new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList(), guardLotes.ToList())).ToList();
@@ -838,6 +840,8 @@ namespace CityWatch.Web.Services
                         guard.hr3Description = guard.hr3Description + desc.Description + " ";
                     }
                 }
+
+                guard.GuardRcSiteAccessCount = guardRcSiteAccess.Count(x => x.GuardId == guard.Id);
             }
 
             return guardViewModels;
@@ -2647,6 +2651,30 @@ namespace CityWatch.Web.Services
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
             var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
             return subdomain.Where(x => clientTypeIds.Contains(x.TypeId)).ToList();
+        }
+
+        public List<object> GetGuardRcClientSiteAccess(int guardId)
+        {
+            var results = new List<object>();
+            var guardAccess = _guardDataProvider.GetGuardRcClientSiteAccess(guardId);
+            var clientSitesGuardAccess = guardAccess.Select(x => x.ClientSiteId);
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x => x.ClientType.Name);
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new
+                {
+                    Name = item.Key,
+                    ClientSites = item.Select(x => new
+                    {
+                        Id = x.Id,
+                        x.Name,
+                        Checked = clientSitesGuardAccess.Contains(x.Id)
+                    }).ToList()
+                });
+            }
+
+            return results;
         }
     }
 
