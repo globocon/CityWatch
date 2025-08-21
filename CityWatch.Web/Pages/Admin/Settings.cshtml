@@ -59,7 +59,8 @@
     .OrderBy(x => x.DomainId) // Place SubDomainId == 0 first
     .ToList();
 
-
+    var isRcSiteAccessEnabled= AuthUserHelper.DoseGuardHaveRcClientSitesControl ? "" : "disabled";
+    if(AuthUserHelper.IsAdminUserLoggedIn){ isRcSiteAccessEnabled = "";}
 }
 
 
@@ -4338,21 +4339,19 @@
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
-                                <label class="form-check-label pl-3 pr-5">LOTE</label>
-                                <div style="width: 267px;padding-left: 34px;" class="guardlote">
-                                    <select class="form-control" multiple="multiple" id="Guard_Lote" name="Guard.LanguageDetails">
-
-                                        @foreach (var AccessType in viewDataServiceNew.GetLanguages(true))
-                                        {
-
-                                            <option value="@AccessType.Value">@AccessType.Text</option>
-                                        }
-
-
+                                <label class="form-check-label pl-3 pr-5">RC Filter</label>
+                                <div class="input-group" style="padding-left: 11px;width: 247px;">                                    
+                                    <select class="form-control" id="Guard_Rc_Access" name="Guard.GuardRCAccess" @isRcSiteAccessEnabled>                                        
+                                            <option value="0">Default - all</option>
+                                            <option value="1">Custom</option>  
                                     </select>
-
-
+                                    @if (AuthUserHelper.DoseGuardHaveRcClientSitesControl || AuthUserHelper.IsAdminUserLoggedIn){
+                                        <button type="button" class="input-group-text btn btn-sm" style="text-align: right;" title="Edit Access" id="btnGuardRcAccess">
+                                            <i class="fa fa-plus text-success" aria-hidden="true"></i>
+                                        </button>    
+                                    }
                                 </div>
+                                
                             </div>
                             <div class="form-group row">
 
@@ -4371,10 +4370,26 @@
                                     <input type="text" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:156px;" autocomplete="off">
 
                                 </div>
-                                <div>
-                                    @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
+                                <label class="form-check-label pl-3 pr-5">LOTE</label>
+                                <div style="width: 267px;padding-left: 34px;" class="guardlote">
+                                    <select class="form-control" multiple="multiple" id="Guard_Lote" name="Guard.LanguageDetails">
+                                        @foreach (var AccessType in viewDataServiceNew.GetLanguages(true))
+                                        {
+                                            <option value="@AccessType.Value">@AccessType.Text</option>
+                                        }
+                                    </select>
                                 </div>
+                            </div>
 
+                            <div class="form-group row">
+                                <label class="col-md-2 col-form-label"></label>
+                                <div class="col-md-3">
+                                </div>
+                                <label class="col-md-1 col-form-label"></label>
+                                <div class="col-md-2">
+                                </div>
+                                <div>
+                                </div>
                                 <label class="form-check-label pl-3 pr-3">Is Active</label>
                                 <div class="pl-3 pr-3 mt-1">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
@@ -4389,11 +4404,7 @@
 
                                 </div>
 
-
-
                             </div>
-
-
 
 
                             <div class="form-group row">
@@ -5173,6 +5184,32 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guard RC access control modal -->
+<div class="modal" tabindex="-1" role="dialog" id="guard-Rc-client-access-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-user" aria-hidden="true"></i> Manage Guard RC Client Site Access</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="guard-rc-access-for-id" value="0" />
+                <button type="button" id="grantAllRcAccess" class="btn btn-light">Grant All</button>
+                <button type="button" id="revokeAllRcAccess" class="btn btn-light">Revoke All</button>
+                <button type="button" id="expandAllRcAccess" class="btn btn-light">Expand All</button>
+                <button type="button" id="collapseAllRcAccess" class="btn btn-light">Collapse All</button>
+                <hr />                
+                <div id="ucaRcTreeView"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSaveGuardRcAccess" class="btn btn-outline-primary" data-dismiss="modal">Save</button>
             </div>
         </div>
     </div>

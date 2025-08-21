@@ -241,9 +241,13 @@ namespace CityWatch.Data
         public DbSet<ClientSiteMobileCrowdControlAuditLog> ClientSiteMobileCrowdControlAuditLog { get; set; }
         public DbSet<ClientSiteSmartWandTags> ClientSiteSmartWandTags { get; set; }
         public DbSet<SmartWandTagsType> SmartWandTagsType { get; set; }
+
         public DbSet<KpiSendKVSchedules> KpiSendKVSchedules { get; set; }
         public DbSet<KpiSendKVClientSites> KpiSendKVClientSites { get; set; }
 
+
+
+        public DbSet<GuardRcClientSiteAccess> GuardRcClientSiteAccess { get; set; }
 
 
     }

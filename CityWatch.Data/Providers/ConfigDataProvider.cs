@@ -756,7 +756,7 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientSiteSmartWand> GetSmartWandsDetails(int ClientSiteID)
         {
-            return _context.ClientSiteSmartWands.Where(z => z.ClientSiteId == ClientSiteID).ToList();
+            return _context.ClientSiteSmartWands.Where(z => z.ClientSiteId == ClientSiteID && z.IsDeleted == false).ToList();
         }
 
         //To get the Logbbok Data-p6-101 start
@@ -1670,7 +1670,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWand> GetClientSiteSmartwands(int ClientSiteID)
         {
-            return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID).ToList();
+            return _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == ClientSiteID && x.IsDeleted == false).ToList();
         }
 
         public List<TrainingCourseInstructor> GetCourseInstructor(int type)

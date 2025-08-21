@@ -118,11 +118,59 @@ $(function () {
     });
     $("#fileUpload").fileUpload();
 
+    $('#Guard_Rc_Access').on('change', function () {
+        var changeval = $(this).val();
+        if (changeval == '1') {
+            $('#btnGuardRcAccess').prop("disabled", false);
+            $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
+        }
+        else {
+            if (confirm("Guard will have access to all sites.Are you sure ?")) {
+                // ajax call to delete all the guard's access client sites
+                $.ajax({
+                    url: '/Admin/Settings?handler=ClearAllRcSiteAccessFromGuard',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    data: {
+                        guardId: $('#Guard_Id').val()
+                    },
+                    success: function (response) {
+                        // Handle success
+                        if (response.status) {
+                            $('#btnGuardRcAccess').prop("disabled", true);
+                            $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
+                            alert(response.message);
+                        } else {
+                            alert(response.message);
+                            $(this).val('1').trigger('change');
+                        }                        
+                    },
+                    error: function (error) {
+                        // Handle error
+                        alert('An error occurred while clearing access. Please try again.');
+                        $(this).val('1').trigger('change');
+                    }
+                });                
+            }
+            else {
+                // Revert the dropdown to '1' and re-trigger change event
+                $(this).val('1').trigger('change');
+            }
+        }
+    });
+
+    $('#btnGuardRcAccess').on('click', function () {
+        if ($(this).prop('disabled')) {
+            return; // Exit early if the button is disabled
+        }
+        const guardId = $('#Guard_Id').val();
+        $('#guard-rc-access-for-id').val(guardId);
+        $('#guard-Rc-client-access-modal').modal('show');
+    });
 
     /*P1-203 ADMIN USER PROFILE-START*/
     $('#Guard_Access').on('change', function () {
-        var newval = $(this).val();
-        
+        var newval = $(this).val();                        
         if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
                 //yourElement in yourArray
             alert('Please select only one option among RC + HR or RC-Fusion or RC or RC (Lite)');
@@ -184,93 +232,83 @@ $(function () {
 
         }
         $('#Guard_Access').val(newval);
-    });
-    //$('#Guard_Access').on('change', function () {
 
-    //    var newval = $(this).val();
-    //    var selectrc = 0;
-    //    //var newval1 = newval[newval.length - 1];
-    //    var newval1 = $("#Guard_Access option:selected").last().val()
-    //    if ($.inArray(6, newval) ) {
-    //        //yourElement in yourArray
-    //        alert('hi')
-
-    //    }
-    //    //if (parseInt(newval1) == 5) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
-
-    //    //            if (parseInt(new1) == 6) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
-
-    //    //    });
-    //    //}
-    //    if (parseInt(newval1) == 6) {
-    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //            var isChecked1 = $(this).is(':checked');
-    //            if (isChecked1 == true) {
-    //                var new1 = $(this).val();
-
-    //                if (parseInt(new1) == 5) {
-    //                     $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
-    //                       selectrc=1
-    //                    //newval = newval.filter(function (value) {
-    //                    //    return value !== new1;
-    //                    //});
-    //                }
-    //            }
-
-    //        });
-    //    }
         
-    //    //if (parseInt(newval1) == 2) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
 
-    //    //            if (parseInt(new1) == 3) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 3 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
+    });
 
-    //    //    });
-    //    //}
-    //    //if (parseInt(newval1) == 3) {
-    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //    //        var isChecked1 = $(this).is(':checked');
-    //    //        if (isChecked1 == true) {
-    //    //            var new1 = $(this).val();
+    //----****** Guard Access RC Client Sites Start *********----//
+    let ucaRcTree;
 
-    //    //            if (parseInt(new1) == 2) {
-    //    //                $(".multiselect-option input[type=checkbox][value='" + 2 + "']").prop("checked", false);
-    //    //                newval = newval.filter(function (value) {
-    //    //                    return value !== new1;
-    //    //                });
-    //    //            }
-    //    //        }
+    $('#guard-Rc-client-access-modal').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const guardId = $('#guard-rc-access-for-id').val();
+        if (ucaRcTree === undefined) {
+            ucaRcTree = $('#ucaRcTreeView').tree({
+                uiLibrary: 'bootstrap4',
+                checkboxes: true,
+                primaryKey: 'id',
+                dataSource: '/Admin/Settings?handler=RcClientAccessByGuardId',
+                autoLoad: false,
+                textField: 'name',
+                childrenField: 'clientSites',
+                checkedField: 'checked'
+            });
+        }
+        ucaRcTree.uncheckAll();
+        ucaRcTree.reload({ guardId: guardId });
+    });
 
-    //    //    });
-    //    //}
-    //    if (selectrc == 1) {
-    //        alert('Please select only one option among RC or RC-Fusion')
-    //    }
-    //   // $("#Guard_Access").val(newval);
-    //    //$("#Guard_Access").multiselect();
-    //   // $("#Guard_Access").multiselect("refresh");
+    $('#btnSaveGuardRcAccess').on('click', function () {
+        if (ucaRcTree) {
+            const guardId = $('#guard-rc-access-for-id').val();
+            let selectedSites = ucaRcTree.getCheckedNodes().filter(function (item) {
+                return item !== 'undefined';
+            });
+            $.ajax({
+                url: '/Admin/Settings?handler=RcClientAccessByGuardId',
+                data: {
+                    guardId: guardId,
+                    selectedSites: selectedSites
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                showStatusNotification(true, 'Saved successfully');
+            }).fail(function () {
+                console.log('error');
+            });
+        }
+    });
 
-    //});
-    /*P1-203 ADMIN USER PROFILE-END*/
+    $('#grantAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.checkAll();
+        }
+    });
+
+    $('#revokeAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined && confirm('Are you sure want to revoke all access?')) {
+            ucaRcTree.uncheckAll();
+        }
+    });
+
+    $('#expandAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.expandAll();
+        }
+    });
+
+    $('#collapseAllRcAccess').on('click', function () {
+        if (ucaRcTree !== undefined) {
+            ucaRcTree.collapseAll();
+        }
+    });
+    //----****** Guard Access RC Client Sites End *********----//
+
+
+
+
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
@@ -4842,7 +4880,6 @@ $(function () {
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
             { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-           
 
         {
             targets: -1,
@@ -4852,7 +4889,8 @@ $(function () {
             className: "text-center",
             width: "0%"
             },
-             { data: 'dateEnrolled', visible: false },
+            { data: 'dateEnrolled', visible: false },
+            { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
         ],
         initComplete: function (settings, json) {
             $('#chkbxfilterGuardActive').prop("disabled", false);
@@ -5273,6 +5311,17 @@ $(function () {
         $("#Guard_Lote").multiselect();
         $("#Guard_Lote").val(selectedlanguages);
         $("#Guard_Lote").multiselect("refresh");
+
+        if (data.guardRcSiteAccessCount > 0) {
+            $('#Guard_Rc_Access').val('1');
+            $('#btnGuardRcAccess').prop('disabled', false);
+            $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
+        } else {
+            $('#Guard_Rc_Access').val('0');
+            $('#btnGuardRcAccess').prop('disabled', true);
+            $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
+        }
+
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');

@@ -1317,6 +1317,7 @@ namespace CityWatch.Web.Pages.Admin
             int? GuId = 0;
             AuthUserHelper.IsAdminPowerUser = false;
             AuthUserHelper.IsAdminGlobal = false;
+            AuthUserHelper.DoseGuardHaveRcClientSitesControl = false;
 
             if (!string.IsNullOrEmpty(securityLicenseNo))
             {
@@ -1444,6 +1445,7 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             if (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess)
                             {
+                                AuthUserHelper.DoseGuardHaveRcClientSitesControl = true;
                                 AccessPermission = true;
                                 GuId = guard.Id;
                                 if (AuthUserHelper.LoggedInUserId != null)
