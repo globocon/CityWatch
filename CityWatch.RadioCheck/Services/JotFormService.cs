@@ -82,9 +82,11 @@ namespace CityWatch.RadioCheck.Services
             int offset = 0;
             bool moreRecords = true;
             List <JotFormSubmission> rtnjfs = new List<JotFormSubmission>();
+            // Properly URL - encoded filter: { "status":"ACTIVE"}
+            string filter = "%7B%22status%22%3A%22ACTIVE%22%7D";
             while (moreRecords)
             {
-                var url = $"{_apiUrl}/form/{_formId}/submissions?apiKey={_apiKey}&limit={limit}&offset={offset}";
+                var url = $"{_apiUrl}/form/{_formId}/submissions?apiKey={_apiKey}&limit={limit}&offset={offset}&filter={filter}";
                 var response = await _httpClient.GetStringAsync(url);
                 var formResponse = JsonConvert.DeserializeObject<JotFormSubmissionResponse>(response);
                 rtnjfs.AddRange(formResponse?.content);
@@ -92,10 +94,14 @@ namespace CityWatch.RadioCheck.Services
                 //using var doc = JsonDocument.Parse(response);
                 //var content = doc.RootElement.GetProperty("content").EnumerateArray().ToList();
 
-                int count = formResponse.content.Count;
+                int count = formResponse?.content?.Count ?? 0;
                 moreRecords = count == limit; // If fewer than limit, no more pages
                 offset += limit;
-            }           
+            }
+            rtnjfs = rtnjfs
+            .Where(sub => sub.answers != null && sub.answers.Count > 0)
+            .ToList();
+
             return rtnjfs;
         }
 
