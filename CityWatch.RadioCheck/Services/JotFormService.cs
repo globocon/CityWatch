@@ -82,8 +82,11 @@ namespace CityWatch.RadioCheck.Services
             int offset = 0;
             bool moreRecords = true;
             List <JotFormSubmission> rtnjfs = new List<JotFormSubmission>();
-            // Properly URL - encoded filter: { "status":"ACTIVE"}
-            string filter = "%7B%22status%22%3A%22ACTIVE%22%7D";
+
+            //string filter = "%7B%22status%3Aeq%22%3A%22ACTIVE%22%7D"; // URL-encoded {"status:eq":"ACTIVE"}
+            //string filter = "%7B%22status%3Aeq%22%3A%22CUSTOM%22%7D"; // URL-encoded {"status:eq":"CUSTOM"}
+            string filter = "%7B%22status%3Ane%22%3A%22DELETED%22%7D"; // URL-encoded {"status:ne":"DELETED"}
+
             while (moreRecords)
             {
                 var url = $"{_apiUrl}/form/{_formId}/submissions?apiKey={_apiKey}&limit={limit}&offset={offset}&filter={filter}";
