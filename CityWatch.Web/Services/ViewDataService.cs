@@ -781,6 +781,7 @@ namespace CityWatch.Web.Services
             foreach (var guard in guardViewModels)
             {
                 var documentStatuses = documentStatusesByGuard[guard.Id];
+                guard.GuardRcSiteAccessCount = guardRcSiteAccess.Count(x => x.GuardId == guard.Id);
 
                 // Initialize default statuses to "Grey"
                 guard.HR1Status = "Grey";
@@ -841,7 +842,7 @@ namespace CityWatch.Web.Services
                     }
                 }
 
-                guard.GuardRcSiteAccessCount = guardRcSiteAccess.Count(x => x.GuardId == guard.Id);
+                
             }
 
             return guardViewModels;
