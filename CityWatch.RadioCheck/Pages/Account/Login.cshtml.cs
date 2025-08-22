@@ -65,6 +65,13 @@ namespace CityWatch.Kpi.Pages.Account
                 else
                 {
 
+                    //  Guard must have at least one RC access type
+                    if (!(guard.IsRCAccess || guard.IsRCHRAccess || guard.IsRCFusionAccess || guard.IsRCLiteAccess))
+                    {
+                        ModelState.AddModelError("Username", "You do not have RC access.");
+                        return Page();
+                    }
+
                     HttpContext.Session.SetInt32("clientprofile", guard.Id);
 
                     // Option A: Just rely on GuardId in session
