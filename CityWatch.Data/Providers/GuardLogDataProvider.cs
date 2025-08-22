@@ -1872,7 +1872,9 @@ namespace CityWatch.Data.Providers
                 }
 
                 // Fetch ClientSiteSmartWands for processing
-                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
+                var smartWandLookup = _context.ClientSiteSmartWands
+     .Where(wand => !wand.IsDeleted)
+     .ToLookup(wand => wand.ClientSiteId);
 
                 foreach (var item in allValues)
                 {
@@ -1983,7 +1985,9 @@ namespace CityWatch.Data.Providers
                 }
 
                 // Fetch ClientSiteSmartWands for processing
-                var smartWandLookup = _context.ClientSiteSmartWands.ToLookup(wand => wand.ClientSiteId);
+                var smartWandLookup = _context.ClientSiteSmartWands
+                .Where(wand => !wand.IsDeleted)
+                .ToLookup(wand => wand.ClientSiteId);
 
                 foreach (var item in allValues)
                 {

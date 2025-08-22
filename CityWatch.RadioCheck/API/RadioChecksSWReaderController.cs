@@ -162,9 +162,9 @@ namespace CityWatch.RadioCheck.API
                                     /* Compare the phone number from swScanItem with ClientSiteSmartWands phone number remove all space and take right 9 char */
                                     var comparisonString = TakeRightCharacters(RemoveWhitespace(swScanItem.EmployeePhone), 9);
                                     var smartWandDetails = _context.ClientSiteSmartWands
-                                   .AsEnumerable()
-                                   .Where(x => TakeRightCharacters(RemoveWhitespace(x.PhoneNumber), 9) == comparisonString)
-                                   .FirstOrDefault();
+      .Where(x => !x.IsDeleted)   // filter at database level
+      .AsEnumerable()
+      .FirstOrDefault(x => TakeRightCharacters(RemoveWhitespace(x.PhoneNumber), 9) == comparisonString);
 
                                     if (smartWandDetails != null)
                                     {
