@@ -36,7 +36,7 @@ namespace CityWatch.Data.Models
 
         public string CommentsForControlRoomOperator { get; set; }
 
-        public DateTime messagetime { get; set; }
+        public DateTime? messagetime { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsState { get; set; }
         public bool IsNational { get; set; }
@@ -45,7 +45,8 @@ namespace CityWatch.Data.Models
         public bool IsSMSSmartWand { get; set; }
         public bool IsPersonalEmail { get; set; }
 
-
+        public DateTime?  Endmessagetime { get; set; }
+        public string Radiofrequencystatus { get; set; }
 
     }
 }

@@ -2677,6 +2677,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 objforMessage.IsSMSPersonal = false;
                 objforMessage.IsSMSSmartWand = false;
                 objforMessage.IsPersonalEmail = false;
+                
 
                 int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
                 if (id != 0)
@@ -2684,7 +2685,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     
                     _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
                     objGuardLogs.RCActionListMessagesId = id;
-                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    if (objforMessage.Radiofrequencystatus == "OnceOff")
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    }
+                    else
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.Endmessagetime;
+                    }
                     _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
                 }
 

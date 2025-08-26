@@ -37,7 +37,7 @@ namespace CityWatch.RadioCheck.Services
         public void SendActionListLater()
         {
             //var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x=>x.messagetime.ToString("dd-MM-yyyy HH:mm") == DateTime.Now.ToString("dd-MM-yyyy  HH:mm"));
-            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.messagetime <= DateTime.Now);
+            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x => (x.Radiofrequencystatus == "OnceOff" && x.messagetime <= DateTime.Now) || (x.Radiofrequencystatus == "EveryDay" && x.Endmessagetime >= DateTime.Now));
             foreach (var message in messagelist)
             {
                 var ActionListMessage = (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
@@ -81,7 +81,10 @@ namespace CityWatch.RadioCheck.Services
                     }
                     _guardLogDataProvider.UpdateRCActionListMessagesClientSites(clientSite.Id);
                 }
-                _guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+                if ((message.Radiofrequencystatus == "OnceOff") || (message.Radiofrequencystatus == "EveryDay" && message.Endmessagetime == DateTime.Now))
+                {
+                    _guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+                }
             }
         }
         public void LogBookDetails(int Id, string Notifications, string Subject, GuardLog tmzdata,int GuardId)
