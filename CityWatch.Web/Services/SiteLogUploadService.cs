@@ -459,7 +459,11 @@ namespace CityWatch.Web.Services
                 // Common email details
                 var fromAddress = _emailOptions.FromAddress.Split('|');
                 var subject = siteLogBook.Type.ToDisplayName();
-                var messageHtml = $"Dear Citywatch Security Client;<br><br>Please find attached {subject.ToLower()}.";
+                var messageHtml = $"Dear Citywatch Security Client;<br><br>";
+                if (!bigSize)
+                {
+                    messageHtml += $"Please find attached {subject.ToLower()}.";
+                }
 
                 // If large, upload to Azure and add link instead of attachment
                 if (bigSize)
@@ -476,7 +480,7 @@ namespace CityWatch.Web.Services
                         containerClient.CreateIfNotExists();
 
                         // Folder structure: irfiles/yyyyMMdd
-                        string blobPath = DateTime.UtcNow.ToString("yyyyMMdd") + "/" + Uri.EscapeDataString(blobName);
+                        string blobPath = DateTime.UtcNow.ToString("yyyyMMdd") + "/" + blobName;
                         BlobClient blobClient = containerClient.GetBlobClient(blobPath);
 
                         using (FileStream fs = File.OpenRead(fileName))
@@ -492,6 +496,7 @@ namespace CityWatch.Web.Services
                                        $"<p>File name: {blobName}</p>";
                     }
                 }
+                
 
                 // Build email
                 var message = new MimeMessage();
