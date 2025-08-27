@@ -9907,6 +9907,10 @@ $('#btnSendGlabalNotificationMessageLater').on('click', function () {
 $('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
     $('#btnSaveMessageTime').prop('disabled', false);
     $('#txtSendMessageDate').val('');
+    $('#txtSendMessageEndDate').val('');
+    $('#txtSendMessageDate').prop('disabled', false);
+    $('#txtSendMessageEndDate').prop('disabled', true);
+    $('#selectRadioFrequencyStatus').val('OnceOff');
 });
 //p1-131-message-scheduler-start
 $('#selectRadioFrequencyStatus').on('change', function () {
