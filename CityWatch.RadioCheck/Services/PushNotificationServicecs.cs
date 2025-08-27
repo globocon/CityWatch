@@ -73,10 +73,10 @@ namespace CityWatch.RadioCheck.Services
                     var clientsitedetail = _guardLogDataProvider.GetClientSites(clientSite.ClientSiteId).FirstOrDefault();
                     LogBookDetails(clientSite.Id, ActionListMessage, message.Subject, guardLog, rcguardlogs.GuardId);
                     _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(rcguardlogs.GuardId, 0, message.Subject, message.Notifications, IrEntryType.Alarm, 1, 0, guardLog);
-                    //if (clientsitedetail.SiteEmail != null)
-                    //{
-                    //    EmailSender(clientsitedetail.SiteEmail, clientsitedetail.Id, message.Subject, ActionListMessage);
-                    //}
+                    if (clientsitedetail.SiteEmail != null)
+                    {
+                        EmailSender(clientsitedetail.SiteEmail, clientsitedetail.Id, message.Subject, ActionListMessage);
+                    }
                     if (message.IsSMSPersonal==true)
                     {
                         SMSPersonal(message, guardLog, rcguardlogs, clientSite.ClientSiteId);
