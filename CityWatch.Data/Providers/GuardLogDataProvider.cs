@@ -389,6 +389,8 @@ namespace CityWatch.Data.Providers
         public List<MobileLogActivityProfile> GetMobileLogActivityProfiles();
         public MobileLogActivityProfile UpdateLogActivityProfile(MobileLogActivityProfile _profile, out string msg);
         public bool DeleteLogActivityProfile(int profileId, out string msg);
+        bool HasMessageBeenSentToday(int messageId, DateTime date);
+        void MarkMessageSentToday(int messageId, DateTime date);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7159,6 +7161,21 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
             msg = "Profile deleted successfully.";
             return true;
+        }
+        public bool HasMessageBeenSentToday(int messageId, DateTime date)
+        {
+            return _context.RCActionListMessagesDailyLog
+                .Any(x => x.RCActionListMessagesId == messageId && x.SentDate == date.Date);
+        }
+
+        public void MarkMessageSentToday(int messageId, DateTime date)
+        {
+            _context.RCActionListMessagesDailyLog.Add(new RCActionListMessagesDailyLog
+            {
+                RCActionListMessagesId = messageId,
+                SentDate = date.Date
+            });
+            _context.SaveChanges();
         }
     }
 
