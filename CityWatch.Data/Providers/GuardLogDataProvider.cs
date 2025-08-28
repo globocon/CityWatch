@@ -389,6 +389,8 @@ namespace CityWatch.Data.Providers
         public List<MobileLogActivityProfile> GetMobileLogActivityProfiles();
         public MobileLogActivityProfile UpdateLogActivityProfile(MobileLogActivityProfile _profile, out string msg);
         public bool DeleteLogActivityProfile(int profileId, out string msg);
+
+        public int SaveGuardLogandReturnId(GuardLog guardLog);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7159,6 +7161,50 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
             msg = "Profile deleted successfully.";
             return true;
+        }
+
+
+        public int SaveGuardLogandReturnId(GuardLog guardLog)
+        {
+            if (guardLog.Id == 0)
+            {
+                var newGuardLog = new GuardLog()
+                {
+                    ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
+                    EventDateTime = guardLog.EventDateTime,
+                    Notes = guardLog.Notes,
+                    GuardLoginId = guardLog.GuardLoginId,
+                    IsSystemEntry = guardLog.IsSystemEntry,
+                    IrEntryType = guardLog.IrEntryType,
+                    RcPushMessageId = guardLog.RcPushMessageId,
+                    EventDateTimeLocal = guardLog.EventDateTimeLocal,
+                    EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = guardLog.EventDateTimeZone,
+                    EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute,
+                    PlayNotificationSound = guardLog.PlayNotificationSound,
+                    GpsCoordinates = guardLog.GpsCoordinates,
+                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
+                    RcLogbookStamp = guardLog.RcLogbookStamp,
+                    EventType = guardLog.EventType
+                };
+
+                _context.GuardLogs.Add(newGuardLog);
+                _context.SaveChanges();
+
+                return newGuardLog.Id;
+            }
+            else
+            {
+                var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
+                if (guardLogToUpdate == null)
+                    throw new InvalidOperationException();
+
+                guardLogToUpdate.Notes = guardLog.Notes;
+                _context.SaveChanges();
+
+                return guardLogToUpdate.Id; // return updated Id
+            }
         }
     }
 

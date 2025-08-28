@@ -2189,6 +2189,135 @@ namespace CityWatch.Web.API
         }
 
 
+        [HttpPost("UploadMultiple")]
+        public async Task<IActionResult> UploadMultiple(
+    [FromForm] List<IFormFile> files,
+    [FromForm] List<string> types,   // <-- multiple types aligned with files
+    [FromForm] int guardId,
+    [FromForm] int clientsiteId,
+    [FromForm] int userId,
+    [FromForm] string gps
+    )
+        {
+            bool success = false;
+            string message = "Uploaded successfully";
+            var uploadedFiles = new List<string>();
+
+            try
+            {
+                if (files == null || files.Count == 0)
+                    throw new Exception("No files uploaded");
+
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+
+                var logBookType = LogBookType.DailyGuardLog;
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                // Get Guard Login ID
+                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+
+                // Default GPS coordinates (should be replaced with actual values if available)
+                var gpsCoordinates = gps;
+
+
+
+                if (types == null || types.Count != files.Count)
+                    throw new Exception("Types count must match files count");
+
+                string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+
+
+                var signInEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    /*your message */
+                    Notes = "Mob app image upload",
+                    IsSystemEntry = false,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gpsCoordinates
+                };
+
+                int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
+
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var file = files[i];
+                    var type = types[i];
+
+                    if (file.Length == 0) continue;
+
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext))
+                        throw new Exception($"Unsupported file type: {ext}");
+
+                    string folderName = type?.ToLower() switch
+                    {
+                        "rear" => "RearFiles",
+                        "twentyfive" => "TwentyfivePercentFiles",
+                        _ => "OtherFiles"
+                    };
+
+                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), folderName);
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
+                    var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
+                    var fullPath = Path.Combine(folderPath, uploadFileName);
+
+                    using (var stream = System.IO.File.Create(fullPath))
+                        await file.CopyToAsync(stream);
+
+                    var finalFileName = uploadFileName;
+
+                    // HEIC conversion
+                    if (ext == ".heic")
+                    {
+                        var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                        await ConvertHeicToJpgAsync(fullPath, folderPath);
+                        System.IO.File.Delete(fullPath);
+                        finalFileName = Path.GetFileName(newPath);
+                    }
+
+                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
+
+                    var logImage = new GuardLogsDocumentImages
+                    {
+                        GuardLogId = GuardLogId,
+                        ImagePath = publicPath,
+                        IsRearfile = type?.ToLower() == "rear",
+                        IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                    };
+
+                    _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
+
+                    uploadedFiles.Add(publicPath);
+                }
+
+                success = true;
+                message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message, files = uploadedFiles });
+        }
+
     }
 
 
