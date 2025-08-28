@@ -56,6 +56,8 @@ namespace CityWatch.Kpi.Services
     {
 
         string GeneratePdfReport(List<ClientSiteKpiSetting> clientSiteKpiSettings, KpiSendKVSchedules schedule, DateTime reportStartDate, DateTime reportEndDate);
+        string GeneratePdfKVReport(DateTime startdate, DateTime endDate, int clientsiteId);
+        string GeneratePdfReportWithClientSiteIds(int ClientSiteId, KpiSendKVSchedules schedule, DateTime reportStartDate, DateTime reportEndDate);
     }
     public class KeyVehicleGenerator: IKeyVehicleGenerator
     {
@@ -673,9 +675,136 @@ namespace CityWatch.Kpi.Services
         //}
 
 
-        
+        public string GeneratePdfKVReport(DateTime startdate, DateTime endDate, int clientsiteId)
+        {
+            //DateTime startdateTime = DateTime.Parse(startdate);
+            var clientsiteName = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault().Name;
+            var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - " + clientsiteName + ".pdf";
+            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
 
-        
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(15f, 30f, 40f, 30f);
+            //int index = 0 ;
+            
+                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientsiteId, LogBookType.VehicleAndKeyLog, startdate, endDate);
+                if (!clientSiteLogBooks.Any())
+                    return null;
+                var logBookIds = clientSiteLogBooks.Select(z => z.Id).ToList();
+                foreach (var logBookId in logBookIds)
+                {
+
+                    var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId);
+
+                    if (clientsiteLogBook == null)
+                        continue;
+
+                    var kvlAuditLogRequest = new KeyVehicleLogAuditLogRequest()
+                    {
+                      
+                        ClientSiteId = clientsiteId.ToString(),
+                        LogFromDate = startdate,
+                        LogToDate = endDate
+                    };
+                    var keyVehicleLogs = GetKeyVehicleLogs(kvlAuditLogRequest).Where(z => z.Detail.GuardLogin.ClientSiteLogBookId == clientsiteLogBook.Id).ToList();
+
+                    if (keyVehicleLogs.Count == 0)
+                    {
+                        continue;
+                    }
+                    pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+                    //var doc = new Document(pdfDoc);
+                    doc.SetMargins(15f, 30f, 40f, 30f);
+
+                    var headerTable = CreateReportHeaderTable(clientsiteLogBook);
+                    doc.Add(headerTable);
+
+                    var reportSummaryTable = CreateReportDataTable(keyVehicleLogs);
+                    doc.Add(reportSummaryTable);
+
+                    var totalEventCountTable = CreateEventCountTable(keyVehicleLogs.Count());
+                    doc.Add(totalEventCountTable);
+
+                    //InsertAttachments(keyVehicleLogs, pdfDoc, doc);
+                    //  pdfDoc.AddNewPage();
+                }
+                var pageSize = new PageSize(pdfDoc.GetFirstPage().GetPageSize());
+                //index = index + 1;
+                //pdfDoc.AddNewPage(index, pageSize);
+            
+            doc.Close();
+            pdfDoc.Close();
+
+            return reportFileName;
+        }
+
+        public string GeneratePdfReportWithClientSiteIds(int ClientSiteId, KpiSendKVSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
+        {
+            var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - " + schedule.ProjectName + ".pdf";
+            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(15f, 30f, 40f, 30f);
+            //int index = 0 ;
+            //foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+            //{
+            var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(ClientSiteId, LogBookType.VehicleAndKeyLog, reportStartDate, reportEndDate);
+            if (!clientSiteLogBooks.Any())
+                return null;
+            var logBookIds = clientSiteLogBooks.Select(z => z.Id).ToList();
+            foreach (var logBookId in logBookIds)
+            {
+
+                var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId);
+
+                if (clientsiteLogBook == null)
+                    continue;
+
+                var kvlAuditLogRequest = new KeyVehicleLogAuditLogRequest()
+                {
+                    VehicleRego = schedule.VehicleRego,
+                    ClientSiteLocationId = schedule.ClientSiteLocationId,
+                    ClientSiteId = ClientSiteId.ToString(),
+                    CompanyName = schedule.CompanyName,
+                    LogFromDate = reportStartDate,
+                    LogToDate = reportEndDate
+                };
+                var keyVehicleLogs = GetKeyVehicleLogs(kvlAuditLogRequest).Where(z => z.Detail.GuardLogin.ClientSiteLogBookId == clientsiteLogBook.Id).ToList();
+
+                if (keyVehicleLogs.Count == 0)
+                {
+                    continue;
+                }
+                pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+                //var doc = new Document(pdfDoc);
+                doc.SetMargins(15f, 30f, 40f, 30f);
+
+                var headerTable = CreateReportHeaderTable(clientsiteLogBook);
+                doc.Add(headerTable);
+
+                var reportSummaryTable = CreateReportDataTable(keyVehicleLogs);
+                doc.Add(reportSummaryTable);
+
+                var totalEventCountTable = CreateEventCountTable(keyVehicleLogs.Count());
+                doc.Add(totalEventCountTable);
+
+                //InsertAttachments(keyVehicleLogs, pdfDoc, doc);
+                //  pdfDoc.AddNewPage();
+            }
+            var pageSize = new PageSize(pdfDoc.GetFirstPage().GetPageSize());
+            //index = index + 1;
+            //pdfDoc.AddNewPage(index, pageSize);
+            //}
+            doc.Close();
+            pdfDoc.Close();
+
+            return IO.Path.GetFileName(reportPdf);
+        }
 
 
     }
