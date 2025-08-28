@@ -35,6 +35,8 @@ namespace CityWatch.Data.Providers
         List<KpiSendKVSchedules> GetAllKVSchedules();
         void DeleteSendScheduleKV(int id);
         KpiSendKVSchedules GetKVScheduleById(int scheduleId);
+        List<KpiSendScheduleJobsKV> GetAllKpiSendScheduleJobsKV();
+        int SaveSendScheduleJobKV(KpiSendScheduleJobsKV sendScheduleJob);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -467,6 +469,26 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == scheduleId);
         }
+        public List<KpiSendScheduleJobsKV> GetAllKpiSendScheduleJobsKV()
+        {
+            return _context.KpiSendScheduleJobsKV.ToList();
+        }
+        public int SaveSendScheduleJobKV(KpiSendScheduleJobsKV sendScheduleJob)
+        {
+            var scheduleJob = _context.KpiSendScheduleJobsKV.SingleOrDefault(z => z.Id == sendScheduleJob.Id);
 
+            if (scheduleJob == null)
+                _context.Add(sendScheduleJob);
+            else
+            {
+                scheduleJob.CompletedDate = sendScheduleJob.CompletedDate;
+                scheduleJob.Success = sendScheduleJob.Success;
+                scheduleJob.StatusMessage = sendScheduleJob.StatusMessage;
+            }
+            _context.SaveChanges();
+
+            return sendScheduleJob.Id;
+        }
+        
     }
 }

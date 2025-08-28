@@ -832,21 +832,32 @@ namespace CityWatch.Kpi.Services
                 {
                     return string.Empty;
                 }
-
-                 fileName = _kpiKVReportGenerator.GeneratePdfReport(clientSiteKpiSettings, schedule, reportStartDate,reportEndDate);
-               
-                // fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, _kpiKVReportGenerator);
-
-
-                if (string.IsNullOrEmpty(fileName))
+                foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
                 {
-                    statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
-                    //continue;
-                }
-                var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
-               SendEmailKV(reportFileName, schedule, reportStartDate, ignoreRecipients);
 
-                siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                    fileName = _kpiKVReportGenerator.GeneratePdfReportWithClientSiteIds(clientSiteKpiSetting.ClientSiteId, schedule, reportStartDate, reportEndDate);
+
+                    // fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, _kpiKVReportGenerator);
+
+
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                        //continue;
+                    }
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiKVScheduleRunOnCalculator.GetNextRunOn(schedule);
+                        _kpiSchedulesDataProvider.SaveKVSchedule(schedule);
+
+                        if (!_webHostEnvironment.IsDevelopment())
+                            UploadReportKV(fileName, schedule, reportStartDate);
+                    }
+                    var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                    SendEmailKV(reportFileName, schedule, reportStartDate, ignoreRecipients);
+
+                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                }
                 statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
 
 
@@ -1027,7 +1038,7 @@ namespace CityWatch.Kpi.Services
                     {
                         try
                         {
-                            var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
+                            var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Key Vehicle Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
                             success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
                         }
                         catch (Exception ex)

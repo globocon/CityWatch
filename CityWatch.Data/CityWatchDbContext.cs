@@ -248,6 +248,7 @@ namespace CityWatch.Data
 
 
         public DbSet<GuardRcClientSiteAccess> GuardRcClientSiteAccess { get; set; }
+        public DbSet<KpiSendScheduleJobsKV> KpiSendScheduleJobsKV { get; set; }
 
 
     }
