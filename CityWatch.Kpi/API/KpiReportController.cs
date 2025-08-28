@@ -196,5 +196,138 @@ namespace CityWatch.Kpi.API
 
             return success;
         }
+        
+        [Route("[action]", Name = "SendKeyVehicleLogs")]
+        [HttpGet]
+        public async Task<bool> SendKeyVehicleLogs()
+        {
+            var prevJob = _kpiSchedulesDataProvider.GetAllKpiSendScheduleJobsKV().FirstOrDefault(z => !z.CompletedDate.HasValue);
+            if (prevJob != null)
+            {
+                _logger.LogWarning($"KpiSendJob: Another job ({prevJob.Id}) is in progress.");
+                return false;
+            }
+
+            var pendingSchedules = _kpiSchedulesDataProvider.GetAllKVSchedules()
+                .Where(z => z.NextRunOn < DateTime.Now)
+                .ToList();
+            if (!pendingSchedules.Any())
+            {
+                _logger.LogInformation("KpiSendJob: No schedule to process.");
+                return true;
+            }
+
+            var sendScheduleJob = new KpiSendScheduleJobsKV()
+            {
+                CreatedDate = DateTime.Now
+            };
+            sendScheduleJob.Id = _kpiSchedulesDataProvider.SaveSendScheduleJobKV(sendScheduleJob);
+
+            var success = true;
+            var statusLog = new StringBuilder();
+            statusLog.AppendFormat("KpiSendJob: {0} - Starting. ", sendScheduleJob.Id);
+            var scheduleResults = new Dictionary<int, string>();
+            try
+            {
+                foreach (var schedule in pendingSchedules)
+                {
+                    //schedule.KpiSendScheduleSummaryNotes = _kpiSchedulesDataProvider.GetKpiSendScheduleSummaryNotes(schedule.Id);
+                    var result = await _sendScheduleService.ProcessKVSchedule(schedule, new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), false, true);
+                    statusLog.Append(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                statusLog.AppendFormat("KpiSendJob: {0} Exception - {1}. ", sendScheduleJob.Id, ex.Message);
+            }
+            statusLog.AppendFormat("KpiSendJob: {0} Completed. Status - {1}", sendScheduleJob.Id, success);
+            sendScheduleJob.Success = success;
+            sendScheduleJob.CompletedDate = DateTime.Now;
+            _kpiSchedulesDataProvider.SaveSendScheduleJobKV(sendScheduleJob);
+
+            _logger.LogInformation(statusLog.ToString());
+            return success;
+        }
+
+        [Route("[action]", Name = "UploadKV")]
+        [HttpGet]
+        public async Task<bool> UploadKV()
+        {
+            if (_webHostEnvironment.IsDevelopment())
+                throw new NotSupportedException("Dropbox upload not supported in development environment");
+
+            var success = false;
+
+            try
+            {
+                var reportFromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                success = await _reportUploadService.ProcessUploadKV(reportFromDate);
+
+                if (DateTime.Today.Day == 1)
+                {
+                    success = await _reportUploadService.ProcessUploadKV(reportFromDate.AddMonths(-1));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+            }
+
+            return success;
+        }
+
+        [Route("[action]", Name = "SendKV")]
+        [HttpGet]
+        public async Task<bool> SendKV()
+        {
+            var prevJob = _kpiSchedulesDataProvider.GetAllKpiSendScheduleJobsKV().FirstOrDefault(z => !z.CompletedDate.HasValue);
+            if (prevJob != null)
+            {
+                _logger.LogWarning($"KpiSendJob: Another job ({prevJob.Id}) is in progress.");
+                return false;
+            }
+
+            var pendingSchedules = _kpiSchedulesDataProvider.GetAllKVSchedules()
+                .Where(z => z.NextRunOn < DateTime.Now)
+                .ToList();
+            if (!pendingSchedules.Any())
+            {
+                _logger.LogInformation("KpiSendJob: No schedule to process.");
+                return true;
+            }
+
+            var sendScheduleJob = new KpiSendScheduleJobsKV()
+            {
+                CreatedDate = DateTime.Now
+            };
+            sendScheduleJob.Id = _kpiSchedulesDataProvider.SaveSendScheduleJobKV(sendScheduleJob);
+
+            var success = true;
+            var statusLog = new StringBuilder();
+            statusLog.AppendFormat("KpiSendJob: {0} - Starting. ", sendScheduleJob.Id);
+            var scheduleResults = new Dictionary<int, string>();
+            try
+            {
+                foreach (var schedule in pendingSchedules)
+                {
+                    //schedule.KpiSendScheduleSummaryNotes = _kpiSchedulesDataProvider.GetKpiSendScheduleSummaryNotes(schedule.Id);
+                    var result = await _sendScheduleService.ProcessKVSchedule(schedule, new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), false, true);
+                    statusLog.Append(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                statusLog.AppendFormat("KpiSendJob: {0} Exception - {1}. ", sendScheduleJob.Id, ex.Message);
+            }
+            statusLog.AppendFormat("KpiSendJob: {0} Completed. Status - {1}", sendScheduleJob.Id, success);
+            sendScheduleJob.Success = success;
+            sendScheduleJob.CompletedDate = DateTime.Now;
+            _kpiSchedulesDataProvider.SaveSendScheduleJobKV(sendScheduleJob);
+
+            _logger.LogInformation(statusLog.ToString());
+            return success;
+        }
     }
 }

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,9 +38,18 @@ namespace CityWatch.RadioCheck.Services
         public void SendActionListLater()
         {
             //var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x=>x.messagetime.ToString("dd-MM-yyyy HH:mm") == DateTime.Now.ToString("dd-MM-yyyy  HH:mm"));
-            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.messagetime <= DateTime.Now);
+            var messagelist = _guardLogDataProvider.GetRCActionListMessages().Where(x => (x.Radiofrequencystatus == "OnceOff" && x.messagetime <= DateTime.Now) || (x.Radiofrequencystatus == "EveryDay" && x.Endmessagetime >= DateTime.Now));
             foreach (var message in messagelist)
             {
+                if (message.Radiofrequencystatus == "EveryDay")
+                {
+                    // Check if already sent today
+                    bool alreadySentToday = _guardLogDataProvider
+                        .HasMessageBeenSentToday(message.Id, DateTime.Now);
+
+                    if (alreadySentToday)
+                        continue; // Skip to next message
+                }
                 var ActionListMessage = (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
                 var rcguardlogs = _guardLogDataProvider.GetRCActionListMessagesGuardLogs().Where(x => x.RCActionListMessagesId == message.Id).FirstOrDefault();
                 
@@ -67,7 +77,7 @@ namespace CityWatch.RadioCheck.Services
                     {
                         EmailSender(clientsitedetail.SiteEmail, clientsitedetail.Id, message.Subject, ActionListMessage);
                     }
-                    if(message.IsSMSPersonal==true)
+                    if (message.IsSMSPersonal==true)
                     {
                         SMSPersonal(message, guardLog, rcguardlogs, clientSite.ClientSiteId);
                     }
@@ -75,13 +85,50 @@ namespace CityWatch.RadioCheck.Services
                     {
                         SMSSmartWand(message, guardLog, rcguardlogs, clientSite.ClientSiteId);
                     }
-                    if (message.IsPersonalEmail == true)
+                    //if (message.IsPersonalEmail == true)
+                    //{
+                    //    PersonalEmails(message, guardLog, rcguardlogs, clientSite.ClientSiteId);
+                    //}
+                    //if ((message.Radiofrequencystatus == "OnceOff") || (message.Radiofrequencystatus == "EveryDay" && Convert.ToDateTime(message.Endmessagetime).Date <= DateTime.Now.Date))
+                    //{
+                    //    _guardLogDataProvider.UpdateRCActionListMessagesClientSites(clientSite.Id);
+                    //}
+                    if (message.Radiofrequencystatus == "OnceOff")
                     {
-                        PersonalEmails(message, guardLog, rcguardlogs, clientSite.ClientSiteId);
+                        // Mark OnceOff as permanently sent
+                        _guardLogDataProvider.UpdateRCActionListMessagesClientSites(clientSite.Id);
                     }
-                    _guardLogDataProvider.UpdateRCActionListMessagesClientSites(clientSite.Id);
+                    if (message.Radiofrequencystatus == "EveryDay")
+                    {
+                        if (Convert.ToDateTime(message.Endmessagetime).Date <= DateTime.Now.Date)
+                        {
+                            // Final day reached - mark as sent and complete
+                            _guardLogDataProvider.UpdateRCActionListMessagesClientSites(clientSite.Id);
+                        }
+                    }
                 }
-                _guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+
+                //_guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+                // ---- Update main message ----
+                if (message.Radiofrequencystatus == "OnceOff")
+                {
+                    // Mark OnceOff as permanently sent
+                    _guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+                }
+                else if (message.Radiofrequencystatus == "EveryDay")
+                {
+                    if (Convert.ToDateTime(message.Endmessagetime).Date <= DateTime.Now.Date)
+                    {
+                        // Final day reached - mark as sent and complete
+                        _guardLogDataProvider.UpdateRCActionListMessages(message.Id);
+                    }
+                    else
+                    {
+                        // Mark that today's message was sent
+                        _guardLogDataProvider.MarkMessageSentToday(message.Id, DateTime.Now);
+                    }
+                }
+
             }
         }
         public void LogBookDetails(int Id, string Notifications, string Subject, GuardLog tmzdata,int GuardId)

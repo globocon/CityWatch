@@ -19,6 +19,7 @@ namespace CityWatch.Kpi.Services
     {
         Task<bool> ProcessUpload(DateTime reportFromDate);
         Task<bool> ProcessUploadTimesheet(DateTime reportFromDate);
+         Task<bool> ProcessUploadKV(DateTime reportFromDate);
     }
 
     public class ReportUploadService : IReportUploadService
@@ -33,6 +34,7 @@ namespace CityWatch.Kpi.Services
         private readonly ILogger<ReportUploadService> _logger;
         private readonly string _reportRootDir;
         private readonly ITimesheetGenerator _kpiTimesheetReportGenerator;
+        private readonly IKeyVehicleGenerator _kpiKVReportGenerator;
 
         public ReportUploadService(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
@@ -41,7 +43,8 @@ namespace CityWatch.Kpi.Services
             IImportJobDataProvider importJobDataProvider,
             IImportDataService importDataService,
             IOptions<Settings> settings,
-            ILogger<ReportUploadService> logger)
+            ILogger<ReportUploadService> logger,
+            IKeyVehicleGenerator kpiKVReportGenerator)
         {
             _webHostEnvironment = webHostEnvironment;
             _clientDataProvider = clientDataProvider;
@@ -52,6 +55,7 @@ namespace CityWatch.Kpi.Services
             _settings = settings.Value;
             _logger = logger;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf");
+            _kpiKVReportGenerator = kpiKVReportGenerator;
         }
 
         public async Task<bool> ProcessUpload(DateTime reportFromDate)
@@ -208,5 +212,59 @@ namespace CityWatch.Kpi.Services
 
             }
         }
+        public async Task<bool> ProcessUploadKV(DateTime reportFromDate)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+            
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSettings().Where(x => !string.IsNullOrEmpty(x.DropboxImagesDir));
+            foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+            {
+                try
+                {
+                    //This is active only Upload to dropbox folder 27/11/2024 Start
+                    if (clientSiteKpiSetting.DropboxScheduleisActive)
+                    {
+                        //This is active only Upload to dropbox folder 27/11/2024 end
+                        var serviceLog = new KpiDataImportJob()
+                        {
+                            ClientSiteId = clientSiteKpiSetting.ClientSiteId,
+                            ReportDate = reportFromDate,
+                            CreatedDate = DateTime.Now,
+                        };
+                        var jobId = _importJobDataProvider.SaveKpiDataImportJob(serviceLog);
+                        await _importDataService.Run(jobId);
+
+                        var reportEndDate = reportFromDate.AddMonths(1).AddDays(-1);
+                        string StartDate = reportFromDate.ToString("MM/dd/yyyy");
+                        string EndDate = "";
+                        if (reportEndDate != null)
+                        {
+                            EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                        }
+
+                      //  var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet(clientSiteKpiSetting.ClientSiteId, StartDate, EndDate);
+                        var fileName = _kpiKVReportGenerator.GeneratePdfKVReport(reportFromDate, reportEndDate, clientSiteKpiSetting.ClientSiteId);
+                        //var fileName = _reportGenerator.GeneratePdfReport(clientSiteKpiSetting.ClientSiteId, reportFromDate, reportFromDate.AddMonths(1).AddDays(-1));
+                        var fileToUpload = Path.Combine(_reportRootDir, "Output", fileName);
+                        var dbxFilePath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Key Vehicle Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/{clientSiteKpiSetting.ClientSite.Name} - Daily KPI Reports - {reportFromDate.Date:MMM yyyy}.pdf";
+
+                        await _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath);
+
+                        await CreateExtraDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+                        await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.StackTrace);
+                }
+            }
+
+            return true;
+        }
+
     }
 }

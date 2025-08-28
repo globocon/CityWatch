@@ -249,6 +249,11 @@ namespace CityWatch.Data
 
         public DbSet<GuardRcClientSiteAccess> GuardRcClientSiteAccess { get; set; }
 
+        public DbSet<RCActionListMessagesDailyLog> RCActionListMessagesDailyLog { get; set; }
+
+        public DbSet<KpiSendScheduleJobsKV> KpiSendScheduleJobsKV { get; set; }
+
+
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0

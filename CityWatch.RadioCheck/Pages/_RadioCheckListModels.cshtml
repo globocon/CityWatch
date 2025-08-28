@@ -501,6 +501,27 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4 col-ipad-50">
+                        <input type="hidden" id="MessageType" />
+                        <label for="selectRadioFrequencyStatus">Frequency</label>
+                        <div class="d-flex">
+                            <select id="selectRadioFrequencyStatus" class="form-control">
+                                <option value="OnceOff" selected>Once Off</option>
+                                <option value="EveryDay">Every Day</option>
+                                </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4 col-ipad-50">
+                        <label for="Report_DateLocation_IncidentEndDate">End Date</label>
+                        <div class="d-flex">
+                            <input class="form-control" type="datetime-local" id="txtSendMessageEndDate" value="" disabled><input name="__Invariant" type="hidden" value="txtSendMessageEndDate">
+                            <span class="field-validation-valid" data-valmsg-for="txtSendMessageEndDate" data-valmsg-replace="true"></span>
+                        </div>
+                    </div>
+                </div>
 
             </div>
             <div class="modal-footer">
