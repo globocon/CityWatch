@@ -2677,6 +2677,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 objforMessage.IsSMSPersonal = false;
                 objforMessage.IsSMSSmartWand = false;
                 objforMessage.IsPersonalEmail = false;
+                
 
                 int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
                 if (id != 0)
@@ -2684,7 +2685,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     
                     _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
                     objGuardLogs.RCActionListMessagesId = id;
-                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    if (objforMessage.Radiofrequencystatus == "OnceOff")
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    }
+                    else
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.Endmessagetime;
+                    }
                     _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
                 }
 
@@ -2700,7 +2708,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
         public JsonResult OnPostSaveGlobalNotificationTestMessagesLater(bool checkedState, string state, string Notifications, string Subject,
-           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime messagetime)
+           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime? messagetime,DateTime? endmessagetime,string radiofrequencystatus)
         {
             var success = true;
             var message = "success";
@@ -2743,14 +2751,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 objforMessage.IsPersonalEmail = chkGlobalPersonalEmail;
                 objforMessage.messagetime = messagetime;
                 objforMessage.IsDeleted = false;
+                objforMessage.Endmessagetime = endmessagetime;
+                objforMessage.Radiofrequencystatus = radiofrequencystatus;
                 objGuardLogs.GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+                
                 if (id != 0)
                 {
 
                     _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
                     objGuardLogs.RCActionListMessagesId = id;
-                    objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+
+                    if (objforMessage.Radiofrequencystatus == "OnceOff")
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.messagetime;
+                    }
+                    else
+                    {
+                        objGuardLogs.EventDateTime = (DateTime)objforMessage.Endmessagetime;
+                    }
                     objGuardLogs.RemoteIPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
                 }

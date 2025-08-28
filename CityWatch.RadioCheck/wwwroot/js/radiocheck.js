@@ -9714,7 +9714,9 @@ $('#btnSaveMessageTime').on('click', function () {
 
 
         $(this).prop('disabled', true);
-        var messagetime = $('#txtSendMessageDate').val()
+        var messagetime = $('#txtSendMessageDate').val();
+        var endmessagetime = $('#txtSendMessageEndDate').val();
+        var radiofrequencystatus = $('#selectRadioFrequencyStatus').val();
         var clientSiteId = $('#dglClientSiteIdActionList2').val();
         var Notifications = $('#txtMessageActionList').val();
         var Subject = $('#txtGlobalNotificationSubject').val();
@@ -9766,7 +9768,8 @@ $('#btnSaveMessageTime').on('click', function () {
                 Action4: Action4,
                 Action5: Action5,
                 CommentsForControlRoomOperator: CommentsForControlRoomOperator,
-
+                endmessagetime: endmessagetime,
+                radiofrequencystatus: radiofrequencystatus,
                 messagetime: messagetime,
                 IsDeleted: false
             }
@@ -9815,6 +9818,8 @@ $('#btnSaveMessageTime').on('click', function () {
         $(this).prop('disabled', true);
         var messagetime = $('#txtSendMessageDate').val()
         const checkedState = $('#chkSiteState').is(':checked');
+        var endmessagetime = $('#txtSendMessageEndDate').val();
+        var radiofrequencystatus = $('#selectRadioFrequencyStatus').val();
         const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
         const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
         const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
@@ -9872,7 +9877,9 @@ $('#btnSaveMessageTime').on('click', function () {
                     chkGlobalPersonalEmail: chkGlobalPersonalEmail,
                     clientSiteId: clientSiteId,
                     objGuardLogs: objGuardLogs,
-                    messagetime: messagetime
+                    messagetime: messagetime,
+                    endmessagetime: endmessagetime,
+                    radiofrequencystatus: radiofrequencystatus
                 },
                 dataType: 'json',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -9900,4 +9907,28 @@ $('#btnSendGlabalNotificationMessageLater').on('click', function () {
 $('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
     $('#btnSaveMessageTime').prop('disabled', false);
     $('#txtSendMessageDate').val('');
-    });
+    $('#txtSendMessageEndDate').val('');
+    $('#txtSendMessageDate').prop('disabled', false);
+    $('#txtSendMessageEndDate').prop('disabled', true);
+    $('#selectRadioFrequencyStatus').val('OnceOff');
+});
+//p1-131-message-scheduler-start
+$('#selectRadioFrequencyStatus').on('change', function () {
+    const frequency = $(this).val();
+
+  
+    if (frequency == 'OnceOff') {
+
+        $('#txtSendMessageDate').prop('disabled', false)
+        $('#txtSendMessageEndDate').prop('disabled', true)
+
+    }
+    if (frequency == 'EveryDay') {
+        $('#txtSendMessageDate').prop('disabled', true)
+        $('#txtSendMessageEndDate').prop('disabled', false)
+
+    }
+
+});
+
+///p1-131-message-scheduler-end
