@@ -71,7 +71,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IMicrosoftOneDriveService _microsoftOneDriveService;
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
-        private readonly EmailOptions _EmailOptions;
+        private readonly EmailOptions _EmailOptions; 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -2245,8 +2245,10 @@ namespace CityWatch.Web.Pages.Admin
                     var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
                     var dbxUploaded = true;
                     dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
-                    var oneDriveUploaded = true;
-                    oneDriveUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    var oneDriveUploaded = false;
+                    //oneDriveUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    oneDriveUploaded = Task.Run(() => _microsoftOneDriveService.Upload(Path.Combine(CourseDocsFolder, fileName), dbxFilePath)).Result;
+
                     var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                     int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
                     if (TQNumbernew == 0)
@@ -2455,25 +2457,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return uploaded;
         }
-        private bool UpoadDocumentToOneDrive(string fileToUpload, string dbxFilePath)
-        {
-            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
-                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
-
-            bool uploaded = false;
-            try
-            {
-
-                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
-                //if (uploaded && System.IO.File.Exists(fileToUpload))
-                //    System.IO.File.Delete(fileToUpload);
-            }
-            catch
-            {
-            }
-
-            return uploaded;
-        }
+        
         public JsonResult OnPostDeleteCourseDocUsingHR(int id, string hrreferenceNumber)
         {
             var status = true;

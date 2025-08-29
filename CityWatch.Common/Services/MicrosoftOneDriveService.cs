@@ -59,7 +59,7 @@ namespace CityWatch.Common.Services
             //    return Task.CompletedTask;
             //}));
 
-            string filePath = dbxFilePath;
+            string filePath = filename;
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 // STEP 1: Create an upload session

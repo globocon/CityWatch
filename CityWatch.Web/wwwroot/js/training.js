@@ -934,10 +934,7 @@ function uploadCourseDocUsingHR(uploadCtrl, edit = false) {
         
         return false;
     }
-    if ('.ppt,.pptx'.indexOf(fileExtn.toLowerCase()) > 0) {
-        showModal('Files with type .ppt or .pptx can only be uploaded in EmbeddedCode');
-        return false;
-    }
+  
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     $('#uploadProgressModal').modal('show');
     $('#uploadProgressModal').addClass('d-flex');
