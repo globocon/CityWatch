@@ -2760,113 +2760,149 @@ namespace CityWatch.Data.Providers
                     Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1 && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
-                    if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
+                    try
                     {
-                        /* Check the number of logins */
-                        var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
-                        if (numberOfLogin)
-                        {    /* No login found */
-                            /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
-                            var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
-                            var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
+                        if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
+                        {
+                            /* Check the number of logins */
+                            var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
+                            if (numberOfLogin)
+                            {    /* No login found */
+                                /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
+                                var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
+                                var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
 
-                            // Get the current server time (UTC)
-                            DateTime serverTimeUtc = DateTime.UtcNow;
-                            // Find the site's time zone (for example, W. Australia Standard Time)
-                            TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
+                                // Get the current server time (UTC)
+                                DateTime serverTimeUtc = DateTime.UtcNow;
+                                // Find the site's time zone (for example, W. Australia Standard Time)
+                                TimeZoneInfo siteTimeZone;
 
-                            TimeSpan offset = siteTimeZone.GetUtcOffset(serverTimeUtc);
-
-                            // Format the offset to display as +HH:mm or -HH:mm
-                            string offsetString = (offset >= TimeSpan.Zero ? "+" : "-") + offset.ToString(@"hh\:mm");
-
-                            // Convert UTC time to site's local time using the offset
-                            DateTime siteLocalTime2 = serverTimeUtc.Add(offset);
-
-                            // Convert server time (UTC) to site's local time
-                            DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
-
-
-
-                            //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
-
-                            if (siteLocalTime >= dateTime && siteLocalTime <= dateendTime)
-                            {
-                                //Commneted for fix the time zone issue
-                                //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
-                                //{
-                                /* Check if anylogbook entery exits in that timing */
-                                var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
-                                bool iflogbookentryexist = false;
-                                foreach (var log in checkSiteLogBook)
+                                try
                                 {
-                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
-                                    if (checklogbookEntryInSpecificTiming.Count != 0)
+                                    string tzString = manning.ClientSiteKpiSetting?.TimezoneString;
+
+                                    if (string.IsNullOrEmpty(tzString))
                                     {
-                                        iflogbookentryexist = true;
+                                        // Default to AUS Eastern Standard Time
+                                        siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+                                    }
+                                    else
+                                    {
+                                        siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(tzString);
                                     }
                                 }
-
-                                if (!iflogbookentryexist)
+                                catch (TimeZoneNotFoundException)
                                 {
-                                    var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
-                                      .ToList();
-                                    if (radioChecklist.Count == 0)
-                                    {
-                                        /* Check if any off duty status checked for this row */
-                                        var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
-                                      .ToList();
-                                        if (rcOffDutyStatus.Count == 0)
-                                        {
-                                            if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
-                                            {
-                                                /* check if any RC status from CRO for this No Gaurd on duty if exist no need to show 04/12/2024 dileep */
-                                                if (!checkIfStatusUpdatedByCROforNoGaurdOnDuty(manning.ClientSiteKpiSetting.ClientSiteId))
-                                                {
-                                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                                                    {
-                                                        ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                        GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                        GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
-                                                /* New Field Added for NotificationType only for manning notification*/
-                                                        NotificationType = 1,
-                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                        CRMSupplier = manning.CrmSupplier,
-                                                        UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
-                                                        GuardLoginTimeZoneShort = offsetString.ToString(),
-                                                    };
-                                                    _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                                    _context.SaveChanges();
+                                    // Fallback if invalid timezone string
+                                    siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+                                }
+                                catch (InvalidTimeZoneException)
+                                {
+                                    siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+                                }
 
-                                                    CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+                                DateTime currentTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, siteTimeZone);
+
+
+
+                                TimeSpan offset = siteTimeZone.GetUtcOffset(serverTimeUtc);
+
+                                // Format the offset to display as +HH:mm or -HH:mm
+                                string offsetString = (offset >= TimeSpan.Zero ? "+" : "-") + offset.ToString(@"hh\:mm");
+
+                                // Convert UTC time to site's local time using the offset
+                                DateTime siteLocalTime2 = serverTimeUtc.Add(offset);
+
+                                // Convert server time (UTC) to site's local time
+                                DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
+
+
+
+                                //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
+
+                                if (siteLocalTime >= dateTime && siteLocalTime <= dateendTime)
+                                {
+                                    //Commneted for fix the time zone issue
+                                    //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                                    //{
+                                    /* Check if anylogbook entery exits in that timing */
+                                    var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
+                                    bool iflogbookentryexist = false;
+                                    foreach (var log in checkSiteLogBook)
+                                    {
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        if (checklogbookEntryInSpecificTiming.Count != 0)
+                                        {
+                                            iflogbookentryexist = true;
+                                        }
+                                    }
+
+                                    if (!iflogbookentryexist)
+                                    {
+                                        var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
+                                          .ToList();
+                                        if (radioChecklist.Count == 0)
+                                        {
+                                            /* Check if any off duty status checked for this row */
+                                            var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
+                                          .ToList();
+                                            if (rcOffDutyStatus.Count == 0)
+                                            {
+                                                if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
+                                                {
+                                                    /* check if any RC status from CRO for this No Gaurd on duty if exist no need to show 04/12/2024 dileep */
+                                                    if (!checkIfStatusUpdatedByCROforNoGaurdOnDuty(manning.ClientSiteKpiSetting.ClientSiteId))
+                                                    {
+                                                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                        {
+                                                            ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                            GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                            GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                /* New Field Added for NotificationType only for manning notification*/
+                                                            NotificationType = 1,
+                                                            /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                            CRMSupplier = manning.CrmSupplier,
+                                                            UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
+                                                            GuardLoginTimeZoneShort = offsetString.ToString(),
+                                                        };
+                                                        _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                        _context.SaveChanges();
+
+                                                        CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
+                                                    }
 
                                                 }
 
                                             }
-
                                         }
                                     }
+                                }
+
+                            }
+                            else
+                            {
+                                /* if login  found  remove the notification*/
+                                var notificationCountIsZero = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).Count() == 0;
+                                if (!notificationCountIsZero)
+                                {
+                                    /* Remove notification because login found */
+                                    var notificationDetails = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1);
+                                    _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetails);
+                                    _context.SaveChanges();
                                 }
                             }
 
                         }
-                        else
-                        {
-                            /* if login  found  remove the notification*/
-                            var notificationCountIsZero = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).Count() == 0;
-                            if (!notificationCountIsZero)
-                            {
-                                /* Remove notification because login found */
-                                var notificationDetails = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1);
-                                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetails);
-                                _context.SaveChanges();
-                            }
-                        }
 
                     }
+
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing site {manning.ClientSiteKpiSetting?.ClientSiteId}: ");
+                    }
+
                 }
-
-
             }
             catch (Exception ex)
             {
