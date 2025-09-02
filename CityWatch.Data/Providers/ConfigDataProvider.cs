@@ -228,6 +228,8 @@ namespace CityWatch.Data.Providers
         List<TrainingTestQuestions> GetTrainingTestQuestions();
         List<TrainingCourseInstructor> GetCourseAllInstructor();
         List<SmartWandTagsType> GetSmartWandTagsType();
+        List<RCActionListMessages> GetRCActionListMessages(int[] Ids);
+        List<RCActionListMessagesClientsites> GetRCActionListMessagesClientSites();
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -2475,6 +2477,40 @@ namespace CityWatch.Data.Providers
         {
             return _context.SmartWandTagsType.OrderBy(x => x.Id).ToList();
 
+        }
+        public List<RCActionListMessages> GetRCActionListMessages(int[] Ids)
+        {
+            // Retrieve documents of the specified type
+            var courseDocList = _context.RCActionListMessages
+                .Where(x => (x.IsDeleted == false)
+                && ((Ids.Count()==0) || (Ids.Contains(x.Id))))
+                .ToList();
+            foreach (var item in courseDocList)
+            {
+                if(item.Radiofrequencystatus == "EveryDay")
+                {
+                    item.ExpiryDate = item.Endmessagetime?.ToString("dd MMM yyyy");
+                    item.FQ = "E";
+                }
+                else
+                {
+                    item.ExpiryDate = item.messagetime?.ToString("dd MMM yyyy");
+                    item.FQ = "O";
+                }
+                
+            }
+
+            return courseDocList;
+        }
+        public List<RCActionListMessagesClientsites> GetRCActionListMessagesClientSites()
+        {
+           
+            var clientSiteList = _context.RCActionListMessagesClientsites
+                .Where(x => x.IsDeleted == false)
+                .ToList();
+            
+
+            return clientSiteList;
         }
 
     }

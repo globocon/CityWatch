@@ -2783,7 +2783,34 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
+        public JsonResult OnGetPendingMessages(bool IsNationality,bool IsState,bool IsClientType,string State,string ClientType,string clientsite)
+        {
+            int[] ActionListIds = new int[] { 0 };
+            int[] clientsiteIds = new int[] { 0 };
+            int[] ClientTypeId= new int[] { 0 };
+            if (IsNationality==true)
+            {
 
+                clientsiteIds = _guardLogDataProvider.GetAllClientSites().Select(x => x.Id).ToArray();
+            }
+            if(IsState==true)
+            {
+                clientsiteIds = _guardLogDataProvider.GetAllClientSites().Where(x => x.State == State).Select(x => x.Id).ToArray();
+            }
+            if(IsClientType==true && clientsite == null)
+            {
+                ClientTypeId= ClientType.Split(",").Select(int.Parse).ToArray();
+                clientsiteIds = _guardLogDataProvider.GetAllClientSites().Where(x => ClientTypeId.Contains(x.TypeId)).Select(x => x.Id).ToArray();
+            }
+            if (clientsite != null)
+            {
+                clientsiteIds = clientsite.Split(",").Select(int.Parse).ToArray();
+                ActionListIds = _configDataProvider.GetRCActionListMessagesClientSites().Where(x=>clientsiteIds.Contains(x.ClientSiteId)).Select(x => x.RCActionListMessagesId).ToArray();
+            }
+            var result = _configDataProvider.GetRCActionListMessages(ActionListIds);
+           
+            return new JsonResult(result);
+        }
 
     }
 }

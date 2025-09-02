@@ -9674,9 +9674,31 @@ function GetGuardRCLoginDetails(headerrow, dates) {
         });
 }
 //p4-117-end
+//p4-132-start
+
+let gridPendingTasks = $('#tblPendingTasks').grid({
+    dataSource: '/RadioCheckV2?handler=PendingMessages',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'notifications', title: 'Message', width: 390 },
+        { field: 'fq', title: 'FQ', width: 50 },
+        { width: 100, field: 'expiryDate', title: 'Expiry', align: 'center' },
+        
+    ],
+    //initialized: function (e) {
+    //    $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+
+    //}
+});
+//p4-132-end
 $('#btnSendActionListLater').on('click', function () {
     $('#MessageType').val('ActionList');
     $('#MessageSendTimeInfoModal').modal('show');
+    gridPendingTasks.clear();
+    gridPendingTasks.reload({ clientsite: $('#dglClientSiteIdActionList2').val()});
 });
 function fillRefreshLocalTimeZoneDetailswithMessageTime(formData, modelname, isform) {
     // for reference https://moment.github.io/luxon/#/
@@ -9901,8 +9923,43 @@ $('#btnSaveMessageTime').on('click', function () {
     }
 });
 $('#btnSendGlabalNotificationMessageLater').on('click', function () {
+    const checkedState = $('#chkSiteState').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+    var clientsiteIds = $('#dglClientSiteId').val().join(',');
+    
+    var Notifications = $('#txtGlobalNotificationMessage').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+    var State = $('#State1').val();
+    var ClientTypeId = $('#dglClientType').val().join(',');
+    const chkClientType = $('#chkClientType').is(':checked');
+    const chkNationality = $('#chkNationality').is(':checked');
+    const chkGlobalPersonalEmail = $('#chkGlobalPersonalEmail').is(':checked');
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
+    }
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false && chkGlobalPersonalEmail == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+        $(this).prop('disabled', false);
+    }
+    else if (chkClientType == true && ClientTypeId.length == 0) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
+    }
+    else {
     $('#MessageType').val('GlobalList');
-    $('#MessageSendTimeInfoModal').modal('show');
+        $('#MessageSendTimeInfoModal').modal('show');
+         gridPendingTasks.clear();
+        gridPendingTasks.reload({ IsNationality: chkNationality, IsState: checkedState, State: State, IsClientType: chkClientType, clientsite: clientsiteIds, ClientType: ClientTypeId });
+        //gridPendingTasks.reload({ clientsite: $('#dglClientSiteId').val().join(',')});
+        //alert($('#dglClientSiteId').val());
+        //gridPendingTasks.reload({
+        //    clientsiteIds: Array.isArray(clientsiteIds) ? selected : [selected]
+        //});
+      
+    }
 });
 $('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
     $('#btnSaveMessageTime').prop('disabled', false);
