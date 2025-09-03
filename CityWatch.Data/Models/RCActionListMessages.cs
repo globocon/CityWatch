@@ -47,6 +47,10 @@ namespace CityWatch.Data.Models
 
         public DateTime?  Endmessagetime { get; set; }
         public string Radiofrequencystatus { get; set; }
+        [NotMapped]
+        public string ExpiryDate{get;set;}
+        [NotMapped]
+        public string FQ { get; set; }
 
     }
 }
