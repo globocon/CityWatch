@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace CityWatch.Data.Providers
 {
@@ -19,15 +21,19 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag);
         void DeleteClientSiteSmartWandTags(int id);
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
+        List<SmartWandTagsType> GetSmartWandTagsType();
+        void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
     {
         private readonly CityWatchDbContext _dbContext;
+        private readonly IConfigDataProvider _configDataProvider;
 
-        public ClientSiteWandDataProvider(CityWatchDbContext dbContext)
+        public ClientSiteWandDataProvider(CityWatchDbContext dbContext, IConfigDataProvider configDataProvider)
         {
             _dbContext = dbContext;
+            _configDataProvider = configDataProvider;
         }
 
         public List<ClientSiteSmartWand> GetClientSiteSmartWands()
@@ -142,6 +148,21 @@ namespace CityWatch.Data.Providers
             }
             return smartwandtags;
         }
+        public List<SmartWandTagsType> GetSmartWandTagsType()
+        {
+            var smartwandtags = _configDataProvider.GetSmartWandTagsType();
+            return smartwandtags;
+        }
+
+        public void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log)
+        {
+            if (log == null)
+                throw new ArgumentNullException();
+            
+            _dbContext.ClientSiteSmartWandTagsHitLogs.Add(log);
+            _dbContext.SaveChanges();
+        }
+
         public void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag)
         {
             if (clientSiteSmartWandTag == null)

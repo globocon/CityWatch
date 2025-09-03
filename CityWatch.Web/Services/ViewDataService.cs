@@ -183,6 +183,7 @@ namespace CityWatch.Web.Services
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
         List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
         List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
+        ScannerTagDetails GetSmartWandTagDetailOfTag(string TagUid, string TagType);
         List<object> GetGuardRcClientSiteAccess(int guardId);
     }
 
@@ -315,6 +316,33 @@ namespace CityWatch.Web.Services
             return smartWandTags;
         }
 
+        public List<ClientSiteSmartWandTags> GetSmartWandTagTypes()
+        {
+            var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                 .ToList();
+            return smartWandTags;
+        }
+
+        public ScannerTagDetails GetSmartWandTagDetailOfTag(string TagUid, string TagType)
+        {
+            var smartWandTag = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                 .FirstOrDefault(z => z.UId == TagUid && z.SmartWandTagsType.value.ToLower() == TagType.ToLower());
+
+            ScannerTagDetails scannerTagDetails = new ScannerTagDetails();
+            if (smartWandTag != null)
+            {
+                scannerTagDetails.Id = smartWandTag.Id;
+                scannerTagDetails.ClientSiteId = smartWandTag.ClientSiteId;
+                scannerTagDetails.ClientSiteName = smartWandTag.ClientSite.Name;
+                scannerTagDetails.UId = smartWandTag.UId;
+                scannerTagDetails.TagsTypeId = smartWandTag.TagsTypeId;
+                scannerTagDetails.TagsType = smartWandTag.SmartWandTagsType.value;
+                scannerTagDetails.LabelDescription = smartWandTag.LabelDescription;
+            }            
+
+            return scannerTagDetails;
+        }
+                
         public List<SelectListItem> LicenseStates
         {
             get
