@@ -307,12 +307,13 @@ namespace CityWatch.Web.Services
             return _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList();
         }
 
-        public List<string> GetSmartWandTagTypesForClientSite(int clientSiteId){
-           var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
-                .Where(z => z.ClientSiteId == clientSiteId)
-                .Select(z => z.TagsType)
-                .Distinct()
-                .ToList();
+        public List<string> GetSmartWandTagTypesForClientSite(int clientSiteId)
+        {
+            var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                 .Where(z => z.ClientSiteId == clientSiteId)
+                 .Select(z => z.TagsType)
+                 .Distinct()
+                 .ToList();
             return smartWandTags;
         }
 
@@ -338,11 +339,15 @@ namespace CityWatch.Web.Services
                 scannerTagDetails.TagsTypeId = smartWandTag.TagsTypeId;
                 scannerTagDetails.TagsType = smartWandTag.SmartWandTagsType.value;
                 scannerTagDetails.LabelDescription = smartWandTag.LabelDescription;
-            }            
+            }
+            else
+            {
+                return null;
+            }
 
             return scannerTagDetails;
         }
-                
+
         public List<SelectListItem> LicenseStates
         {
             get
@@ -870,7 +875,7 @@ namespace CityWatch.Web.Services
                     }
                 }
 
-                
+
             }
 
             return guardViewModels;
@@ -1050,7 +1055,7 @@ namespace CityWatch.Web.Services
                     dt.Rows.Add(row);
 
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
 
                 }
@@ -2496,20 +2501,20 @@ namespace CityWatch.Web.Services
                                 TimeSpan inactivity = localNow - lastUpdateLocal;
 
                                 // Check for hours of inactivity and that we haven't already reset
-                                if (inactivity.TotalHours >= _inactivityTimeFrameWindow) 
-                                { 
-                                    if(siteCrowdData.CrowdControlDate.Value.Date != utcNow.Date)
+                                if (inactivity.TotalHours >= _inactivityTimeFrameWindow)
+                                {
+                                    if (siteCrowdData.CrowdControlDate.Value.Date != utcNow.Date)
                                     {
                                         // Reset only if the date has changed
                                         string _ChangeReason = $"Date changed from {siteCrowdData.CrowdControlDate.Value.Date.ToString("dd-MM-yyyy")} to {utcNow.Date.ToString("dd-MM-yyyy")}";
-                                       await ResetSiteCounter(siteCrowdData, utcNow, localNow, site.ClientSiteId, _ClientSiteName, utcOffsetString, _ArchivedMode, _ChangeReason);
+                                        await ResetSiteCounter(siteCrowdData, utcNow, localNow, site.ClientSiteId, _ClientSiteName, utcOffsetString, _ArchivedMode, _ChangeReason);
                                     }
                                     else if (siteCrowdData.Tcount > 0 || siteCrowdData.Ccount > 0)
                                     {
                                         string _ChangeReason = $"Counts not 0. Tcount:{siteCrowdData.Tcount}, Ccount:{siteCrowdData.Ccount}.";
                                         await ResetSiteCounter(siteCrowdData, utcNow, localNow, site.ClientSiteId, _ClientSiteName, utcOffsetString, _ArchivedMode, _ChangeReason);
                                     }
-                                }                                
+                                }
                                 else
                                 {
                                     var msg = "";
@@ -2599,8 +2604,8 @@ namespace CityWatch.Web.Services
             }
         }
 
-        private async Task ResetSiteCounter(ClientSiteMobileCrowdControl siteCrowdData, DateTime utcNow, DateTime localNow, 
-            int ClientSiteId, string _ClientSiteName,string utcOffsetString, string _ArchivedMode,string _ChangeReason)
+        private async Task ResetSiteCounter(ClientSiteMobileCrowdControl siteCrowdData, DateTime utcNow, DateTime localNow,
+            int ClientSiteId, string _ClientSiteName, string utcOffsetString, string _ArchivedMode, string _ChangeReason)
         {
             // Move to history
             var history = new ClientSiteMobileCrowdControlHistory
@@ -2672,10 +2677,10 @@ namespace CityWatch.Web.Services
             if (userId == null)
             {
                 var clientTypeIdsnew = clientTypes.Select(x => x.Id).Distinct().ToList();
-                
-                return subdomain.Where(x=>clientTypeIdsnew.Contains(x.TypeId)).ToList();
+
+                return subdomain.Where(x => clientTypeIdsnew.Contains(x.TypeId)).ToList();
             }
-                
+
 
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
             var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
