@@ -252,6 +252,7 @@ namespace CityWatch.Data
         public DbSet<RCActionListMessagesDailyLog> RCActionListMessagesDailyLog { get; set; }
 
         public DbSet<KpiSendScheduleJobsKV> KpiSendScheduleJobsKV { get; set; }
+        public DbSet<ClientSiteSmartWandTagsHitLog> ClientSiteSmartWandTagsHitLogs { get; set; }
 
 
 
