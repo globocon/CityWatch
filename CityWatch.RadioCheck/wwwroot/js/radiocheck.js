@@ -3083,7 +3083,41 @@ $('#btnSendActionList').on('click', function () {
     var Action4 = $('#Action4').val();
     var Action5 = $('#Action5').val();
     var CommentsForControlRoomOperator = $('#txtComments').val();
+    var textToCopy = "";
+    var nwl = "\r\n";
+    if ($('#dglClientTypeActionList').val() != '') { 
+    var cl_type = $("#dglClientTypeActionList option[value='" + $('#dglClientTypeActionList').val() + "']").text() + nwl;
+    var cl_site = $("#dglClientSiteIdActionList option[value='" + $('#dglClientSiteIdActionList').val() + "']").text() + nwl;
+    var cl_address = $('#pn_client_site_address').val() + nwl;
+    var cl_gps = ($('#pn_sitegpsmap').prop('href') == "javascript:void(0)" ? "" : $('#pn_sitegpsmap').prop('href')) + nwl + nwl;
+    var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;
+    var cl_phykey = $('#site_Physical_key').val() + nwl;
+    var cl_cmblock = $('#Site_Combination_Look').val() + nwl;
+    var cl_act1 = $('#Action1').val() + nwl;
+    var cl_act2 = $('#Action2').val() + nwl;
+    var cl_act3 = $('#Action3').val() + nwl;
+    var cl_act4 = $('#Action4').val() + nwl;
+    var cl_act5 = $('#Action5').val() + nwl;
+    var cl_txtcoment = $('#txtComments').val() + nwl;
+    var cl_txtmsgactlist = $('#txtMessageActionList').val() + nwl;
 
+    textToCopy = `Client Type: ${cl_type}`;
+    textToCopy += `Client Site: ${cl_site}`;
+    textToCopy += `Address: ${cl_address}`;
+    textToCopy += `Google Map Link: ${cl_gps}`;
+    textToCopy += "Site Access" + nwl;
+    textToCopy += "===========" + nwl;
+    textToCopy += `Alarm Keypad Code: ${cl_keypadcode}`;
+    textToCopy += `Physical key: ${cl_phykey}`;
+    textToCopy += `Combination Lock: ${cl_cmblock}${nwl}`;
+    textToCopy += "Alarm Response" + nwl;
+    textToCopy += "==============" + nwl;
+    textToCopy += `Action 1: ${cl_act1}`;
+    textToCopy += `Action 2: ${cl_act2}`;
+    textToCopy += `Action 3: ${cl_act3}`;
+    textToCopy += `Action 4: ${cl_act4}`;
+    textToCopy += `Action 5: ${cl_act5}`;
+    }
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
@@ -3125,7 +3159,8 @@ $('#btnSendActionList').on('click', function () {
                 Action4: Action4,
                 Action5: Action5,
                 CommentsForControlRoomOperator: CommentsForControlRoomOperator,
-                tmzdata: tmzdata
+                tmzdata: tmzdata,
+                textToCopy: textToCopy
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -9754,7 +9789,8 @@ $('#btnSaveMessageTime').on('click', function () {
         var Action4 = $('#Action4').val();
         var Action5 = $('#Action5').val();
         var CommentsForControlRoomOperator = $('#txtComments').val();
-
+        var clientTypeOnTop = $('#dglClientTypeActionList').val();
+        var clientSiteOnTop = $('#dglClientSiteIdActionList').val();
         if (Notifications === '') {
             displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
             $(this).prop('disabled', false);
@@ -9793,7 +9829,9 @@ $('#btnSaveMessageTime').on('click', function () {
                 endmessagetime: endmessagetime,
                 radiofrequencystatus: radiofrequencystatus,
                 messagetime: messagetime,
-                IsDeleted: false
+                IsDeleted: false,
+                ClientTypeId: clientTypeOnTop,
+                ClientSiteId: clientSiteOnTop
             }
             var objGuardLogs = {
                 Id: 0,

@@ -1890,7 +1890,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         //code added for ActionList Send start
         public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode,
             string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5,
-            string CommentsForControlRoomOperator, GuardLog tmzdata)
+            string CommentsForControlRoomOperator, GuardLog tmzdata,string textToCopy)
         {
             var success = true;
             var message = "success";
@@ -1906,8 +1906,15 @@ namespace CityWatch.RadioCheck.Pages.Radio
             //       (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
             //       (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
 
+            var ActionListMessage = string.Empty;
 
-            var ActionListMessage = (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications);
+            if( !string.IsNullOrEmpty(textToCopy))
+            {
+                ActionListMessage = textToCopy;
+                ActionListMessage += "/r /n";
+            }
+
+             ActionListMessage += (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications);
             try
             {
 

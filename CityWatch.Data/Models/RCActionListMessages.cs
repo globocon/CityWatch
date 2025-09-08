@@ -51,6 +51,8 @@ namespace CityWatch.Data.Models
         public string ExpiryDate{get;set;}
         [NotMapped]
         public string FQ { get; set; }
+        public int? ClientTypeId { get; set; }
+        public int? ClientSiteId { get; set; }
 
     }
 }

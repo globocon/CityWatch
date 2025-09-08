@@ -4,6 +4,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Spreadsheet;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,14 +28,16 @@ namespace CityWatch.RadioCheck.Services
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _emailOptions;
         private readonly ISmsSenderProvider _smsSenderProvider;
+        private readonly IClientDataProvider _clientDataProvider;
         public PushNotificationServicecs(
             IOptions<EmailOptions> emailOptions,
-            IGuardLogDataProvider guardLogDataProvider, ISmsSenderProvider smsSenderProvider)
+            IGuardLogDataProvider guardLogDataProvider, ISmsSenderProvider smsSenderProvider,IClientDataProvider clientDataProvider)
         {
             
             _emailOptions = emailOptions.Value;
             _guardLogDataProvider = guardLogDataProvider;
            _smsSenderProvider= smsSenderProvider;
+            _clientDataProvider = clientDataProvider;
         }
         public void SendActionListLater()
         {
@@ -50,7 +54,30 @@ namespace CityWatch.RadioCheck.Services
                     if (alreadySentToday)
                         continue; // Skip to next message
                 }
-                var ActionListMessage = (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
+                var ActionListMessage = string.Empty;
+                if(message.ClientSiteId !=null)
+                {
+                    var clientsite = _clientDataProvider.GetClientSiteDetailsWithId(Convert.ToInt32(message.ClientSiteId)).FirstOrDefault();
+                    ActionListMessage = "Client Type: " + _clientDataProvider.GetClientTypes().Where(x => x.Id == message.ClientTypeId).FirstOrDefault().Name + "\r\n";
+                    ActionListMessage += "Client Site: " + clientsite.Name + "\r\n";
+                    ActionListMessage += "Address: " + clientsite.Address + "\r\n";
+                    ActionListMessage += "Google Map Link: " + clientsite.Gps + "\r\n";
+                    ActionListMessage += "Site Access \r\n";
+                    ActionListMessage += "=========== \r\n";
+                    ActionListMessage += "Alarm Keypad Code: " + message.AlarmKeypadCode + "\r\n";
+                    ActionListMessage += "Physical key: " + message.Physicalkey + "\r\n";
+                    ActionListMessage += "Combination Lock: " + message.SiteCombinationLook + "\r\n";
+                    ActionListMessage += "Alarm Response \r\n";
+                    ActionListMessage += "=========== \r\n";
+                    ActionListMessage += "Action 1: " + message.Action1 + "\r\n";
+                    ActionListMessage += "Action 2: " + message.Action2 + "\r\n";
+                    ActionListMessage += "Action 3: " + message.Action3 + "\r\n";
+                    ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
+                    ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
+                 
+
+                }
+                 ActionListMessage += (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
                 var rcguardlogs = _guardLogDataProvider.GetRCActionListMessagesGuardLogs().Where(x => x.RCActionListMessagesId == message.Id).FirstOrDefault();
                 
                 var guardLog = new GuardLog()
