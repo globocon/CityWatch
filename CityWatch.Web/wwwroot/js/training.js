@@ -817,6 +817,7 @@ $('#tbl_guard_trainingAndAssessment_by_Admin tbody').on('click', 'button[name=bt
     var data = gridGuardTrainingAndAssessmentByAdmin.row($(this).parents('tr')).data();
     $('#rplDetailsModal').modal('show');
     getPracticalLocation('');
+    getTheoryLocation('')
     getRPLInstructorSignOff('');
 
     $('#rplCertificateId').val(data.trainingCertificateId);
@@ -2588,6 +2589,7 @@ function fetchURPLDeatils(Id,GuardId) {
                 $('#rplDetailsModal').find('#rplId').val(data.id)
                 //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
                 getPracticalLocation(data.trainingPracticalLocationId);
+                getTheoryLocation(data.trainingTheoryLocationId)
                 $('#rplDetailsModal').find('#RPL_DateAssessment_started').val(data.assessmentStartDate.split('T')[0]);
                 $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val(data.assessmentEndDate.split('T')[0]);
                 $('#rplDetailsModal').find('#rplGuardId').val(GuardId)
@@ -2600,6 +2602,7 @@ function fetchURPLDeatils(Id,GuardId) {
                 $('#rplDetailsModal').find('#rplId').val(-1)
                 //$('#rplDetailsModal').find('#ddlPracticalAssessmentLocation').val(data.trainingPracticalLocationId);
                 getPracticalLocation('');
+                getTheoryLocation('');
                 $('#rplDetailsModal').find('#RPL_DateAssessment_started').val('');
                 $('#rplDetailsModal').find('#RPL_DateAssessment_ended').val('');
                 $('#rplDetailsModal').find('#rplGuardId').val(GuardId)
@@ -2660,6 +2663,27 @@ function getPracticalLocation(selectedLocation) {
         }
     });
 }
+function getTheoryLocation(selectedLocation) {
+    const practicalLocationControl = $('#ddlTheoryAssessmentLocation');
+    practicalLocationControl.html('');
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingLocation',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            practicalLocationControl.append('<option value="" selected>Select</option>')
+            data.map(function (site) {
+                practicalLocationControl.append('<option value="' + site.id + '">' + site.location + '</option>');
+            });
+
+            if (selectedLocation) {
+                $('#ddlTheoryAssessmentLocation').val(selectedLocation);
+            } else {
+                $('#ddlTheoryAssessmentLocation').val('');
+            }
+        }
+    });
+}
 function getRPLInstructorSignOff(seletedInstructor) {
    
     const practicalInstructorControl = $('#ddlRPLInstructorsignOff');
@@ -2691,6 +2715,7 @@ $('#btnSaveRPLDetails').on('click', function () {
     }
     var obj = {
         Id: $('#rplId').val(),
+        TrainingTheoryLocationId: $('#ddlTheoryAssessmentLocation').val(),
         TrainingPracticalLocationId: $('#ddlPracticalAssessmentLocation').val(),
         AssessmentStartDate: $('#RPL_DateAssessment_started').val(),
         AssessmentEndDate: $('#RPL_DateAssessment_ended').val(),

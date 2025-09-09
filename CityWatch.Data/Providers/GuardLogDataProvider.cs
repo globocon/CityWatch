@@ -6873,6 +6873,7 @@ namespace CityWatch.Data.Providers
                     traininglocationToUpdate.GuardId = trainingCertificateRPL.GuardId;
                     traininglocationToUpdate.isDeleted = trainingCertificateRPL.isDeleted;
                     traininglocationToUpdate.FileName = trainingCertificateRPL.FileName;
+                    traininglocationToUpdate.TrainingTheoryLocationId = trainingCertificateRPL.TrainingTheoryLocationId;
 
                 }
             }

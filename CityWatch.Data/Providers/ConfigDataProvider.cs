@@ -1883,6 +1883,7 @@ namespace CityWatch.Data.Providers
             var courseDocList = _context.TrainingCourseCertificateRPL
                 .Where(x => x.TrainingCourseCertificateId == id)
                 .Include(x => x.TrainingLocation)
+                .Include(x => x.TrainingTheoryLocation)
                 .Include(x => x.TrainingInstructor)
                 .ToList();
 
