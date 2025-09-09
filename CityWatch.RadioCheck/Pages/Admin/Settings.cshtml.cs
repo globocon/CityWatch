@@ -25,6 +25,7 @@ using CityWatch.Kpi.Models;
 using CityWatch.RadioCheck.Services;
 using CityWatch.RadioCheck.Helpers;
 using System.ComponentModel.DataAnnotations;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CityWatch.RadioCheck.Pages.Admin
 {
@@ -149,7 +150,10 @@ namespace CityWatch.RadioCheck.Pages.Admin
             {
                 if (record.RadioCheckStatusColorName != null)
                 {
-                    record.RadioCheckStatusColorId = _configDataProvider.GetRadioCheckStatusColorCode(record.RadioCheckStatusColorName).Select(x => x.Id).FirstOrDefault();
+
+                    var colors = _configDataProvider.GetRadioCheckStatusColorCode(record.RadioCheckStatusColorName);
+                    var selected = colors.FirstOrDefault(x => x.Name == record.RadioCheckStatusColorName);
+                    record.RadioCheckStatusColorId = selected?.Id ?? 0;
                 }
                 if (record.Id == -1)
                 {
