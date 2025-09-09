@@ -223,28 +223,37 @@ namespace CityWatch.Web.Services
             {
                 if (acroForm.GetField("DOI_RPL_start") != null)
                 {
-                    acroForm.GetField("DOI_RPL_start").SetValue(certificateRPL.FirstOrDefault().AssessmentStartDate.ToString("dd-MMM-yyyy"), true);
+                    acroForm.GetField("DOI_RPL_start").SetValue(certificateRPL.LastOrDefault().AssessmentStartDate.ToString("dd-MMM-yyyy"), true);
                 }
                 if (acroForm.GetField("DOI_RPL_end") != null)
                 {
-                    acroForm.GetField("DOI_RPL_end").SetValue(certificateRPL.FirstOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
+                    acroForm.GetField("DOI_RPL_end").SetValue(certificateRPL.LastOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
                 }
                 if (acroForm.GetField("sign_off_name") != null)
                 {
-                    acroForm.GetField("sign_off_name").SetValue(certificateRPL.FirstOrDefault().TrainingInstructor.Name, true);
+                    acroForm.GetField("sign_off_name").SetValue(certificateRPL.LastOrDefault().TrainingInstructor.Name, true);
                 }
                 if (acroForm.GetField("sign_off_title") != null)
                 {
-                    acroForm.GetField("sign_off_title").SetValue(certificateRPL.FirstOrDefault().TrainingInstructor.Position, true);
+                    acroForm.GetField("sign_off_title").SetValue(certificateRPL.LastOrDefault().TrainingInstructor.Position, true);
 
                 }
-                //if (acroForm.GetField("DOI_practical") != null)
-                //{
-                //    acroForm.GetField("DOI_practical").SetValue(practicalresult.PracticalDate.ToString("dd-MMM-yyyy"), true);
-                //}
+                if (acroForm.GetField("DOI_practical") != null)
+                {
+                    acroForm.GetField("DOI_practical").SetValue(certificateRPL.LastOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy"), true);
+                }
                 if (acroForm.GetField("Location_practical") != null)
                 {
-                    acroForm.GetField("Location_practical").SetValue(certificateRPL.FirstOrDefault().TrainingLocation.Location, true);
+                    acroForm.GetField("Location_practical").SetValue(certificateRPL.LastOrDefault().TrainingLocation.Location, true);
+                }
+                if (acroForm.GetField("Location_theory") != null)
+                {
+
+                    acroForm.GetField("Location_theory").SetValue(certificateRPL.LastOrDefault().TrainingTheoryLocation.Location, true);
+                }
+                if (acroForm.GetField("DOI_theory") != null)
+                {
+                    acroForm.GetField("DOI_theory").SetValue(certificateRPL.LastOrDefault().AssessmentStartDate.ToString("dd-MMM-yyyy"), true);
                 }
             }
             if (isCertificateExpiry)

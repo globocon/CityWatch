@@ -24,6 +24,9 @@ namespace CityWatch.Data.Models
         public bool isDeleted { get; set; }
         public int GuardId { get; set; }
         public string FileName { get; set; }
+        public int? TrainingTheoryLocationId { get; set; }
+        [ForeignKey("TrainingTheoryLocationId")]
+        public TrainingLocation TrainingTheoryLocation { get; set; }
 
 
     }

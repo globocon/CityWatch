@@ -152,6 +152,7 @@ namespace CityWatch.Web.Services
                     AssessmentStartDate = rpldetails.AssessmentStartDate,
                     AssessmentEndDate = rpldetails.AssessmentEndDate,
                     TrainingPracticalLocationId = rpldetails.TrainingPracticalLocationId,
+                    TrainingTheoryLocationId=rpldetails.TrainingTheoryLocationId,
                     TrainingInstructorId = rpldetails.TrainingInstructorId,
                     isDeleted = true
                 });

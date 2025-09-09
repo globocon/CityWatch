@@ -601,25 +601,34 @@
                             <div class="col-md-12">
                                 
                                 <div class="form-group mb-1">
-                                    <label >Location of Practical Assessment</label>
+                                    <label >Location of Theory Assessment</label>
                                     @* <select id="ddlPracticalAssessmentLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select> *@
-                                    <select id="ddlPracticalAssessmentLocation" class="form-control" ></select>
+                                    <select id="ddlTheoryAssessmentLocation" class="form-control" ></select>
                                 </div>
                                
                             </div>
                             <div class="col-md-12">
                                 
                                 <div class="form-group mb-1">
-                                    <label >Date Assessment Started</label>
+                                    <label >Date Theory Started</label>
                                     <div class="pr-3"><input type="date" class="form-control" id="RPL_DateAssessment_started"  max="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
                                 
                                 </div>
                                
                             </div>
                             <div class="col-md-12">
+
+                                <div class="form-group mb-1">
+                                    <label>Location of Practical Assessment</label>
+                                    @* <select id="ddlPracticalAssessmentLocation" class="form-control" asp-items="@viewDataServiceNew.GetPracticalLocation(true)"></select> *@
+                                    <select id="ddlPracticalAssessmentLocation" class="form-control"></select>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12">
                                 
                                 <div class="form-group mb-1">
-                                    <label >Date Assessment Ended</label>
+                                    <label >Date Practical Ended</label>
                                     <div class="pr-3"><input type="date" class="form-control" id="RPL_DateAssessment_ended"  max="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
                                 
                                 </div>
