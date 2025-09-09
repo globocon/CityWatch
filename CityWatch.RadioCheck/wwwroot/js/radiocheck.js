@@ -9681,19 +9681,82 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
+    inlineEditing: { mode: 'command' },
     columns: [
-        { field: 'notifications', title: 'Message', width: 390 },
-        { field: 'fq', title: 'FQ', width: 50 },
+        { field: 'notifications', title: 'Message', width: 290, editor: true },
+        { field: 'fq', title: 'FQ', width: 50, type: 'dropdown', editor: { dataSource: '/RadioCheckV2?handler=FQValues', valueField: 'name', textField: 'name' } },
         { width: 100, field: 'expiryDate', title: 'Expiry', align: 'center' },
         
     ],
-    //initialized: function (e) {
-    //    $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
-    //}
+    }
 });
+if (gridPendingTasks) {
+    gridPendingTasks.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            // url: '/Admin/Settings?handler=ClientTypes',
+            url: ' /RadioCheckV2?handler=SaveActionListLater',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridPendingTasks.reload();
+
+          
+        }).fail(function () {
+            console.log('error');
+        })
+    });
+
+    gridPendingTasks.on('rowRemoving', function (e, id, record) {
+        const isAdminLoggedIn = $('#hdnIsAdminLoggedIn').val();
+        if (isAdminLoggedIn === 'False') {
+            showModal('Insufficient permission to perform this operation');
+            return;
+        }
+
+        if (confirm('Are you sure want to delete this client type and its related client sites?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteClientType',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (respose) {
+                if (respose.status == false) {
+                    alert(respose.message);
+                }
+                else {
+                    gridType.reload();
+
+                    $('#sel_client_type').html('');
+                    $.ajax({
+                        url: '/Admin/Settings?handler=ClientTypes',
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (data) {
+                        $('#sel_client_type').append('<option value="">All</option>');
+                        data.map(function (clientType) {
+                            $('#sel_client_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
+                        });
+                        gridSite.reload();
+                    });
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isClientTypeAdding)
+                    isClientTypeAdding = false;
+            });
+        }
+    });
+}
 //p4-132-end
+
 $('#btnSendActionListLater').on('click', function () {
     $('#MessageType').val('ActionList');
     $('#MessageSendTimeInfoModal').modal('show');
