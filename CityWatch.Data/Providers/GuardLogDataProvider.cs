@@ -2411,12 +2411,40 @@ namespace CityWatch.Data.Providers
         }
 
         // p6#73 timezone bug - Added by binoy 24-01-2024
-        public int GetClientSiteLogBookIdByLogBookMaxID(int clientsiteId, LogBookType type, out DateTime logbookDate)
+        public int GetClientSiteLogBookIdByLogBookMaxID(int clientSiteId, LogBookType type, out DateTime logbookDate)
         {
-            int lbid = _context.ClientSiteLogBooks.Where(z => z.ClientSiteId == clientsiteId && z.Type == type).Select(x => x.Id).Max();
-            logbookDate = _context.ClientSiteLogBooks.Where(z => z.Id == lbid && z.Type == type).Select(x => x.Date).FirstOrDefault();
-            return lbid;
+            // Pick today’s date (or replace with your timezone helper)
+            var todayDate = DateTime.Today;
+
+            // Try to get an existing logbook for this site & type on today’s date
+            var logBook = _context.ClientSiteLogBooks
+                .Where(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == todayDate)
+                .OrderByDescending(z => z.Id)
+                .FirstOrDefault();
+
+            if (logBook != null)
+            {
+                logbookDate = logBook.Date;
+                return logBook.Id;
+            }
+            else
+            {
+                // No logbook found, so create one
+                var newLogBook = new ClientSiteLogBook
+                {
+                    ClientSiteId = clientSiteId,
+                    Type = type,
+                    Date = todayDate
+                };
+
+                _context.ClientSiteLogBooks.Add(newLogBook);
+                _context.SaveChanges();
+
+                logbookDate = newLogBook.Date;
+                return newLogBook.Id;
+            }
         }
+
 
         public void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck)
         {
