@@ -316,7 +316,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true)
         {
             try
             {
@@ -347,7 +347,7 @@ namespace CityWatch.Web.API
                     EventDateTime = DateTime.Now,
                     /*your message */
                     Notes = activityString,
-                    IsSystemEntry = true,
+                    IsSystemEntry = systemEntry,
                     EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
                     EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
                     EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
@@ -901,7 +901,9 @@ namespace CityWatch.Web.API
                         Notes = notes,
                         ImageUrls = imageUrls,
                         GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A",
-                        IrEntryType = guardlog.IrEntryType == IrEntryType.Normal ? true : false,
+                        IrEntryType = guardlog.IrEntryType.HasValue ? (int)guardlog.IrEntryType.Value : 0,
+                        IsSystemEntry = guardlog.IsSystemEntry,
+                        rcPushMessageId= guardlog.RcPushMessageId
                     };
 
 
@@ -1077,7 +1079,7 @@ namespace CityWatch.Web.API
         public IActionResult ProcessIrSubmit([FromQuery] string gps, [FromQuery] int UserId, [FromQuery] int IRguardId, [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report)
         {
 
-          
+
 
 
 
@@ -1107,7 +1109,7 @@ namespace CityWatch.Web.API
                 CallSign = string.Empty,
                 Billing = string.Empty,
                 GuardMonth = Report.Officer.GuardMonth,
-                NotifiedBy= Report.Officer.NotifiedBy
+                NotifiedBy = Report.Officer.NotifiedBy
             };
             /* specific for mobile app Android*/
             Report.WebVersion = false;
@@ -1153,7 +1155,7 @@ namespace CityWatch.Web.API
                 var result = GetCoordinatesFromAddress(Report.DateLocation.ClientAddress);
                 Report.DateLocation.ClientSiteLiveGps = result.Latitude + "," + result.Longitude;
             }
-            else if(string.IsNullOrEmpty(clientSite.Gps))
+            else if (string.IsNullOrEmpty(clientSite.Gps))
             {
                 //mobile app current location shows as the map
                 Report.DateLocation.ShowIncidentLocationAddress = true;
@@ -1166,7 +1168,7 @@ namespace CityWatch.Web.API
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
-               
+
                 var templateFilename = CheckIfTheUrlIsAThirdPartyUrl(domain);
                 fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite, templateFilename);
                 reportGenerated = true;
@@ -1346,11 +1348,11 @@ namespace CityWatch.Web.API
                 {
                     if (true)
                     {
-                        
-                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report,domain);
+
+                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName), Report, domain);
 
                         /* Save log for duress button enable Start 02032024 dileep*/
-            var guradDetailsName = "Admin";
+                        var guradDetailsName = "Admin";
                         var guardId = 0;
                         if (IRguardId != 0)
                         {
@@ -1450,12 +1452,12 @@ namespace CityWatch.Web.API
             {
                 _logger.LogError(ex.StackTrace);
             }
-            
+
             return Ok(new
             {
                 Success = processResult.Count == 0,
                 FileName = fileName,
-                Domin = domain?.Domain ?? string.Empty, 
+                Domin = domain?.Domain ?? string.Empty,
                 Errors = processResult.Select(p => new { Code = p.Key, Message = p.Value.ErrorMessage })
             });
         }
@@ -1589,7 +1591,7 @@ namespace CityWatch.Web.API
             }
 
             return null;
-        }     
+        }
 
 
         private bool SendEmailWithAzureBlob(string fileName, IncidentRequest Report, SubDomain domain)
@@ -1605,7 +1607,7 @@ namespace CityWatch.Web.API
             if (thirpartyemail != string.Empty)
             {
                 toAddressData = thirpartyemail + '|' + ToAddreddAppset[1];
-               
+
                 if (domain != null)
                 {
 
@@ -2318,6 +2320,94 @@ namespace CityWatch.Web.API
             return new JsonResult(new { success, message, files = uploadedFiles });
         }
 
+
+
+
+
+        [HttpPost("SavePushNotificationTestMessage")]
+        public IActionResult SavePushNotificationTestMessage( int guardId,int clientsiteId,int  userId, string notifications,int rcPushMessageId)
+        {
+            var status = true;
+            var message = "Success";
+
+            try
+            {
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+                var logBookType = LogBookType.DailyGuardLog;
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                // Get Guard Login ID
+                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+                // Save Guard Log Entry
+                var signOffEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = notifications,
+                    IrEntryType = IrEntryType.Normal,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute()
+                };
+                _guardLogDataProvider.SaveGuardLog(signOffEntry);
+
+                // Update acknowledgement
+                _guardLogDataProvider.UpdateIsAcknowledged(rcPushMessageId);
+
+                // Send notification to Citywatch logbook
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Any())
+                {
+                    var logbookType = LogBookType.DailyGuardLog;
+                    var logbookDate = DateTime.Today;
+
+                    var logBookIdNew = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(
+                        clientSiteForLogbook.First().Id, logbookType, out logbookDate);
+
+                    var selectedGuardId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault()?.GuardId ?? 0;
+                    var guardDetails = _guardLogDataProvider.GetGuards(selectedGuardId);
+                    var guardInitials = guardDetails != null ? $"{guardDetails.Name} [{guardDetails.Initial}]" : "Unknown Guard";
+
+                    var clientSiteId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault()?.ClientSiteId ?? 0;
+                    var clientSiteName = _guardLogDataProvider.GetClientSites(clientSiteId).FirstOrDefault()?.Name ?? "Unknown Site";
+
+                    var notifcationToCitywatch = new GuardLog
+                    {
+                        ClientSiteLogBookId = logBookIdNew,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = $"{notifications} - {guardInitials} - {clientSiteName}",
+                        IrEntryType = IrEntryType.Normal,
+                        EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                        EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                        EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                        EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                        EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute()
+                    };
+
+                    _guardLogDataProvider.SaveGuardLog(notifcationToCitywatch);
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = $"Error: {ex.Message}";
+            }
+
+            return Ok(new { status, message });
+        }
+
+
     }
 
 
@@ -2363,7 +2453,10 @@ namespace CityWatch.Web.API
         public string Notes { get; set; }
         public List<string> ImageUrls { get; set; }
         public string GuardInitials { get; set; }
-        public bool? IrEntryType { get; set; }
+        public int IrEntryType { get; set; }
+        public bool IsSystemEntry { get; set; }
+
+        public int? rcPushMessageId { get; set; }
     }
     public class DuressRequest
     {
