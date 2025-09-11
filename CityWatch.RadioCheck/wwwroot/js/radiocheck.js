@@ -1,4 +1,4 @@
-let nIntervId;
+﻿let nIntervId;
 let DuressAlarmNotificationPending = false;
 const duration = 60 * 3;
 var isPaused = false;
@@ -9710,25 +9710,133 @@ function GetGuardRCLoginDetails(headerrow, dates) {
 }
 //p4-117-end
 //p4-132-start
+function parseDateValue(v) {
+    if (!v && v !== 0) return null;
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    if (typeof v === 'number') return new Date(v); // epoch ms
+    if (typeof v === 'string') {
+        v = v.trim();
+        // JSON.NET /Date(1234567890)/
+        var m = v.match(/\/Date\((-?\d+)(?:[+-]\d+)?\)\//);
+        if (m) return new Date(parseInt(m[1], 10));
 
+        // replace space between date and time with T to improve parsing
+        var iso = v.replace(' ', 'T');
+
+        // Try direct parse (ISO or "yyyy-mm-ddTHH:MM:ss")
+        var d = new Date(iso);
+        if (!isNaN(d.getTime())) return d;
+
+        // fallback to Date.parse
+        var t = Date.parse(v);
+        if (!isNaN(t)) return new Date(t);
+
+        return null;
+    }
+    return null;
+}
+
+// helper: format a Date object to "dd mmm yyyy HH:MM" for display & picker init
+function formatForPicker(date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+    var day = String(date.getDate()).padStart(2, '0');
+    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var month = monthNames[date.getMonth()];
+    var year = date.getFullYear();
+    var hours = String(date.getHours()).padStart(2, '0');
+    var mins = String(date.getMinutes()).padStart(2, '0');
+    return day + ' ' + month + ' ' + year + ' ' + hours + ':' + mins;
+}
 let gridPendingTasks = $('#tblPendingTasks').grid({
     dataSource: '/RadioCheckV2?handler=PendingMessages',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
+    inlineEditing: { mode: 'command' },
     columns: [
-        { field: 'notifications', title: 'Message', width: 390 },
-        { field: 'fq', title: 'FQ', width: 50 },
-        { width: 100, field: 'expiryDate', title: 'Expiry', align: 'center' },
+        { field: 'notifications', title: 'Message', width: 290, editor: true },
+        {
+            field: 'fq', title: 'FQ', width: 50, type: 'dropdown',
+            //editor: { dataSource: '/RadioCheckV2?handler=FQValues', valueField: 'value', textField: 'text' }
+            editor: {
+                dataSource: [
+                    { value: 'O', text: 'Once Off' },
+                    { value: 'E', text: 'Every Day' }
+                ],
+                valueField: 'value',
+                textField: 'text'
+            },
+            renderer: function (value) {
+                switch (value) {
+                    case 'O': return 'O';
+                    case 'E': return 'E';
+                    default: return value;
+                }
+            }
+        },
+        {
+            width: 100, field: 'expiryDate', title: 'Expiry', align: 'center',
+          /*  type: 'date', format: 'dd-mmm-yyyy',*/
+            editor: true, parseFormat: 'dd-MM-yyyy'
+         
+            
+        },
         
     ],
-    //initialized: function (e) {
-    //    $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
-    //}
+    }
 });
+if (gridPendingTasks) {
+    gridPendingTasks.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            // url: '/Admin/Settings?handler=ClientTypes',
+            url: ' /RadioCheckV2?handler=UpdateActionListLater',
+            data: {
+                id: data.id,
+                notifications: data.notifications,
+                frequency: data.fq,
+                expiryDate: data.expiryDate
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridPendingTasks.reload();
+
+          
+        }).fail(function () {
+            console.log('error');
+        })
+    });
+
+    gridPendingTasks.on('rowRemoving', function (e, id, record) {
+       
+
+        if (confirm('Are you sure want to delete this message?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: ' /RadioCheckV2?handler=DeletePendingMessages',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (respose) {
+                gridPendingTasks.reload();
+                
+            }).fail(function () {
+                console.log('error');
+            })
+            //    .always(function () {
+            //    //if (isClientTypeAdding)
+            //    //    isClientTypeAdding = false;
+            //});
+        }
+    });
+}
 //p4-132-end
+
 $('#btnSendActionListLater').on('click', function () {
     $('#MessageType').val('ActionList');
     $('#MessageSendTimeInfoModal').modal('show');
