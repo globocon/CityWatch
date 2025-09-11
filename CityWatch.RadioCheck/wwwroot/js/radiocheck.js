@@ -9741,7 +9741,8 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
         },
         {
             width: 100, field: 'expiryDate', title: 'Expiry', align: 'center',
-            type: 'date', format: 'dd-mmm-yyyy', editor: true
+          /*  type: 'date', format: 'dd-mmm-yyyy',*/
+            editor: true, parseFormat: 'dd-MM-yyyy'
          
             
         },
