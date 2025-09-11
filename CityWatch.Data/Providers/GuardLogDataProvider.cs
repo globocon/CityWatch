@@ -393,6 +393,8 @@ namespace CityWatch.Data.Providers
         void MarkMessageSentToday(int messageId, DateTime date);
 
         public int SaveGuardLogandReturnId(GuardLog guardLog);
+        void DeleteRCActionListMessagesClientSites(int id);
+        void DeleteRCActionListMessages(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6991,6 +6993,17 @@ namespace CityWatch.Data.Providers
 
                 _context.RCActionListMessages.Add(rcActionListMessages);
             }
+            else
+            {
+                var rcMessagesToUpdate = _context.RCActionListMessages.SingleOrDefault(x => x.Id == rcActionListMessages.Id);
+                if (rcMessagesToUpdate == null)
+                    throw new InvalidOperationException();
+
+                rcMessagesToUpdate.Notifications = rcActionListMessages.Notifications;
+                rcMessagesToUpdate.messagetime = rcActionListMessages.messagetime;
+                rcMessagesToUpdate.Endmessagetime = rcActionListMessages.Endmessagetime;
+                rcMessagesToUpdate.Radiofrequencystatus = rcActionListMessages.Radiofrequencystatus;
+            }
 
 
             _context.SaveChanges();
@@ -7258,6 +7271,32 @@ namespace CityWatch.Data.Providers
 
                 return guardLogToUpdate.Id; // return updated Id
             }
+        }
+        public void DeleteRCActionListMessagesClientSites(int id)
+        {
+
+
+            var rcActionListMessagesClientsites = _context.RCActionListMessagesClientsites.Where (x => x.RCActionListMessagesId == id);
+            foreach (var item in rcActionListMessagesClientsites)
+            {
+                item.IsDeleted = true;
+                _context.SaveChanges();
+            }
+            
+
+
+        }
+        public void DeleteRCActionListMessages(int id)
+        {
+
+
+            var rcActionListMessagesClientsites = _context.RCActionListMessages.Where(x => x.Id == id).FirstOrDefault();
+
+            rcActionListMessagesClientsites.IsDeleted = true;
+            
+            _context.SaveChanges();
+
+
         }
     }
 

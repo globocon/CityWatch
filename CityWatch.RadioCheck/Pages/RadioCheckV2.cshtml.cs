@@ -34,6 +34,7 @@ using CityWatch.Web.Pages.Radio;
 using Dropbox.Api.Files;
 using System.Web;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -2811,6 +2812,73 @@ namespace CityWatch.RadioCheck.Pages.Radio
            
             return new JsonResult(result);
         }
+        public JsonResult OnGetFQValues()
+        {
+           var fqValues = new List<SelectListItem>();
+            
+            fqValues.Add(new SelectListItem("Once Off","OnceOff"));
+            fqValues.Add(new SelectListItem("Every Day","EveryDay"));
+           
+            return new JsonResult(fqValues);
+        }
+        public JsonResult OnPostDeletePendingMessages(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                
+                _guardLogDataProvider.DeleteRCActionListMessagesClientSites(id);
+                _guardLogDataProvider.DeleteRCActionListMessages(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostUpdateActionListLater(int id,string notifications,string frequency,string expiryDate)
+        {
+            var success = true;
+            var message = "Success";
+
+            try
+            {
+
+
+                var objforMessage = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.Id == id).FirstOrDefault();
+
+                objforMessage.Notifications = notifications;
+                if(frequency == "Once Off")
+                {
+                    objforMessage.Radiofrequencystatus = "OnceOff";
+                    objforMessage.messagetime = Convert.ToDateTime(expiryDate);
+                    objforMessage.Endmessagetime = null;
+                }
+                else
+                {
+                    objforMessage.Radiofrequencystatus = "EveryDay";
+                    objforMessage.messagetime = null;
+                    objforMessage.Endmessagetime = Convert.ToDateTime(expiryDate);
+                }
+                int newid = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+
 
     }
 }
