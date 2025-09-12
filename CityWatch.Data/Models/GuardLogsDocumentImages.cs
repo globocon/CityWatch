@@ -15,6 +15,8 @@ namespace CityWatch.Data.Models
         public bool? IsRearfile { get; set; } = false;
 
         public bool? IsTwentyfivePercentfile { get; set; } = false;
+
+        public bool? IsVideo { get; set; } = false;
         public int? GuardLogId { get; set; }
         [ForeignKey("GuardLogId")]
         public GuardLog GuardLog { get; set; }

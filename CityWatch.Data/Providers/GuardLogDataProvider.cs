@@ -6212,7 +6212,8 @@ namespace CityWatch.Data.Providers
                     ImagePath = guardLogDocumentImages.ImagePath,
                     IsRearfile = guardLogDocumentImages.IsRearfile,
                     IsTwentyfivePercentfile = guardLogDocumentImages.IsTwentyfivePercentfile,
-                    GuardLogId = guardLogDocumentImages.GuardLogId
+                    GuardLogId = guardLogDocumentImages.GuardLogId,
+                    IsVideo= guardLogDocumentImages.IsVideo
 
                 });
             }
