@@ -68,7 +68,9 @@ namespace CityWatch.Data.Models
 
             return errors;
         }
+
+        public ScanningType WAND_TAG_ENTRY_TYPE { get; set; }
+
     }
 }
 
-   

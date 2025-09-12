@@ -680,7 +680,8 @@ namespace CityWatch.Data.Providers
                     GpsCoordinates = guardLog.GpsCoordinates,
                     IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
                     RcLogbookStamp = guardLog.RcLogbookStamp,
-                    EventType = guardLog.EventType
+                    EventType = guardLog.EventType,
+                    WAND_TAG_ENTRY_TYPE = guardLog.WAND_TAG_ENTRY_TYPE
 
                 });
             }
