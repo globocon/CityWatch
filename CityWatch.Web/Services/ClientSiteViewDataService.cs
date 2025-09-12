@@ -18,6 +18,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetClientSiteLocationsNew(int[] clientSiteIds);
         List<SelectListItem> GetClientSitePocsNew(int[] clientSiteIds);
         List<SelectListItem> GetClientSites();
+       
     }
 
     public class ClientSiteViewDataService : IClientSiteViewDataService
@@ -108,5 +109,7 @@ namespace CityWatch.Web.Services
 
             return sitePocs;
         }
+
+        
     }
 }

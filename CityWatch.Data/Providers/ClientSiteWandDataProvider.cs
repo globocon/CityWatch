@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,9 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
         List<SmartWandTagsType> GetSmartWandTagsType();
         void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log);
+
+        List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds);
+        List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -214,6 +218,51 @@ namespace CityWatch.Data.Providers
             //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
 
             _dbContext.SaveChanges();
+        }
+
+        public List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds)
+        {
+            return _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSite.IsActive && !x.IsDeleted && clientSiteIds.Contains(x.ClientSiteId))
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.ClientSite)
+                .AsEnumerable() // switch to in-memory to allow property set
+                .Select(x =>
+                {
+                    x.TagsType = x.SmartWandTagsType.value;
+                    return x;
+                })
+                .ToList();
+        }
+
+        public List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds)
+        {
+            var logs =  _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(x => clientSiteIds.Contains(x.LoggedInClientSiteId) ||
+                            (x.TagLinkedClientSiteId.HasValue && clientSiteIds.Contains(x.TagLinkedClientSiteId.Value)))
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.LoggedInClientSite)
+                .Include(x => x.LinkedClientSite)
+                .ToList();
+
+
+            var tagList = logs.Select(x => new ClientSiteSmartWandTags
+            {
+                // Use TagLinkedClientSiteId if available, otherwise fall back to LoggedInClientSiteId
+                ClientSiteId = x.TagLinkedClientSiteId ?? x.LoggedInClientSiteId,
+                UId = x.TagUId,
+                TagsTypeId = x.TagsTypeId ?? 0, // or handle null case as needed
+                LabelDescription = x.LabelDescription,
+                SmartWandTagsType = x.SmartWandTagsType,
+                TagsType = x.SmartWandTagsType?.value,
+                ClientSite = x.TagLinkedClientSiteId.HasValue ? x.LinkedClientSite : x.LoggedInClientSite,
+                IsDeleted = false // assuming all from logs are "not deleted"
+            })
+            .GroupBy(x => new { x.ClientSiteId, x.UId }) // Optional: remove duplicates
+            .Select(g => g.First()) // Keep one per UID per site
+            .ToList();
+
+            return tagList;
         }
     }
 }

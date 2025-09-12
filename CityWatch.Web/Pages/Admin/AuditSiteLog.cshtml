@@ -31,6 +31,9 @@
                         <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="wandstrike_log-tab" data-toggle="tab" href="#wandstrikeLog" role="tab" aria-controls="wandstrikeLog" aria-selected="false">Wand Strikes</a>
+                    </li>
+                    <li class="nav-item">
 
                         <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
                     </li>
@@ -92,6 +95,9 @@
                 </div>
                 <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
                     <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="wandstrikeLog" role="tabpanel" aria-labelledby="wandstrike_log-tab">
+                    <partial name="_WandStrikeAuditSiteLog" model="Model"></partial>
                 </div>
                 <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
                     <partial name="_FusionGuardSiteLog"></partial> 

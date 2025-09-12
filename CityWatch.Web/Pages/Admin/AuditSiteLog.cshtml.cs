@@ -45,6 +45,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
+        public WandStrikeAuditLogRequest WandStrikeAuditLogRequest { get; set; }
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
@@ -650,6 +651,49 @@ namespace CityWatch.Web.Pages.Admin
             var r = _viewDataService.GetFileDownloadAuditLogs(logFromDate, logToDate);
             return new JsonResult(r);
         }
+
+        #region "Wand Strikes"
+        public JsonResult OnGetClientSiteWandAndTags(string clientSiteIds)
+        {
+            var tagIds = new List<SelectListItem>();
+            var tagTypeIds = new List<SelectListItem>();
+            var tagLabels = new List<SelectListItem>();
+            var smartWandIds = new List<SelectListItem>();
+            var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
+
+            var tags = _viewDataService.GetClientSiteTagIds(arClientSiteIds);
+
+            tagIds = tags.DistinctBy(x => x.UId)
+                        .Select(x => new SelectListItem
+                        {
+                            Text = x.UId,
+                            Value = x.UId
+                        })
+                        .ToList();
+
+            tagTypeIds = tags.DistinctBy(x => x.SmartWandTagsType.Id)
+                            .Select(x => new SelectListItem
+                            {
+                                Value = x.SmartWandTagsType.Id.ToString(),
+                                Text = x.SmartWandTagsType.value
+                            })
+                            .OrderBy(x => x.Text)
+                            .ToList();
+
+            tagLabels = tags.DistinctBy(x => x.LabelDescription)
+                            .Select(x => new SelectListItem
+                            {
+                                Value = x.LabelDescription,
+                                Text = x.LabelDescription
+                            })
+                            .OrderBy(x => x.Text) 
+                            .ToList();
+
+            smartWandIds = _viewDataService.GetClientSiteSmartWandIds(arClientSiteIds);
+
+            return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds });
+        }
+        #endregion "Wand Strikes"
 
 
     }

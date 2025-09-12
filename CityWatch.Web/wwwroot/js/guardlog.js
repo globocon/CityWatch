@@ -237,6 +237,7 @@ $(function () {
 
     });
 
+
     //----****** Guard Access RC Client Sites Start *********----//
     let ucaRcTree;
 
@@ -8993,7 +8994,83 @@ $(function () {
         
     });
 
+    // WandStrike -- Start
+    $('.wandstrikemultiselect').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true
+    });
 
+    //const todayDate = new Date();
+    //const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
+    $('#wandstrikeAudtitFromDate').val(startDate.toISOString().substr(0, 10));
+    $('#wandstrikeAudtitToDate').val(systemDate);
+
+    $('#wandstrikeClientType').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#wandstrikeClientSiteId');
+        keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    });
+
+    $('#wandstrikeClientSiteId').on('change', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        const clientSiteWandStrikeTagId = $('#wandstrikeTagId');
+        const clientSiteWandStrikeTagTypeId = $('#wandstrikeTagTypeId');
+        const clientSiteWandStrikeTagLabel = $('#wandstrikeTagLabel');
+        const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
+
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSiteWandAndTags&clientSiteIds=' + $(this).val().join(';'),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSiteWandStrikeTagId.html('');
+            clientSiteWandStrikeTagTypeId.html('');
+            clientSiteWandStrikeTagLabel.html('');
+            clientSiteWandStrikeSmartWandId.html('');
+            data.tagIds.map(function (result) {
+
+                clientSiteWandStrikeTagId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagTypeIds.map(function (result) {
+                clientSiteWandStrikeTagTypeId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagLabels.map(function (result) {
+                clientSiteWandStrikeTagLabel.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.smartWandIds.map(function (result) {
+                clientSiteWandStrikeSmartWandId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            clientSiteWandStrikeTagId.multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+        });
+    });
+
+
+    // WandStrike -- End
 
 });
 //Gurad License and Compliance Form start
