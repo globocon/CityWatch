@@ -37,6 +37,7 @@ using CityWatch.Data.Enums;
 using ConvertApiDotNet;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
 
 
 namespace CityWatch.Web.API
@@ -316,7 +317,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true, int scanningType = 0)
         {
             try
             {
@@ -339,6 +340,8 @@ namespace CityWatch.Web.API
                 // Default GPS coordinates (should be replaced with actual values if available)
                 var gpsCoordinates = gps;
 
+                var _scanningType = (ScanningType)scanningType;
+
                 // Create a log entry
                 var signInEntry = new GuardLog
                 {
@@ -353,7 +356,8 @@ namespace CityWatch.Web.API
                     EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
                     EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
                     EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gpsCoordinates
+                    GpsCoordinates = gpsCoordinates,
+                    WAND_TAG_ENTRY_TYPE = _scanningType
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
