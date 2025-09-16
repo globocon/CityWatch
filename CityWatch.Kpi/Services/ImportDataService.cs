@@ -118,6 +118,11 @@ namespace CityWatch.Kpi.Services
             var wandScanCounts = await GetWandScansCount(clientSiteKpiSetting, datesToProcess);
             runLog.AppendFormat(GetFormattedLogMessage("Wand scans count collected"));
 
+            // Get NFCandBLE WAND Scan count
+            var dailyLogTimersNFCandBLE = await GetDailyLogTimerNFCandBLE(datesToProcess, item.ClientSiteId);
+            runLog.AppendFormat(GetFormattedLogMessage("Daily log data collected"));
+
+
             // Get employee hours
             var employeeHours = GetEmployeeHours(clientSiteKpiSetting, datesToProcess);
             runLog.AppendFormat(GetFormattedLogMessage("Employee hours collected"));
@@ -133,6 +138,7 @@ namespace CityWatch.Kpi.Services
                 var wandScanCount = wandScanCounts.GetValueOrDefault(date, 0);
                 var employeeHour = employeeHours.GetValueOrDefault(date, 0);
                 var acceptableLogFreq = dailyLogTimers.ContainsKey(date) && dailyLogTimers[date] != null ? dailyLogTimers[date].IsAcceptable : null;
+                var NFCandBLE = dailyLogTimersNFCandBLE.ContainsKey(date) && dailyLogTimersNFCandBLE[date] != null ? dailyLogTimersNFCandBLE[date].Count : 0;
 
                 var kpi = new DailyClientSiteKpi()
                 {
@@ -144,6 +150,7 @@ namespace CityWatch.Kpi.Services
                     WandScanCount = pastDate ? wandScanCount : null,
                     EmployeeHours = pastDate ? employeeHour : null,
                     IsAcceptableLogFreq = acceptableLogFreq,
+                    WandScanNFCandBLE= pastDate ? NFCandBLE : null
                 };
                 dailyKpis.Add(kpi);
             }
@@ -182,6 +189,7 @@ namespace CityWatch.Kpi.Services
                     existingDateKpi.WandScanCount = kpi.WandScanCount;
                     existingDateKpi.FireOrAlarmCount = kpi.FireOrAlarmCount;
                     existingDateKpi.IsAcceptableLogFreq = kpi.IsAcceptableLogFreq;
+                    existingDateKpi.WandScanNFCandBLE= kpi.WandScanNFCandBLE;
                 }
                 else
                 {
@@ -243,7 +251,45 @@ namespace CityWatch.Kpi.Services
             }
             return isAcceptableLogFreq;
         }
-    
+
+
+
+
+        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyLogTimerNFCandBLE( List<DateTime> kpiDates, int clientSiteId)
+        {
+            var logCounts = new Dictionary<DateTime, DailyIrCount>();
+            var results = new List<DailyIrCount>();
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(_settings.IrApiUrl);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var url = $"api/incidentreport/DailyLogTimerNFCandBLE?dateFrom={kpiDates.Min():yyyy-MM-dd}" +
+                          $"&dateTo={kpiDates.Max():yyyy-MM-dd}&siteId={clientSiteId}";
+
+                HttpResponseMessage response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultString = await response.Content.ReadAsStringAsync();
+                    results = JsonSerializer.Deserialize<List<DailyIrCount>>(resultString,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+            }
+
+            foreach (var date in kpiDates)
+            {
+                var logResult = results.SingleOrDefault(x => x.Date == date);
+                logCounts.Add(date, logResult ?? new DailyIrCount { Date = date, Count = 0 });
+            }
+
+            return logCounts;
+        }
+
+
+
+
         private async Task<Dictionary<DateTime, int>> GetImageCount(ClientSiteKpiSetting clientSiteKpiSetting, DateTime reportDate, List<DateTime> kpiDates)
         {
             var dbxItemCount = new Dictionary<string, int>();
