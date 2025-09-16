@@ -37,6 +37,7 @@ using CityWatch.Data.Enums;
 using ConvertApiDotNet;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
 
 
 namespace CityWatch.Web.API
@@ -316,7 +317,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true, int scanningType = 0)
         {
             try
             {
@@ -339,6 +340,8 @@ namespace CityWatch.Web.API
                 // Default GPS coordinates (should be replaced with actual values if available)
                 var gpsCoordinates = gps;
 
+                var _scanningType = (ScanningType)scanningType;
+
                 // Create a log entry
                 var signInEntry = new GuardLog
                 {
@@ -353,7 +356,8 @@ namespace CityWatch.Web.API
                     EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
                     EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
                     EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gpsCoordinates
+                    GpsCoordinates = gpsCoordinates,
+                    WAND_TAG_ENTRY_TYPE = _scanningType
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
@@ -2320,6 +2324,103 @@ namespace CityWatch.Web.API
             return new JsonResult(new { success, message, files = uploadedFiles });
         }
 
+
+
+
+        [HttpPost("UploadMultipleVideos")]
+        public async Task<IActionResult> UploadMultipleVideos(
+      [FromForm] List<IFormFile> files,
+      [FromForm] int guardId,
+      [FromForm] int clientsiteId,
+      [FromForm] int userId,
+      [FromForm] string gps
+  )
+        {
+            bool success = false;
+            string message = "Uploaded successfully";
+            var uploadedFiles = new List<string>();
+
+            try
+            {
+                if (files == null || files.Count == 0)
+                    throw new Exception("No videos uploaded");
+
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, LogBookType.DailyGuardLog);
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+
+                var signInEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = "Mob app video upload",
+                    IsSystemEntry = false,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gps
+                };
+
+                int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
+
+                string[] allowedExtensions = { ".mp4", ".mov", ".avi", ".mkv" };
+
+                foreach (var file in files)
+                {
+                    if (file.Length == 0) continue;
+
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext) || !file.ContentType.StartsWith("video"))
+                        throw new Exception($"Unsupported video type: {file.FileName}");
+
+                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), "Videos");
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
+                    var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
+                    var fullPath = Path.Combine(folderPath, uploadFileName);
+
+                    using (var stream = System.IO.File.Create(fullPath))
+                        await file.CopyToAsync(stream);
+
+                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/Videos/{uploadFileName}";
+
+                    // Save record in the same table
+                    var logFile = new GuardLogsDocumentImages
+                    {
+                        GuardLogId = GuardLogId,
+                        ImagePath = publicPath,
+                        IsVideo = true,         
+                        IsRearfile = false,
+                        IsTwentyfivePercentfile = false
+                    };
+
+                    _guardLogDataProvider.SaveGuardLogDocumentImages(logFile);
+
+                    uploadedFiles.Add(publicPath);
+                }
+
+                success = true;
+                message = $"{uploadedFiles.Count} video(s) uploaded successfully.";
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message, videos = uploadedFiles });
+        }
 
 
 
