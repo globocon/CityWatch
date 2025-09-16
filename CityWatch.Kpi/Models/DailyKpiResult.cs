@@ -29,7 +29,8 @@ namespace CityWatch.Kpi.Models
 
         public int? ImageCount { get { return _dailyClientSiteKpi.ImageCount; } }
 
-        public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount; } }
+        //public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount; } }
+        public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount+ _dailyClientSiteKpi.WandScanNFCandBLE; } }
 
         public int? IncidentCount { get { return _dailyClientSiteKpi.IncidentCount; } }
 

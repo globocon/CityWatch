@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Threading.Tasks;
+using CityWatch.Data.Enums;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CityWatch.Web.API
@@ -144,6 +145,35 @@ namespace CityWatch.Web.API
 
             return new JsonResult(dailyGuardLogFrequency.Select(z => new { date = z.Key, isAcceptable = z.Value }));
         }
+
+
+        [Route("[action]", Name = "DailyLogTimerNFCandBLE")]
+        public JsonResult DailyLogTimerNFCandBLE([FromQuery] DateTime dateFrom, [FromQuery] DateTime dateTo, [FromQuery] int siteId)
+        {
+            var dailyGuardLogCounts = new Dictionary<DateTime, int>();
+
+            for (DateTime date = dateFrom; date <= dateTo; date = date.AddDays(1))
+            {
+                int scanCount = 0;
+
+                var logBook = _clientDataProvider.GetClientSiteLogBook(siteId, LogBookType.DailyGuardLog, date);
+                if (logBook != null)
+                {
+                    // Exclude "Normal" scans → only NFC + BLE + others
+                    var guardLogs = _guardLogDataProvider.GetGuardLogs(logBook.Id, logBook.Date)
+                        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+
+                    scanCount = guardLogs.Count();
+                }
+
+                dailyGuardLogCounts.Add(date, scanCount);
+            }
+
+            return new JsonResult(
+                dailyGuardLogCounts.Select(z => new { date = z.Key, count = z.Value })
+            );
+        }
+
 
 
 
