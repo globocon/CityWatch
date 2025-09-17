@@ -7,9 +7,11 @@ using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using ImageMagick;
 using iText.Kernel.Pdf;
 using iText.Layout.Element;
 using iText.Layout.Properties;
@@ -45,12 +47,13 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly string _downloadsFolderPath;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         public string ClientNameTitle { get; set; }
 
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -62,6 +65,7 @@ namespace CityWatch.Web.Pages.Reports
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _downloadsFolderPath = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
         [BindProperty]
@@ -1191,7 +1195,53 @@ namespace CityWatch.Web.Pages.Reports
             return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
         }
 
+        public IActionResult OnPostGenerateReportGraphFourthTab()
+        {
+           
+            var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
+           
+            int totalDays = 28; // always 4 weeks
+            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
 
+            var dailySiteControllerWandStrikeData = new List<object>();
+
+            for (DateTime day = ReportRequest.FromDate; day <= toDate; day = day.AddDays(1))
+            {
+                int strikes = dailyLogWandStrikeReportForSiteController.Where(x => x.ClientSiteLogBook.Date == day.Date)
+                                .Count();
+
+                dailySiteControllerWandStrikeData.Add(new
+                {
+                    DayLabel = day.ToString("d") + "(" + day.ToString("dddd")[0].ToString() + ")",   // ?? gives MTWTFSS
+                   
+                    Strikes = strikes
+                });
+            }
+            var individualFQWandStrikeData = new List<object>();
+            var clientsitesmartwands= _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                .Where(z =>
+         (ReportRequest.ClientTypes == null
+             || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+         (ReportRequest.ClientSites == null
+             || ReportRequest.ClientSites.Contains(z.ClientSite.Name)));
+            foreach (var item in clientsitesmartwands)
+            {
+                int strikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)
+                                && x.Notes.Contains(item.LabelDescription)).Count();
+                int totalStrikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)).Count();
+                var percent = Math.Round((double)strikes / totalStrikes * 100, 2);
+                if (strikes != 0) { 
+                    individualFQWandStrikeData.Add(new
+                    {
+                        Wands = item.LabelDescription,   // ?? gives MTWTFSS
+
+                        Strikes = percent
+                    });
+                }
+            }
+
+            return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData } });
+        }
 
 
 

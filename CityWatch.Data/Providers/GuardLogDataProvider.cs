@@ -395,6 +395,7 @@ namespace CityWatch.Data.Providers
         public int SaveGuardLogandReturnId(GuardLog guardLog);
         void DeleteRCActionListMessagesClientSites(int id);
         void DeleteRCActionListMessages(int id);
+        List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7329,6 +7330,37 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs)
+        {
+
+
+
+
+            var data = _context.GuardLogs
+    .Where(z =>
+         (patrolRequest.ClientTypes == null
+             || patrolRequest.ClientTypes.Contains(z.ClientSiteLogBook.ClientSite.ClientType.Name)) &&
+         (patrolRequest.ClientSites == null
+             || patrolRequest.ClientSites.Contains(z.ClientSiteLogBook.ClientSite.Name)) &&
+         //z.ClientSiteLogBook.Date >= patrolRequest.FromDate
+         //    && z.ClientSiteLogBook.Date <= patrolRequest.ToDate &&
+         //(!excludeSystemLogs
+         //    || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue)))
+             //&& 
+             (z.WAND_TAG_ENTRY_TYPE != ScanningType.Normal)
+     //(z.WAND_TAG_ENTRY_TYPE == (ScanningType)1 || z.WAND_TAG_ENTRY_TYPE == (ScanningType)2)
+     )
+    .Include(z=> z.ClientSiteLogBook.ClientSite.ClientType)
+    .Include(z => z.GuardLogin.Guard)
+    .ToList();
+
+            var returnData = data.OrderBy(z => z.EventDateTimeLocal.HasValue ? z.EventDateTimeLocal : z.EventDateTime)
+                .ThenBy(z => z.Id)
+                .ToList();
+
+            return returnData;
+        }
+
     }
 
 

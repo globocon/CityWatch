@@ -140,7 +140,7 @@ namespace CityWatch.Data.Providers
             var smartwandtags = _dbContext.ClientSiteSmartWandTags
                 .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
                 .Include(x => x.SmartWandTagsType)
-                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
                 .ToList();
             foreach (var item in smartwandtags)
             {
