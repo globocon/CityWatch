@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -27,6 +28,7 @@ namespace CityWatch.Data.Providers
 
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds);
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
+        List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -162,7 +164,7 @@ namespace CityWatch.Data.Providers
         {
             if (log == null)
                 throw new ArgumentNullException();
-            
+
             _dbContext.ClientSiteSmartWandTagsHitLogs.Add(log);
             _dbContext.SaveChanges();
         }
@@ -172,7 +174,7 @@ namespace CityWatch.Data.Providers
             if (clientSiteSmartWandTag == null)
                 throw new ArgumentNullException();
 
-            if(clientSiteSmartWandTag.TagsType == null)
+            if (clientSiteSmartWandTag.TagsType == null)
                 throw new ArgumentNullException("TagsType cannot be null. Please select a tag type.");
 
             clientSiteSmartWandTag.TagsTypeId = _dbContext.SmartWandTagsType.Where(x => x.value == clientSiteSmartWandTag.TagsType).FirstOrDefault().Id;
@@ -237,7 +239,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds)
         {
-            var logs =  _dbContext.ClientSiteSmartWandTagsHitLogs
+            var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
                 .Where(x => clientSiteIds.Contains(x.LoggedInClientSiteId) ||
                             (x.TagLinkedClientSiteId.HasValue && clientSiteIds.Contains(x.TagLinkedClientSiteId.Value)))
                 .Include(x => x.SmartWandTagsType)
@@ -263,6 +265,75 @@ namespace CityWatch.Data.Providers
             .ToList();
 
             return tagList;
+        }
+
+        public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
+        {
+            //var _utc = _dbContext.ClientSiteKpiSettings.Where(x => clientSiteIds.Contains(x.ClientSiteId))?.Select(x => x.UTC)?.FirstOrDefault() ?? "+10:00";
+
+            // Step 1: Get UTC offsets per client site
+            var utcOffsets = _dbContext.ClientSiteKpiSettings
+                .Where(x => clientSiteIds.Contains(x.ClientSiteId))
+                .Select(x => new
+                {
+                    x.ClientSiteId,
+                    _siteUTC = x.UTC ?? "+10:00" // Default to +10:00 if null
+                })
+                .ToList();
+
+            // Prepare a list to accumulate matching logs
+            var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
+
+            foreach (var site in utcOffsets)
+            {
+                // Step 2: Parse UTC offset like "+05:30" or "-04:00"
+                if (!TimeSpan.TryParse(site._siteUTC, out TimeSpan offset))
+                {
+                    // Default offset if parsing fails (you can customize this)
+                    offset = TimeSpan.Zero;
+                }
+
+                // Step 3: Convert the local from/to to UTC for this site
+                var fromUtc = fromDate - offset;
+                var toUtc = toDate - offset;
+
+                // Step 4: Get logs for this client site in the adjusted range
+                var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
+                    .Where(x =>
+                        (x.LoggedInClientSiteId == site.ClientSiteId ||
+                         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
+                        x.HitUtcDateTime >= fromUtc &&
+                        x.HitUtcDateTime <= toUtc)
+                    .Include(x => x.SmartWandTagsType)
+                    .Include(x => x.LoggedInClientSite)
+                    .Include(x => x.LinkedClientSite)
+                    .Include(x => x.LoggedInGuard)
+                    .Include(x => x.LoggedInUser)
+                    .ToList();
+
+                var logsWithLocal = logs.Select(log => new ClientSiteSmartWandTagsHitLog
+                {
+                    Id = log.Id,
+                    LoggedInClientSiteId = log.LoggedInClientSiteId,
+                    LoggedInUserId = log.LoggedInUserId,
+                    LoggedInGuardId = log.LoggedInGuardId,
+                    TagUId = log.TagUId,
+                    TagsTypeId = log.TagsTypeId,
+                    LabelDescription = log.LabelDescription,
+                    TagLinkedClientSiteId = log.TagLinkedClientSiteId,
+                    HitUtcDateTime = log.HitUtcDateTime,
+                    HitLocalDateTime = log.HitUtcDateTime + offset, // Add local time conversion
+                    LoggedInClientSite = log.LoggedInClientSite,
+                    LinkedClientSite = log.LinkedClientSite,
+                    SmartWandTagsType = log.SmartWandTagsType,
+                    LoggedInGuard = log.LoggedInGuard,
+                    LoggedInUser = log.LoggedInUser
+                });
+
+                matchingLogs.AddRange(logsWithLocal);
+            }
+
+            return matchingLogs;
         }
     }
 }

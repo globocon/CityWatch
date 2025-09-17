@@ -40,11 +40,11 @@ namespace CityWatch.Web.Models
 
         public string TagLabel { get; set; }
 
-        public int[] TagLabelIds
+        public string[] TagLabelIds
         {
             get
             {
-                return TagLabel?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+                return TagLabel?.Split(",").ToArray() ?? Array.Empty<string>();
             }
         }
 
@@ -58,15 +58,7 @@ namespace CityWatch.Web.Models
             }
         }
 
-        public string GuardLicenceNoId { get; set; }
-
-        //public int[] GuardLicenceNoIds
-        //{
-        //    get
-        //    {
-        //        return GuardLicenceNoId?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
-        //    }
-        //}
+        public string GuardLicenceNoId { get; set; }               
         public string GuardName { get; set; }
                 
     }

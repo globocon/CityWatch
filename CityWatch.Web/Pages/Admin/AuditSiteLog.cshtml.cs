@@ -97,7 +97,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
             }
-                if (GuardId != 0)
+            if (GuardId != 0)
             {
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
 
@@ -131,14 +131,14 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public JsonResult OnGetDailyGuardSiteLogs(int pageNo, int limit, int clientSiteId,
-                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs,string keywordDownSelect)
+                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs, string keywordDownSelect)
         {
             var start = (pageNo - 1) * limit;
             var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).
-                Where(x=>string.IsNullOrEmpty(keywordDownSelect) || 
+                Where(x => string.IsNullOrEmpty(keywordDownSelect) ||
                 (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
                 (!string.IsNullOrEmpty(x.GuardInitials) && x.GuardInitials.Contains(keywordDownSelect)));
-            if(limit == 0)
+            if (limit == 0)
             {
                 limit = dailyGuardLogs.Count();
             }
@@ -150,11 +150,11 @@ namespace CityWatch.Web.Pages.Admin
         public IActionResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
             //return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
-           
+
             var keyVehicleAuditLogRequest = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
             //duress entries per week-start
-             var today = keyVehicleLogAuditLogRequest.LogFromDate;
-            var todate= keyVehicleLogAuditLogRequest.LogToDate;
+            var today = keyVehicleLogAuditLogRequest.LogFromDate;
+            var todate = keyVehicleLogAuditLogRequest.LogToDate;
             var todaynew = keyVehicleLogAuditLogRequest.LogFromDate;
             var todatenew = keyVehicleLogAuditLogRequest.LogToDate;
             var kvtruckentriesForWeekNew = new List<KeyVehicleLogAuditLogRequest>();
@@ -194,8 +194,8 @@ namespace CityWatch.Web.Pages.Admin
             var kvtruckentriesForWeekNewCount = kvtruckentriesForWeekNewCountnew;
             //duress entries per week-end
             //duress entries per month-start
-            keyVehicleLogAuditLogRequest.LogFromDate= todaynew;
-            keyVehicleLogAuditLogRequest.LogToDate= todatenew;
+            keyVehicleLogAuditLogRequest.LogFromDate = todaynew;
+            keyVehicleLogAuditLogRequest.LogToDate = todatenew;
             today = todaynew;
             todate = todatenew;
             var kvtruckentriesForMonthNew = new List<KeyVehicleLogAuditLogRequest>();
@@ -269,7 +269,7 @@ namespace CityWatch.Web.Pages.Admin
             }
         */
 
-        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate,string keywordDownSelect)
+        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate, string keywordDownSelect)
         {
             var success = true;
             var message = string.Empty;
@@ -457,7 +457,7 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, string clientSiteIds,
-                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs,string keywordDownSelect)
+                                                   DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs, string keywordDownSelect)
         {
             if (string.IsNullOrWhiteSpace(clientSiteIds))
             {
@@ -503,7 +503,7 @@ namespace CityWatch.Web.Pages.Admin
                 limit = dailyGuardLogs.Count();
             }
             var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
-            
+
 
             return new JsonResult(new { records, total = dailyGuardLogs.Count() });
         }
@@ -553,56 +553,56 @@ namespace CityWatch.Web.Pages.Admin
             var statusCode = 0;
             DateTime startDate = DateTime.MinValue;
             DateTime endDate = DateTime.MinValue;
-           
-                DateTime today = DateTime.Today;
 
-                if (frequency == "ThisWeek")
-                {
+            DateTime today = DateTime.Today;
 
-                    // Assuming the week starts on Monday and ends on Sunday
-                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
-                    startDate = today.AddDays(-daysToSubtract);
+            if (frequency == "ThisWeek")
+            {
 
-                    endDate = startDate.AddDays(6);
-                }
-                else if (frequency == "Last2weeks")
-                {
-                    // Calculate the end of last week (Sunday)
-                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Sunday + 7;
-                    endDate = today.AddDays(-daysToSubtract);
+                // Assuming the week starts on Monday and ends on Sunday
+                int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
+                startDate = today.AddDays(-daysToSubtract);
 
-                    // Start date is 13 days before the end date (2 weeks)
-                    startDate = endDate.AddDays(-13);
-                }
-                else if (frequency == "Last4weeks")
-                {
-                    // Calculate the end of last week (Sunday)
-                    int daysToSubtract = (int)today.DayOfWeek + 1; // daysToSubtract for the previous Sunday
-                    endDate = today.AddDays(-daysToSubtract);
+                endDate = startDate.AddDays(6);
+            }
+            else if (frequency == "Last2weeks")
+            {
+                // Calculate the end of last week (Sunday)
+                int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Sunday + 7;
+                endDate = today.AddDays(-daysToSubtract);
 
-                    // Start date is 27 days before the end date (for four weeks)
-                    startDate = endDate.AddDays(-27);
-                }
-                else if (frequency == "Month")
-                {
-                    // Calculate the start date as the first day of the last month
-                    startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+                // Start date is 13 days before the end date (2 weeks)
+                startDate = endDate.AddDays(-13);
+            }
+            else if (frequency == "Last4weeks")
+            {
+                // Calculate the end of last week (Sunday)
+                int daysToSubtract = (int)today.DayOfWeek + 1; // daysToSubtract for the previous Sunday
+                endDate = today.AddDays(-daysToSubtract);
 
-                    // Calculate the end date as the last day of the last month
-                    endDate = startDate.AddMonths(1).AddDays(-1);
-                }
-                else if (frequency == "Today")
-                {
-                    startDate = today;
-                    endDate = today;
-                }
-                string StartDate = startDate.ToString();
-                string EndDate = endDate.ToString();
+                // Start date is 27 days before the end date (for four weeks)
+                startDate = endDate.AddDays(-27);
+            }
+            else if (frequency == "Month")
+            {
+                // Calculate the start date as the first day of the last month
+                startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
 
-                try
+                // Calculate the end date as the last day of the last month
+                endDate = startDate.AddMonths(1).AddDays(-1);
+            }
+            else if (frequency == "Today")
+            {
+                startDate = today;
+                endDate = today;
+            }
+            string StartDate = startDate.ToString();
+            string EndDate = endDate.ToString();
+
+            try
             {
                 zipFileName = _TimesheetReportGenerator.GenerateTimesheetZipFileFrequency(clientSiteIds.ToArray(), StartDate, EndDate).Result;
-              //fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(startdate, endDate, guradid);
+                //fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(startdate, endDate, guradid);
             }
             catch (Exception ex)
             {
@@ -615,7 +615,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
         }
-        public async Task<JsonResult> OnPostDownloadTimesheetBulk(string clientSiteId,string startdate, string endDate)
+        public async Task<JsonResult> OnPostDownloadTimesheetBulk(string clientSiteId, string startdate, string endDate)
         {
             List<int> clientSiteIds = clientSiteId.Split(',').Select(int.Parse).ToList();
             var fileName = string.Empty;
@@ -686,12 +686,57 @@ namespace CityWatch.Web.Pages.Admin
                                 Value = x.LabelDescription,
                                 Text = x.LabelDescription
                             })
-                            .OrderBy(x => x.Text) 
+                            .OrderBy(x => x.Text)
                             .ToList();
 
             smartWandIds = _viewDataService.GetClientSiteSmartWandIds(arClientSiteIds);
 
             return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds });
+        }
+
+        public IActionResult OnPostWandStrikeAuditSiteLogs(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
+        {
+            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest);
+            return new JsonResult(new { wandStrikeAuditLogViewModel });
+        }
+
+        public JsonResult OnPostDownloadWandStrikeLogZip(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
+        {
+            //var success = true;
+            //var message = string.Empty;
+            //var zipFileName = string.Empty;
+
+            //try
+            //{
+            //    if (wandStrikeAuditLogRequest == null)
+            //    {
+            //        success = false;
+            //        message = "error";
+            //    }
+            //    else
+            //    {
+            //        var arClientSiteIds = clientSiteId
+            //   .Split(";")
+            //   .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
+            //   .Select(z => int.Parse(z))
+            //   .ToArray();
+            //        zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog, keywordDownSelect).Result;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    success = false;
+            //    message = ex.Message;
+
+            //    if (ex.InnerException != null)
+            //        message = ex.InnerException.Message;
+            //}
+
+            //return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+            return new JsonResult(new { success = false, message = "Download not implemented." })
+            {
+                StatusCode = 501
+            };
         }
         #endregion "Wand Strikes"
 

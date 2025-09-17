@@ -2737,7 +2737,7 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds)
         {
             var siteSmartWands = new List<SelectListItem>();
-            siteSmartWands.AddRange(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => clientSiteIds.Contains(z.ClientSiteId)).Select(z => new SelectListItem(z.SmartWandId, z.SmartWandId)));
+            siteSmartWands.AddRange(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => clientSiteIds.Contains(z.ClientSiteId)).Select(z => new SelectListItem($"{z.SmartWandId} - [ {z.PhoneNumber} ]", z.SmartWandId)));
             return siteSmartWands;
         }
 
