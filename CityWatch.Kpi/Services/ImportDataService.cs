@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Kpi.Helpers;
@@ -46,16 +47,19 @@ namespace CityWatch.Kpi.Services
         private readonly CityWatchDbContext _dbContext;
         private readonly IImportJobDataProvider _importJobDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider = null;
 
         public ImportDataService(IOptions<Settings> settings,
             CityWatchDbContext dbContext,
             IImportJobDataProvider importJobDataProvider,
-            IClientDataProvider clientDataProvider)
+            IClientDataProvider clientDataProvider,
+            IGuardLogDataProvider guardLogDataProvider)
         {
             _settings = settings.Value;
             _dbContext = dbContext;
             _importJobDataProvider = importJobDataProvider;
             _clientDataProvider = clientDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
         }
 
         /// <summary>
@@ -255,36 +259,45 @@ namespace CityWatch.Kpi.Services
 
 
 
-        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyLogTimerNFCandBLE( List<DateTime> kpiDates, int clientSiteId)
+        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyLogTimerNFCandBLE(List<DateTime> kpiDates, int clientSiteId)
         {
-            var logCounts = new Dictionary<DateTime, DailyIrCount>();
-            var results = new List<DailyIrCount>();
+            var dailyLogCounts = new Dictionary<DateTime, DailyIrCount>();
 
-            using (var client = new HttpClient())
+            DateTime startDate = kpiDates.Min();
+            DateTime endDate = kpiDates.Max();
+
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
             {
-                client.BaseAddress = new Uri(_settings.IrApiUrl);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                int scanCount = 0;
 
-                var url = $"api/incidentreport/DailyLogTimerNFCandBLE?dateFrom={kpiDates.Min():yyyy-MM-dd}" +
-                          $"&dateTo={kpiDates.Max():yyyy-MM-dd}&siteId={clientSiteId}";
-
-                HttpResponseMessage response = await client.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                // Daily Guard Log
+                var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, date);
+                if (logBook != null)
                 {
-                    var resultString = await response.Content.ReadAsStringAsync();
-                    results = JsonSerializer.Deserialize<List<DailyIrCount>>(resultString,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var guardLogs = _guardLogDataProvider.GetGuardLogs(logBook.Id, logBook.Date)
+                        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+
+                    scanCount += guardLogs.Count();
                 }
+
+                // Fusion Log
+                var logBook2 = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, date);
+                if (logBook2 != null)
+                {
+                    var fusionLogs = _guardLogDataProvider.GetGuardLogs(logBook2.Id, logBook2.Date)
+                        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+
+                    scanCount += fusionLogs.Count();
+                }
+
+                dailyLogCounts[date] = new DailyIrCount
+                {
+                    Date = date,
+                    Count = scanCount
+                };
             }
 
-            foreach (var date in kpiDates)
-            {
-                var logResult = results.SingleOrDefault(x => x.Date == date);
-                logCounts.Add(date, logResult ?? new DailyIrCount { Date = date, Count = 0 });
-            }
-
-            return logCounts;
+            return dailyLogCounts;
         }
 
 
