@@ -237,6 +237,7 @@ $(function () {
 
     });
 
+
     //----****** Guard Access RC Client Sites Start *********----//
     let ucaRcTree;
 
@@ -8993,7 +8994,339 @@ $(function () {
         
     });
 
+    // WandStrike -- Start
+    const wandStrikeGroupColumn = 0;
+    let wandStrikeLogReport = $('#tbl_wandstrike_site_log').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        paging: true,
+        ordering: false,
+        order: [[wandStrikeGroupColumn, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%" },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
+            { data: 'smartWandType', width: "5%" },
+            { data: 'endUser', width: "15%" },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%" },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%" },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
 
+            api.column(wandStrikeGroupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="6">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+    let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[wandStrikeGroupColumn, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%" },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
+            { data: 'smartWandType', width: "5%" },
+            { data: 'endUser', width: "15%" },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%" },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%" },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(wandStrikeGroupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="6">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+
+    $('.wandstrikemultiselect').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true
+    });
+
+    //const todayDate = new Date();
+    //const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
+    $('#wandstrikeAudtitFromDate').val(startDate.toISOString().substr(0, 10));
+    $('#wandstrikeAudtitToDate').val(systemDate);
+
+    $('#wandstrikeClientType').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#wandstrikeClientSiteId');
+        wandStrikeLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    });
+
+    $('#wandstrikeClientSiteId').on('change', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        const clientSiteWandStrikeTagId = $('#wandstrikeTagId');
+        const clientSiteWandStrikeTagTypeId = $('#wandstrikeTagTypeId');
+        const clientSiteWandStrikeTagLabel = $('#wandstrikeTagLabel');
+        const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
+
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSiteWandAndTags&clientSiteIds=' + $(this).val().join(';'),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSiteWandStrikeTagId.html('');
+            clientSiteWandStrikeTagTypeId.html('');
+            clientSiteWandStrikeTagLabel.html('');
+            clientSiteWandStrikeSmartWandId.html('');
+            data.tagIds.map(function (result) {
+
+                clientSiteWandStrikeTagId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagTypeIds.map(function (result) {
+                clientSiteWandStrikeTagTypeId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagLabels.map(function (result) {
+                clientSiteWandStrikeTagLabel.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.smartWandIds.map(function (result) {
+                clientSiteWandStrikeSmartWandId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            clientSiteWandStrikeTagId.multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+        });
+    });
+
+    $('#btnGenerateWandstrikeAuditReport').on('click', function () { 
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        //calculate month difference-start
+        var date1 = new Date($('#wandstrikeAudtitFromDate').val());
+        var date2 = new Date($('#wandstrikeAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+
+        $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
+        $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
+        $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
+
+        $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
+        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
+
+        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+
+        $('#loader').show();
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
+        })
+            .done(function (response) {
+                wandStrikeLogReport.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();                
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    $('#btnDownloadWandstrikeAuditExcel').on('click', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        //calculate month difference-start
+        var date1 = new Date($('#wandstrikeAudtitFromDate').val());
+        var date2 = new Date($('#wandstrikeAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+
+        $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
+        $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
+        $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
+
+        $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
+        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
+
+        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+
+        $('#loader').show();
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
+        })
+            .done(function (response) {
+                wandStrikeLogExcel.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
+                var searchtext = wandStrikeLogReport.search();
+                wandStrikeLogExcel.search(searchtext).draw();
+                                
+                // Get raw data directly from DataTable
+                var exportData = wandStrikeLogExcel.rows({ search: 'applied' }).data().toArray();
+
+                // Optional: Flatten or clean up data if needed
+                var cleanedData = exportData.map(x => ({
+                    "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
+                    "SmartWand / Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
+                    "SmartWand / Tag Type": x.smartWandType ?? '',
+                    "End User": x.endUser ?? '',
+                    "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
+                    "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+                }));
+
+                // Convert to worksheet
+                var worksheet = XLSX.utils.json_to_sheet(cleanedData);
+                // Create workbook
+                var workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "WandStrikeLogs");
+
+                // Generate and download Excel file
+                var name = 'Wand Strike Data Logs - ' + $('#wandstrikeAudtitFromDate').val() + ' to ' + $('#wandstrikeAudtitToDate').val() + '.xlsx';
+                XLSX.writeFile(workbook, name);
+
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+
+    $('#btnDownloadWandstrikeAuditZip').on('click', function () {        
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        $('#wandstrikeauditlog-zip-modal').modal('show');
+    });
+
+
+    $('#wandstrikeauditlog-zip-modal').on('show.bs.modal', function (event) {
+        $('#btn-wandstrikeauditlog-zip-download').attr('href', '#');
+        $('#btn-wandstrikeauditlog-zip-download').hide();
+        $('#wandstrikeauditlog-zip-msg').show();                
+        downloadWandStrikeLogZipFile();        
+    });
+
+    function downloadWandStrikeLogZipFile() {
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=DownloadWandStrikeLogZip',
+            type: 'POST',
+            dataType: 'json',
+            //data: {
+            //    clientSiteId: $('#fusionClientSiteId').val().join(';'),
+            //    logFromDate: $('#fusionAudtitFromDate').val(),
+            //    logToDate: $('#fusionAudtitToDate').val(),
+            //    keywordDownSelect: $('#FusionKeydownselect').val()
+            //},
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        })
+            .done(function (response) {
+            if (!response.success) {
+                $('#wandstrikeauditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            } else {
+                $('#btn-wandstrikeauditlog-zip-download').attr('href', response.fileName);
+                $('#btn-wandstrikeauditlog-zip-download').show();
+                $('#wandstrikeauditlog-zip-msg').hide();
+            }
+        })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                $('#wandstrikeauditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            })
+            .always(function () {
+                //$('#loader').hide();
+            });            ;
+    }
+
+    function convertWandStrikeDateTimeString(value) {
+        if (value === null || value === undefined)
+        {
+            return '';
+        }
+        else {
+            const date = new Date(value);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('dd LLL yyyy HH:mm');
+            return dt;
+        }        
+    }
+
+    // WandStrike -- End
 
 });
 //Gurad License and Compliance Form start

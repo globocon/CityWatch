@@ -16,15 +16,18 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+        List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest);
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
     {
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
-        public AuditLogViewDataService(IGuardLogDataProvider guardLogDataProvider)
+        public AuditLogViewDataService(IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
         public List<GuardLogViewModel> GetAuditGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
@@ -123,6 +126,28 @@ namespace CityWatch.Web.Services
         {
             var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
             return dailyGuardLogGroups.ToList();
+        }
+
+        public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
+        {
+
+            var strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+            var filterLogs = strikeLogs.Where(z =>
+                    (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
+                    (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+                    (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
+                     (string.IsNullOrEmpty(wsRequest.GuardName) || string.Equals(z.LoggedInGuard.Name, wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                     (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
+                     ).ToList();
+
+            var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
+                {
+                    clientSiteSmartWandTagsHitLog = z
+                })
+                .ToList();
+
+            return filteredLogs;
+
         }
     }
 }

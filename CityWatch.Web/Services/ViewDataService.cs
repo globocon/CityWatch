@@ -185,6 +185,8 @@ namespace CityWatch.Web.Services
         List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
         ScannerTagDetails GetSmartWandTagDetailOfTag(string TagUid, string TagType);
         List<object> GetGuardRcClientSiteAccess(int guardId);
+        List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds);
+        List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds);
     }
 
     public class ViewDataService : IViewDataService
@@ -2652,6 +2654,8 @@ namespace CityWatch.Web.Services
         {
             await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
         }
+
+       
         public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type)
         {
             var sites = new List<SelectListItem>();
@@ -2710,6 +2714,34 @@ namespace CityWatch.Web.Services
 
             return results;
         }
+
+
+        public List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds)
+        {            
+            // Get tags from logs history for the selected client sites
+            var tagsFromLogs = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSitesFromLogs(clientSiteIds);
+
+            // Get tags from tags table for the selected client sites
+            var tagsFromTagMaster = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSites(clientSiteIds);
+
+            // Get distinct tag ids and names
+            var uniqueUids = tagsFromLogs
+            .Concat(tagsFromTagMaster)
+            .Where(x => !string.IsNullOrWhiteSpace(x.UId))
+            .DistinctBy(x => x.UId)
+            .OrderBy(x => x.UId)
+            .ToList();
+                       
+            return uniqueUids;
+        }
+        public List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds)
+        {
+            var siteSmartWands = new List<SelectListItem>();
+            siteSmartWands.AddRange(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => clientSiteIds.Contains(z.ClientSiteId)).Select(z => new SelectListItem($"{z.SmartWandId} - [ {z.PhoneNumber} ]", z.SmartWandId)));
+            return siteSmartWands;
+        }
+
+
     }
 
 

@@ -18,12 +18,19 @@ namespace CityWatch.Data.Models
         public int? TagLinkedClientSiteId { get; set; }
         public DateTime HitUtcDateTime { get; set; } =  DateTime.UtcNow;
 
+        [NotMapped]
+        public DateTime HitLocalDateTime { get; set; }
+
 
         [ForeignKey("LoggedInClientSiteId")]
         public ClientSite LoggedInClientSite { get; set; }
         [ForeignKey("TagLinkedClientSiteId")]
         public ClientSite LinkedClientSite { get; set; }
         [ForeignKey("TagsTypeId")]
-        public SmartWandTagsType SmartWandTagsType { get; set; }                
+        public SmartWandTagsType SmartWandTagsType { get; set; }     
+        [ForeignKey("LoggedInGuardId")]
+        public Guard LoggedInGuard { get; set; }
+        [ForeignKey("LoggedInUserId")]
+        public User LoggedInUser { get; set; }
     }
 }
