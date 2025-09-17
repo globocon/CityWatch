@@ -154,7 +154,7 @@ namespace CityWatch.Kpi.Services
                     WandScanCount = pastDate ? wandScanCount : null,
                     EmployeeHours = pastDate ? employeeHour : null,
                     IsAcceptableLogFreq = acceptableLogFreq,
-                    WandScanNFCandBLE= pastDate ? NFCandBLE : null
+                    WandScanNFCandBLE= pastDate ? NFCandBLE : 0
                 };
                 dailyKpis.Add(kpi);
             }
@@ -193,7 +193,7 @@ namespace CityWatch.Kpi.Services
                     existingDateKpi.WandScanCount = kpi.WandScanCount;
                     existingDateKpi.FireOrAlarmCount = kpi.FireOrAlarmCount;
                     existingDateKpi.IsAcceptableLogFreq = kpi.IsAcceptableLogFreq;
-                    existingDateKpi.WandScanNFCandBLE= kpi.WandScanNFCandBLE;
+                    existingDateKpi.WandScanNFCandBLE=  kpi.WandScanNFCandBLE ?? 0;
                 }
                 else
                 {

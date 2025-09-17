@@ -30,7 +30,22 @@ namespace CityWatch.Kpi.Models
         public int? ImageCount { get { return _dailyClientSiteKpi.ImageCount; } }
 
         //public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount; } }
-        public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount+ _dailyClientSiteKpi.WandScanNFCandBLE; } }
+        //public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount+ _dailyClientSiteKpi.WandScanNFCandBLE; } }
+
+        public int? WandScanCount
+        {
+            get
+            {
+                int? count = _dailyClientSiteKpi.WandScanCount;
+
+                if (_dailyClientSiteKpi.WandScanNFCandBLE.HasValue && _dailyClientSiteKpi.WandScanNFCandBLE.Value != 0)
+                {
+                    count += _dailyClientSiteKpi.WandScanNFCandBLE.Value;
+                }
+
+                return count;
+            }
+        }
 
         public int? IncidentCount { get { return _dailyClientSiteKpi.IncidentCount; } }
 
