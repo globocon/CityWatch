@@ -277,6 +277,7 @@ namespace CityWatch.Data.Providers
         public int GetSiteLinksTypeUsingTypeText(string typeText);
         public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
         List<SubDomain> GetSubDomains();
+        List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3817,6 +3818,13 @@ namespace CityWatch.Data.Providers
         public List<SubDomain> GetSubDomains()
         {
             return _context.SubDomain.OrderBy(x => x.Domain).ToList();
+        }
+        public List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites)
+        {
+            var clientSiteDetails = _context.ClientSites
+                .Where(x => clientSites.Contains(x.Name))
+                .ToList();
+            return clientSiteDetails;
         }
 
     }
