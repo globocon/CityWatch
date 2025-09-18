@@ -17,6 +17,7 @@ using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 namespace CityWatch.RadioCheck.Services
 {
     public interface IPushNotificationServicecs
@@ -54,30 +55,57 @@ namespace CityWatch.RadioCheck.Services
                     if (alreadySentToday)
                         continue; // Skip to next message
                 }
-                var ActionListMessage = string.Empty;
-                if(message.ClientSiteId !=null)
+                var ActionListMessage = new StringBuilder();
+                if (message.ClientSiteId !=null)
                 {
                     var clientsite = _clientDataProvider.GetClientSiteDetailsWithId(Convert.ToInt32(message.ClientSiteId)).FirstOrDefault();
-                    ActionListMessage = "Client Type: " + _clientDataProvider.GetClientTypes().Where(x => x.Id == message.ClientTypeId).FirstOrDefault().Name + "\r\n";
-                    ActionListMessage += "Client Site: " + clientsite.Name + "\r\n";
-                    ActionListMessage += "Address: " + clientsite.Address + "\r\n";
-                    ActionListMessage += "Google Map Link: " + clientsite.Gps + "\r\n";
-                    ActionListMessage += "Site Access \r\n";
-                    ActionListMessage += "=========== \r\n";
-                    ActionListMessage += "Alarm Keypad Code: " + message.AlarmKeypadCode + "\r\n";
-                    ActionListMessage += "Physical key: " + message.Physicalkey + "\r\n";
-                    ActionListMessage += "Combination Lock: " + message.SiteCombinationLook + "\r\n";
-                    ActionListMessage += "Alarm Response \r\n";
-                    ActionListMessage += "=========== \r\n";
-                    ActionListMessage += "Action 1: " + message.Action1 + "\r\n";
-                    ActionListMessage += "Action 2: " + message.Action2 + "\r\n";
-                    ActionListMessage += "Action 3: " + message.Action3 + "\r\n";
-                    ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
-                    ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
-                 
+                    var clientType = _clientDataProvider
+            .GetClientTypes()
+            .FirstOrDefault(x => x.Id == message.ClientTypeId);
+
+                    ActionListMessage.AppendLine("Client Type: " + clientType?.Name);
+                    ActionListMessage.AppendLine(); // blank line before Client Site
+
+                    ActionListMessage.AppendLine("Client Site: " + clientsite.Name);
+                    ActionListMessage.AppendLine("Address: " + clientsite.Address);
+                    ActionListMessage.AppendLine("Google Map Link: " + clientsite.Gps);
+                    ActionListMessage.AppendLine("Site Access");
+                    ActionListMessage.AppendLine("===========");
+                    ActionListMessage.AppendLine("Alarm Keypad Code: " + message.AlarmKeypadCode);
+                    ActionListMessage.AppendLine("Physical key: " + message.Physicalkey);
+                    ActionListMessage.AppendLine("Combination Lock: " + message.SiteCombinationLook);
+                    ActionListMessage.AppendLine("Alarm Response");
+                    ActionListMessage.AppendLine("===========");
+                    ActionListMessage.AppendLine("Action 1: " + message.Action1);
+                    ActionListMessage.AppendLine("Action 2: " + message.Action2);
+                    ActionListMessage.AppendLine("Action 3: " + message.Action3);
+                    ActionListMessage.AppendLine("Action 4: " + message.Action4);
+                    ActionListMessage.AppendLine("Action 5: " + message.Action5);
+                    ActionListMessage.AppendLine(); // blank line before Message
+                                                    //ActionListMessage = "Client Type: " + _clientDataProvider.GetClientTypes().Where(x => x.Id == message.ClientTypeId).FirstOrDefault().Name + "\r\n";
+                                                    //ActionListMessage += "Client Site: " + clientsite.Name + "\r\n";
+                                                    //ActionListMessage += "Address: " + clientsite.Address + "\r\n";
+                                                    //ActionListMessage += "Google Map Link: " + clientsite.Gps + "\r\n";
+                                                    //ActionListMessage += "Site Access \r\n";
+                                                    //ActionListMessage += "=========== \r\n";
+                                                    //ActionListMessage += "Alarm Keypad Code: " + message.AlarmKeypadCode + "\r\n";
+                                                    //ActionListMessage += "Physical key: " + message.Physicalkey + "\r\n";
+                                                    //ActionListMessage += "Combination Lock: " + message.SiteCombinationLook + "\r\n";
+                                                    //ActionListMessage += "Alarm Response \r\n";
+                                                    //ActionListMessage += "=========== \r\n";
+                                                    //ActionListMessage += "Action 1: " + message.Action1 + "\r\n";
+                                                    //ActionListMessage += "Action 2: " + message.Action2 + "\r\n";
+                                                    //ActionListMessage += "Action 3: " + message.Action3 + "\r\n";
+                                                    //ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
+                                                    //ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
+
 
                 }
-                 ActionListMessage += (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
+                if (!string.IsNullOrEmpty(message.Notifications))
+                {
+                    ActionListMessage.AppendLine("Message: " + message.Notifications);
+                }
+                // ActionListMessage += (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
                 var rcguardlogs = _guardLogDataProvider.GetRCActionListMessagesGuardLogs().Where(x => x.RCActionListMessagesId == message.Id).FirstOrDefault();
                 
                 var guardLog = new GuardLog()
@@ -92,17 +120,17 @@ namespace CityWatch.RadioCheck.Services
                     EventDateTimeUtcOffsetMinute = rcguardlogs.EventDateTimeUtcOffsetMinute
 
                 };
-                _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(rcguardlogs.GuardId, 0, message.Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, guardLog);
+                _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(rcguardlogs.GuardId, 0, message.Subject, ActionListMessage.ToString(), IrEntryType.Alarm, 1, 0, guardLog);
 
                 var clientSiteList = _guardLogDataProvider.GetRCActionListMessagesClientsites().Where(x => x.RCActionListMessagesId == message.Id).ToList();
                 foreach(var clientSite in clientSiteList)
                 {
                     var clientsitedetail = _guardLogDataProvider.GetClientSites(clientSite.ClientSiteId).FirstOrDefault();
-                    LogBookDetails(clientSite.Id, ActionListMessage, message.Subject, guardLog, rcguardlogs.GuardId);
+                    LogBookDetails(clientSite.Id, ActionListMessage.ToString(), message.Subject, guardLog, rcguardlogs.GuardId);
                     _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(rcguardlogs.GuardId, 0, message.Subject, message.Notifications, IrEntryType.Alarm, 1, 0, guardLog);
                     if (clientsitedetail.SiteEmail != null)
                     {
-                        EmailSender(clientsitedetail.SiteEmail, clientsitedetail.Id, message.Subject, ActionListMessage);
+                        EmailSender(clientsitedetail.SiteEmail, clientsitedetail.Id, message.Subject, ActionListMessage.ToString());
                     }
                     if (message.IsSMSPersonal==true)
                     {
