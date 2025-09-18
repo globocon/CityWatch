@@ -876,32 +876,32 @@
                     }
 
                    
-                    //$.ajax({
-                    //    url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
-                    //    type: 'POST',
-                    //    dataType: 'json',
-                    //    data: $('#frm_patrol_report_request').serialize(),
-                    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    //}).done(function (response) {
-
-                    //    $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
-                    //    if (response.chartData.dailySiteControllerWandStrikeData != 0) {
+                    $.ajax({
+                        url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: $('#frm_patrol_report_request').serialize(),
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (response) {
+                        console.log('graph response3 successs wand strikes charts ');
+                        $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
+                        if (response.chartData.dailySiteControllerWandStrikeData != 0) {
                             
-                    //        drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
-                    //       // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
-                    //    }
-                    //    $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
-                    //    if (response.chartData.individualFQWandStrikeData != 0) {
+                            drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
+                           // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                        }
+                        $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
+                        if (response.chartData.individualFQWandStrikeData != 0) {
                             
-                    //        drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
-                    //    }
-                    //}).fail(function () {
-                    //}).always(function () {
-                    //    $('#loader-p').hide();
-                    //});
+                            drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
+                        }
+                    }).fail(function () {
+                    }).always(function () {
+                        $('#loader-p').hide();
+                    });
                 }).fail(function () {
                 }).always(function () {
-                   $('#loader-p').hide();
+                   //$('#loader-p').hide();
                 });
                
 
