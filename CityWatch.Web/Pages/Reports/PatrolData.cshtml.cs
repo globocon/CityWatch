@@ -1202,43 +1202,86 @@ namespace CityWatch.Web.Pages.Reports
            
             int totalDays = 28; // always 4 weeks
             DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
+            var groupedLogs = dailyLogWandStrikeReportForSiteController
+    .GroupBy(x => x.ClientSiteLogBook.Date.Date)
+    .ToDictionary(g => g.Key, g => g.Count());
 
-            var dailySiteControllerWandStrikeData = new List<object>();
-
-            for (DateTime day = ReportRequest.FromDate; day <= toDate; day = day.AddDays(1))
-            {
-                int strikes = dailyLogWandStrikeReportForSiteController.Where(x => x.ClientSiteLogBook.Date == day.Date)
-                                .Count();
-
-                dailySiteControllerWandStrikeData.Add(new
+            var dailySiteControllerWandStrikeData =
+                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
+                .Select(offset =>
                 {
-                    DayLabel = day.ToString("d") + "(" + day.ToString("dddd")[0].ToString() + ")",   // ?? gives MTWTFSS
-                   
-                    Strikes = strikes
-                });
-            }
-            var individualFQWandStrikeData = new List<object>();
-            var clientsitesmartwands= _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
-                .Where(z =>
-         (ReportRequest.ClientTypes == null
-             || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
-         (ReportRequest.ClientSites == null
-             || ReportRequest.ClientSites.Contains(z.ClientSite.Name)));
-            foreach (var item in clientsitesmartwands)
-            {
-                int strikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)
-                                && x.Notes.Contains(item.LabelDescription)).Count();
-                int totalStrikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)).Count();
-                var percent = Math.Round((double)strikes / totalStrikes * 100, 2);
-                if (strikes != 0) { 
-                    individualFQWandStrikeData.Add(new
-                    {
-                        Wands = item.LabelDescription,   // ?? gives MTWTFSS
+                    var day = ReportRequest.FromDate.Date.AddDays(offset);
+                    groupedLogs.TryGetValue(day, out int strikes);
 
+                    return new
+                    {
+                        DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
+                        Strikes = strikes
+                    };
+                })
+                .ToList();
+
+            //var dailySiteControllerWandStrikeData = new List<object>();
+
+            //for (DateTime day = ReportRequest.FromDate; day <= toDate; day = day.AddDays(1))
+            //{
+            //    int strikes = dailyLogWandStrikeReportForSiteController.Where(x => x.ClientSiteLogBook.Date == day.Date)
+            //                    .Count();
+
+            //    dailySiteControllerWandStrikeData.Add(new
+            //    {
+            //        DayLabel = day.ToString("d") + "(" + day.ToString("dddd")[0].ToString() + ")",   // ?? gives MTWTFSS
+
+            //        Strikes = strikes
+            //    });
+            //}
+            var filteredLogs = dailyLogWandStrikeReportForSiteController
+    .Where(x => x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date &&
+                x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)
+    .ToList();
+
+            int totalStrikes = filteredLogs.Count;
+
+            var individualFQWandStrikeData = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                .Where(z =>
+                    (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                    (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.ClientSite.Name)))
+                .Select(item =>
+                {
+                    int strikes = filteredLogs.Count(x => x.Notes.Contains(item.LabelDescription));
+                    double percent = totalStrikes > 0 ? Math.Round((double)strikes / totalStrikes * 100, 2) : 0;
+
+                    return new
+                    {
+                        Wands = item.LabelDescription, // MTWTFSS
                         Strikes = percent
-                    });
-                }
-            }
+                    };
+                })
+                .Where(x => x.Strikes > 0)
+                .ToList();
+
+            //   var individualFQWandStrikeData = new List<object>();
+            //   var clientsitesmartwands= _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+            //       .Where(z =>
+            //(ReportRequest.ClientTypes == null
+            //    || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+            //(ReportRequest.ClientSites == null
+            //    || ReportRequest.ClientSites.Contains(z.ClientSite.Name)));
+            //   foreach (var item in clientsitesmartwands)
+            //   {
+            //       int strikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)
+            //                       && x.Notes.Contains(item.LabelDescription)).Count();
+            //       int totalStrikes = dailyLogWandStrikeReportForSiteController.Where(x => (x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date && x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)).Count();
+            //       var percent = Math.Round((double)strikes / totalStrikes * 100, 2);
+            //       if (strikes != 0) { 
+            //           individualFQWandStrikeData.Add(new
+            //           {
+            //               Wands = item.LabelDescription,   // ?? gives MTWTFSS
+
+            //               Strikes = percent
+            //           });
+            //       }
+            //   }
 
             return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData } });
         }

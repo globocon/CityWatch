@@ -6271,6 +6271,8 @@ namespace CityWatch.Data.Providers
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
+               .Include(z=>z.ClientSite)
+               .Include(z=>z.ClientSite.ClientType)
                .ToList();
 
             var returnData = data.OrderBy(z => z.EventDateTime)
@@ -7342,11 +7344,11 @@ namespace CityWatch.Data.Providers
              || patrolRequest.ClientTypes.Contains(z.ClientSiteLogBook.ClientSite.ClientType.Name)) &&
          (patrolRequest.ClientSites == null
              || patrolRequest.ClientSites.Contains(z.ClientSiteLogBook.ClientSite.Name)) &&
-         //z.ClientSiteLogBook.Date >= patrolRequest.FromDate
-         //    && z.ClientSiteLogBook.Date <= patrolRequest.ToDate &&
+         z.ClientSiteLogBook.Date >= patrolRequest.FromDate
+             && z.ClientSiteLogBook.Date <= patrolRequest.ToDate &&
          //(!excludeSystemLogs
-         //    || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue)))
-             //&& 
+         //    || ( (!z.IsSystemEntry || z.IrEntryType.HasValue)))
+         //    &&
              (z.WAND_TAG_ENTRY_TYPE != ScanningType.Normal)
      //(z.WAND_TAG_ENTRY_TYPE == (ScanningType)1 || z.WAND_TAG_ENTRY_TYPE == (ScanningType)2)
      )
