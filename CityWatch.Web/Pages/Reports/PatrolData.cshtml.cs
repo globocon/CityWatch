@@ -1203,7 +1203,7 @@ namespace CityWatch.Web.Pages.Reports
             int totalDays = 28; // always 4 weeks
             DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
             var groupedLogs = dailyLogWandStrikeReportForSiteController
-    .GroupBy(x => x.ClientSiteLogBook.Date.Date)
+    .GroupBy(x => x.HitUtcDateTime.Date.Date)
     .ToDictionary(g => g.Key, g => g.Count());
 
             var dailySiteControllerWandStrikeData =
@@ -1237,8 +1237,8 @@ namespace CityWatch.Web.Pages.Reports
             //    });
             //}
             var filteredLogs = dailyLogWandStrikeReportForSiteController
-    .Where(x => x.ClientSiteLogBook.Date >= ReportRequest.FromDate.Date &&
-                x.ClientSiteLogBook.Date <= ReportRequest.ToDate.Date)
+    .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
+                x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
     .ToList();
 
             int totalStrikes = filteredLogs.Count;
@@ -1249,8 +1249,8 @@ namespace CityWatch.Web.Pages.Reports
                     (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.ClientSite.Name)))
                 .Select(item =>
                 {
-                    var normalizedLabel = item.LabelDescription.Trim();
-                    int strikes = filteredLogs.Count(x => x.Notes.Contains(normalizedLabel));
+                    var normalizedLabel = item.UId;
+                    int strikes = filteredLogs.Count(x => x.TagUId.Contains(normalizedLabel));
                     double percent = totalStrikes > 0 ? Math.Round((double)strikes / totalStrikes * 100, 2) : 0;
 
                     return new
