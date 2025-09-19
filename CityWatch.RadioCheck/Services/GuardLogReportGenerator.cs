@@ -84,7 +84,7 @@ namespace CityWatch.RadioCheck.Services
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
-            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date);
+            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date).Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal).ToList();
                
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4);

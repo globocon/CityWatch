@@ -53,6 +53,20 @@ namespace CityWatch.Web.Services
                         {
                             guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
                         }
+                        else if (guardLogImage.IsVideo == true)
+                        {
+                            guardlog.Notes +=
+                                "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
+                                $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
+                                "Your browser does not support the video tag." +
+                                "</video>";
+
+                            guardlog.NotesNew +=
+                                "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
+                                $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
+                                "Your browser does not support the video tag." +
+                                "</video>";
+                        }
                     }
                 }
                 //p6-102 add photo-end
