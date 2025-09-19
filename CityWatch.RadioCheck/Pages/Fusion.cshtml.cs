@@ -112,29 +112,48 @@ namespace CityWatch.RadioCheck.Pages
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
-                (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)));
+            //var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+            //    (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)));
+
+
+            var dailyGuardLogs = _auditLogViewDataService
+    .GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs)
+    .Where(x =>
+        // filter by keyword if provided
+        (string.IsNullOrEmpty(keywordDownSelect) ||
+            (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
+        // exclude if Notes contain [NFC] or [BLE]
+        && (string.IsNullOrEmpty(x.Notes) ||
+            (!x.Notes.Contains("[NFC]") && !x.Notes.Contains("[BLE]")))
+    )
+    .ToList();
+
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
                 {
-                    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)guardlog.LBId);
 
-                
-                    foreach (var guardLogImage in guardlogImages)
-                    {
-                        if (guardLogImage.IsRearfile == true)
+                   
+                        var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)guardlog.LBId);
+
+
+                        foreach (var guardLogImage in guardlogImages)
                         {
-                            guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                            if (guardLogImage.IsRearfile == true)
+                            {
+                                guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                            }
+                            if (guardLogImage.IsTwentyfivePercentfile == true)
+                            {
+
+                                guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+
+
+                            }
                         }
-                        if (guardLogImage.IsTwentyfivePercentfile == true)
-                        {
 
-                            guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-
-                        }
-                    }
+                    
                 }
             }
             if (limit == 0)

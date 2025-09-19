@@ -281,14 +281,14 @@ namespace CityWatch.Kpi.Services
                 }
 
                 // Fusion Log
-                var logBook2 = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, date);
-                if (logBook2 != null)
-                {
-                    var fusionLogs = _guardLogDataProvider.GetGuardLogs(logBook2.Id, logBook2.Date)
-                        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+                //var logBook2 = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, date);
+                //if (logBook2 != null)
+                //{
+                //    var fusionLogs = _guardLogDataProvider.GetGuardLogs(logBook2.Id, logBook2.Date)
+                //        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
 
-                    scanCount += fusionLogs.Count();
-                }
+                //    scanCount += fusionLogs.Count();
+                //}
 
                 dailyLogCounts[date] = new DailyIrCount
                 {
