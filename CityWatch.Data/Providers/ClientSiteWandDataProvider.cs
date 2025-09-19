@@ -269,7 +269,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
         {
-            //var _utc = _dbContext.ClientSiteKpiSettings.Where(x => clientSiteIds.Contains(x.ClientSiteId))?.Select(x => x.UTC)?.FirstOrDefault() ?? "+10:00";
+            toDate = toDate.AddDays(1).AddTicks(-1); // Include the entire 'toDate' day
 
             // Step 1: Get UTC offsets per client site
             var utcOffsets = _dbContext.ClientSiteKpiSettings
