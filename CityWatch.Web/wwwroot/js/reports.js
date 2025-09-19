@@ -5859,7 +5859,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(7),
+                    backgroundColor: getColors(1),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
                         'rgba(54, 162, 235, 1)',
@@ -5892,6 +5892,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                         }
                     },
                     legend: {
+                        display: false ,
                         position: 'right',
                         labels: {
 
@@ -5964,7 +5965,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(15),
+                    backgroundColor: getColors(1),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
                         'rgba(54, 162, 235, 1)',
@@ -5997,6 +5998,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                         }
                     },
                     legend: {
+                        display: false,
                         position: 'right',
                         labels: {
                             font: {

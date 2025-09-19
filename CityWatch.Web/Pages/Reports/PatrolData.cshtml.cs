@@ -1215,7 +1215,8 @@ namespace CityWatch.Web.Pages.Reports
 
                     return new
                     {
-                        DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
+                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
+                        DayLabel =  day.ToString("dddd")[0].ToString() ,
                         Strikes = strikes
                     };
                 })
@@ -1248,7 +1249,8 @@ namespace CityWatch.Web.Pages.Reports
                     (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.ClientSite.Name)))
                 .Select(item =>
                 {
-                    int strikes = filteredLogs.Count(x => x.Notes.Contains(item.LabelDescription));
+                    var normalizedLabel = item.LabelDescription.Trim();
+                    int strikes = filteredLogs.Count(x => x.Notes.Contains(normalizedLabel));
                     double percent = totalStrikes > 0 ? Math.Round((double)strikes / totalStrikes * 100, 2) : 0;
 
                     return new
