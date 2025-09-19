@@ -263,7 +263,7 @@ namespace CityWatch.Web.Pages.Admin
         /*
          *  TODO: Remove this unused handler
             public JsonResult OnGetGuardLogBookId(int clientSiteId, LogBookType logBookType, DateTime eventDate)
-            {
+            {GetGuardFusionLogs
                 var logBookId = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, eventDate)?.Id;
                 return new JsonResult(new { success = true, logBookId });
             }
@@ -472,21 +472,21 @@ namespace CityWatch.Web.Pages.Admin
                 .ToArray();
 
             var start = (pageNo - 1) * limit;
-            //var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
-            //(!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))); ;
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))); ;
 
-            var dailyGuardLogs = _auditLogViewDataService
-    .GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs)
-    .Where(x =>
-        // filter by keyword if provided
-        (string.IsNullOrEmpty(keywordDownSelect) ||
-            (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
-            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
-        // exclude if Notes contain [NFC] or [BLE]
-        && (string.IsNullOrEmpty(x.Notes) ||
-            (!x.Notes.Contains("[NFC]") && !x.Notes.Contains("[BLE]")))
-    )
-    .ToList();
+    //        var dailyGuardLogs = _auditLogViewDataService
+    //.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs)
+    //.Where(x =>
+    //    // filter by keyword if provided
+    //    (string.IsNullOrEmpty(keywordDownSelect) ||
+    //        (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+    //        (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
+    //    // exclude if Notes contain [NFC] or [BLE]
+    //    && (string.IsNullOrEmpty(x.Notes) ||
+    //        (!x.Notes.Contains("[NFC]") && !x.Notes.Contains("[BLE]")))
+    //)
+    //.ToList();
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)

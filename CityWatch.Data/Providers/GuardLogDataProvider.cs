@@ -6137,19 +6137,32 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
             // Fetch GuardLogs
-            var GuardLogs = _context.GuardLogs
-                .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
-                            z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
-                            z.ClientSiteLogBook.Date >= logFromDate &&
-                            z.ClientSiteLogBook.Date <= logToDate &&
-                            (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
-                .Include(z => z.GuardLogin)
-                .Include(z => z.GuardLogin.Guard)
-                .Include(z => z.GuardLogin.ClientSiteLogBook)
-                .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
-                .ToList();
+            //var GuardLogs = _context.GuardLogs
+            //    .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
+            //                z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+            //                z.ClientSiteLogBook.Date >= logFromDate &&
+            //                z.ClientSiteLogBook.Date <= logToDate &&
+            //                (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //    .Include(z => z.GuardLogin)
+            //    .Include(z => z.GuardLogin.Guard)
+            //    .Include(z => z.GuardLogin.ClientSiteLogBook)
+            //    .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
+            //    .ToList();
 
             // Fetch SW logs
+
+            var GuardLogs = _context.GuardLogs
+    .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
+                z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+                z.ClientSiteLogBook.Date >= logFromDate &&
+                z.ClientSiteLogBook.Date <= logToDate &&
+                z.WAND_TAG_ENTRY_TYPE == ScanningType.Normal &&   
+                (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+    .Include(z => z.GuardLogin)
+    .Include(z => z.GuardLogin.Guard)
+    .Include(z => z.GuardLogin.ClientSiteLogBook)
+    .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
+    .ToList();
             var activityTypes = new[] { "SW", "KV" }; // Add the activity types you want to include
             var data = _context.ClientSiteRadioChecksActivityStatus_History
     .Where(z => z.ClientSiteId.HasValue &&
