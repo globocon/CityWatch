@@ -295,32 +295,15 @@ namespace CityWatch.Data.Providers
 
                 // Step 3: Convert the local from/to to UTC for this site
                 var fromUtc = fromDate - offset;
-                var toUtc = toDate - offset;
-
-                //var fromUtc = fromDate;
-                //var toUtc = toDate;
-
-                //// Step 4: Get logs for this client site in the adjusted range
-                //var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
-                //    .Where(x =>
-                //        (x.LoggedInClientSiteId == site.ClientSiteId ||
-                //         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
-                //        x.HitUtcDateTime.ToLocalTime() >= fromUtc &&
-                //        x.HitUtcDateTime.ToLocalTime() < toUtc)
-                //    .Include(x => x.SmartWandTagsType)
-                //    .Include(x => x.LoggedInClientSite)
-                //    .Include(x => x.LinkedClientSite)
-                //    .Include(x => x.LoggedInGuard)
-                //    .Include(x => x.LoggedInUser)
-                //    .ToList();
+                var toUtc = toDate - offset;                              
 
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
                     .Where(x =>
                         (x.LoggedInClientSiteId == site.ClientSiteId ||
                          (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
-                        x.HitUtcDateTime.Date >= fromUtc.Date &&
-                        x.HitUtcDateTime.Date < toUtc.Date)
+                        x.HitUtcDateTime >= fromUtc &&
+                        x.HitUtcDateTime <= toUtc)
                     .Include(x => x.SmartWandTagsType)
                     .Include(x => x.LoggedInClientSite)
                     .Include(x => x.LinkedClientSite)
