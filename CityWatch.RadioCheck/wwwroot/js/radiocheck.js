@@ -3160,7 +3160,8 @@ $('#btnSendActionList').on('click', function () {
                 Action5: Action5,
                 CommentsForControlRoomOperator: CommentsForControlRoomOperator,
                 tmzdata: tmzdata,
-                textToCopy: textToCopy
+                textToCopy: textToCopy,
+                ClientSiteActionListId: $('#dglClientSiteIdActionList').val()
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },

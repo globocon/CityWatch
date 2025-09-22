@@ -1901,7 +1901,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         //code added for ActionList Send start
         public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode,
             string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5,
-            string CommentsForControlRoomOperator, GuardLog tmzdata,string textToCopy)
+            string CommentsForControlRoomOperator, GuardLog tmzdata,string textToCopy,int ClientSiteActionListId)
         {
             var success = true;
             var message = "success";
@@ -1922,10 +1922,45 @@ namespace CityWatch.RadioCheck.Pages.Radio
             if( !string.IsNullOrEmpty(textToCopy))
             {
                 ActionListMessage = textToCopy;
-                ActionListMessage += "/r /n";
+                ActionListMessage += "\r\n";
+                ActionListMessage += "\r\n";
             }
+            if(ClientSiteActionListId !=0)
+            {
+                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == ClientSiteActionListId);
+                if (sopfiletype.Count() != 0)
+                {
+                    ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList() ;
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += "\r\n";
 
-             ActionListMessage += (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications);
+                }
+                else
+                {
+                    ActionListMessage += "SOP's Site:";
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += "\r\n";
+                }
+                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == ClientSiteActionListId);
+                if (sopAlarmfileType.Count() != 0)
+                {
+                    ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += "\r\n";
+
+                }
+                else
+                {
+                    ActionListMessage += "SOP's Alarm:";
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += "\r\n";
+                }
+            }
+            ActionListMessage += "Message";
+            ActionListMessage += "\r\n";
+            ActionListMessage += "========";
+            ActionListMessage += "\r\n";
+            ActionListMessage += (string.IsNullOrEmpty(Notifications) ? string.Empty :  Notifications);
             try
             {
 
@@ -1937,7 +1972,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
-
+                        
                         LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
 
 
