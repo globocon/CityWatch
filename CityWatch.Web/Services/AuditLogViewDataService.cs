@@ -152,9 +152,10 @@ namespace CityWatch.Web.Services
                     (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
                     (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
                     (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
-                     (string.IsNullOrEmpty(wsRequest.GuardName) || string.Equals(z.LoggedInGuard.Name, wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
-                     (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
-                     ).ToList();
+                    (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+
 
             var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
                 {

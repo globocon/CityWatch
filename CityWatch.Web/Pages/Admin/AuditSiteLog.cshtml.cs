@@ -709,7 +709,9 @@ namespace CityWatch.Web.Pages.Admin
 
         public IActionResult OnPostWandStrikeAuditSiteLogs(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
         {
-            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest);
+           // if(!string.IsNullOrEmpty(wandStrikeAuditLogRequest.TagLabel)) { wandStrikeAuditLogRequest.TagLabel = Uri.UnescapeDataString(wandStrikeAuditLogRequest.TagLabel); }            
+
+            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x=> x.DateTimeSort);
             return new JsonResult(new { wandStrikeAuditLogViewModel });
         }
 
