@@ -269,7 +269,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
         {
-            toDate = toDate.AddDays(1).AddTicks(-1); // Include the entire 'toDate' day
+            toDate = toDate.AddDays(1); // Include the entire 'toDate' day
 
             // Step 1: Get UTC offsets per client site
             var utcOffsets = _dbContext.ClientSiteKpiSettings
@@ -277,7 +277,7 @@ namespace CityWatch.Data.Providers
                 .Select(x => new
                 {
                     x.ClientSiteId,
-                    _siteUTC = x.UTC ?? "+10:00" // Default to +10:00 if null
+                    _siteUTC = x.UTC.Replace("+","") ?? "+10:00" // Default to +10:00 if null
                 })
                 .ToList();
 
@@ -285,9 +285,9 @@ namespace CityWatch.Data.Providers
             var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
 
             foreach (var site in utcOffsets)
-            {
+            {                
                 // Step 2: Parse UTC offset like "+05:30" or "-04:00"
-                if (!TimeSpan.TryParse(site._siteUTC, out TimeSpan offset))
+                if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
                 {
                     // Default offset if parsing fails (you can customize this)
                     offset = TimeSpan.Zero;
@@ -297,13 +297,30 @@ namespace CityWatch.Data.Providers
                 var fromUtc = fromDate - offset;
                 var toUtc = toDate - offset;
 
+                //var fromUtc = fromDate;
+                //var toUtc = toDate;
+
+                //// Step 4: Get logs for this client site in the adjusted range
+                //var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
+                //    .Where(x =>
+                //        (x.LoggedInClientSiteId == site.ClientSiteId ||
+                //         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
+                //        x.HitUtcDateTime.ToLocalTime() >= fromUtc &&
+                //        x.HitUtcDateTime.ToLocalTime() < toUtc)
+                //    .Include(x => x.SmartWandTagsType)
+                //    .Include(x => x.LoggedInClientSite)
+                //    .Include(x => x.LinkedClientSite)
+                //    .Include(x => x.LoggedInGuard)
+                //    .Include(x => x.LoggedInUser)
+                //    .ToList();
+
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
                     .Where(x =>
                         (x.LoggedInClientSiteId == site.ClientSiteId ||
                          (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
-                        x.HitUtcDateTime >= fromUtc &&
-                        x.HitUtcDateTime <= toUtc)
+                        x.HitUtcDateTime.Date >= fromUtc.Date &&
+                        x.HitUtcDateTime.Date < toUtc.Date)
                     .Include(x => x.SmartWandTagsType)
                     .Include(x => x.LoggedInClientSite)
                     .Include(x => x.LinkedClientSite)
@@ -328,7 +345,7 @@ namespace CityWatch.Data.Providers
                     SmartWandTagsType = log.SmartWandTagsType,
                     LoggedInGuard = log.LoggedInGuard,
                     LoggedInUser = log.LoggedInUser
-                });
+                }).Where(l=> l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
 
                 matchingLogs.AddRange(logsWithLocal);
             }
