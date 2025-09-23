@@ -7356,7 +7356,7 @@ namespace CityWatch.Data.Providers
      )
     .Include(z => z.LoggedInClientSite)
     .Include(z=> z.LoggedInClientSite.ClientType)
-  //  .Include(z => z.GuardLogin.Guard)
+  .Include(z => z.LoggedInGuard)
     .ToList();
 
             //var returnData = data.OrderBy(z => z.HitUtcDateTime.HasValue ? z.EventDateTimeLocal : z.EventDateTime)

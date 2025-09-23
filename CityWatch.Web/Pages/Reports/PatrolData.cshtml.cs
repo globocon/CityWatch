@@ -19,8 +19,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
@@ -1287,8 +1289,127 @@ namespace CityWatch.Web.Pages.Reports
 
             return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData } });
         }
+        public IActionResult OnPostGenerateReportGraphFifthTab(PatrolRequest ReportRequestnew, string[] TagId, string[] TagTypeId, string[] TagLabel,string GuardName,string LicenseNo, string[] SmartWandId)
+        {
+            //string[] TagIds = TagId.ToString()?.Split(",").ToArray() ?? Array.Empty<string>();
+            int[] TagTypeIds = TagTypeId?.Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            //string[] TagLabels = TagLabel?.Split(",").ToArray() ?? Array.Empty<string>();
+
+            var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
+
+            var filterLogsLatest = dailyLogWandStrikeReportForSiteController.Where(z =>
+            (TagId == null || !TagId.Any() || TagId.Contains(z.TagUId)) &&
+            (TagTypeId == null || !TagTypeId.Any() || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+            (TagLabel == null || !TagLabel.Any() || TagLabel.Any(term => z.LabelDescription.Contains(term))) &&
+                     //(string.IsNullOrEmpty(TagId.ToString()) || TagIds.Contains(z.TagUId)) &&
+                     //(string.IsNullOrEmpty(TagTypeId) || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+                     //(string.IsNullOrEmpty(TagLabel) || TagLabels.Contains(z.LabelDescription)) &&
+                     (string.IsNullOrEmpty(GuardName) || string.Equals(z.LoggedInGuard.Name, GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                     (string.IsNullOrEmpty(LicenseNo) || string.Equals(z.LoggedInGuard.SecurityNo, LicenseNo, StringComparison.OrdinalIgnoreCase))
+                     ).ToList();
+
+            
+
+            
+            int totalDays = 28; // always 4 wee
+            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
+            var groupedLogs = filterLogsLatest
+    .GroupBy(x => x.HitUtcDateTime.Date.Date)
+    .ToDictionary(g => g.Key, g => g.Count());
+
+            var dailySiteControllerWandStrikeDataForDownselect =
+                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
+                .Select(offset =>
+                {
+                    var day = ReportRequest.FromDate.Date.AddDays(offset);
+                    groupedLogs.TryGetValue(day, out int strikes);
+
+                    return new
+                    {
+                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
+                        DayLabel = day.ToString("dddd")[0].ToString(),
+                        Strikes = strikes
+                    };
+                })
+                .ToList();
+
+            var filteredLogs = filterLogsLatest
+    .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
+                x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
+    .ToList();
+
+            int totalStrikes = filteredLogs.Count;
+
+            var individualFQWandStrikeDataForDownselect = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+                .Where(z =>
+                    (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                    (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.ClientSite.Name)) &&
+                     (TagId == null || !TagId.Any() || TagId.Contains(z.UId)) &&
+                     (TagTypeId == null || !TagTypeId.Any() || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+                    (TagLabel == null || !TagLabel.Any() || TagLabel.Any(term => z.LabelDescription.Contains(term))))
+                    //(string.IsNullOrEmpty(TagId.ToString()) || TagIds.Contains(z.UId)) &&
+                    //(string.IsNullOrEmpty(TagTypeId) || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+                    //(string.IsNullOrEmpty(TagLabel) || TagLabels.Contains(z.LabelDescription)))
+                .Select(item =>
+                {
+                    var normalizedLabel = item.UId;
+                    int strikes = filteredLogs.Count(x => x.TagUId.Contains(normalizedLabel));
+                    double percent = totalStrikes > 0 ? Math.Round((double)strikes / totalStrikes * 100, 2) : 0;
+
+                    return new
+                    {
+                        Wands = item.LabelDescription, // MTWTFSS
+                        Strikes = percent
+                    };
+                })
+                .Where(x => x.Strikes > 0)
+                .ToList();
 
 
+
+            return new JsonResult(new { chartData = new { dailySiteControllerWandStrikeDataForDownselect, individualFQWandStrikeDataForDownselect } });
+        }
+
+        public JsonResult OnGetClientSiteWandAndTags(string clientSites)
+        {
+            var tagIds = new List<SelectListItem>();
+            var tagTypeIds = new List<SelectListItem>();
+            var tagLabels = new List<SelectListItem>();
+            var smartWandIds = new List<SelectListItem>();
+            var arClientSites = clientSites.Split(";").ToArray();
+            var arClientSiteIds = _clientDataProvider.GetClientSiteDetailsWithName(arClientSites).Select(x => x.Id).ToArray();
+            var tags = _viewDataService.GetClientSiteTagIds(arClientSiteIds);
+
+            tagIds = tags.DistinctBy(x => x.UId)
+                        .Select(x => new SelectListItem
+                        {
+                            Text = x.UId,
+                            Value = x.UId
+                        })
+                        .ToList();
+
+            tagTypeIds = tags.DistinctBy(x => x.SmartWandTagsType.Id)
+                            .Select(x => new SelectListItem
+                            {
+                                Value = x.SmartWandTagsType.Id.ToString(),
+                                Text = x.SmartWandTagsType.value
+                            })
+                            .OrderBy(x => x.Text)
+                            .ToList();
+
+            tagLabels = tags.DistinctBy(x => x.LabelDescription)
+                            .Select(x => new SelectListItem
+                            {
+                                Value = x.LabelDescription,
+                                Text = x.LabelDescription
+                            })
+                            .OrderBy(x => x.Text)
+                            .ToList();
+
+            smartWandIds = _viewDataService.GetClientSiteSmartWandIds(arClientSiteIds);
+
+            return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds });
+        }
 
         public List<string> ArrageColurCode(KeyValuePair<string, double>[] ColourCodeName, List<FeedbackTemplate> FeedBackTempletes)
         {
