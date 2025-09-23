@@ -396,6 +396,8 @@ namespace CityWatch.Data.Providers
         void DeleteRCActionListMessagesClientSites(int id);
         void DeleteRCActionListMessages(int id);
         List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs);
+
+        public List<SiteTagStatus> GetSiteTagStatus(int clientId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7333,6 +7335,10 @@ namespace CityWatch.Data.Providers
 
         }
         public List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs)
+        
+        
+        
+        
         {
 
 
@@ -7363,9 +7369,33 @@ namespace CityWatch.Data.Providers
             return returnData;
         }
 
+
+
+        public List<SiteTagStatus> GetSiteTagStatus(int clientId)
+        {
+            try
+            {
+                return _context.Set<SiteTagStatus>()
+                    .FromSqlRaw("EXEC MobileAppSp_GetSiteTagStatus @ClientId = {0}", clientId)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatus>();
+            }
+        }
+
     }
 
-
+    public class SiteTagStatus
+    {
+        public int ClientSiteId { get; set; }
+        public int TotalTags { get; set; }
+        public int ScannedTags { get; set; }
+        public int RemainingTags { get; set; }
+        public int CompletedRounds { get; set; }
+    }
     public class FeedbackTemplateViewModel
     {
         public int TemplateId { get; set; }

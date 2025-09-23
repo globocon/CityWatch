@@ -2509,9 +2509,33 @@ namespace CityWatch.Web.API
         }
 
 
+
+        [HttpGet("GetTagStatus")]
+        public ActionResult<IEnumerable<SiteTagStatus>> GetTagStatus(int clientId)
+        {
+            try
+            {
+                var result = _guardLogDataProvider.GetSiteTagStatus(clientId);
+                if (result == null || result.Count == 0)
+                    return NotFound($"No tag status found for clientId {clientId}");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error fetching site tag status: {ex.Message}");
+            }
+        }
     }
 
-
+    public class SiteTagStatus
+    {
+        public int ClientSiteId { get; set; }
+        public int TotalTags { get; set; }
+        public int ScannedTags { get; set; }
+        public int RemainingTags { get; set; }
+        public int CompletedRounds { get; set; }
+    }
     public class AreaDto
     {
         public string Text { get; set; }
