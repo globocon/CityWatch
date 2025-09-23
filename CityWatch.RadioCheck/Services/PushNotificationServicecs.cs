@@ -30,15 +30,17 @@ namespace CityWatch.RadioCheck.Services
         private readonly EmailOptions _emailOptions;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
         public PushNotificationServicecs(
             IOptions<EmailOptions> emailOptions,
-            IGuardLogDataProvider guardLogDataProvider, ISmsSenderProvider smsSenderProvider,IClientDataProvider clientDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, ISmsSenderProvider smsSenderProvider,IClientDataProvider clientDataProvider,IConfigDataProvider configDataProvider)
         {
             
             _emailOptions = emailOptions.Value;
             _guardLogDataProvider = guardLogDataProvider;
            _smsSenderProvider= smsSenderProvider;
             _clientDataProvider = clientDataProvider;
+            _configDataProvider = configDataProvider;
         }
         public void SendActionListLater()
         {
@@ -55,7 +57,8 @@ namespace CityWatch.RadioCheck.Services
                     if (alreadySentToday)
                         continue; // Skip to next message
                 }
-                var ActionListMessage = new StringBuilder();
+                var ActionListMessage = string.Empty;
+                //var ActionListMessage = new StringBuilder();
                 if (message.ClientSiteId !=null)
                 {
                     var clientsite = _clientDataProvider.GetClientSiteDetailsWithId(Convert.ToInt32(message.ClientSiteId)).FirstOrDefault();
@@ -63,47 +66,106 @@ namespace CityWatch.RadioCheck.Services
             .GetClientTypes()
             .FirstOrDefault(x => x.Id == message.ClientTypeId);
 
-                    ActionListMessage.AppendLine("Client Type: " + clientType?.Name);
-                    ActionListMessage.AppendLine(); // blank line before Client Site
+                    //ActionListMessage.AppendLine("Client Type: " + clientType?.Name);
+                    //ActionListMessage.AppendLine(); // blank line before Client Site
 
-                    ActionListMessage.AppendLine("Client Site: " + clientsite.Name);
-                    ActionListMessage.AppendLine("Address: " + clientsite.Address);
-                    ActionListMessage.AppendLine("Google Map Link: " + clientsite.Gps);
-                    ActionListMessage.AppendLine("Site Access");
-                    ActionListMessage.AppendLine("===========");
-                    ActionListMessage.AppendLine("Alarm Keypad Code: " + message.AlarmKeypadCode);
-                    ActionListMessage.AppendLine("Physical key: " + message.Physicalkey);
-                    ActionListMessage.AppendLine("Combination Lock: " + message.SiteCombinationLook);
-                    ActionListMessage.AppendLine("Alarm Response");
-                    ActionListMessage.AppendLine("===========");
-                    ActionListMessage.AppendLine("Action 1: " + message.Action1);
-                    ActionListMessage.AppendLine("Action 2: " + message.Action2);
-                    ActionListMessage.AppendLine("Action 3: " + message.Action3);
-                    ActionListMessage.AppendLine("Action 4: " + message.Action4);
-                    ActionListMessage.AppendLine("Action 5: " + message.Action5);
-                    ActionListMessage.AppendLine(); // blank line before Message
-                                                    //ActionListMessage = "Client Type: " + _clientDataProvider.GetClientTypes().Where(x => x.Id == message.ClientTypeId).FirstOrDefault().Name + "\r\n";
-                                                    //ActionListMessage += "Client Site: " + clientsite.Name + "\r\n";
-                                                    //ActionListMessage += "Address: " + clientsite.Address + "\r\n";
-                                                    //ActionListMessage += "Google Map Link: " + clientsite.Gps + "\r\n";
-                                                    //ActionListMessage += "Site Access \r\n";
-                                                    //ActionListMessage += "=========== \r\n";
-                                                    //ActionListMessage += "Alarm Keypad Code: " + message.AlarmKeypadCode + "\r\n";
-                                                    //ActionListMessage += "Physical key: " + message.Physicalkey + "\r\n";
-                                                    //ActionListMessage += "Combination Lock: " + message.SiteCombinationLook + "\r\n";
-                                                    //ActionListMessage += "Alarm Response \r\n";
-                                                    //ActionListMessage += "=========== \r\n";
-                                                    //ActionListMessage += "Action 1: " + message.Action1 + "\r\n";
-                                                    //ActionListMessage += "Action 2: " + message.Action2 + "\r\n";
-                                                    //ActionListMessage += "Action 3: " + message.Action3 + "\r\n";
-                                                    //ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
-                                                    //ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
+                    //ActionListMessage.AppendLine("Client Site: " + clientsite.Name);
+                    //ActionListMessage.AppendLine("Address: " + clientsite.Address);
+                    //ActionListMessage.AppendLine("Google Map Link: " + clientsite.Gps);
+                    //ActionListMessage.AppendLine("Site Access");
+                    //ActionListMessage.AppendLine("===========");
+                    //ActionListMessage.AppendLine("Alarm Keypad Code: " + message.AlarmKeypadCode);
+                    //ActionListMessage.AppendLine("Physical key: " + message.Physicalkey);
+                    //ActionListMessage.AppendLine("Combination Lock: " + message.SiteCombinationLook);
+                    //ActionListMessage.AppendLine("Alarm Response");
+                    //ActionListMessage.AppendLine("===========");
+                    //ActionListMessage.AppendLine("Action 1: " + message.Action1);
+                    //ActionListMessage.AppendLine("Action 2: " + message.Action2);
+                    //ActionListMessage.AppendLine("Action 3: " + message.Action3);
+                    //ActionListMessage.AppendLine("Action 4: " + message.Action4);
+                    //ActionListMessage.AppendLine("Action 5: " + message.Action5);
+                    //var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == message.ClientSiteId);
+                    //if (sopfiletype.Count() != 0)
+                    //{
+                    //    ActionListMessage.AppendLine("SOP's Site: https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList());
+
+                    //}
+                    //else
+                    //{
+                    //    ActionListMessage.AppendLine("SOP's Site:");
+                    //}
+                    //var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == message.ClientSiteId);
+                    //if (sopAlarmfileType.Count() != 0)
+                    //{
+                    //    ActionListMessage.AppendLine("SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList());
+
+                    //}
+                    //else
+                    //{
+                    //    ActionListMessage.AppendLine("SOP's Alarm:");
+                    //}
+
+                    //ActionListMessage.AppendLine(); // blank line before Message
 
 
+                    ActionListMessage = "Client Type: " + _clientDataProvider.GetClientTypes().Where(x => x.Id == message.ClientTypeId).FirstOrDefault().Name + "\r\n";
+                    ActionListMessage += "Client Site: " + clientsite.Name + "\r\n";
+                    ActionListMessage += "Address: " + clientsite.Address + "\r\n";
+                    ActionListMessage += "Google Map Link: " + clientsite.Gps + "\r\n";
+                    ActionListMessage += "Site Access \r\n";
+                    ActionListMessage += "=========== \r\n";
+                    ActionListMessage += "Alarm Keypad Code: " + message.AlarmKeypadCode + "\r\n";
+                    ActionListMessage += "Physical key: " + message.Physicalkey + "\r\n";
+                    ActionListMessage += "Combination Lock: " + message.SiteCombinationLook + "\r\n";
+                    ActionListMessage += "Alarm Response \r\n";
+                    ActionListMessage += "=========== \r\n";
+                    ActionListMessage += "Action 1: " + message.Action1 + "\r\n";
+                    ActionListMessage += "Action 2: " + message.Action2 + "\r\n";
+                    ActionListMessage += "Action 3: " + message.Action3 + "\r\n";
+                    ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
+                    ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
+                    ActionListMessage += "\r\n";
+                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientsite.Id);
+                    if (sopfiletype.Count() != 0)
+                    {
+                        ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList();
+                        ActionListMessage += "\r\n";
+                        ActionListMessage += "\r\n";
+
+                    }
+                    else
+                    {
+                        ActionListMessage += "SOP's Site:";
+                        ActionListMessage += "\r\n";
+                        ActionListMessage += "\r\n";
+                    }
+                    var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientsite.Id);
+                    if (sopAlarmfileType.Count() != 0)
+                    {
+                        ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
+                        ActionListMessage += "\r\n";
+                        ActionListMessage += "\r\n";
+
+                    }
+                    else
+                    {
+                        ActionListMessage += "SOP's Alarm:";
+                        ActionListMessage += "\r\n";
+                        ActionListMessage += "\r\n";
+                    }
                 }
+
+            
                 if (!string.IsNullOrEmpty(message.Notifications))
                 {
-                    ActionListMessage.AppendLine("Message: " + message.Notifications);
+                    //ActionListMessage.AppendLine("Message");
+                    //ActionListMessage.AppendLine("===========");
+                    //ActionListMessage.AppendLine(message.Notifications);
+                    ActionListMessage += "Message";
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += "========";
+                    ActionListMessage += "\r\n";
+                    ActionListMessage += (string.IsNullOrEmpty(message.Notifications) ? string.Empty : message.Notifications);
                 }
                 // ActionListMessage += (string.IsNullOrEmpty(message.Notifications) ? string.Empty : "Message: " + message.Notifications);
                 var rcguardlogs = _guardLogDataProvider.GetRCActionListMessagesGuardLogs().Where(x => x.RCActionListMessagesId == message.Id).FirstOrDefault();
