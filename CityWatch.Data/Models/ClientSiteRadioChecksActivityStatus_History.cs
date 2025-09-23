@@ -108,8 +108,26 @@ namespace CityWatch.Data.Models
 
         [NotMapped]
         public bool IsIRReportTypeEntry { get; set; }
-        
 
+        [NotMapped]
+        public string SWSmartWandId { 
+            get 
+            {
+                if (!string.IsNullOrEmpty(SwNotes))
+                {
+                    // Check for text inside square brackets like [GTE-HSE]
+                    int start = SwNotes.IndexOf('[');
+                    int end = SwNotes.IndexOf(']');
+
+                    if (start >= 0 && end > start)
+                    {
+                        return SwNotes.Substring(start + 1, end - start - 1).Trim();
+                    }
+                    else { return string.Empty; }
+                }
+                else { return ""; }
+            } 
+        }
 
     }
     public class ClientSiteRadioChecksActivityStatus_HistoryReport
