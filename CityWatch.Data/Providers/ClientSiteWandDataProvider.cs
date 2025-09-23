@@ -16,6 +16,8 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms);
         void SaveClientSiteSmartWand(ClientSiteSmartWand clientSiteSmartWand);
         void DeleteClientSiteSmartWand(int id);
+        List<ClientSiteSmartWand> GetClientSiteAllSmartWands(int[] clientSiteIds);
+        List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteAllSmartWandsStrikes(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
         List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId);
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
@@ -104,6 +106,31 @@ namespace CityWatch.Data.Providers
 
             _dbContext.SaveChanges();
         }
+
+        public List<ClientSiteSmartWand> GetClientSiteAllSmartWands(int[] clientSiteIds)
+        {
+            return _dbContext.ClientSiteSmartWands
+                .Where(x => clientSiteIds.Contains(x.ClientSiteId) && x.ClientSite.IsActive == true && x.IsDeleted == false)
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteAllSmartWandsStrikes(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
+        {
+            toDate = toDate.AddDays(1); // Include the entire 'toDate' day
+
+            return _dbContext.ClientSiteRadioChecksActivityStatus_History
+                .Where(x => x.ClientSiteId.HasValue &&
+                            clientSiteIds.Contains(x.ClientSiteId.Value) &&
+                            x.ActivityType == "SW" &&
+                            x.SwNotes != null &&
+                            x.EventDateTime.Date >= fromDate.Date &&
+                            x.EventDateTime.Date < toDate.Date)
+                .Include(x => x.ClientSite)
+                .OrderBy(x => x.EventDateTime)
+                .ToList();
+        }
+
 
         public List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId)
         {
@@ -277,7 +304,7 @@ namespace CityWatch.Data.Providers
                 .Select(x => new
                 {
                     x.ClientSiteId,
-                    _siteUTC = x.UTC.Replace("+","") ?? "+10:00" // Default to +10:00 if null
+                    _siteUTC = x.UTC.Replace("+", "") ?? "+10:00" // Default to +10:00 if null
                 })
                 .ToList();
 
@@ -285,7 +312,7 @@ namespace CityWatch.Data.Providers
             var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
 
             foreach (var site in utcOffsets)
-            {                
+            {
                 // Step 2: Parse UTC offset like "+05:30" or "-04:00"
                 if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
                 {
@@ -295,7 +322,7 @@ namespace CityWatch.Data.Providers
 
                 // Step 3: Convert the local from/to to UTC for this site
                 var fromUtc = fromDate - offset;
-                var toUtc = toDate - offset;                              
+                var toUtc = toDate - offset;
 
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
@@ -328,7 +355,7 @@ namespace CityWatch.Data.Providers
                     SmartWandTagsType = log.SmartWandTagsType,
                     LoggedInGuard = log.LoggedInGuard,
                     LoggedInUser = log.LoggedInUser
-                }).Where(l=> l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
+                }).Where(l => l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
 
                 matchingLogs.AddRange(logsWithLocal);
             }

@@ -23,12 +23,14 @@ namespace CityWatch.Web.Services
     public class AuditLogViewDataService : IAuditLogViewDataService
     {
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IGuardDataProvider _guardDataProvider;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
-        public AuditLogViewDataService(IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider)
+        public AuditLogViewDataService(IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider, IGuardDataProvider guardDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         public List<GuardLogViewModel> GetAuditGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
@@ -147,14 +149,90 @@ namespace CityWatch.Web.Services
         public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
         {
 
-            var strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
-            var filterLogs = strikeLogs.Where(z =>
+            List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
+            List<ClientSiteSmartWandTagsHitLog> filterLogs = new List<ClientSiteSmartWandTagsHitLog>();
+            List<ClientSiteSmartWand> smartWands = new List<ClientSiteSmartWand>();
+            List<ClientSiteRadioChecksActivityStatus_History> smartWandStrikeLogs = new List<ClientSiteRadioChecksActivityStatus_History>();
+
+            List<Guard> guards = new List<Guard>();
+            List<ClientSite> clientSites = new List<ClientSite>();
+
+            guards = _guardDataProvider.GetGuards();
+            int? Id = null;
+            clientSites = _guardLogDataProvider.GetClientSites(Id);
+
+            if (string.IsNullOrEmpty(wsRequest.SmartWandId) && string.IsNullOrEmpty(wsRequest.TagId) && string.IsNullOrEmpty(wsRequest.TagTypeId) && 
+                string.IsNullOrEmpty(wsRequest.TagLabel) && string.IsNullOrEmpty(wsRequest.GuardName) && string.IsNullOrEmpty(wsRequest.GuardLicenceNoId))
+            {
+                // if every filter is empty, return all smartwand_tags_strike logs and smartwand_strike logs
+                strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+                smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
+                smartWandStrikeLogs = _clientSiteWandDataProvider.GetClientSiteAllSmartWandsStrikes(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+            }
+            else if (string.IsNullOrEmpty(wsRequest.SmartWandId))
+            {
+                //if smartwandid is empty, return all smartwand_tags_strike logs
+                strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+            }
+            else
+            {
+                //if smartwandid is not empty, return all smartwand_strike logs
+                smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
+                smartWandStrikeLogs = _clientSiteWandDataProvider.GetClientSiteAllSmartWandsStrikes(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+            }
+
+            if (strikeLogs.Any())
+            {
+                filterLogs = strikeLogs.Where(z =>
                     (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
                     (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
                     (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
                     (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
                 ).ToList();
+            }
+                
+            if(smartWandStrikeLogs.Any() && smartWands.Any())
+            {                
+                var smartWandWithGuardInfo = (
+                                    from log in smartWandStrikeLogs
+                                    join guard in guards on log.GuardId equals guard.Id into gj
+                                    from g in gj.DefaultIfEmpty() // left join
+                                    select new
+                                    {
+                                        Log = log,
+                                        Guard = g
+                                    }).ToList();
+
+                var smartWandFilterLogs = smartWandWithGuardInfo.Where(z => string.IsNullOrEmpty(wsRequest.SmartWandId) || wsRequest.SmartWandIds.Contains(z.Log.SWSmartWandId) &&
+                    (string.IsNullOrEmpty(wsRequest.GuardName) || z.Guard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.Guard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
+                    ).ToList();
+
+
+                // convert smartwand_strike logs to smartwand_tags_strike logs view model
+                foreach (var item in smartWandFilterLogs)
+                {
+                    filterLogs.Add(new ClientSiteSmartWandTagsHitLog()
+                    {
+                        Id = item.Log.Id,
+                        LoggedInClientSiteId = (int)item.Log.ClientSiteId,
+                        LoggedInGuardId = (int)item.Log.GuardId,
+                        LoggedInUserId = 1,
+                        TagUId = item.Log.SWSmartWandId,
+                        TagsTypeId = null,
+                        LabelDescription = item?.Log?.SwNotes?.Replace(item.Log.SWSmartWandId,"").Replace("[]","") ?? "",
+                        TagLinkedClientSiteId = null,
+                        HitUtcDateTime = item.Log.EventDateTime.ToUniversalTime(),
+                        HitLocalDateTime = item.Log.EventDateTime,
+                        LoggedInGuard = item.Guard,
+                        LoggedInUser = null,
+                        LoggedInClientSite = item.Log.ClientSite,
+                        SmartWandTagsType = null,
+                        LinkedClientSite = null
+                    });
+                }
+            }
 
 
             var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()

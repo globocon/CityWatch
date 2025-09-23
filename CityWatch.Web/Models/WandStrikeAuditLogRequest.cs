@@ -50,11 +50,11 @@ namespace CityWatch.Web.Models
 
         public string SmartWandId { get; set; }
 
-        public int[] SmartWandIds
+        public string[] SmartWandIds
         {
             get
             {
-                return SmartWandId?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+                return SmartWandId?.Split(",").ToArray() ?? Array.Empty<string>();
             }
         }
 

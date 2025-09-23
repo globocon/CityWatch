@@ -8995,6 +8995,7 @@ $(function () {
     });
 
     // WandStrike -- Start
+    
     const wandStrikeGroupColumn = 0;
     let wandStrikeLogReport = $('#tbl_wandstrike_site_log').DataTable({
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
@@ -9008,7 +9009,6 @@ $(function () {
         data: [],
         columns: [
             { data: 'groupText', visible: false, orderable: false },
-            //{ data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%", orderable: false },
             {
                 data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
                 render: {
@@ -9016,7 +9016,7 @@ $(function () {
                         return convertDateTimeString(value); // For display in table
                     },
                     sort: function (value) {
-                        return new Date(value); // Use actual date object for sorting
+                        return new Date(value).getTime(); // Use actual date object for sorting
                     }
                 },
                 width: "5%",
@@ -9034,30 +9034,43 @@ $(function () {
             var last = null;
 
             api.column(wandStrikeGroupColumn, { page: 'current' })
-                .data()
+                .data()                
                 .each(function (group, i) {
                     if (last !== group) {
                         $(rows)
                             .eq(i)
-                            .before('<tr class="group bg-light text-dark"><td colspan="6">' + group + '</td></tr>');
+                            .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
 
                         last = group;
                     }
                 });
         },
     });
+       
 
     let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
         paging: false,
         ordering: false,
-        order: [[wandStrikeGroupColumn, 'asc']],
+        order: [[1, 'asc']],
         info: false,
         searching: true,
         scrollX: true,
         data: [],
         columns: [
             { data: 'groupText', visible: false },
-            { data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%" },
+            {
+                data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
+                render: {
+                    display: function (value) {
+                        return convertDateTimeString(value); // For display in table
+                    },
+                    sort: function (value) {
+                        return new Date(value).getTime(); // Use actual date object for sorting
+                    }
+                },
+                width: "5%",
+                orderable: true
+            },
             { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
             { data: 'smartWandType', width: "5%" },
             { data: 'endUser', width: "15%" },
@@ -9075,7 +9088,7 @@ $(function () {
                     if (last !== group) {
                         $(rows)
                             .eq(i)
-                            .before('<tr class="group bg-light text-dark"><td colspan="6">' + group + '</td></tr>');
+                            .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
 
                         last = group;
                     }
