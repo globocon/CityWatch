@@ -457,10 +457,10 @@
         const clientSiteWandStrikeTagTypeId = $('#patroldatawandstrikeTagTypeId');
         const clientSiteWandStrikeTagLabel = $('#patroldatawandstrikeTagLabel');
         const clientSiteWandStrikeSmartWandId = $('#patroldatawandstrikeSmartWandId');
-
+        var sit = $(this).val().join(';');
 
         $.ajax({
-            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' + $(this).val().join(';'),
+            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' +  encodeURIComponent($(this).val().join(';')),
             type: 'GET',
             datatype: 'json',
         }).done(function (data) {
