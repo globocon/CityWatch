@@ -89,10 +89,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             DisplayItem = displayItem;
 
-            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
-            ActiveGuardCount = activeGuardDetails.Count();
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
-            InActiveGuardCount = inActiveGuardDetails.Count();
+           
             SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
@@ -103,7 +100,42 @@ namespace CityWatch.RadioCheck.Pages.Radio
             string LoginGuardId = Request.Query["guid"];
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
-           
+            /* new code added for guard can view allowed sites Start*/
+            List<int> allowedSiteIds = new List<int>();
+            if (!string.IsNullOrEmpty(LoginGuardId))
+            {
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(LoginGuardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+                }
+            }
+
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                activeGuardDetails = activeGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            ActiveGuardCount = activeGuardDetails.Count();
+
+            // Inactive guards
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                inActiveGuardDetails = inActiveGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            InActiveGuardCount = inActiveGuardDetails.Count();
+            /* new code added for guard can view allowed sites end*/
+
+            //var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            //ActiveGuardCount = activeGuardDetails.Count();
+            //var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            //InActiveGuardCount = inActiveGuardDetails.Count();
+
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
             foreach (var item in UserId1)
