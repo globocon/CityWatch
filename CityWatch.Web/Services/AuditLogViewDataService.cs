@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using System;
@@ -32,7 +33,8 @@ namespace CityWatch.Web.Services
 
         public List<GuardLogViewModel> GetAuditGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
-            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).GroupBy(z => z.ClientSiteLogBookId);
+            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(x=>x.WAND_TAG_ENTRY_TYPE==ScanningType.Normal)
+                .GroupBy(z => z.ClientSiteLogBookId);
             var patrolCarLogGroups = _guardLogDataProvider.GetPatrolCarLogs(clientSiteId, logFromDate, logToDate);
             var customFieldLogGroups = _guardLogDataProvider.GetCustomFieldLogs(clientSiteId, logFromDate, logToDate);
 
@@ -52,6 +54,20 @@ namespace CityWatch.Web.Services
                         if (guardLogImage.IsTwentyfivePercentfile == true)
                         {
                             guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+                        }
+                        else if (guardLogImage.IsVideo == true)
+                        {
+                            guardlog.Notes +=
+                                "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
+                                $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
+                                "Your browser does not support the video tag." +
+                                "</video>";
+
+                            guardlog.NotesNew +=
+                                "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
+                                $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
+                                "Your browser does not support the video tag." +
+                                "</video>";
                         }
                     }
                 }
@@ -136,9 +152,10 @@ namespace CityWatch.Web.Services
                     (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
                     (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
                     (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
-                     (string.IsNullOrEmpty(wsRequest.GuardName) || string.Equals(z.LoggedInGuard.Name, wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
-                     (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
-                     ).ToList();
+                    (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+
 
             var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
                 {

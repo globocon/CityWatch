@@ -269,7 +269,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
         {
-            //var _utc = _dbContext.ClientSiteKpiSettings.Where(x => clientSiteIds.Contains(x.ClientSiteId))?.Select(x => x.UTC)?.FirstOrDefault() ?? "+10:00";
+            toDate = toDate.AddDays(1); // Include the entire 'toDate' day
 
             // Step 1: Get UTC offsets per client site
             var utcOffsets = _dbContext.ClientSiteKpiSettings
@@ -277,7 +277,7 @@ namespace CityWatch.Data.Providers
                 .Select(x => new
                 {
                     x.ClientSiteId,
-                    _siteUTC = x.UTC ?? "+10:00" // Default to +10:00 if null
+                    _siteUTC = x.UTC.Replace("+","") ?? "+10:00" // Default to +10:00 if null
                 })
                 .ToList();
 
@@ -285,9 +285,9 @@ namespace CityWatch.Data.Providers
             var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
 
             foreach (var site in utcOffsets)
-            {
+            {                
                 // Step 2: Parse UTC offset like "+05:30" or "-04:00"
-                if (!TimeSpan.TryParse(site._siteUTC, out TimeSpan offset))
+                if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
                 {
                     // Default offset if parsing fails (you can customize this)
                     offset = TimeSpan.Zero;
@@ -295,7 +295,7 @@ namespace CityWatch.Data.Providers
 
                 // Step 3: Convert the local from/to to UTC for this site
                 var fromUtc = fromDate - offset;
-                var toUtc = toDate - offset;
+                var toUtc = toDate - offset;                              
 
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
@@ -328,7 +328,7 @@ namespace CityWatch.Data.Providers
                     SmartWandTagsType = log.SmartWandTagsType,
                     LoggedInGuard = log.LoggedInGuard,
                     LoggedInUser = log.LoggedInUser
-                });
+                }).Where(l=> l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
 
                 matchingLogs.AddRange(logsWithLocal);
             }

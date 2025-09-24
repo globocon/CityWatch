@@ -9000,20 +9000,33 @@ $(function () {
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
         pageLength: 100,
         paging: true,
-        ordering: false,
-        order: [[wandStrikeGroupColumn, 'asc']],
+        ordering: true,
+        order: [[1, 'asc']],
         info: false,
         searching: true,
         scrollX: true,
         data: [],
         columns: [
-            { data: 'groupText', visible: false },
-            { data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%" },
-            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
-            { data: 'smartWandType', width: "5%" },
-            { data: 'endUser', width: "15%" },
-            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%" },
-            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%" },
+            { data: 'groupText', visible: false, orderable: false },
+            //{ data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime', 'render': function (value) { return convertDateTimeString(value); }, width: "5%", orderable: false },
+            {
+                data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
+                render: {
+                    display: function (value) {
+                        return convertDateTimeString(value); // For display in table
+                    },
+                    sort: function (value) {
+                        return new Date(value); // Use actual date object for sorting
+                    }
+                },
+                width: "5%",
+                orderable: true
+            },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },
+            { data: 'smartWandType', width: "5%", orderable: false },
+            { data: 'endUser', width: "15%", orderable: true },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%", orderable: false },
         ],
         drawCallback: function () {
             var api = this.api();
@@ -9097,7 +9110,7 @@ $(function () {
             dataType: 'json',
             success: function (data) {
                 data.map(function (site) {
-                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                    clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
                 });
                 clientSiteControl.multiselect('rebuild');
             }
@@ -9126,17 +9139,16 @@ $(function () {
             clientSiteWandStrikeTagLabel.html('');
             clientSiteWandStrikeSmartWandId.html('');
             data.tagIds.map(function (result) {
-
-                clientSiteWandStrikeTagId.append('<option value="' + result.value + '">' + result.text + '</option>');
+                clientSiteWandStrikeTagId.append($('<option></option>').val(result.value).text(result.text));
             });
             data.tagTypeIds.map(function (result) {
-                clientSiteWandStrikeTagTypeId.append('<option value="' + result.value + '">' + result.text + '</option>');
-            });
+                clientSiteWandStrikeTagTypeId.append($('<option></option>').val(result.value).text(result.text));
+            });            
             data.tagLabels.map(function (result) {
-                clientSiteWandStrikeTagLabel.append('<option value="' + result.value + '">' + result.text + '</option>');
+                clientSiteWandStrikeTagLabel.append($('<option></option>').val(result.value).text(result.text));
             });
             data.smartWandIds.map(function (result) {
-                clientSiteWandStrikeSmartWandId.append('<option value="' + result.value + '">' + result.text + '</option>');
+                clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
             });
             clientSiteWandStrikeTagId.multiselect('rebuild');
             clientSiteWandStrikeTagTypeId.multiselect('rebuild');
@@ -9166,6 +9178,7 @@ $(function () {
 
         $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
         $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        //$('#WandStrikeAuditLogRequest_TagLabel').val(encodeURIComponent($('#wandstrikeTagLabel').val()));
         $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
 
         $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());

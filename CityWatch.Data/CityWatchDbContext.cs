@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Reflection.Metadata;
 using Microsoft.Data.SqlClient;
+using CityWatch.Data.Providers;
 
 namespace CityWatch.Data
 {
@@ -162,7 +163,8 @@ namespace CityWatch.Data
             modelBuilder.Entity<GuardLog>()
                 .ToTable(tb => tb.HasTrigger("Insert_GuardLogs"));
             base.OnModelCreating(modelBuilder);
-          
+            modelBuilder.Entity<SiteTagStatus>().HasNoKey();
+
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -254,7 +256,7 @@ namespace CityWatch.Data
         public DbSet<KpiSendScheduleJobsKV> KpiSendScheduleJobsKV { get; set; }
         public DbSet<ClientSiteSmartWandTagsHitLog> ClientSiteSmartWandTagsHitLogs { get; set; }
 
-
+        public DbSet<SiteTagStatus> SiteTagStatuses { get; set; }
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
