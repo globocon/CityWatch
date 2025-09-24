@@ -16,14 +16,14 @@ window.onload = function () {
 
 };
 $(document).ready(function () {
-    
+
     //$(document).on('show.bs.modal', '.modal', function () {
     //    const zIndex = 1040 + 10 * $('.modal:visible').length;
     //    $(this).css('z-index', zIndex);
     //    console.log('show.bs.modal');
     //    setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
     //});
-        
+
     //$(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
 
 });
@@ -32,12 +32,12 @@ $(function () {
 
     $('#clientType').on('change', function () {
         resetDashboardUi();
-        
+
         const option = $(this).val();
         if (!option)
             return;
         var guardId = $("#hid_userId").val();
-       
+
         $.ajax({
             url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&&guardId=" + encodeURIComponent(guardId),
             type: 'GET',
@@ -111,8 +111,8 @@ $(function () {
         $('#is_thermal_site').val('N/A');
     }
 
-   
-   
+
+
 
     /***** KPI Report *****/
 
@@ -644,7 +644,7 @@ $(function () {
         $('#CompanyNamekv').val('');
         $('#SiteLockv').val('');
         kvSitesOptionAdded();
-        
+
 
     }
     function scheduleModalOnEditKV(scheduleId) {
@@ -676,7 +676,7 @@ $(function () {
             $('#VehicleRegokv').val(data.vehicleRego);
             $('#CompanyNamekv').val(data.companyName);
             $('#SiteLockv').val(data.clientSiteLocationId);
-            
+
         }).always(function () {
             $('#loader').hide();
         });
@@ -793,35 +793,35 @@ $(function () {
             $('#clientSiteskv').append('<option value="">Select</option>');
             data.map(function (site) {
                 $('#clientSiteskv').append('<option value="' + site.value + '">' + site.text + '</option>');
-               
+
             });
         });
     });
-   
-     function kvSitesOptionAdded () {
+
+    function kvSitesOptionAdded() {
         //const option = $(this).val();
         const option = $('#selectedSiteskv option').map(function () {
             return $(this).val();
         }).get();
-         if (option.length == 0 ) {
+        if (option.length == 0) {
             $('#SiteLockv').html('');
             $('#SiteLockv').append('<option value="">Select</option>');
             $('#CompanyNamekv').html('');
             $('#CompanyNamekv').append('<option value="">Select</option>');
 
             $('#kvKeyNo').html('');
-             $('#kvKeyNo').append('<option value="">Select</option>');
-             return;
+            $('#kvKeyNo').append('<option value="">Select</option>');
+            return;
         }
 
         $.ajax({
-            url: '/Admin/Settings?handler=ClientSiteLocationsAndCompanyDetails&clientSiteIds=' +  option.join(';'),
+            url: '/Admin/Settings?handler=ClientSiteLocationsAndCompanyDetails&clientSiteIds=' + option.join(';'),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
             $('#SiteLockv').html('');
             $('#SiteLockv').append('<option value="">Select</option>');
-            
+
             $('#CompanyNamekv').html('');
             $('#CompanyNamekv').append('<option value="">Select</option>');
 
@@ -878,7 +878,7 @@ $(function () {
         updateSelectedSitesKVCount();
         kvSitesOptionAdded();
     });
-   
+
     //kv-schedule-end
     $('#btnSaveTimesheetSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
@@ -988,7 +988,7 @@ $(function () {
         });
     }
 
-    
+
 
     //P2-103 Duplicate Settings-start
     function scheduleModalOnCopy(scheduleId) {
@@ -1104,7 +1104,7 @@ $(function () {
 
     /*Rc Action List Image Upload start*/
     $('#div_site_settings').on('change', '#upload_summary_imageRcList', function () {
-       
+
         const file = $('#upload_summary_imageRcList').prop("files")[0];
         if (file) {
             const scheduleId = $("#scheduleId").val();
@@ -1231,9 +1231,9 @@ $(function () {
     /*Rc Action List Image Upload stop*/
 
     //RC Action List Save start
-    
 
-   
+
+
     $('#div_site_settings').on('click', '#save_site_RC', function () {
         var List = $('#frm_ActionList').serialize();
         $.ajax({
@@ -1257,17 +1257,17 @@ $(function () {
                 $('#Action5').val('');
                 $('#userInput').val('');
             }
-           // $('#kpi-settings-modal').modal('hide');
+            // $('#kpi-settings-modal').modal('hide');
             //gridClientSiteSettings.clear();
             //gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
         }).fail(function () { });
     });
     //RC Action List Save stop
     //p2 - 135 rc duress - start
-    $('#div_site_settings').on('change','#cbIsRCBypassSite', function () {
+    $('#div_site_settings').on('change', '#cbIsRCBypassSite', function () {
 
         const isChecked = $(this).is(':checked');
-     
+
         $('#RCList_IsSiteRCBypass').val(isChecked);
     });
     //p2 - 135 rc duress - start
@@ -1383,12 +1383,12 @@ $(function () {
         } else {
 
             let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-            //p1-139 change pop up start
+                //p1-139 change pop up start
                 'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KPI"></button>';
             //p1-139 change pop up end
             $(triggerButton).insertAfter($(this));
             $('#editSiteTrigger').click();
-          
+
         }
     });
 
@@ -1446,11 +1446,11 @@ $(function () {
             $('#frm_kpi_schedule').append(elem);
         });
         if ($('#cbIsDownselect').is(':checked')) {
-            
+
             if (!$('#CriticalGroupNameID').val()) {
-                
+
                 alert('Please select a value in  Policy Group.');
-                return; 
+                return;
             }
         }
         $.ajax({
@@ -1527,7 +1527,7 @@ $(function () {
                 //var url = window.URL.createObjectURL(blob);
                 // // Open the PDF in a new tab
                 //var newTab = window.open(url, '_blank');
-                
+
                 const URL = window.URL || window.webkitURL;
                 const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
                 const bloburl = URL.createObjectURL(blob);
@@ -1617,7 +1617,7 @@ $(function () {
     });
     */
 
-  
+
     /***** Client Site KPI Settings *****/
 
     let gridClientSiteSettings;
@@ -1626,10 +1626,10 @@ $(function () {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
             'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '" data-cs-email="' + record.siteEmail + '" data-cs-address="' + record.address + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
             '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
-        //p1-139 change pop up start
+            //p1-139 change pop up start
             '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '" data-type-tab="LB"><i class="fa fa-pencil mr-2"></i>Edit</button>';
         //p1-139 change pop up end
-       
+
     }
 
     gridClientSiteSettings = $('#kpi_client_site_settings').grid({
@@ -1659,11 +1659,11 @@ $(function () {
     $('#search_sites_settings').on('keyup', function (e) {
         var SearchTextbox = $("#search_sites_settings");
         var searchText = SearchTextbox.val();
-        if (searchText.length >= 3) {     
+        if (searchText.length >= 3) {
             gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $(this).val(), userId: $('#hid_userIdSettings').val() });
-       
+
         }
-      
+
     });
     $('#btnSearchSites').on('click', function () {
         gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val(), userId: $('#hid_userIdSettings').val() });
@@ -1680,10 +1680,10 @@ $(function () {
         gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem, userId: $('#hid_userIdSettings').val() });
     }
 
-   
+
     /*code added for search client stop */
     var currentDiv = 1;
-    let gritdSmartWands;   
+    let gritdSmartWands;
     let gridSiteDropboxSettings;
 
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
@@ -1699,19 +1699,19 @@ $(function () {
         $('#client_site_name').text(siteName);
         $('#client_site_address').text(siteAddress);
         globalClientSiteAddress = siteAddress;
-  
-       // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
-       
+
+        // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
+
         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'), function () {
             // This function will be executed after the content is loaded
             window.sharedVariable = button.data('cs-id');
-            console.log('Load operation completed!');            
+            console.log('Load operation completed!');
             // You can add your additional code or actions here
             console.log(button.data('cs-id'));
             console.log(button.data('cs-address'));
             $('#_dropboxStatusDisplay').html('');
 
-            populateDuressApp(button.data('cs-id'),1);
+            populateDuressApp(button.data('cs-id'), 1);
             //p1-139 change pop up start
             if (type == 'KPI') {
                 $('#kpi-LB-Menu-tab').removeClass('active');
@@ -1728,10 +1728,10 @@ $(function () {
             //p1-139 change pop up end
         });
     });
-      
-    
 
-    
+
+
+
 
 
     $('#div_site_settings').on('change', '.patrol-frequency', function () {
@@ -1856,7 +1856,7 @@ $(function () {
             }).done(function (result) {
                 if (result.status) {
                     if (result.clientSiteId !== 0) {
-                       
+
                         $('#div_site_settings').html('');
                         //$('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);  
                         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + result.clientSiteId, function () {
@@ -1870,8 +1870,8 @@ $(function () {
                             console.log('Load operation completed!');
                             // You can add your additional code or actions here
                             console.log(result.clientSiteId);
-                           // $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
-                           
+                            // $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+
 
                             //alert('Removed the worker successfully');
                         });
@@ -1879,7 +1879,7 @@ $(function () {
                         //$("#kpi-settings-modal").appendTo("body");
                         currentDiv = 1;
                     }
-                   
+
                 }
                 else
                     alert(result.message);
@@ -1931,7 +1931,7 @@ $(function () {
             $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(result.notes));
             $("#ClientSiteKpiNote_ForMonth").val(result.forMonth);
             $("#ClientSiteKpiNote_HRRecords").val(result.hrRecords);
-            
+
 
         }).fail(function () { });
     }
@@ -1944,7 +1944,7 @@ $(function () {
             sum += value;
         });
         $("#PatrolSum").val(sum);
-        
+
     });
     /*code added for No of Patrols sum stop */
     $('#div_site_settings').on('keyup', '#ClientSiteKpiNote_Notes', function () {
@@ -2016,7 +2016,7 @@ $(function () {
             else {
                 alert('Error');
             }
-           
+
         }).fail(function () { });
     });
 
@@ -2048,8 +2048,8 @@ $(function () {
             }
         });
     });
-  
-   $('#div_site_settings').on('change', '#ClientSite_Status', function () {
+
+    $('#div_site_settings').on('change', '#ClientSite_Status', function () {
         // Get the selected value
         var selectedStatus = $(this).val();
         if (selectedStatus != 0) {
@@ -2063,9 +2063,9 @@ $(function () {
         else {
             $('#scheduleisActive').prop('checked', true);
         }
-        
 
-       
+
+
     });
     $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
         $.ajax({
@@ -2075,35 +2075,35 @@ $(function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == 1) {
-                alert('Saved site manning details successfully');               
+                alert('Saved site manning details successfully');
                 $('#div_site_settings').html('');
                 //$('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);  
                 $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId, function () {
                     // This function will be executed after the content is loaded
-                    console.log('Load operation completed!');                  
+                    console.log('Load operation completed!');
                     // You can add your additional code or actions here
                     $('#kpi-tab').tab('show');
-                    $('#contracted-manning-tab').tab('show');                   
+                    $('#contracted-manning-tab').tab('show');
                     window.sharedVariable = data.clientSiteId;
                     console.log('Load operation completed!');
                     // You can add your additional code or actions here
                     console.log(data.clientSiteId);
-                 
-                  //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
-                  
+
+                    //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
+
                 });
                 //$('#kpi-settings-modal').modal('show');
                 //$("#kpi-settings-modal").appendTo("body");
                 currentDiv = 1;
-              
+
             }
             else if (data.success == 2) {
                 $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
                 $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
                 $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
                 $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
-                alert('Please add the site settings from site settings tab');               
-               
+                alert('Please add the site settings from site settings tab');
+
             }
             else if (data.success == 3) {
                 alert('Please select position');
@@ -2114,9 +2114,9 @@ $(function () {
                 $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
 
             }
-            else if (data.success ==5) {
-                alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage+' .');
-                
+            else if (data.success == 5) {
+                alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage + ' .');
+
             }
 
             else if (data.success == 6) {
@@ -2127,7 +2127,7 @@ $(function () {
                 alert('Please make sure you fill out the three boxes (start, end, and workers) for a day or make them blank. Please ensure workers have a value and cannot be blank when a clock is set.');
 
             }
-           
+
         }).fail(function () { });
     });
 
@@ -2135,7 +2135,7 @@ $(function () {
 
     // Save only master settings values without manning hours  start
     $('#div_site_settings').on('click', '#save_site_manning_settings_WithoutValue', function () {
-        
+
 
         $.ajax({
             url: '/admin/settings?handler=ClientSiteManningKpiSettingsWithoutValue',
@@ -2180,7 +2180,7 @@ $(function () {
                 $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
 
             }
-            
+
 
         }).fail(function () { });
     });
@@ -2264,7 +2264,7 @@ $(function () {
 
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
-        
+
         $("#ClientSiteManningPatrolCarKpiSettingsADHOC_0__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettingsADHOC_1__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettingsADHOC_2__Type").val(filter);
@@ -2475,7 +2475,7 @@ $(function () {
         var clientSiteId = $("#ClientSiteId").val();
         var clientSiteName = $('#client_site_name').text();
         var clientSiteAddress = globalClientSiteAddress;
-       
+
         let content = document.getElementById('contractedmanningSettings').innerHTML;
 
         let element = document.createElement('div');
@@ -2489,7 +2489,7 @@ $(function () {
         element.style.maxWidth = '800px';
         element.style.backgroundColor = '#ffffff';
         element.style.width = '100%';
-   
+
         let heading = '<div style="text-align: center; color: black;">';
         heading += '<span style="font-size: 1em; display: block;font-weight: bold;">Contracted Manning Schedule</span>';
         heading += '<span style="font-size: 0.875em; display: block;">' + clientSiteName + '</span>';
@@ -2498,20 +2498,20 @@ $(function () {
 
         element.innerHTML = heading + content;
         document.body.appendChild(element);
-        
+
         // Hide all buttons with the class 'no-print'
         let noPrintElements = element.getElementsByClassName('no-print');
         for (let el of noPrintElements) {
             el.style.display = 'none';
-        }    
-        
+        }
+
         let opt = {
             margin: [0, 0, 0, 0],
-            filename:  formattedDate + 'Contracted Manning.pdf',
+            filename: formattedDate + 'Contracted Manning.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        };     
+        };
         html2pdf().from(element).set(opt).toPdf().output('datauristring').then(function (pdfDataUri) {
             // Create a new window and display the PDF
             let newWindow = window.open('', '_blank');
@@ -2533,7 +2533,7 @@ $(function () {
         });
     });
 
-    
+
     function formatDate(dateStr) {
         var date = new Date(dateStr);
         if (isNaN(date.getTime())) {
@@ -2546,22 +2546,22 @@ $(function () {
 
         return `${day}/${month}/${year}`;
     }
-    
+
     $('#div_site_settings').on('click', '#showDivButton', function () {
-        
+
         $('#divPatrolCar').show();
         $('#divbtn').show();
         $('#save_site_manning_settings_WithoutValue').hide();
-        
-   });
-    
-   
+
+    });
+
+
 
     $('#div_site_settings').on('change', '#positionfilterGuard', function () {
 
         const isChecked = $(this).is(':checked');
-        const filter = isChecked ? 1 : 2;      
-       
+        const filter = isChecked ? 1 : 2;
+
         $.ajax({
             url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
             type: 'GET',
@@ -2572,7 +2572,7 @@ $(function () {
                 $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
             });
         });
-        
+
     });
     $(".patrol-sum").on("input", function () {
         alert('ddd');
@@ -2591,7 +2591,7 @@ $(function () {
         $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_7__Type").val(filter);
-       
+
 
         calculateSumOfTextBoxValues();
 
@@ -2605,9 +2605,9 @@ $(function () {
                 $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
             });
         });
-       
+
     });
-   
+
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
@@ -2691,7 +2691,7 @@ $(function () {
     $('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols', function () {
 
         calculateSumOfTextBoxValues();
-      
+
     });
 
     $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_0__NoOfPatrols,#ClientSiteManningGuardKpiSettings_1__NoOfPatrols, #ClientSiteManningGuardKpiSettings_2__NoOfPatrols, #ClientSiteManningGuardKpiSettings_3__NoOfPatrols, #ClientSiteManningGuardKpiSettings_4__NoOfPatrols, #ClientSiteManningGuardKpiSettings_5__NoOfPatrols,#ClientSiteManningGuardKpiSettings_6__NoOfPatrols,#ClientSiteManningGuardKpiSettings_7__NoOfPatrols', function () {
@@ -2712,7 +2712,7 @@ $(function () {
 
     });
 
-   
+
 
 
     function calculateSumOfTextBoxValues() {
@@ -2741,7 +2741,7 @@ $(function () {
             $('#lbl_ManningPatrolCar_3').text('Workers');
             $('#monthlyHrsAddNew').val('');
         }
-       
+
     }
 
     function calculateSumOfTextBoxValues2() {
@@ -2762,7 +2762,7 @@ $(function () {
             var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
             // Update the value in textbox2
             $('#monthlyHrs_0').val(sum);
-           
+
 
         }
 
@@ -2786,7 +2786,7 @@ $(function () {
             var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
             // Update the value in textbox2
             $('#monthlyHrs_8').val(sum);
-           
+
 
         }
 
@@ -2806,12 +2806,12 @@ $(function () {
             var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_21__NoOfPatrols').val()) || 0;
             var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_22__NoOfPatrols').val()) || 0;
             var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_23__NoOfPatrols').val()) || 0;
-            
+
             // Calculate the sum
             var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
             // Update the value in textbox2
             $('#monthlyHrs_16').val(sum);
-           
+
 
         }
 
@@ -2858,9 +2858,9 @@ $(function () {
     }
 
 
-  
-   
-     
+
+
+
 
 
 
@@ -2884,7 +2884,7 @@ $('#save_default_email').on('click', function () {
         }
         else {
             isValidEmailIds = false;
-            alert("Invalid email address.'" + emailAddress+"'");
+            alert("Invalid email address.'" + emailAddress + "'");
         }
 
 
@@ -2912,7 +2912,7 @@ $('#save_default_email').on('click', function () {
 
 //Code to handle timesheet schedule start
 function clearScheduleModalTimesheet() {
-   
+
     $('#TimeSheetscheduleId').val('0');
     $('#clientTypeNameTimesheet').val('');
     $('#clientSitesTimesheet').html('<option value="">Select</option>');
@@ -2931,9 +2931,9 @@ function clearScheduleModalTimesheet() {
     $('#sch-modal-validation').html('');
     $('#emailToTimeSheet').val('');
     $('#emailBccTimeSheet').val('');
-  
+
     $('#projectNameTimeSheet').val('');
-   
+
 }
 $('#TimeSheetschedule-modal').on('shown.bs.modal', function (event) {
     clearScheduleModalTimesheet();
@@ -2954,7 +2954,7 @@ $('#TimeSheetschedule-modal').on('shown.bs.modal', function (event) {
         //P2-103 Duplicate Settings-end
     }
 
-   // showHideSchedulePopupTabs(isEdit);
+    // showHideSchedulePopupTabs(isEdit);
 });
 $('#clientTypeNameTimesheet').on('change', function () {
     const option = $(this).val();
@@ -2992,9 +2992,9 @@ function scheduleModalOnAddTimesheet() {
     $('#startDateTimesheet').attr('min', dateToday);
     const dateEnd = '2100-01-01'
     $('#endDateTimesheet').val(dateEnd.split('T')[0]);
-  
+
     $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
-    
+
 }
 function scheduleModalOnEditTimesheet(scheduleId) {
     $('#loader').show();
@@ -3070,7 +3070,7 @@ function scheduleModalOnCopy1(scheduleId) {
         $('#endDateTimesheet').val(dateEnd.split('T')[0]);
 
         $('#TimeSheetscheduleId').val(data.id);
-       // $('#startDateTimesheet').val(data.startDate.split('T')[0]);
+        // $('#startDateTimesheet').val(data.startDate.split('T')[0]);
         //if (data.endDate)
         //    $('#endDateTimesheet').val(data.endDate.split('T')[0]);
         //$('#endDateTimesheet').attr('min', new Date().toISOString().split('T')[0]);
@@ -3202,7 +3202,7 @@ $('#div_site_settings').on('change', '#dgKPITelamaticsName', function () {
                 $('#KPITelematicsMobileNo').val('');
                 $('#emailLink').attr('href', 'mailto:');
             }
-            
+
             $('#KPITelematicsFieldID').val(data.id);
             //$('#KPITelematicsMobileNo').append(new Option('Select', '', true, true));
             data.map(function (site) {
@@ -3286,7 +3286,7 @@ $('#div_site_settings').on('click', '#save_DuressApp', function () {
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
-        
+
         if (result.success) {
             var successMessage = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
                 '<strong>Success!</strong> Duress APP settings saved successfully.' +
@@ -3323,7 +3323,7 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
             if (result.success === false) {
                 /*clearDuressAppForm();*/
                 $("#QrCode").attr("src", "");
-                $("#QrCode").attr("src", qrImagePath).hide(); 
+                $("#QrCode").attr("src", qrImagePath).hide();
                 $('#positionfilterPatrolCarDuressApp_Pertrol').val(''); // Clear dropdown
                 $('#positionfilterPatrolCarDuressApp').prop('checked', false); // Uncheck the checkbox
                 const filter = 2;
@@ -3337,7 +3337,7 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
                         $('#positionfilterPatrolCarDuressApp_Pertrol').append('<option value="' + position.value + '">' + position.text + '</option>');
 
                     });
-                    
+
                 });
                 return;
             }
@@ -3348,10 +3348,10 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
             $('#selectLogActivityProfile').val(result.data.logProfileId);
             var qrText = result.data.id; // Change this to any text or URL
-            var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+qrText;
+            var qrImagePath = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + qrText;
 
             $("#QrCode").attr("src", qrImagePath)
-            $("#QrCode").attr("src", qrImagePath).show(); 
+            $("#QrCode").attr("src", qrImagePath).show();
 
             if (result.data.positionFilter === 'Patrol Car') {
                 // If position filter is "Patrol Car", check the checkbox
@@ -3384,7 +3384,7 @@ $('#div_site_settings').on('change', '#siteDuressNumber', function () {
                     $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
                 });
             }
-            
+
         },
         error: function (xhr, status, error) {
             console.error("AJAX Error: " + status + " " + error);
@@ -3412,7 +3412,7 @@ function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
             }
 
             // Populate the form fields with the retrieved data
-           
+
             $('#siteDuressNumber').val(result.data.siteDuressNumber);
             $('#duressAppId').val(result.data.id);
             $('#clientSiteIdDuress').val(clientSiteIdDuress);
@@ -3452,9 +3452,9 @@ function populateDuressApp(clientSiteIdDuress, siteDuressNumber) {
                     $('#positionfilterPatrolCarDuressApp_Pertrol').val(result.data.selectedPosition);
                 });
             }
-          
 
-           
+
+
         },
         error: function (xhr, status, error) {
             // Handle AJAX request failure
@@ -3507,7 +3507,7 @@ $('#div_site_settings').on('click', '#delete_DuressApp', function () {
     });
 });
 
-$('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () { 
+$('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () {
     var data = {
         'Id': 0,
         'ClientSiteId': $('#clientSiteMobileAppSettings_ClientSiteId').val(),
@@ -3532,8 +3532,7 @@ $('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () 
     //console.log("data IsGateEnabled:" + data.IsGateEnabled);
     //console.log("data CounterQuantity:" + data.CounterQuantity);
 
-    if ((data.IsCrowdCountEnabled) && (data.IsDoorEnabled == false && data.IsGateEnabled == false && data.IsLevelFloorEnabled == false && data.IsRoomEnabled == false))
-    {
+    if ((data.IsCrowdCountEnabled) && (data.IsDoorEnabled == false && data.IsGateEnabled == false && data.IsLevelFloorEnabled == false && data.IsRoomEnabled == false)) {
         alert("Please select atleast one Counter Location.");
         return;
     }
@@ -3544,14 +3543,13 @@ $('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () 
             return;
         }
     }
-    if (data.IsCrowdCountEnabled == false)
-    {
+    if (data.IsCrowdCountEnabled == false) {
         data.IsDoorEnabled = false;
         data.IsGateEnabled = false;
         data.IsLevelFloorEnabled = false;
         data.IsRoomEnabled = false;
         data.CounterQuantity = 0;
-                       
+
         $('#clientSiteMobileAppSettings_IsDoorEnabled').prop('checked', false);
         $('#clientSiteMobileAppSettings_IsGateEnabled').prop('checked', false);
         $('#clientSiteMobileAppSettings_IsLevelFloorEnabled').prop('checked', false);
@@ -3566,16 +3564,35 @@ $('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () 
         dataType: 'json',
         data: { csmas: data },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {        
+    }).done(function (response) {
         if (response.success) {
             $('#clientSiteMobileAppSettings_Id').val(response.clientSiteMobileAppSettings.id);
-        } 
+        }
         alert(response.message);
-        $('#loader').hide();
-    }).fail(function () { alert('An error occured while svaing the settings. Please try again.'); });
+    }).fail(function () {
+        alert('An error occured while saving the settings. Please try again.');
+    }).always(function () { $('#loader').hide(); });
 });
 
-
+$('#div_site_settings').on('click', '#btnSavePatrolTouringModeSettings', function () {
+    var data = {
+        clientSiteId: parseInt($('#clientSiteIdPatrolTourMode').val()),
+        PatrolTourMode: parseInt($('#ClientSite_PatrolTourMode').val())
+    };
+       
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveClientSiteMobileAppPatrolTouringModeSettings',
+        type: 'POST',
+        dataType: 'json',
+        data: data,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {        
+        alert(response.message);
+    }).fail(function () {
+        alert('An error occured while saving the settings. Please try again.');
+    }).always(function () { $('#loader').hide(); });
+});
 
 //Code to handle timesheet schedule stop
 
