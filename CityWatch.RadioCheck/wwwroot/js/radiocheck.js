@@ -9554,10 +9554,10 @@ function getLoggedGuardDetails() {
     isPaused = true;
     // Generate dates
     for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
-        dates.push(d.toLocaleDateString('en-GB', {
-            weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
-        }));
-    }
+    dates.push(d.toLocaleDateString('en-GB', {
+        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+    }).replace('Sept', 'Sep'));
+}
 
     // Row 1: Main headers (dates)
     let topRow = '<tr><th rowspan="2">CRO</th><th rowspan="2">Licence</th>';
