@@ -51,7 +51,7 @@ namespace CityWatch.Web.API
                 //Check if scanned tag recently with in a minute from the same site
                 if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalMinutes < 1)
                 {
-                    message = "Tag recently scanned. Please try again after some time.";
+                    message = "Tag already scanned !!!";
                     return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
                 }
 
