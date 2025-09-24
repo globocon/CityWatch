@@ -32,7 +32,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds);
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
         List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
-        ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid);
+        ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(string tagUid);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -365,10 +365,10 @@ namespace CityWatch.Data.Providers
             return matchingLogs;
         }
 
-        public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid)
+        public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(string tagUid)
         {
             return _dbContext.ClientSiteSmartWandTagsHitLogs
-                .Where(x => x.LoggedInClientSiteId == siteId && x.TagUId == tagUid)
+                .Where(x => x.TagUId == tagUid)
                 .OrderByDescending(x => x.HitUtcDateTime)
                 .Take(1)
                 .SingleOrDefault();

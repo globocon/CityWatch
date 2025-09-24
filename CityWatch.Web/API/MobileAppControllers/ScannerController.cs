@@ -46,7 +46,7 @@ namespace CityWatch.Web.API
             try
             {
                 var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
-                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
+                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(TagUid);
 
                 //Check if scanned tag recently with in a minute from the same site
                 if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalMinutes < 1)
