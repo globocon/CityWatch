@@ -2315,6 +2315,33 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostSaveClientSiteMobileAppPatrolTouringModeSettings(int clientSiteId, PatrolTouringMode PatrolTourMode)
+        {
+            try
+            {
+
+                if (clientSiteId != 0)
+                {                    
+                     _clientDataProvider.SaveClientSitePatrolTourSettings(clientSiteId, PatrolTourMode);
+                    return new JsonResult(new { success = true, message = "Settings saved successfully."});                   
+                }
+                else
+                {
+                    // Return a custom error message if no record is found
+                    return new JsonResult(new { success = false, message = "No client site found with the specified ID." });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (optional)
+                _logger.LogError(ex, "An error occurred while saving the Patrol Touring Mode setting.");
+
+                // Return an error message
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
         //wand tags-end
         //kv-scheudle-start
         public JsonResult OnGetKpiKVSchedules()

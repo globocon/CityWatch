@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Helpers;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
 using iText.Layout.Borders;
@@ -278,6 +279,8 @@ namespace CityWatch.Data.Providers
         public Task SaveCrowdControlGuardLocation(MobileCrowdControlGuard MCCG);
         List<SubDomain> GetSubDomains();
         List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites);
+
+        public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3825,6 +3828,19 @@ namespace CityWatch.Data.Providers
                 .Where(x => clientSites.Contains(x.Name))
                 .ToList();
             return clientSiteDetails;
+        }
+
+        public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm)
+        {
+            var _clientSite = _context.ClientSites.Where(x => x.Id == siteId && x.IsActive == true).FirstOrDefault();
+            if (_clientSite == null)
+            {
+                throw new Exception("Client site not found or inactive.");
+            }
+
+            _clientSite.PatrolTourMode = ptm;
+            _context.SaveChanges();
+
         }
 
     }
