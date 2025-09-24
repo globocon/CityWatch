@@ -2237,6 +2237,9 @@
                 <li class="nav-item " role="presentation">
                     <a class="nav-link" id="MobileAppCrowdControl-tab" data-toggle="tab" href="#CrowdControlTab" role="tab" aria-controls="Crowd Control">Crowd Control</a>
                 </li>
+                <li class="nav-item " role="presentation">
+                    <a class="nav-link" id="MobileAppWandStrikes-tab" data-toggle="tab" href="#WandStrikesTab" role="tab" aria-controls="Crowd Control">Wand Strikes</a>
+                </li>
             </ul>
             <div class="tab-content">
                 <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
@@ -2351,6 +2354,24 @@
                                 <button type="button" class="btn btn-success" id="btnSaveCrowdControlSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
                             </div>
                             @* </form> *@
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="WandStrikesTab" role="tabpanel" aria-labelledby="WandStrikesTab">
+                    <div class="row m-0 pt-5">
+                        <div class="col-md-12">                            
+                            <input type="hidden" id="clientSiteIdPatrolTourMode" name="clientSiteIdPatrolTourMode" value="@Model.ClientSiteId" />
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label mt-0">Partol Touring Mode</label>
+                                <div class="col-md-6">                                    
+                                    <select asp-for="@Model.ClientSite.PatrolTourMode" asp-items="Html.GetEnumSelectList<PatrolTouringMode>()" class="form-control">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row mt-3">
+                                <button type="button" class="btn btn-success" id="btnSavePatrolTouringModeSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                            </div>
                         </div>
                     </div>
                 </div>

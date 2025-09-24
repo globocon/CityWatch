@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CityWatch.Data.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -52,5 +53,6 @@ namespace CityWatch.Data.Models
         public bool IsDosDontList { get; set; }
         [NotMapped]
         public string AccountManager { get; set; }
+        public PatrolTouringMode PatrolTourMode { get; set; }
     }
 }
