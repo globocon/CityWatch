@@ -45,8 +45,19 @@ namespace CityWatch.Web.API
             ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
             try
             {
-                var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc");
                 var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
+                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
+
+                //Check if scanned tag recently with in a minute from the same site
+                if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalMinutes < 1)
+                {
+                    message = "Tag recently scanned. Please try again after some time.";
+                    return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
+                }
+
+
+                var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc");
+
 
                 _clientSiteSmartWandTagsHitLog.LoggedInClientSiteId = siteId;
                 _clientSiteSmartWandTagsHitLog.LoggedInGuardId = GuardId;
@@ -62,8 +73,8 @@ namespace CityWatch.Web.API
                     message = "Tag Not Found";
                     TagInfoLabel = $"{TagUid} [NFC]";
                     _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-                    
-                    
+
+
                 }
                 else
                 {
@@ -71,16 +82,17 @@ namespace CityWatch.Web.API
                     _clientSiteSmartWandTagsHitLog.TagLinkedClientSiteId = TagInfoDetails.ClientSiteId;
                     if (TagInfoDetails.ClientSiteId != siteId)
                     {
-                        if (TagInfoDetails.ClientSiteId == 0) {
+                        if (TagInfoDetails.ClientSiteId == 0)
+                        {
                             IsSuccess = true;
                             message = "Tag Not Found";
                             TagInfoLabel = $"{TagUid} [NFC]";
                             _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-                        } 
+                        }
                         else
                         {
                             message = "Tag does not belong to logged in site. Please check.";
-                        }                            
+                        }
                     }
                     else
                     {
@@ -91,7 +103,7 @@ namespace CityWatch.Web.API
                     }
                 }
                 try
-                {   
+                {
                     // Log the tag details
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
                 }

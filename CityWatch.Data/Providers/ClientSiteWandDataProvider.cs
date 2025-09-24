@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace CityWatch.Data.Providers
@@ -31,6 +32,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds);
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
         List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
+        ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -361,6 +363,15 @@ namespace CityWatch.Data.Providers
             }
 
             return matchingLogs;
+        }
+
+        public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid)
+        {
+            return _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(x => x.LoggedInClientSiteId == siteId && x.TagUId == tagUid)
+                .OrderByDescending(x => x.HitUtcDateTime)
+                .Take(1)
+                .SingleOrDefault();
         }
     }
 }
