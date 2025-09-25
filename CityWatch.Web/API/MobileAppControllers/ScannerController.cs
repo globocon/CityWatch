@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
@@ -14,11 +15,12 @@ namespace CityWatch.Web.API
     {
         private readonly IViewDataService _viewDataService;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
-
-        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider)
+        private readonly IClientDataProvider _clientSitesDataProvider;
+        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, IClientDataProvider clientSitesDataProvider)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _clientSitesDataProvider = clientSitesDataProvider;
         }
 
         [HttpGet("GetScannerControlSettings")]
@@ -46,16 +48,16 @@ namespace CityWatch.Web.API
             try
             {
                 var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
-                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(TagUid);
+                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId,TagUid);
 
                 //Check if scanned tag recently with in a minute from the same site
-                if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalMinutes < 1)
+                if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalSeconds < 60)
                 {
                     message = "Tag already scanned !!!";
                     return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
                 }
 
-
+                var _ClientSiteTourMode = _clientSitesDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
                 var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc");
 
 
@@ -91,7 +93,16 @@ namespace CityWatch.Web.API
                         }
                         else
                         {
-                            message = "Tag does not belong to logged in site. Please check.";
+                            if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode == PatrolTouringMode.STND)
+                            {
+                                message = "Tag does not belong to logged in site. Please check.";
+                            }
+                            else {
+                                IsSuccess = true;
+                                TagFound = true;
+                                message = "Tag Found";
+                                TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";                                
+                            }                                
                         }
                     }
                     else
@@ -106,6 +117,14 @@ namespace CityWatch.Web.API
                 {
                     // Log the tag details
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
+                    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                    {
+                        // If tour mode enabled then log the tour activity
+                        ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
+                        _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
+                        _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
+                        _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
+                    }
                 }
                 catch (Exception exp)
                 {

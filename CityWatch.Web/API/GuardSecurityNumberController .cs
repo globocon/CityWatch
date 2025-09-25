@@ -317,7 +317,7 @@ namespace CityWatch.Web.API
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true, int scanningType = 0)
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true, int scanningType = 0, string tagUID = "NA")
         {
             try
             {
@@ -361,6 +361,23 @@ namespace CityWatch.Web.API
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+                //Check if tour mode is enabled for the site then log into corresponding tag attached site also
+                var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
+                if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND && !string.Equals(tagUID, "NA"))
+                {
+                    var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(tagUID, "nfc");
+                    var _CorrespondingSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(TagInfoDetails.ClientSiteId, logBookType);
+                    guardLoginId = GetGuardLoginId(_CorrespondingSitelogBookId, guardId, TagInfoDetails.ClientSiteId, userId);
+
+
+                    // If tour mode enabled then log the tour activity
+                    GuardLog _CorrespondingSiteLogEntry = signInEntry;
+                    _CorrespondingSiteLogEntry.Id = 0;
+                    _CorrespondingSiteLogEntry.ClientSiteLogBookId = _CorrespondingSitelogBookId;
+                    _CorrespondingSiteLogEntry.GuardLoginId = guardLoginId;
+                    _guardLogDataProvider.SaveGuardLog(_CorrespondingSiteLogEntry);
+                }
 
                 return Ok(new { message = "Guard successfully logged in.", guardLoginId });
             }
