@@ -367,16 +367,22 @@ namespace CityWatch.Web.API
                 if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND && !string.Equals(tagUID, "NA"))
                 {
                     var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(tagUID, "nfc");
-                    var _CorrespondingSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(TagInfoDetails.ClientSiteId, logBookType);
-                    guardLoginId = GetGuardLoginId(_CorrespondingSitelogBookId, guardId, TagInfoDetails.ClientSiteId, userId);
+                    if (TagInfoDetails != null  && TagInfoDetails?.ClientSiteId > 0) {
+                        var _CorrespondingSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(TagInfoDetails.ClientSiteId, logBookType);
+                        guardLoginId = GetGuardLoginId(_CorrespondingSitelogBookId, guardId, TagInfoDetails.ClientSiteId, userId);
 
 
-                    // If tour mode enabled then log the tour activity
-                    GuardLog _CorrespondingSiteLogEntry = signInEntry;
-                    _CorrespondingSiteLogEntry.Id = 0;
-                    _CorrespondingSiteLogEntry.ClientSiteLogBookId = _CorrespondingSitelogBookId;
-                    _CorrespondingSiteLogEntry.GuardLoginId = guardLoginId;
-                    _guardLogDataProvider.SaveGuardLog(_CorrespondingSiteLogEntry);
+                        // If tour mode enabled then log the tour activity
+                        GuardLog _CorrespondingSiteLogEntry = signInEntry;
+                        _CorrespondingSiteLogEntry.Id = 0;
+                        _CorrespondingSiteLogEntry.ClientSiteLogBookId = _CorrespondingSitelogBookId;
+                        _CorrespondingSiteLogEntry.GuardLoginId = guardLoginId;
+                        if (clientsiteId != TagInfoDetails.ClientSiteId)
+                        {
+                            _guardLogDataProvider.SaveGuardLog(_CorrespondingSiteLogEntry);
+                        }
+                    }
+                   
                 }
 
                 return Ok(new { message = "Guard successfully logged in.", guardLoginId });
