@@ -1376,7 +1376,7 @@ namespace CityWatch.Web.Pages.Reports
             var tagTypeIds = new List<SelectListItem>();
             var tagLabels = new List<SelectListItem>();
             var smartWandIds = new List<SelectListItem>();
-            var arClientSites = clientSites.Split(";").ToArray();
+            var arClientSites = clientSites.Split(",").ToArray();
             var arClientSiteIds = _clientDataProvider.GetClientSiteDetailsWithName(arClientSites).Select(x => x.Id).ToArray();
             var tags = _viewDataService.GetClientSiteTagIds(arClientSiteIds);
 
