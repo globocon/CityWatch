@@ -7398,6 +7398,7 @@ namespace CityWatch.Data.Providers
         public int ScannedTags { get; set; }
         public int RemainingTags { get; set; }
         public int CompletedRounds { get; set; }
+        public string Tour { get; set; }
     }
     public class FeedbackTemplateViewModel
     {
