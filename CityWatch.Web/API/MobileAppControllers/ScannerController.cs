@@ -123,7 +123,7 @@ namespace CityWatch.Web.API
                         ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
                         _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
                         _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
-                        if (siteId != TagInfoDetails.ClientSiteId)
+                        if (siteId != TagInfoDetails.ClientSiteId && TagInfoDetails != null && TagInfoDetails?.ClientSiteId > 0)
                         {
                             _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
                         }
