@@ -119,12 +119,12 @@ namespace CityWatch.Web.API
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
                     if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
                     {
-                        // If tour mode enabled then log the tour activity
-                        ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
-                        _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
-                        _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
+                        // If tour mode enabled then log the tour activity  
                         if (siteId != TagInfoDetails.ClientSiteId && TagInfoDetails != null && TagInfoDetails?.ClientSiteId > 0)
                         {
+                            ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
+                            _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
+                            _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
                             _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
                         }
                     }
