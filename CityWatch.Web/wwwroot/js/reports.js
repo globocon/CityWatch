@@ -446,6 +446,48 @@
             }
         });
     });
+    //p3-41-start
+    $('#ReportRequest_ClientSites').on('change', function () {
+        if ($('#ReportRequest_ClientSites').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        const clientSiteWandStrikeTagId = $('#patroldatawandstrikeTagId');
+        const clientSiteWandStrikeTagTypeId = $('#patroldatawandstrikeTagTypeId');
+        const clientSiteWandStrikeTagLabel = $('#patroldatawandstrikeTagLabel');
+        const clientSiteWandStrikeSmartWandId = $('#patroldatawandstrikeSmartWandId');
+        var sit = $(this).val().join(';');
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' +  encodeURIComponent($(this).val().join(',')),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSiteWandStrikeTagId.html('');
+            clientSiteWandStrikeTagTypeId.html('');
+            clientSiteWandStrikeTagLabel.html('');
+            clientSiteWandStrikeSmartWandId.html('');
+            data.tagIds.map(function (result) {
+
+                clientSiteWandStrikeTagId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagTypeIds.map(function (result) {
+                clientSiteWandStrikeTagTypeId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagLabels.map(function (result) {
+                clientSiteWandStrikeTagLabel.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.smartWandIds.map(function (result) {
+                clientSiteWandStrikeSmartWandId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            clientSiteWandStrikeTagId.multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+        });
+    });
+    //p4-41-end
     window.myChart2;
     window.myChart3;
     window.myChart4;
@@ -756,6 +798,15 @@
                 window.myChart30.destroy();
             if (window.myChart31 != undefined)
                 window.myChart31.destroy();
+            if (window.myChart32 != undefined)
+                window.myChart32.destroy();
+            if (window.myChart33 != undefined)
+                window.myChart33.destroy();
+            if (window.myChart34 != undefined)
+                window.myChart34.destroy();
+            if (window.myChart35 != undefined)
+                window.myChart35.destroy();
+
            // $('#btnExportExcel').attr('href', '#');
             const fromDate = $('#date_from').val();
             const toDate = $('#date_to').val();
@@ -895,9 +946,63 @@
                             
                             drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
                         }
+                        $('#WandStrikeAuditLogRequest_TagId').val($('#patroldatawandstrikeTagId').val());
+                        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#patroldatawandstrikeTagTypeId').val());
+                        $('#WandStrikeAuditLogRequest_TagLabel').val($('#patroldatawandstrikeTagLabel').val());
+                        var tag = $('#patroldatawandstrikeTagId').val();
+                        var selectedLabel = $('#patroldatawandstrikeTagLabel').find("option:selected");
+                        var selectedLabelText = selectedLabel.text();
+
+                        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+                        $.ajax({
+                            url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: 
+                                $.extend(
+                                    $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
+                                        obj[item.name] = item.value;
+                                        return obj;
+                                    }, {}),
+                                    {
+                                        TagId: tag,
+                                        TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
+                                        TagLabel: $('#patroldatawandstrikeTagLabel').val(),
+                                        GuardName: $('#patroldatawandstrikeGuardName').val(),
+                                        LicenseNo: $('#patroldatawandstrikeLicenseNo').val(),
+                                        SmartWandId: $('#patroldatawandstrikeSmartWandId').val()
+                                    }
+                                ),
+
+                            //{
+                            //    $('#frm_patrol_report_request').serialize(),
+                            //    TagId: $('#patroldatawandstrikeTagId').val(),
+                            //    TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
+                            //    TagLabel: $('#patroldatawandstrikeTagLabel').val(),
+                            //    GuardName: $('#patroldatawandstrikeGuardName').val(),
+                            //    LicenseNo: $('#patroldatawandstrikeLicenseNo').val()
+                            //    },
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        }).done(function (response) {
+                            console.log('graph response4 successs wand strikes downselect charts ');
+                            $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
+                            if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
+
+                                drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
+                                // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                            }
+                            $('#btncount_individualwandsbydownselect').html(response.chartData.individualFQWandStrikeDataForDownselect.length);
+                            if (response.chartData.individualFQWandStrikeDataForDownselect != 0) {
+
+                                drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(response.chartData.individualFQWandStrikeDataForDownselect);
+                            }
+                        }).fail(function () {
+                        }).always(function () {
+                            $('#loader-p').hide();
+                        });
                     }).fail(function () {
                     }).always(function () {
-                        $('#loader-p').hide();
+                        //$('#loader-p').hide();
                     });
                 }).fail(function () {
                 }).always(function () {
@@ -2466,6 +2571,13 @@ $('#btncount_daily_wandstrikes').on('click', function () {
 $('#btncount_individualwands').on('click', function () {
     $('#modelWandStrikesIndividual').modal('show');
 });
+$('#btncount_daily_wandstrikesbydownselect').on('click', function () {
+    $('#modelWandStrikesDailyByDownselect').modal('show');
+});
+$('#btncount_individualwandsbydownselect').on('click', function () {
+    $('#modelWandStrikesIndividualByDownselect').modal('show');
+});
+
 //p4-41-end
 
 function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
@@ -5859,7 +5971,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(7),
+                    backgroundColor: getColors(1),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
                         'rgba(54, 162, 235, 1)',
@@ -5892,6 +6004,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                         }
                     },
                     legend: {
+                        display: false ,
                         position: 'right',
                         labels: {
 
@@ -5964,7 +6077,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(15),
+                    backgroundColor: getColors(1),
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
                         'rgba(54, 162, 235, 1)',
@@ -5997,6 +6110,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                         }
                     },
                     legend: {
+                        display: false,
                         position: 'right',
                         labels: {
                             font: {
@@ -6324,6 +6438,517 @@ function drawPieChartUsingChartJsIndividualWandStrikeData(dataValue) {
     
 
 }
+function drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dayLabel;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_sitecounters_wandstrikesbydownselect");
+    var canvas2 = document.getElementById("bar_chart_by_sitecounters_wandstrikesbydownselect1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_sitecounters_wandstrikesbydownselect').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart32 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_sitecounters_wandstrikesbydownselect1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart33 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+function drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.wands;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_individual_fq_wand_pointbydownselect");
+    var canvas2 = document.getElementById("pie_chart_by_individual_fq_wand_pointbydownselect1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_individual_fq_wand_pointbydownselect').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart34 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_individual_fq_wand_pointbydownselect1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart35 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+
+
+}
+$('.wandstrikemultiselect').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true
+});
 //p3-41-end
 
 $('#convert-to-pdf').click(function () {
