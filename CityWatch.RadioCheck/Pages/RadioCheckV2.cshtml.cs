@@ -328,7 +328,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
             // 1. Get guardId from claims
-            var guardId = Guid;
+            var guardId = HttpContext.Session.GetString("Guid");
 
             List<int> allowedSiteIds = new List<int>();
 
