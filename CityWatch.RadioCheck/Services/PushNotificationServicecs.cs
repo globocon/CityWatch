@@ -128,7 +128,12 @@ namespace CityWatch.RadioCheck.Services
                     var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientsite.Id);
                     if (sopfiletype.Count() != 0)
                     {
-                        ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList();
+                        // ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList();
+                        //ActionListMessage += "SOP's Site:" + $" < a href='https://cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
+                        foreach (var item in sopfiletype)
+                        {
+                            ActionListMessage += "SOP's Site:" + $"<a href=\"https://cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
+                        }
                         ActionListMessage += "\r\n";
                         ActionListMessage += "\r\n";
 
@@ -142,7 +147,12 @@ namespace CityWatch.RadioCheck.Services
                     var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientsite.Id);
                     if (sopAlarmfileType.Count() != 0)
                     {
-                        ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
+                        //ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
+                        //ActionListMessage += "SOP's Alarm:" + $" < a href='https://kpi.cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
+                        foreach (var item in sopAlarmfileType)
+                        {
+                            ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
+                        }
                         ActionListMessage += "\r\n";
                         ActionListMessage += "\r\n";
 
