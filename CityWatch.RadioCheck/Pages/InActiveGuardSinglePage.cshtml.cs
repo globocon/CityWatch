@@ -83,6 +83,10 @@ namespace CityWatch.Web.Pages.Radio
                 LoginGuardId = guidFromQuery;
                 HttpContext.Session.SetString("Guid", guidFromQuery);
             }
+            else
+            {
+                HttpContext.Session.Remove("Guid"); // removes it from session if empty
+            }
 
             /* new code added for guard can view allowed sites Start*/
             List<int> allowedSiteIds = new List<int>();
