@@ -62,12 +62,10 @@ namespace CityWatch.Web.Pages.Radio
             /* API call end*/
 
             DisplayItem = displayItem;
-            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
-            ActiveGuardCount = activeGuardDetails.Count();
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
-            InActiveGuardCount = inActiveGuardDetails.Count();
-
-
+            //var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            //ActiveGuardCount = activeGuardDetails.Count();
+            //var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            //InActiveGuardCount = inActiveGuardDetails.Count();
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
             var claimsIdentity = User.Identity as ClaimsIdentity;
@@ -78,6 +76,47 @@ namespace CityWatch.Web.Pages.Radio
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             string sidValue = "";
+            var guidFromQuery = HttpContext.Session.GetString("Guid");
+
+            if (!string.IsNullOrEmpty(guidFromQuery))
+            {
+                LoginGuardId = guidFromQuery;
+                HttpContext.Session.SetString("Guid", guidFromQuery);
+            }
+
+            /* new code added for guard can view allowed sites Start*/
+            List<int> allowedSiteIds = new List<int>();
+            if (!string.IsNullOrEmpty(LoginGuardId))
+            {
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(LoginGuardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+                }
+            }
+
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                activeGuardDetails = activeGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            ActiveGuardCount = activeGuardDetails.Count();
+
+            // Inactive guards
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                inActiveGuardDetails = inActiveGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            InActiveGuardCount = inActiveGuardDetails.Count();
+
+
+
+           
             var UserId1 = claimsIdentity.Claims;
             foreach (var item in UserId1)
             {
