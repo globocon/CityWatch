@@ -482,8 +482,11 @@ namespace CityWatch.Web.Pages.Admin
         (string.IsNullOrEmpty(keywordDownSelect) ||
             (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
             (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
-        // exclude if Notes contain [NFC] or [BLE]
-       
+        &&
+        // Exclude only when ActivityType is "LB" and Notes contain [NFC] or [BLE]
+        !(x.ActivityType == "LB" &&
+          (!string.IsNullOrEmpty(x.Notes) &&
+           (x.Notes.Contains("[NFC]") || x.Notes.Contains("[BLE]"))))
     )
     .ToList();
             foreach (var guardlog in dailyGuardLogs)
