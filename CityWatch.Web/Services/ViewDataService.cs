@@ -2719,20 +2719,21 @@ namespace CityWatch.Web.Services
         public List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds)
         {            
             // Get tags from logs history for the selected client sites
-            var tagsFromLogs = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSitesFromLogs(clientSiteIds);
+            //var tagsFromLogs = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSitesFromLogs(clientSiteIds);
 
             // Get tags from tags table for the selected client sites
             var tagsFromTagMaster = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSites(clientSiteIds);
 
-            // Get distinct tag ids and names
-            var uniqueUids = tagsFromLogs
-            .Concat(tagsFromTagMaster)
-            .Where(x => !string.IsNullOrWhiteSpace(x.UId))
-            .DistinctBy(x => x.UId)
-            .OrderBy(x => x.UId)
-            .ToList();
+            //// Get distinct tag ids and names
+            //var uniqueUids = tagsFromLogs
+            //.Concat(tagsFromTagMaster)
+            //.Where(x => !string.IsNullOrWhiteSpace(x.UId))
+            //.DistinctBy(x => x.UId)
+            //.OrderBy(x => x.UId)
+            //.ToList();
                        
-            return uniqueUids;
+            //return uniqueUids;
+            return tagsFromTagMaster;
         }
         public List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds)
         {
