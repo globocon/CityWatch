@@ -382,14 +382,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR3 = CalculateHr3GroupStatus(detail.GuardId)
             }).ToList();
 
-            // 5. Clean SiteName
-            foreach (var g in activeGuardDetailModels)
-            {
-                if (!string.IsNullOrEmpty(g.SiteName))
-                {
-                    g.SiteName = Regex.Replace(g.SiteName, "<.*?>", string.Empty).Trim();
-                }
-            }
+            //// 5. Clean SiteName
+            //foreach (var g in activeGuardDetailModels)
+            //{
+            //    if (!string.IsNullOrEmpty(g.SiteName))
+            //    {
+            //        g.SiteName = Regex.Replace(g.SiteName, "<.*?>", string.Empty).Trim();
+            //    }
+            //}
 
             return new JsonResult(activeGuardDetailModels);
 
@@ -650,13 +650,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
 
             // Clean SiteName (remove <a> and <i> tags)
-            foreach (var g in inActiveGuardDetails)
-            {
-                if (!string.IsNullOrEmpty(g.SiteName))
-                {
-                    g.SiteName = Regex.Replace(g.SiteName, "<.*?>", string.Empty).Trim();
-                }
-            }
+            //foreach (var g in inActiveGuardDetails)
+            //{
+            //    if (!string.IsNullOrEmpty(g.SiteName))
+            //    {
+            //        g.SiteName = Regex.Replace(g.SiteName, "<.*?>", string.Empty).Trim();
+            //    }
+            //}
 
             return new JsonResult(inActiveGuardDetails);
 
