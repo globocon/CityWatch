@@ -111,7 +111,26 @@ namespace CityWatch.Data.Services
                                    // New Code Added for Serial number
                                    //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
 
-                                   ));
+                                   ) ||
+                                    (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly &&
+                               (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                               (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
+                               (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                               // New Code Added for ColourCode filter
+                               (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                                
+
+                                   )
+                                   );
+                if(patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+                {
+                    var plateIds = _irDataProvider.GetKeyVehicleLogWithDocket(patrolRequest.FromDate, patrolRequest.ToDate).Where(v => v.DocketSerialNo != null).Select(z =>
+
+                        z.PlateId   // or z.TruckNo, depending on your property name
+                    ).ToArray();
+                    var incidentreportIds = _irDataProvider.GetIncidentReportsPlatesLoadedWithPlateIds(plateIds).Select(z => z.IncidentReportId).ToArray() ;
+                    incidentReports = incidentReports.Where(x => incidentreportIds.Contains(x.Id));
+                }
             }
             else
             {

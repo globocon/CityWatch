@@ -72,6 +72,11 @@
         const reportType = $(this).val();
         if (reportType === '2')
             $('#patrol_report_controls').show();
+       /* p3-42-Dockets-start*/
+        else if (reportType === '3')
+            $('#patrol_report_controls').show();
+
+       /* p3-42-Dockets-end*/
         else
             $('#patrol_report_controls').hide();
         $('#ReportRequest_ClientType option:first').prop('selected', true);

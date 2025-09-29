@@ -20,6 +20,8 @@ namespace CityWatch.Data.Providers
 
         public void UpdateTheSiteExpiringToExpired();
         List<IncidentReport> GetIncidentReports();
+        List<KeyVehicleLog> GetKeyVehicleLogWithDocket(DateTime fromReportDate, DateTime toReportDate);
+        List<IncidentReportsPlatesLoaded> GetIncidentReportsPlatesLoadedWithPlateIds(int[] plateIds);
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -157,6 +159,19 @@ namespace CityWatch.Data.Providers
                 .Include(n => n.IncidentReportEventTypes)
               
                 .ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogWithDocket(DateTime fromReportDate,DateTime toReportDate)
+        {
+            return _dbContext.KeyVehicleLogs.Where(z=> z.ClientSiteLogBook.Date.Date >= fromReportDate.Date
+                            && z.ClientSiteLogBook.Date.Date < toReportDate.Date.AddDays(1))
+                .Include(z => z.ClientSiteLogBook)
+                .ToList();
+        }
+        public List<IncidentReportsPlatesLoaded> GetIncidentReportsPlatesLoadedWithPlateIds(int[] plateIds)
+        {
+            return _dbContext.IncidentReportsPlatesLoaded
+               .Where(z =>plateIds.Contains(z.PlateId)).ToList();
+
         }
 
     }
