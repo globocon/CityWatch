@@ -14,8 +14,8 @@ namespace CityWatch.Data.Models
         public int TagsTypeId { get; set; }
 
         public string LabelDescription { get; set; }
+        public bool FqBypass { get; set; }
 
-      
 
         [ForeignKey("ClientSiteId")]
         public ClientSite ClientSite { get; set; }

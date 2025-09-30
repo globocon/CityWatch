@@ -236,6 +236,8 @@ namespace CityWatch.Data.Providers
                     clientSiteSmartWandTagToUpdate.TagsTypeId = clientSiteSmartWandTag.TagsTypeId;
                     clientSiteSmartWandTagToUpdate.LabelDescription = clientSiteSmartWandTag.LabelDescription;
                     clientSiteSmartWandTagToUpdate.IsDeleted = false;
+                    clientSiteSmartWandTagToUpdate.FqBypass = clientSiteSmartWandTag.FqBypass;
+
                 }
             }
             _dbContext.SaveChanges();

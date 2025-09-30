@@ -1850,7 +1850,16 @@ $(function () {
         columns: [
             { width: '200', field: 'uId', title: 'UID', sortable: true, editor: tagsUIDEditor },
             { width: '100', field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: smartWandtagsListForDDL, valueField: 'value', textField: 'value' } },
-            { width: '100%', field: 'labelDescription', title: 'Label', sortable: true, editor: tagsLabelEditor},
+           
+            { width: '100%', field: 'labelDescription', title: 'Label', sortable: true, editor: tagsLabelEditor },
+            {
+                width: '80',
+                field: 'fqBypass',
+                title: 'Fq Bypass',
+                type: 'checkbox',
+                align: 'center',
+                editor: true // enables inline checkbox editing
+            }
         ],
 
         initialized: function (e) {
