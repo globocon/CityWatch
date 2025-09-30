@@ -6154,14 +6154,33 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             // Fetch SW logs
-            var activityTypes = new[] { "SW", "KV" }; // Add the activity types you want to include
+            //        var activityTypes = new[] { "SW", "KV" }; // Add the activity types you want to include
+            //        var data = _context.ClientSiteRadioChecksActivityStatus_History
+            //.Where(z => z.ClientSiteId.HasValue &&
+            //            clientSiteIds.Contains(z.ClientSiteId.Value) &&
+            //            z.EventDateTime.Date >= logFromDate.Date &&
+            //            z.EventDateTime.Date <= logToDate.Date &&
+            //            activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
+            //.ToList();
+            //Modified by Dileep on 30-09-2023 to append ActivityDescription to Notes for KV type
+            var activityTypes = new[] { "SW", "KV" };
+
             var data = _context.ClientSiteRadioChecksActivityStatus_History
-    .Where(z => z.ClientSiteId.HasValue &&
-                clientSiteIds.Contains(z.ClientSiteId.Value) &&
-                z.EventDateTime.Date >= logFromDate.Date &&
-                z.EventDateTime.Date <= logToDate.Date &&
-                activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
-    .ToList();
+                .Where(z => z.ClientSiteId.HasValue &&
+                            clientSiteIds.Contains(z.ClientSiteId.Value) &&
+                            z.EventDateTime.Date >= logFromDate.Date &&
+                            z.EventDateTime.Date <= logToDate.Date &&
+                            activityTypes.Contains(z.ActivityType))
+                .ToList(); // get full entity with all fields
+
+            // now adjust Notes in memory
+            foreach (var item in data)
+            {
+                if (item.ActivityType.Trim() == "KV")
+                {
+                    item.Notes = (item.Notes ?? "") + " " + (item.ActivityDescription ?? "");
+                }
+            }
 
             // Check for GMT timezone
             var checkGMT = GuardLogs
