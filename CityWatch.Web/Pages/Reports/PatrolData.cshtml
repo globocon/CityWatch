@@ -35,6 +35,7 @@
                     <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Excel</a>
                     @*<a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>*@
                     <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download Pdf</a>
+                    <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-kvl-pdf"><i class="fa fa-file-pdf-o" aria-hidden="true" hidden></i> Download Pdf</a>
                     <input type="hidden" id="txtDownloadfilename" />
 
                 </div>
@@ -129,6 +130,60 @@
             <div id="monthly_patrol_data_wrapper">
                 <div class="large-table-container-2">
                     <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
+                        <thead style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>IR S/No</th>
+                                <th>
+                                    <button class="btn" id="btnPatrolIncidentReportBatchDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>
+                                    @* <a class="btn btn-outline-primary mt-2"  id="download_IncidentReportBatch" href="#" target="_blank" style="display:none" hidden></a> *@
+                                </th>
+                                <th>Control Room Job No</th>
+                                <th>Site</th>
+                                <th>Address</th>
+                                <th>Desp. Time</th>
+                                <th>Arrival</th>
+                                <th>Depart</th>
+                                <th>CWS SNo.</th>
+                                <th>Total Mins on Site</th>
+                                <th>Resp. Time</th>
+                                <th>Alarm</th>
+                                <th>Patrol Att.</th>
+                                <th>Action Taken</th>
+                                <th>Notified By</th>
+                                <th>Bill To</th>
+                            </tr>
+                        </thead>
+
+                        <tfoot style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>IR S/No</th>
+                                <th>
+                                    <button class="btn" id="btnPatrolIncidentReportBatchDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>
+                                    @* <a class="btn btn-outline-primary mt-2" id="download_IncidentReportBatch" href="#" target="_blank" style="display:none" hidden></a> *@
+                                </th>
+                                <th>Control Room Job No</th>
+                                <th>Site</th>
+                                <th>Address</th>
+                                <th>Desp. Time</th>
+                                <th>Arrival</th>
+                                <th>Depart</th>
+                                <th>CWS SNo.</th>
+                                <th>Total Mins on Site</th>
+                                <th>Resp. Time</th>
+                                <th>Alarm</th>
+                                <th>Patrol Att.</th>
+                                <th>Action Taken</th>
+                                <th>Notified By</th>
+                                <th>Bill To</th>
+                            </tr>
+                            <!-- Footer content here (will be styled to look like the header) -->
+                        </tfoot>
+                    </table>
+                    <table id="monthly_Kv_dockets" class="table table-bordered table-sm" width="100%" hidden>
                         <thead style="background-color: #C8C8C8; color:black">
                             <tr>
                                 <th>Day</th>

@@ -131,7 +131,29 @@ namespace CityWatch.Web.Pages.Reports
         public IActionResult OnPostGenerateReport()
         {
             var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            
+            var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogswithPatrolRequest(ReportRequest).Where(x=>x.SerialNo !=null);
             var results = patrolDataReport.Results;
+            var docketresults = keyVehicleLog;
+
+           
+            // var mappedLogs = new PatrolDataReport((keyVehicleLog.Select(x=>x.ClientSiteLogBook.ClientSiteId.ToString())).ToArray(), keyVehicleLog.Select(x => new DailyPatrolData(x, (x.ClientSiteLogBook.ClientSiteId.ToString()).ToArray(), _configDataProvider)), feedbackTemplates);
+
+            //foreach(var item in keyVehicleLog)
+            //{
+            //    var mappedLogs = new PatrolDataReport(item.ClientSiteLogBook.ClientSiteId.ToString().ToArray(), incidentReports.Select(x => new DailyPatrolData(x, clientSites, _configDataProvider)), feedbackTemplates);
+
+            //}
+            //    keyVehicleLog.Select(log => new PatrolDataReport()
+            //{
+            //    Id = log.Id,
+            //    PlateId = log.PlateId,
+            //    TruckNumber = log.TruckNumber,
+            //    DocketSerialNo = log.DocketSerialNo,
+            //    // map other fields...
+            //});
+
+            //  patrolDataReport.Results.AddRange(mappedLogs);
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
             //    var sitePercentage = patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray();
@@ -391,13 +413,28 @@ namespace CityWatch.Web.Pages.Reports
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
 
-            var dataTable = _viewDataService.PatrolDataToDataTable(results).Result;
-            var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
-            if (!Directory.Exists(excelFileDir))
-                Directory.CreateDirectory(excelFileDir);
-            var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
-            PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
-            return new JsonResult(new { results, fileName });
+            
+            
+            var fileName = string.Empty;
+            if (ReportRequest.DataFilter == PatrolDataFilter.DocketOnly)
+            {
+                var dataTable = _viewDataService.KeyVehicleDocketToDataTable(docketresults.ToList()).Result;
+                var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
+                fileName = $"Key Vehicle Docket {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+                PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
+                if (!Directory.Exists(excelFileDir))
+                    Directory.CreateDirectory(excelFileDir);
+            }
+            else {
+                var dataTable = _viewDataService.PatrolDataToDataTable(results).Result;
+                var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
+                fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+                PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
+                if (!Directory.Exists(excelFileDir))
+                    Directory.CreateDirectory(excelFileDir);
+            }
+            
+            return new JsonResult(new { results, docketresults, fileName });
         }
 
 
@@ -1662,6 +1699,33 @@ namespace CityWatch.Web.Pages.Reports
             
             return new JsonResult(_guardLogDataProvider.GetIRSerialNumbers(snoPart).ToList());
 
+        }
+        public async Task<JsonResult> OnPostGenerateManualDocketBulk()
+        {
+            //id = 37200;
+            var fileName = string.Empty;
+            var statusCode = 0;
+            int id = 1;
+            try
+            {
+                var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogswithPatrolRequest(ReportRequest).Where(x => x.SerialNo != null);
+                //var serialNo = GetNextDocketSequenceNumber(id);
+
+                //fileName = _keyVehicleLogDocketGenerator.GenerateBulkPdfReport(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
+
+            }
+            catch (Exception ex)
+            {
+                
+            }
+
+
+            if (Path.GetExtension(fileName) == ".zip" || Path.GetExtension(fileName) == ".ZIP")
+                return new JsonResult(new { fileName = @Url.Content($"~/Pdf/FromDropbox/{fileName}"), statusCode });
+
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
 
     }

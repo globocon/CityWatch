@@ -396,6 +396,7 @@ namespace CityWatch.Data.Providers
         void DeleteRCActionListMessagesClientSites(int id);
         void DeleteRCActionListMessages(int id);
         List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs);
+        List<DailyKeyvehicleLog> GetKeyVehicleLogswithPatrolRequest(PatrolRequest request);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -6271,6 +6272,8 @@ namespace CityWatch.Data.Providers
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
+               .Include(z=>z.ClientSite)
+               .Include(z=>z.ClientSite.ClientType)
                .ToList();
 
             var returnData = data.OrderBy(z => z.EventDateTime)
@@ -7359,6 +7362,27 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return returnData;
+        }
+        public List<DailyKeyvehicleLog> GetKeyVehicleLogswithPatrolRequest(PatrolRequest patrolRequest)
+        {
+            var keyvehicle= _context.KeyVehicleLogs.
+               Where (z=>(patrolRequest.ClientTypes == null ||  patrolRequest.ClientTypes.Contains(z.ClientSiteLogBook.ClientSite.ClientType.Name)) &&
+                               (patrolRequest.ClientSites == null || patrolRequest.ClientSites.Contains(z.ClientSiteLogBook.ClientSite.Name)) &&
+                               z.ClientSiteLogBook.Date >= patrolRequest.FromDate.Date
+                                    && z.ClientSiteLogBook.Date <= patrolRequest.ToDate.Date &&
+                                 
+                                   (patrolRequest.SerialNo == null || z.DocketSerialNo == patrolRequest.SerialNo)
+
+                                   ) 
+                                 
+                .Include(z => z.GuardLogin.Guard)
+                .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+                .Include(z => z.ClientSitePoc)
+                .Include(z => z.ClientSiteLocation)
+                .ToList();
+            var clientSites = GetClientSites(null);
+            return keyvehicle.Select(x=> new DailyKeyvehicleLog(x, clientSites)).ToList();
         }
 
     }

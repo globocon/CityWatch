@@ -30,13 +30,13 @@
             // { data: 'fileNametodownload' },
             {
                 data: 'fileNametodownload',
-                render: function (data, type, row) {
-                    if (data) {
-                        return '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + data.substring(0, 8) + '/' + data + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
-                    } else {
-                        return '';
-                    }
-                }
+                //render: function (data, type, row) {
+                //    if (data) {
+                //        return '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + data.substring(0, 8) + '/' + data + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                //    } else {
+                //        return '';
+                //    }
+                //}
             },
             { data: 'controlRoomJobNo' },
             { data: 'siteName' },
@@ -60,6 +60,7 @@
             $('td', row).eq(13).addClass('action-taken');
         }
     });
+
     var scrollHead = $(patrolReport.table().container()).find('.dataTables_scrollHead');
     $(scrollHead).css({
         'overflow-x': 'scroll'
@@ -72,11 +73,11 @@
         const reportType = $(this).val();
         if (reportType === '2')
             $('#patrol_report_controls').show();
-       /* p3-42-Dockets-start*/
+        /* p3-42-Dockets-start*/
         else if (reportType === '3')
             $('#patrol_report_controls').show();
 
-       /* p3-42-Dockets-end*/
+        /* p3-42-Dockets-end*/
         else
             $('#patrol_report_controls').hide();
         $('#ReportRequest_ClientType option:first').prop('selected', true);
@@ -694,8 +695,24 @@
             data: $('#frm_patrol_report_request').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
-            patrolReport.clear().rows.add(response.results).draw();
-            $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+            if ($('#ReportRequest_DataFilter').val() == 3) {
+                $.each(response.docketresults, function (index, item) {
+                    var filename = item.fileNametodownload;
+                    item.fileNametodownload = '<a href="https://cws-ir.com/Pdf/Output/' + filename + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                });
+                patrolReport.clear().rows.add(response.docketresults).draw();
+            }
+            else {
+                $.each(response.results, function (index, item) {
+                    var filename = item.fileNametodownload;
+                    item.fileNametodownload = '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + filename.substring(0, 8) + '/' + filename + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                });
+                patrolReport.clear().rows.add(response.results).draw();
+                 
+
+               
+            }
+           
           /// Show Grpah data start
             console.log('graph started ');
             if (window.myChart1 != undefined)
@@ -6349,6 +6366,20 @@ $('#convert-to-pdf').click(function () {
 
 });
 
+//p3-42-dockets-start
+$('#convert-to-kvl-pdf').click(function () {
+    $('#loader-p').show();
+    $.ajax({
+        url: '/Reports/PatrolData?handler=GenerateManualDocketBulk',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#frm_patrol_report_request').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+    });
+
+});
+//p3-42-dockets-end
 function formatDate(dateStr) {
     var date = new Date(dateStr);
     if (isNaN(date.getTime())) {
