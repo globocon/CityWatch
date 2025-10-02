@@ -5,6 +5,7 @@ using CityWatch.Data.Services;
 using CityWatch.Kpi.Models;
 using iText.IO.Image;
 using iText.Kernel.Colors;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Borders;
@@ -310,9 +311,9 @@ namespace CityWatch.Kpi.Services
             var noteCellPaddingTop = 200f;
             var summaryTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth();
             var summaryImage = schedule.KpiSendScheduleSummaryImage?.FileName;
-            if (!string.IsNullOrEmpty(summaryImage) && File.Exists(Path.Combine(_summaryImageDir, summaryImage)))
+            if (!string.IsNullOrEmpty(summaryImage) && File.Exists(IO.Path.Combine(_summaryImageDir, summaryImage)))
             {
-                var summaryImageTable = CreateSummaryImageTable(Path.Combine(_summaryImageDir, summaryImage));
+                var summaryImageTable = CreateSummaryImageTable(IO.Path.Combine(_summaryImageDir, summaryImage));
                 summaryTable.AddCell(new Cell().Add(summaryImageTable).SetBorder(Border.NO_BORDER));
                 noteCellPaddingTop = 0f;
             }
@@ -359,12 +360,16 @@ namespace CityWatch.Kpi.Services
             summaryNoteTable.AddCell(summaryNoteMonthYear);
 
             var monthNote = schedule.KpiSendScheduleSummaryNotes?.SingleOrDefault(z => z.ForMonth == new DateTime(toDate.Year, toDate.Month, 1))?.Notes ?? "N/A";
+            // Define a fixed area for SUMMARY
+            Rectangle area = new Rectangle(50, 500, 500, 200); // X, Y, Width, Height
             var summaryNote = new Cell()
                 .Add(new Paragraph().Add(new Text(monthNote)))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetTextAlignment(TextAlignment.LEFT)
                 .SetPaddingBottom(10f)
-                .SetBorder(Border.NO_BORDER);
+                .SetBorder(Border.NO_BORDER)
+                .SetMaxHeight(area.GetHeight());
+               
             summaryNoteTable.AddCell(summaryNote);
 
             return summaryNoteTable;
