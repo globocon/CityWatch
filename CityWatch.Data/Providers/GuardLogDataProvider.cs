@@ -400,6 +400,8 @@ namespace CityWatch.Data.Providers
 
         public List<SiteTagStatus> GetSiteTagStatus(int clientId);
 
+        public List<SiteTagStatusPending> GetTagStatusPending(int clientId);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7408,8 +7410,35 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        public List<SiteTagStatusPending> GetTagStatusPending(int clientId)
+        {
+            try
+            {
+                return _context.Set<SiteTagStatusPending>()
+                    .FromSqlRaw("EXEC GetMissingTagRoundsToday @ClientId = {0}", clientId)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatusPending>();
+            }
+        }
+
+
+        
+
     }
 
+    public class SiteTagStatusPending
+    {
+       
+        public string LabelDescription { get; set; }   // Tag label / description
+        public string TagType { get; set; }            // NFC, BLE, Other
+        public int RoundNumber { get; set; }           // Round number
+        public int TodayScanCount { get; set; }             // How many times scanned today
+       
+    }
     public class SiteTagStatus
     {
         public int ClientSiteId { get; set; }

@@ -2549,8 +2549,36 @@ namespace CityWatch.Web.API
                 return StatusCode(500, $"Error fetching site tag status: {ex.Message}");
             }
         }
+
+
+        [HttpGet("GetTagStatusPending")]
+        public ActionResult<IEnumerable<SiteTagStatusPending>> GetTagStatusPending(int clientId)
+        {
+            try
+            {
+                var result = _guardLogDataProvider.GetTagStatusPending(clientId);
+                if (result == null || result.Count == 0)
+                    return NotFound($"No tag status found for clientId {clientId}");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error fetching site tag status: {ex.Message}");
+            }
+        }
     }
 
+
+    public class SiteTagStatusPending
+    {
+
+        public string LabelDescription { get; set; }   // Tag label / description
+        public string TagType { get; set; }            // NFC, BLE, Other
+        public int RoundNumber { get; set; }           // Round number
+        public int TodayScanCount { get; set; }             // How many times scanned today
+
+    }
     public class SiteTagStatus
     {
         public int ClientSiteId { get; set; }
