@@ -164,7 +164,7 @@ namespace CityWatch.Data
                 .ToTable(tb => tb.HasTrigger("Insert_GuardLogs"));
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<SiteTagStatus>().HasNoKey();
-
+            modelBuilder.Entity<SiteTagStatusPending>().HasNoKey();
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -257,7 +257,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteSmartWandTagsHitLog> ClientSiteSmartWandTagsHitLogs { get; set; }
 
         public DbSet<SiteTagStatus> SiteTagStatuses { get; set; }
-
+        public DbSet<SiteTagStatusPending> SiteTagStatusPendings { get; set; } 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
      issue save changes because the target table has database triggers
