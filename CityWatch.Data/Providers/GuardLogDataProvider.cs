@@ -397,6 +397,8 @@ namespace CityWatch.Data.Providers
         void DeleteRCActionListMessages(int id);
         List<GuardLog> GetGuardLogsWithWandStrikes(PatrolRequest patrolRequest, bool excludeSystemLogs);
         List<DailyKeyvehicleLog> GetKeyVehicleLogswithPatrolRequest(PatrolRequest request);
+        void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory);
+        List<KeyVehicleLogDocketHistory> GetDocketHistories(int keyVehicleLogId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7383,6 +7385,30 @@ namespace CityWatch.Data.Providers
                 .ToList();
             var clientSites = GetClientSites(null);
             return keyvehicle.Select(x=> new DailyKeyvehicleLog(x, clientSites)).ToList();
+        }
+          public void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory)
+        {
+            if (_KeyVehicleLogDocketHistory == null)
+                throw new ArgumentNullException();
+            if (_KeyVehicleLogDocketHistory.Id == 0)
+            {
+                _context.KeyVehicleLogDocketHistory.Add(_KeyVehicleLogDocketHistory);
+            }
+            else
+            {
+                var docketHistory = _context.KeyVehicleLogDocketHistory.Where(x => x.Id == _KeyVehicleLogDocketHistory.Id).FirstOrDefault();
+                docketHistory.DocketSerialNo = _KeyVehicleLogDocketHistory.DocketSerialNo;
+                docketHistory.DocketReason = _KeyVehicleLogDocketHistory.DocketReason;
+                docketHistory.FileName = _KeyVehicleLogDocketHistory.FileName;
+            }
+            _context.SaveChanges();
+        }
+        public List<KeyVehicleLogDocketHistory> GetDocketHistories(int keyVehicleLogId)
+        {
+
+            var data = _context.KeyVehicleLogDocketHistory.Where(x=>x.KeyVehicleLogId == keyVehicleLogId).ToList();
+
+            return data;
         }
 
     }

@@ -47,6 +47,7 @@ using System.Web;
 using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using DocumentFormat.OpenXml.Spreadsheet;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -1269,9 +1270,25 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids, clientSiteId);
                 }
+                foreach(var item in ids)
+                {
+                    var serialNo1 = GetNextDocketSequenceNumber(item);
+                    var docketList = _guardLogDataProvider.GetDocketHistories(item).ToList();
+                    if (docketList.Count() > 0)
+                    {
+                        foreach (var doc in docketList)
+                        {
+                            var fileNamenew = _keyVehicleLogDocketGenerator.GeneratePdfReport(item, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, doc.DocketSerialNo);
+                        }
+                    }
+                    else
+                    {
+                        var fileNamenew = _keyVehicleLogDocketGenerator.GeneratePdfReport(item, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo1);
 
+                    }
+                }
 
-
+                
             }
             catch (Exception ex)
             {
@@ -1340,7 +1357,23 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     fileName = _keyVehicleLogDocketGenerator.GenerateBulkIndividualPdfReportWithZip(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
                 }
+                foreach (var item in ids)
+                {
+                    var serialNo1 = GetNextDocketSequenceNumber(item);
+                    var docketList = _guardLogDataProvider.GetDocketHistories(item).ToList();
+                    if (docketList.Count() > 0)
+                    {
+                        foreach (var doc in docketList)
+                        {
+                            var fileNamenew = _keyVehicleLogDocketGenerator.GeneratePdfReport(item, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, doc.DocketSerialNo);
+                        }
+                    }
+                    else
+                    {
+                        var fileNamenew = _keyVehicleLogDocketGenerator.GeneratePdfReport(item, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo1);
 
+                    }
+                }
 
             }
             catch (Exception ex)

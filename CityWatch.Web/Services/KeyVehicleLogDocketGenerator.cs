@@ -145,8 +145,38 @@ namespace CityWatch.Web.Services
                                     {
 
 
-
-                                        _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                                        var docketList = _guardLogDataProvider.GetDocketHistories(keyVehicleLog.Id);
+                                        if (docketList.Count() > 0)
+                                        {
+                                            foreach (var item in docketList)
+                                            {
+                                                var _docketHistory = new KeyVehicleLogDocketHistory()
+                                                {
+                                                    Id =item.Id,
+                                                    KeyVehicleLogId = item.KeyVehicleLogId,
+                                                    FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{CliSiteDetails.FirstOrDefault().Name}_SN{item.DocketSerialNo}.pdf",
+                                                    DocketReason = docketReason,
+                                                    DocketSerialNo = item.DocketSerialNo
+                                                };
+                                                _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var _docketHistory = new KeyVehicleLogDocketHistory()
+                                            {
+                                                Id = 0,
+                                                KeyVehicleLogId = keyVehicleLog.Id,
+                                                FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{CliSiteDetails.FirstOrDefault().Name}_SN{serialNo}.pdf",
+                                                DocketReason = docketReason,
+                                                DocketSerialNo = serialNo
+                                            };
+                                            _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                                        }
+                                       // _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                                        
+                                       
+                                        
 
                                         if (keyVehicleLog == null)
                                             return string.Empty;
@@ -436,8 +466,36 @@ namespace CityWatch.Web.Services
             }
 
             //To Get the SitePocNames stop
-
-            _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
+            var docketList = _guardLogDataProvider.GetDocketHistories(keyVehicleLog.Id);
+            if (docketList.Count() > 0)
+            {
+                foreach (var item in docketList)
+                {
+                    var _docketHistory = new KeyVehicleLogDocketHistory()
+                    {
+                        Id = item.Id,
+                        KeyVehicleLogId = item.KeyVehicleLogId,
+                        FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{item.DocketSerialNo}.pdf",
+                        DocketReason = docketReason,
+                        DocketSerialNo = item.DocketSerialNo
+                    };
+                    _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                }
+            }
+            if (docketList.Count()==0)
+            {
+                var _docketHistory = new KeyVehicleLogDocketHistory()
+                {
+                    Id = 0,
+                    KeyVehicleLogId = keyVehicleLog.Id,
+                    FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                    DocketReason = docketReason,
+                    DocketSerialNo = serialNo
+                };
+                _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+            }
+            // _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+            // _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
 
             if (keyVehicleLog == null)
                 return string.Empty;
@@ -588,7 +646,10 @@ namespace CityWatch.Web.Services
 
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(i);
                 serialNo = GetNextDocketSequenceNumber(i);
-                _guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
+                var docketList = _guardLogDataProvider.GetDocketHistories(keyVehicleLog.Id);
+                
+                // _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                //_guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
 
                 if (keyVehicleLog == null)
                     return string.Empty;
@@ -1676,7 +1737,36 @@ namespace CityWatch.Web.Services
 
 
                 serialNo = GetNextDocketSequenceNumber(i);
-                _guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
+                var docketList = _guardLogDataProvider.GetDocketHistories(keyVehicleLog.Id);
+                if (docketList.Count() > 0)
+                {
+                    foreach (var item in docketList)
+                    {
+                        var _docketHistory = new KeyVehicleLogDocketHistory()
+                        {
+                            Id = item.Id,
+                            KeyVehicleLogId = item.KeyVehicleLogId,
+                            FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                            DocketReason = docketReason,
+                            DocketSerialNo = item.DocketSerialNo
+                        };
+                        _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                    }
+                }
+                else
+                {
+                    var _docketHistory = new KeyVehicleLogDocketHistory()
+                    {
+                        Id = 0,
+                        KeyVehicleLogId = keyVehicleLog.Id,
+                        FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                        DocketReason = docketReason,
+                        DocketSerialNo = serialNo
+                    };
+                    _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                }
+                // _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                //_guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
 
                 if (keyVehicleLog == null)
                     return string.Empty;
