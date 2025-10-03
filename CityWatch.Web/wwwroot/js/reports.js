@@ -2582,10 +2582,10 @@ $('#btncount_individualwandsbydownselect').on('click', function () {
 function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -2970,10 +2970,10 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
 function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -3358,10 +3358,10 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
 function drawPieChartUsingChartJsChartRCForYear(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -3749,10 +3749,10 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
 function drawPieChartUsingChartJsChartRCButton(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -4140,10 +4140,10 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
 function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -4529,10 +4529,10 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
 function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.dateRange;
+        return e.DateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCountNew;
+        return e.RecordCountNew;
     });
     // Data for the pie chart
     const data = {
