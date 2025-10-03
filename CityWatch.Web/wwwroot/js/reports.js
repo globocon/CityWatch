@@ -934,7 +934,12 @@
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                     }).done(function (response) {
                         console.log('graph response3 successs wand strikes charts ');
-                        $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
+                        if (response.chartData.totalStrikes == 0) {
+                            $('#btncount_daily_wandstrikes').html(response.chartData.totalStrikes);
+                        }
+                        else {
+                            $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
+                        }
                         if (response.chartData.dailySiteControllerWandStrikeData != 0) {
 
                             drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
@@ -984,7 +989,12 @@
                             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                         }).done(function (response) {
                             console.log('graph response4 successs wand strikes downselect charts ');
-                            $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
+                            if (response.chartData.totalStrikes == 0) {
+                                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.totalStrikes);
+                            }
+                            else {
+                                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
+                            }
                             if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
 
                                 drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
