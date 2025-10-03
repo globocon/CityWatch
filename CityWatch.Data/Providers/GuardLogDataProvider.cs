@@ -6295,9 +6295,9 @@ namespace CityWatch.Data.Providers
             //.ToList();
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
-               .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
-               .Include(z=>z.ClientSite)
-               .Include(z=>z.ClientSite.ClientType)
+                .AsNoTracking()
+               .Where(z => z.EventDateTime >= FromDate && z.EventDateTime < ToDate.AddDays(1))
+               .Include(z=>z.ClientSite).ThenInclude(x => x.ClientType)               
                .ToList();
 
             var returnData = data.OrderBy(z => z.EventDateTime)

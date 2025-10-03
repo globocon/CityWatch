@@ -31,6 +31,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -720,7 +722,16 @@ namespace CityWatch.Web.Pages.Reports
                 obj.DateRange = item.DateRange;
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesForWeekNewCount;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesForWeekNew.Add(obj);
             }
             //duress entries per week-end
@@ -766,7 +777,16 @@ namespace CityWatch.Web.Pages.Reports
                 obj.DateRange = item.DateRange;
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesForMonthNewCount;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesForMonthNew.Add(obj);
             }
             //duress entries per month-end
@@ -814,7 +834,16 @@ namespace CityWatch.Web.Pages.Reports
 
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesForYearNewCount;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesForYearNew.Add(obj);
             }
 
@@ -848,7 +877,16 @@ namespace CityWatch.Web.Pages.Reports
                 obj.DateRange = item.DateRange;
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesGuardsPrealarmCountnew;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesGuardsPrealarmNew.Add(obj);
             }
 
@@ -884,7 +922,16 @@ namespace CityWatch.Web.Pages.Reports
                 obj.DateRange = item.DateRange;
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesGuardsFromPrealarmCountnew;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesGuardsFromPrealarmNew.Add(obj);
             }
 
@@ -916,10 +963,25 @@ namespace CityWatch.Web.Pages.Reports
                 obj.DateRange = item.DateRange;
                 obj.RecordCount = item.RecordCount;
                 var newc = (double)item.RecordCount / rcChartTypesCROCountnew;
-                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                double rawValue = newc * 100;
+                if (double.IsNaN(rawValue) || double.IsInfinity(rawValue))
+                {
+                    obj.RecordCountNew = 0; // or any fallback value
+                }
+                else
+                {
+                    obj.RecordCountNew = Math.Round(rawValue, 1);
+                }
+                //obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesCRONew.Add(obj);
             }
-            return new JsonResult(new { chartData = new {rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew },  rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
+
+            var options = new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+            };
+
+            return new JsonResult(new { chartData = new {rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew },  rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew }, options);
         }
 
 
