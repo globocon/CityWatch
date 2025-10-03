@@ -48,10 +48,10 @@
             { data: 'totalMinsOnsite' },
             { data: 'responseTime' },
             { data: 'alarm' },
-            { data: 'patrolAttented' },           
+            { data: 'patrolAttented' },
             { data: 'actionTaken' },
             { data: 'notifiedBy' },
-            { data: 'billing' }           
+            { data: 'billing' }
         ],
         'createdRow': function (row, data, index) {
             // alarm
@@ -84,7 +84,7 @@
     $('#btncontractedmanning').on('click', function (event) {
         //var csnme = $('#ReportRequest_ClientTypes option:selected').text();
         //var csid = $('#ReportRequest_ClientSites option:selected').val();
-        
+
         //if (csnme == '' || csid == '') {
         //    console.log('Nothing selected...')
         //    alert('Please select a site to edit.');
@@ -98,8 +98,7 @@
             alert('Please select a site to edit.');
             return;
         }
-        if (clienttype.length > 1)
-        {
+        if (clienttype.length > 1) {
             console.log('More than one client type selected...')
             alert('More than one client type is selected. Please select only one client type');
             return;
@@ -133,8 +132,8 @@
             //    $('#div_kpi_rc_contractedmanning').html('');
             //else if (choice == 'CONTRACTEDMANNING')
             //    $('#div_kpi_rc_action_list').html('');
-        
-});
+
+        });
     }
     $('#div_site_settings').on('click', '#showDivButton', function () {
 
@@ -342,7 +341,7 @@
         }).fail(function () { });
     });
     $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
-        
+
         $('#lbl_company_name').html('');
         $('#lbl_abn').html('');
         $('#lbl_landline').html('');
@@ -460,7 +459,7 @@
         var sit = $(this).val().join(';');
 
         $.ajax({
-            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' +  encodeURIComponent($(this).val().join(',')),
+            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' + encodeURIComponent($(this).val().join(',')),
             type: 'GET',
             datatype: 'json',
         }).done(function (data) {
@@ -733,7 +732,7 @@
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
-          /// Show Grpah data start
+            /// Show Grpah data start
             console.log('graph started ');
             if (window.myChart1 != undefined)
                 window.myChart1.destroy();
@@ -807,7 +806,7 @@
             if (window.myChart35 != undefined)
                 window.myChart35.destroy();
 
-           // $('#btnExportExcel').attr('href', '#');
+            // $('#btnExportExcel').attr('href', '#');
             const fromDate = $('#date_from').val();
             const toDate = $('#date_to').val();
             if (fromDate === '' || toDate === '') {
@@ -926,7 +925,7 @@
                         drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
                     }
 
-                   
+
                     $.ajax({
                         url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
                         type: 'POST',
@@ -937,13 +936,13 @@
                         console.log('graph response3 successs wand strikes charts ');
                         $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
                         if (response.chartData.dailySiteControllerWandStrikeData != 0) {
-                            
+
                             drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
-                           // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                            // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
                         }
                         $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
                         if (response.chartData.individualFQWandStrikeData != 0) {
-                            
+
                             drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
                         }
                         $('#WandStrikeAuditLogRequest_TagId').val($('#patroldatawandstrikeTagId').val());
@@ -958,7 +957,7 @@
                             url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
                             type: 'POST',
                             dataType: 'json',
-                            data: 
+                            data:
                                 $.extend(
                                     $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
                                         obj[item.name] = item.value;
@@ -1006,15 +1005,15 @@
                     });
                 }).fail(function () {
                 }).always(function () {
-                   //$('#loader-p').hide();
+                    //$('#loader-p').hide();
                 });
-               
+
 
             }).fail(function () {
             }).always(function () {
                 //$('#loader-p').hide();
             });
-          ///show graph data end 
+            ///show graph data end 
         }).fail(function () {
         }).always(function () {
             //$('#loader-p').hide();
@@ -1026,7 +1025,7 @@
 
 
 
-  
+
 
 
     /************Chart in popup 13/12/2024 large Size Start ***************** */
@@ -1191,12 +1190,12 @@
             width = svg.attr('width'),
             height = svg.attr('height'),
             radius = Math.min(width, height) / 2,
-            arcX = (width / 2) -170,
+            arcX = (width / 2) - 170,
             arcY = (height / 2) - 3,
-            legendX = (width / 2) -30,
+            legendX = (width / 2) - 30,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
-        radius = radius-27;
+        radius = radius - 27;
         // Generate the pie
         var pie = d3.pie()
             .value(function (d) { return d.value; });
@@ -1344,7 +1343,7 @@
             radius = Math.min(width, height) / 2,
             arcX = width / 4,
             arcY = height / 2,
-            legendX = (width / 2) -20,
+            legendX = (width / 2) - 20,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
         radius = radius - 27;
@@ -2423,15 +2422,15 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                                 const data = chart.data;
                                 if (data.labels.length && data.datasets.length) {
                                     const { labels: { pointStyle } } = chart.legend.options;
-                                    
+
 
                                     return data.labels.map((label, i) => {
-                                        
+
                                         var truncatedLabel = label.length > 25 ? label.substring(0, 25) + '...' : label;
 
                                         const meta = chart.getDatasetMeta(0);
                                         const style = meta.controller.getStyle(i);
-                                       
+
                                         return {
                                             text: `${truncatedLabel} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
@@ -4252,7 +4251,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                             return args.value + '%';
 
                         },
-                        
+
                         outsidePadding: 4,
                         textMargin: 4
 
@@ -4678,7 +4677,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0, radius:'80%'
+                    borderWidth: 0, radius: '80%'
                 }]
             },
             options: {
@@ -5156,7 +5155,7 @@ function drawPieChartUsingChartJsChartYearOfOnBoarding(dataValue) {
     }
 
 
-    
+
 
     function getColors(length) {
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
@@ -5170,7 +5169,7 @@ function drawPieChartUsingChartJsChartYearOfOnBoarding(dataValue) {
 
         return colors;
     }
-    
+
 
 }
 
@@ -5793,7 +5792,7 @@ function drawBarChartUsingChartJsGenderGuard(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value ;
+                            return args.value;
 
                         },
 
@@ -5897,7 +5896,7 @@ function drawBarChartUsingChartJsGenderGuard(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value ;
+                            return args.value;
 
                         },
                         position: 'outside',
@@ -6004,7 +6003,7 @@ function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
                         }
                     },
                     legend: {
-                        display: false ,
+                        display: false,
                         position: 'right',
                         labels: {
 
@@ -6433,9 +6432,9 @@ function drawPieChartUsingChartJsIndividualWandStrikeData(dataValue) {
 
         return colors;
     }
-  
 
-    
+
+
 
 }
 function drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(dataValue) {
@@ -6991,7 +6990,7 @@ $('#btnPatrolIncidentReportBatchDownload').on('click', function () {
         data: $('#frm_patrol_report_request').serialize(),
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
-        
+
         $('#download_IncidentReportBatch').attr('href', response.zipFile);
         $('#download_IncidentReportBatch').trigger('click');
         downloadZipViaAjax(response.zipFile);
