@@ -23,8 +23,8 @@ namespace CityWatch.Web.API
         [Route("[action]", Name = "UploadLogsNew")]
         public JsonResult Upload()
         {
-            if (_webHostEnvironment.IsDevelopment())
-                throw new NotSupportedException("Dropbox upload not supported in development environment");
+            //if (_webHostEnvironment.IsDevelopment())
+            //    throw new NotSupportedException("Dropbox upload not supported in development environment");
 
             _siteLogUploadService.ProcessDailyGuardLogsNew();
 
