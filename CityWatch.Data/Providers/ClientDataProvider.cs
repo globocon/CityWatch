@@ -281,6 +281,8 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites);
 
         public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm);
+
+        public void SavemobAppShowClientTypeandSiteSettings(int siteId, bool mobAppShowClientTypeandSite);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3842,7 +3844,19 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+        public void SavemobAppShowClientTypeandSiteSettings(int siteId, bool mobAppShowClientTypeandSite)
+        {
+            var _clientSite = _context.ClientSites
+                .FirstOrDefault(x => x.Id == siteId && x.IsActive);
 
+            if (_clientSite == null)
+            {
+                throw new Exception("Client site not found or inactive.");
+            }
+          
+            _clientSite.MobAppShowClientTypeandSite = mobAppShowClientTypeandSite;
+            _context.SaveChanges();
+        }
     }
 
 

@@ -2344,6 +2344,30 @@ namespace CityWatch.Kpi.Pages.Admin
         }
         //wand tags-end
         //kv-scheudle-start
+
+
+        public JsonResult OnPostSavemobAppShowClientTypeandSiteSettings(int clientSiteId, bool mobAppShowClientTypeandSite)
+        {
+            try
+            {
+                if (clientSiteId != 0)
+                {
+                    _clientDataProvider.SavemobAppShowClientTypeandSiteSettings(clientSiteId, mobAppShowClientTypeandSite);
+                    return new JsonResult(new { success = true, message = "Settings saved successfully." });
+                }
+                else
+                {
+                    return new JsonResult(new { success = false, message = "No client site found with the specified ID." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while saving MobAppShowClientTypeandSite settings.");
+
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
         public JsonResult OnGetKpiKVSchedules()
         {
             

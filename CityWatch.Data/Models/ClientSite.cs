@@ -54,5 +54,7 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public string AccountManager { get; set; }
         public PatrolTouringMode PatrolTourMode { get; set; }
+
+        public bool MobAppShowClientTypeandSite { get; set; }
     }
 }
