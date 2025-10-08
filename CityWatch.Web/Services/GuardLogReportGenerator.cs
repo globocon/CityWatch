@@ -103,11 +103,13 @@ namespace CityWatch.Web.Services
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
-            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date).
-                Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) &&
- x.Notes.Contains(keywordDownSelect)) && x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal
- 
- ).ToList();
+            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date)
+     .Where(x =>
+         (string.IsNullOrEmpty(keywordDownSelect) ||
+          (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)))
+         && x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal
+     )
+     .ToList();
             if (_guardLogs.Count() > 0)
             {
                 var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
@@ -913,7 +915,7 @@ namespace CityWatch.Web.Services
                 }
 
                 int? clientSiteId = firstLog.ClientSiteId;
-                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value, LogBookType.DailyGuardLog, firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
+                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value,  firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
 
                 if (clientSiteLogBooks == null || !clientSiteLogBooks.Any())
                 {

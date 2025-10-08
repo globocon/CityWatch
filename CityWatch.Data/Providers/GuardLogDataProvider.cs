@@ -557,9 +557,9 @@ namespace CityWatch.Data.Providers
             //    //.OrderBy(z => z.Id)
             //    //.ThenBy(z => z.EventDateTime)
             //    .ToList();
-
+            //removed && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
             var data = _context.GuardLogs
-               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId 
                        && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
                        (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
                .Include(z => z.GuardLogin.Guard)
@@ -6147,7 +6147,7 @@ namespace CityWatch.Data.Providers
             var GuardLogs = _context.GuardLogs
                 .AsNoTracking()
                 .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
-                            z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+                           // z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate &&
                             (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
@@ -6167,7 +6167,7 @@ namespace CityWatch.Data.Providers
             //            activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
             //.ToList();
             //Modified by Dileep on 30-09-2023 to append ActivityDescription to Notes for KV type
-            var activityTypes = new[] { "SW", "KV" };
+            var activityTypes = new[] { "SW", "KV", "LB" };
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                 .AsNoTracking()
@@ -6194,24 +6194,26 @@ namespace CityWatch.Data.Providers
                 .FirstOrDefault();
 
             // Convert GuardLogs to the same model
-            var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
-            {
-                ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
-                NotificationCreatedTime = log.EventDateTime,
-                LBId = log.Id,
-                Notes = log.Notes,
-                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
-                SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
-                GuardName = log.GuardLogin?.Guard != null ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}" : null, // Null check for Guard
-                EventDateTimeZoneShort = checkGMT,
-                EventDateTime = log.EventDateTime,
-                EventDateTimeLocal = log.EventDateTimeLocal,
-                gpsCoordinates = log.GpsCoordinates,
-                GuardId = log.GuardLogin?.GuardId,
-                IrEntryType = log.IrEntryType,
-                IsIRReportTypeEntry = log.IsIRReportTypeEntry
+        //    var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+        //    {
+        //        ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+        //        NotificationCreatedTime = log.EventDateTime,
+        //        LBId = log.Id,
+        //        Notes = log.Notes,
+        //        ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+        //        SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+        //        GuardName = log.GuardLogin?.Guard != null
+        //? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+        //: null, // Null check for Guard
+        //        EventDateTimeZoneShort = checkGMT,
+        //        EventDateTime = log.EventDateTime,
+        //        EventDateTimeLocal = log.EventDateTimeLocal,
+        //        gpsCoordinates = log.GpsCoordinates,
+        //        GuardId = log.GuardLogin?.GuardId,
+        //        IrEntryType = log.IrEntryType,
+        //        IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
-            }).ToList();
+        //    }).ToList();
 
             // Update SW data with timezone and datetime adjustments
             if (!string.IsNullOrEmpty(checkGMT))
@@ -6225,7 +6227,7 @@ namespace CityWatch.Data.Providers
             }
 
             // Combine LB and SW logs
-            var combinedData = unifiedGuardLogs.Concat(data).OrderBy(z => z.EventDateTime).ToList();
+            var combinedData = data.OrderBy(z => z.EventDateTime).ToList();
 
             return combinedData;
         }
