@@ -41,6 +41,7 @@ namespace CityWatch.Web.Services
         public Table CreateReportDataForFusionWithoutSiteName(List<ClientSiteRadioChecksActivityStatus_History> guardLog);
 
         public string GeneratePdfReportFusion(int clientSiteLogBookId);
+        public string GeneratePdfReportSmartWand(int clientSiteLogBookId);
     }
 
     public class GuardLogReportGenerator : IGuardLogReportGenerator
@@ -478,6 +479,42 @@ namespace CityWatch.Web.Services
                 .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .Add(new Paragraph("Gate House: Daily Shift Log Book"))
+                .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
+
+            var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
+            headerTable.AddCell(new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph(clientSiteWandNos)));
+
+            return headerTable;
+        }
+
+        private Table CreateReportHeaderForSmartWand(ClientSite clientSite, string version)
+        {
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 45, 30 })).UseAllAvailableWidth();
+
+            headerTable.AddCell(new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph(clientSite.SiteEmail ?? string.Empty)));
+
+            headerTable.AddCell(new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+                .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                .Add(new Paragraph("Gate House: Smart Wand Strikes"))
                 .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
 
             var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
@@ -1448,6 +1485,100 @@ namespace CityWatch.Web.Services
         private string GetReportPdfFilePathFusion(ClientSiteLogBook clientsiteLogBook, string version)
         {
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Fusion Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
+
+            if (IO.File.Exists(reportPdfPath))
+                IO.File.Delete(reportPdfPath);
+
+            return reportPdfPath;
+        }
+
+        public string GeneratePdfReportSmartWand(int clientSiteLogBookId)
+        {
+            var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
+
+            if (clientsiteLogBook == null)
+                return string.Empty;
+
+            var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            var reportPdfsw = GetReportPdfFilePathSmartWand(clientsiteLogBook, version);
+            int[] clientSiteId = { clientsiteLogBook.ClientSite.Id };
+            var _swGuardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
+            var _guardLogs = _swGuardLogs.Where(x => x.ActivityType.Trim().ToUpper().Equals("SW")).ToList(); // Filter for Smart Wand logs only
+
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdfsw));
+            pdfDoc.SetDefaultPageSize(PageSize.A4);
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(15f, 30f, 40f, 30f);
+
+            var headerTable = CreateReportHeaderForSmartWand(clientsiteLogBook.ClientSite, version);
+            doc.Add(headerTable);
+
+            doc.Add(new Paragraph("On-Duty Guard Details")
+                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                .SetMarginTop(5));
+
+            var guardDetails = CreateGuardDetails(clientsiteLogBook);
+            doc.Add(guardDetails);
+
+            doc.Add(new Paragraph("Smart Wand Strike Logs")
+                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                .SetMarginTop(5));
+
+            //var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
+            //var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
+            //if (customFieldLogs.Any() || patrolCarLogs.Any())
+            //{
+            //    var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+            //    doc.Add(addlFieldLogs);
+            //}
+
+            var tableData = CreateReportDataForFusionWithoutSiteName(_guardLogs);
+            doc.Add(tableData);
+
+            var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
+            doc.Add(logNotes);
+
+            int _clientTypeId = clientsiteLogBook.ClientSite.ClientType.Id;
+            var footer = CreateFooter(_clientTypeId);
+            pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
+
+            //int lastPageIndex = pdfDoc.GetNumberOfPages();
+            //var index = lastPageIndex + 1;
+            //foreach (var entry in _guardLogs)
+            //{
+            //    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+            //    foreach (var guardLogImage in guardlogImages)
+            //    {
+
+            //        if (guardLogImage.IsRearfile == true)
+            //        {
+            //            try
+            //            {
+
+            //                AttachImageToPdf(pdfDoc, doc, index, guardLogImage.ImagePath);
+            //                index++;                            
+
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                // Log exception or handle it as needed
+            //                Console.WriteLine($"Error attaching image: {ex.Message}");
+            //            }
+            //        }
+            //    }
+            //}
+            doc.Close();
+            pdfDoc.Close();
+
+            return IO.Path.GetFileName(reportPdfsw);
+        }
+
+
+        private string GetReportPdfFilePathSmartWand(ClientSiteLogBook clientsiteLogBook, string version)
+        {
+            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Smart Wand Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);

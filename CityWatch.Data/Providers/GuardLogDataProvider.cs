@@ -6108,11 +6108,12 @@ namespace CityWatch.Data.Providers
             //.ToList();
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
+               .AsNoTracking()
                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
                .ToList();
 
             var checkGMT = data
-                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null && (x.ActivityType == "LB") && (x.NotificationType != 1))
+                  .Where(x => !x.ActivityType.Trim().ToUpper().Equals("SW") && x.EventDateTimeZoneShort != null && (x.ActivityType.Trim().ToUpper().Equals("LB")) && (x.NotificationType != 1))
                   .Select(x => x.EventDateTimeZoneShort)
                   .FirstOrDefault();
 
@@ -6144,6 +6145,7 @@ namespace CityWatch.Data.Providers
         {
             // Fetch GuardLogs
             var GuardLogs = _context.GuardLogs
+                .AsNoTracking()
                 .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
                             z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
                             z.ClientSiteLogBook.Date >= logFromDate &&
@@ -6168,6 +6170,7 @@ namespace CityWatch.Data.Providers
             var activityTypes = new[] { "SW", "KV" };
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
+                .AsNoTracking()
                 .Where(z => z.ClientSiteId.HasValue &&
                             clientSiteIds.Contains(z.ClientSiteId.Value) &&
                             z.EventDateTime.Date >= logFromDate.Date &&
@@ -6199,9 +6202,7 @@ namespace CityWatch.Data.Providers
                 Notes = log.Notes,
                 ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
                 SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
-                GuardName = log.GuardLogin?.Guard != null
-        ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
-        : null, // Null check for Guard
+                GuardName = log.GuardLogin?.Guard != null ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}" : null, // Null check for Guard
                 EventDateTimeZoneShort = checkGMT,
                 EventDateTime = log.EventDateTime,
                 EventDateTimeLocal = log.EventDateTimeLocal,
