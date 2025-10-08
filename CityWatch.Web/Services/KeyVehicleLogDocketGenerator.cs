@@ -147,7 +147,19 @@ namespace CityWatch.Web.Services
 
 
                                         _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                                        //p3-2-Dockets-start
+                                        // to save dockets seperately
 
+                                        var _docketHistory = new KeyVehicleLogDocketHistory()
+                                        {
+                                            Id = 0,
+                                            KeyVehicleLogId = keyVehicleLogId,
+                                            FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                                            DocketReason = docketReason,
+                                            DocketSerialNo = serialNo
+                                        };
+                                        _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                                        //p3-2-Dockets-end
                                         if (keyVehicleLog == null)
                                             return string.Empty;
 
@@ -306,6 +318,19 @@ namespace CityWatch.Web.Services
 
 
                                     _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+                                    //p3-2-Dockets-start
+                                    // to save dockets seperately
+
+                                    var _docketHistory = new KeyVehicleLogDocketHistory()
+                                    {
+                                        Id = 0,
+                                        KeyVehicleLogId = keyVehicleLogId,
+                                        FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                                        DocketReason = docketReason,
+                                        DocketSerialNo = serialNo
+                                    };
+                                    _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                                    //p3-2-Dockets-end
 
                                     if (keyVehicleLog == null)
                                         return string.Empty;
@@ -438,7 +463,19 @@ namespace CityWatch.Web.Services
             //To Get the SitePocNames stop
 
             _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
+            //p3-2-Dockets-start
+            // to save dockets seperately
 
+            var _docketHistory = new KeyVehicleLogDocketHistory()
+            {
+                Id = 0,
+                KeyVehicleLogId = keyVehicleLogId,
+                FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                DocketReason = docketReason,
+                DocketSerialNo = serialNo
+            };
+            _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+            //p3-2-Dockets-end
             if (keyVehicleLog == null)
                 return string.Empty;
 
@@ -592,7 +629,19 @@ namespace CityWatch.Web.Services
 
                 if (keyVehicleLog == null)
                     return string.Empty;
+                //p3-2-Dockets-start
+                // to save dockets seperately
 
+                var _docketHistory = new KeyVehicleLogDocketHistory()
+                {
+                    Id = 0,
+                    KeyVehicleLogId = i,
+                    FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                    DocketReason = docketReason,
+                    DocketSerialNo = serialNo
+                };
+                _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                //p3-2-Dockets-end
                 var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
                 var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
 
@@ -1677,6 +1726,19 @@ namespace CityWatch.Web.Services
 
                 serialNo = GetNextDocketSequenceNumber(i);
                 _guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
+                //p3-2-Dockets-start
+                // to save dockets seperately
+
+                var _docketHistory = new KeyVehicleLogDocketHistory()
+                {
+                    Id = 0,
+                    KeyVehicleLogId = i,
+                    FileName = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf",
+                    DocketReason = docketReason,
+                    DocketSerialNo = serialNo
+                };
+                _guardLogDataProvider.SaveDocketHistory(_docketHistory);
+                //p3-2-Dockets-end
 
                 if (keyVehicleLog == null)
                     return string.Empty;

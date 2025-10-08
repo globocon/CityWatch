@@ -17,15 +17,19 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Office.Interop.Excel;
 using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -36,6 +40,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace CityWatch.Web.Pages.Reports
 {
@@ -1891,7 +1896,27 @@ namespace CityWatch.Web.Pages.Reports
             return new JsonResult(_guardLogDataProvider.GetIRSerialNumbers(snoPart).ToList());
 
         }
+        public IActionResult OnPostKeyVehicleSiteLogsWithDocket()
+        {
+            int[] clientsiteIds =  _clientDataProvider.GetClientSites(null).Where(z =>
+            (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientType.Name)) &&
+                               (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.Name))).Select(x => x.Id).ToArray(); 
 
+
+            var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogsWithDockets(ReportRequest.FromDate, ReportRequest.ToDate, clientsiteIds)
+                .Where(x=>(ReportRequest.SerialNo.IsNullOrEmpty()) || x.Detail.DocketSerialNo==ReportRequest.SerialNo);
+            //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+           
+            
+            
+       
+            //        // return new JsonResult(new { results, fileName });
+            //        //duress entries per year-end
+
+            //        //duress entries per year-end
+            //return new JsonResult(new { "fileName" });
+            return new JsonResult(new {  keyVehicleAuditLogRequest });
+        }
     }
 
 

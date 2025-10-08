@@ -33,8 +33,10 @@
                 <div>
                     <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>
                     <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Download Excel</a>
+                    <a href="#" class="btn btn-primary" id="btnExportExcelDocket" hidden><i class="fa fa-file-excel-o" aria-hidden="true"></i> <i class="fa fa-download mr-2"></i> Excel</a>
                     @*<a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>*@
                     <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download Pdf</a>
+                    <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-pdf-docket" hidden><i class="fa fa-file-pdf-o" aria-hidden="true"></i> <i class="fa fa-download mr-2"></i> Pdf</a>
                     <input type="hidden" id="txtDownloadfilename" />
 
                 </div>
@@ -181,6 +183,65 @@
                             </tr>
                             <!-- Footer content here (will be styled to look like the header) -->
                         </tfoot>
+                    </table>
+                    <table class="table table-bordered table-sm" width="100%" id="monthly_kvl_docket_data" hidden>
+                        <thead>
+                            <tr>
+                                <th style="display:none"></th>
+                                <th rowspan="2">Client Site</th>
+                                 <th rowspan="2">Date Of Log</th>
+                                <th rowspan="2">Serial Number</th>
+                                <th rowspan="2">Guard Initials</th>
+                                <th colspan="5"><center>Clocks</center></th>
+                               
+                                <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                                <th rowspan="2"><center>ID / Plate</center></th> 
+                                 <th colspan="2"><center>Vehicle Description</center></th>
+                                <th colspan="4"><center>Trailers Rego or ISO</center></th>
+                                <th rowspan="2"><center>Sender / Receiver</center></th>
+                                <th rowspan="2"><center>Key / Card Scan</center></th>
+                                <th rowspan="2"><center>Reels / Qty</center></th>
+                                <th rowspan="2"><center>Customer Ref</center></th>
+                                <th rowspan="2"><center>VWI / Manifest</center></th>
+                                <th rowspan="2"><center>Company Name</center></th>
+                                <th colspan="3"><center>Individual</center></th>
+                                <th colspan="3"><center>Site </center></th>
+                                
+                                <th colspan="4"><center>Weight</center></th>
+                                <th rowspan="2"><center>Compliance Documents</center></th>
+                                <th rowspan="2"><center>Docket Reason</center></th>
+                                <th rowspan="2"><center>Loader</center></th>
+                                <th rowspan="2"><center>Dispatch</center></th>
+                                <th rowspan="2"><center>Driver</center></th>
+                                <th style="min-width: 250px" rowspan="2"><center>Notes</center></th>
+                            </tr>
+                            <tr>
+                                <th style="display:none"></th>
+                               
+                                 <th>Initial Call</th>
+                                <th>Entry Time</th>
+                                <th>Sent In Time</th>
+                                <th>Exit Time</th>
+                                <th>Time Slot No</th>
+                                 <th>Truck Config</th>
+                                <th>Trailer Type</th> 
+                                 <th>1</th>
+                                <th>2</th>
+                                <th>3</th>
+                                <th>4</th>
+                                <th>Name</th>
+                                <th>Mobile No:</th>
+                                <th>Type</th>
+                                <th>POC</th>
+                                <th>Location</th>
+                                <th>Purpose Of Entry</th>
+                                <th>In Gross (t)</th>
+                                <th>Out Net (t)</th>
+                                <th>Tare (t)</th>
+                                <th>Max (t)</th> 
+                                @* <th>Contamination Deduction</th> *@
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>

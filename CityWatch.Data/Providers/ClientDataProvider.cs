@@ -281,6 +281,7 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites);
 
         public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm);
+        List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3841,6 +3842,17 @@ namespace CityWatch.Data.Providers
             _clientSite.PatrolTourMode = ptm;
             _context.SaveChanges();
 
+        }
+        public List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId)
+        {
+
+
+            return _context.ClientSites
+                .Where(x => (typeId.Length==0 || typeId.Contains(x.TypeId))  && x.IsActive == true)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
         }
 
     }

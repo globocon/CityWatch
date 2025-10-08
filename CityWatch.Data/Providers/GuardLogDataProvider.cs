@@ -401,6 +401,8 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatus> GetSiteTagStatus(int clientId);
 
         public List<SiteTagStatusPending> GetTagStatusPending(int clientId);
+        void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory);
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
 
     }
 
@@ -7424,9 +7426,34 @@ namespace CityWatch.Data.Providers
                 return new List<SiteTagStatusPending>();
             }
         }
+        public void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory)
+        {
+            if (_KeyVehicleLogDocketHistory == null)
+                throw new ArgumentNullException();
+            if (_KeyVehicleLogDocketHistory.Id == 0)
+            {
+                _context.KeyVehicleLogDocketHistory.Add(_KeyVehicleLogDocketHistory);
+            }
+            
+            _context.SaveChanges();
+        }
 
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate)
+        {
+            var results = _context.KeyVehicleLogDocketHistory
+               .Where(z => clientSiteIds.Contains(z.KeyVehicleLog.ClientSiteLogBook.ClientSiteId) && z.KeyVehicleLog.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.KeyVehicleLog.EntryTime >= logFromDate && z.KeyVehicleLog.EntryTime < logToDate.AddDays(1))
+               .Include(z => z.KeyVehicleLog)
+               .Include(z => z.KeyVehicleLog.GuardLogin.Guard)
+               .Include(x => x.KeyVehicleLog.ClientSiteLocation)
+               .Include(x => x.KeyVehicleLog.ClientSitePoc);
 
-        
+            results.Include(x => x.KeyVehicleLog.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
+
+            return results.OrderBy(z => z.KeyVehicleLog.EntryTime).ToList();
+        }
 
     }
 
