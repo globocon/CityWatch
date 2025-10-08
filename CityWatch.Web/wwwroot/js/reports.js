@@ -210,6 +210,76 @@
         });
 
     });
+    $("#convert-to-pdf-docket").on('click', function () {
+
+       
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateManualDocketBulk',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader-p').hide();
+            keyVehicleDocketLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            var Key = 'Key & Vehicle Logs Dockets - ' + $('#ReportRequest_FromDate').val() + ' to ' + $('#ReportRequest_ToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('monthly_kvl_docket_data');
+
+            //var data = keyVehicleDocketLogReport.data().toArray();
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogDockets" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+           
+           
+        });
+
+    });
     var scrollHead = $(patrolReport.table().container()).find('.dataTables_scrollHead');
     $(scrollHead).css({
         'overflow-x': 'scroll'
@@ -232,8 +302,8 @@
             $('#patrol_report_controls').show();
             $('#btnExportExcelDocket').attr('hidden', false);
             $('#btnExportExcel').attr('hidden', true);
-            $('#convert-to-pdf').attr('hidden', true);
-            $('#convert-to-pdf-docket').attr('hidden', false);
+            $('#convert-to-pdf').attr('hidden', false);
+            //$('#convert-to-pdf-docket').attr('hidden', false);
         }
         else {
             $('#patrol_report_controls').hide();
