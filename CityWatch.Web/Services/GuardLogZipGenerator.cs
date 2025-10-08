@@ -72,8 +72,12 @@ namespace CityWatch.Web.Services
                     var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteDetail.Id, logFromDate, logToDate);
                     if (!clientSiteLogBooks.Any())
                         continue;
-                    var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReports(logbooksToCreate, zipFolderPath, keywordDownSelect);
+                    foreach (var item in clientSiteLogBooks)
+                    {
+                        item.Type = LogBookType.DailyGuardLog;
+                    }
+                    //var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
+                    CreateLogBookReports(clientSiteLogBooks, zipFolderPath, keywordDownSelect);
                 }
             }
             else
@@ -86,13 +90,18 @@ namespace CityWatch.Web.Services
                     var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logFromDate, logToDate);
                     if (!clientSiteLogBooks.Any())
                         continue;
-                    if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
-                    {
-                        await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
-                    }
 
-                    var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
-                    CreateLogBookReports(logbooksToCreate, zipFolderPath, keywordDownSelect);
+                    foreach (var item in clientSiteLogBooks)
+                    {
+                        item.Type = LogBookType.DailyGuardLog;
+                    }
+                    //if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
+                    //{
+                    //    await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
+                    //}
+
+                    //var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
+                    CreateLogBookReports(clientSiteLogBooks, zipFolderPath, keywordDownSelect);
                 }
 
             }
