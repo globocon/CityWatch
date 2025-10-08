@@ -281,6 +281,8 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites);
 
         public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm);
+
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -876,6 +878,13 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId,  DateTime fromDate, DateTime toDate)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.ClientSiteId == clientSiteId  && z.Date >= fromDate && z.Date <= toDate)
                 .ToList();
         }
 

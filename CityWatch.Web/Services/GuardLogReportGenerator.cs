@@ -876,7 +876,7 @@ namespace CityWatch.Web.Services
                 }
 
                 int? clientSiteId = firstLog.ClientSiteId;
-                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value, LogBookType.DailyGuardLog, firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
+                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value,  firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
 
                 if (clientSiteLogBooks == null || !clientSiteLogBooks.Any())
                 {
