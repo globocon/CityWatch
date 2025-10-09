@@ -5728,8 +5728,8 @@ $(function () {
 
             const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE','Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
                /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
-                'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024'];
-            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
+                'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024', 'Q1 HRS 2025', 'Q2 HRS 2025', 'Q3 HRS 2025', 'Q4 HRS 2025'];
+            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
 
 
 
@@ -5792,6 +5792,10 @@ $(function () {
                 item.q2HRS2024,
                 item.q3HRS2024,
                 item.q4HRS2024,
+                item.q1HRS2025,
+                item.q2HRS2025,
+                item.q3HRS2025,
+                item.q4HRS2025,
             ])];
 
             // Update the worksheet with headers and data

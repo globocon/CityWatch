@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using System.Xml.Schema;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
-using Microsoft.Office.Interop; 
+using Microsoft.Office.Interop;
 
 
 namespace CityWatch.Web.Services
@@ -930,6 +930,16 @@ namespace CityWatch.Web.Services
                         item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
                         item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
                         item.Q4HRS2024 = guardQuaterDeatils.Q4HRS2024;
+
+                        item.Q1HRS2025 = guardQuaterDeatils.Q1HRS2025;
+                        item.Q2HRS2025 = guardQuaterDeatils.Q2HRS2025;
+                        item.Q3HRS2025 = guardQuaterDeatils.Q3HRS2025;
+                        item.Q4HRS2025 = guardQuaterDeatils.Q4HRS2025;
+
+                        //item.Q1HRS2026 = guardQuaterDeatils.Q1HRS2026;
+                        //item.Q2HRS2026 = guardQuaterDeatils.Q2HRS2026;
+                        //item.Q3HRS2026 = guardQuaterDeatils.Q3HRS2026;
+                        //item.Q4HRS2026 = guardQuaterDeatils.Q4HRS2026;
                     }
                     // Assuming GuardViewExcelModel has a string property called 'ColumnName'
                     if (!string.IsNullOrEmpty(item.ClientSites))
