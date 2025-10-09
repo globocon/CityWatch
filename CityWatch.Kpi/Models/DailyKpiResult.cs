@@ -82,6 +82,29 @@ namespace CityWatch.Kpi.Models
             }
         }
 
+        //public decimal? WandScanCountPerHr
+        //{
+        //    get
+        //    {
+        //        if (_dailyClientSiteKpi.EffectiveEmployeeHours.HasValue &&
+        //            _dailyClientSiteKpi.EffectiveEmployeeHours.Value == 0 &&
+        //            Date <= DateTime.Today)
+        //            return null;
+
+        //        if (_dailyClientSiteKpi.EffectiveEmployeeHours.GetValueOrDefault() > 0)
+        //        {
+        //            var divideBy = _dailyClientSiteKpi.EffectiveEmployeeHours.Value;
+        //            if (_clientSiteKpiSetting != null &&
+        //                _clientSiteKpiSetting.ClientSiteDayKpiSettings.SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
+        //                divideBy = 1;
+
+        //            return Math.Round((decimal)_dailyClientSiteKpi.WandScanCount.GetValueOrDefault() / divideBy, 1);
+        //        }
+
+        //        return decimal.Zero;
+        //    }
+        //}
+
         public decimal? WandScanCountPerHr
         {
             get
@@ -95,15 +118,21 @@ namespace CityWatch.Kpi.Models
                 {
                     var divideBy = _dailyClientSiteKpi.EffectiveEmployeeHours.Value;
                     if (_clientSiteKpiSetting != null &&
-                        _clientSiteKpiSetting.ClientSiteDayKpiSettings.SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
+                        _clientSiteKpiSetting.ClientSiteDayKpiSettings
+                            .SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
                         divideBy = 1;
 
-                    return Math.Round((decimal)_dailyClientSiteKpi.WandScanCount.GetValueOrDefault() / divideBy, 1);
+                    //  Combine both WandScanCount and WandScanNFCandBLE
+                    var totalWandScanCount = _dailyClientSiteKpi.WandScanCount.GetValueOrDefault()
+                                           + _dailyClientSiteKpi.WandScanNFCandBLE.GetValueOrDefault();
+
+                    return Math.Round((decimal)totalWandScanCount / divideBy, 1);
                 }
 
                 return decimal.Zero;
             }
         }
+
 
         public int? EffortCounterImage { get; set; }
 
