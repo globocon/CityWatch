@@ -147,6 +147,9 @@ namespace CityWatch.Data.Providers
             if (clientSite != null)
             {
                 clientSite.UploadGuardLog = false;
+                clientSite.UploadKVLog = false;
+                clientSite.UploadSWLog = false;
+                clientSite.UploadFusionLog = false;
             }
             _dbContext.SaveChanges();
 

@@ -60,6 +60,226 @@
             $('td', row).eq(13).addClass('action-taken');
         }
     });
+    let keyVehicleDocketLogReport = $('#monthly_kvl_docket_data').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[1, 'asc']],
+        info: false,
+        searching: false,
+        scrollX: true,
+        data: [],
+        autoWidth: false,
+        columns: [
+            { data: 'detail.id', visible: false },
+            {
+                data: 'detail.keyVehicleLog.clientSiteLogBook.clientSite.name',
+                
+                width: "5%",
+                orderable: true
+            },
+            { data: 'dateOfLog', width: "10%" },
+           
+            { data: 'detail.docketSerialNo', width: "15%" },
+            { data: 'detail.keyVehicleLog.guardLogin.guard.initial', width: "5%" },
+            { data: 'intialCall', width: "20%" },
+            { data: 'entryTime', width: "45%" },
+            { data: 'sentInTime', width: "10%" },
+            { data: 'exitTime', width: "5%" },
+            { data: 'detail.keyVehicleLog.timeSlotNo', width: "15%" },
+            { data: 'detail.keyVehicleLog.vehicleRego', width: "5%" },
+            { data: 'plate', width: "15%" },
+            { data: 'truckConfigText', width: "5%" },
+            { data: 'trailerTypeText', width: "15%" },
+            { data: 'plate1', width: "5%" },
+            { data: 'plate2', width: "15%" },
+            { data: 'plate3', width: "5%" },
+            { data: 'plate4', width: "15%" },
+            { data: 'detail.keyVehicleLog.sender', width: "15%" },
+            { data: 'detail.keyVehicleLog.keyNo', width: "15%" },
+            
+            { data: 'detail.keyVehicleLog.reels', width: "15%" },
+            { data: 'detail.keyVehicleLog.customerRef', width: "15%" },
+            { data: 'detail.keyVehicleLog.vwi', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.companyName', width: "15%" },
+            { data: 'detail.keyVehicleLog.personName', width: "15%" },
+            { data: 'detail.keyVehicleLog.mobileNumber', width: "15%" },
+            { data: 'personTypeText', width: "15%" },
+            { data: 'clientSitePocName', width: "15%" },
+            { data: 'clientSiteLocationName', width: "15%" },
+            { data: 'purposeOfEntry', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.inWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.outWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.tareWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.maxWeight', width: "15%" },
+
+            { data: 'complianceDocuments', width: "15%" },
+            { data: 'detail.docketReason', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.loaderName', width: "15%" },
+            { data: 'detail.keyVehicleLog.dispatchName', width: "15%" },
+            { data: 'detail.keyVehicleLog.personName', width: "15%" },
+            { data: 'detail.keyVehicleLog.notes', width: "15%" },
+        ],
+        //drawCallback: function () {
+        //    var api = this.api();
+        //    var rows = api.rows({ page: 'current' }).nodes();
+        //    var last = null;
+
+        //    api.column(wandStrikeGroupColumn, { page: 'current' })
+        //        .data()
+        //        .each(function (group, i) {
+        //            if (last !== group) {
+        //                $(rows)
+        //                    .eq(i)
+        //                    .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
+
+        //                last = group;
+        //            }
+        //        });
+        //},
+    });
+    $("#btnExportExcelDocket").on('click', function () {
+
+       
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=KeyVehicleSiteLogsWithDocket',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader-p').hide();
+            keyVehicleDocketLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            var Key = 'Key & Vehicle Logs Dockets - ' + $('#ReportRequest_FromDate').val() + ' to ' + $('#ReportRequest_ToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('monthly_kvl_docket_data');
+
+            //var data = keyVehicleDocketLogReport.data().toArray();
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogDockets" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+           
+           
+        });
+
+    });
+    $("#convert-to-pdf-docket").on('click', function () {
+
+       
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateManualDocketBulk',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader-p').hide();
+            keyVehicleDocketLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            var Key = 'Key & Vehicle Logs Dockets - ' + $('#ReportRequest_FromDate').val() + ' to ' + $('#ReportRequest_ToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('monthly_kvl_docket_data');
+
+            //var data = keyVehicleDocketLogReport.data().toArray();
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogDockets" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+           
+           
+        });
+
+    });
     var scrollHead = $(patrolReport.table().container()).find('.dataTables_scrollHead');
     $(scrollHead).css({
         'overflow-x': 'scroll'
@@ -70,10 +290,28 @@
     });
     $('#ReportRequest_DataFilter').on('change', function () {
         const reportType = $(this).val();
-        if (reportType === '2')
+        if (reportType === '2') {
             $('#patrol_report_controls').show();
-        else
+            $('#btnExportExcelDocket').attr('hidden', true);
+            $('#btnExportExcel').attr('hidden', false);
+            $('#convert-to-pdf').attr('hidden', false);
+            $('#convert-to-pdf-docket').attr('hidden', true);
+        }
+
+        else if (reportType === '3') {
+            $('#patrol_report_controls').show();
+            $('#btnExportExcelDocket').attr('hidden', false);
+            $('#btnExportExcel').attr('hidden', true);
+            $('#convert-to-pdf').attr('hidden', false);
+            //$('#convert-to-pdf-docket').attr('hidden', false);
+        }
+        else {
             $('#patrol_report_controls').hide();
+            $('#btnExportExcelDocket').attr('hidden', true);
+            $('#btnExportExcel').attr('hidden', false);
+            $('#convert-to-pdf').attr('hidden', false);
+            $('#convert-to-pdf-docket').attr('hidden', true);
+        }
         $('#ReportRequest_ClientType option:first').prop('selected', true);
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
         $('#ReportRequest_Position option:first').prop('selected', true);
