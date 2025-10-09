@@ -153,7 +153,7 @@ namespace CityWatch.Web.Services
             var _guardLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadGuardLog && x.Type == LogBookType.DailyGuardLog).ToList();
             var _keyVechileLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadKVLog && x.Type == LogBookType.VehicleAndKeyLog).ToList();
             var _smartWandDailyGuardLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadSWLog && x.Type == LogBookType.DailyGuardLog).ToList(); // Since Smartwand logs are in guard logs
-            var _fusionLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog).ToList();
+            var _fusionLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog && (x.Type == LogBookType.DailyGuardLog || x.Type == LogBookType.VehicleAndKeyLog)).DistinctBy(x => x.ClientSiteId).ToList();
 
             var _totalLogBooksToProcess = _fusionLogs.Count + _guardLogs.Count + _keyVechileLogs.Count  + _smartWandDailyGuardLogs.Count;
 
@@ -363,13 +363,25 @@ namespace CityWatch.Web.Services
                 try
                 {
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start fusion" + siteLogBook.ClientSite.Name + "----" });
+                    var _fusionLogbook = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog && x.Type == LogBookType.FusionLog && x.Date == siteLogBook.Date).FirstOrDefault();
+                    if (_fusionLogbook == null)
+                    {
+                        //Create logbook if not exists
+                        var newFusionClientSiteLogBook = new ClientSiteLogBook()
+                        {
+                            ClientSiteId = siteLogBook.ClientSiteId,
+                            Type = LogBookType.FusionLog,
+                            Date = siteLogBook.Date,
+                            DbxUploaded = false
+                        };
+                        var newfusionLogBookId = _clientDataProvider.SaveClientSiteLogBook(newFusionClientSiteLogBook);
+                        _fusionLogbook = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.FusionLog, siteLogBook.Date);
+                    }
 
-
-                    siteLogBook.Type = LogBookType.FusionLog;
                     string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog);
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id });
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id + " FusionLogBookId:" + _fusionLogbook.Id });
 
                     var fileToUpload = Path.Combine(outputDirectory, logFileName);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
@@ -390,7 +402,7 @@ namespace CityWatch.Web.Services
                     }
 
                     // Mark the log book as uploaded.
-                    _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+                    _clientDataProvider.MarkClientSiteLogBookAsUploaded(_fusionLogbook.Id, logFileName);
 
 
 
@@ -445,7 +457,7 @@ namespace CityWatch.Web.Services
             var _guardLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadGuardLog && x.Type == LogBookType.DailyGuardLog).ToList();
             var _keyVechileLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadKVLog && x.Type == LogBookType.VehicleAndKeyLog).ToList();
             var _smartWandDailyGuardLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadSWLog && x.Type == LogBookType.DailyGuardLog).ToList(); // Since Smartwand logs are in guard logs
-            var _fusionLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog).ToList();
+            var _fusionLogs = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog && (x.Type == LogBookType.DailyGuardLog || x.Type == LogBookType.VehicleAndKeyLog)).DistinctBy(x => x.ClientSiteId).ToList();
 
             var _totalLogBooksToProcess = _fusionLogs.Count + _guardLogs.Count + _keyVechileLogs.Count + _smartWandDailyGuardLogs.Count;
 
@@ -655,13 +667,25 @@ namespace CityWatch.Web.Services
                 try
                 {
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start fusion" + siteLogBook.ClientSite.Name + "----" });
+                    var _fusionLogbook = siteLogBooksToUpload.Where(x => x.ClientSite.UploadFusionLog && x.Type == LogBookType.FusionLog && x.Date == siteLogBook.Date).FirstOrDefault();
+                    if (_fusionLogbook == null)
+                    {
+                        //Create logbook if not exists
+                        var newFusionClientSiteLogBook = new ClientSiteLogBook()
+                        {
+                            ClientSiteId = siteLogBook.ClientSiteId,
+                            Type = LogBookType.FusionLog,
+                            Date = siteLogBook.Date,
+                            DbxUploaded = false
+                        };
+                        var newfusionLogBookId = _clientDataProvider.SaveClientSiteLogBook(newFusionClientSiteLogBook);
+                        _fusionLogbook = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.FusionLog, siteLogBook.Date);
+                    }
 
-
-                    siteLogBook.Type = LogBookType.FusionLog;
                     string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog);
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id });
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id + " FusionLogBookId:" + _fusionLogbook.Id });
 
                     var fileToUpload = Path.Combine(outputDirectory, logFileName);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
@@ -682,7 +706,7 @@ namespace CityWatch.Web.Services
                     }
 
                     // Mark the log book as uploaded.
-                    //_clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+                    //_clientDataProvider.MarkClientSiteLogBookAsUploaded(_fusionLogbook.Id, logFileName);
 
 
 
