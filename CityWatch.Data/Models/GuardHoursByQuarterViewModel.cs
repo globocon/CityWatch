@@ -22,7 +22,16 @@ namespace CityWatch.Data.Models
         public int Q2HRS2024 { get; set; }
         public int Q3HRS2024 { get; set; }
         public int Q4HRS2024 { get; set; }
-        
-        
+        public int Q1HRS2025 { get; set; }
+        public int Q2HRS2025 { get; set; }
+        public int Q3HRS2025 { get; set; }
+        public int Q4HRS2025 { get; set; }
+        //public int Q1HRS2026 { get; set; }
+        //public int Q2HRS2026 { get; set; }
+        //public int Q3HRS2026 { get; set; }
+        //public int Q4HRS2026 { get; set; }
+
+
+
     }
 }
