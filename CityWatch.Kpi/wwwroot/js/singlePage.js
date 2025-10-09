@@ -114,12 +114,20 @@ $(function () {
 
     });
     $('#btnSaveGuardSiteSettings').on('click', function () {
-        var isUpdateDailyLog = false;  
+        var isUpdateLBDailyLog = false;  
+        var isUpdateKVDailyLog = false;
+        var isUpdateSWDailyLog = false;
         var isUpdateDailyLogFusion = false;
         var test = $('#IsDosDontListEnabledHidden').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
-        if ($('#enableLogDump').is(":checked")) {
-            isUpdateDailyLog = true;
+        if ($('#enableLBLogDump').is(":checked")) {
+            isUpdateLBDailyLog = true;
+        }
+        if ($('#enableKVLogDump').is(":checked")) {
+            isUpdateKVDailyLog = true;
+        }
+        if ($('#enableSWLogDump').is(":checked")) {
+            isUpdateSWDailyLog = true;
         }
         if ($('#enableFusionDump').is(":checked")) {
             isUpdateDailyLogFusion = true;
@@ -130,7 +138,9 @@ $(function () {
             data: {
                 siteId: $('#gl_client_site_id').val(),
                 siteEmail: $('#gs_site_email').val(),
-                enableLogDump: isUpdateDailyLog,
+                enableLBLogDump: isUpdateLBDailyLog,
+                enableKVLogDump: isUpdateKVDailyLog,
+                enableSWLogDump: isUpdateSWDailyLog,
                 uploadFusionLog: isUpdateDailyLogFusion,
                 landLine: $('#gs_land_line').val(),
                 guardEmailTo: $('#gs_email_recipients').val(),
@@ -1388,39 +1398,47 @@ $(function () {
                 const IsDosDontListEnabledHidden = result[0].isDosDontList
                
                 const guardLogEmailTo = result[0].guardLogEmailTo;
-                const isUpdateDailyLog = result[0].uploadGuardLog;
+                const isUpdateLBDailyLog = result[0].uploadGuardLog;
                 const isUpdateDailyFusionLog = result[0].uploadFusionLog;
+                const isUpdateDailyKVLog = result[0].uploadKVLog;
+                const isUpdateDailySWLog = result[0].uploadSWLog;
                 $('#gs_site_email').val(SiteEmail);
                 $('#gs_duress_email').val(duressEmail);
                 $('#gs_duress_sms').val(duressSms);
                 $('#gs_land_line').val(landLine);
                 $('#gs_email_recipients').val(guardLogEmailTo);
-                $('#enableLogDump').prop('checked', false);
+                $('#enableLBLogDump').prop('checked', false);
+                $('#enableKVLogDump').prop('checked', false);
+                $('#enableSWLogDump').prop('checked', false);
                 $('#enableFusionDump').prop('checked', false);
                 $('#IsDosDontListEnabledHidden').val(IsDosDontListEnabledHidden);
                 $('#IsDosDontList').prop('checked', IsDosDontListEnabledHidden);
 
                 $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
-                if (isUpdateDailyLog)
-                    $('#enableLogDump').prop('checked', true);
+                if (isUpdateLBDailyLog)
+                    $('#enableLBLogDump').prop('checked', true);
+                if (isUpdateDailyKVLog)
+                    $('#enableKVLogDump').prop('checked', true);
+                if (isUpdateDailySWLog)
+                    $('#enableSWLogDump').prop('checked', true);
                 if (isUpdateDailyFusionLog)
                     $('#enableFusionDump').prop('checked', true);
 
             }
         }).fail(function () { });
     }
-    $('#enableLogDump').on('change', function () {
-        if (this.checked) {
-            $('#enableFusionDump').prop('checked', false);  // Uncheck the other box
-        }
-    });
+    /* //$('#enableLBLogDump').on('change', function () {
+    //    if (this.checked) {
+    //        $('#enableFusionDump').prop('checked', false);  // Uncheck the other box
+    //    }
+    //});
 
     // When #enableFusionDump is checked/unchecked
-    $('#enableFusionDump').on('change', function () {
-        if (this.checked) {
-            $('#enableLogDump').prop('checked', false);  // Uncheck the other box
-        }
-    });
+    //$('#enableFusionDump').on('change', function () {
+    //    if (this.checked) {
+    //        $('#enableLBLogDump').prop('checked', false);  // Uncheck the other box
+    //    }
+    //}); */
     
     /*Dropbox settings-start*/        
     gridSiteDropboxSettings = $('#grid_Drpbx_Custom').grid({

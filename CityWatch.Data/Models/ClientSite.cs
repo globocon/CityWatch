@@ -43,7 +43,8 @@ namespace CityWatch.Data.Models
         public string DuressSms { get; set; }
 
         public bool UploadGuardLog { get; set; }
-
+        public bool UploadKVLog { get; set; }
+        public bool UploadSWLog { get; set; }
         public bool UploadFusionLog { get; set; }
 
         public string GuardLogEmailTo { get; set; }
