@@ -403,6 +403,7 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatusPending> GetTagStatusPending(int clientId);
         void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory);
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
 
     }
 
@@ -7434,6 +7435,13 @@ namespace CityWatch.Data.Providers
             {
                 _context.KeyVehicleLogDocketHistory.Add(_KeyVehicleLogDocketHistory);
             }
+            else
+            {
+                var dockets = _context.KeyVehicleLogDocketHistory.Where(x => x.Id == _KeyVehicleLogDocketHistory.Id).FirstOrDefault();
+                dockets.FileName = _KeyVehicleLogDocketHistory.FileName;
+                dockets.DocketSerialNo = _KeyVehicleLogDocketHistory.DocketSerialNo;
+                dockets.DocketReason = _KeyVehicleLogDocketHistory.DocketReason;
+            }
             
             _context.SaveChanges();
         }
@@ -7454,7 +7462,11 @@ namespace CityWatch.Data.Providers
 
             return results.OrderBy(z => z.KeyVehicleLog.EntryTime).ToList();
         }
-
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid)
+        {
+            var results = _context.KeyVehicleLogDocketHistory.Where(x => x.KeyVehicleLogId == keyvehiclelogid).ToList();
+            return results;
+        }
     }
 
     public class SiteTagStatusPending
