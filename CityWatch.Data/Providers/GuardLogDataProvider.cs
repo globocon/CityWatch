@@ -561,12 +561,17 @@ namespace CityWatch.Data.Providers
             //    //.ThenBy(z => z.EventDateTime)
             //    .ToList();
             //removed && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+            //var data = _context.GuardLogs
+            //   .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId 
+            //           && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
+            //           (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //   .Include(z => z.GuardLogin.Guard)
+            //   .ToList();
             var data = _context.GuardLogs
-               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId 
+               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog              
                        && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
                        (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
-               .Include(z => z.GuardLogin.Guard)
-               .ToList();
+               .Include(z => z.GuardLogin.Guard);
 
             var returnData = data.OrderBy(z => z.EventDateTimeLocal.HasValue ? z.EventDateTimeLocal : z.EventDateTime)
                 .ThenBy(z => z.Id)

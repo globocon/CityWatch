@@ -69,7 +69,7 @@ namespace CityWatch.Web.Services
                 fileNamePart = clientSiteDetails[0].Name;
                 foreach (var clientSiteDetail in clientSiteDetails)
                 {
-                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteDetail.Id, logFromDate, logToDate);
+                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteDetail.Id, logBookType, logFromDate, logToDate);
                     if (!clientSiteLogBooks.Any())
                         continue;
                     foreach (var item in clientSiteLogBooks)
@@ -87,7 +87,7 @@ namespace CityWatch.Web.Services
                 
                 foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
                 {
-                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logFromDate, logToDate);
+                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
                     if (!clientSiteLogBooks.Any())
                         continue;
 

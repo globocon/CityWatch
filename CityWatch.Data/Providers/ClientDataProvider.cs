@@ -286,8 +286,8 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId);
 
 
-        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate);
-        public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, DateTime date);
+        //public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate);
+        //public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, DateTime date);
 
     }
 

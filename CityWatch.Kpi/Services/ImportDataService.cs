@@ -271,7 +271,7 @@ namespace CityWatch.Kpi.Services
                 int scanCount = 0;
 
                 // Daily Guard Log
-                var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, date);
+                var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, date);
                 if (logBook != null)
                 {
                     var guardLogs = _guardLogDataProvider.GetGuardLogs(logBook.Id, logBook.Date)
