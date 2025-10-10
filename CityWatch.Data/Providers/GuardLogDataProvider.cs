@@ -401,6 +401,9 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatus> GetSiteTagStatus(int clientId);
 
         public List<SiteTagStatusPending> GetTagStatusPending(int clientId);
+        void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory);
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
 
     }
 
@@ -557,13 +560,18 @@ namespace CityWatch.Data.Providers
             //    //.OrderBy(z => z.Id)
             //    //.ThenBy(z => z.EventDateTime)
             //    .ToList();
-
+            //removed && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+            //var data = _context.GuardLogs
+            //   .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId 
+            //           && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
+            //           (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //   .Include(z => z.GuardLogin.Guard)
+            //   .ToList();
             var data = _context.GuardLogs
-               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog              
                        && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
                        (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
-               .Include(z => z.GuardLogin.Guard)
-               .ToList();
+               .Include(z => z.GuardLogin.Guard);
 
             var returnData = data.OrderBy(z => z.EventDateTimeLocal.HasValue ? z.EventDateTimeLocal : z.EventDateTime)
                 .ThenBy(z => z.Id)
@@ -6108,11 +6116,12 @@ namespace CityWatch.Data.Providers
             //.ToList();
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
+               .AsNoTracking()
                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
                .ToList();
 
             var checkGMT = data
-                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null && (x.ActivityType == "LB") && (x.NotificationType != 1))
+                  .Where(x => !x.ActivityType.Trim().ToUpper().Equals("SW") && x.EventDateTimeZoneShort != null && (x.ActivityType.Trim().ToUpper().Equals("LB")) && (x.NotificationType != 1))
                   .Select(x => x.EventDateTimeZoneShort)
                   .FirstOrDefault();
 
@@ -6144,8 +6153,9 @@ namespace CityWatch.Data.Providers
         {
             // Fetch GuardLogs
             var GuardLogs = _context.GuardLogs
+                .AsNoTracking()
                 .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
-                            z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+                           // z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate &&
                             (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
@@ -6165,9 +6175,10 @@ namespace CityWatch.Data.Providers
             //            activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
             //.ToList();
             //Modified by Dileep on 30-09-2023 to append ActivityDescription to Notes for KV type
-            var activityTypes = new[] { "SW", "KV" };
+            var activityTypes = new[] { "SW", "KV", "LB" };
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
+                .AsNoTracking()
                 .Where(z => z.ClientSiteId.HasValue &&
                             clientSiteIds.Contains(z.ClientSiteId.Value) &&
                             z.EventDateTime.Date >= logFromDate.Date &&
@@ -6191,26 +6202,26 @@ namespace CityWatch.Data.Providers
                 .FirstOrDefault();
 
             // Convert GuardLogs to the same model
-            var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
-            {
-                ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
-                NotificationCreatedTime = log.EventDateTime,
-                LBId = log.Id,
-                Notes = log.Notes,
-                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
-                SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
-                GuardName = log.GuardLogin?.Guard != null
-        ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
-        : null, // Null check for Guard
-                EventDateTimeZoneShort = checkGMT,
-                EventDateTime = log.EventDateTime,
-                EventDateTimeLocal = log.EventDateTimeLocal,
-                gpsCoordinates = log.GpsCoordinates,
-                GuardId = log.GuardLogin?.GuardId,
-                IrEntryType = log.IrEntryType,
-                IsIRReportTypeEntry = log.IsIRReportTypeEntry
+        //    var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+        //    {
+        //        ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+        //        NotificationCreatedTime = log.EventDateTime,
+        //        LBId = log.Id,
+        //        Notes = log.Notes,
+        //        ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+        //        SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+        //        GuardName = log.GuardLogin?.Guard != null
+        //? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+        //: null, // Null check for Guard
+        //        EventDateTimeZoneShort = checkGMT,
+        //        EventDateTime = log.EventDateTime,
+        //        EventDateTimeLocal = log.EventDateTimeLocal,
+        //        gpsCoordinates = log.GpsCoordinates,
+        //        GuardId = log.GuardLogin?.GuardId,
+        //        IrEntryType = log.IrEntryType,
+        //        IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
-            }).ToList();
+        //    }).ToList();
 
             // Update SW data with timezone and datetime adjustments
             if (!string.IsNullOrEmpty(checkGMT))
@@ -6224,7 +6235,7 @@ namespace CityWatch.Data.Providers
             }
 
             // Combine LB and SW logs
-            var combinedData = unifiedGuardLogs.Concat(data).OrderBy(z => z.EventDateTime).ToList();
+            var combinedData = data.OrderBy(z => z.EventDateTime).ToList();
 
             return combinedData;
         }
@@ -7424,10 +7435,46 @@ namespace CityWatch.Data.Providers
                 return new List<SiteTagStatusPending>();
             }
         }
+        public void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory)
+        {
+            if (_KeyVehicleLogDocketHistory == null)
+                throw new ArgumentNullException();
+            if (_KeyVehicleLogDocketHistory.Id == 0)
+            {
+                _context.KeyVehicleLogDocketHistory.Add(_KeyVehicleLogDocketHistory);
+            }
+            else
+            {
+                var dockets = _context.KeyVehicleLogDocketHistory.Where(x => x.Id == _KeyVehicleLogDocketHistory.Id).FirstOrDefault();
+                dockets.FileName = _KeyVehicleLogDocketHistory.FileName;
+                dockets.DocketSerialNo = _KeyVehicleLogDocketHistory.DocketSerialNo;
+                dockets.DocketReason = _KeyVehicleLogDocketHistory.DocketReason;
+            }
+            
+            _context.SaveChanges();
+        }
 
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate)
+        {
+            var results = _context.KeyVehicleLogDocketHistory
+               .Where(z => clientSiteIds.Contains(z.KeyVehicleLog.ClientSiteLogBook.ClientSiteId) && z.KeyVehicleLog.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.KeyVehicleLog.EntryTime >= logFromDate && z.KeyVehicleLog.EntryTime < logToDate.AddDays(1))
+               .Include(z => z.KeyVehicleLog)
+               .Include(z => z.KeyVehicleLog.GuardLogin.Guard)
+               .Include(x => x.KeyVehicleLog.ClientSiteLocation)
+               .Include(x => x.KeyVehicleLog.ClientSitePoc);
 
-        
+            results.Include(x => x.KeyVehicleLog.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
 
+            return results.OrderBy(z => z.KeyVehicleLog.EntryTime).ToList();
+        }
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid)
+        {
+            var results = _context.KeyVehicleLogDocketHistory.Where(x => x.KeyVehicleLogId == keyvehiclelogid).ToList();
+            return results;
+        }
     }
 
     public class SiteTagStatusPending

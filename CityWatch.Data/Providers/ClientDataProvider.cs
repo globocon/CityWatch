@@ -108,6 +108,7 @@ namespace CityWatch.Data.Providers
         ClientSite GetClientSitesUsingName(string name);
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
+        ClientSite GetClientSiteDetails(int clientSiteId);
         List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId);
         //to add functions for settings in radio check-start
         void SaveRadioCheckStatus(RadioCheckStatus radioCheckStatus);
@@ -283,6 +284,12 @@ namespace CityWatch.Data.Providers
         public void SaveClientSitePatrolTourSettings(int siteId, PatrolTouringMode ptm);
 
         public void SavemobAppShowClientTypeandSiteSettings(int siteId, bool mobAppShowClientTypeandSite);
+        List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId);
+
+
+        //public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate);
+        //public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, DateTime date);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -702,6 +709,11 @@ namespace CityWatch.Data.Providers
             return clientSiteDetails;
         }
 
+        public ClientSite GetClientSiteDetails(int clientSiteId)
+        {
+            return _context.ClientSites.FirstOrDefault(x => x.Id == clientSiteId);
+        }
+
         public void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting)
         {
             var entityState = !_context.ClientSiteKpiSettings.Any(x => x.ClientSiteId == setting.ClientSiteId) ? EntityState.Added : EntityState.Modified;
@@ -881,6 +893,13 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId,  DateTime fromDate, DateTime toDate)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.ClientSiteId == clientSiteId  && z.Date >= fromDate && z.Date <= toDate)
+                .ToList();
+        }
+
         public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate)
         {
             return _context.ClientSiteLogBooks
@@ -892,6 +911,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                  .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == date);
+        }
+
+        public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId,  DateTime date)
+        {
+            return _context.ClientSiteLogBooks
+                 .SingleOrDefault(z => z.ClientSiteId == clientSiteId  && z.Date == date);
         }
         public ClientSite GetClientSiteName(int clientSiteId)
         {
@@ -3436,6 +3461,9 @@ namespace CityWatch.Data.Providers
                         if (clientSite != null)
                         {
                             clientSite.UploadGuardLog = false;
+                            clientSite.UploadKVLog = false;
+                            clientSite.UploadSWLog = false;
+                            clientSite.UploadFusionLog = false;
                             _context.SaveChanges();
                         }
                     }
@@ -3848,6 +3876,7 @@ namespace CityWatch.Data.Providers
         {
             var _clientSite = _context.ClientSites
                 .FirstOrDefault(x => x.Id == siteId && x.IsActive);
+       
 
             if (_clientSite == null)
             {
@@ -3856,6 +3885,18 @@ namespace CityWatch.Data.Providers
           
             _clientSite.MobAppShowClientTypeandSite = mobAppShowClientTypeandSite;
             _context.SaveChanges();
+        }
+        
+        public List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId)
+        {
+
+
+            return _context.ClientSites
+                .Where(x => (typeId.Length==0 || typeId.Contains(x.TypeId))  && x.IsActive == true)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
         }
     }
 

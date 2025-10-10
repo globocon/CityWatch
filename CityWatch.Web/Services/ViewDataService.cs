@@ -24,8 +24,11 @@ using System.Linq;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
+using Microsoft.Office.Interop;
+
 
 namespace CityWatch.Web.Services
 {
@@ -187,6 +190,8 @@ namespace CityWatch.Web.Services
         List<object> GetGuardRcClientSiteAccess(int guardId);
         List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds);
         List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds);
+        List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds);
+        Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
     }
 
     public class ViewDataService : IViewDataService
@@ -925,6 +930,16 @@ namespace CityWatch.Web.Services
                         item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
                         item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
                         item.Q4HRS2024 = guardQuaterDeatils.Q4HRS2024;
+
+                        item.Q1HRS2025 = guardQuaterDeatils.Q1HRS2025;
+                        item.Q2HRS2025 = guardQuaterDeatils.Q2HRS2025;
+                        item.Q3HRS2025 = guardQuaterDeatils.Q3HRS2025;
+                        item.Q4HRS2025 = guardQuaterDeatils.Q4HRS2025;
+
+                        //item.Q1HRS2026 = guardQuaterDeatils.Q1HRS2026;
+                        //item.Q2HRS2026 = guardQuaterDeatils.Q2HRS2026;
+                        //item.Q3HRS2026 = guardQuaterDeatils.Q3HRS2026;
+                        //item.Q4HRS2026 = guardQuaterDeatils.Q4HRS2026;
                     }
                     // Assuming GuardViewExcelModel has a string property called 'ColumnName'
                     if (!string.IsNullOrEmpty(item.ClientSites))
@@ -2742,6 +2757,97 @@ namespace CityWatch.Web.Services
             return siteSmartWands;
         }
 
+        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate,DateTime LogToDate, int[] ClientSiteIds)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            
+            return _guardLogDataProvider.GetKeyVehicleLogsWithDockets(ClientSiteIds, LogFromDate, LogToDate)
+                
+                .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
+                .ToList();
+        }
+        public async Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData)
+        {
+
+            var dt = new DataTable("KV Dockets");
+            //dt.Columns.Add("Day");
+            //dt.Columns.Add("Date", typeof(string)); // Use string to hold formatted date
+            ////  dt.Columns.Add("IR S/No");
+            //dt.Columns.Add("Control Room Job No.");
+            dt.Columns.Add("Site");
+            //dt.Columns.Add("Address");
+            //dt.Columns.Add("Desp. Time");
+            //dt.Columns.Add("Arrival");
+            //dt.Columns.Add("Depart.");
+            //dt.Columns.Add("CWS SNo.");
+            //dt.Columns.Add("Total mins on Site");
+            //dt.Columns.Add("Resp. Time");
+            //dt.Columns.Add("Alarm");
+            //dt.Columns.Add("Patrol Att.");
+            //dt.Columns.Add("Colour Code");
+            //dt.Columns.Add("Action Taken");
+            //dt.Columns.Add("Notified By");
+            //dt.Columns.Add("Bill To:");
+            //dt.Columns.Add("File Name");
+            //dt.Columns.Add("PSPF");
+            //dt.Columns.Add("File Size(KB)");
+            //dt.Columns.Add("Hash String");
+
+
+            foreach (var data in dailyPatrolData)
+            {
+
+                try
+                {
+                    var row = dt.NewRow();
+                    //row["Day"] = data.NameOfDay;
+                    //row["Date"] = data.Date;
+                    ////row["IR S/No"] = data.SerialNo;
+                    //row["Control Room Job No."] = data.ControlRoomJobNo;
+                    row["Site"] = data.Detail.KeyVehicleLog.ClientSiteLogBook.ClientSite.Name;
+                    //row["Address"] = data.SiteAddress;
+                    //row["Desp. Time"] = NormalizeTime(data.DespatchTime);
+                    //row["Arrival"] = NormalizeTime(data.ArrivalTime);
+                    //row["Depart."] = NormalizeTime(data.DepartureTime);
+                    //row["CWS SNo."] = data.SerialNo;
+                    //row["Total mins on Site"] = data.TotalMinsOnsite;
+                    //row["Resp. Time"] = NormalizeTime(data.ResponseTime);
+                    //row["Alarm"] = data.Alarm;
+                    //row["Patrol Att."] = data.PatrolAttented;
+                    //row["Colour Code"] = data.ColorCodeStr;
+                    //row["Action Taken"] = data.ActionTaken;
+                    //row["Notified By"] = data.NotifiedBy;
+                    //row["Bill To:"] = data.Billing;
+                    //row["File Name"] = data.fileNametodownload;
+                    //row["PSPF"] = data.pspfname;
+                    //row["File Size(Kb)"] = await data.GetBlobSizeAsync();
+                    //row["Hash String"] = data.hashvalue;
+                    dt.Rows.Add(row);
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+
+            var sortedRows = dt;
+            //.AsEnumerable()
+            //      .OrderBy(row =>
+            //      {
+            //          var dateStr = row.Field<string>("Date");
+            //          return DateTime.TryParseExact(dateStr, "dd MMM yyyy", null, System.Globalization.DateTimeStyles.None, out var parsedDate)
+            //              ? parsedDate
+            //              : DateTime.MinValue;
+            //      });
+
+            // Create a new sorted DataTable
+            DataTable sortedTable = dt.Clone();
+            //DataTable sortedTable = sortedRows.Any() ? sortedRows.CopyToDataTable() : dt.Clone();
+
+            return sortedTable;
+            //return dt;
+        }
 
     }
 
