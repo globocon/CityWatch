@@ -192,6 +192,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds);
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds);
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
+
+        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
     }
 
     public class ViewDataService : IViewDataService
@@ -2670,7 +2672,7 @@ namespace CityWatch.Web.Services
             await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
         }
 
-       
+
         public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type)
         {
             var sites = new List<SelectListItem>();
@@ -2732,7 +2734,7 @@ namespace CityWatch.Web.Services
 
 
         public List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds)
-        {            
+        {
             // Get tags from logs history for the selected client sites
             //var tagsFromLogs = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSitesFromLogs(clientSiteIds);
 
@@ -2746,7 +2748,7 @@ namespace CityWatch.Web.Services
             //.DistinctBy(x => x.UId)
             //.OrderBy(x => x.UId)
             //.ToList();
-                       
+
             //return uniqueUids;
             return tagsFromTagMaster;
         }
@@ -2757,12 +2759,12 @@ namespace CityWatch.Web.Services
             return siteSmartWands;
         }
 
-        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate,DateTime LogToDate, int[] ClientSiteIds)
+        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            
+
             return _guardLogDataProvider.GetKeyVehicleLogsWithDockets(ClientSiteIds, LogFromDate, LogToDate)
-                
+
                 .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
                 .ToList();
         }
@@ -2849,8 +2851,40 @@ namespace CityWatch.Web.Services
             //return dt;
         }
 
+
+        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id)
+        {
+            var sites = new List<DropdownItemWithAddress>
+    {
+        new DropdownItemWithAddress { Id = 0, Name = "Select", Address = string.Empty } // Default option
+    };
+
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+
+            if (clientType != null)
+            {
+                var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+
+                sites.AddRange(mapping.Select(item => new DropdownItemWithAddress
+                {
+                    Id = item.Id,
+                    Name = item.Name,
+                    Address = item.Address // assumes mapping object has Address property
+                }));
+            }
+
+            return sites;
+
+        }
+
     }
 
+    public class DropdownItemWithAddress
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Address { get; set; }
+    }
 
     public class HRGroupStatusNew
     {

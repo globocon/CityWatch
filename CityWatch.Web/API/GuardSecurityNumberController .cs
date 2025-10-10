@@ -2072,6 +2072,7 @@ namespace CityWatch.Web.API
                 DataCollectionEnabled = site.DataCollectionEnabled,
                 IsActive = site.IsActive,
                 IsDosDontList = site.IsDosDontList
+               
             };
 
             return Ok(dto);
@@ -2567,6 +2568,25 @@ namespace CityWatch.Web.API
                 return StatusCode(500, $"Error fetching site tag status: {ex.Message}");
             }
         }
+
+
+        [HttpGet("GetClientSitesByClientTypeWithAdress")]
+        public IActionResult GetClientSitesByClientTypeWithAdress(int userId, int clientTypeId)
+        {
+            try
+            {
+                var clientSites = _viewDataService.GetUserClientSitesWithAddressUsingId(userId, clientTypeId);
+
+                if (clientSites == null || !clientSites.Any())
+                    return NotFound(new { message = "No client sites found." });
+
+                return Ok(clientSites);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
     }
 
 
@@ -2617,6 +2637,7 @@ namespace CityWatch.Web.API
         public bool DataCollectionEnabled { get; set; }
         public bool IsActive { get; set; }
         public bool IsDosDontList { get; set; }
+
     }
 
 
