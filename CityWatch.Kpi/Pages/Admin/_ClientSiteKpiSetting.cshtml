@@ -2248,6 +2248,10 @@
                 <li class="nav-item " role="presentation">
                     <a class="nav-link" id="MobileAppWandStrikes-tab" data-toggle="tab" href="#WandStrikesTab" role="tab" aria-controls="Crowd Control">Wand Strikes</a>
                 </li>
+                <li class="nav-item " role="presentation">
+                    <a class="nav-link" id="MobileAppIR-tab" data-toggle="tab" href="#MobileAppIRTab" role="tab" aria-controls="Crowd Control">IR</a>
+                </li>
+
             </ul>
             <div class="tab-content">
                 <input type="hidden" id="duressAppId" name="duressAppId" value="0" />
@@ -2383,6 +2387,54 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="tab-pane" id="MobileAppIRTab" role="tabpanel" aria-labelledby="MobileAppIRTab">
+                    <div class="row m-0 pt-5">
+                        <div class="col-md-12">
+                            <input type="hidden" id="clientSiteIMobileAppIRTab" name="clientSiteIdMobileAppIRTab" value="@Model.ClientSiteId" />
+                            <div class="d-flex align-items-center justify-content-between ml-1"
+                                 style="padding-top:0.4em; width:30%;"
+                                 title="Show Client Type & Site Selection">
+
+                                <!-- Label on the LEFT -->
+                                <label for="MobAppShowClientTypeandSiteSwitch"
+                                       class="mb-0"
+                                       style="white-space: nowrap;">
+                                    Show Client Type & Site Selection
+                                </label>
+
+                                <!-- Switch on the FAR RIGHT -->
+                                <div class="custom-control custom-switch m-0 p-0"
+                                     style="min-width: 40px; display: flex; justify-content: flex-end;">
+                                    <input asp-for="ClientSite.MobAppShowClientTypeandSite"
+                                           type="checkbox"
+                                           class="custom-control-input"
+                                           id="MobAppShowClientTypeandSiteSwitch">
+                                    <label class="custom-control-label"
+                                           for="MobAppShowClientTypeandSiteSwitch"
+                                          "></label>
+                                </div>
+                            </div>
+
+
+
+
+
+                            <div class="form-row mt-3">
+                                <button type="button" class="btn btn-success" id="btnSaveMobileAppIRSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
             </div>
 
 
