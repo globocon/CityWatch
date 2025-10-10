@@ -2071,8 +2071,8 @@ namespace CityWatch.Web.API
                 GuardLogEmailTo = site.GuardLogEmailTo,
                 DataCollectionEnabled = site.DataCollectionEnabled,
                 IsActive = site.IsActive,
-                IsDosDontList = site.IsDosDontList
-               
+                IsDosDontList = site.IsDosDontList,
+                MobAppShowClientTypeandSite = site.MobAppShowClientTypeandSite
             };
 
             return Ok(dto);
@@ -2637,6 +2637,8 @@ namespace CityWatch.Web.API
         public bool DataCollectionEnabled { get; set; }
         public bool IsActive { get; set; }
         public bool IsDosDontList { get; set; }
+
+        public bool MobAppShowClientTypeandSite { get; set; }
 
     }
 
