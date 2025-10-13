@@ -3594,6 +3594,34 @@ $('#div_site_settings').on('click', '#btnSavePatrolTouringModeSettings', functio
     }).always(function () { $('#loader').hide(); });
 });
 
+
+$('#div_site_settings').on('click', '#btnSaveMobileAppIRSettings', function () {
+    var data = {
+        clientSiteId: parseInt($('#clientSiteIMobileAppIRTab').val()),
+        mobAppShowClientTypeandSite: $('#ClientSite_MobAppShowClientTypeandSite').is(':checked')
+    };
+
+    $('#loader').show();
+
+    $.ajax({
+        url: '/Admin/Settings?handler=SavemobAppShowClientTypeandSiteSettings',
+        type: 'POST',
+        dataType: 'json',
+        data: data,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    })
+        .done(function (response) {
+            alert(response.message);
+        })
+        .fail(function () {
+            alert('An error occurred while saving the settings. Please try again.');
+        })
+        .always(function () {
+            $('#loader').hide();
+        });
+});
+
+
 //Code to handle timesheet schedule stop
 
 //$('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () {

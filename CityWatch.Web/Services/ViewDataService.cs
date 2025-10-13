@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using System.Xml.Schema;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
-using Microsoft.Office.Interop; 
+using Microsoft.Office.Interop;
 
 
 namespace CityWatch.Web.Services
@@ -192,6 +192,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds);
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds);
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
+
+        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
     }
 
     public class ViewDataService : IViewDataService
@@ -930,6 +932,16 @@ namespace CityWatch.Web.Services
                         item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
                         item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
                         item.Q4HRS2024 = guardQuaterDeatils.Q4HRS2024;
+
+                        item.Q1HRS2025 = guardQuaterDeatils.Q1HRS2025;
+                        item.Q2HRS2025 = guardQuaterDeatils.Q2HRS2025;
+                        item.Q3HRS2025 = guardQuaterDeatils.Q3HRS2025;
+                        item.Q4HRS2025 = guardQuaterDeatils.Q4HRS2025;
+
+                        //item.Q1HRS2026 = guardQuaterDeatils.Q1HRS2026;
+                        //item.Q2HRS2026 = guardQuaterDeatils.Q2HRS2026;
+                        //item.Q3HRS2026 = guardQuaterDeatils.Q3HRS2026;
+                        //item.Q4HRS2026 = guardQuaterDeatils.Q4HRS2026;
                     }
                     // Assuming GuardViewExcelModel has a string property called 'ColumnName'
                     if (!string.IsNullOrEmpty(item.ClientSites))
@@ -2660,7 +2672,7 @@ namespace CityWatch.Web.Services
             await _clientDataProvider.SaveCrowdControlGuardLocation(MCCG);
         }
 
-       
+
         public List<SelectListItem> GetUserClientSitesWithPatrolData(int? userId, string[] type)
         {
             var sites = new List<SelectListItem>();
@@ -2722,7 +2734,7 @@ namespace CityWatch.Web.Services
 
 
         public List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds)
-        {            
+        {
             // Get tags from logs history for the selected client sites
             //var tagsFromLogs = _clientSiteWandDataProvider.GetClientSiteWandTagsForClientSitesFromLogs(clientSiteIds);
 
@@ -2736,7 +2748,7 @@ namespace CityWatch.Web.Services
             //.DistinctBy(x => x.UId)
             //.OrderBy(x => x.UId)
             //.ToList();
-                       
+
             //return uniqueUids;
             return tagsFromTagMaster;
         }
@@ -2747,12 +2759,12 @@ namespace CityWatch.Web.Services
             return siteSmartWands;
         }
 
-        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate,DateTime LogToDate, int[] ClientSiteIds)
+        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            
+
             return _guardLogDataProvider.GetKeyVehicleLogsWithDockets(ClientSiteIds, LogFromDate, LogToDate)
-                
+
                 .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
                 .ToList();
         }
@@ -2839,8 +2851,40 @@ namespace CityWatch.Web.Services
             //return dt;
         }
 
+
+        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id)
+        {
+            var sites = new List<DropdownItemWithAddress>
+    {
+        new DropdownItemWithAddress { Id = 0, Name = "Select", Address = string.Empty } // Default option
+    };
+
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+
+            if (clientType != null)
+            {
+                var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+
+                sites.AddRange(mapping.Select(item => new DropdownItemWithAddress
+                {
+                    Id = item.Id,
+                    Name = item.Name,
+                    Address = item.Address // assumes mapping object has Address property
+                }));
+            }
+
+            return sites;
+
+        }
+
     }
 
+    public class DropdownItemWithAddress
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Address { get; set; }
+    }
 
     public class HRGroupStatusNew
     {

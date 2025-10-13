@@ -2071,7 +2071,8 @@ namespace CityWatch.Web.API
                 GuardLogEmailTo = site.GuardLogEmailTo,
                 DataCollectionEnabled = site.DataCollectionEnabled,
                 IsActive = site.IsActive,
-                IsDosDontList = site.IsDosDontList
+                IsDosDontList = site.IsDosDontList,
+                MobAppShowClientTypeandSite = site.MobAppShowClientTypeandSite
             };
 
             return Ok(dto);
@@ -2594,6 +2595,26 @@ namespace CityWatch.Web.API
     }
 
 
+        [HttpGet("GetClientSitesByClientTypeWithAdress")]
+        public IActionResult GetClientSitesByClientTypeWithAdress(int userId, int clientTypeId)
+        {
+            try
+            {
+                var clientSites = _viewDataService.GetUserClientSitesWithAddressUsingId(userId, clientTypeId);
+
+                if (clientSites == null || !clientSites.Any())
+                    return NotFound(new { message = "No client sites found." });
+
+                return Ok(clientSites);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+    }
+
+
     public class SiteTagStatusPending
     {
 
@@ -2641,6 +2662,9 @@ namespace CityWatch.Web.API
         public bool DataCollectionEnabled { get; set; }
         public bool IsActive { get; set; }
         public bool IsDosDontList { get; set; }
+
+        public bool MobAppShowClientTypeandSite { get; set; }
+
     }
 
 
