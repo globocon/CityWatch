@@ -769,7 +769,8 @@ namespace CityWatch.Web.Pages.Guard
             //string feedbackPath = filename.Substring(filename.IndexOf("Feedback"));
             var securitylicense = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault().SecurityNo;
 
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/Feedback/{securitylicense}/{filename}");
+            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/Feedback/{securitylicense}/{filename}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/Feedback/{securitylicense}/{filename}");
             var dbxUploaded = true;
             dbxUploaded = UpoadDocumentToDropbox(filename, dbxFilePath);
 
