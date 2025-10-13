@@ -117,7 +117,7 @@ namespace CityWatch.Web.API
                 });
             }
 
-            if (!guard.IsMobileAppAccess)
+            if (!guard.IsMobileAppAccess && !guard.IsMobileAppPlusTags)
             {
                 return Unauthorized("Access denied !!!. Please contact admin.");
             }
@@ -2565,6 +2565,30 @@ namespace CityWatch.Web.API
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error fetching site tag status: {ex.Message}");
+            }
+        }
+
+        [HttpGet("GetClientSitesSmartWands")]
+        public IActionResult GetClientSitesSmartWands(int userId, int clientSiteId)
+        {
+            try
+            {
+                var clientSites = _viewDataService.GetClientSiteSmartWands(clientSiteId);
+
+                if (clientSites == null || !clientSites.Any())
+                    return NotFound(new { message = "No smart wand for client site found." });
+
+                var r = clientSites.Select(cs => new
+                {
+                    Id = cs.Id,
+                    Name = cs.SmartWandId
+                }).ToList();
+
+                return Ok(r);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
         }
     }

@@ -294,6 +294,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsRCLiteAccess = guard.IsRCLiteAccess;
                 updateGuard.IsTerminated = guard.IsTerminated;
                 updateGuard.IsMobileAppAccess = guard.IsMobileAppAccess;
+                updateGuard.IsMobileAppPlusTags = guard.IsMobileAppPlusTags;
 
             }
 
@@ -332,6 +333,7 @@ namespace CityWatch.Data.Providers
                 guard.IsSTATSChartsAccess = false;
                 guard.IsRCFusionAccess = false;
                 guard.IsMobileAppAccess = false;
+                guard.IsMobileAppPlusTags = false;
 
                 //P1-273 access levels-end
                 _context.Guards.Add(guard);
