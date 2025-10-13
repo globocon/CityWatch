@@ -141,5 +141,6 @@ namespace CityWatch.Data.Models
 
         public bool IsTerminated { get; set; }
         public bool IsMobileAppAccess { get; set; }
+        public bool IsMobileAppPlusTags { get; set; }
     }
 }

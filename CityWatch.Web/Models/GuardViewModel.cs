@@ -110,7 +110,8 @@ namespace CityWatch.Web.Models
 
         public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
         public bool IsMobileAppAccess { get { return _guard.IsMobileAppAccess; } }
-        
+        public bool IsMobileAppPlusTags { get { return _guard.IsMobileAppPlusTags; } }
+
         public bool IsRCHRAccess { get { return _guard.IsRCHRAccess; } }
         public bool IsRCLiteAccess { get { return _guard.IsRCLiteAccess; } }
         public bool IsTerminated { get { return _guard.IsTerminated; } }

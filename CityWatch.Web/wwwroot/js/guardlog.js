@@ -5272,7 +5272,9 @@ $(function () {
         if (data.isMobileAppAccess) {
             selectedValues.push(15);
         }
-
+        if (data.isMobileAppPlusTags) {
+            selectedValues.push(16);
+        }
 
         selectedValues.forEach(function (value) {
 
