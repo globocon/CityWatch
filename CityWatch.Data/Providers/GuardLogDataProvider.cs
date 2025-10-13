@@ -404,6 +404,7 @@ namespace CityWatch.Data.Providers
         void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory);
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
+        int GetLatestQuestionNumber(int hrsettingsId, int tqnumberId);
 
     }
 
@@ -7474,6 +7475,21 @@ namespace CityWatch.Data.Providers
         {
             var results = _context.KeyVehicleLogDocketHistory.Where(x => x.KeyVehicleLogId == keyvehiclelogid).ToList();
             return results;
+        }
+        public int GetLatestQuestionNumber(int hrsettingsId,int tqnumberId)
+        {
+            var questionIds = _context.TrainingTestQuestions.Where(x=>x.HRSettingsId==hrsettingsId && x.TQNumberId==tqnumberId)
+                          .Select(q => q.QuestionNoId);
+
+            var missingIds = _context.TrainingTestQuestionNumbers
+                          .Where(t => !questionIds.Contains(t.Id))
+                          .Select(t => t.Id)
+                          .ToList();
+
+
+
+
+            return missingIds.FirstOrDefault();
         }
     }
 

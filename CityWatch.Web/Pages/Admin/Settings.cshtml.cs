@@ -3695,7 +3695,30 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
-
+        public JsonResult OnPostSaveDuplicateTQAnswers(TrainingTestQuestions testquestions, List<TrainingTestQuestionsAnswers> testquestionanswers)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                testquestions.QuestionNoId = _guardLogDataProvider.GetLatestQuestionNumber(testquestions.HRSettingsId, testquestions.TQNumberId);
+                int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (id != 0)
+                {
+                    foreach (var item in testquestionanswers)
+                    {
+                        item.TrainingTestQuestionsId = id;
+                    }
+                    _guardLogDataProvider.SaveTestQuestionsAnswers(id, testquestionanswers);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message, testquestions.QuestionNoId });
+        }
 
 
     }
