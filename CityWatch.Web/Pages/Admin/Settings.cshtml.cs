@@ -71,6 +71,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
+        private readonly IMicrosoftOneDriveService _microsoftOneDriveService;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -79,7 +80,7 @@ namespace CityWatch.Web.Pages.Admin
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions, IMicrosoftOneDriveService microsoftOneDriveService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -93,6 +94,7 @@ namespace CityWatch.Web.Pages.Admin
             _dropboxUploadService = dropboxUploadService;
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
+            _microsoftOneDriveService = microsoftOneDriveService;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -2243,6 +2245,9 @@ namespace CityWatch.Web.Pages.Admin
                     var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
                     var dbxUploaded = true;
                     dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    var oneDriveUploaded = false;
+                    //oneDriveUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    oneDriveUploaded = Task.Run(() => _microsoftOneDriveService.Upload(Path.Combine(CourseDocsFolder, fileName), dbxFilePath)).Result;
                     var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                     int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
                     if (TQNumbernew == 0)
