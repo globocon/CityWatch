@@ -1904,7 +1904,7 @@ namespace CityWatch.Web.Pages.Reports
 
 
             var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogsWithDockets(ReportRequest.FromDate, ReportRequest.ToDate, clientsiteIds)
-                .Where(x=>(ReportRequest.SerialNo.IsNullOrEmpty()) || x.Detail.DocketSerialNo==ReportRequest.SerialNo);
+                .Where(x=>(string.IsNullOrEmpty(ReportRequest.SerialNo)) || x.Detail.DocketSerialNo==ReportRequest.SerialNo);
             //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
            
             

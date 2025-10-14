@@ -27,6 +27,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Graph" Version="5.94.0" />
 		<PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
 	</ItemGroup>
 	<ItemGroup>
