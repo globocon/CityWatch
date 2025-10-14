@@ -92,7 +92,7 @@ namespace CityWatch.Common.Services
                         RemoveLicenses = removeLicenses
                     };
 
-                    await graphClient.Users[userId].AssignLicense.PostAsync(parameterSet);
+                    //await graphClient.Users[userId].AssignLicense.PostAsync(parameterSet);
                     //var meDrive = await graphClient.Me.Drive.GetAsync();
                     //var uploadSession = await graphClient.Drives[meDrive.Id].Root.ItemWithPath(dbxFilePath).CreateUploadSession.PostAsync(new CreateUploadSessionPostRequestBody());
 
