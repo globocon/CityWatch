@@ -360,8 +360,9 @@ namespace CityWatch.Kpi.Services
             summaryNoteTable.AddCell(summaryNoteMonthYear);
 
             var monthNote = schedule.KpiSendScheduleSummaryNotes?.SingleOrDefault(z => z.ForMonth == new DateTime(toDate.Year, toDate.Month, 1))?.Notes ?? "N/A";
+           
             // Define a fixed area for SUMMARY
-            Rectangle area = new Rectangle(50, 500, 500, 200); // X, Y, Width, Height
+            Rectangle area = new Rectangle(50, 500, 500, 1000); // X, Y, Width, Height
             var summaryNote = new Cell()
                 .Add(new Paragraph().Add(new Text(monthNote)))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
