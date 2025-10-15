@@ -16,11 +16,14 @@ namespace CityWatch.Web.API
         private readonly IViewDataService _viewDataService;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IClientDataProvider _clientSitesDataProvider;
-        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, IClientDataProvider clientSitesDataProvider)
+        private readonly IGuardDataProvider _guardDataProvider;
+        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
+            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         [HttpGet("GetScannerControlSettings")]
@@ -48,7 +51,7 @@ namespace CityWatch.Web.API
             try
             {
                 var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
-                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId,TagUid);
+                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
 
                 //Check if scanned tag recently with in a minute from the same site
                 if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalSeconds < 60)
@@ -97,12 +100,13 @@ namespace CityWatch.Web.API
                             {
                                 message = "Tag does not belong to logged in site. Please check.";
                             }
-                            else {
+                            else
+                            {
                                 IsSuccess = true;
                                 TagFound = true;
                                 message = "Tag Found";
-                                TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";                                
-                            }                                
+                                TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
+                            }
                         }
                     }
                     else
@@ -141,6 +145,46 @@ namespace CityWatch.Web.API
             }
 
             return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
+        }
+
+        [HttpGet("CheckIfGuardHasTagAddAccess")]
+        public IActionResult CheckIfGuardHasTagAddAccess(int GuardId)
+        {
+            var hasAccess = false;
+            try
+            {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(GuardId).FirstOrDefault();
+                if (guardDetails != null && guardDetails.IsMobileAppPlusTags)
+                {
+                    hasAccess = true;
+                }
+                return Ok(hasAccess);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+        [HttpPost("SaveNFCtagInfoData")]
+        public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt)
+        {
+            var IsSuccess = false;
+            var message = string.Empty;
+            var TagFound = false;
+            try
+            {                
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt);
+                IsSuccess = true;
+                TagFound = true;
+                message = "Tag saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = csswt.LabelDescription });
         }
 
         //[HttpGet("GetCrowdCountControlDataAndSettings")]
