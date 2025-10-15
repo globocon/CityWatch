@@ -184,6 +184,14 @@ else
 
 
     <iframe id="coursePresentation" height="500"></iframe>
+    @* <div id="coursePresentation">
+        <!-- Slides will be loaded here -->
+    </div> *@
+    <div class="controls mt-3" id="pptControlls">
+        <div id="prevSlide" style="position: absolute; top: 50%; left: 10px; font-size: 2em; cursor:pointer;background-color: white;"><i class="fa fa-arrow-left"></i></div>
+        <div id="nextSlide" style="position: absolute; top: 50%; right: 10px; font-size: 2em; cursor: pointer;background-color: white;"><i class="fa fa-arrow-right"></i></div>
+
+    </div>
     <canvas id="canvasCousePdf" ></canvas>
         @* <button class="btn" id="coursePdfPrev" hidden>Prev</button>
         <button class="btn" id="coursePdfNext" hidden>Next</button> *@

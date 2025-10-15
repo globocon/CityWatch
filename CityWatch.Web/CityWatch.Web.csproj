@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspose.Slides.NET" Version="25.10.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.18.0" />
     <PackageReference Include="ConvertApi" Version="3.1.1" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.16.0" />
