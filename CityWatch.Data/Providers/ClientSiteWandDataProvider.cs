@@ -210,7 +210,7 @@ namespace CityWatch.Data.Providers
             var _existingTagUID = _dbContext.ClientSiteSmartWandTags.Where(x => x.UId == clientSiteSmartWandTag.UId
                 && x.ClientSite.IsActive == true && x.IsDeleted == false).ToList();
 
-            if (clientSiteSmartWandTag.Id == -1)
+            if (clientSiteSmartWandTag.Id <= 0)
             {
                 clientSiteSmartWandTag.Id = 0;
 

@@ -21,8 +21,8 @@ namespace CityWatch.Data.Models
         public ClientSite ClientSite { get; set; }
         [ForeignKey("TagsTypeId")]
         public SmartWandTagsType SmartWandTagsType { get; set; }
+
         [NotMapped]
-        // public string TQNumberName { get { return TQNumber.Name; } }
         public string TagsType { get; set; }
         public bool IsDeleted { get; set; }
     }

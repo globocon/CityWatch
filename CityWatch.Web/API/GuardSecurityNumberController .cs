@@ -2592,7 +2592,7 @@ namespace CityWatch.Web.API
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
         }
-    }
+    
 
 
         [HttpGet("GetClientSitesByClientTypeWithAdress")]
