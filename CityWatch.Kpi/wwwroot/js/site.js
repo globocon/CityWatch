@@ -3598,7 +3598,7 @@ $('#div_site_settings').on('click', '#btnSavePatrolTouringModeSettings', functio
 $('#div_site_settings').on('click', '#btnSaveMobileAppIRSettings', function () {
     var data = {
         clientSiteId: parseInt($('#clientSiteIMobileAppIRTab').val()),
-        mobAppShowClientTypeandSite: $('#ClientSite_MobAppShowClientTypeandSite').is(':checked')
+        mobAppShowClientTypeandSite: $('#MobAppShowClientTypeandSiteSwitch').is(':checked')
     };
 
     $('#loader').show();
