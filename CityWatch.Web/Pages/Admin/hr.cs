@@ -1938,17 +1938,49 @@ namespace CityWatch.Web.Pages.Admin
         }
         //for toggle areas - end
         // p1-191 hr files task 3-start
+        //public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, string[] SelectedStates)
+        //{
+        //    var status = true;
+        //    var message = "Success";
+        //    var id = -1;
+        //    try
+        //    {
+        //        //if (!ModelState.IsValid)
+        //        //{
+        //        //    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
+        //        //}
+        //        HrSettings hrSettingsnew = new HrSettings()
+        //        {
+        //            Id = Id,
+        //            HRGroupId = hrGroupId,
+        //            ReferenceNoNumberId = refNoNumberId,
+        //            ReferenceNoAlphabetId = refNoAlphabetId,
+        //            Description = description
+
+        //        };
+
+
+        //        _guardLogDataProvider.SaveHRSettings(hrSettingsnew, Selectedsites, SelectedStates);
+
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        status = false;
+        //        message = "Error " + ex.Message;
+        //    }
+
+        //    return new JsonResult(new { status, message = new[] { message }, id });
+        //}
+
         public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, string[] SelectedStates)
         {
             var status = true;
-            var message = "Success";
+            var messages = new List<string>();
             var id = -1;
+
             try
             {
-                //if (!ModelState.IsValid)
-                //{
-                //    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
-                //}
                 HrSettings hrSettingsnew = new HrSettings()
                 {
                     Id = Id,
@@ -1956,22 +1988,24 @@ namespace CityWatch.Web.Pages.Admin
                     ReferenceNoNumberId = refNoNumberId,
                     ReferenceNoAlphabetId = refNoAlphabetId,
                     Description = description
-
                 };
-
 
                 _guardLogDataProvider.SaveHRSettings(hrSettingsnew, Selectedsites, SelectedStates);
 
-
+                id = hrSettingsnew.Id; // Return the saved ID if needed
+                messages.Add("HR Settings saved successfully.");
             }
             catch (Exception ex)
             {
                 status = false;
-                message = "Error " + ex.Message;
+
+                // You can show only the message, or more details if needed
+                messages.Add(ex.Message);
             }
 
-            return new JsonResult(new { status, message = new[] { message }, id });
+            return new JsonResult(new { status, messages, id });
         }
+
         public JsonResult OnPostDeleteHRSettings(int id)
         {
             var success = false;

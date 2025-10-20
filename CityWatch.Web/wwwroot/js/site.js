@@ -7278,13 +7278,17 @@ $('#btn_save_hr_settings').on('click', function () {
     allSitesValues.each(function () {
         allValues.push($(this).val());
     });
-
+    var description = $('#txtHrSettingsDescription').val().trim();
 
     if ($('#list_hrGroups').val() == '') {
         alert('Please Select HrGroups')
     }
     else if ($('#list_ReferenceNoNumber').val() == '' || $('#list_ReferenceNoAlphabet').val() == '') {
         alert('Please Select  Reference Numbers')
+    }
+    else if (description === '') {
+        alert('Description cannot be empty.');
+        $('#txtHrSettingsDescription').focus();
     }
     else {
         $.ajax({
@@ -7316,7 +7320,10 @@ $('#btn_save_hr_settings').on('click', function () {
                 gridHrSettingswithCourseLibrary.clear();
                 gridHrSettingswithCourseLibrary.reload();
             } else {
-                displayValidationSummaryHrSettings(result.errors);
+                // Show all messages returned from server
+                alert(result.messages.join('\n'));
+                // Or display them in a div:
+                // $('#validationSummary').html(result.messages.join('<br>'));
             }
         }).always(function () {
             $('#loader').hide();

@@ -5820,64 +5820,187 @@ namespace CityWatch.Data.Providers
         }
 
         //p1-191 hr files task 3-start
+        //public void SaveHRSettings(HrSettings hrSettings, int[] selctedSites, string[] selectedStates)
+        //{
+
+
+
+        //    if (hrSettings.Id == 0)
+        //    {
+        //        _context.HrSettings.Add(hrSettings);
+        //        _context.SaveChanges();
+        //        int newId = hrSettings.Id;
+        //        if (newId != 0)
+        //        {
+        //            // Sites 
+
+        //            foreach (var siteId in selctedSites)
+        //            {
+        //                HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+        //                {
+
+        //                    ClientSiteId = siteId,
+        //                    HrSettingsId = newId
+
+        //                };
+
+
+        //                _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+        //                _context.SaveChanges();
+
+        //            }
+
+
+        //            // State
+        //            if (selectedStates.Count() != 0)
+        //            {
+        //                foreach (var state in selectedStates)
+        //                {
+        //                    HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+        //                    {
+
+
+        //                        HrSettingsId = newId,
+        //                        State = state
+
+        //                    };
+
+
+        //                    _context.HrSettingsClientStates.Add(HrSettingsStates);
+        //                    _context.SaveChanges();
+
+        //                }
+
+        //            }
+
+
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var hrSettingsToUpdate = _context.HrSettings.SingleOrDefault(x => x.Id == hrSettings.Id);
+        //        if (hrSettingsToUpdate != null)
+        //        {
+        //            hrSettingsToUpdate.HRGroupId = hrSettings.HRGroupId;
+        //            hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
+        //            hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
+        //            hrSettingsToUpdate.Description = hrSettings.Description;
+        //            _context.SaveChanges();
+        //        }
+
+        //        var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+        //        if (hrremoveSites != null)
+        //        {
+        //            _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
+        //            _context.SaveChanges();
+
+        //        }
+        //        foreach (var siteId in selctedSites)
+        //        {
+        //            HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+        //            {
+
+        //                ClientSiteId = siteId,
+        //                HrSettingsId = hrSettings.Id
+
+        //            };
+
+        //            _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+        //            _context.SaveChanges();
+
+        //        }
+
+
+
+
+
+        //        var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+        //        if (hrremoveStates != null)
+        //        {
+        //            _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
+        //            _context.SaveChanges();
+
+        //        }
+        //        foreach (var State in selectedStates)
+        //        {
+        //            HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+        //            {
+
+        //                State = State,
+        //                HrSettingsId = hrSettings.Id
+
+        //            };
+
+        //            _context.HrSettingsClientStates.Add(HrSettingsStates);
+        //            _context.SaveChanges();
+
+        //        }
+
+
+
+
+
+        //    }
+
+        //}
+
         public void SaveHRSettings(HrSettings hrSettings, int[] selctedSites, string[] selectedStates)
         {
+            // Normalize description (trim & lowercase)
+            string desc = hrSettings.Description?.Trim().ToLower();
 
+            if (string.IsNullOrEmpty(desc))
+            {
+                throw new ArgumentException("Description cannot be empty.");
+            }
 
+            // Check if description already exists
+            // Check if active description already exists
+            bool isDuplicate = _context.HrSettings
+                .Any(x => x.Description.Trim().ToLower() == desc
+                          && x.Id != hrSettings.Id
+                          && x.IsDeleted == false); // check only active records
+
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Description already exists. Please choose a different one.");
+            }
 
             if (hrSettings.Id == 0)
             {
+                // Insert new HrSettings
                 _context.HrSettings.Add(hrSettings);
                 _context.SaveChanges();
                 int newId = hrSettings.Id;
+
                 if (newId != 0)
                 {
-                    // Sites 
-
+                    // Add Sites
                     foreach (var siteId in selctedSites)
                     {
-                        HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                        _context.HrSettingsClientSites.Add(new HrSettingsClientSites
                         {
-
                             ClientSiteId = siteId,
                             HrSettingsId = newId
-
-                        };
-
-
-                        _context.HrSettingsClientSites.Add(HrSettingsClientSites);
-                        _context.SaveChanges();
-
+                        });
                     }
 
-
-                    // State
-                    if (selectedStates.Count() != 0)
+                    // Add States
+                    foreach (var state in selectedStates ?? Array.Empty<string>())
                     {
-                        foreach (var state in selectedStates)
+                        _context.HrSettingsClientStates.Add(new HrSettingsClientStates
                         {
-                            HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
-                            {
-
-
-                                HrSettingsId = newId,
-                                State = state
-
-                            };
-
-
-                            _context.HrSettingsClientStates.Add(HrSettingsStates);
-                            _context.SaveChanges();
-
-                        }
-
+                            HrSettingsId = newId,
+                            State = state
+                        });
                     }
 
-
+                    _context.SaveChanges();
                 }
             }
             else
             {
+                // Update existing HrSettings
                 var hrSettingsToUpdate = _context.HrSettings.SingleOrDefault(x => x.Id == hrSettings.Id);
                 if (hrSettingsToUpdate != null)
                 {
@@ -5885,64 +6008,42 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
                     hrSettingsToUpdate.Description = hrSettings.Description;
-                    _context.SaveChanges();
                 }
 
-                var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
-                if (hrremoveSites != null)
-                {
-                    _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
-                    _context.SaveChanges();
+                // Remove old sites & states
+                _context.HrSettingsClientSites.RemoveRange(
+                    _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id)
+                );
+                _context.HrSettingsClientStates.RemoveRange(
+                    _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id)
+                );
 
-                }
+                _context.SaveChanges();
+
+                // Add new sites
                 foreach (var siteId in selctedSites)
                 {
-                    HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                    _context.HrSettingsClientSites.Add(new HrSettingsClientSites
                     {
-
                         ClientSiteId = siteId,
                         HrSettingsId = hrSettings.Id
-
-                    };
-
-                    _context.HrSettingsClientSites.Add(HrSettingsClientSites);
-                    _context.SaveChanges();
-
+                    });
                 }
 
-
-
-
-
-                var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
-                if (hrremoveStates != null)
+                // Add new states
+                foreach (var state in selectedStates ?? Array.Empty<string>())
                 {
-                    _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
-                    _context.SaveChanges();
-
-                }
-                foreach (var State in selectedStates)
-                {
-                    HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+                    _context.HrSettingsClientStates.Add(new HrSettingsClientStates
                     {
-
-                        State = State,
-                        HrSettingsId = hrSettings.Id
-
-                    };
-
-                    _context.HrSettingsClientStates.Add(HrSettingsStates);
-                    _context.SaveChanges();
-
+                        HrSettingsId = hrSettings.Id,
+                        State = state
+                    });
                 }
 
-
-
-
-
+                _context.SaveChanges();
             }
-
         }
+
         public void DeleteHRSettings(int id)
         {
             var deleteHrSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
