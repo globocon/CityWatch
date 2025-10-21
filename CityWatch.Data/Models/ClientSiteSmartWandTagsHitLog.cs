@@ -17,6 +17,7 @@ namespace CityWatch.Data.Models
         public string LabelDescription { get; set; }
         public int? TagLinkedClientSiteId { get; set; }
         public DateTime HitUtcDateTime { get; set; } =  DateTime.UtcNow;
+        public int? SmartWandId { get; set; }
 
         [NotMapped]
         public DateTime HitLocalDateTime { get; set; }

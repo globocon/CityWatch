@@ -194,6 +194,7 @@ namespace CityWatch.Web.Services
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
 
         public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
+        public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -2875,6 +2876,28 @@ namespace CityWatch.Web.Services
 
             return sites;
 
+        }
+
+
+        public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId)
+        {
+            var smartWandList = GetClientSiteSmartWands(clientSiteId).OrderBy(x=> x.SmartWandId);
+                        
+            // Initialize with the default "Select" option
+            var items = new List<DropdownItem>
+                {
+                    new DropdownItem { Id = 0, Name = "Select" }
+                };
+
+            items.AddRange(smartWandList.Select(item =>
+                new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = item.SmartWandId
+                }
+            ));
+
+            return items;
         }
 
     }
