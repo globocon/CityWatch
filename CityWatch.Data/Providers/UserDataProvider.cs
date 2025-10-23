@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Models;
+using iText.Commons.Actions.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -36,36 +37,48 @@ namespace CityWatch.Data.Providers
         {
 
             var users = _context.Users
-       .Where(x => includeAdminUsers || !x.IsAdmin)
-       .OrderBy(x => x.UserName)
-       .ToList();
+               .Where(x => includeAdminUsers || !x.IsAdmin)
+               .OrderBy(x => x.UserName)
+               .ToList();
 
-            // Get last login information for all users from LoginUserHistory, including guard and site name
-            var lastLogins = _context.LoginUserHistory
-                .Select(l => new
-                {
-                    l.LoginUserId,
-                    l.LoginTime,
-                    l.IPAddress,
-                    GuardName = l.GuardId != 0 ? _context.Guards.FirstOrDefault(g => g.Id == l.GuardId).Name : string.Empty,
-                    SiteName = l.ClientSiteId != 0 ? _context.ClientSites.FirstOrDefault(c => c.Id == l.ClientSiteId).Name : string.Empty
-                })
-                .GroupBy(x => x.LoginUserId)  // Group by LoginUserId to get the latest login for each user
-                .Select(g => g.OrderByDescending(x => x.LoginTime).FirstOrDefault()) // Take the most recent login per user
-                .ToDictionary(x => x.LoginUserId, x => x);
+            var Guards = _context.Guards.ToList();
+            var Sites = _context.ClientSites.ToList();
+            var result = _context.LoginUserHistory
+            .GroupBy(l => l.LoginUserId)
+            .Select(g => g.OrderByDescending(x => x.LoginTime).FirstOrDefault())
+            .ToList();
 
-            // Loop through users and assign the last login information to each user
             foreach (var user in users)
-            {
-                if (lastLogins.TryGetValue(user.Id, out var lastLoginRecord))
-                {
-                    // Assign the login time, IP, and additional information to the user object
-                    user.LastLoginDate = lastLoginRecord.LoginTime;
-                    user.LastLoginIPAdress = lastLoginRecord.IPAddress;
-
-
-                }
+            {                
+                user.LastLoginDate = result.Where(x => x.LoginUserId == user.Id)?.FirstOrDefault()?.LoginTime ?? null;
+                user.LastLoginIPAdress = result.Where(x => x.LoginUserId == user.Id)?.FirstOrDefault()?.IPAddress ?? null;
             }
+
+
+            //// Get last login information for all users from LoginUserHistory, including guard and site name
+            //var lastLogins = _context.LoginUserHistory
+            //    .Select(l => new
+            //    {
+            //        l.LoginUserId,
+            //        l.LoginTime,
+            //        l.IPAddress,
+            //        GuardName = l.GuardId != 0 ? Guards.FirstOrDefault(g => g.Id == l.GuardId).Name : string.Empty,
+            //        SiteName = l.ClientSiteId != 0 ? Sites.FirstOrDefault(c => c.Id == l.ClientSiteId).Name : string.Empty
+            //    })
+            //    .GroupBy(x => x.LoginUserId)  // Group by LoginUserId to get the latest login for each user
+            //    .Select(g => g.OrderByDescending(x => x.LoginTime).FirstOrDefault()) // Take the most recent login per user
+            //    .ToDictionary(x => x.LoginUserId, x => x);
+
+            //// Loop through users and assign the last login information to each user
+            //foreach (var user in users)
+            //{
+            //    if (lastLogins.TryGetValue(user.Id, out var lastLoginRecord))
+            //    {
+            //        // Assign the login time, IP, and additional information to the user object
+            //        user.LastLoginDate = lastLoginRecord.LoginTime;
+            //        user.LastLoginIPAdress = lastLoginRecord.IPAddress;
+            //    }
+            //}
 
             return users;
 
@@ -271,7 +284,7 @@ namespace CityWatch.Data.Providers
                     x.Id
                 })
                 .ToList();
-             var primaryDefaultTemplate= _context.ReportTemplates.Where(x => x.SubDomainId == 0).FirstOrDefault();
+            var primaryDefaultTemplate = _context.ReportTemplates.Where(x => x.SubDomainId == 0).FirstOrDefault();
             var reportTemplets = _context.ReportTemplates
                 .Where(rt => subdomin.Select(s => s.Id).Contains(rt.SubDomainId)) // Fetch only necessary templates
                 .ToList();
@@ -290,7 +303,7 @@ namespace CityWatch.Data.Providers
                     LastUpdated = checkifexist?.LastUpdated ?? DateTime.MinValue,
                     DefaultEmail = checkifexist?.DefaultEmail ?? "", // Ensure non-null values
                     FileName = checkifexist?.FileName ?? "",
-                    SubDomainId= domin.Id
+                    SubDomainId = domin.Id
                 });
             }
             temp.Add(primaryDefaultTemplate);
@@ -298,7 +311,7 @@ namespace CityWatch.Data.Providers
         }
 
 
-       
+
 
 
 

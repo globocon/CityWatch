@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+
 namespace CityWatch.Data.Models
 {
     public class ClientSiteSmartWand
@@ -15,6 +16,12 @@ namespace CityWatch.Data.Models
         public string PhoneNumber { get; set; }
         public string SIMProvider { get; set; }
         public bool IsDeleted { get; set; }
+        [MaxLength(100)]
+        public string? DeviceType { get; set; }
+        [MaxLength(150)]
+        public string? DeviceId { get; set; }
+        [MaxLength(250)]
+        public string? DeviceName { get; set; }
 
         [NotMapped]
         public bool IsInUse { get; set; }

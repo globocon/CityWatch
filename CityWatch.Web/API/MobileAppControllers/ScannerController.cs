@@ -5,6 +5,7 @@ using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 namespace CityWatch.Web.API
@@ -31,7 +32,19 @@ namespace CityWatch.Web.API
         {
             try
             {
-                var clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypesForClientSite(siteId);
+                List<string> clientSiteScannerOnBoardingSettings = new List<string>();
+                //Check if tour mode is enabled for the site then allow nfc and bluetooth tag scanning
+                var _ClientSiteTourMode = _clientSitesDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
+                if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                {
+                    clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypes().Distinct().Select(x => x.value).ToList();
+                }
+                else
+                {
+                    clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypesForClientSite(siteId);
+                }
+
+                    
                 return Ok(clientSiteScannerOnBoardingSettings);
             }
             catch (Exception ex)
@@ -41,7 +54,7 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetNFCtagInfoData")]
-        public IActionResult GetNFCtagInfoData(int siteId, string TagUid, int GuardId, int UserId)
+        public IActionResult GetNFCtagInfoData(int siteId, string TagUid, int GuardId, int UserId, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -70,6 +83,7 @@ namespace CityWatch.Web.API
                 _clientSiteSmartWandTagsHitLog.TagUId = TagUid;
                 _clientSiteSmartWandTagsHitLog.HitUtcDateTime = DateTime.UtcNow;
                 _clientSiteSmartWandTagsHitLog.TagsTypeId = _smartWandTagsTypes.Where(x => x.value.ToLower().Equals("nfc")).FirstOrDefault()?.Id ?? null;
+                _clientSiteSmartWandTagsHitLog.SmartWandId = SmartWandId ?? 0;
 
                 if (TagInfoDetails == null)
                 {
@@ -187,40 +201,56 @@ namespace CityWatch.Web.API
             return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = csswt.LabelDescription });
         }
 
-        //[HttpGet("GetCrowdCountControlDataAndSettings")]
-        //public async Task<IActionResult> GetCrowdCountControlDataAndSettingsAsync(int siteId)
-        //{
-        //    try
-        //    {
-        //        var cdto = await _viewDataService.GetCrowdCountControlDataAndSettings(siteId);                                
-        //        return Ok(cdto);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
-        //    }
-        //}
 
-        //[HttpGet("ResetCrowdCountControl")]
-        //public async Task<IActionResult> ResetCrowdCountControl()
-        //{
-        //    try
-        //    {
-        //        await _viewDataService.ResetAllSiteCrowdCountControl();
-        //        return Ok("Ok");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
-        //    }
-        //}
+        [HttpPost("CheckAndRegisterDeviceWithSmartWand")]
+        public IActionResult CheckAndRegisterDeviceWithSmartWand([FromBody] SmartWandDeviceRegister csswt)
+        {            
+            try
+            {
+                var res = _viewDataService.CheckAndRegisterDeviceWithSmartWand(csswt);
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                csswt.Message = ex.Message;
+            }
 
-        //[HttpPost("SaveGuardLocation")]
-        //public async Task<IActionResult> SaveGuardLocation([FromBody] MobileCrowdControlGuard MCCG)
-        //{
-        //    await _viewDataService.SaveCrowdControlGuardLocation(MCCG);
-        //    return Ok("Ok");
-        //}
+            return Ok(csswt);
+        }
+
+        [HttpPost("CheckIfSmartWandIsDeRegisteredAsync")]
+        public IActionResult CheckIfSmartWandIsDeRegisteredAsync([FromBody] string deviceid)
+        {
+            
+            try
+            {
+                var res = _viewDataService.CheckIfSmartWandIsDeRegisteredAsync(deviceid);
+                return Ok(res);
+            }
+            catch (Exception)
+            {
+                return Ok(false);
+            }            
+        }
+
+        [HttpGet("GetClientSiteSmartWands")]
+        public IActionResult GetClientSiteSmartWands(int siteId)
+        {
+            try
+            {
+                //GetClientSiteSmartWands
+                var smartWandList = _viewDataService.GetClientSiteSmartWandListForMobile(siteId);
+
+                if (smartWandList == null || !smartWandList.Any())
+                    return NotFound(new { message = "No smart wands found." });
+
+                return Ok(smartWandList);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
 
     }
 }

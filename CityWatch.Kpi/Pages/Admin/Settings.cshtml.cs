@@ -2099,7 +2099,28 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
+        public JsonResult OnPostDeRegisterDevice(int id)
+        {
+            var status = true;
+            var message = "Device has been successfully de-registered.";
+            try
+            {
+                var document = _clientSiteWandDataProvider.DeRegisterDeviceWithSmartWand(id);
+                if (!document)
+                {
+                    status = false;
+                    message = "An error occured while de-registering device. Please try after sometime.";
+                }
 
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
 
         public JsonResult OnPostSaveDuressApp(int duressAppId, string positionFilter, int selectedPosition, int siteDuressNumber, int clientSiteIdDuress, int? logProfileId)
         {

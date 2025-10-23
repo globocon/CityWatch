@@ -186,6 +186,7 @@ namespace CityWatch.Web.Services
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
         List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
         List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
+        List<SmartWandTagsType> GetSmartWandTagTypes();
         ScannerTagDetails GetSmartWandTagDetailOfTag(string TagUid, string TagType);
         List<object> GetGuardRcClientSiteAccess(int guardId);
         List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds);
@@ -194,6 +195,10 @@ namespace CityWatch.Web.Services
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
 
         public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
+        public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
+        public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
+        public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -326,9 +331,9 @@ namespace CityWatch.Web.Services
             return smartWandTags;
         }
 
-        public List<ClientSiteSmartWandTags> GetSmartWandTagTypes()
+        public List<SmartWandTagsType> GetSmartWandTagTypes()
         {
-            var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+            var smartWandTags = _clientSiteWandDataProvider.GetSmartWandTagsType()
                  .ToList();
             return smartWandTags;
         }
@@ -2876,6 +2881,104 @@ namespace CityWatch.Web.Services
             return sites;
 
         }
+
+
+        public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId)
+        {
+            var smartWandList = GetClientSiteSmartWands(clientSiteId).OrderBy(x => x.SmartWandId);
+
+            // Initialize with the default "Select" option
+            var items = new List<DropdownItem>
+                {
+                    new DropdownItem { Id = 0, Name = "Select" }
+                };
+
+            items.AddRange(smartWandList.Select(item =>
+                new DropdownItem
+                {
+                    Id = item.Id,
+                    Name = item.SmartWandId
+                }
+            ));
+
+            return items;
+        }
+
+        public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister)
+        {
+            // Get Details of SmartWand from ClientSiteSmartWand table
+
+            var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(x => x.Id == DeviceToRegister.SmartWandId).FirstOrDefault();
+            if (smartWand != null)
+            {
+                // Check if the SmartWandId already registered with any device
+                if (smartWand.DeviceId != null && smartWand.DeviceId != "")
+                {
+                    // Check if registered with same device
+                    if (smartWand.DeviceId == DeviceToRegister.DeviceId)
+                    {
+                        DeviceToRegister.IsSuccess = false;
+                        DeviceToRegister.Message = "Device already registered with this device.";
+                        return DeviceToRegister;
+                    }
+                    else
+                    {
+                        DeviceToRegister.IsSuccess = false;
+                        DeviceToRegister.Message = "Device already registered with a different device.";
+                        return DeviceToRegister;
+                    }
+                }
+                else
+                {
+                    // Not registered, proceed to register
+                    smartWand.DeviceId = DeviceToRegister.DeviceId;
+                    smartWand.DeviceName = DeviceToRegister.DeviceName;
+                    smartWand.DeviceType = DeviceToRegister.DeviceType;
+                    try
+                    {
+                        var result = _clientSiteWandDataProvider.UpdateClientSiteSmartWand(smartWand);
+                        if (result)
+                        {
+                            DeviceToRegister.IsSuccess = true;
+                            DeviceToRegister.Message = "Device registered successfully.";
+                        }
+                        else
+                        {
+                            DeviceToRegister.IsSuccess = false;
+                            DeviceToRegister.Message = "Failed to register device.";
+                        }
+                        return DeviceToRegister;
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("Smart Wand not found");
+            }
+
+        }
+
+        public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck)
+        {
+            // Get Details of SmartWand from ClientSiteSmartWand table
+
+            if (string.IsNullOrWhiteSpace(DeviceIdToCheck))
+                return false; // invalid deviceId
+
+            var allSmartWands = _clientSiteWandDataProvider.GetClientSiteSmartWands();
+
+            if (allSmartWands == null)
+                return true; // no data available means treat as deregistered
+
+            var smartWand = allSmartWands.FirstOrDefault(x => x.DeviceId != null && x.DeviceId.Trim() == DeviceIdToCheck.Trim());
+
+            return smartWand == null; // true = deregistered
+        }
+
 
     }
 
