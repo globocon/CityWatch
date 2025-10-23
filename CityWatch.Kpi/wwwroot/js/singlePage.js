@@ -17,16 +17,29 @@ $(function () {
     $('#ClientSiteCustomField_ClientSiteId').val(window.sharedVariable);
 
     gritdSmartWands = $('#cs-smart-wands').grid({
-        dataSource: '/admin/settings?handler=SmartWandSettings&&clientSiteId=' + $('#gl_client_site_id').val(),
+        dataSource: '/admin/settings?handler=SmartWandSettings&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 250, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
-            { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
-            { width: 250, field: 'simProvider', title: 'SIM Provider', editor: true },
-        ],
+            { width: 150, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
+            { width: 200, field: 'phoneNumber', title: 'Number', editor: true },
+            { width: 150, field: 'simProvider', title: 'SIM Provider', editor: true },
+            /*{ width: 250, renderer: renderderegisterDevice, title: 'Registered Device', align: 'left', editor: false },*/
+            {
+                title: 'Registered Device',
+                width: 250,
+                align: 'left',
+                editor: false,
+                tmpl: '<span class="action-placeholder"></span>'
+            }
+        ],        
+        rowDataBound: function (e, $row, id, record) {
+            const $cell = $row.find('.action-placeholder');
+            const html = renderderegisterDevice(record);
+            $cell.html(html);
+        },
         
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -87,6 +100,48 @@ $(function () {
             }
         });
     }
+
+function renderderegisterDevice(value, record) {
+    let buttonHtml = '';
+    if (record.deviceId != null && record.deviceId != '') {
+        buttonHtml = `<span><strong>Device Name:</strong> ${record.deviceName}</br><strong>Device Type:</strong> ${record.deviceType}</span>`;
+        buttonHtml += '</br><button type="button" style="display:inline-block!important;" class="btn btn-outline-primary m-1 de-registerDevice d-block" data-sw-id="' + record.id + '""><i class="fa fa-unlink mr-1" aria-hidden="true"></i>De-Register</button>';
+    }
+    return buttonHtml;
+    }
+
+    function renderderegisterDevice(record) {
+        let buttonHtml = '';
+        if (record.deviceId != null && record.deviceId != '') {
+            buttonHtml = `<span><strong>Device Name:</strong> ${record.deviceName}</br><strong>Device Type:</strong> ${record.deviceType}</span>`;
+            buttonHtml += '</br><button type="button" style="display:inline-block!important;" class="btn btn-outline-primary m-1 de-registerDevice d-block" data-sw-id="' + record.id + '""><i class="fa fa-unlink mr-1" aria-hidden="true"></i>De-Register</button>';
+        }
+        return buttonHtml;
+    }
+
+
+    $('#cs-smart-wands').on('click', '.de-registerDevice', function () {
+        const idToDelete = $(this).attr('data-sw-id');
+        if (confirm('Are you sure want to de-register this device?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeRegisterDevice',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.status) {
+                    //gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                    gritdSmartWands.reload();
+                    alert('Success: ' + response.message);
+                } else {
+                    alert('Error: ' +response.message);
+                }
+            });
+        }
+
+    });
+
+    
     let isSmartWandAdding = false;
     $('#add_smart_wand').on('click', function () {
 

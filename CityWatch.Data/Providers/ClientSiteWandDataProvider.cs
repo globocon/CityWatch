@@ -16,6 +16,8 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWand> GetClientSiteSmartWands();
         List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms);
         void SaveClientSiteSmartWand(ClientSiteSmartWand clientSiteSmartWand);
+        bool UpdateClientSiteSmartWand(ClientSiteSmartWand clientSiteSmartWand);
+        bool DeRegisterDeviceWithSmartWand(int SmartWandId);
         void DeleteClientSiteSmartWand(int id);
         List<ClientSiteSmartWand> GetClientSiteAllSmartWands(int[] clientSiteIds);
         List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteAllSmartWandsStrikes(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
@@ -91,6 +93,42 @@ namespace CityWatch.Data.Providers
                 }
             }
             _dbContext.SaveChanges();
+        }
+
+        public bool UpdateClientSiteSmartWand(ClientSiteSmartWand clientSiteSmartWand)
+        {
+            if (clientSiteSmartWand == null)
+                throw new ArgumentNullException();
+
+            if (clientSiteSmartWand.Id <= 0)            
+                throw new Exception("Invalid Smart Wand.") ;
+            
+            _dbContext.SaveChanges();
+            return true;                       
+        }
+
+        public bool DeRegisterDeviceWithSmartWand(int SmartWandId)
+        {
+            var smartWand = _dbContext.ClientSiteSmartWands.Where(x => x.Id == SmartWandId).FirstOrDefault();
+            if (smartWand != null)
+            {
+                smartWand.DeviceId = null;
+                smartWand.DeviceName = null;
+                smartWand.DeviceType = null;
+                try
+                {
+                    _dbContext.SaveChanges();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            else
+            {
+                throw new Exception("Smart Wand not found");
+            }
         }
 
         public void DeleteClientSiteSmartWand(int id)

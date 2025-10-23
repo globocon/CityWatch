@@ -195,6 +195,8 @@ namespace CityWatch.Web.Services
 
         public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
+        public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
+        
     }
 
     public class ViewDataService : IViewDataService
@@ -2881,8 +2883,8 @@ namespace CityWatch.Web.Services
 
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId)
         {
-            var smartWandList = GetClientSiteSmartWands(clientSiteId).OrderBy(x=> x.SmartWandId);
-                        
+            var smartWandList = GetClientSiteSmartWands(clientSiteId).OrderBy(x => x.SmartWandId);
+
             // Initialize with the default "Select" option
             var items = new List<DropdownItem>
                 {
@@ -2899,6 +2901,66 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+
+        public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister)
+        {
+            // Get Details of SmartWand from ClientSiteSmartWand table
+
+            var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(x => x.Id == DeviceToRegister.SmartWandId).FirstOrDefault();
+            if (smartWand != null)
+            {
+                // Check if the SmartWandId already registered with any device
+                if (smartWand.DeviceId != null && smartWand.DeviceId != "")
+                {
+                    // Check if registered with same device
+                    if (smartWand.DeviceId == DeviceToRegister.DeviceId)
+                    {
+                        DeviceToRegister.IsSuccess = false;
+                        DeviceToRegister.Message = "Device already registered with this device.";
+                        return DeviceToRegister;
+                    }
+                    else
+                    {
+                        DeviceToRegister.IsSuccess = false;
+                        DeviceToRegister.Message = "Device already registered with a different device.";
+                        return DeviceToRegister;
+                    }
+                }
+                else
+                {
+                    // Not registered, proceed to register
+                    smartWand.DeviceId = DeviceToRegister.DeviceId;
+                    smartWand.DeviceName = DeviceToRegister.DeviceName;
+                    smartWand.DeviceType = DeviceToRegister.DeviceType;
+                    try
+                    {
+                        var result = _clientSiteWandDataProvider.UpdateClientSiteSmartWand(smartWand);
+                        if (result)
+                        {
+                            DeviceToRegister.IsSuccess = true;
+                            DeviceToRegister.Message = "Device registered successfully.";
+                        }
+                        else
+                        {
+                            DeviceToRegister.IsSuccess = false;
+                            DeviceToRegister.Message = "Failed to register device.";
+                        }
+                        return DeviceToRegister;
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("Smart Wand not found");
+            }
+
+        }
+
+        
 
     }
 

@@ -188,6 +188,23 @@ namespace CityWatch.Web.API
             return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = csswt.LabelDescription });
         }
 
+
+        [HttpPost("CheckAndRegisterDeviceWithSmartWand")]
+        public IActionResult CheckAndRegisterDeviceWithSmartWand([FromBody] SmartWandDeviceRegister csswt)
+        {            
+            try
+            {
+                var res = _viewDataService.CheckAndRegisterDeviceWithSmartWand(csswt);
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                csswt.Message = ex.Message;
+            }
+
+            return Ok(csswt);
+        }
+
         [HttpGet("GetClientSiteSmartWands")]
         public IActionResult GetClientSiteSmartWands(int siteId)
         {
