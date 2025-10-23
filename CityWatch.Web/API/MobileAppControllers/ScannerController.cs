@@ -218,6 +218,21 @@ namespace CityWatch.Web.API
             return Ok(csswt);
         }
 
+        [HttpPost("CheckIfSmartWandIsDeRegisteredAsync")]
+        public IActionResult CheckIfSmartWandIsDeRegisteredAsync([FromBody] string deviceid)
+        {
+            
+            try
+            {
+                var res = _viewDataService.CheckIfSmartWandIsDeRegisteredAsync(deviceid);
+                return Ok(res);
+            }
+            catch (Exception)
+            {
+                return Ok(false);
+            }            
+        }
+
         [HttpGet("GetClientSiteSmartWands")]
         public IActionResult GetClientSiteSmartWands(int siteId)
         {

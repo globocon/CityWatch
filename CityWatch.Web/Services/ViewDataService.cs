@@ -197,7 +197,8 @@ namespace CityWatch.Web.Services
         public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
         public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
-        
+        public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -2961,7 +2962,23 @@ namespace CityWatch.Web.Services
 
         }
 
-        
+        public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck)
+        {
+            // Get Details of SmartWand from ClientSiteSmartWand table
+
+            if (string.IsNullOrWhiteSpace(DeviceIdToCheck))
+                return false; // invalid deviceId
+
+            var allSmartWands = _clientSiteWandDataProvider.GetClientSiteSmartWands();
+
+            if (allSmartWands == null)
+                return true; // no data available means treat as deregistered
+
+            var smartWand = allSmartWands.FirstOrDefault(x => x.DeviceId != null && x.DeviceId.Trim() == DeviceIdToCheck.Trim());
+
+            return smartWand == null; // true = deregistered
+        }
+
 
     }
 
