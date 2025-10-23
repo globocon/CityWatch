@@ -2238,11 +2238,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
 
                     Directory.Delete(tempFolder);
-                    var DropboxDir = _guardDataProvider.GetDrobox();
-                    //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
-                    var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
-                    var dbxUploaded = true;
-                    dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    
                     var documentId = Convert.ToInt32(Request.Form["doc-id"]);
                     int TQNumbernew = Convert.ToInt32(Request.Form["tq-id"]);
                     if (TQNumbernew == 0)
@@ -2300,6 +2296,14 @@ namespace CityWatch.Web.Pages.Admin
                     }
 
                     success = true;
+                    if (".mp4".IndexOf(Path.GetExtension(fileName).ToLower()) < 0)
+                    {
+                        var DropboxDir = _guardDataProvider.GetDrobox();
+                        //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+                        var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Course/{fileName}");
+                        var dbxUploaded = true;
+                        dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, fileName), dbxFilePath);
+                    }
                 }
 
             }
@@ -2445,7 +2449,7 @@ namespace CityWatch.Web.Pages.Admin
                 //if (uploaded && System.IO.File.Exists(fileToUpload))
                 //    System.IO.File.Delete(fileToUpload);
             }
-            catch
+            catch(Exception ex)
             {
             }
 

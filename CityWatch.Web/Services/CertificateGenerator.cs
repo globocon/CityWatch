@@ -384,7 +384,16 @@ namespace CityWatch.Web.Services
                 DateTime currentdate = DateTime.Now;
                 // DateTime parsedDate = DateTime.Parse(futuredate);
                 var formattedDate = currentdate.ToString("dd MMM yy").ToUpper();
-                var newFileName = jresult.FirstOrDefault().Description + "-" + "doi " + formattedDate + extension;
+                var newFileName = string.Empty;
+                if (certificateRPL.Count() > 0)
+                {
+
+                    newFileName = jresult.FirstOrDefault().Description + "-" + "doi " + certificateRPL.LastOrDefault().AssessmentEndDate.ToString("dd-MMM-yyyy") + extension;
+                }
+                else
+                {
+                    newFileName = jresult.FirstOrDefault().Description + "-" + "doi " + formattedDate + extension;
+                }
                 var fileName = jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name + "_" + newFileName;
                 fileName = GetFilename(fileName);
                 reportPdf = IO.Path.Combine(_UploadRootDir, certificateName);

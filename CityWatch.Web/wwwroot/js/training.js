@@ -3006,7 +3006,7 @@ function RunCourses() {
                 if (!video.paused && !video.ended) {
                     //canvas.width = video.videoWidth;
                     //canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, 0, 0);
+                    //ctx.drawImage(video, 0, 0, 0, 0);
                     requestAnimationFrame(drawFrame);
                 }
 
