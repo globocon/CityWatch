@@ -5,6 +5,7 @@ using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 namespace CityWatch.Web.API
@@ -31,7 +32,19 @@ namespace CityWatch.Web.API
         {
             try
             {
-                var clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypesForClientSite(siteId);
+                List<string> clientSiteScannerOnBoardingSettings = new List<string>();
+                //Check if tour mode is enabled for the site then allow nfc and bluetooth tag scanning
+                var _ClientSiteTourMode = _clientSitesDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
+                if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                {
+                    clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypes().Distinct().Select(x => x.value).ToList();
+                }
+                else
+                {
+                    clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypesForClientSite(siteId);
+                }
+
+                    
                 return Ok(clientSiteScannerOnBoardingSettings);
             }
             catch (Exception ex)

@@ -186,6 +186,7 @@ namespace CityWatch.Web.Services
         public Task<ClientSiteMobileCrowdControlDTO> GetCrowdCountControlDataAndSettings(int siteId);
         List<SubDomain> GetUserSubDomainsHavingAccess(int? userId);
         List<string> GetSmartWandTagTypesForClientSite(int clientSiteId);
+        List<SmartWandTagsType> GetSmartWandTagTypes();
         ScannerTagDetails GetSmartWandTagDetailOfTag(string TagUid, string TagType);
         List<object> GetGuardRcClientSiteAccess(int guardId);
         List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds);
@@ -329,9 +330,9 @@ namespace CityWatch.Web.Services
             return smartWandTags;
         }
 
-        public List<ClientSiteSmartWandTags> GetSmartWandTagTypes()
+        public List<SmartWandTagsType> GetSmartWandTagTypes()
         {
-            var smartWandTags = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+            var smartWandTags = _clientSiteWandDataProvider.GetSmartWandTagsType()
                  .ToList();
             return smartWandTags;
         }
