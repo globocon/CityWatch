@@ -395,6 +395,8 @@ namespace CityWatch.Data.Providers
                     LoggedInClientSite = log.LoggedInClientSite,
                     LinkedClientSite = log.LinkedClientSite,
                     SmartWandTagsType = log.SmartWandTagsType,
+                    SmartWandNameId = log.SmartWandNameId,
+                    SmartWandId = log.SmartWandId,
                     LoggedInGuard = log.LoggedInGuard,
                     LoggedInUser = log.LoggedInUser
                 }).Where(l => l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();

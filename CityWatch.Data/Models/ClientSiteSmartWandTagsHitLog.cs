@@ -22,6 +22,8 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public DateTime HitLocalDateTime { get; set; }
 
+        [NotMapped]
+        public string? SmartWandNameId { get; set; }
 
         [ForeignKey("LoggedInClientSiteId")]
         public ClientSite LoggedInClientSite { get; set; }
