@@ -9028,11 +9028,12 @@ $(function () {
                 width: "5%",
                 orderable: true
             },
-            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },            
             { data: 'smartWandType', width: "5%", orderable: false },
             { data: 'endUser', width: "15%", orderable: true },
-            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%", orderable: false },
-            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "15%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "40%", orderable: false },
         ],
         drawCallback: function () {
             var api = this.api();
@@ -9045,7 +9046,7 @@ $(function () {
                     if (last !== group) {
                         $(rows)
                             .eq(i)
-                            .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
+                            .before('<tr class="group bg-light text-dark"><td colspan="8">' + group + '</td></tr>');
 
                         last = group;
                     }
@@ -9077,6 +9078,7 @@ $(function () {
                 width: "5%",
                 orderable: true
             },
+            { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
             { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
             { data: 'smartWandType', width: "5%" },
             { data: 'endUser', width: "15%" },
