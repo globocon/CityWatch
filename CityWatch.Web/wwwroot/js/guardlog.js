@@ -68,12 +68,12 @@ $(function () {
             dataType: 'json',
             success: function (data) {
      
-                $('#GuardLogin_ClientSiteID').val(data);
+                $('#Rooster_ClientSiteID').val(data);
                 }
         });
 
 
-        const clientSiteControl = $('#GuardLogin_ClientSiteName');
+        const clientSiteControl = $('#Rooster_ClientSite');
         clientSiteControl.html('');
         $.ajax({
             url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
@@ -87,9 +87,9 @@ $(function () {
                 });
 
                 if (selectedSiteName) {
-                    $('#GuardLogin_ClientSiteName').val(selectedSiteName);
+                    $('#Rooster_ClientSite').val(selectedSiteName);
                 } else {
-                    $('#GuardLogin_ClientSiteName').val('');
+                    $('#Rooster_ClientSite').val('');
                 }
             }
         });
@@ -9359,7 +9359,50 @@ $(function () {
     }
 
     // WandStrike -- End
+    //p9-Issue 1-start
+    $('#Rooster_ClientType').on('change', function () {
+        populateClientSitesForRooster();
+    });
+    function populateClientSitesForRooster(selectedSiteName) {
 
+
+      
+        const option = $('#Rooster_ClientType').val();
+        if (option == '')
+            return false;
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSitesNew&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+
+                $('#GuardLogin_ClientSiteID').val(data);
+            }
+        });
+
+
+        const clientSiteControl = $('#Rooster_ClientSite');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                clientSiteControl.html('');
+                clientSiteControl.append('<option value="">Select</option>')
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+
+                if (selectedSiteName) {
+                    $('#Rooster_ClientSite').val(selectedSiteName);
+                } else {
+                    $('#Rooster_ClientSite').val('');
+                }
+            }
+        });
+    }
+    //p9-Issue 1-end
 });
 //Gurad License and Compliance Form start
 let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTable({

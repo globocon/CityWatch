@@ -1,4 +1,5 @@
 ﻿@page
+@using CityWatch.Web.Helpers
 @model CityWatch.Web.Pages.Admin.RosterModel
 @{
    
@@ -8,16 +9,32 @@
 }
 <div class="row">
     <div class="col-sm-2"></div>
-    <div class="col-sm-4" style="padding-top:90px">
-        <div class="col-sm-2"> <h3>TIMESHEETS</h3></div>
+    @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+   {
+    <div class="col-sm-2" style="padding-top:90px">
+        <div class="col-sm-2" style="padding-left:29px"> <h3>BOOKING</h3></div>
         <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
-            <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
-                <img src="~/images/Timesheet.jpg" class="center" />
+            <a href="javascript:void(0);" id="AnBooking">
+                <img src="~/images/CalendarWithHand.png" class="center" />
+               
             </a>
         </div>
-    </div>
+        </div>
+    }
+    else
+    {
+        <div class="col-sm-2" style="padding-top:90px" >
+            <div class="col-sm-2" style="padding-left:29px"> <h3>BOOKING</h3></div>
+            <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
+                <a href="javascript:void(0);" id="AnBooking" disabled>
+                    <img src="~/images/CalendarWithHand.png" class="center" />
+
+                </a>
+            </div>
+        </div>
+    }
     <div class="col-sm-2"></div>
-    <div class="col-sm-4" style="padding-top:90px">
+    <div class="col-sm-2" style="padding-top:90px">
         <div class="col-sm-2" style="padding-left:29px"> <h3>ROSTERS</h3></div>
         <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
             <a href="https://app.guardhousehq.com/au/account/login/" id="Ancompanysop3">
@@ -25,6 +42,17 @@
             </a>
         </div>
     </div>
+    
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2" style="padding-top:90px">
+        <div class="col-sm-2"> <h3>TIMESHEETS</h3></div>
+        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
+            <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
+                <img src="~/images/Timesheet.jpg" class="center" />
+            </a>
+        </div>
+    </div>
+    
 </div>
 @* <div id="dvDownloadSelecterOuter">
     <h3>Timesheet</h3> <!-- Heading outside the div -->
@@ -45,7 +73,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title">Security License No</h6>
+                <h6 class="modal-title">Select Individual Security License No</h6>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -66,9 +94,46 @@
                 </div>
                 <div class="form-row pb-2">
                     <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
-                        Enter Security License No. and click Download
+                        Enter Security License No
                     </div>
                 </div>
+              
+            </div>
+            <div class="modal-header">
+                <h6 class="modal-title">Or Select Site</h6>
+              
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="Rooster_ClientType">Client Type</label>
+                        <div class="input-group">
+                            
+                            
+                            <select class="form-control" id="Rooster_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" ></select>
+                            
+                            
+                        </div>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="Rooster_ClientSite">Client Site</label>
+                        <div class="input-group">
+                            <input type="hidden" id="Rooster_ClientSiteID" />
+
+                            <select class="form-control" id="Rooster_ClientSite">
+                                <option value="">Select</option>
+                            </select>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col text-right">
+                        <button type="button" class="btn btn-primary" id="btnTimesheetSiteConfirm" >Search</button>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer" style="display:block">
                 <div class="text-left">
