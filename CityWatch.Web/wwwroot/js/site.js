@@ -7489,7 +7489,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         // Dynamically add SmartWand and SIMProvider headers
         const smartWandHeaders = [];
         for (let i = 1; i <= maxSmartWands; i++) {
-            smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`);
+            smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`, `IMEI`);
         }
 
         const headers = [...baseHeaders, ...smartWandHeaders];
@@ -7539,7 +7539,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                 // Add SmartWand and SIMProvider data dynamically
                 for (let i = 0; i < maxSmartWands; i++) {
                     const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
-                    rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '');
+                    rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '', smartWand.imei || '');
                 }
 
                 return rowData;
