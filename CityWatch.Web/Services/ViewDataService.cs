@@ -198,6 +198,11 @@ namespace CityWatch.Web.Services
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
         public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
         public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck);
+        public List<Dictionary<string, string>> GetCustomFieldLogs(int logBookId, int clientSiteId);
+        public bool SaveCustomFieldLog(int logBookId, Dictionary<string, string> records);
+        public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId);
+        public bool SavePatrolCarLog(PatrolCarLog record);
+        public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId);
 
     }
 
@@ -2979,6 +2984,103 @@ namespace CityWatch.Web.Services
             return smartWand == null; // true = deregistered
         }
 
+        public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId) {
+
+            var columns = new Dictionary<string, string>()
+            {
+                { "timeSlot", "Time Slot"}
+            };
+            var clientSiteCustomFields = _guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId);
+            var fields = clientSiteCustomFields.Select(z => z.Name).Distinct();
+            foreach (var field in fields)
+            {
+                columns.Add(field, field);
+            }
+            return columns; 
+        }
+
+        public List<Dictionary<string, string>> GetCustomFieldLogs(int logBookId, int clientSiteId)
+        {
+            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
+            if (!customFieldLogs.Any())
+            {
+                var clientSiteCustomFields = _guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId)
+                                                .Select(z => new CustomFieldLog()
+                                                {
+                                                    ClientSiteLogBookId = logBookId,
+                                                    CustomFieldId = z.Id
+                                                }).ToList();
+                _guardLogDataProvider.SaveCustomFieldLogs(clientSiteCustomFields);
+                customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
+            }
+
+            var timeSlotGroups = customFieldLogs.GroupBy(z => z.ClientSiteCustomField.TimeSlot);
+            var rows = new List<Dictionary<string, string>>();
+            foreach (var group in timeSlotGroups)
+            {
+                var columns = new Dictionary<string, string>();
+                if (!columns.ContainsKey(group.Key))
+                {
+                    columns.Add("timeSlot", group.Key);
+                }
+
+                foreach (var field in group.ToList())
+                {
+                    columns.Add(field.ClientSiteCustomField.Name, field.DayValue);
+                }
+                rows.Add(columns);
+            }
+            return rows;
+        }
+
+        public bool SaveCustomFieldLog(int logBookId, Dictionary<string, string> records) {
+            var timeSlot = records["timeSlot"];
+            var success = true;
+            try
+            {
+                var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
+                foreach (var record in records.Where(z => z.Key != "timeSlot"))
+                {
+                    if (record.Value != null)
+                    {
+                        var customFieldLog = customFieldLogs.SingleOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) &&
+                                                                x.ClientSiteCustomField.TimeSlot.Equals(timeSlot));
+                        if (customFieldLog != null)
+                        {
+                            customFieldLog.DayValue = record.Value;
+                            _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return success;
+        }
+
+        public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId) {
+            var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(logBookId);
+            if (!patrolCarLogs.Any())
+            {
+                var clientSitePatrolCars = _clientSiteWandDataProvider.GetClientSitePatrolCars(clientSiteId).Select(z => new PatrolCarLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    PatrolCarId = z.Id,
+                });
+                _guardLogDataProvider.SavePatrolCarLogs(clientSitePatrolCars);
+                patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(logBookId);
+            }
+            return patrolCarLogs;
+        }
+
+        public bool SavePatrolCarLog(PatrolCarLog record)
+        {
+            _guardLogDataProvider.SavePatrolCarLog(record);
+            return true;
+        }
 
     }
 

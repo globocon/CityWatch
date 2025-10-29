@@ -430,18 +430,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetPatrolCarLogs(int logBookId, int clientSiteId)
         {
-            var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(logBookId);
-            if (!patrolCarLogs.Any())
-            {
-                var clientSitePatrolCars = _clientSiteWandDataProvider.GetClientSitePatrolCars(clientSiteId).Select(z => new PatrolCarLog()
-                {
-                    ClientSiteLogBookId = logBookId,
-                    PatrolCarId = z.Id,
-                });
-                _guardLogDataProvider.SavePatrolCarLogs(clientSitePatrolCars);
-                patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(logBookId);
-            }
-
+            var patrolCarLogs = _viewDataService.GetPatrolCarLogs(logBookId, clientSiteId);
             return new JsonResult(patrolCarLogs);
         }
 
@@ -451,7 +440,7 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
-                _guardLogDataProvider.SavePatrolCarLog(record);
+                success = _viewDataService.SavePatrolCarLog(record);
             }
             catch (Exception ex)
             {
@@ -464,81 +453,19 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetCustomFieldConfig(int clientSiteId)
         {
-            var columns = new Dictionary<string, string>()
-            {
-                { "timeSlot", "Time Slot"}
-            };
-            var clientSiteCustomFields = _guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId);
-            var fields = clientSiteCustomFields.Select(z => z.Name).Distinct();
-            foreach (var field in fields)
-            {
-                columns.Add(field, field);
-            }
-
+            var columns = _viewDataService.GetCustomFieldConfig(clientSiteId);
             return new JsonResult(columns.ToArray());
         }
 
         public JsonResult OnGetCustomFieldLogs(int logBookId, int clientSiteId)
         {
-            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
-            if (!customFieldLogs.Any())
-            {
-                var clientSiteCustomFields = _guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId)
-                                                .Select(z => new CustomFieldLog()
-                                                {
-                                                    ClientSiteLogBookId = logBookId,
-                                                    CustomFieldId = z.Id
-                                                }).ToList();
-                _guardLogDataProvider.SaveCustomFieldLogs(clientSiteCustomFields);
-                customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
-            }
-
-            var timeSlotGroups = customFieldLogs.GroupBy(z => z.ClientSiteCustomField.TimeSlot);
-            var rows = new List<Dictionary<string, string>>();
-            foreach (var group in timeSlotGroups)
-            {
-                var columns = new Dictionary<string, string>();
-                if (!columns.ContainsKey(group.Key))
-                {
-                    columns.Add("timeSlot", group.Key);
-                }
-
-                foreach (var field in group.ToList())
-                {
-                    columns.Add(field.ClientSiteCustomField.Name, field.DayValue);
-                }
-                rows.Add(columns);
-            }
-
+            var rows = _viewDataService.GetCustomFieldLogs(logBookId, clientSiteId);
             return new JsonResult(rows.ToArray());
         }
 
         public JsonResult OnPostSaveCustomFieldLog(int logBookId, Dictionary<string, string> records)
-        {
-            var timeSlot = records["timeSlot"];
-            var success = true;
-            try
-            {
-                var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
-                foreach (var record in records.Where(z => z.Key != "timeSlot"))
-                {
-                    if (record.Value != null)
-                    {
-                        var customFieldLog = customFieldLogs.SingleOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) &&
-                                                                x.ClientSiteCustomField.TimeSlot.Equals(timeSlot));
-                        if (customFieldLog != null)
-                        {
-                            customFieldLog.DayValue = record.Value;
-                            _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                success = false;
-            }
-
+        {            
+            var success = _viewDataService.SaveCustomFieldLog(logBookId, records); 
             return new JsonResult(success);
         }
 
