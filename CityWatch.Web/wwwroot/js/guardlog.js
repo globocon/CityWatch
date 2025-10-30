@@ -68,12 +68,12 @@ $(function () {
             dataType: 'json',
             success: function (data) {
      
-                $('#Rooster_ClientSiteID').val(data);
+                $('#GuardLogin_ClientSiteID').val(data);
                 }
         });
 
 
-        const clientSiteControl = $('#Rooster_ClientSite');
+        const clientSiteControl = $('#GuardLogin_ClientSiteName');
         clientSiteControl.html('');
         $.ajax({
             url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
@@ -87,9 +87,9 @@ $(function () {
                 });
 
                 if (selectedSiteName) {
-                    $('#Rooster_ClientSite').val(selectedSiteName);
+                    $('#GuardLogin_ClientSiteName').val(selectedSiteName);
                 } else {
-                    $('#Rooster_ClientSite').val('');
+                    $('#GuardLogin_ClientSiteName').val('');
                 }
             }
         });
@@ -9378,7 +9378,7 @@ $(function () {
             dataType: 'json',
             success: function (data) {
 
-                $('#GuardLogin_ClientSiteID').val(data);
+                $('#Rooster_ClientSiteID').val(data);
             }
         });
 
