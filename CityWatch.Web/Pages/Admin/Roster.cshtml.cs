@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
+using CityWatch.Web.Services;
 
 namespace CityWatch.Web.Pages.Admin
 {
     public class RosterModel : PageModel
     {
+        private readonly IViewDataService _viewDataService;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly ILogger<RosterModel> _logger;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
@@ -17,13 +19,15 @@ namespace CityWatch.Web.Pages.Admin
         public string ClientNameTitle { get; set; }
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService)
         {
             _logger = logger;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _configDataProvider = configDataProvider;
+            _viewDataService = viewDataService;
         }
+        public IViewDataService ViewDataService { get { return _viewDataService; } }
         public void OnGet()
         {
             var host = HttpContext.Request.Host.Host;

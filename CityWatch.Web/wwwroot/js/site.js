@@ -4149,8 +4149,17 @@
         // Toggle the dark-mode class on the body element
         $("body").toggleClass("dark-mode", !darkModeEnabled);
         // Toggle dark mode for all other elements
+        //$("*").each(function () {
+        //    $(this).toggleClass("dark-mode", !darkModeEnabled);
+        //});
         $("*").each(function () {
-            $(this).toggleClass("dark-mode", !darkModeEnabled);
+            if (!$(this).hasClass("no-dark") && $(this).closest(".no-dark").length === 0) {
+                $(this).toggleClass("dark-mode", !darkModeEnabled);
+            }
+            else {
+
+                $(this).toggleClass("dark-mode", false);
+            }
         });
         // Update the user's preference in local storage
         localStorage.setItem('darkMode', !darkModeEnabled);
@@ -4172,8 +4181,17 @@
 
         if (darkModeEnabled2 != null) {
             $("body").toggleClass("dark-mode", darkModeEnabled2);
+            //$("*").each(function () {
+            //    $(this).toggleClass("dark-mode", darkModeEnabled2);
+            //});
             $("*").each(function () {
-                $(this).toggleClass("dark-mode", darkModeEnabled2);
+                if (!$(this).hasClass("no-dark") && $(this).closest(".no-dark").length === 0) {
+                    $(this).toggleClass("dark-mode", darkModeEnabled2);
+                }
+                else {
+
+                    $(this).toggleClass("dark-mode", false);
+                }
             });
             $('table tbody tr').each(function () {
                 $(this).toggleClass("dark-mode", darkModeEnabled2);
@@ -7489,7 +7507,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         // Dynamically add SmartWand and SIMProvider headers
         const smartWandHeaders = [];
         for (let i = 1; i <= maxSmartWands; i++) {
-            smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`);
+            smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`, `IMEI`);
         }
 
         const headers = [...baseHeaders, ...smartWandHeaders];
@@ -7539,7 +7557,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                 // Add SmartWand and SIMProvider data dynamically
                 for (let i = 0; i < maxSmartWands; i++) {
                     const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
-                    rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '');
+                    rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '', smartWand.imei || '');
                 }
 
                 return rowData;

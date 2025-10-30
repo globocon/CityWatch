@@ -15,6 +15,7 @@ namespace CityWatch.Data.Models
 
         public string PhoneNumber { get; set; }
         public string SIMProvider { get; set; }
+        public string IMEI { get; set; }
         public bool IsDeleted { get; set; }
         [MaxLength(100)]
         public string? DeviceType { get; set; }
