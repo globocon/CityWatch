@@ -908,8 +908,8 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ReferenceNoAlphabets)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name)
-                //.Where(z => z.HRGroups.Id == HRid && z.Description == Description)
-                .Where(z => z.HRGroups.Id == HRid && z.Description.Contains(Description))
+                .Where(z => z.HRGroups.Id == HRid && z.Description == Description)
+                //.Where(z => z.HRGroups.Id == HRid && z.Description.Contains(Description))
                 .FirstOrDefault();
 
         }
