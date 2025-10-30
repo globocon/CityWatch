@@ -38,6 +38,7 @@ using ConvertApiDotNet;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace CityWatch.Web.API
@@ -859,96 +860,152 @@ namespace CityWatch.Web.API
             }
         }
 
-        [HttpGet("GetSiteLog")]
-        public IActionResult GetSiteLog(int clientsiteId)
+
+
+        [HttpGet("UpdateGuardLogNotes")]
+        public IActionResult UpdateGuardLogNotes(int id, string notes)
         {
             try
             {
-                // Fetch site name (optional usage)
-                var site = _clientDataProvider.GetClientSiteName(clientsiteId);
+                if (id <= 0)
+                    return BadRequest("Invalid log ID.");
 
-                // Get today's logbook
-                var logbook = _clientDataProvider.GetClientSiteLogBook(clientsiteId, LogBookType.DailyGuardLog, DateTime.Today);
-                if (logbook == null)
+                if (string.IsNullOrWhiteSpace(notes))
+                    return BadRequest("Notes cannot be empty.");
+
+                // Create a minimal GuardLog object
+                var guardLog = new GuardLog
                 {
-                    return NotFound(new { message = "No logbook found for today." });
-                }
+                    Id = id,
+                    Notes = notes.Trim()
+                };
 
-                // Get guard logs
-                var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logbook.Id, DateTime.Today)
-                    .OrderByDescending(z => z.Id)
-                    .ThenByDescending(z => z.EventDateTime)
-                    .ToList();
+                // Call your existing SaveGuardLog method
+               _guardLogDataProvider.SaveGuardLog(guardLog);
 
-                var result = new List<GuardLogDto>();
-
-                foreach (var guardlog in guardLogs)
-                {
-                    var imageUrls = new List<string>();
-                    var notes = guardlog.Notes ?? "";
-
-                    // Process images
-                    var images = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
-                    foreach (var img in images)
-                    {
-                        if (img.IsTwentyfivePercentfile == true && !string.IsNullOrEmpty(img.ImagePath))
-                            imageUrls.Add(img.ImagePath);
-
-                        if (img.IsRearfile == true && !string.IsNullOrEmpty(img.ImagePath))
-                        {
-                            var filename = Path.GetFileName(img.ImagePath);
-                            notes += $"</br>See attached file <a href=\"{img.ImagePath}\" target=\"_blank\">{filename}</a>";
-                        }
-                    }
-
-                    string formattedDisplayTime = string.Empty;
-
-                    if (guardlog.EventDateTimeLocalWithOffset.HasValue)
-                    {
-                        var dateandOffset = guardlog.EventDateTimeLocalWithOffset.Value;
-
-                        var offsetSign = dateandOffset.Offset.TotalMinutes >= 0 ? "+" : "-";
-                        var formattedOffset = offsetSign + dateandOffset.Offset.ToString(@"hh\:mm");
-
-                        formattedDisplayTime = dateandOffset.ToString("HH:mm") + " Hrs GMT" + formattedOffset;
-                    }
-                    else
-                    {
-                        // fallback if value is null
-                        formattedDisplayTime = "N/A";
-                    }
+                return Ok("Log updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error updating guard log: {ex.Message}");
+            }
+        }
 
 
 
-                    var dto = new GuardLogDto
-                    {
-                        Id = guardlog.Id,
-                        EventDateTime = guardlog.EventDateTime,
-                        EventDateTimeLocal = formattedDisplayTime,
-                        Notes = notes,
-                        ImageUrls = imageUrls,
-                        GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A",
-                        IrEntryType = guardlog.IrEntryType.HasValue ? (int)guardlog.IrEntryType.Value : 0,
-                        IsSystemEntry = guardlog.IsSystemEntry,
-                        rcPushMessageId= guardlog.RcPushMessageId
-                    };
+        //old working fine start //
+        //[HttpGet("GetSiteLog")]
+        //public IActionResult GetSiteLog(int clientsiteId)
+        //{
+        //    try
+        //    {
+        //        // Fetch site name (optional usage)
+        //        var site = _clientDataProvider.GetClientSiteName(clientsiteId);
+
+        //        // Get today's logbook
+        //        var logbook = _clientDataProvider.GetClientSiteLogBook(clientsiteId, LogBookType.DailyGuardLog, DateTime.Today);
+        //        if (logbook == null)
+        //        {
+        //            return NotFound(new { message = "No logbook found for today." });
+        //        }
+
+        //        // Get guard logs
+        //        var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logbook.Id, DateTime.Today)
+        //            .OrderByDescending(z => z.Id)
+        //            .ThenByDescending(z => z.EventDateTime)
+        //            .ToList();
+
+        //        var result = new List<GuardLogDto>();
+
+        //        foreach (var guardlog in guardLogs)
+        //        {
+        //            var imageUrls = new List<string>();
+        //            var notes = guardlog.Notes ?? "";
+
+        //            // Process images
+        //            var images = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+        //            foreach (var img in images)
+        //            {
+        //                if (img.IsTwentyfivePercentfile == true && !string.IsNullOrEmpty(img.ImagePath))
+        //                    imageUrls.Add(img.ImagePath);
+
+        //                if (img.IsRearfile == true && !string.IsNullOrEmpty(img.ImagePath))
+        //                {
+        //                    var filename = Path.GetFileName(img.ImagePath);
+        //                    notes += $"</br>See attached file <a href=\"{img.ImagePath}\" target=\"_blank\">{filename}</a>";
+        //                }
+        //            }
+
+        //            string formattedDisplayTime = string.Empty;
+
+        //            if (guardlog.EventDateTimeLocalWithOffset.HasValue)
+        //            {
+        //                var dateandOffset = guardlog.EventDateTimeLocalWithOffset.Value;
+
+        //                var offsetSign = dateandOffset.Offset.TotalMinutes >= 0 ? "+" : "-";
+        //                var formattedOffset = offsetSign + dateandOffset.Offset.ToString(@"hh\:mm");
+
+        //                formattedDisplayTime = dateandOffset.ToString("HH:mm") + " Hrs GMT" + formattedOffset;
+        //            }
+        //            else
+        //            {
+        //                // fallback if value is null
+        //                formattedDisplayTime = "N/A";
+        //            }
 
 
 
-                    result.Add(dto);
-                }
+        //            var dto = new GuardLogDto
+        //            {
+        //                Id = guardlog.Id,
+        //                EventDateTime = guardlog.EventDateTime,
+        //                EventDateTimeLocal = formattedDisplayTime,
+        //                Notes = notes,
+        //                ImageUrls = imageUrls,
+        //                GuardInitials = guardlog.GuardLogin?.Guard?.Initial ?? "N/A",
+        //                IrEntryType = guardlog.IrEntryType.HasValue ? (int)guardlog.IrEntryType.Value : 0,
+        //                IsSystemEntry = guardlog.IsSystemEntry,
+        //                rcPushMessageId= guardlog.RcPushMessageId
+        //            };
 
+
+
+        //            result.Add(dto);
+        //        }
+
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new
+        //        {
+        //            message = "An error occurred while fetching the site log.",
+        //            error = ex.Message
+        //        });
+        //    }
+        //}
+
+        //end //
+
+
+        [HttpGet("GetSiteLog")]
+        public async Task<IActionResult> GetSiteLog(int clientsiteId, int lastLogId = 0)
+        {
+            try
+            {
+                var result = await _guardLogDataProvider.GetSiteLogAsync(clientsiteId, lastLogId);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new
                 {
-                    message = "An error occurred while fetching the site log.",
+                    message = "Error loading logs",
                     error = ex.Message
                 });
             }
         }
+
 
         [HttpGet("GetStaffDocuments")]
         public IActionResult GetStaffDocuments(int type, int UserId, string query = "")

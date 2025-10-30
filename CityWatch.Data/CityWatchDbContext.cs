@@ -165,6 +165,11 @@ namespace CityWatch.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<SiteTagStatus>().HasNoKey();
             modelBuilder.Entity<SiteTagStatusPending>().HasNoKey();
+            modelBuilder.Entity<GuardLogDto>().HasNoKey();
+            modelBuilder.Entity<GuardLogRawProjection>().HasNoKey();
+            
+
+
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -257,7 +262,11 @@ namespace CityWatch.Data
         public DbSet<ClientSiteSmartWandTagsHitLog> ClientSiteSmartWandTagsHitLogs { get; set; }
 
         public DbSet<SiteTagStatus> SiteTagStatuses { get; set; }
-        public DbSet<SiteTagStatusPending> SiteTagStatusPendings { get; set; } 
+        public DbSet<SiteTagStatusPending> SiteTagStatusPendings { get; set; }
+        public DbSet<GuardLogDto> GuardLogDtos { get; set; }
+
+        public DbSet<GuardLogRawProjection> GuardLogRawProjection { get; set; }
+        
         public DbSet<KeyVehicleLogDocketHistory> KeyVehicleLogDocketHistory { get; set; }
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0

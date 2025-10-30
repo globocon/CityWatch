@@ -21,9 +21,11 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using static Dropbox.Api.Files.SearchMatchType;
 using static Dropbox.Api.Files.WriteMode;
@@ -405,6 +407,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
         int GetLatestQuestionNumber(int hrsettingsId, int tqnumberId);
+        Task<List<GuardLogDto>> GetSiteLogAsync(int clientsiteId, int lastLogId = 0);
 
     }
 
@@ -7523,6 +7526,71 @@ namespace CityWatch.Data.Providers
             }
         }
 
+
+        public async Task<List<GuardLogDto>> GetSiteLogAsync(int clientsiteId, int lastLogId = 0)
+        {
+            try
+            {
+                var rawData = await _context.Set<GuardLogRawProjection>()
+                    .FromSqlRaw("EXEC sp_GetSiteLog @ClientSiteId={0}, @LastLogId={1}",
+                                clientsiteId, lastLogId)
+                    .ToListAsync();
+
+                var groupedResult = rawData
+                    .GroupBy(r => r.Id)
+                    .Select(g =>
+                    {
+                        var first = g.First();
+                        var notes = first.Notes ?? "";
+
+                        // ✅ Use <br/> (not </br>) - correct HTML line break
+                        foreach (var img in g.Where(x => x.IsRearfile == true && !string.IsNullOrEmpty(x.ImagePath)))
+                        {
+                            var filename = Path.GetFileName(img.ImagePath);
+                            notes += $"<br/>See attached file <a href=\"{img.ImagePath}\" target=\"_blank\">{filename}</a>";
+                        }
+
+                        return new GuardLogDto
+                        {
+                            Id = first.Id,
+                            EventDateTime = first.EventDateTime ?? DateTime.MinValue,
+                            EventDateTimeLocal = first.EventDateTimeLocal ?? "N/A",
+                            EventDateTimeZoneShort = first.EventDateTimeZoneShort ?? "",
+                            Notes = notes,
+
+                            GuardInitials = first.GuardInitials ?? "N/A",
+                            IrEntryType = first.IrEntryType ?? 0,
+                            IsSystemEntry = first.IsSystemEntry ?? false,
+                            rcPushMessageId = first.RcPushMessageId,
+                            GuardId = first.GuardId,
+
+                            // Clickable image URLs
+                            ImageUrls = g
+                                .Where(x => x.IsTwentyfivePercentfile == true &&
+                                            !string.IsNullOrEmpty(x.ImagePath))
+                                .Select(x => x.ImagePath)
+                                .Distinct()
+                                .ToList()
+                        };
+                    })
+                    .OrderByDescending(x => x.Id)
+                    .ToList();
+
+                return groupedResult;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site log: {ex.Message}");
+                return new List<GuardLogDto>();
+            }
+        }
+
+
+
+
+
+
+
         public List<SiteTagStatusPending> GetTagStatusPending(int clientId)
         {
             try
@@ -7592,6 +7660,50 @@ namespace CityWatch.Data.Providers
 
             return missingIds.FirstOrDefault();
         }
+    }
+
+
+
+    public class GuardLogRawProjection
+    {
+        public int Id { get; set; }
+
+        public DateTime? EventDateTime { get; set; } // 
+        public string EventDateTimeLocal { get; set; }
+        public string EventDateTimeZoneShort { get; set; }
+
+        public string Notes { get; set; }
+        public string GuardInitials { get; set; }
+
+        public int? IrEntryType { get; set; } //
+        public bool? IsSystemEntry { get; set; } //
+
+        public int? RcPushMessageId { get; set; }
+        public int? GuardId { get; set; }
+
+        public string ImagePath { get; set; }
+        public bool? IsTwentyfivePercentfile { get; set; }
+        public bool? IsRearfile { get; set; }
+    }
+
+
+
+    public class GuardLogDto
+    {
+        public int Id { get; set; }
+        public DateTime EventDateTime { get; set; }
+        public string EventDateTimeLocal { get; set; } // For frontend use
+        public string EventDateTimeZoneShort { get; set; } // For frontend use
+
+        public string Notes { get; set; }
+        [NotMapped]
+        public List<string> ImageUrls { get; set; }
+        public string GuardInitials { get; set; }
+        public int IrEntryType { get; set; }
+        public bool IsSystemEntry { get; set; }
+
+        public int? rcPushMessageId { get; set; }
+        public int? GuardId { get; set; }
     }
 
     public class SiteTagStatusPending
