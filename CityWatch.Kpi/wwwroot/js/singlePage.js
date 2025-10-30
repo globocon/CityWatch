@@ -26,10 +26,11 @@ $(function () {
             { width: 150, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
             { width: 200, field: 'phoneNumber', title: 'Number', editor: true },
             { width: 150, field: 'simProvider', title: 'SIM Provider', editor: true },
+            { width: 100, field: 'imei', title: 'IMEI', editor: true },
             /*{ width: 250, renderer: renderderegisterDevice, title: 'Registered Device', align: 'left', editor: false },*/
             {
                 title: 'Registered Device',
-                width: 250,
+                width: 210,
                 align: 'left',
                 editor: false,
                 tmpl: '<span class="action-placeholder"></span>'

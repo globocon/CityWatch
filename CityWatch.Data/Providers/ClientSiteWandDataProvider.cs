@@ -90,6 +90,7 @@ namespace CityWatch.Data.Providers
                     clientSiteSmartWandToUpdate.SmartWandId = clientSiteSmartWand.SmartWandId;
                     clientSiteSmartWandToUpdate.PhoneNumber = clientSiteSmartWand.PhoneNumber;
                     clientSiteSmartWandToUpdate.SIMProvider = clientSiteSmartWand.SIMProvider;
+                    clientSiteSmartWandToUpdate.IMEI = clientSiteSmartWand.IMEI;
                 }
             }
             _dbContext.SaveChanges();
