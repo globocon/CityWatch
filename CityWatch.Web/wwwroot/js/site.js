@@ -4149,8 +4149,17 @@
         // Toggle the dark-mode class on the body element
         $("body").toggleClass("dark-mode", !darkModeEnabled);
         // Toggle dark mode for all other elements
+        //$("*").each(function () {
+        //    $(this).toggleClass("dark-mode", !darkModeEnabled);
+        //});
         $("*").each(function () {
-            $(this).toggleClass("dark-mode", !darkModeEnabled);
+            if (!$(this).hasClass("no-dark") && $(this).closest(".no-dark").length === 0) {
+                $(this).toggleClass("dark-mode", !darkModeEnabled);
+            }
+            else {
+
+                $(this).toggleClass("dark-mode", false);
+            }
         });
         // Update the user's preference in local storage
         localStorage.setItem('darkMode', !darkModeEnabled);
@@ -4172,8 +4181,17 @@
 
         if (darkModeEnabled2 != null) {
             $("body").toggleClass("dark-mode", darkModeEnabled2);
+            //$("*").each(function () {
+            //    $(this).toggleClass("dark-mode", darkModeEnabled2);
+            //});
             $("*").each(function () {
-                $(this).toggleClass("dark-mode", darkModeEnabled2);
+                if (!$(this).hasClass("no-dark") && $(this).closest(".no-dark").length === 0) {
+                    $(this).toggleClass("dark-mode", darkModeEnabled2);
+                }
+                else {
+
+                    $(this).toggleClass("dark-mode", false);
+                }
             });
             $('table tbody tr').each(function () {
                 $(this).toggleClass("dark-mode", darkModeEnabled2);
