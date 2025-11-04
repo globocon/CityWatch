@@ -123,15 +123,143 @@ namespace CityWatch.Web.API
                 return Unauthorized("Access denied !!!. Please contact admin.");
             }
 
+
+            //HRList Status start 
+            var HR1 = "Grey";
+            var HR2 = "Grey";
+            var HR3 = "Grey";
+            bool guardLockStatusBasedOnRedDoc = false;
+            if (guard != null)
+            {
+                var hrGroupStatusesNew = LEDStatusForLoginUser(guard.Id);
+                if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+                {
+                    if (hrGroupStatusesNew != null || hrGroupStatusesNew.Count != 0)
+                    {
+
+
+                        // Group document statuses by GroupName for faster lookups
+                        var statusLookup = hrGroupStatusesNew.ToLookup(x => x.GroupName.Trim());
+
+                        // Set HR1Status
+                        var HR1List = statusLookup["HR 1 (C4i)"];
+                        if (HR1List.Any())
+                        {
+                            HR1 = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
+
+                        // Set HR2Status
+                        var HR2List = statusLookup["HR 2 (Client)"];
+                        if (HR2List.Any())
+                        {
+                            HR2 = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
+
+                        // Set HR3Status
+                        var HR3List = statusLookup["HR 3 (Special)"];
+                        if (HR3List.Any())
+                        {
+                            HR3 = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
+
+
+                       
+
+
+
+                    }
+                }
+
+
+
+            }
+
             return Ok(new
             {
                 GuardId = guard.Id,
                 Name = guard.Name,
                 SecurityNo = guard.SecurityNo,
-                isActive = true
+                isActive = true,
+                HR1Status = HR1,
+                HR2Status = HR2,
+                HR3Status = HR3,
+                GuardLockStatusBasedOnRedDoc = guardLockStatusBasedOnRedDoc
             });
         }
+        private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            // Retrieve guard document details in one call
+            var guardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
 
+            // Iterate through each document detail
+            foreach (var item in guardDocumentDetails)
+            {
+                // Directly use the item without filtering again
+                hrGroupStatusesNew.Add(new HRGroupStatusNew
+                {
+                    documentDescription = item.Description,
+                    Status = 1,
+                    GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
+                                                         // Generate the color code based on the current item
+                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item })
+                });
+            }
+
+            return hrGroupStatusesNew;
+        }
+        private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> selectedList)
+        {
+            var today = DateTime.Now;
+            var colourCode = "Green"; // Default to green
+
+            if (selectedList.Count > 0)
+            {
+                // Check if any entry has DateType == true
+                var hasDateTypeTrue = selectedList.Any(x => x.DateType == true);
+
+                if (hasDateTypeTrue)
+                {
+                    return "Green"; // Return immediately if DateType == true exists
+                }
+
+                // Get the first non-null expiry date (if any)
+                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+
+                if (firstItem != null)
+                {
+                    var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
+
+                    // Compare expiry date with today's date
+                    if (expiryDate < today)
+                    {
+                        return "Red";
+                    }
+                    else if ((expiryDate - today).Days < 45)
+                    {
+                        return "Yellow";
+                    }
+                }
+            }
+
+            return colourCode; // Default return is green
+        }
+        public class HRGroupStatusNew
+        {
+
+            public int Status { get; set; }
+
+            public string GroupName { get; set; }
+            public string ColourCodeStatus { get; set; }
+
+            public string documentDescription { get; set; }
+        }
 
         [HttpGet("GetUserClientTypes")]
         public IActionResult GetUserClientTypes(int userId, int? clientTypeId = null)
