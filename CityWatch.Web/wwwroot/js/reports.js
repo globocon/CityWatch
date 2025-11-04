@@ -940,7 +940,9 @@
         $('#count_hr_activeGuardVsInactiveGuard').html(0);
         $('#count_hr_GenderGuard').html(0);
         $('#count_hr_numberofYearofOnboarding2').html(0);
-
+        $('#count_hr_GuardLanguages').html(0);
+        $('#count_hr_AttributionPerAnnum').html(0);
+        
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
         const toDate = $('#date_to').val();
@@ -1043,7 +1045,14 @@
                 window.myChart34.destroy();
             if (window.myChart35 != undefined)
                 window.myChart35.destroy();
-
+            if (window.myChart36 != undefined)
+                window.myChart36.destroy();
+            if (window.myChart37 != undefined)
+                window.myChart37.destroy();
+            if (window.myChart38 != undefined)
+                window.myChart38.destroy();
+            if (window.myChart39 != undefined)
+                window.myChart39.destroy();
             // $('#btnExportExcel').attr('href', '#');
             const fromDate = $('#date_from').val();
             const toDate = $('#date_to').val();
@@ -1100,9 +1109,10 @@
 
                 $('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
                 $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
-                if (response.yearOfOnBoardingcount != 0) {
-                    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
-                }
+                $('#count_hr_GuardLanguages').html(response.languageReportCount);
+                //if (response.yearOfOnBoardingcount != 0) {
+                //    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
+                //}
 
 
                 $('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
@@ -1119,8 +1129,16 @@
                 if (response.yearOfOnBoardingcount != 0) {
                     drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
                 }
-
-
+                $('#count_hr_GuardLanguages').html(response.languageReportCount);
+                //p3-36-hrcharts partial-start
+                if (response.languageReportCount != 0) {
+                    drawPieChartUsingChartJsGuardLanguages(response.languageReport);
+                }
+                $('#count_hr_AttributionPerAnnum').html(response.attributionReportCount);
+                if (response.attributionReportCount != 0) {
+                    drawBarChartUsingChartJsGuardAttributionPerAnnum(response.attributionReport);
+                }
+                //p3-36-hrcharts partial-end
                 $.ajax({
                     url: '/Reports/PatrolData?handler=GenerateReportGraphSecondTab',
                     type: 'POST',
@@ -1244,6 +1262,7 @@
                 }).fail(function () {
                 }).always(function () {
                     //$('#loader-p').hide();
+                   
                 });
 
 
@@ -2816,7 +2835,14 @@ $('#btncount_individualwandsbydownselect').on('click', function () {
 });
 
 //p4-41-end
-
+//p3-36-hrcharts partial-start
+$('#btncount_hr_GuardLanguages').on('click', function () {
+    $('#modelHrGuardLanguages').modal('show');
+});
+$('#btncount_hr_AttributionPerAnnum').on('click', function () {
+    $('#modelHrGuardAttributionPerAnnum').modal('show');
+});
+//p3-36-hrcharts partial-end
 function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
 
     var labels = dataValue.map(function (e) {
@@ -5415,10 +5441,14 @@ function drawPieChartUsingChartJsChartYearOfOnBoarding(dataValue) {
 function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.key;
+
+        return e.status;
     });
     var data2 = dataValue.map(function (e) {
-        return e.value;
+        return e.percentage;
+    });
+    var Counts = dataValue.map(function (e) {
+        return e.count;
     });
     // Data for the pie chart
     const data = {
@@ -5502,7 +5532,7 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${Counts[i]})`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -5606,7 +5636,8 @@ function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            //text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${Counts[i]})`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -5922,10 +5953,13 @@ function drawPieChartUsingChartJsGenderGuard(dataValue) {
 function drawBarChartUsingChartJsGenderGuard(dataValue) {
 
     var labels = dataValue.map(function (e) {
-        return e.key;
+        return e.status;
     });
     var data2 = dataValue.map(function (e) {
-        return e.value;
+        return e.count;
+    });
+    var Percentage = dataValue.map(function (e) {
+        return e.percentage;
     });
     // Data for the pie chart
     const data = {
@@ -6009,7 +6043,7 @@ function drawBarChartUsingChartJsGenderGuard(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${Percentage[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -6113,7 +6147,7 @@ function drawBarChartUsingChartJsGenderGuard(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${Percentage[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -7179,6 +7213,517 @@ function drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(dataValue
 
 
 }
+
+//p3-36-hrcharts partial-start
+function drawPieChartUsingChartJsGuardLanguages(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+
+        return e.language;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    var Counts = dataValue.map(function (e) {
+        return e.count;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_hr_guardLanguages");
+    var canvas2 = document.getElementById("pie_chart_by_hr_guardLanguages1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_hr_guardLanguages').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart36 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_hr_guardLanguages1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart37 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            //text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+function drawBarChartUsingChartJsGuardAttributionPerAnnum(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.year;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.count;
+    });
+    var Percentage = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_hr_AttributionPerAnnum");
+    var canvas2 = document.getElementById("bar_chart_by_hr_AttributionPerAnnum1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_hr_AttributionPerAnnum').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart38 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_hr_AttributionPerAnnum1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart39 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+//p3-36-hrcharts partial-end
 $('.wandstrikemultiselect').multiselect({
     maxHeight: 400,
     buttonWidth: '100%',
