@@ -2033,7 +2033,7 @@ namespace CityWatch.Web.Pages.Reports
             var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
             //var guardsIds = _guardDataProvider.GetGuards().Select(x=>x.Id).ToArray();
 
-            var languages = _guardDataProvider.GetGuardLanguages(guardIds).ToList();
+            var languages = _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray()).ToList();
             // Total count of guards
             int totalLanguagesCount = languages.Count();
 
