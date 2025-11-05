@@ -2536,6 +2536,105 @@ namespace CityWatch.Web.API
 
 
 
+        [HttpPost("UploadMultipleEdit")]
+        public async Task<IActionResult> UploadMultipleEdit(
+ [FromForm] List<IFormFile> files,
+ [FromForm] List<string> types,   // <-- multiple types aligned with files
+ [FromForm] int logbookId
+ 
+ )
+        {
+            bool success = false;
+            string message = "Uploaded successfully";
+            var uploadedFiles = new List<string>();
+
+            try
+            {
+                if (files == null || files.Count == 0)
+                    throw new Exception("No files uploaded");
+
+               
+
+
+
+                if (types == null || types.Count != files.Count)
+                    throw new Exception("Types count must match files count");
+
+                string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+
+
+
+
+                int GuardLogId = logbookId;
+
+                for (int i = 0; i < files.Count; i++)
+                {
+                    var file = files[i];
+                    var type = types[i];
+
+                    if (file.Length == 0) continue;
+
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext))
+                        throw new Exception($"Unsupported file type: {ext}");
+
+                    string folderName = type?.ToLower() switch
+                    {
+                        "rear" => "RearFiles",
+                        "twentyfive" => "TwentyfivePercentFiles",
+                        _ => "OtherFiles"
+                    };
+
+                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), folderName);
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
+                    var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
+                    var fullPath = Path.Combine(folderPath, uploadFileName);
+
+                    using (var stream = System.IO.File.Create(fullPath))
+                        await file.CopyToAsync(stream);
+
+                    var finalFileName = uploadFileName;
+
+                    // HEIC conversion
+                    if (ext == ".heic")
+                    {
+                        var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                        await ConvertHeicToJpgAsync(fullPath, folderPath);
+                        System.IO.File.Delete(fullPath);
+                        finalFileName = Path.GetFileName(newPath);
+                    }
+
+                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
+
+                    var logImage = new GuardLogsDocumentImages
+                    {
+                        GuardLogId = GuardLogId,
+                        ImagePath = publicPath,
+                        IsRearfile = type?.ToLower() == "rear",
+                        IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                    };
+
+                    _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
+
+                    uploadedFiles.Add(publicPath);
+                }
+
+                success = true;
+                message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message, files = uploadedFiles });
+        }
+
+
+
         [HttpPost("UploadMultipleVideos")]
         public async Task<IActionResult> UploadMultipleVideos(
       [FromForm] List<IFormFile> files,
@@ -2795,6 +2894,20 @@ namespace CityWatch.Web.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+        [HttpPost("DeleteFile")]
+        public IActionResult DeleteFile([FromForm] int logbookId, [FromForm] string fileName)
+        {
+            try
+            {
+                _guardLogDataProvider.DeleteGuardLogDocumentImagesByLogId(logbookId, fileName);
+                return Ok(new { success = true, message = "File deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }

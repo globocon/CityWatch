@@ -408,6 +408,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
         int GetLatestQuestionNumber(int hrsettingsId, int tqnumberId);
         Task<List<GuardLogDto>> GetSiteLogAsync(int clientsiteId, int lastLogId = 0);
+        public void DeleteGuardLogDocumentImagesByLogId(int guardLogId, string fileName);
 
     }
 
@@ -6370,6 +6371,19 @@ namespace CityWatch.Data.Providers
             //}
             _context.SaveChanges();
         }
+
+        public void DeleteGuardLogDocumentImagesByLogId(int guardLogId, string fileName)
+        {
+            var image = _context.GuardLogsDocumentImages
+                .FirstOrDefault(x => x.GuardLogId == guardLogId &&
+                                     x.ImagePath.EndsWith(fileName));
+
+            if (image != null)
+            {
+                _context.GuardLogsDocumentImages.Remove(image);
+                _context.SaveChanges();
+            }
+        }
         public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
         {
             var result = new List<GuardLogsDocumentImages>();
@@ -7543,6 +7557,20 @@ namespace CityWatch.Data.Providers
                         var first = g.First();
                         var notes = first.Notes ?? "";
 
+                        // 25% images
+                        var twentyFiveFiles = g
+                            .Where(x => x.IsTwentyfivePercentfile==true && !string.IsNullOrEmpty(x.ImagePath))
+                            .Select(x => x.ImagePath)
+                            .Distinct()
+                            .ToList();
+
+                        // Rear images
+                        var rearFiles = g
+                            .Where(x => x.IsRearfile==true && !string.IsNullOrEmpty(x.ImagePath))
+                            .Select(x => x.ImagePath)
+                            .Distinct()
+                            .ToList();
+
                         // ✅ Use <br/> (not </br>) - correct HTML line break
                         foreach (var img in g.Where(x => x.IsRearfile == true && !string.IsNullOrEmpty(x.ImagePath)))
                         {
@@ -7565,12 +7593,8 @@ namespace CityWatch.Data.Providers
                             GuardId = first.GuardId,
 
                             // Clickable image URLs
-                            ImageUrls = g
-                                .Where(x => x.IsTwentyfivePercentfile == true &&
-                                            !string.IsNullOrEmpty(x.ImagePath))
-                                .Select(x => x.ImagePath)
-                                .Distinct()
-                                .ToList()
+                            ImageUrls = twentyFiveFiles,
+                            RearFileUrls= rearFiles
                         };
                     })
                     .OrderByDescending(x => x.Id)
@@ -7698,6 +7722,8 @@ namespace CityWatch.Data.Providers
         public string Notes { get; set; }
         [NotMapped]
         public List<string> ImageUrls { get; set; }
+        [NotMapped]
+        public List<string> RearFileUrls { get; set; }
         public string GuardInitials { get; set; }
         public int IrEntryType { get; set; }
         public bool IsSystemEntry { get; set; }
