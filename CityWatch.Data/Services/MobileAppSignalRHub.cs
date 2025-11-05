@@ -16,27 +16,40 @@ namespace CityWatch.Data.Services
             _clientDataProvider = clientDataProvider;
         }
 
-        #region "MobileCrowdControl"
+        #region "SignalRHubCommon"
+
         public override async Task OnConnectedAsync()
         {
             //await Groups.AddToGroupAsync(Context.ConnectionId, "SignalR Users");
             await base.OnConnectedAsync();
         }
-
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             Console.WriteLine(exception);
             Debug.WriteLine(exception);
             await base.OnDisconnectedAsync(exception);
         }
-
-        public Task<ClientSiteMobileCrowdControl> JoinGroup(MobileCrowdControlGuard JoinGaurd)
+        public async Task<string> JoinGroup(MobileCrowdControlGuard JoinGaurd)
         {
-            Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
+            await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
+            return "Joined successfully";
+        }
+        #endregion "SignalRHubCommon"
+
+        #region "MobileCrowdControl"       
+
+        //public Task<ClientSiteMobileCrowdControl> JoinGroup(MobileCrowdControlGuard JoinGaurd)
+        //{
+        //    Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
+        //    var currentCount = _clientDataProvider.GetCrowdControlCount(JoinGaurd);
+        //    return currentCount;
+        //}
+
+        public Task<ClientSiteMobileCrowdControl> GetCurrentCrowdControlData(MobileCrowdControlGuard JoinGaurd)
+        {
             var currentCount = _clientDataProvider.GetCrowdControlCount(JoinGaurd);
             return currentCount;
         }
-
 
         public async Task UpdateCCCToMobileSiteGroup(ClientSiteMobileCrowdControlData CountData)
         {
@@ -58,7 +71,7 @@ namespace CityWatch.Data.Services
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
             var currentCount = await _clientDataProvider.ResetSiteCrowdControlCount(JoinGaurd);
-            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetSiteCrowdControlCount", currentCount);            
+            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetSiteCrowdControlCount", currentCount);
             return;
         }
 
@@ -66,10 +79,11 @@ namespace CityWatch.Data.Services
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
             var currentCount = await _clientDataProvider.ResetGuardCrowdControlCount(JoinGaurd);
-            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetGuardCrowdControlCount", currentCount);            
+            Clients.Group(JoinGaurd.ClientSiteId.ToString()).SendAsync("ResetGuardCrowdControlCount", currentCount);
             return;
-        }               
+        }
 
         #endregion "MobileCrowdControl"
+       
     }
 }

@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +20,16 @@ namespace CityWatch.Web.API
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IClientDataProvider _clientSitesDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
         public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
-            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider)
+            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider,
+            IHubContext<MobileAppSignalRHub> hubContext)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
             _guardDataProvider = guardDataProvider;
+            _hubContext = hubContext;
         }
 
         [HttpGet("GetScannerControlSettings")]
@@ -192,6 +197,9 @@ namespace CityWatch.Web.API
                 IsSuccess = true;
                 TagFound = true;
                 message = "Tag saved successfully.";
+
+                // Notify all SignalR clients in this ClientSiteId group to refresh the tag scan status
+                _hubContext.Clients.Group(csswt.ClientSiteId.ToString()).SendAsync("RefreshTagScanStatus");
             }
             catch (Exception ex)
             {
