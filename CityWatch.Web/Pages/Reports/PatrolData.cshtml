@@ -417,29 +417,29 @@
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                            LOTE (Count :)
-                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            LOTE (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_GuardLanguages"><span id="count_hr_GuardLanguages" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div> *@
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
-                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
-                           @* <canvas id="bar_chart_by_rc_duress_foryear"></canvas>*@
+
+                            <canvas id="pie_chart_by_hr_guardLanguages"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="row mt-2">
-                <div class="col-md-4">
+              @*   <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
                             Year of Onboarding (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_YearofOnboarding"><span id="count_hr_numberofYearofOnboarding" class="p-0 b-0"></span></a>)
                             @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
-                        </div>
-                        <div class="card-body" style="height: 235px; width: 400px;">
+                        @* </div> *@
+                        @* <div class="card-body" style="height: 235px; width: 400px;"> *@
                             @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
-                            <canvas id="pie_chart_by_hr_YearofOnboarding"></canvas>
-                        </div>
-                    </div>
-                </div>
+                            @* <canvas id="pie_chart_by_hr_YearofOnboarding"></canvas> *@
+                        @* </div> *@
+                    @* </div> *@
+                @* </div> *@ 
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
@@ -453,11 +453,11 @@
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                        
+                            Attribution Per Annum (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_hr_AttributionPerAnnum"><span id="count_hr_AttributionPerAnnum" class="p-0 b-0"></span></a>)
+
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
-                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
-                           @* <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored"></canvas>*@
+                            <canvas id="bar_chart_by_hr_AttributionPerAnnum"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1286,6 +1286,40 @@
                 <div style="height:730px ;width:1000px">
                     <canvas id="pie_chart_by_individual_fq_wand_pointbydownselect1"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelHrGuardLanguages" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="pie_chart_by_hr_guardLanguages1"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelHrGuardAttributionPerAnnum" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_hr_AttributionPerAnnum1"></canvas>
+                </div>
+
             </div>
         </div>
     </div>

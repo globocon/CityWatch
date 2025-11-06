@@ -116,6 +116,8 @@ namespace CityWatch.Data.Providers
         List<GuardRcClientSiteAccess> GetAllGuardRcClientSiteAccess();
         void SaveGuardRcClientSiteAccess(int guardId, List<GuardRcClientSiteAccess> guardRcClientSiteAccess);
         void RemoveGuardRcClientSiteAccess(int guardId);
+        List<InActiveGuardsDetails> GetInActiveGuardDetails();
+        List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -299,7 +301,33 @@ namespace CityWatch.Data.Providers
             }
 
             _context.SaveChanges();
-
+            if(guard.IsActive==false)
+            {
+                _context.InActiveGuardsDetails.Add(new InActiveGuardsDetails()
+                {
+                    Id = 0,
+                    GuardId = guard.Id,
+                    LastWorkingDate = DateTime.Now
+                });
+                _context.SaveChanges();
+            }
+            else if(guard.IsTerminated == true)
+            {
+                _context.InActiveGuardsDetails.Add(new InActiveGuardsDetails()
+                {
+                    Id = 0,
+                    GuardId = guard.Id,
+                    LastWorkingDate = DateTime.Now
+                });
+                _context.SaveChanges();
+            }
+            else
+            {
+                var inactiveguard = _context.InActiveGuardsDetails.SingleOrDefault(x => x.GuardId == guard.Id);
+                if (inactiveguard != null)
+                    _context.InActiveGuardsDetails.Remove(inactiveguard);
+                    _context.SaveChanges();
+            }
             if (isNewGuard)
             {
                 _context.GuardLicenses.Add(new GuardLicense()
@@ -1337,6 +1365,33 @@ namespace CityWatch.Data.Providers
             var currentAccess = _context.GuardRcClientSiteAccess.Where(x => x.GuardId == guardId).ToList();
             _context.RemoveRange(currentAccess);
             _context.SaveChanges();
+        }
+        public List<InActiveGuardsDetails> GetInActiveGuardDetails()
+        {
+            return _context.InActiveGuardsDetails.Include(x=>x.Guard).ToList();
+
+        }
+        public List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest)
+        {
+            List<GuardLogin> guardLogins = new List<GuardLogin>();
+            
+                guardLogins.AddRange(_context.GuardLogins
+                .Where(z =>  
+                ((ReportRequest.ClientTypes==null) || (ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)))
+                &&
+                ((ReportRequest.ClientSites == null) || (ReportRequest.ClientSites.Contains(z.ClientSite.Name)))
+                )
+                    .Include(z => z.ClientSite)
+                    .ToList());
+            
+            
+
+
+            return guardLogins
+                
+                .ToList();
+
+
         }
 
     }

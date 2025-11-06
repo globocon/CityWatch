@@ -660,13 +660,23 @@ namespace CityWatch.Web.Pages.Reports
             //        rcChartTypesCRONew.Add(obj);
             //    }
 
+            int[]? guardIds = null;
+            if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            {
+                var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
 
-            var activeAndInActive = GetActiveAndInactiveGuardHrReport().ToArray();
+                if (clientsites.Count() > 0)
+                {
+                    guardIds = clientsites.Select(x => x.GuardId).Distinct().ToArray();
+                }
+            }
+            var activeAndInActive = GetActiveAndInactiveGuardHrReport(guardIds).ToArray();
             var activeAndInActiveCount = activeAndInActive.Length;
-            var yearOfOnBoarding = GetYearofOnBoardingGuardHrReport().ToArray();
-            var yearOfOnBoardingcount = yearOfOnBoarding.Length;
-            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart().ToArray();
-            var genderReport = GetGenderBasedGuardHrReport().ToArray(); ;
+            //var yearOfOnBoarding = GetYearofOnBoardingGuardHrReport().ToArray();
+            //var yearOfOnBoardingcount = yearOfOnBoarding.Length;
+            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart(guardIds).ToArray();
+            var yearOfOnBoardingcount = yearOfOnBoradingBarChart.Length;
+            var genderReport = GetGenderBasedGuardHrReport(guardIds).ToArray(); ;
             var genderReportCount = genderReport.Length;
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
@@ -677,8 +687,15 @@ namespace CityWatch.Web.Pages.Reports
             //        Directory.CreateDirectory(excelFileDir);
             //    var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             //    PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
+            var languageReport = GetGuardLanguagesHrReport(guardIds).ToArray();
+            var languageReportCount = languageReport.Length;
 
-            return new JsonResult(new {  chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour }, recordCount, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
+            var attributionReport = GetGuardAttributionPerAnnumReport(guardIds).ToArray();
+            var attributionReportCount = attributionReport.Length;
+
+            return new JsonResult(new { chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour }, recordCount, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart, languageReport, languageReportCount, attributionReport, attributionReportCount });
+
+            //return new JsonResult(new {  chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour }, recordCount, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart, languageReport, languageReportCount, attributionReport, attributionReportCount });
         }
 
 
@@ -1240,16 +1257,25 @@ namespace CityWatch.Web.Pages.Reports
                 obj.RecordCountNew = Math.Round(newc * 100, 1);
                 rcChartTypesCRONew.Add(obj);
             }
+            int[]? guardIds = null;
+            if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            {
+                var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
 
+                if (clientsites.Count() > 0)
+                {
+                    guardIds = clientsites.Select(x => x.GuardId).ToArray();
+                }
+            }
 
-            var activeAndInActive = GetActiveAndInactiveGuardHrReport().ToArray();
+            var activeAndInActive = GetActiveAndInactiveGuardHrReport(guardIds).ToArray();
             var activeAndInActiveCount = activeAndInActive.Length;
             var yearOfOnBoarding = GetYearofOnBoardingGuardHrReport().ToArray();
             var yearOfOnBoardingcount = yearOfOnBoarding.Length;
 
-            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart().ToArray();
+            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart(guardIds).ToArray();
 
-            var genderReport = GetGenderBasedGuardHrReport().ToArray(); ;
+            var genderReport = GetGenderBasedGuardHrReport(guardIds).ToArray(); ;
             var genderReportCount = genderReport.Length;
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
@@ -1749,32 +1775,63 @@ namespace CityWatch.Web.Pages.Reports
             return groupedByYear;
         }
 
-        public IEnumerable<KeyValuePair<string, double>> GetActiveAndInactiveGuardHrReport()
-        {
-            var guards = _guardDataProvider.GetGuards();
+        //public IEnumerable<KeyValuePair<string, double>> GetActiveAndInactiveGuardHrReport()
+        //{
+        //    var guards = _guardDataProvider.GetGuards();
 
+        //    int totalGuards = guards.Count();
+
+        //    if (totalGuards == 0)
+        //        return Enumerable.Empty<KeyValuePair<string, double>>();
+
+        //    // Group, count, and calculate percentages for active and inactive guards
+        //    var groupedByStatus = guards
+        //        .GroupBy(g => g.IsActive ? "Active" : "Inactive") // Group by IsActive field
+        //        .Select(g => new KeyValuePair<string, double>(
+        //            g.Key,
+        //            Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+        //        ))
+        //        .OrderBy(kvp => kvp.Key); // Sort alphabetically (Active first)
+
+        //    return groupedByStatus;
+        //}
+
+        public IEnumerable<object> GetActiveAndInactiveGuardHrReport(int[]? guardIds)
+        {
+           
+            var guards = _guardDataProvider.GetGuards().Where(x=>(guardIds==null) || (guardIds.Contains(x.Id)));
             int totalGuards = guards.Count();
 
             if (totalGuards == 0)
-                return Enumerable.Empty<KeyValuePair<string, double>>();
+                return Enumerable.Empty<object>();
 
-            // Group, count, and calculate percentages for active and inactive guards
             var groupedByStatus = guards
-                .GroupBy(g => g.IsActive ? "Active" : "Inactive") // Group by IsActive field
-                .Select(g => new KeyValuePair<string, double>(
-                    g.Key,
-                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
-                ))
-                .OrderBy(kvp => kvp.Key); // Sort alphabetically (Active first)
+                .GroupBy(g => g.IsActive ? "Active" : "Inactive")
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2)
+                })
+                .OrderBy(x => x.Status);
 
             return groupedByStatus;
         }
 
-
-        public IEnumerable<KeyValuePair<string, double>> GetGenderBasedGuardHrReport()
+        public IEnumerable<KeyValuePair<string, double>> GetGenderBasedGuardHrReport(int[]? guardIds)
         {
-            var guards = _guardDataProvider.GetGuards();
+            //var guards = _guardDataProvider.GetGuards();
+            //int[]? guardIds = null;
+            //if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            //{
+            //    var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
 
+            //    if (clientsites.Count() > 0)
+            //    {
+            //        guardIds = clientsites.Select(x => x.GuardId).ToArray();
+            //    }
+            //}
+            var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
             int totalGuards = guards.Count();
 
             if (totalGuards == 0)
@@ -1793,9 +1850,44 @@ namespace CityWatch.Web.Pages.Reports
         }
 
 
-        public IEnumerable<KeyValuePair<string, int>> GetYearofOnBoardingGuardHrReportBarchart()
+        //public IEnumerable<KeyValuePair<string, int>> GetYearofOnBoardingGuardHrReportBarchart()
+        //{
+        //    var guards = _guardDataProvider.GetGuards();
+
+        //    // Set all blank/null DateEnrolled to 01-Jan-2022
+        //    foreach (var guard in guards)
+        //    {
+        //        if (!guard.DateEnrolled.HasValue)
+        //        {
+        //            guard.DateEnrolled = new DateTime(2022, 1, 1);
+        //        }
+        //    }
+
+        //    // Group, count, and return the number of guards for each year
+        //    var groupedByYear = guards
+        //        .GroupBy(g => g.DateEnrolled.Value.Year.ToString()) // Convert year to string
+        //        .Select(g => new KeyValuePair<string, int>(
+        //            g.Key,
+        //            g.Count() // Return count directly
+        //        ))
+        //        .OrderBy(kvp => kvp.Key); // Sort by year (string representation)
+
+        //    return groupedByYear;
+        //}
+        public IEnumerable<object> GetYearofOnBoardingGuardHrReportBarchart(int[]? guardIds)
         {
-            var guards = _guardDataProvider.GetGuards();
+            ////var guards = _guardDataProvider.GetGuards();
+            //int[]? guardIds = null;
+            //if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            //{
+            //    var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
+
+            //    if (clientsites.Count() > 0)
+            //    {
+            //        guardIds = clientsites.Select(x => x.GuardId).ToArray();
+            //    }
+            //}
+            var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
 
             // Set all blank/null DateEnrolled to 01-Jan-2022
             foreach (var guard in guards)
@@ -1805,16 +1897,20 @@ namespace CityWatch.Web.Pages.Reports
                     guard.DateEnrolled = new DateTime(2022, 1, 1);
                 }
             }
+            // Total count of guards
+            int totalGuards = guards.Count();
 
             // Group, count, and return the number of guards for each year
             var groupedByYear = guards
                 .GroupBy(g => g.DateEnrolled.Value.Year.ToString()) // Convert year to string
-                .Select(g => new KeyValuePair<string, int>(
-                    g.Key,
-                    g.Count() // Return count directly
-                ))
-                .OrderBy(kvp => kvp.Key); // Sort by year (string representation)
-
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2) // Return count directly
+                })
+                .OrderBy(kvp => kvp.Status); // Sort by year (string representation)
+           
             return groupedByYear;
         }
         public async Task<IActionResult> OnPostGenerateBulkIRReportAsync()
@@ -1917,10 +2013,83 @@ namespace CityWatch.Web.Pages.Reports
             //return new JsonResult(new { "fileName" });
             return new JsonResult(new {  keyVehicleAuditLogRequest });
         }
+        //p3-36-hrcharts partial-start
+        public IEnumerable<object> GetGuardLanguagesHrReport(int[]? guardIds)
+        {
+            //int[]? guardIds = null;
+            //if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            //{
+            //    var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
+
+            //    if (clientsites.Count() > 0)
+            //    {
+            //        guardIds = clientsites.Select(x => x.GuardId).ToArray();
+            //    }
+            //}
+            //else
+            //{
+            //     guardIds = _guardDataProvider.GetGuards().Select(x => x.Id).ToArray();
+            //}
+            var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+            //var guardsIds = _guardDataProvider.GetGuards().Select(x=>x.Id).ToArray();
+
+            var languages = _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray()).ToList();
+            // Total count of guards
+            int totalLanguagesCount = languages.Count();
+
+            // Group, count, and calculate percentages for pie chart
+            var groupedByLanguage = languages
+                .GroupBy(g => g.LanguageMaster.Language.ToString()) // Convert year to string
+                .Select(g => new
+                {
+                    Language=g.Key,
+                    Count=g.Count(),
+                    Percentage=Math.Round((double)g.Count() / totalLanguagesCount * 100, 2) // Calculate percentage and round to 2 decimals
+                })
+                .OrderBy(kvp => kvp.Language); // Sort by year (string representation)
+
+            return groupedByLanguage;
+        }
+        
+         public IEnumerable<object> GetGuardAttributionPerAnnumReport(int[]? guardIds)
+        {
+            //int[]? guardIds = null;
+            //if (ReportRequest.ClientTypes != null || ReportRequest.ClientSites != null)
+            //{
+            //    var clientsites = _guardDataProvider.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
+
+            //    if (clientsites.Count() > 0)
+            //    {
+            //        guardIds = clientsites.Select(x => x.GuardId).ToArray();
+            //    }
+            //}
+            //var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+            var inactiveGuards = _guardDataProvider.GetInActiveGuardDetails().Where(x =>
+            ((guardIds == null) || (guardIds.Contains(x.GuardId)))
+            && (x.LastWorkingDate >= ReportRequest.FromDate
+                            && x.LastWorkingDate < ReportRequest.ToDate.AddDays(1)));
+
+            // Total count of guards
+            int totalInactiveGuardsCount = inactiveGuards.Count();
+
+            // Group, count, and calculate percentages for pie chart
+            var groupedByExpiredYears = inactiveGuards
+                .GroupBy(g => g.LastWorkingDate.Value.Year.ToString()) // Convert year to string
+                .Select(g => new
+                {
+                    Year = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalInactiveGuardsCount * 100, 2) // Calculate percentage and round to 2 decimals
+                })
+                .OrderBy(kvp => kvp.Year); // Sort by year (string representation)
+
+            return groupedByExpiredYears;
+        }
+        //p3-36-hrcharts partial-end
     }
 
 
-   
+
 
 
 
