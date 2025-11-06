@@ -902,17 +902,44 @@ namespace CityWatch.Data.Providers
         }
         public HrSettings GetHRRefernceNo(int HRid, string Description)
         {
+            var result = _context.HrSettings
+    .Include(z => z.HRGroups)
+    .Include(z => z.ReferenceNoNumbers)
+    .Include(z => z.ReferenceNoAlphabets)
+    .Where(z => z.HRGroups.Id == HRid)   // Filter by group ID in SQL
+    .AsEnumerable()                      // Switch to in-memory filtering
+    .OrderBy(x => x.HRGroups.Name)
+    .ThenBy(x => x.ReferenceNoNumbers.Name)
+    .ThenBy(x => x.ReferenceNoAlphabets.Name)
+    .FirstOrDefault(z => NormalizeDescription(z.Description) == Description);
+            return result;
 
-            return _context.HrSettings.Include(z => z.HRGroups)
-                .Include(z => z.ReferenceNoNumbers)
-                .Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name)
-                .Where(z => z.HRGroups.Id == HRid && z.Description == Description)
-                //.Where(z => z.HRGroups.Id == HRid && z.Description.Contains(Description))
-                .FirstOrDefault();
+            //return _context.HrSettings.Include(z => z.HRGroups)
+                //.Include(z => z.ReferenceNoNumbers)
+                //.Include(z => z.ReferenceNoAlphabets)
+                //.OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                //ThenBy(x => x.ReferenceNoAlphabets.Name)
+                // //.Where(z => z.HRGroups.Id == HRid && z.Description == Description)
+                // //.Where(z => z.HRGroups.Id == HRid && z.Description.Contains(Description))
+                // .Where(z => z.HRGroups.Id == HRid && NormalizeDescription(z.Description) == Description)
+                //.FirstOrDefault();
 
         }
+        private static string NormalizeDescription(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+            var output= input
+                .Replace("\r", "")    // remove carriage returns
+                .Replace("\n", "")    // remove line feeds
+                .Replace("–", "-")    // convert Unicode dash
+                .Trim(); // remove spaces
+
+            return output;
+        }
+      
+
+
         public List<GuardCompliance> GetGuardCompliancesList(int[] guardIds)
         {
             return _context.GuardCompliances
