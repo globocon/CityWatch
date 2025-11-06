@@ -26,7 +26,7 @@ $(function () {
             { width: 150, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
             { width: 200, field: 'phoneNumber', title: 'Number', editor: true },
             { width: 150, field: 'simProvider', title: 'SIM Provider', editor: true },
-            { width: 100, field: 'imei', title: 'IMEI', editor: true },
+            { width: 210, field: 'imei', title: 'IMEI', editor: true },
             /*{ width: 250, renderer: renderderegisterDevice, title: 'Registered Device', align: 'left', editor: false },*/
             {
                 title: 'Registered Device',
@@ -43,7 +43,20 @@ $(function () {
         },
         
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            //$(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            const $grid = $(e.target);
+            const $lastTh = $grid.find('thead tr th:last');
+
+            // Add icon
+            $lastTh.html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+
+            // Set fixed width (for header)
+            $lastTh.css('width', '150px');
+
+            // Also set width for body cells
+            $grid.find('tbody tr').each(function () {
+                $(this).find('td:last').css('width', '150px');
+            });
         }
     });
 
