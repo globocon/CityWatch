@@ -1,5 +1,6 @@
-﻿using Azure.Storage.Blobs.Models;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -8,13 +9,18 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
+using ConvertApiDotNet;
 //using iText.Kernel.Geom;
 using iText.Layout;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,15 +36,10 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
-using CityWatch.Data.Enums;
-using ConvertApiDotNet;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace CityWatch.Web.API
@@ -69,8 +70,16 @@ namespace CityWatch.Web.API
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
+        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
 
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication)
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, 
+            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, 
+            IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, 
+            IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, 
+            IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, 
+            ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, 
+            IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
+            IHubContext<MobileAppSignalRHub> hubContext)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -89,6 +98,7 @@ namespace CityWatch.Web.API
             _incidentReportGenerator = incidentReportGenerator;
             _appConfigurationProvider = appConfigurationProvider;
             _userAuthentication = userAuthentication;
+            _hubContext = hubContext;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -513,6 +523,12 @@ namespace CityWatch.Web.API
                     }
                    
                 }
+
+                // Notify all SignalR clients in this ClientSiteId group to refresh the tag scan status
+                if(_scanningType != ScanningType.Normal) {
+                    _hubContext.Clients.Group(clientsiteId.ToString()).SendAsync("RefreshTagScanStatus");
+                }
+                    
 
                 return Ok(new { message = "Guard successfully logged in.", guardLoginId });
             }

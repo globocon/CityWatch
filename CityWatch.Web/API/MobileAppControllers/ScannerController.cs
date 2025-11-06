@@ -20,16 +20,14 @@ namespace CityWatch.Web.API
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IClientDataProvider _clientSitesDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
-        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
+        
         public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
-            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider,
-            IHubContext<MobileAppSignalRHub> hubContext)
+            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
             _guardDataProvider = guardDataProvider;
-            _hubContext = hubContext;
         }
 
         [HttpGet("GetScannerControlSettings")]
@@ -196,10 +194,7 @@ namespace CityWatch.Web.API
                 _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt);
                 IsSuccess = true;
                 TagFound = true;
-                message = "Tag saved successfully.";
-
-                // Notify all SignalR clients in this ClientSiteId group to refresh the tag scan status
-                _hubContext.Clients.Group(csswt.ClientSiteId.ToString()).SendAsync("RefreshTagScanStatus");
+                message = "Tag saved successfully.";               
             }
             catch (Exception ex)
             {
