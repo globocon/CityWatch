@@ -64,7 +64,11 @@ namespace CityWatch.Web.Pages
                 returnUrl = Url.Page("/");
 
             var isValidLogin = _userAuthentication.TryGetLoginUser(LoginUser, out User user);
-            var IsthirdParty = IsThirdParty(user.Id);
+            var IsthirdParty = false;
+            if (user != null) {
+                IsthirdParty = IsThirdParty(user.Id);
+            }
+            
             if (!isValidLogin)
                 ModelState.AddModelError("Username", "Incorrect User Name or Password");
             else if (!user.IsAdmin && returnUrl == Url.Page("/Admin/Settings"))
