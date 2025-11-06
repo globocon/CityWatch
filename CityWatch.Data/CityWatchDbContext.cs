@@ -1,21 +1,94 @@
 ﻿using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata;
-using Microsoft.Data.SqlClient;
-using CityWatch.Data.Providers;
+using System.Threading;
+using System.Threading.Tasks;
+using static iText.IO.Util.IntHashtable;
 
 namespace CityWatch.Data
 {
     public class CityWatchDbContext : DbContext
     {
-        public CityWatchDbContext(DbContextOptions<CityWatchDbContext> options) : base(options)
+        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
+        public CityWatchDbContext(DbContextOptions<CityWatchDbContext> options,
+                        IHubContext<MobileAppSignalRHub> hubContext) : base(options)
         {
             Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+            _hubContext = hubContext;
+        }
+        
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var clientSiteIds = GetGuardLogChangedClientSiteIds();
+
+            int result = await base.SaveChangesAsync(cancellationToken);
+
+            if (clientSiteIds.Count > 0)
+            {
+                // Notify all clients in the affected ClientSite groups
+                foreach (var siteId in clientSiteIds.Distinct())
+                {                    
+                    await _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                }
+            }
+
+            return result;
+        }
+
+        public override int SaveChanges()
+        {
+            var clientSiteIds = GetGuardLogChangedClientSiteIds();
+
+            int result = base.SaveChanges();
+
+            if (clientSiteIds.Count > 0)
+            {
+                // Notify all clients in the affected ClientSite groups
+                foreach (var siteId in clientSiteIds.Distinct())
+                {
+                    _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                }
+            }
+
+            return result;
+        }
+
+        private List<int> GetGuardLogChangedClientSiteIds()
+        {
+            var clientSiteIds = new List<int>();
+
+            // Get any GuardLog entities being added, updated, or deleted
+            var guardLogEntries = ChangeTracker.Entries()
+                .Where(e => e.Entity is GuardLog &&
+                            e.State != EntityState.Unchanged &&
+                            e.State != EntityState.Detached)
+                .Select(e => e.Entity as GuardLog)
+                .ToList();
+
+            foreach (var log in guardLogEntries)
+            {
+                // If ClientSiteLogBook not loaded, fetch it quickly from the DbSet
+                var siteId = log.ClientSiteLogBook?.ClientSiteId ??
+                             ClientSiteLogBooks
+                                .Where(x => x.Id == log.ClientSiteLogBookId)
+                                .Select(x => x.ClientSiteId)
+                                .FirstOrDefault();
+
+                if (siteId > 0)
+                    clientSiteIds.Add(siteId);
+            }
+
+            return clientSiteIds;
         }
 
 
@@ -270,6 +343,8 @@ namespace CityWatch.Data
         public DbSet<KeyVehicleLogDocketHistory> KeyVehicleLogDocketHistory { get; set; }
         public DbSet<InActiveGuardsDetails> InActiveGuardsDetails { get; set; }
     }
+
+
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
      issue save changes because the target table has database triggers
      */
@@ -300,4 +375,6 @@ namespace CityWatch.Data
             }
         }
     }
+
+
 }

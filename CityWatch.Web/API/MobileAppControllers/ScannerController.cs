@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,7 @@ namespace CityWatch.Web.API
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IClientDataProvider _clientSitesDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
+        
         public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
             IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider)
         {
@@ -191,7 +194,7 @@ namespace CityWatch.Web.API
                 _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt);
                 IsSuccess = true;
                 TagFound = true;
-                message = "Tag saved successfully.";
+                message = "Tag saved successfully.";               
             }
             catch (Exception ex)
             {
