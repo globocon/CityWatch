@@ -7308,6 +7308,9 @@ $('#btn_save_hr_settings').on('click', function () {
         alert('Description cannot be empty.');
         $('#txtHrSettingsDescription').focus();
     }
+    else if (description.includes("+")) {
+        alert('Description contains + which is invalid');
+    }
     else {
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveHRSettings',
