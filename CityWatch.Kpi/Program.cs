@@ -61,6 +61,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(120);
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
 
 
 var app = builder.Build();
@@ -81,4 +82,5 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<MobileAppSignalRHub>("/MobileAppSignalRHub");
 app.Run();
