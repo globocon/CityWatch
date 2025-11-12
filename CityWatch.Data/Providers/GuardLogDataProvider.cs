@@ -6281,7 +6281,7 @@ namespace CityWatch.Data.Providers
             //            activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
             //.ToList();
             //Modified by Dileep on 30-09-2023 to append ActivityDescription to Notes for KV type
-            var activityTypes = new[] { "SW", "KV", "LB" };
+            var activityTypes = new[] { "SW", "KV", "LB" ,"IR"};
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                 .AsNoTracking()
