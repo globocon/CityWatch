@@ -2506,6 +2506,15 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
         //-kvscheudele-end
+        public JsonResult OnGetPreviousMonthSummaryNote(int scheduleId, int month, int year)
+        {
+
+
+            var kpiSendScheduleNotes = _kpiSchedulesDataProvider.GetSendScheduleById(scheduleId);
+            var kpiScheduleNote = kpiSendScheduleNotes.KpiSendScheduleSummaryNotes.SingleOrDefault(z => z.ForMonth == new DateTime(year, month, 1).AddMonths(-1));
+           
+            return new JsonResult(kpiScheduleNote.Notes);
+        }
     }
 
 

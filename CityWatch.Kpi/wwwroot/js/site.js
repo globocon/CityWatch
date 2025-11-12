@@ -2651,6 +2651,26 @@ $(function () {
             $("#KpiSendScheduleSummaryNote_Id").val(result.id);
         });
     });
+    //p2-168-Import-start
+    $('#getPrevoiusMonthSummaryNotes').on('click', function () {
+      
+
+        $.ajax({
+            url: '/admin/settings?handler=PreviousMonthSummaryNote',
+            type: 'GET',
+            data: {
+                scheduleId: $('#KpiSendScheduleSummaryNote_ScheduleId').val(),
+                month: $('#summaryNoteMonth').val(),
+                year: $('#summaryNoteYear').val()
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            
+            $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val(result)
+            $('#lblRemainingCount').html(getNoteLength(result));
+        }).fail(function () { });
+    });
+    //p2-1668-Import-end
 
     function populateSummaryNotesForYearMonth() {
         $.ajax({
