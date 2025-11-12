@@ -124,7 +124,7 @@ $(function () {
         data: [],
         columns: [
             { data: 'dayOfDate' },
-            { data: 'nameOfDay' },
+            { data: 'nameOfDay', width: '75px' },
             { data: 'employeeHours' },
             { data: 'actualEmployeeHours', className: 'empHrsActual' },
             { data: 'imageCount' },
@@ -281,6 +281,16 @@ $(function () {
         $('#report_footer_1').find('th:eq(7)').text(parseInt(response.data.notInAcceptableLogFreqCount));
         $('#report_footer_1').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
         $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
+
+        //p2-48 adhoc shift expexted vs actual hrs-start
+        $('#report_footer_3').find('th:eq(1)').text(parseFloat(response.data.totalExpectedEmployeeHours).toFixed(2));
+        $('#report_footer_3').find('th:eq(2)').text(parseFloat(response.data.totalActualEmployeeHours).toFixed(2));
+        //$('#report_footer_3').find('th:eq(4)').text(parseFloat(response.data.imageCountAverage).toFixed(2));
+        //$('#report_footer_3').find('th:eq(5)').text(parseFloat(response.data.wandPatrolsAverage).toFixed(2));
+        //$('#report_footer_3').find('th:eq(7)').text(parseInt(response.data.notInAcceptableLogFreqCount));
+        //$('#report_footer_3').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
+        //$('#report_footer_3').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
+        //p2-48 adhoc shift expexted vs actual hrs-end
 
         const imageCountPercentage = response.data.imageCountPercentage ? parseFloat(response.data.imageCountPercentage).toFixed(2) : 0;
         if (imageCountPercentage >= 100)
