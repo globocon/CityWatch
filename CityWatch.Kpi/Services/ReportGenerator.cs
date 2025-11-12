@@ -213,6 +213,53 @@ namespace CityWatch.Kpi.Services
 
         private Table CreateReportDataSummary(Table table, MonthlyKpiResult monthlyKpiResult)
         {
+            //row 1
+            table.AddCell(new Cell(1, 2)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.LEFT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph("Expected Hours Vs Actual")));
+            table.AddCell(new Cell(1, 1)
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.RIGHT)
+               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+               .Add(new Paragraph($"{monthlyKpiResult.TotalExpectedEmployeeHours:0.00}"))); ;
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.RIGHT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.TotalActualEmployeeHours:0.00}")));
+            table.AddCell(new Cell(1, 2)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.RIGHT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.ImageCountAverage:0.00}"))); ;
+            table.AddCell(new Cell(1, 2)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.RIGHT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.WandScanAverage:0.00}")));
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.RIGHT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.WandPatrolsAverage:0.00}")));
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.LEFT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.NotInAcceptableLogFreqCount}")));
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.LEFT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.IrCountTotal}")));
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.LEFT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.AlarmCountTotal}")));
+            //row 2
             table.AddCell(new Cell(1, 4)
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.LEFT)
@@ -249,7 +296,7 @@ namespace CityWatch.Kpi.Services
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph($"{monthlyKpiResult.AlarmCountTotal}")));
 
-            // row 2
+            // row 3
             table.AddCell(new Cell(1, 4)
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.LEFT)

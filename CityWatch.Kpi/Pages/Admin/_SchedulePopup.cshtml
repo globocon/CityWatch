@@ -161,6 +161,9 @@
                                         <label for="summaryNoteYear">Year</label>
                                         <select class="form-control" id="summaryNoteYear" asp-items="@Model.ViewDataService.GetYears()"></select>
                                     </div>
+                                    <div class="form-group col-md-3 pt-4 mt-2">
+                                        <button type="button" class="btn btn-success" id="getPrevoiusMonthSummaryNotes">Import Last Month?</button>
+                                    </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col-md-12">

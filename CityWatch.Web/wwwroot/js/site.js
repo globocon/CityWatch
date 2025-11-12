@@ -7243,15 +7243,16 @@ $('#add_Timesheet').on('click', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
     var weekname = $('#week').val();
     var frequency = $('#Reportfrequency').val();
-    var mailid = $('#mailbox').val();
+    //var mailid = $('#mailbox').val();
+    var mailid = '';
     var dropbox = $('#Defaultdropbox').val();
     var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
 
-    if (!emailPattern.test(mailid)) {
-        alert("Please enter a valid email address.");
-        return;
-    }
+    //if (!emailPattern.test(mailid)) {
+    //    alert("Please enter a valid email address.");
+    //    return;
+    //}
 
     if (weekname) {
 

@@ -270,5 +270,25 @@ namespace CityWatch.Kpi.Models
                 dayCount++;
             }
         }
+        public decimal TotalExpectedEmployeeHours
+        {
+            get
+            {
+                var data = _dailyKpiResults.Where(z => z.EmployeeHours.GetValueOrDefault() > 0);
+                if (data.Any())
+                    return data.Sum(y => y.EmployeeHours.Value);
+                return decimal.Zero;
+            }
+        }
+        public decimal TotalActualEmployeeHours
+        {
+            get
+            {
+                var data = _dailyKpiResults.Where(z => z.ActualEmployeeHours.GetValueOrDefault() > 0);
+                if (data.Any())
+                    return data.Sum(y => y.ActualEmployeeHours.Value);
+                return decimal.Zero;
+            }
+        }
     }
 }
