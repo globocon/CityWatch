@@ -808,7 +808,7 @@
             { title: 'Profile', width: '100%', editor: false, renderer: function (value, record) { return record.profile ? record.profile.profileName : ''; } },
             { title: 'ProfileID', hidden: true, width: '100%', editor: false, renderer: function (value, record) { return record.profile ? record.profile.id : ''; } },
             { field: 'label', title: 'Label', width: '100%', editor: true },
-            { field: 'name', title: 'Text to Stamp into LB', width: '100%', editor: true },            
+            { field: 'name', title: 'Text to Stamp into LB', width: '100%', editor: true },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -949,7 +949,7 @@
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
-           
+
             $('#add_label').val(data.label);
             $('#audioId').val(data.id);
             $('#filenameaudio').val(data.name);
@@ -982,7 +982,7 @@
 
     $('#duressapp_types').on('change', function () {
         const selKvlFieldTypeId = $('#duressapp_types').val();
-       
+
         if (selKvlFieldTypeId == 2) {
             $('#add_duressappMultimedia_fields').hide();
             $('#add_duressapp_fields').show();
@@ -1029,7 +1029,7 @@
             $('#add_duressappMultimedia_fields').hide();
             $('#add_DuressAppAudio').hide();
             gridDuressAppMultimediaFields.hide();
-        }        
+        }
     });
 
     $('#LogActivity_profile_types').on('change', function () {
@@ -1069,8 +1069,8 @@
             if (selFieldTypeId == 2) {
                 if (isDuressAppFieldAdding) {
                     alert('Unsaved changes in the grid. Refresh the page');
-                } else {                    
-                    const _profileid = $('#LogActivity_profile_types').val(); 
+                } else {
+                    const _profileid = $('#LogActivity_profile_types').val();
                     if (!_profileid) {
                         alert('Please select a profile.');
                         return;
@@ -1085,7 +1085,7 @@
                 }
             }
         }
-       
+
     });
     if (gridDuressAppLogFields) {
         gridDuressAppLogFields.on('rowDataChanged', function (e, id, record1) {
@@ -1103,7 +1103,7 @@
                 }
                 else {
                     alert(result.message);
-                   
+
                     gridDuressAppLogFields.edit(id);
 
 
@@ -1138,23 +1138,23 @@
 
     }
 
-   
+
 
     $('#btnSaveAudioFile').on('click', function () {
         $('#loadinDivAudio').show();
         var fileName = $('#filenameaudio').val();
         var label = $('#add_label').val();
-        
+
         var TypeId = $('#duressapp_types').val();
-        
-        var fileInput = $('#add_filenameduress')[0]; 
+
+        var fileInput = $('#add_filenameduress')[0];
         var Id = $('#audioId').val();
         const fileForm = new FormData();
-       
+
 
         if (fileInput.files.length > 0) {
-            const file = fileInput.files[0]; 
-            const fileExtn = file.name.split('.').pop().toLowerCase(); 
+            const file = fileInput.files[0];
+            const fileExtn = file.name.split('.').pop().toLowerCase();
             fileName = file.name;
 
             fileForm.append('file', file);
@@ -1172,7 +1172,7 @@
         fileForm.append('label', label);
         fileForm.append('name', fileName);
         fileForm.append('id', Id);
-        
+
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveAudio',
             type: 'POST',
@@ -1219,7 +1219,7 @@
             const file = fileInput.files[0];
             const fileExtn = file.name.split('.').pop().toLowerCase();
             fileName = file.name;
-           
+
             fileForm.append('file', file);
 
         }
@@ -1231,7 +1231,7 @@
             showModal('Please select the file to upload');
             return false;
         }
-        
+
         fileForm.append('typeId', TypeId);
         fileForm.append('label', label);
         fileForm.append('name', fileName);
@@ -1260,7 +1260,7 @@
 
     });
 
-     //Duress App stop
+    //Duress App stop
 
 
     /****** Report Fileds start *******/
@@ -2658,7 +2658,7 @@
             });
         }
 
-       
+
         //3rd Party Dropdown start
         $('#sel_ThirdParty_type').html('');
         $.ajax({
@@ -2680,8 +2680,8 @@
                 }
             });
         });
-         //3rd Party Dropdown stop
-       
+        //3rd Party Dropdown stop
+
         ucaTree.uncheckAll();
         ucaTree.reload({ userId: userId });
     });
@@ -3001,7 +3001,7 @@
             showStatusNotification(false, 'Something went wrong');
         });
 
-       
+
     });
 
     $(".file-upload").change(function () {
@@ -3151,7 +3151,7 @@
                 return {
                     query: $('#searchBoxTempAndForms').val(),// Include query dynamically
                     companyProfile: $('#report_company_Profile').val()
-                }; 
+                };
             }
         },
         uiLibrary: 'bootstrap4',
@@ -3246,7 +3246,8 @@
             data: function () {
                 return {
                     query: $('#searchBoxTempAndForms').val(),
-                    companyProfile: $('#report_training_Profile').val() }; // Include query dynamically
+                    companyProfile: $('#report_training_Profile').val()
+                }; // Include query dynamically
             }
         },
 
@@ -3980,9 +3981,9 @@
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
                 HyperlinkColour: $("#txt_HyperlinkColor").val(),
                 LogoHyperlink: $("#txt_LogoHyplerLink").val(),
-                
+
                 //p1-225 Core Settings-end
-                
+
             }
             $.ajax({
                 url: '/Admin/Settings?handler=CompanyDetails',
@@ -4525,7 +4526,7 @@
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '200px');
-           // $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            // $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
@@ -4879,7 +4880,7 @@
             gridDosAndDontsFields.hide();
             gridAreaReportFields.hide();
             gridKPITelematicsFields.hide();
-            
+
 
             $('#report_field_types').val('');
             gridReportFields.reload({ typeId: $('#report_field_types').val() });
@@ -4963,7 +4964,7 @@
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
             gridAreaReportFields.hide();
-            gridKPITelematicsFields.hide();           
+            gridKPITelematicsFields.hide();
             $('#report_field_types').val('');
             $('#ta_field_types').show();
             $('#add_ta_fields').show();
@@ -5035,7 +5036,7 @@
             gridReportFields.hide();
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
-            gridKPITelematicsFields.hide();         
+            gridKPITelematicsFields.hide();
             /*p5-Issue-20-Instructor-start*/
             gridTAFields.hide();
             $('#ta_field_types').hide();
@@ -5442,7 +5443,7 @@
             gridStaffDocsTypeCompanySop.reload({ companyProfile: $('#report_company_Profile').val() });
 
         }
-      
+
 
 
     });
@@ -5450,7 +5451,7 @@
         const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
 
 
-      
+
         if ($('#report_module_types_irtemplate').val() == 3) {
             gridStaffDocsTypeTraining.clear();
             gridStaffDocsTypeTraining.reload({ companyProfile: $('#report_training_Profile').val() });
@@ -5462,13 +5463,13 @@
 
 
     });
-    
+
     $('#report_templatesandforms_Profile').on('change', function () {
         const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
 
 
 
-       
+
         if ($('#report_module_types_irtemplate').val() == 4) {
             gridStaffDocsTypeTemplatesAndForms.clear();
             gridStaffDocsTypeTemplatesAndForms.reload({ companyProfile: $('#report_templatesandforms_Profile').val() });
@@ -5825,8 +5826,8 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             .addClass('text-center')
             .html('<i class="fa fa-lock" aria-hidden="true"></i>');
         $('#tbl_hr_settings thead tr th:last')
-            .prev() 
-           
+            .prev()
+
             .addClass('text-center')
             .html('<i class="fa fa-ban" aria-hidden="true"></i>');
         $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -5902,8 +5903,8 @@ function courseStatusColorRenderer(value, record) {
         cellvalue = '<div class="text-center">' +
             '<i class="fa fa-circle text-success" style="padding-top:10px;"></i>' + '</div>';
     }
-    
-   
+
+
     return cellvalue;
 }
 function hrgroupLockButtonRenderer(value, record) {
@@ -6030,7 +6031,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
         enableStatus = 1;
     }
 
-    
+
     $.ajax({
         url: '/Admin/Settings?handler=HrSettingsBanEdit',
         data: {
@@ -6047,7 +6048,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
         console.log('error');
     });
 
-   
+
 });
 
 
@@ -6243,7 +6244,7 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
 
 });
 function ShowStatusColorForCourse() {
-    var hrSettingsId=$('#HrSettings_Id').val();
+    var hrSettingsId = $('#HrSettings_Id').val();
     $.ajax({
         url: '/Admin/Settings?handler=CourseStatusColorById&hrSettingsid=' + hrSettingsId,
         type: 'GET',
@@ -6267,7 +6268,7 @@ function ShowStatusColorForCourse() {
 
             $('#statusTestQuestionsColor').addClass('text-muted');
         }
-        
+
         if (data.certificateLength == true && data.instructorLength == true) {
             $('#statusCertificateColor').removeClass('text-warning');
             $('#statusCertificateColor').removeClass('text-muted');
@@ -6637,7 +6638,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettingswithCourseLibrary.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
-        
+
         gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
@@ -6653,7 +6654,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettingswithCourseLibrary.show();
         gridHrSettingswithCourseLibrary.clear();
         gridHrSettingswithCourseLibrary.reload();
-        
+
     }
     else {
         gridLicenseTypes.hide();
@@ -6771,7 +6772,7 @@ $('#add_hr_settings').on('click', function () {
         alert('Please select a field type to update');
         return;
     }
-    if (selFieldTypeId == 1 || selFieldTypeId==8) {
+    if (selFieldTypeId == 1 || selFieldTypeId == 8) {
         $('#list_hrGroups').val('');
         $('#list_ReferenceNoNumber').val('');
         $('#list_ReferenceNoAlphabet').val('');
@@ -7050,7 +7051,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridCriticalDocument.hide();
     gridLanguage.hide();
     gridHrSettingswithCourseLibrary.hide();
-   
+
 }
 
 $('#Critical-modal').on('shown.bs.modal', function (event) {
@@ -7662,7 +7663,7 @@ gridLogActivityProfiles = $('#tbladdEditViewProfileModal').grid({
     inlineEditing: { mode: 'command' },
     columns: [
         { field: 'id', title: 'ID', width: 50, editor: false },
-        { field: 'profileName', title: 'Profile Name', width: 400, editor: true}
+        { field: 'profileName', title: 'Profile Name', width: 400, editor: true }
     ],
 
     initialized: function (e) {
@@ -7693,12 +7694,12 @@ if (gridLogActivityProfiles) {
         }).fail(function () {
             console.log('error');
         }).always(function () {
-            
+
         });
     });
 
-    gridLogActivityProfiles.on('rowRemoving', function (e, id, record) {  
-        if (confirm('Are you sure to delete this profile ?')) {            
+    gridLogActivityProfiles.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure to delete this profile ?')) {
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
                 url: '/Admin/Settings?handler=DeleteLogActivityProfile',
@@ -7720,14 +7721,14 @@ if (gridLogActivityProfiles) {
             }).fail(function () {
                 console.log('error');
             }).always(function () {
-                
+
             });
         }
     });
 }
 
 
-$('#add_LogActivity_profile_settings').on('click', function () {    
+$('#add_LogActivity_profile_settings').on('click', function () {
     $("#txtProfileName").val('');
     //Reload grid
     gridLogActivityProfiles.reload();
@@ -7745,21 +7746,231 @@ $('#btnSaveNewLogActivityProfile').on('click', function () {
     }).done(function (data) {
         if (data.success) {
             $('#LogActivity_profile_types').append('<option value="' + data.id + '">' + data.name + '</option>');
-            $("#txtProfileName").val();            
+            $("#txtProfileName").val();
             gridLogActivityProfiles.reload();
             alert(data.message);
         }
         else {
             alert(data.message);
         }
-        
+
     }).fail(function () {
         console.log('error');
     }).always(function () {
 
-    });    
+    });
+});
+
+
+
+/* ######## Mobile Upgrade Page Start ######### */
+let appversionsActiveDataLoaded = false;
+var appversions = $('#tbl_app_active_version').DataTable({
+    pageLength: 50,
+    autoWidth: false,
+    ajax: {
+        url: '/Admin/MobileAppUpgrade?handler=AllAppVersionDetails&active=true',
+        dataSrc: '' // <-- tell DataTables the data is a plain array
+    },
+    processing: true,
+    language: {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading data please wait...'
+    },
+    columns: [
+        { data: 'id', visible: false },
+        { data: 'appType', name: 'appType', title: 'Platform Type', width: "5%" },
+        {
+            data: 'appVersionMajor', name: 'appVersionMajor', title: 'App Version', className: "text-center", width: "3%", 'render': function (value, type, data) {
+                return renderAppVersionCell(value, type, data);
+            }
+        },
+        { data: 'appDownloadUrl', name: 'appDownloadUrl', title: 'App Download Url', width: "25%" },
+        { data: 'appVersionNotes', name: 'appVersionNotes', title: 'Upgrade Notes', width: "25%" },
+        {
+            data: 'recordCreateDTM',
+            name: 'recordCreateDTM',
+            title: 'Created Time',
+            orderable: false,
+            width: "13%",
+            render: function (value) {
+                if (!value) return '';
+                const date = new Date(value);
+                const options = {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                };
+                // Example: 12-Nov-2025 11:17
+                return date.toLocaleString('en-GB', options)
+                    .replace(',', '') // remove comma
+                    .replace(' ', '-'); // ensures dd-MMM-yyyy HH:mm
+            }
+        },
+        { data: 'totalDownloadCount', name: 'totalDownloadCount', title: 'Download Count', width: "1%", visible: false },
+        {
+            data: 'isActive', name: 'isactive', title: 'Is Active', className: "text-center", width: "4%", 'render': function (value, type, data) {
+                return renderAppVersionActiveCell(value, type, data);
+            }
+        },
+        { data: 'appVersionMajor', visible: false },
+        { data: 'appVersionMinor', visible: false },
+        { data: 'appVersionPatch', visible: false },
+    ],
+    initComplete: function (settings, json) {
+        //$('#chkbxfilterGuardActive').prop("disabled", false);
+        //$('#chkbxfilterGuardInActive').prop("disabled", false);
+        appversionsActiveDataLoaded = true;
+        /*$('#chkbxfilterGuardActive').trigger('click');*/
+    }
+}).on('preInit.dt', function (e, settings) {
+    //$('#chkbxfilterGuardActive').prop("disabled", true);
+    //$('#chkbxfilterGuardInActive').prop("disabled", true);
+    appversionsActiveDataLoaded = false;
 });
 
 
 
 
+let appversionsDataLoaded = false;
+var appversions = $('#tbl_app_version_history').DataTable({
+    pageLength: 50,
+    autoWidth: false,
+    ajax: {
+        url: '/Admin/MobileAppUpgrade?handler=AllAppVersionDetails&active=false',
+        dataSrc: '' // <-- tell DataTables the data is a plain array
+    },
+    processing: true,
+    language: {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading data please wait...'
+    },
+    columns: [
+        { data: 'id', visible: false },
+        { data: 'appType', name: 'appType', title: 'Platform Type', width: "5%" },
+        {
+            data: 'appVersionMajor', name: 'appVersionMajor', title: 'App Version', className: "text-center", width: "3%", 'render': function (value, type, data) {
+                return renderAppVersionCell(value, type, data);
+            }
+        },
+        { data: 'appDownloadUrl', name: 'appDownloadUrl', title: 'App Download Url', width: "25%" },
+        { data: 'appVersionNotes', name: 'appVersionNotes', title: 'Upgrade Notes', width: "25%" },
+        {
+            data: 'recordCreateDTM',
+            name: 'recordCreateDTM',
+            title: 'Created Time',
+            orderable: false,
+            width: "13%",
+            render: function (value) {
+                if (!value) return '';
+                const date = new Date(value);
+                const options = {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                };
+                // Example: 12-Nov-2025 11:17
+                return date.toLocaleString('en-GB', options)
+                    .replace(',', '') // remove comma
+                    .replace(' ', '-'); // ensures dd-MMM-yyyy HH:mm
+            }
+        },
+        { data: 'totalDownloadCount', name: 'totalDownloadCount', title: 'Download Count', width: "1%", visible: false },
+        {
+            data: 'isActive', name: 'isactive', title: 'Is Active', className: "text-center", width: "4%", 'render': function (value, type, data) {
+                return renderAppVersionActiveCell(value, type, data);
+            }
+        },
+        { data: 'appVersionMajor', visible: false },
+        { data: 'appVersionMinor', visible: false },
+        { data: 'appVersionPatch', visible: false },
+        //{
+        //    targets: -1,
+        //    title: 'De-Activate',
+        //    data: 'isActive',
+        //    orderable: false,
+        //    className: "text-center",
+        //    width: "0%",
+        //    render: function (value, type, data) {
+        //        if (data.isActive) {
+        //            return '<button class="btn btn-outline-primary mb-1" name="btn_deactivateappversion"><i class="fa fa-trash"></i></button>';
+        //        } else {
+        //            return ''; // hide button if inactive
+        //        }
+        //    }
+        //},
+    ],
+    initComplete: function (settings, json) {
+        //$('#chkbxfilterGuardActive').prop("disabled", false);
+        //$('#chkbxfilterGuardInActive').prop("disabled", false);
+        appversionsDataLoaded = true;
+        /*$('#chkbxfilterGuardActive').trigger('click');*/
+    }
+}).on('preInit.dt', function (e, settings) {
+    //$('#chkbxfilterGuardActive').prop("disabled", true);
+    //$('#chkbxfilterGuardInActive').prop("disabled", true);
+    appversionsDataLoaded = false;
+});
+
+
+
+
+function renderAppVersionCell(value, type, data) {
+    return data.appVersionMajor + '.' + data.appVersionMinor + '.' + data.appVersionPatch;
+}
+
+function renderAppVersionActiveCell(value, type, data) {
+
+    if (data.isActive) {
+        return '<i class="fa fa-circle text-success"></i>';
+    }
+    else {
+        return '<i class="fa fa-circle text-danger"></i>';
+    }
+}
+
+
+//$('#chkbxfilterGuardActive').on('click', function () {
+//    var thisCheck = $(this);
+//    if (guardSettingsDataLoaded) {
+//        if (thisCheck.is(':checked')) {
+//            $('#chkbxfilterGuardInActive').prop("checked", false);
+//        }
+//        filterActiveInActiveGuards(guardSettings);
+//    }
+//});
+
+//$('#chkbxfilterGuardInActive').on('click', function () {
+//    var thisCheck = $(this);
+//    if (guardSettingsDataLoaded) {
+//        if (thisCheck.is(':checked')) {
+//            $('#chkbxfilterGuardActive').prop("checked", false);
+//        }
+//        filterActiveInActiveGuards(guardSettings);
+//    }
+//});
+
+//function filterActiveInActiveGuards(table) {
+//    let filter = '';
+//    let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
+//    let guardActive = $('#chkbxfilterGuardActive').is(':checked');
+//    let regex = true;
+//    let smart = true;
+
+//    if (guardActive)
+//        filter = 'true';
+//    else if (guardInActive)
+//        filter = 'false';
+
+//    //table.search(filter.value, regex, smart).draw();
+//    table.column('isactive:name').search(filter, regex, smart).draw();
+//}
+
+
+/* ######## Mobile Upgrade Page End ######### */
