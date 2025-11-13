@@ -203,6 +203,11 @@ namespace CityWatch.Web.Services
         public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId);
         public bool SavePatrolCarLog(PatrolCarLog record);
         public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId);
+        public MobileAppUpgrade GetLatestMobileAppVersion(string platformType);
+        public List<MobileAppUpgrade> GetAllMobileAppVersion();
+        public void SaveMobileAppUpgrade(MobileAppUpgrade mobileAppUpgrade);
+        public void DeleteMobileAppUpgrade(int id);
+        public void UpdateDownloadCount(int id);
 
     }
 
@@ -216,6 +221,7 @@ namespace CityWatch.Web.Services
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly ILogbookDataService _logbookDataService;
+        private readonly IAppConfigurationProvider _appConfigurationProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -224,7 +230,8 @@ namespace CityWatch.Web.Services
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardSettingsDataProvider guardSettingsDataProvider,
-            ILogbookDataService logbookDataService)
+            ILogbookDataService logbookDataService,
+            IAppConfigurationProvider appConfigurationProvider)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -234,6 +241,7 @@ namespace CityWatch.Web.Services
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
             _logbookDataService = logbookDataService;
+            _appConfigurationProvider = appConfigurationProvider;
         }
 
         public List<SelectListItem> Genders
@@ -2984,7 +2992,8 @@ namespace CityWatch.Web.Services
             return smartWand == null; // true = deregistered
         }
 
-        public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId) {
+        public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId)
+        {
 
             var columns = new Dictionary<string, string>()
             {
@@ -2996,7 +3005,7 @@ namespace CityWatch.Web.Services
             {
                 columns.Add(field, field);
             }
-            return columns; 
+            return columns;
         }
 
         public List<Dictionary<string, string>> GetCustomFieldLogs(int logBookId, int clientSiteId)
@@ -3033,7 +3042,8 @@ namespace CityWatch.Web.Services
             return rows;
         }
 
-        public bool SaveCustomFieldLog(int logBookId, Dictionary<string, string> records) {
+        public bool SaveCustomFieldLog(int logBookId, Dictionary<string, string> records)
+        {
             var timeSlot = records["timeSlot"];
             var success = true;
             try
@@ -3061,7 +3071,8 @@ namespace CityWatch.Web.Services
             return success;
         }
 
-        public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId) {
+        public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId)
+        {
             var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(logBookId);
             if (!patrolCarLogs.Any())
             {
@@ -3080,6 +3091,29 @@ namespace CityWatch.Web.Services
         {
             _guardLogDataProvider.SavePatrolCarLog(record);
             return true;
+        }
+
+        public MobileAppUpgrade GetLatestMobileAppVersion(string platformType)
+        {
+            return _appConfigurationProvider.GetLatestMobileAppVersion(platformType);
+        }
+
+        public List<MobileAppUpgrade> GetAllMobileAppVersion()
+        {
+            return _appConfigurationProvider.GetAllMobileAppVersion();
+        }
+        public void SaveMobileAppUpgrade(MobileAppUpgrade mobileAppUpgrade)
+        {
+            _appConfigurationProvider.SaveMobileAppUpgrade(mobileAppUpgrade);
+        }
+        public void DeleteMobileAppUpgrade(int id)
+        {
+            _appConfigurationProvider.DeleteMobileAppUpgrade(id);
+        }
+
+        public void UpdateDownloadCount(int id)
+        {
+            _appConfigurationProvider.UpdateDownloadCount(id);
         }
 
     }

@@ -44,6 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\Downloads\MobileApp\Android\" />
     <Folder Include="wwwroot\GpsImage\" />
     <Folder Include="wwwroot\KvlUploads\" />
     <Folder Include="wwwroot\DuressAppAudio\" />

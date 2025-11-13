@@ -1,0 +1,31 @@
+﻿@page
+@model CityWatch.Web.Pages.Admin.MobileAppUpgradeModel
+@{
+    ViewData["Title"] = "Mobile App Upgrade";
+}
+<div id="loader" style="z-index: 99999"></div>
+
+<div class="row">
+    <div class="col-md-12 mt-2 text-left">
+        <button class="btn btn-success mb-3" id="btn_add_newversion"><i class="fa fa-plus mr-2"></i>New Version</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="text-primary">Active Version</h2>
+    </div>
+    <div class="col-md-12">
+        <table id="tbl_app_active_version" class="table table-bordered" style="width:100%">                        
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="text-primary">Version History</h2>
+    </div>
+    <div class="col-md-12">
+        <table id="tbl_app_version_history" class="table table-bordered" style="width:100%">                        
+        </table>
+    </div>
+</div>
+
