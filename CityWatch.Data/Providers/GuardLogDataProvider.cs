@@ -1903,6 +1903,8 @@ namespace CityWatch.Data.Providers
      .Where(wand => !wand.IsDeleted)
      .ToLookup(wand => wand.ClientSiteId);
 
+                var wandTages = _context.ClientSiteSmartWandTags.Where(wand=>!wand.IsDeleted).ToLookup(wand => wand.ClientSiteId);
+
                 foreach (var item in allValues)
                 {
                     try
@@ -1913,7 +1915,9 @@ namespace CityWatch.Data.Providers
                             .Select(wand => wand.PhoneNumber)
                             .ToList();
 
-                        if (phoneNumbers.Any())
+                        var wandTagsForSite = wandTages[item.ClientSiteId];
+
+                        if (phoneNumbers.Any() || wandTagsForSite.Any())
                         {
                             item.hasmartwand = 1;
                         }
