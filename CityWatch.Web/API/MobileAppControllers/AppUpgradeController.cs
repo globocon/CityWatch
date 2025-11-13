@@ -33,7 +33,8 @@ namespace CityWatch.Web.API
         public IActionResult DownloadMobileApp(string platform)
         {
             var latestVersion = _viewDataService.GetLatestMobileAppVersion(platform);
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Downloads", "MobileApp", platform, latestVersion.FileName);
+            var versionPath = $"{latestVersion.AppVersionMajor}.{latestVersion.AppVersionMinor}.{latestVersion.AppVersionPatch}";
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Downloads", "MobileApp", platform, versionPath, latestVersion.FileName);
             var contentType = "application/vnd.android.package-archive";
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
 

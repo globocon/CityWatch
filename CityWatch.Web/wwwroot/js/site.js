@@ -7890,21 +7890,21 @@ var appversions = $('#tbl_app_version_history').DataTable({
         { data: 'appVersionMajor', visible: false },
         { data: 'appVersionMinor', visible: false },
         { data: 'appVersionPatch', visible: false },
-        //{
-        //    targets: -1,
-        //    title: 'De-Activate',
-        //    data: 'isActive',
-        //    orderable: false,
-        //    className: "text-center",
-        //    width: "0%",
-        //    render: function (value, type, data) {
-        //        if (data.isActive) {
-        //            return '<button class="btn btn-outline-primary mb-1" name="btn_deactivateappversion"><i class="fa fa-trash"></i></button>';
-        //        } else {
-        //            return ''; // hide button if inactive
-        //        }
-        //    }
-        //},
+        {
+            targets: -1,
+            title: 'Re-Activate',
+            data: 'isActive',
+            orderable: false,
+            className: "text-center",
+            width: "0%",
+            render: function (value, type, data) {
+                if (data.isActive) {
+                    return '<button class="btn btn-outline-primary mb-1" data-recordid=' + data.id + ' name="btn_reactivateappversion"><i class="fa fa-bullseye"></i></button>';
+                } else {
+                    return ''; // hide button if inactive
+                }
+            }
+        },
     ],
     initComplete: function (settings, json) {
         //$('#chkbxfilterGuardActive').prop("disabled", false);
