@@ -3993,7 +3993,9 @@ namespace CityWatch.Data.Providers
                                     ClientSiteLogBookId = logBookId,
                                     GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
-                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                    Notes = clientSiteRadioCheck.Status,
+                                    
                                     IrEntryType = IrEntryType.Notification,
                                     IsSystemEntry = true,
                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4032,7 +4034,8 @@ namespace CityWatch.Data.Providers
                                         ClientSiteLogBookId = logBookId,
                                         GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
-                                        Notes = "Duress Alarm De-Activated by Control Room",
+                                        //Notes = "Duress Alarm De-Activated by Control Room",
+                                        Notes = clientSiteRadioCheck.Status,
                                         IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true,
                                         EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4087,7 +4090,8 @@ namespace CityWatch.Data.Providers
                                                     ClientSiteLogBookId = logBookIdLinked,
                                                     GuardLoginId = guardLoginIdLinked.Id,
                                                     EventDateTime = DateTime.Now,
-                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                                    Notes = clientSiteRadioCheck.Status,
                                                     IrEntryType = IrEntryType.Notification,
                                                     IsSystemEntry = true,
                                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4112,7 +4116,8 @@ namespace CityWatch.Data.Providers
                                                     ClientSiteLogBookId = logBookIdLinked,
                                                     GuardLoginId = null,
                                                     EventDateTime = DateTime.Now,
-                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                                    Notes = clientSiteRadioCheck.Status,
                                                     IrEntryType = IrEntryType.Notification,
                                                     IsSystemEntry = true,
                                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4760,7 +4765,8 @@ namespace CityWatch.Data.Providers
                                     ClientSiteLogBookId = logBookId,
                                     GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
-                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                    Notes = clientSiteRadioCheck.Status,
                                     IrEntryType = IrEntryType.Notification,
                                     IsSystemEntry = true,
                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4797,7 +4803,8 @@ namespace CityWatch.Data.Providers
                                         ClientSiteLogBookId = logBookId,
                                         GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
-                                        Notes = "Duress Alarm De-Activated by Control Room",
+                                        //Notes = "Duress Alarm De-Activated by Control Room",
+                                        Notes = clientSiteRadioCheck.Status,
                                         IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true,
                                         EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4848,7 +4855,8 @@ namespace CityWatch.Data.Providers
                                                     ClientSiteLogBookId = logBookIdLinked,
                                                     GuardLoginId = guardLoginIdLinked.Id,
                                                     EventDateTime = DateTime.Now,
-                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                                    Notes = clientSiteRadioCheck.Status,
                                                     IrEntryType = IrEntryType.Notification,
                                                     IsSystemEntry = true,
                                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -4872,7 +4880,8 @@ namespace CityWatch.Data.Providers
                                                 {
                                                     ClientSiteLogBookId = logBookIdLinked,
                                                     EventDateTime = DateTime.Now,
-                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    //Notes = "Duress Alarm De-Activated by Control Room",
+                                                    Notes = clientSiteRadioCheck.Status,
                                                     IrEntryType = IrEntryType.Notification,
                                                     IsSystemEntry = true,
                                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -6299,11 +6308,33 @@ namespace CityWatch.Data.Providers
             // now adjust Notes in memory
             foreach (var item in data)
             {
-                if (item.ActivityType.Trim() == "KV")
+                var type = item.ActivityType?.Trim();
+
+                switch (type)
                 {
-                    item.Notes = (item.Notes ?? "") + " " + (item.ActivityDescription ?? "");
+                    case "KV":
+                        item.Notes = $"{item.Notes ?? ""} {item.ActivityDescription ?? ""}".Trim();
+                        break;
+
+                    case "LB":
+                        if (item.LBId != null)
+                        {
+                            item.IrEntryType = GuardLogs
+                                .Where(x => x.Id == item.LBId)
+                                .Select(x => x.IrEntryType)
+                                .FirstOrDefault();
+                        }
+                        break;  // Ensure break is always hit
+
+                    case "IR":
+                        if (item.IRId != null)
+                        {
+                            item.IrEntryType = IrEntryType.Notification;
+                        }
+                        break;
                 }
             }
+
 
             // Check for GMT timezone
             var checkGMT = GuardLogs
