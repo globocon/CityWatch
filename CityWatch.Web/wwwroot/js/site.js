@@ -7765,7 +7765,7 @@ $('#btnSaveNewLogActivityProfile').on('click', function () {
 
 /* ######## Mobile Upgrade Page Start ######### */
 let appversionsActiveDataLoaded = false;
-var appversions = $('#tbl_app_active_version').DataTable({
+var appversionsactive = $('#tbl_app_active_version').DataTable({
     pageLength: 50,
     autoWidth: false,
     ajax: {
@@ -7836,7 +7836,7 @@ var appversions = $('#tbl_app_active_version').DataTable({
 
 
 let appversionsDataLoaded = false;
-var appversions = $('#tbl_app_version_history').DataTable({
+var appversionshistory = $('#tbl_app_version_history').DataTable({
     pageLength: 50,
     autoWidth: false,
     ajax: {
@@ -7892,14 +7892,16 @@ var appversions = $('#tbl_app_version_history').DataTable({
         { data: 'appVersionPatch', visible: false },
         {
             targets: -1,
-            title: 'Re-Activate',
+            title: 'Roll Back/ Delete',
             data: 'isActive',
             orderable: false,
             className: "text-center",
-            width: "0%",
+            width: "15%",
             render: function (value, type, data) {
-                if (data.isActive) {
-                    return '<button class="btn btn-outline-primary mb-1" data-recordid=' + data.id + ' name="btn_reactivateappversion"><i class="fa fa-bullseye"></i></button>';
+                if (!data.isActive) {
+                    var html = '<button class="btn btn-outline-primary mb-1 mr-2 btn-reactivate" data-recordid="' + data.id + '" data-versionid="' + data.appVersionMajor + '.' + data.appVersionMinor + '.' + data.appVersionPatch + '" title="Roll Back"><i class="fa fa-bullseye"></i></button>';
+                    html += '<button class="btn btn-outline-danger mb-1 btn-deleteappversion" data-recordid="' + data.id + '" data-versionid="' + data.appVersionMajor + '.' + data.appVersionMinor + '.' + data.appVersionPatch + '" title="Delete"><i class="fa fa-trash"></i></button>';
+                    return html;
                 } else {
                     return ''; // hide button if inactive
                 }
@@ -7918,9 +7920,6 @@ var appversions = $('#tbl_app_version_history').DataTable({
     appversionsDataLoaded = false;
 });
 
-
-
-
 function renderAppVersionCell(value, type, data) {
     return data.appVersionMajor + '.' + data.appVersionMinor + '.' + data.appVersionPatch;
 }
@@ -7935,42 +7934,206 @@ function renderAppVersionActiveCell(value, type, data) {
     }
 }
 
+$('#btn_add_newappversion').on('click', function () {
+    $("#upgradeForm")[0].reset();
+    $("#Id").val("0");
 
-//$('#chkbxfilterGuardActive').on('click', function () {
-//    var thisCheck = $(this);
-//    if (guardSettingsDataLoaded) {
-//        if (thisCheck.is(':checked')) {
-//            $('#chkbxfilterGuardInActive').prop("checked", false);
-//        }
-//        filterActiveInActiveGuards(guardSettings);
-//    }
-//});
+    //var modal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+    //modal.show();
+    $('#upgradeModal').modal('show');
+});
 
-//$('#chkbxfilterGuardInActive').on('click', function () {
-//    var thisCheck = $(this);
-//    if (guardSettingsDataLoaded) {
-//        if (thisCheck.is(':checked')) {
-//            $('#chkbxfilterGuardActive').prop("checked", false);
-//        }
-//        filterActiveInActiveGuards(guardSettings);
-//    }
-//});
+$("#btnSaveUpgrade").on("click", function () {
 
-//function filterActiveInActiveGuards(table) {
-//    let filter = '';
-//    let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
-//    let guardActive = $('#chkbxfilterGuardActive').is(':checked');
-//    let regex = true;
-//    let smart = true;
+    var formData = new FormData();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    formData.append("AppType", $("#AppType").val());
+    formData.append("AppVersionMajor", $("#AppVersionMajor").val());
+    formData.append("AppVersionMinor", $("#AppVersionMinor").val());
+    formData.append("AppVersionPatch", $("#AppVersionPatch").val());
+    formData.append("AppVersionNotes", $("#AppVersionNotes").val());
+    alert("1");
+    var file = $("#AppVersionFileUpload").prop('files')[0];
+    if (file) {
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || 'apk'.indexOf(fileExtn) < 0) {
+            alert('Please select a valid file type');
+            return false;
+        }
+        alert("2");
+        formData.append("AppVersionFileUpload", file);
+    }
+    else {
+        alert("Please select a file to upload.");
+        return;
+    }
+    alert("3");
+    // Show progress bar
+    $("#uploadProgressContainer").removeClass("d-none");
+    $("#uploadProgressBar").css("width", "0%").text("0%");
+    alert("4");
+    $.ajax({
+        url: '/Admin/MobileAppUpgrade?handler=NewAppVersionUpload',
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+        contentType: false,
+        processData: false,
+        data: formData,
 
-//    if (guardActive)
-//        filter = 'true';
-//    else if (guardInActive)
-//        filter = 'false';
+        xhr: function () {
+            var xhr = new XMLHttpRequest();
 
-//    //table.search(filter.value, regex, smart).draw();
-//    table.column('isactive:name').search(filter, regex, smart).draw();
-//}
+            xhr.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    var percent = Math.round((e.loaded / e.total) * 100);
 
+                    $("#uploadProgressBar")
+                        .css("width", percent + "%")
+                        .text(percent + "%");
+                }
+            });
+
+            return xhr;
+        },
+        success: function (response) {
+            $("#uploadProgressBar")
+                .css("width", "100%")
+                .text("Upload Complete");
+
+            setTimeout(function () {
+                $("#uploadProgressContainer").addClass("d-none");
+            }, 1000);
+
+            if (response.success) {
+                alert(response.message);
+                appversionsactive.ajax.reload(null, false);
+                appversionshistory.ajax.reload(null, false);
+            }
+            else {
+                alert(response.message);
+            }
+        },
+        error: function (err) {
+            console.log(err);
+            alert("Error saving upgrade");
+            $("#uploadProgressContainer").addClass("d-none");
+        }
+    });
+});
+
+var selectedRecordId = null;
+var selectedVersionId = null;
+
+// open modal on button click
+$(document).on('click', '.btn-reactivate', function () {
+
+    selectedRecordId = $(this).data('recordid');
+    selectedVersionId = $(this).data('versionid');
+
+    // Set modal text
+    $("#reactivateMessage").html(
+        "Are you sure you want to reactivate version <strong>" +
+        selectedVersionId + "</strong> ?"
+    );
+
+    // Show modal
+    //var modal = new bootstrap.Modal(document.getElementById('reactivateModal'));
+    //modal.show();
+    $('#reactivateModal').modal('show');
+});
+
+
+
+// ok button click
+$('#btnConfirmReactivate').on('click', function () {
+
+    // Close modal
+    $('#reactivateModal').modal('hide');
+
+    // Call your custom function
+    reactivateVersion(selectedRecordId, selectedVersionId);
+});
+
+function reactivateVersion(recordId, versionId) {
+    console.log("Reactivating:", recordId, versionId);
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    // Example AJAX call
+    $.ajax({
+        url: '/Admin/MobileAppUpgrade?handler=RollBackToAppVersion',
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+        data: { recordId: recordId },
+        success: function (response) {
+            if (response.success) {
+                alert(response.message);
+                appversionsactive.ajax.reload(null, false);
+                appversionshistory.ajax.reload(null, false);
+            }
+            else {
+                alert(response.message);
+            }
+        },
+        error: function (err) {
+            console.log(err);
+            alert("Error in downgrading.");
+        }
+    });
+}
+
+// open modal on button click
+$(document).on('click', '.btn-deleteappversion', function () {
+
+    selectedRecordId = $(this).data('recordid');
+    selectedVersionId = $(this).data('versionid');
+
+    // Set modal text
+    $("#deleteAppVersionMessage").html(
+        "Are you sure you want to delete version <strong>" +
+        selectedVersionId + "</strong> ?"
+    );
+
+    // Show modal
+    //var modal = new bootstrap.Modal(document.getElementById('deleteAppVersionModal'));
+    //modal.show();
+    $('#deleteAppVersionModal').modal('show');
+});
+
+// ok button click
+$('#btnConfirmDeleteAppVersion').on('click', function () {
+
+    // Close modal
+    $('#deleteAppVersionModal').modal('hide');
+
+    // Call your custom function
+    deleteAppVersion(selectedRecordId, selectedVersionId);
+});
+
+function deleteAppVersion(recordId, versionId) {
+    console.log("Deleting:", recordId, versionId);
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    // Example AJAX call
+    $.ajax({
+        url: '/Admin/MobileAppUpgrade?handler=DeleteAppVersion',
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+        data: {
+            id: recordId
+        },
+        success: function (response) {
+            if (response.success) {
+                alert(response.message);
+                appversionsactive.ajax.reload(null, false);
+                appversionshistory.ajax.reload(null, false);
+            }
+            else {
+                alert(response.message);
+            }
+        },
+        error: function (err) {
+            console.log(err);
+            alert("Error deleting upgrade record.");
+        }
+    });
+}
 
 /* ######## Mobile Upgrade Page End ######### */
