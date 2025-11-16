@@ -208,6 +208,7 @@ namespace CityWatch.Web.Services
         public void SaveMobileAppUpgrade(MobileAppUpgrade mobileAppUpgrade);
         public void DeleteMobileAppUpgrade(int id);
         public void UpdateDownloadCount(int id);
+        public void RollBackToVersion(int recordId);
 
     }
 
@@ -3108,12 +3109,32 @@ namespace CityWatch.Web.Services
         }
         public void DeleteMobileAppUpgrade(int id)
         {
+            //Get app version by id
+            var mv = _appConfigurationProvider.GetMobileAppVersionById(id);
+            var versionPath = $"{mv.AppVersionMajor}.{mv.AppVersionMinor}.{mv.AppVersionPatch}";
+            var filename = mv.FileName;
+            var platform = mv.AppType;
             _appConfigurationProvider.DeleteMobileAppUpgrade(id);
+            try {                
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Downloads", "MobileApp", platform, versionPath, filename);
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+            catch(Exception ex)
+            {
+                //Log exception but do not throw as the main operation is already done
+                Console.WriteLine($"Error deleting mobile app file from server: {ex.Message}");
+            }                      
         }
 
         public void UpdateDownloadCount(int id)
         {
             _appConfigurationProvider.UpdateDownloadCount(id);
+        }
+
+        public void RollBackToVersion(int recordId)
+        {
+            _appConfigurationProvider.RollBackToVersion(recordId);
         }
 
     }

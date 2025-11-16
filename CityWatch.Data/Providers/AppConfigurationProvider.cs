@@ -14,9 +14,11 @@ namespace CityWatch.Data.Providers
         List<AppConfiguration> GetConfigurations();
         MobileAppUpgrade GetLatestMobileAppVersion(string platformType);
         List<MobileAppUpgrade> GetAllMobileAppVersion();
+        MobileAppUpgrade GetMobileAppVersionById(int Id);
         void SaveMobileAppUpgrade(MobileAppUpgrade mobileAppUpgrade);
         void DeleteMobileAppUpgrade(int id);
         void UpdateDownloadCount(int id);
+        void RollBackToVersion(int recordId);
     }
 
     public class AppConfigurationProvider : IAppConfigurationProvider
@@ -58,6 +60,11 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.IsActive)
                 .OrderByDescending(x => x.AppVersionMajor).ThenByDescending(x => x.AppVersionMinor).ThenByDescending(x => x.AppVersionPatch)
                 .FirstOrDefault();
+        }
+
+        public MobileAppUpgrade GetMobileAppVersionById(int Id)
+        {
+            return _context.MobileAppUpgrade.SingleOrDefault(x => x.Id == Id);
         }
 
         public List<MobileAppUpgrade> GetAllMobileAppVersion()
@@ -119,7 +126,11 @@ namespace CityWatch.Data.Providers
             var record = _context.MobileAppUpgrade.SingleOrDefault(x => x.Id == id);
             if (record != null)
             {
-                record.IsActive = false;
+                if (record.IsActive) { 
+                    throw new InvalidOperationException("Cannot delete an active mobile app record.");
+                }
+                
+                _context.MobileAppUpgrade.Remove(record);
                 _context.SaveChanges();
 
             }
@@ -132,6 +143,29 @@ namespace CityWatch.Data.Providers
             {
                 record.TotalDownloadCount += 1;
                 _context.SaveChanges();
+            }
+        }
+
+        public void RollBackToVersion(int recordId)
+        {
+            var record = _context.MobileAppUpgrade.SingleOrDefault(x => x.Id == recordId);
+            if (record != null)
+            {
+                var allExistingRecord = _context.MobileAppUpgrade.Where(x => x.AppType == record.AppType && x.IsActive).ToList();
+                if (allExistingRecord != null)
+                {
+                    foreach (var Activerecord in allExistingRecord)
+                    {
+                        Activerecord.IsActive = false;
+                    }
+                }
+
+                record.IsActive = true;
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new InvalidOperationException("Record not found for rollback.");
             }
         }
     }
