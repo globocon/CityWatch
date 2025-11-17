@@ -1,4 +1,4 @@
-using CityWatch.Data.Enums;
+﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -34,7 +34,9 @@ using CityWatch.Common.Helpers;
 using CityWatch.Common.Models;
 using System.Threading.Tasks;
 using CityWatch.Common.Services;
-
+using Aspose.Slides;
+using Aspose.Slides.Export;
+using System.Diagnostics;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -52,6 +54,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IPptxToHtmlService _pptService;
         public int GuardId { get; set; }
         public int GuardTrainingAssessmentId { get; set; }
         public GuardTrainingAndAssessment GuardTrainingAndAssessment { get; set; }
@@ -69,7 +72,7 @@ namespace CityWatch.Web.Pages.Guard
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator,
              IOptions<EmailOptions> emailOptions,
-             IDropboxService dropboxUploadService)
+             IDropboxService dropboxUploadService, IPptxToHtmlService pptService)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -83,6 +86,7 @@ namespace CityWatch.Web.Pages.Guard
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
             _dropboxUploadService = dropboxUploadService;
+            _pptService = pptService;
         }
         public void OnGet()
         {
@@ -816,6 +820,101 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
+        //public JsonResult OnGetSlides(string hrreferenceno,string fileName)
+        //{
+           
+        //   // var slides = _pptService.ConvertToSlides(hrreferenceno, fileName);
+        //    return new JsonResult(slides);
+        //}
+        public IFormFile Upload { get; set; }
+
+
+        public JsonResult OnPostConvertToHtml(int guardId,string hrreferenceno, string fileName)
+        {
+            //if (Upload == null)
+            //    return new JsonResult(new { success = false, message = "No file uploaded." });
+
+            // Save uploaded file temporarily
+            string tempInput = Path.Combine(_webHostEnvironment.WebRootPath, "temp_slides", guardId.ToString(), hrreferenceno, Path.GetFileNameWithoutExtension(fileName));
+            Directory.CreateDirectory(tempInput);
+            //using (var stream = new FileStream(tempInput, FileMode.Create))
+            //{
+                //Upload = 
+                //Upload.CopyTo(stream);
+                // ✅ Copy (not move)
+                System.IO.File.Copy(Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceno, "Course", fileName), Path.Combine(tempInput, fileName), overwrite: true);
+            //}
+            
+            string outputDir = Path.Combine(_webHostEnvironment.WebRootPath, "slides_html", guardId.ToString(), hrreferenceno, Path.GetFileNameWithoutExtension(fileName));
+            string outputFile = Path.Combine(outputDir, $"{Path.GetFileNameWithoutExtension(fileName)}.html");
+            Directory.CreateDirectory(outputDir);
+
+            // Convert slides
+            var slideFiles = ConvertSlidesToHtml(Path.Combine(tempInput, fileName));
+            CombineSlidesToSlideshow(slideFiles, outputFile);
+
+            // Clean up temp file
+            System.IO.File.Delete(Path.Combine(tempInput, fileName));
+
+            string webPath = "/slides_html/"+ guardId.ToString() +"/" + hrreferenceno +"/"+ Path.GetFileNameWithoutExtension(fileName)+"/ " + Path.GetFileName(outputFile);
+            return new JsonResult(new { success = true, htmlUrl = webPath });
+        }
+
+        private static List<string> ConvertSlidesToHtml(string inputPath)
+        {
+            List<string> slideFiles = new();
+            string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+
+            using (Aspose.Slides.Presentation pres = new Aspose.Slides.Presentation(inputPath))
+            {
+                HtmlOptions options = new HtmlOptions
+                {
+                    HtmlFormatter = HtmlFormatter.CreateDocumentFormatter("", true)
+                    //,
+                    //SvgTextAsTrueTypeFonts = false
+                };
+
+                int i = 1;
+                foreach (ISlide slide in pres.Slides)
+                {
+                    using (Aspose.Slides.Presentation tempPres = new Aspose.Slides.Presentation())
+                    {
+                        tempPres.Slides.RemoveAt(0);
+                        tempPres.Slides.AddClone(slide);
+
+                        string tempSlideFile = Path.Combine(tempDir, $"slide_{i}.html");
+                        tempPres.Save(tempSlideFile, SaveFormat.Html, options);
+                        slideFiles.Add(tempSlideFile);
+                        i++;
+                    }
+                }
+            }
+            return slideFiles;
+        }
+
+        private static void CombineSlidesToSlideshow(List<string> slideFiles, string outputFile)
+        {
+            using (StreamWriter writer = new StreamWriter(outputFile))
+            {
+                //writer.WriteLine("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><title>Slideshow</title>");
+                //writer.WriteLine("<style>body{margin:0;overflow:hidden;} .slide{display:none;width:100%;height:100vh;} .nav{position:fixed;top:50%;transform:translateY(-50%);font-size:2em;color:#000;cursor:pointer;z-index:1000;}#prev{left:10px;} #next{right:10px;}</style></head><body>");
+                int total = slideFiles.Count;
+                for (int j = 0; j < total; j++)
+                {
+                    string slideHtml = System.IO.File.ReadAllText(slideFiles[j]);
+                    writer.WriteLine($"<div class='slide' id='slide{j + 1}'>");
+                    writer.WriteLine(slideHtml);
+                    writer.WriteLine("</div>");
+                }
+                //writer.WriteLine("<div id='prev' class='nav' onclick='prevSlide()'>&lt;</div>");
+                //writer.WriteLine("<div id='next' class='nav' onclick='nextSlide()'>&gt;</div>");
+                //writer.WriteLine("<script>let current=1; const total=" + total + "; showSlide(current);function showSlide(n){for(let s=1;s<=total;s++){document.getElementById('slide'+s).style.display='none';} document.getElementById('slide'+n).style.display='block';}function nextSlide(){current=current<total?current+1:1;showSlide(current);}function prevSlide(){current=current>1?current-1:total;showSlide(current);}</script>");
+                //writer.WriteLine("</body></html>");
+            }
+        }
+
+
     }
 
 }

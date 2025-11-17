@@ -67,6 +67,7 @@ builder.Services.AddScoped<ITimesheetReportGenerator, TimesheetReportGenerator>(
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ICertificateGenerator, CertificateGenerator>();
 builder.Services.AddScoped<IRPLCertificateGeneratorService, RPLCertificateGeneratorService>();
+builder.Services.AddScoped<IPptxToHtmlService, PptxToHtmlService>();
 
 builder.Services.AddRazorPages(options =>
 {

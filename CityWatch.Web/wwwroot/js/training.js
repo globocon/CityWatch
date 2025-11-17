@@ -2967,7 +2967,10 @@ function StartCourse() {
     })
 }
 var pdfUrl;
-var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx  ;
+var pdfDoc = null, pageNum = 1, scale = 1.5, canvas, ctx;
+let slides = [];
+let currentIndex = 0;
+
 function RunCourses() {
 
     const fileExtn = $('#txtCoursefilename').val().split('.').pop();
@@ -3029,12 +3032,45 @@ function RunCourses() {
         $('#couseVideo').hide();
         if (('.ppt'.indexOf(fileExtn.toLowerCase()) > 0) || ('.pptx'.indexOf(fileExtn.toLowerCase()) > 0)) {
 
-            var pptURL = 'https://docs.google.com/gview?url=https://cws-ir.com' + pdfUrl + '&embedded=true';
-            //var pptURL = 'https://docs.google.com/gview?url=http://test.c4i-system.com/' + pdfUrl + '&embedded=true';
-            $('#coursePresentation').attr('src', pptURL);
+            //var pptURL = 'https://docs.google.com/gview?url=https://cws-ir.com' + pdfUrl + '&embedded=true';
+            ////var pptURL = 'https://docs.google.com/gview?url=http://test.c4i-system.com/' + pdfUrl + '&embedded=true';
+            //$('#coursePresentation').attr('src', pptURL);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Guard/GuardStartTest?handler=ConvertToHtml',
+                data: {
+                    'guardId': $('#txtguardIdForTest').val(),
+                    'hrreferenceno': $('#txthrreferencenumber').val(),
+                    'fileName': $('#txtCoursefilename').val()
+                },
+                //data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                //slides = result;
+                //showSlide(0);
+
+                $('#coursePresentation').attr('src', response.htmlUrl);
+
+
+            }).fail(function () {
+                console.log('error');
+            })
 
 
         }
+    }
+    $("#nextSlide").click(function () {
+        if (currentIndex < slides.length - 1) showSlide(currentIndex + 1);
+    });
+
+    $("#prevSlide").click(function () {
+        if (currentIndex > 0) showSlide(currentIndex - 1);
+    });
+    function showSlide(index) {
+
+        currentIndex = index;
+        $("#coursePresentation").html(slides[index]);
     }
 
 
