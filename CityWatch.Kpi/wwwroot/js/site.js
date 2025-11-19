@@ -1925,6 +1925,29 @@ $(function () {
     $('#div_site_settings').on('change', '#note_year', function () {
         populateNotesForYearMonth();
     });
+    //p2-168-Import--partial-start
+    $('#div_site_settings').on('click','#getPrevoiusMonthKPINotesAndHRrecords' ,function () {
+
+
+        $.ajax({
+            url: '/admin/settings?handler=PreviousMonthKPINotesAndHRRecords',
+            type: 'GET',
+            data: {
+                clientSiteId: $('#ClientSiteId').val(),
+                month: $('#note_month').val(),
+                year: $('#note_year').val()
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+
+            $("#ClientSiteKpiNote_Id").val(result.id);
+            $("textarea[id='ClientSiteKpiNote_Notes']").val(result.notes);
+            $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(result.notes));
+            $("#ClientSiteKpiNote_ForMonth").val(result.forMonth);
+            $("#ClientSiteKpiNote_HRRecords").val(result.hrRecords);
+        }).fail(function () { });
+    });
+    //p2-1668-Import-end
 
     function populateNotesForYearMonth() {
         $.ajax({
@@ -2671,7 +2694,7 @@ $(function () {
         }).fail(function () { });
     });
     //p2-1668-Import-end
-
+  
     function populateSummaryNotesForYearMonth() {
         $.ajax({
             url: '/admin/settings?handler=KpiSendScheduleSummaryNote',

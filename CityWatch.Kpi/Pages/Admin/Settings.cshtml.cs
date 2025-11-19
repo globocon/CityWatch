@@ -2515,6 +2515,19 @@ namespace CityWatch.Kpi.Pages.Admin
            
             return new JsonResult(kpiScheduleNote.Notes);
         }
+        public JsonResult OnGetPreviousMonthKPINotesAndHRRecords(int clientSiteId, int month, int year)
+        {
+            var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
+            var clientSiteKpiNote = kpiSetting.Notes.SingleOrDefault(z => z.ForMonth == new DateTime(year, month, 1).AddMonths(-1));
+            clientSiteKpiNote ??= new ClientSiteKpiNote()
+            {
+                ForMonth = new DateTime(year, month, 1),
+                SettingsId = kpiSetting.Id,
+                Notes = string.Empty,
+                HRRecords = string.Empty
+            };
+            return new JsonResult(clientSiteKpiNote);
+        }
     }
 
 
