@@ -293,7 +293,7 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
-    inlineEditing: { mode: 'command' },
+    inlineEditing: { mode: 'command', managementColumn: false },
 
     columns: [
         { width: 130, field: 'id', title: 'Id', hidden: true },
@@ -302,12 +302,192 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
-        { width: 100, field: 'isPublicHoliday', title: 'PH', type: 'checkbox', align: 'center', editor: true },
+        /* { width: 100, field: 'isPublicHoliday', title: 'PH', type: 'checkbox', align: 'center', editor: true },*/
+        //{ width: 100, title: 'PH', align: 'center', editor: editPublicHoliday },
+        // GROUP HEADER placeholder (will be replaced with colspan)
+       // { title: 'PH', headerCssClass: 'ph-group-header', width: 0, sortable: false },
+
+        // Sub-columns
+        { width: 80, field: 'isPublicHoliday', type: 'checkbox', align: 'center', editor: true },
+        { width: 120, field: 'states', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        { width: 270, renderer: editBroadcastCalendarEvents },
     ],
+    onCellValueChanged: function (e) {
+        if (e.field === "isPublicHoliday") {
+            toggleStatesEditor(e.record, e.value, this);
+        }
+    },
+
+    onRowDataBound: function (e) {
+        // ensure state editor reflects initial data correctly
+        toggleStatesEditor(e.record, e.record.isPublicHoliday, this);
+    },
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        let grid = $(e.target);
+        let thead = grid.find("thead");
+
+        // -------------------------------
+        // 1. CREATE GROUP HEADER ROW
+        // -------------------------------
+        let groupRow = `
+        <tr class="gj-grid-header">
+            <th rowspan="2" data-field="referenceNo" class="text-center align-middle" style="width:100px;">
+                Reference No
+            </th>
+            <th rowspan="2" data-field="textMessage" class="text-center align-middle" style="width:600px;">
+                Text Message
+            </th>
+            <th rowspan="2" data-field="formattedStartDate" class="text-center align-middle"style="width:160px;">
+                Start
+            </th>
+            <th rowspan="2" data-field="formattedExpiryDate" class="text-center align-middle"style="width:160px;">
+                Expiry
+            </th>
+             <th rowspan="2" data-field="repeatYearly" class="text-center align-middle" style="width:100px;">
+                Repeat
+            </th>
+            <th colspan="2" class="text-center" style="width::200px;">
+                PH
+            </th>
+            <th rowspan="2" >
+               
+            </th>
+            <!-- Add more group headers if needed -->
+        </tr>
+    `;
+
+        // -------------------------------
+        // 2. CREATE SUBHEADER ROW
+        // -------------------------------
+        //let subHeaderRow = `
+        //<tr class="gj-grid-header">
+        //    <th data-field="startDate" class="text-center"></th>
+        //    <th data-field="endDate" class="text-center"></th>
+        //</tr>
+    //;
+
+        // Replace auto-generated header with custom header
+        thead.html(groupRow );
     }
 });
+var editBroadcastCalendarEvents;
+editBroadcastCalendarEvents = function (value, record, $cell, $displayEl, id, $grid) {
+   
+    var data = $grid.data(),
+       $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_course_file_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+        $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+        $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+    $edit.on('click', function (e) {
+        $grid.edit($(this).data('key'));
+        $edit.hide();
+        $delete.hide();
+        $update.show();
+        $cancel.show();
+        // DisableTQColumn();
+        let rowCount = $('#BroadCastBannerCalendarEvents tbody tr').length;
+
+
+        let tqColumn = $(this).closest('tr').find('td').eq(2);
+
+        let tqInput = tqColumn.find('select');
+        let tqInputNew = tqColumn.find('button');
+        if (rowCount === 1) {
+            /* tqInput.prop('disabled', true); // disable input*/
+
+            //tqColumn.hide();
+            //$('#tbl_courseDocumentFiles thead th:eq(2)').hide();
+            tqInput.attr('disabled', 'disabled');
+            tqInputNew.attr('disabled', 'disabled');
+        }
+        //else {
+        //    //tqInput.prop('disabled', false); // enable input if more than one row
+        //    tqInput.attr('data-mode', 'edit');
+        //}
+    });
+    $delete.on('click', function (e) {
+        $grid.removeRow($(this).data('key'));
+    });
+    $update.on('click', function (e) {
+        $grid.update($(this).data('key'));
+        $edit.show();
+        $delete.show();
+        $update.hide();
+        $cancel.hide();
+    });
+    $cancel.on('click', function (e) {
+        $grid.cancel($(this).data('key'));
+        $edit.show();
+        $delete.show();
+        $update.hide();
+        $cancel.hide();
+    });
+    $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+}
+function stateMultiEditor($container, value, record) {
+
+    // wrapper for checkboxes
+    var $wrapper = $('<div class="p-1"></div>');
+    $container.append($wrapper);
+
+    // Converts saved CSV to array (eg: "Karnataka,Kerala")
+    var selectedValues = value ? value.split(',') : [];
+
+    // Load items from server
+    $.ajax({
+        url: '/Admin/Settings?handler=ClientStates'
+    })
+        .done(function (result) {
+
+            // Render checkboxes
+            result.forEach(function (item) {
+
+                var id = "state_" + item.name.replace(/\s+/g, "_"); // safe id
+
+                var $row = $(`
+                <label style="display:block;">
+                    <input type="checkbox" value="${item.name}" id="${id}">
+                    ${item.name}
+                </label>
+            `);
+
+                $wrapper.append($row);
+
+                // Preselect if value already saved
+                if (selectedValues.includes(item.name)) {
+                    $row.find("input").prop("checked", true);
+                }
+            });
+
+        })
+        .fail(function () {
+            console.log("State load error");
+        });
+
+    // Required editor methods for GIGO Grid
+    return {
+
+        // Return CSV string of checked values
+        getValue: function () {
+            var vals = [];
+            $wrapper.find("input[type=checkbox]:checked").each(function () {
+                vals.push($(this).val());
+            });
+            return vals.join(',');
+        },
+
+        // Set values programmatically
+        setValue: function (val) {
+            var arr = val ? val.split(',') : [];
+            $wrapper.find("input[type=checkbox]").each(function () {
+                $(this).prop("checked", arr.includes($(this).val()));
+            });
+        }
+    };
+}
+
+
 
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
