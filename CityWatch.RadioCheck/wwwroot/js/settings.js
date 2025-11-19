@@ -293,7 +293,7 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
+    inlineEditing: { mode: 'command' },
 
     columns: [
         { width: 130, field: 'id', title: 'Id', hidden: true },
@@ -310,7 +310,7 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         // Sub-columns
         { width: 80, field: 'isPublicHoliday', type: 'checkbox', align: 'center', editor: true },
         { width: 120, field: 'states', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-        { width: 270, renderer: editBroadcastCalendarEvents },
+       // { width: 270, renderer: editBroadcastCalendarEvents },
     ],
     onCellValueChanged: function (e) {
         if (e.field === "isPublicHoliday") {
@@ -371,8 +371,8 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         thead.html(groupRow );
     }
 });
-var editBroadcastCalendarEvents;
-editBroadcastCalendarEvents = function (value, record, $cell, $displayEl, id, $grid) {
+//var editBroadcastCalendarEvents;
+function editBroadcastCalendarEvents (value, record, $cell, $displayEl, id, $grid) {
    
     var data = $grid.data(),
        $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
@@ -389,22 +389,21 @@ editBroadcastCalendarEvents = function (value, record, $cell, $displayEl, id, $g
         let rowCount = $('#BroadCastBannerCalendarEvents tbody tr').length;
 
 
-        let tqColumn = $(this).closest('tr').find('td').eq(2);
+        let tqColumn = $(this).closest('tr').find('td').eq(6);
+        let tqColumnDropdown = $(this).closest('tr').find('td').eq(7);
 
-        let tqInput = tqColumn.find('select');
-        let tqInputNew = tqColumn.find('button');
-        if (rowCount === 1) {
-            /* tqInput.prop('disabled', true); // disable input*/
+        let tqInput = tqColumnDropdown.find('select');
+        let tqInputbutton = tqColumnDropdown.find('button');
+        let tqInputNew = tqColumn.find('input[type="checkbox"]');
 
-            //tqColumn.hide();
-            //$('#tbl_courseDocumentFiles thead th:eq(2)').hide();
+        if (tqInputNew.is(':checked')) {
+            tqInput.attr('disabled', false);
+            tqInputbutton.attr('disabled', false);
+        } else {
             tqInput.attr('disabled', 'disabled');
-            tqInputNew.attr('disabled', 'disabled');
+            tqInputbutton.attr('disabled', 'disabled');
         }
-        //else {
-        //    //tqInput.prop('disabled', false); // enable input if more than one row
-        //    tqInput.attr('data-mode', 'edit');
-        //}
+       
     });
     $delete.on('click', function (e) {
         $grid.removeRow($(this).data('key'));
@@ -423,7 +422,7 @@ editBroadcastCalendarEvents = function (value, record, $cell, $displayEl, id, $g
         $update.hide();
         $cancel.hide();
     });
-    $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+    $displayEl.empty().append($edit).append($delete).append($update).append($cancel);
 }
 function stateMultiEditor($container, value, record) {
 
@@ -490,23 +489,34 @@ function stateMultiEditor($container, value, record) {
 
 
 if (gridBroadCastBannerCalendarEvents) {
+    gridBroadCastBannerCalendarEvents.on('srowEdit', function (e, id, record) {
+
+        let row = $('tr[data-id="' + id + '"]');
+
+        // Find the editor input in column index 4
+        let input = row.find('td').eq(4).find('input, select, textarea');
+
+        // Disable it
+        input.prop('disabled', true);
+    });
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
-
-        if (isNaN(data.referenceNo)) {
-            $.notify('Reference number should only contains numbers. !!!',
-                {
-                    align: "center",
-                    verticalAlign: "top",
-                    color: "#fff",
-                    background: "#D44950",
-                    blur: 0.4,
-                    delay: 0
-                }
-            );
-            gridBroadCastBannerCalendarEvents.edit(id);
-            return;
-        }
+        //if (!data.isPublicHoliday) {
+            if (isNaN(data.referenceNo)) {
+                $.notify('Reference number should only contains numbers. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.edit(id);
+                return;
+            }
+        //}
         if ((data.formattedStartDate == '') || (data.formattedExpiryDate == '') || (data.formattedStartDate == undefined) || (data.formattedExpiryDate == undefined)) {
             $.notify('Please check start date and expiry date. !!!',
                 {
@@ -600,6 +610,68 @@ if (gridBroadCastBannerCalendarEvents) {
                 if (isBroadCastCalendareventsAdding)
                     isBroadCastCalendareventsAdding = false;
             });
+        }
+    });
+    gridBroadCastBannerCalendarEvents.on('change', 'input[type="checkbox"]', function () {
+
+        let row = $(this).closest('tr');
+
+        // FIRST COLUMN (value may be in a <td> OR an <input>)
+        let firstCol = row.find('td').eq(1);
+        let input = firstCol.find('input');
+
+        let val = input.length          // edit mode
+            ? input.val().trim()
+            : firstCol.text().trim();   // normal mode
+        val = String(val || "");
+
+        // OTHER COLUMNS
+        let tqColumn = row.find('td').eq(6);
+        let tqColumnDropdown = row.find('td').eq(7);
+
+        let tqInput = tqColumnDropdown.find('select');
+        let tqInputbutton = tqColumnDropdown.find('button');
+        let tqInputNew = tqColumn.find('input[type="checkbox"]:visible');
+
+
+        if ($(this).is(':checked')) {
+
+            tqInput.prop('disabled', false);
+            tqInputbutton.prop('disabled', false);
+
+            if (!val.endsWith('-PH')) {
+                let newVal = val + '-PH';
+
+                if (input.length)
+                    input.val(newVal);      // update editor
+                else
+                    firstCol.text(newVal);  // update cell
+            }
+
+        } else {
+
+            tqInput.prop('disabled', true);
+            tqInputbutton.prop('disabled', true);
+
+            if (val.endsWith('-PH')) {
+                let newVal = val.replace(/-PH$/, '');
+
+                if (input.length)
+                    input.val(newVal);
+                else
+                    firstCol.text(newVal);
+            }
+        }
+    });
+
+    const bg_color_pale_yellow = '#fcf8d1';
+    gridBroadCastBannerCalendarEvents.on('rowDataBound', function (e, $row, id, record) {
+        if (record.isPublicHoliday) {
+           
+                $row.css('background-color', bg_color_pale_yellow);
+            
+          
+            /* add for check if dark mode is on end*/
         }
     });
 }

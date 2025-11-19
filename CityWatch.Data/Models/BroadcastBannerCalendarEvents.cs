@@ -20,6 +20,8 @@ namespace CityWatch.Data.Models
         public string FormattedStartDate { get { return StartDate.ToString("dd-MMM-yyyy"); } }
         [NotMapped]
         public string FormattedExpiryDate { get { return ExpiryDate.ToString("dd-MMM-yyyy"); } }
+        [NotMapped]
+        public string States { get; set; }
 
     }
 }

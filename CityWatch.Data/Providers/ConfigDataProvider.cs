@@ -995,8 +995,18 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerCalendarEvents.Count();
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
-        {
-            return _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
+        { 
+            var calendarevents= _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
+            if(calendarevents.Count()>0)
+            {
+                foreach (var item in calendarevents)
+                {
+                    string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id).Select(x => x.State).ToArray(); 
+                    item.States= string.Join(",", states);
+                }
+            }
+
+            return calendarevents;
         }
         //broadcast banner calendar events-end
         //SW Channels-start
