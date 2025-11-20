@@ -410,6 +410,8 @@ namespace CityWatch.Data.Providers
         Task<List<GuardLogDto>> GetSiteLogAsync(int clientsiteId, int lastLogId = 0);
         public void DeleteGuardLogDocumentImagesByLogId(int guardLogId, string fileName);
 
+        public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1920,6 +1922,10 @@ namespace CityWatch.Data.Providers
                         if (phoneNumbers.Any() || wandTagsForSite.Any())
                         {
                             item.hasmartwand = 1;
+                        }
+                        if (wandTagsForSite.Any())
+                        {
+                            item.haswandtags = wandTagsForSite.Any() ? 1 : 0;
                         }
 
                         var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
@@ -7664,6 +7670,21 @@ namespace CityWatch.Data.Providers
                 return new List<SiteTagStatusPending>();
             }
         }
+
+        public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId)
+        {
+            try
+            {
+                return _context.Set<SiteTagStatusPendingNew>()
+                    .FromSqlRaw("EXEC Sp_GetGuardTagScanSummary @ClientId = {0}, @GuardId = {1}", clientId, guardId)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatusPendingNew>();
+            }
+        }
         public void SaveDocketHistory(KeyVehicleLogDocketHistory _KeyVehicleLogDocketHistory)
         {
             if (_KeyVehicleLogDocketHistory == null)
@@ -7773,8 +7794,24 @@ namespace CityWatch.Data.Providers
         public string LabelDescription { get; set; }   // Tag label / description
         public string TagType { get; set; }            // NFC, BLE, Other
         public int RoundNumber { get; set; }           // Round number
-        public int TodayScanCount { get; set; }             // How many times scanned today
-       
+        public int TodayScanCount { get; set; }
+        
+      
+
+    }
+
+
+    public class SiteTagStatusPendingNew
+    {
+
+        public string LabelDescription { get; set; }   // Tag label / description
+        public string TagType { get; set; }            // NFC, BLE, Other
+        public int RoundNumber { get; set; }           // Round number
+        public int TodayScanCount { get; set; }
+
+        public int MyScans { get; set; }
+        // How many times scanned today
+
     }
     public class SiteTagStatus
     {
