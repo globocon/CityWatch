@@ -2066,8 +2066,9 @@ namespace CityWatch.Web.Pages.Reports
             //var guards = _guardDataProvider.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
             var inactiveGuards = _guardDataProvider.GetInActiveGuardDetails().Where(x =>
             ((guardIds == null) || (guardIds.Contains(x.GuardId)))
-            && (x.LastWorkingDate >= ReportRequest.FromDate
-                            && x.LastWorkingDate < ReportRequest.ToDate.AddDays(1)));
+            //&& (x.LastWorkingDate >= ReportRequest.FromDate
+            //                && x.LastWorkingDate < ReportRequest.ToDate.AddDays(1))
+                            );
 
             // Total count of guards
             int totalInactiveGuardsCount = inactiveGuards.Count();
