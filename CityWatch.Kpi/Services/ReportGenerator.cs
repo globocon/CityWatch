@@ -218,6 +218,7 @@ namespace CityWatch.Kpi.Services
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .SetKeepTogether(true)
               .Add(new Paragraph("Expected Hrs Vs Actual")));
             table.AddCell(new Cell(1, 1)
                .SetFontSize(CELL_FONT_SIZE)
