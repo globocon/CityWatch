@@ -238,6 +238,7 @@ namespace CityWatch.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<SiteTagStatus>().HasNoKey();
             modelBuilder.Entity<SiteTagStatusPending>().HasNoKey();
+            modelBuilder.Entity<SiteTagStatusPendingNew>().HasNoKey();
             modelBuilder.Entity<GuardLogDto>().HasNoKey();
             modelBuilder.Entity<GuardLogRawProjection>().HasNoKey();
             

@@ -231,6 +231,11 @@ else {
     ajaxUrl2 = "/ClientProfile?handler=ClientSiteActivityStatus";
 }
 
+if ($.fn.DataTable.isDataTable('#clientSiteActiveGuards')) {
+    $('#clientSiteActiveGuards').DataTable().clear().destroy();
+}
+let userRole = $("#hdnUserRole").val();  // "1" or "0"
+
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
     dom: 'Bfrtip',
@@ -612,6 +617,44 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 }
             }
         },
+        /*  new fq column */
+        {
+
+            data: 'completedRounds',
+            name: 'completedRoundsCol',
+            width: '6%',
+            defaultContent: '',
+            className: "text-center",
+            visible: (userRole === "1"),
+            render: function (value, type, data) {
+
+                if (data.haswandtags !== 0) {
+
+                    if (value === null) return 'N/A';
+
+                    if (data.tourMode === 'STND') {
+
+                        return value +
+                            ' [<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                            'data-client="' + data.clientSiteId + '" ' +
+                            'data-guard="' + data.guardId + '" ' +
+                            'data-value="' + value + '">?</a>]';
+                    }
+                    else {
+                        return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
+                    }
+                }
+                else {
+
+                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
+                }
+            }
+            
+
+          
+        },
+
+
         {
             data: 'latestDate',
             width: '2%',
@@ -797,7 +840,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 });
 
-
+//hide fq column based on the user role 
+clientSiteActiveGuards.column("completedRoundsCol:name").visible(userRole === "1");
 
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
@@ -2189,6 +2233,122 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value,
 });
 
 /* for SW details of the guard-end*/
+
+
+
+/* for wand tags  details of the guard-start*/
+
+let clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    order: [[1, 'desc']],
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteSWTagsDetails',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        {
+            data: 'tagType',
+            width: '10%'
+        },
+        {
+            data: 'labelDescription',
+            width: '60%'
+        },
+        {
+            data: 'roundNumber',
+            width: '10%',
+            className: "text-center"
+        },
+        {
+            data: 'todayScanCount',
+            width: '10%',
+            className: "text-center"
+        },
+        {
+            data: 'myScans',
+            width: '10%',
+            className: "text-center",
+            render: function (value, type, data) {
+
+                if (value > 0) {
+                    return '<i class="fa fa-check-circle" style="color:green;"></i> ' + value;
+                } else {
+                    return '<i class="fa fa-times-circle" style="color:red;"></i> ' + value;
+                }
+            }
+        }
+    ],
+
+
+    drawCallback: function () {
+        $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+        $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('border-bottom', 0);
+
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+    },
+
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnWandTagdetails', function () {
+
+    $('#guardSWTagsInfoModal').modal('show');
+    isPaused = true;
+
+    let userRole = document.getElementById("hdnUserRole").value;
+  
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text().trim();
+    var GuardId = $(this).data("guard");
+    var ClientSiteId = $(this).data("client");
+    var currentFrequencyValue = $(this).data("value");
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+
+    // Header main title
+    $('#lbl_GuardActivityHeaderSWTagsInfoModal')
+        .text(GuardName + ' - Wand Tag Scan Details');
+
+    // Extract initials inside brackets [T.S [2]]
+    let match = GuardName.match(/\[[^\]]+\]/);
+    let initials = match ? match[0] : "";
+
+    // Update table header (last column)
+    $('#th_GuardScansHeader').text(initials + " Scans");
+    $("#currentFrequencyDisplay").text("Current Frequency: " + currentFrequencyValue);
+    // Reload data
+    clientSiteActiveGuardsSWTagsDetails.ajax.reload();
+});
+
+
+
+
+
+
+/* fo rwand tags of the guard-end*/
+
+
+
+
+
+
+
 $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
     $('#guardIncidentReportsInfoModal').modal('show');
     isPaused = true;
@@ -4107,57 +4267,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
 
 });
-if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' ) {
 
-
-    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
-
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
-
-
-    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
-
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
-    
-
-}
-if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
-
-
- 
-
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
-
-
-
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
-    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
-
-
-}
 
 $('#clientSiteInActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
 
@@ -4207,7 +4317,7 @@ if (showButtonsActivesinglepage) {
 else {
     ajaxUrl2singlepage = "/ClientProfile?handler=ClientSiteActivityStatus";
 }
-
+let userRoleSinglePage = $("#hdnUserRole").val();  // "1" or "0"
 let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').DataTable({
 
     dom: 'Bfrtip',
@@ -4561,6 +4671,43 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 }
             }
         },
+
+        {
+
+            data: 'completedRounds',
+            name: 'completedRoundsCol',
+            width: '6%',
+            defaultContent: '',
+            className: "text-center",
+            visible: (userRoleSinglePage === "1"),
+            render: function (value, type, data) {
+
+                if (data.haswandtags !== 0) {
+
+                    if (value === null) return 'N/A';
+
+                    if (data.tourMode === 'STND') {
+
+                        return value +
+                            ' [<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                            'data-client="' + data.clientSiteId + '" ' +
+                            'data-guard="' + data.guardId + '" ' +
+                            'data-value="' + value + '">?</a>]';
+                    }
+                    else {
+                        return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
+                    }
+                }
+                else {
+
+                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
+                }
+            }
+
+
+
+        },
+
         {
             data: 'latestDate',
             width: '2%',
@@ -4711,6 +4858,38 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 });
 
 
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnWandTagdetails', function (value, record) {
+
+    $('#guardSWTagsInfoModal').modal('show');
+    isPaused = true;
+
+    let userRole = document.getElementById("hdnUserRole").value;
+    
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text().trim();
+    var GuardId = $(this).data("guard");
+    var ClientSiteId = $(this).data("client");
+    var currentFrequencyValue = $(this).data("value");
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+
+    // Header main title
+    $('#lbl_GuardActivityHeaderSWTagsInfoModal')
+        .text(GuardName + ' - Wand Tag Scan Details');
+
+    // Extract initials inside brackets [T.S [2]]
+    let match = GuardName.match(/\[[^\]]+\]/);
+    let initials = match ? match[0] : "";
+
+    // Update table header (last column)
+    $('#th_GuardScansHeader').text(initials + " Scans");
+    $("#currentFrequencyDisplay").text("Current Frequency: " + currentFrequencyValue);
+    // Reload data
+    clientSiteActiveGuardsSWTagsDetails.ajax.reload();
+});
+
+clientSiteActiveGuardsSinglePage.column("completedRoundsCol:name").visible(userRoleSinglePage === "1");
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
 $(clientSiteActiveGuardsSinglePage.table().header()).on('click', 'th', function () {
@@ -4749,6 +4928,58 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function
 
     //}
 });
+
+if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True') {
+
+
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
+
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
+
+
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
+
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
+
+
+}
+if ($('#txtguardGuardRCLiteAccess').val() == 'True') {
+
+
+
+
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-guardlogin").hide();
+
+
+
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-guardlogin").hide();
+
+
+}
 
 $('#clientSiteActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheckStatusActive"]', function () {
     var data = clientSiteActiveGuardsSinglePage.row($(this).parents('tr')).data();
