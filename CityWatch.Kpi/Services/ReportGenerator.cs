@@ -218,7 +218,7 @@ namespace CityWatch.Kpi.Services
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph("Expected Hours Vs Actual")));
+              .Add(new Paragraph("Expected Hrs Vs Actual")));
             table.AddCell(new Cell(1, 1)
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.RIGHT)
@@ -233,32 +233,32 @@ namespace CityWatch.Kpi.Services
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.ImageCountAverage:0.00}"))); ;
+              .Add(new Paragraph(string.Empty))); ;
             table.AddCell(new Cell(1, 2)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.WandScanAverage:0.00}")));
+              .Add(new Paragraph(string.Empty)));
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.WandPatrolsAverage:0.00}")));
+              .Add(new Paragraph(string.Empty)));
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.NotInAcceptableLogFreqCount}")));
+              .Add(new Paragraph(string.Empty)));
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.IrCountTotal}")));
+              .Add(new Paragraph(string.Empty)));
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.AlarmCountTotal}")));
+              .Add(new Paragraph(string.Empty)));
             //row 2
             table.AddCell(new Cell(1, 4)
                .SetFontSize(CELL_FONT_SIZE)
