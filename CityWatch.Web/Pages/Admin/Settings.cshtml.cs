@@ -1394,7 +1394,7 @@ namespace CityWatch.Web.Pages.Admin
             foreach (var item in fields)
             {
                 if (item.ClientSiteIds != null)
-                {
+                {hhjhjg
                     var values = item.ClientSiteIds.Split(';');
                     int[] ids = new int[values.Length];
                     for (int i = 0; i < values.Length; i++)
