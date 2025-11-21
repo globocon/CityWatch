@@ -37,6 +37,7 @@ namespace CityWatch.Data.Providers
         KpiSendKVSchedules GetKVScheduleById(int scheduleId);
         List<KpiSendScheduleJobsKV> GetAllKpiSendScheduleJobsKV();
         int SaveSendScheduleJobKV(KpiSendScheduleJobsKV sendScheduleJob);
+        List<ClientSiteKpiNote> GetClientSiteKpiNotesAndHRRecords(int id);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -489,6 +490,10 @@ namespace CityWatch.Data.Providers
 
             return sendScheduleJob.Id;
         }
-        
+        public List<ClientSiteKpiNote> GetClientSiteKpiNotesAndHRRecords(int id)
+        {
+            return _context.ClientSiteKpiNotes.Where(z => z.Id == id).ToList();
+        }
+
     }
 }

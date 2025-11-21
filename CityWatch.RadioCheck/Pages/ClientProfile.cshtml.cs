@@ -82,6 +82,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public string DisplayItem { get; set; }
         public GuardViewModel Guard { get; set; }
         public bool IsRCAccess { get; set; }
+        public string UserRole { get; set; }
         public IActionResult OnGet(string displayItem)
         {
             var guardId = User.FindFirst("ClientProfileId")?.Value;
@@ -90,6 +91,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             if (!string.IsNullOrEmpty(guardId))
             {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(guardId)).FirstOrDefault();
+
+                // Convert boolean to string value
+                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                GuardId = int.Parse(guardId);
                 var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
                 if (clientSites != null && clientSites.Any())
                 {
@@ -329,7 +335,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 hasmartwand = detail.hasmartwand,
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
-                HR3 = CalculateHr3GroupStatus(detail.GuardId)
+                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                CompletedRounds=detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
             }).ToList();
 
             // 5. Clean SiteName
@@ -370,7 +379,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
                 HR3 = CalculateHr3GroupStatus(detail.GuardId),
-                State=detail.State
+                State=detail.State,
+                CompletedRounds=detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
+
                 // Map other properties as needed
             }).ToList().Where(x=>x.State== State);
             return new JsonResult(activeGuardDetailModels);
@@ -401,7 +414,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
                 HR3 = CalculateHr3GroupStatus(detail.GuardId),
-                State = detail.State
+                State = detail.State,
+                CompletedRounds=detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
                 // Map other properties as needed
             }).ToList().Where(x => x.ClientSiteId == ClientSiteId);
             return new JsonResult(activeGuardDetailModels);

@@ -34,6 +34,10 @@ namespace CityWatch.Data.Models
         public string HR3 { get; set; }
         public string State { get; set; }
 
+        public int CompletedRounds { get; set; }
+        public int haswandtags { get; set; }
+        public string TourMode { get; set; }
+
     }
 
 }

@@ -22,8 +22,9 @@ using System.Threading.Tasks;
 using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using CityWatch.RadioCheck.Services;
+using CityWatch.RadioCheck.Helpers;
 
-namespace CityWatch.Web.Pages.Radio
+namespace CityWatch.RadioCheck.Pages.Radio
 {
     public class InActiveGuardSinglePage : PageModel
     {
@@ -139,13 +140,67 @@ namespace CityWatch.Web.Pages.Radio
             }
             
 
-            if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
+            if (!string.IsNullOrEmpty(LoginGuardId))
             {
                
-                UserId = int.Parse(loginUserId);
+               
                 GuardId = int.Parse(LoginGuardId);
 
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+
+               
+                if (GuardId != 0)
+                {
+                    Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+
+                }
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                HttpContext.Session.SetInt32("loginUserId", UserId);
+                ViewData["GuardId"] = GuardId;
+
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(GuardId).FirstOrDefault();
+
+                if (guard != null)
+                {
+                    if ((guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Page();
+                    }
+                    if ((guard.IsAdminSOPToolsAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+
+                        AuthUserHelper.IsAdminPowerUser = true;
+                        return Page();
+                    }
+                    if (guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                    {
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Redirect(Url.Page("/Admin/Settings"));
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminPowerUser = false;
+                    }
+                    if (guard.IsAdminGlobal)
+                    {
+                        AuthUserHelper.IsAdminGlobal = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminGlobal = false;
+                    }
+
+
+
+                }
                 return Page();
             }
             // Check if the user is authenticated(Normal Admin Login)
