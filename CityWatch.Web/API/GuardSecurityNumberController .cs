@@ -25,6 +25,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,7 @@ namespace CityWatch.Web.API
         private readonly ILogbookDataService _logbookDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientDataProvider _clientDataProvider;
+        public readonly IMobileAppDataServices _mobileAppDataServices;
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly EmailOptions _emailOptions;
         private readonly IWebHostEnvironment _WebHostEnvironment;
@@ -70,16 +72,16 @@ namespace CityWatch.Web.API
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
-        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
 
-        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService, 
-            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, 
-            IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider, 
-            IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions, 
-            IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider, 
-            ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator, 
+
+        public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService,
+            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider,
+            IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider,
+            IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions,
+            IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
+            ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
-            IHubContext<MobileAppSignalRHub> hubContext)
+            IMobileAppDataServices mobileAppDataServices)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -98,7 +100,7 @@ namespace CityWatch.Web.API
             _incidentReportGenerator = incidentReportGenerator;
             _appConfigurationProvider = appConfigurationProvider;
             _userAuthentication = userAuthentication;
-            _hubContext = hubContext;
+            _mobileAppDataServices = mobileAppDataServices;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -179,7 +181,7 @@ namespace CityWatch.Web.API
                         }
 
 
-                       
+
 
 
 
@@ -324,7 +326,8 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
                 // Get Guard Login ID
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
@@ -350,7 +353,9 @@ namespace CityWatch.Web.API
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
 
-                return Ok(new { message = "Guard successfully logged in.", guardLoginId });
+                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
+
+                return Ok(new { message = "Guard successfully logged in.", guardLoginId , TourMode = (int)clientsiteDetails.PatrolTourMode});
             }
             catch (Exception ex)
             {
@@ -418,119 +423,59 @@ namespace CityWatch.Web.API
 
 
 
-        private int GetGuardLoginId(int logBookId, int guardId, int clientsiteId, int userId)
-        {
-            // Get all guard logins associated with the logBookId
-            var guardLoginList = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).ToList();
+        //private int GetGuardLoginId(int logBookId, int guardId, int clientsiteId, int userId)
+        //{
+        //    // Get all guard logins associated with the logBookId
+        //    var guardLoginList = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).ToList();
 
-            // Check if a guard login exists for the current day
-            var existingGuardLogin = guardLoginList.FirstOrDefault(x => x.GuardId == guardId && x.OnDuty.Date == DateTime.Now.Date);
+        //    // Check if a guard login exists for the current day
+        //    var existingGuardLogin = guardLoginList.FirstOrDefault(x => x.GuardId == guardId && x.OnDuty.Date == DateTime.Now.Date);
 
-            if (existingGuardLogin != null)
-            {
-                return existingGuardLogin.Id; // Return existing login ID
-            }
+        //    if (existingGuardLogin != null)
+        //    {
+        //        return existingGuardLogin.Id; // Return existing login ID
+        //    }
 
-            // Create a new GuardLogin entry
-            var newGuardLogin = new GuardLogin
-            {
-                LoginDate = DateTime.Now,
-                GuardId = guardId,
-                ClientSiteId = clientsiteId,
-                ClientSiteLogBookId = logBookId,
-                PositionId = null,
-                SmartWandId = null,
-                OnDuty = DateTime.Now,
-                OffDuty = DateTime.Now.AddHours(1),
-                UserId = userId,
-                IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
-            };
-
-
+        //    // Create a new GuardLogin entry
+        //    var newGuardLogin = new GuardLogin
+        //    {
+        //        LoginDate = DateTime.Now,
+        //        GuardId = guardId,
+        //        ClientSiteId = clientsiteId,
+        //        ClientSiteLogBookId = logBookId,
+        //        PositionId = null,
+        //        SmartWandId = null,
+        //        OnDuty = DateTime.Now,
+        //        OffDuty = DateTime.Now.AddHours(1),
+        //        UserId = userId,
+        //        IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
+        //    };
 
 
-            // Save and return new login ID
-            return _guardDataProvider.SaveGuardLogin(newGuardLogin);
-        }
+
+
+        //    // Save and return new login ID
+        //    return _guardDataProvider.SaveGuardLogin(newGuardLogin);
+        //}
 
 
 
         [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true, int scanningType = 0, string tagUID = "NA")
+        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
+            int scanningType = 0, string tagUID = "NA")
         {
             try
             {
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(guardId, clientsiteId, userId, activityString,
+                    gps, IPAddress, DateTime.Today, systemEntry, scanningType, tagUID);
 
-                if (guardId <= 0 || clientsiteId <= 0)
-                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
-
-                var logBookType = LogBookType.DailyGuardLog;
-                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
-
-                if (logBookId <= 0)
-                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
-
-                // Get Guard Login ID
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
-
-                if (guardLoginId <= 0)
-                    return BadRequest(new { message = "Guard login failed." });
-
-                // Default GPS coordinates (should be replaced with actual values if available)
-                var gpsCoordinates = gps;
-
-                var _scanningType = (ScanningType)scanningType;
-
-                // Create a log entry
-                var signInEntry = new GuardLog
+                if (!IsSuccessR)
                 {
-                    ClientSiteLogBookId = logBookId,
-                    GuardLoginId = guardLoginId,
-                    EventDateTime = DateTime.Now,
-                    /*your message */
-                    Notes = activityString,
-                    IsSystemEntry = systemEntry,
-                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gpsCoordinates,
-                    WAND_TAG_ENTRY_TYPE = _scanningType
-                };
-
-                _guardLogDataProvider.SaveGuardLog(signInEntry);
-
-                //Check if tour mode is enabled for the site then log into corresponding tag attached site also
-                var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
-                if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND && !string.Equals(tagUID, "NA"))
-                {
-                    var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(tagUID, "nfc");
-                    if (TagInfoDetails != null  && TagInfoDetails?.ClientSiteId > 0) {
-                        var _CorrespondingSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(TagInfoDetails.ClientSiteId, logBookType);
-                        guardLoginId = GetGuardLoginId(_CorrespondingSitelogBookId, guardId, TagInfoDetails.ClientSiteId, userId);
-
-
-                        // If tour mode enabled then log the tour activity
-                        GuardLog _CorrespondingSiteLogEntry = signInEntry;
-                        _CorrespondingSiteLogEntry.Id = 0;
-                        _CorrespondingSiteLogEntry.ClientSiteLogBookId = _CorrespondingSitelogBookId;
-                        _CorrespondingSiteLogEntry.GuardLoginId = guardLoginId;
-                        if (clientsiteId != TagInfoDetails.ClientSiteId)
-                        {
-                            _guardLogDataProvider.SaveGuardLog(_CorrespondingSiteLogEntry);
-                        }
-                    }
-                   
+                    return BadRequest(new { message = msgR });
                 }
 
-                // Notify all SignalR clients in this ClientSiteId group to refresh the tag scan status
-                if(_scanningType != ScanningType.Normal) {
-                    _hubContext.Clients.Group(clientsiteId.ToString()).SendAsync("RefreshTagScanStatus");
-                }
-                    
-
-                return Ok(new { message = "Guard successfully logged in.", guardLoginId });
+                return Ok(new { message = msgR, guardLoginId = guardLoginIdR });
             }
             catch (Exception ex)
             {
@@ -588,7 +533,8 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
                 // Get Guard Login ID
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
@@ -1025,7 +971,7 @@ namespace CityWatch.Web.API
                 };
 
                 // Call your existing SaveGuardLog method
-               _guardLogDataProvider.SaveGuardLog(guardLog);
+                _guardLogDataProvider.SaveGuardLog(guardLog);
 
                 return Ok("Log updated successfully.");
             }
@@ -1228,7 +1174,8 @@ namespace CityWatch.Web.API
                 if (clientSiteLogBookId <= 0)
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
-                var guardLoginId = GetGuardLoginId(clientSiteLogBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(clientSiteLogBookId, guardId, clientsiteId, userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
@@ -1785,7 +1732,8 @@ namespace CityWatch.Web.API
         {
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(report.ClientSiteId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
-            var guardLoginId = GetGuardLoginId(logBookId, Guardid, report.ClientSiteId.Value, UserId);
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, Guardid, report.ClientSiteId.Value, UserId, IPAddress);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
@@ -2449,7 +2397,8 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
                 // Get Guard Login ID
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
@@ -2557,7 +2506,7 @@ namespace CityWatch.Web.API
  [FromForm] List<IFormFile> files,
  [FromForm] List<string> types,   // <-- multiple types aligned with files
  [FromForm] int logbookId
- 
+
  )
         {
             bool success = false;
@@ -2569,7 +2518,7 @@ namespace CityWatch.Web.API
                 if (files == null || files.Count == 0)
                     throw new Exception("No files uploaded");
 
-               
+
 
 
 
@@ -2676,7 +2625,8 @@ namespace CityWatch.Web.API
                 if (logBookId <= 0)
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
 
@@ -2725,7 +2675,7 @@ namespace CityWatch.Web.API
                     {
                         GuardLogId = GuardLogId,
                         ImagePath = publicPath,
-                        IsVideo = true,         
+                        IsVideo = true,
                         IsRearfile = false,
                         IsTwentyfivePercentfile = false
                     };
@@ -2750,7 +2700,7 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("SavePushNotificationTestMessage")]
-        public IActionResult SavePushNotificationTestMessage( int guardId,int clientsiteId,int  userId, string notifications,int rcPushMessageId)
+        public IActionResult SavePushNotificationTestMessage(int guardId, int clientsiteId, int userId, string notifications, int rcPushMessageId)
         {
             var status = true;
             var message = "Success";
@@ -2766,7 +2716,8 @@ namespace CityWatch.Web.API
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
                 // Get Guard Login ID
-                var guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
@@ -2892,7 +2843,7 @@ namespace CityWatch.Web.API
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
         }
-    
+
 
 
         [HttpGet("GetClientSitesByClientTypeWithAdress")]

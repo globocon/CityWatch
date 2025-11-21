@@ -8,7 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 namespace CityWatch.Web.API
 {
@@ -20,14 +23,19 @@ namespace CityWatch.Web.API
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IClientDataProvider _clientSitesDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
-        
-        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
-            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider)
+        private readonly IMobileAppDataServices _mobileAppDataServices;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+
+        public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
+            IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider,
+            IMobileAppDataServices mobileAppDataServices, IGuardLogDataProvider guardLogDataProvider)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
             _guardDataProvider = guardDataProvider;
+            _mobileAppDataServices = mobileAppDataServices;
+            _guardLogDataProvider = guardLogDataProvider;
         }
 
         [HttpGet("GetScannerControlSettings")]
@@ -47,7 +55,7 @@ namespace CityWatch.Web.API
                     clientSiteScannerOnBoardingSettings = _viewDataService.GetSmartWandTagTypesForClientSite(siteId);
                 }
 
-                    
+
                 return Ok(clientSiteScannerOnBoardingSettings);
             }
             catch (Exception ex)
@@ -57,112 +65,68 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetNFCtagInfoData")]
-        public IActionResult GetNFCtagInfoData(int siteId, string TagUid, int GuardId, int UserId, int? SmartWandId = null)
+        public async Task<IActionResult> GetNFCtagInfoData(int siteId, string TagUid, int GuardId, int UserId, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
-            ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
+
             try
             {
-                var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
-                var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
-
-                //Check if scanned tag recently with in a minute from the same site
-                if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalSeconds < 60)
-                {
-                    message = "Tag already scanned !!!";
-                    return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
-                }
-
-                var _ClientSiteTourMode = _clientSitesDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
-                var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc");
-
-
-                _clientSiteSmartWandTagsHitLog.LoggedInClientSiteId = siteId;
-                _clientSiteSmartWandTagsHitLog.LoggedInGuardId = GuardId;
-                _clientSiteSmartWandTagsHitLog.LoggedInUserId = UserId;
-                _clientSiteSmartWandTagsHitLog.TagUId = TagUid;
-                _clientSiteSmartWandTagsHitLog.HitUtcDateTime = DateTime.UtcNow;
-                _clientSiteSmartWandTagsHitLog.TagsTypeId = _smartWandTagsTypes.Where(x => x.value.ToLower().Equals("nfc")).FirstOrDefault()?.Id ?? null;
-                _clientSiteSmartWandTagsHitLog.SmartWandId = SmartWandId ?? 0;
-
-                if (TagInfoDetails == null)
-                {
-                    // if tag not found show uid in log book entry
-                    IsSuccess = true;
-                    message = "Tag Not Found";
-                    TagInfoLabel = $"{TagUid} [NFC]";
-                    _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-
-
-                }
-                else
-                {
-                    _clientSiteSmartWandTagsHitLog.LabelDescription = TagInfoDetails.LabelDescription;
-                    _clientSiteSmartWandTagsHitLog.TagLinkedClientSiteId = TagInfoDetails.ClientSiteId;
-                    if (TagInfoDetails.ClientSiteId != siteId)
-                    {
-                        if (TagInfoDetails.ClientSiteId == 0)
-                        {
-                            IsSuccess = true;
-                            message = "Tag Not Found";
-                            TagInfoLabel = $"{TagUid} [NFC]";
-                            _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-                        }
-                        else
-                        {
-                            if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode == PatrolTouringMode.STND)
-                            {
-                                message = "Tag does not belong to logged in site. Please check.";
-                            }
-                            else
-                            {
-                                IsSuccess = true;
-                                TagFound = true;
-                                message = "Tag Found";
-                                TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        IsSuccess = true;
-                        TagFound = true;
-                        message = "Tag Found";
-                        TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
-                    }
-                }
-                try
-                {
-                    // Log the tag details
-                    _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
-                    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
-                    {
-                        // If tour mode enabled then log the tour activity  
-                        if (siteId != TagInfoDetails.ClientSiteId && TagInfoDetails != null && TagInfoDetails?.ClientSiteId > 0)
-                        {
-                            ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
-                            _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
-                            _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
-                            _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
-                        }
-                    }
-                }
-                catch (Exception exp)
-                {
-
-                }
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandNFCHitLogRecord(siteId, TagUid, GuardId, UserId, false, Guid.NewGuid(), DateTime.UtcNow, SmartWandId);
+                IsSuccess = IsSuccessR;
+                message = messageR;
+                TagFound = TagFoundR;
+                TagInfoLabel = TagInfoLabelR;
             }
             catch (Exception ex)
             {
-                //return StatusCode(500, new { message = "An error occurred", error = ex.Message });
                 message = ex.Message;
             }
 
             return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
         }
+
+        [HttpPost("SyncOfflineSmartWandTagHitData")]
+        public async Task<IActionResult> SyncOfflineSmartWandTagHitData([FromBody] List<ClientSiteSmartWandTagsHitLogCacheOffline> offlineRecords)
+        {
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            bool systemEntry = true;
+            if (offlineRecords != null && offlineRecords.Count > 0)
+            {
+                foreach (var offlineRecord in offlineRecords)
+                {
+                    try
+                    {
+                        //Save tag hit 
+                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandNFCHitLogRecord(offlineRecord.LoggedInClientSiteId,
+                            offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
+                            offlineRecord.HitUtcDateTime, offlineRecord.SmartWandId);
+
+                        if (IsSuccessR)
+                        {
+                            //Create Logbook entries                        
+                            var (IsSuccessLR, msgLR, guardLoginIdLR) = _mobileAppDataServices.PostMobileLogActivity(offlineRecord.LoggedInGuardId,
+                                offlineRecord.LoggedInClientSiteId, offlineRecord.LoggedInUserId, TagInfoLabelR, offlineRecord.GPScoordinates, IPAddress,
+                                offlineRecord.HitLocalDateTime, systemEntry, offlineRecord.TagsTypeId, offlineRecord.TagUId);
+
+                            offlineRecord.IsSynced = true;
+                            Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                        // throw;
+                    }
+                }
+            }
+
+            return Ok(offlineRecords);
+
+        }
+
 
         [HttpGet("CheckIfGuardHasTagAddAccess")]
         public IActionResult CheckIfGuardHasTagAddAccess(int GuardId)
@@ -190,11 +154,11 @@ namespace CityWatch.Web.API
             var message = string.Empty;
             var TagFound = false;
             try
-            {                
+            {
                 _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt);
                 IsSuccess = true;
                 TagFound = true;
-                message = "Tag saved successfully.";               
+                message = "Tag saved successfully.";
             }
             catch (Exception ex)
             {
@@ -207,7 +171,7 @@ namespace CityWatch.Web.API
 
         [HttpPost("CheckAndRegisterDeviceWithSmartWand")]
         public IActionResult CheckAndRegisterDeviceWithSmartWand([FromBody] SmartWandDeviceRegister csswt)
-        {            
+        {
             try
             {
                 var res = _viewDataService.CheckAndRegisterDeviceWithSmartWand(csswt);
@@ -224,7 +188,7 @@ namespace CityWatch.Web.API
         [HttpPost("CheckIfSmartWandIsDeRegisteredAsync")]
         public IActionResult CheckIfSmartWandIsDeRegisteredAsync([FromBody] string deviceid)
         {
-            
+
             try
             {
                 var res = _viewDataService.CheckIfSmartWandIsDeRegisteredAsync(deviceid);
@@ -233,7 +197,7 @@ namespace CityWatch.Web.API
             catch (Exception)
             {
                 return Ok(false);
-            }            
+            }
         }
 
         [HttpGet("GetClientSiteSmartWands")]
@@ -255,5 +219,59 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpGet("GetClientSiteAllSmartWandTags")]
+        public IActionResult GetClientSiteAllSmartWandTags(int siteId)
+        {
+            try
+            {
+                //GetClientSiteSmartWandsTags
+                int[] clientSiteIds;
+                var ls = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
+
+                if (ls != null && ls.Count > 0)
+                {
+                    clientSiteIds = ls.Select(x => x.ClientSiteId).ToArray();
+                }
+                else
+                {
+                    clientSiteIds = new[] { siteId };
+                }
+
+                var smartWandTagList = _viewDataService.GetClientSiteTagIds(clientSiteIds);
+
+                List<ClientSiteSmartWandTagsLocal> nwswtL = new List<ClientSiteSmartWandTagsLocal>();
+                foreach (var item in smartWandTagList)
+                {
+                    nwswtL.Add(new ClientSiteSmartWandTagsLocal()
+                    {
+                        Id = item.Id,
+                        ClientSiteId = item.ClientSiteId,
+                        UId = item.UId,
+                        TagsTypeId = item.TagsTypeId,
+                        LabelDescription = item.LabelDescription,
+                        FqBypass = item.FqBypass,
+                        TagsType = item.TagsType
+                    });
+                }
+
+                return Ok(nwswtL);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+    }
+
+    public class ClientSiteSmartWandTagsLocal
+    {
+        public int Id { get; set; }
+        public int ClientSiteId { get; set; }
+        public string UId { get; set; }
+        public int TagsTypeId { get; set; }
+        public string LabelDescription { get; set; }
+        public bool FqBypass { get; set; }
+        public string TagsType { get; set; }
     }
 }
