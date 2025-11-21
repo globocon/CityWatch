@@ -8,6 +8,7 @@ namespace CityWatch.Data.Services
     public interface ILogbookDataService
     {
         int GetNewOrExistingClientSiteLogBookId(int clientSiteId, LogBookType logBookType);
+        int GetNewOrExistingClientSiteLogBookId(int clientSiteId, LogBookType logBookType, DateTime LogBookDate);
     }
 
     public class LogbookDataService : ILogbookDataService
@@ -21,8 +22,18 @@ namespace CityWatch.Data.Services
 
         public int GetNewOrExistingClientSiteLogBookId(int clientSiteId, LogBookType logBookType)
         {
+            return GetOrCreateNewLogBook(clientSiteId, logBookType, DateTime.Today);
+        }
+
+        public int GetNewOrExistingClientSiteLogBookId(int clientSiteId, LogBookType logBookType, DateTime LogBookDate)
+        {
+            return GetOrCreateNewLogBook(clientSiteId, logBookType, LogBookDate);
+        }
+
+        public int GetOrCreateNewLogBook(int clientSiteId, LogBookType logBookType, DateTime LogBookDate)
+        {
             int newLogBookId;
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, DateTime.Today);
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, LogBookDate);
             if (clientSiteLogBook != null)
             {
                 newLogBookId = clientSiteLogBook.Id;
@@ -33,7 +44,7 @@ namespace CityWatch.Data.Services
                 {
                     ClientSiteId = clientSiteId,
                     Type = logBookType,
-                    Date = DateTime.Today,
+                    Date = LogBookDate,
                     DbxUploaded = false
                 };
                 newLogBookId = _clientDataProvider.SaveClientSiteLogBook(newClientSiteLogBook);
@@ -41,17 +52,17 @@ namespace CityWatch.Data.Services
                 var clientSite = _clientDataProvider.GetClientSiteDetails(clientSiteId);
                 //Check and create SmartWandLog if enabled for client site
                 if (logBookType != LogBookType.SmartWandLog)
-                {                    
-                    if(clientSite != null && clientSite.IsActive && clientSite.UploadSWLog)
+                {
+                    if (clientSite != null && clientSite.IsActive && clientSite.UploadSWLog)
                     {
-                        var swclientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.SmartWandLog, DateTime.Today);
+                        var swclientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.SmartWandLog, LogBookDate);
                         if (swclientSiteLogBook == null)
                         {
                             var newSWClientSiteLogBook = new ClientSiteLogBook()
                             {
                                 ClientSiteId = clientSiteId,
                                 Type = LogBookType.SmartWandLog,
-                                Date = DateTime.Today,
+                                Date = LogBookDate,
                                 DbxUploaded = false
                             };
                             var newSWLogBookId = _clientDataProvider.SaveClientSiteLogBook(newSWClientSiteLogBook);
@@ -63,14 +74,14 @@ namespace CityWatch.Data.Services
                 {
                     if (clientSite != null && clientSite.IsActive && clientSite.UploadFusionLog)
                     {
-                        var fusionClientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, DateTime.Today);
+                        var fusionClientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, LogBookDate);
                         if (fusionClientSiteLogBook == null)
                         {
                             var newFusionClientSiteLogBook = new ClientSiteLogBook()
                             {
                                 ClientSiteId = clientSiteId,
                                 Type = LogBookType.FusionLog,
-                                Date = DateTime.Today,
+                                Date = LogBookDate,
                                 DbxUploaded = false
                             };
                             var newFusionLogBookId = _clientDataProvider.SaveClientSiteLogBook(newFusionClientSiteLogBook);

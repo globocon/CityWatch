@@ -35,5 +35,27 @@ namespace CityWatch.Data.Models
         public Guard LoggedInGuard { get; set; }
         [ForeignKey("LoggedInUserId")]
         public User LoggedInUser { get; set; }
+        public Guid? UniqueRecordId { get; set; }
+        public bool IsOfflineRecord { get; set; } = false;
+        public DateTime? OfflineRecordSyncUtcDateTime { get; set; }
+    }
+
+    public class ClientSiteSmartWandTagsHitLogCacheOffline
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int Id { get; set; }
+        public int LoggedInClientSiteId { get; set; }
+        public int LoggedInUserId { get; set; }
+        public int LoggedInGuardId { get; set; }
+        public string TagUId { get; set; }
+        public int TagsTypeId { get; set; }
+        public DateTime HitUtcDateTime { get; set; }
+        public DateTime HitLocalDateTime { get; set; }
+        public DateTime LastModifiedUtc { get; set; }
+        public int? SmartWandId { get; set; }
+        public string GPScoordinates { get; set; }
+        public bool IsSynced { get; set; }
+        public Guid UniqueRecordId { get; set; }
     }
 }
