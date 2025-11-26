@@ -305,7 +305,8 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Client Type', width: 400, editor: true },
+            { field: 'name', title: 'Client Type', width: 350, editor: true },
+            { title: 'Country', field: 'country', width: 50, editor: false, cssClass: 'text-center' },
             { title: '3rd Party', width: 50, renderer: domainSettings, cssClass: 'text-center' },
             { field: 'clientSiteCount', width: 50, editor: false, cssClass: 'text-center' }
         ],

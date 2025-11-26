@@ -1003,6 +1003,10 @@ namespace CityWatch.Data.Providers
                 {
                     string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id && x.IsDeleted==false).Select(x => x.State).ToArray(); 
                     item.States= string.Join(",", states);
+                    if (item.IsPublicHoliday)
+                    {
+                        item.ReferenceNo = item.ReferenceNo + "-PH";
+                    }
                 }
             }
 

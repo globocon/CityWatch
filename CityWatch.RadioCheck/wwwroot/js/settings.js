@@ -296,7 +296,7 @@ let editStates = function (value, record, $cell, $displayEl, id, $grid) {
     $.get("/Admin/Settings?handler=ClientStates", function (data) {
 
         // Count total states
-        totalStates = data.columns.length;
+        totalStates = data.length;
         if (record.isPublicHoliday == true) {
             $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="' + record.isPublicHoliday + '" disabled> Is PH </label>');
             if (arr.length == totalStates) {
@@ -483,6 +483,7 @@ function stateMultiEditor($container, value, record) {
         $btndrp.prop("disabled", false);
         $listBox.find("input.state-item").prop("disabled", false);
 
+
     } else {
         // Disable everything
         //$btndrp.prop("disabled", true);
@@ -586,12 +587,27 @@ function stateMultiEditor($container, value, record) {
 
                 let btnDrp = row.find(".dropdown-btn"); // dropdown button ONLY
                 let listBox = row.find(".dropdown-list"); // checklist ONLY
+                let firstCol = row.find('td').eq(1);
+                let input = firstCol.find('input');
 
+                let val = input.length          // edit mode
+                    ? input.val().trim()
+                    : firstCol.text().trim();   // normal mode
+                val = String(val || "");
                 if ($(this).is(":checked")) {
 
                     btnDrp.prop("disabled", false);
                     listBox.hide();
                     isHoliday = true;
+                    
+                    if (!val.endsWith('-PH')) {
+                        let newVal = val + '-PH';
+
+                        if (input.length)
+                            input.val(newVal);      // update editor
+                        else
+                            firstCol.text(newVal);
+                    }
 
                 } else {
                     isHoliday = false;
@@ -601,7 +617,14 @@ function stateMultiEditor($container, value, record) {
 
                     // IMPORTANT: Do NOT touch update/cancel
                      row.find(".update-btn, .cancel-btn").prop("disabled", false);
+                    if (val.endsWith('-PH')) {
+                        let newVal = val.replace(/-PH$/, '');
 
+                        if (input.length)
+                            input.val(newVal);
+                        else
+                            firstCol.text(newVal);
+                    }
                 }
             });
 
@@ -610,15 +633,7 @@ function stateMultiEditor($container, value, record) {
     
 
 }
-//$('#BroadCastBannerCalendarEvents').on('change', '.ph-flag', function () {
 
-//    if ($(this).is(":checked")) {
-//        console.log("Checkbox checked!");
-//    } else {
-//        console.log("Checkbox unchecked!");
-//    }
-
-//});
 
 
 
@@ -629,7 +644,13 @@ if (gridBroadCastBannerCalendarEvents) {
         const data = $.extend(true, {}, record);
         data.states = statesvalue;
         data.isPublicHoliday = isHoliday;
-        //if (!data.isPublicHoliday) {
+        if (isHoliday) {
+            if (data.referenceNo.endsWith('-PH')) {
+                data.referenceNo = data.referenceNo.replace(/-PH$/, '');
+
+               
+            }
+        }
             if (isNaN(data.referenceNo)) {
                 $.notify('Reference number should only contains numbers. !!!',
                     {
