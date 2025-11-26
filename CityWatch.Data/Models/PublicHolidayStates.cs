@@ -10,5 +10,6 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
         public int CalendarEventId { get; set; }
         public string  State { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

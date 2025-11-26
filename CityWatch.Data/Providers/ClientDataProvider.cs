@@ -2707,6 +2707,10 @@ namespace CityWatch.Data.Providers
                 string[] states = calendarEvents.States.Split(',');
                 SavePHStates(calendarEvents.id, states);
             }
+            else
+            {
+                DeletePHStates(calendarEvents.id);
+            }
         }
 
         public void DeleteCalendarEvents(int id)
@@ -3925,7 +3929,7 @@ namespace CityWatch.Data.Providers
                     publicHolidayStates.Id = 0;
                     publicHolidayStates.CalendarEventId = CalendarEventId;
                     publicHolidayStates.State = item;
-                    
+                    publicHolidayStates.IsDeleted = false;
                     _context.PublicHolidayStates .Add(publicHolidayStates);
                     _context.SaveChanges();
                 }
@@ -3941,7 +3945,7 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException();
             foreach (var item in phStatesToDelete)
             {
-                _context.Remove(item);
+                item.IsDeleted = true;
                 _context.SaveChanges();
             }
         }

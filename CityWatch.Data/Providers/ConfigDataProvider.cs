@@ -1001,7 +1001,7 @@ namespace CityWatch.Data.Providers
             {
                 foreach (var item in calendarevents)
                 {
-                    string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id).Select(x => x.State).ToArray(); 
+                    string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id && x.IsDeleted==false).Select(x => x.State).ToArray(); 
                     item.States= string.Join(",", states);
                 }
             }

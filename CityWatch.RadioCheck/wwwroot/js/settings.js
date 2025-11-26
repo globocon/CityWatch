@@ -286,6 +286,138 @@ $('#add_calendar_events').on('click', function () {
         }).edit(-1);
     }
 });
+let statesvalue;
+let isHoliday = false;
+
+let editStates = function (value, record, $cell, $displayEl, id, $grid) {
+    var data = $grid.data();
+    let arr = record.states.split(","); 
+    let totalStates = 0;
+    $.get("/Admin/Settings?handler=ClientStates", function (data) {
+
+        // Count total states
+        totalStates = data.columns.length;
+        if (record.isPublicHoliday == true) {
+            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="' + record.isPublicHoliday + '" disabled> Is PH </label>');
+            if (arr.length == totalStates) {
+                $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>ALL ▼</button>');
+
+                $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+            }
+            else {
+                let displayValues = arr.length > 1
+                    ? arr.slice(0, 1).join(", ") + " ..."   // e.g., "NSW, VIC ..."
+                    : arr.join(", ");
+                $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>' + displayValues + ' ▼</button>');
+
+                $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+            }
+        }
+        else {
+
+            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" disabled> Is PH </label>');
+            $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>ALL ▼</button>');
+
+            $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+
+        }
+    });
+   
+    
+        //.append($delete).append($update).append($cancel);
+
+//    const html = `
+//        <div class="state-editor" style="display:flex; align-items:center; gap:10px;">
+   
+//    <label class="mb-0">
+//        <input type="checkbox" class="ph-flag"> Is PH
+//    </label>
+
+//    <div class="dropdown-checklist" style="flex-grow:1;white-space:nowrap;">
+//        <button type="button" id="btnDropdownState" class="btn dropdown-btn" style="width:100%; text-align:left;">
+//            ALL ▼
+//        </button>
+
+//        <div class="dropdown-list card p-2" style="display:none; max-height:150px; overflow-y:auto;">
+//        </div>
+//    </div>
+
+//</div>
+//    `;
+
+//    $displayEl.append(html);
+//    $displayEl.children("div").first().css({
+//        padding: "0",
+//        margin: "0",
+//        display: "flex",
+//        alignItems: "center",
+//        gap: "10px"
+//    });
+//    const $textbox = $displayEl.find(".ph-textbox");
+//    const $btndrp = $displayEl.find("#btnDropdownState");
+//    const $listBox = $displayEl.find(".dropdown-list");
+//    const $checkbox = $displayEl.find(".ph-flag");
+   
+
+//    $listBox.append(`
+//                <label style="display:block;">
+//                    <input type="checkbox" class="state-item state-all" value="ALL"> ALL
+//                </label>
+//            `);
+//    $.get("/Admin/Settings?handler=ClientStates", function (data) {
+
+//        data.forEach(item => {
+//            $listBox.append(`
+//                <label style="display:block;">
+//                    <input type="checkbox" class="state-item" value="${item.name}"> ${item.name}
+//                </label>
+//            `);
+//        });
+
+//        // Restore old values
+
+
+//        if (record.states) {
+//            let arr = record.states.split(",").map(s => s.trim());
+//            arr.forEach(v => {
+//                $listBox.find(`input[value="${v}"]`).prop("checked", true);
+//            });
+//            $textbox.val(record.states);
+//            statesvalue = record.states;
+//            // If all normal states selected → check ALL
+//            const totalNormal = $listBox.find(".state-item").not(".state-all").length;
+//            const selectedNormal = $listBox.find(".state-item:checked").not(".state-all").length;
+
+//            if (totalNormal === selectedNormal) {
+//                $listBox.find(".state-all").prop("checked", true);
+//                $btndrp.html("ALL ▼");
+
+//            }
+//            else {
+//                $btndrp.html(statesvalue + " ▼");
+//            }
+//        }
+
+        
+
+//    });
+
+//    $checkbox.prop("checked", record.isPublicHoliday);
+//    if ($checkbox.is(":checked")) {
+//        // Enable button & checklist
+//        $btndrp.prop("disabled", false);
+//        $listBox.find("input.state-item").prop("disabled", false);
+
+//    } else {
+//        // Disable everything
+//        //$btndrp.prop("disabled", true);
+//        $listBox.hide();
+//        //$listBox.find("input.state-item").prop("disabled", true);
+//    }
+//    let $row = $grid.find(`tr[data-id="${id}"]`);
+
+//    let $div = $grid.closest('tr').find("div[data-role='display']");
+}
 
 let gridBroadCastBannerCalendarEvents;
 gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
@@ -303,15 +435,7 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
         {
-            width: 120, editor: stateMultiEditor, getValue: function ($cell) {
-                // Pull the textbox value
-                return $cell.find(".ph-textbox").val() || "";
-            },
-
-            setValue: function ($cell, value) {
-                // Show saved value when row is not in edit mode
-                $cell.html(value || "");
-            } },
+            width: 220, title: 'PH', editor: stateMultiEditor, renderer: editStates },
        // { width: 270, renderer: editBroadcastCalendarEvents },
     ],
     
@@ -327,15 +451,15 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
 function stateMultiEditor($container, value, record) {
 
   
-
+   
         const html = `
-        <div class="state-editor">
-            <label class="mb-1">
+        <div class="state-editor" style="display:flex; align-items:center; gap:10px;">
+            <label  class="mb-0" style="white-space:nowrap;">
                 <input type="checkbox" class="ph-flag" /> Is PH
             </label>
             <input type="hidden" class="form-control ph-textbox mb-1" placeholder="All" readonly />
 
-            <div class="dropdown-checklist">
+            <div class="dropdown-checklist"  style="flex-grow:1;white-space:nowrap;">
                 <button type="button" id="btnDropdownState" class="btn  dropdown-btn" style="width:100%; text-align:left;">
                     ALL ▼
                 </button>
@@ -382,19 +506,29 @@ function stateMultiEditor($container, value, record) {
             });
 
             // Restore old values
-            if (value) {
-                let obj = {};
-                try { obj = JSON.parse(value); } catch { }
+           
 
-                if (obj.states) {
-                    let arr = obj.states.split(",").map(s => s.trim());
+                if (record.states) {
+                    let arr = record.states.split(",").map(s => s.trim());
                     arr.forEach(v => {
                         $listBox.find(`input[value="${v}"]`).prop("checked", true);
                     });
-                    $textbox.val(obj.states);
-                    
+                    $textbox.val(record.states);
+                    statesvalue = $textbox.val();
+                    // If all normal states selected → check ALL
+                    const totalNormal = $listBox.find(".state-item").not(".state-all").length;
+                    const selectedNormal = $listBox.find(".state-item:checked").not(".state-all").length;
+
+                    if (totalNormal === selectedNormal) {
+                        $listBox.find(".state-all").prop("checked", true);
+                        $btndrp.html("ALL ▼");
+
+                    }
+                    else {
+                        $btndrp.html(statesvalue +" ▼");
+                    }
                 }
-            }
+            
             $btndrp.on("click", function () {
                 $listBox.toggle();
             });
@@ -443,6 +577,7 @@ function stateMultiEditor($container, value, record) {
 
                 $textbox.val(selectedList.join(", "));
                 statesvalue = $textbox.val();
+                $btndrp.html(statesvalue + " ▼");
             });
 
             $checkbox.on("change", function () {
@@ -456,9 +591,10 @@ function stateMultiEditor($container, value, record) {
 
                     btnDrp.prop("disabled", false);
                     listBox.hide();
+                    isHoliday = true;
 
                 } else {
-
+                    isHoliday = false;
                     btnDrp.prop("disabled", true);
                     listBox.hide();
                     //listBox.find("input.state-item").prop("disabled", true);
@@ -485,14 +621,14 @@ function stateMultiEditor($container, value, record) {
 //});
 
 
-const statesvalue;
-const isHoliday=false
+
 
 if (gridBroadCastBannerCalendarEvents) {
   
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
-        
+        data.states = statesvalue;
+        data.isPublicHoliday = isHoliday;
         //if (!data.isPublicHoliday) {
             if (isNaN(data.referenceNo)) {
                 $.notify('Reference number should only contains numbers. !!!',

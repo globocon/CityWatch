@@ -4,6 +4,7 @@ CREATE TABLE [dbo].[PublicHolidayStates](
 	[id] [int] IDENTITY(1,1) NOT NULL,
 	[CalendarEventId] [int] NOT NULL,
 	[State] [nvarchar](max) NULL,
+	[IsDeleted] [bit] default 0
 	
 PRIMARY KEY CLUSTERED 
 (
