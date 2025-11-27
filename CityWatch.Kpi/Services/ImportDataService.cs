@@ -106,6 +106,9 @@ namespace CityWatch.Kpi.Services
 
             runLog.AppendFormat(GetFormattedLogMessage($"Job (id={item.Id}) run started"));
 
+            var dailyFqCounts = await GetDailyFqCounts(datesToProcess, item.ClientSiteId);
+            runLog.AppendFormat(GetFormattedLogMessage("Daily FQ data collected"));
+
             // Get IR count
             var irCounts = await GetIrCount(datesToProcess, item.ClientSiteId);
             runLog.AppendFormat(GetFormattedLogMessage("IR count collected"));
@@ -131,6 +134,10 @@ namespace CityWatch.Kpi.Services
             var employeeHours = GetEmployeeHours(clientSiteKpiSetting, datesToProcess);
             runLog.AppendFormat(GetFormattedLogMessage("Employee hours collected"));
 
+
+            
+
+
             // Create and save daily KPI data
             var dailyKpis = new List<DailyClientSiteKpi>();
             foreach (var date in datesInReport)
@@ -143,6 +150,8 @@ namespace CityWatch.Kpi.Services
                 var employeeHour = employeeHours.GetValueOrDefault(date, 0);
                 var acceptableLogFreq = dailyLogTimers.ContainsKey(date) && dailyLogTimers[date] != null ? dailyLogTimers[date].IsAcceptable : null;
                 var NFCandBLE = dailyLogTimersNFCandBLE.ContainsKey(date) && dailyLogTimersNFCandBLE[date] != null ? dailyLogTimersNFCandBLE[date].Count : 0;
+                var fq = dailyFqCounts.TryGetValue(date, out var fqValue)? fqValue?.Count ?? 0 : 0;
+
 
                 var kpi = new DailyClientSiteKpi()
                 {
@@ -154,7 +163,8 @@ namespace CityWatch.Kpi.Services
                     WandScanCount = pastDate ? wandScanCount : null,
                     EmployeeHours = pastDate ? employeeHour : null,
                     IsAcceptableLogFreq = acceptableLogFreq,
-                    WandScanNFCandBLE= pastDate ? NFCandBLE : 0
+                    WandScanNFCandBLE= pastDate ? NFCandBLE : 0,
+                    WandScanFq = pastDate ? fq : 0,
                 };
                 dailyKpis.Add(kpi);
             }
@@ -194,6 +204,7 @@ namespace CityWatch.Kpi.Services
                     existingDateKpi.FireOrAlarmCount = kpi.FireOrAlarmCount;
                     existingDateKpi.IsAcceptableLogFreq = kpi.IsAcceptableLogFreq;
                     existingDateKpi.WandScanNFCandBLE=  kpi.WandScanNFCandBLE ?? 0;
+                    existingDateKpi.WandScanFq = kpi.WandScanFq ?? 0;
                 }
                 else
                 {
@@ -299,6 +310,99 @@ namespace CityWatch.Kpi.Services
 
             return dailyLogCounts;
         }
+
+
+
+
+        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
+    List<DateTime> kpiDates,
+    int clientSiteId)
+        {
+            var result = new Dictionary<DateTime, DailyIrCount>();
+
+            DateTime fromDate = kpiDates.Min();
+            DateTime toDate = kpiDates.Max().AddDays(1); // include entire end date
+
+            // ---- STEP 1: Load UTC offset for this client site ----
+            var site = _dbContext.ClientSiteKpiSettings
+                .Where(x => x.ClientSiteId == clientSiteId)
+                .Select(x => new
+                {
+                    x.ClientSiteId,
+                    UtcString = x.UTC ?? "+10:00"
+                })
+                .FirstOrDefault();
+
+            if (site == null)
+                throw new Exception("ClientSiteKpiSettings missing UTC value.");
+
+            // Parse "+05:30" → TimeSpan
+            if (!TimeSpan.TryParse(site.UtcString, out TimeSpan offset))
+                offset = TimeSpan.Zero;
+
+            // ---- STEP 2: Convert local date range → UTC ----
+            DateTime fromUtc = fromDate - offset;
+            DateTime toUtc = toDate - offset;
+
+            // ---- STEP 3: Get all hits for this site within UTC range ----
+            var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(x =>
+                    x.HitUtcDateTime >= fromUtc &&
+                    x.HitUtcDateTime < toUtc &&
+                    (x.LoggedInClientSiteId == clientSiteId ||
+                     (x.TagLinkedClientSiteId.HasValue &&
+                      x.TagLinkedClientSiteId.Value == clientSiteId)))
+                .ToList();
+
+            // ---- STEP 4: Convert UTC → Local using the SAME logic ----
+            var localLogs = logs
+                .Select(l => new
+                {
+                    TagUId = l.TagUId,
+                    LocalDate = (l.HitUtcDateTime + offset).Date
+                })
+                .ToList();
+
+            // ---- STEP 5: Load tags for FQ (same site) ----
+            var tags = _dbContext.ClientSiteSmartWandTags
+                .Where(t => t.ClientSiteId == clientSiteId && !t.IsDeleted)
+                .Select(t => new { t.UId, t.FqBypass })
+                .ToList();
+
+            // ---- STEP 6: Per day calculation ----
+            for (var date = fromDate; date < toDate; date = date.AddDays(1))
+            {
+                var hitsForDay = localLogs
+                    .Where(x => x.LocalDate == date.Date)
+                    .ToList();
+
+                // Count all scans per tag
+                var perTagCounts = tags
+                    .Select(t => new
+                    {
+                        t.UId,
+                        t.FqBypass,
+                        ScanCount = hitsForDay.Count(h => h.TagUId == t.UId)
+                    })
+                    .ToList();
+
+                // FQ = min scans among NON-bypass tags
+                int fq = perTagCounts
+                    .Where(x => x.FqBypass == false)
+                    .Select(x => x.ScanCount)
+                    .DefaultIfEmpty(0)
+                    .Min();
+
+                result[date.Date] = new DailyIrCount
+                {
+                    Date = date.Date,
+                    Count = fq
+                };
+            }
+
+            return result;
+        }
+
 
 
 

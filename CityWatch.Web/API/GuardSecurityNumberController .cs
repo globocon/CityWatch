@@ -1950,10 +1950,23 @@ namespace CityWatch.Web.API
                     /*Commented for local testing ,uncomment when go on live*/
                     blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
                     fs.Close();
-                    messageHtml = messageHtml + "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. In this situation simply " +
-                    "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
-                    "click here</a> to download the Incident Report, which are unlimited in size.</p>";
-                    messageHtml = messageHtml + "<p>File name : " + blobName + "</p>";
+                    //messageHtml = messageHtml + "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. In this situation simply " +
+                    //"<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
+                    //"click here</a> to download the Incident Report, which are unlimited in size.</p>";
+                    //messageHtml = messageHtml + "<p>File name : " + blobName + "</p>";
+
+                   
+                    string folder = new string(blobName.Take(8).ToArray());
+
+                    // Encode file name for safe URL
+                    string encodedBlobName = Uri.EscapeDataString(blobName);
+
+                    messageHtml += "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. In this situation simply " +
+                        "<a href=\"https://c4istorage1.blob.core.windows.net/irfiles/"
+                        + folder + "/" + encodedBlobName + "\" target=\"_blank\">" +
+                        "click here</a> to download the Incident Report, which are unlimited in size.</p>";
+
+                    messageHtml += "<p>File name : " + blobName + "</p>";
                 }
 
             }

@@ -55,6 +55,8 @@ namespace CityWatch.Kpi.Models
 
         public string NameOfDay { get { return _dailyClientSiteKpi.Date.DayOfWeek.ToString(); } }
 
+        public int? WandScanFq { get { return _dailyClientSiteKpi.WandScanFq; } }
+
         public decimal? ImageCountPerHr
         {
             get
@@ -161,5 +163,7 @@ namespace CityWatch.Kpi.Models
                 return decimal.Zero;
             }
         }
+
+      
     }
 }

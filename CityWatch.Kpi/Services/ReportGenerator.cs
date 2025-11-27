@@ -240,11 +240,16 @@ namespace CityWatch.Kpi.Services
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph(string.Empty)));
+
+          
+
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph(string.Empty)));
+
+            table.AddCell(new Cell(1, 1).Add(new Paragraph(""))); // *** Fq Column Added Here ***
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
@@ -281,6 +286,16 @@ namespace CityWatch.Kpi.Services
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph($"{monthlyKpiResult.WandPatrolsAverage:0.00}")));
+
+
+
+
+            table.AddCell(new Cell(1, 1)
+              .SetFontSize(CELL_FONT_SIZE)
+              .SetTextAlignment(TextAlignment.RIGHT)
+              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+              .Add(new Paragraph($"{monthlyKpiResult.WandFqAverage:0.00}"))); // *** Fq Column Added Here ***
+
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
@@ -327,6 +342,15 @@ namespace CityWatch.Kpi.Services
              .SetTextAlignment(TextAlignment.RIGHT)
              .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
              .Add(new Paragraph($"{monthlyKpiResult.WandPatrolsPercentage:0.00}%")));
+
+
+            table.AddCell(new Cell(1, 1)
+            .SetFontSize(CELL_FONT_SIZE)
+            .SetTextAlignment(TextAlignment.RIGHT)
+            .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+            .Add(new Paragraph($"{monthlyKpiResult.WandFqPercentage:0.00}%"))); // *** Fq Column Added Here ***
+
+           
 
             table.AddCell(new Cell(1, 1)
                .SetFontSize(CELL_FONT_SIZE)
@@ -398,7 +422,34 @@ namespace CityWatch.Kpi.Services
 
         private Table CreateReportData(ClientSiteKpiSetting clientSiteKpiSetting, DateTime fromDate, List<DailyKpiResult> dailyKpiResults, bool isHrTimerPaused)
         {
-            var colWidth = new float[] { 2, 10, 8, 8, 9, 9, 9, 9, 12, 8, 8, 8 };
+            //var colWidth = new float[] { 2, 10, 8, 8, 9, 9, 9, 9, 12, 8, 8, 8 };
+            var colWidth = new float[]
+     {
+                   2,   // DATE
+                   11,  // DAY
+                   8,   // Expected Hours
+                   8,   // Hours Change
+
+                   9,   // Images: Day + Total
+                   9,   // Images: p/hr
+
+                   9,   // Patrol: Total
+                   9, // Patrol: p/hr (split from 9)
+
+                   6, // Fq        (split from 9)
+
+                   6,  // 2HR Timer
+                   8,   // IR Reports
+                   8,   // Fire/Alarms
+                   8    // Existing last column
+     };
+
+
+
+
+
+
+
             var table = new Table(UnitValue.CreatePercentArray(colWidth)).UseAllAvailableWidth();
 
             CreateHeaderRow(table, fromDate, clientSiteKpiSetting);
@@ -480,7 +531,7 @@ namespace CityWatch.Kpi.Services
                 .Add(new Paragraph()
                     .Add(new Text("DAILY WAND SCANS\n"))
                     .Add(new Text($"{clientSiteKpiSetting.WandScanTargetText}").SetFontSize(CELL_FONT_SIZE * .8f))));
-            table.AddCell(new Cell(1, 1)
+            table.AddCell(new Cell(1, 2)
                 .SetFontSize(CELL_FONT_SIZE)
                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                 .Add(new Paragraph()
@@ -504,6 +555,7 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("Total"));
             table.AddCell(CreateHeaderCell("p/hr"));
             table.AddCell(CreateHeaderCell("p/hr"));
+            table.AddCell(CreateHeaderCell("Fq"));
 
             table.AddCell(CreateHeaderCell("DAILY LOG 2HR TIMER"));
             table.AddCell(CreateHeaderCell("IR REPORTS"));
@@ -569,6 +621,10 @@ namespace CityWatch.Kpi.Services
                 cellColor = CELL_BG_RED;
             }
             table.AddCell(CreateDataCell(cellValue, cellHasBg, cellColor));
+
+            //Missing Fq column — add blank cell
+            table.AddCell(CreateDataCell(item.WandScanFq.ToString()));
+           
 
             //DAILY LOG 2HR TIMER
             cellColor = string.Empty;
