@@ -284,10 +284,22 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var data = _dailyKpiResults.Where(z => z.ActualEmployeeHours.GetValueOrDefault() > 0);
-                if (data.Any())
-                    return data.Sum(y => y.ActualEmployeeHours.Value);
-                return decimal.Zero;
+                //var data = _dailyKpiResults.Where(z => z.ActualEmployeeHours.GetValueOrDefault() > 0);
+                //if (data.Any())
+                //    return data.Sum(y => y.ActualEmployeeHours.Value);
+                //return decimal.Zero;
+                var data = _dailyKpiResults.Where(z => z.EmployeeHours > 0);
+
+                if (!data.Any())
+                    return decimal.Zero;
+
+                decimal totalExpected = (decimal)data.Sum(x => x.EmployeeHours);
+
+                decimal totalVariation = (decimal)data.Sum(x =>
+                    x.ActualEmployeeHours.GetValueOrDefault() - x.EmployeeHours
+                );
+                decimal result = totalExpected + totalVariation;
+                return result;   // Final Actual Value
             }
         }
     }
