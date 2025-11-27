@@ -5440,7 +5440,7 @@ namespace CityWatch.Data.Providers
 
             }
             /* Rc Status update*/
-            if (type == 2)
+            if (type == 2 || type == 32)
             {
                 if (clientSiteForLogbook.Count() > 0)
                 {
