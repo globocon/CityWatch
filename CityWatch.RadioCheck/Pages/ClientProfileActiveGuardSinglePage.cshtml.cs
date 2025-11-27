@@ -23,7 +23,7 @@ using CityWatch.Data.Services;
 using CityWatch.RadioCheck.Services;
 using CityWatch.Web.Models;
 
-namespace CityWatch.Web.Pages.Radio
+namespace CityWatch.RadioCheck.Pages.Radio
 {
     public class ClientProfileActiveGuardSinglePage : PageModel
     {
@@ -54,16 +54,64 @@ namespace CityWatch.Web.Pages.Radio
         public int ActiveGuardCount { get; set; }
         public string DisplayItem { get; set; }
         public GuardViewModel Guard { get; set; }
+        public string UserRole { get; set; }
         public IActionResult OnGet(string displayItem)
         {
+
+
+            var guardId = User.FindFirst("ClientProfileId")?.Value;
+
+            List<int> allowedSiteIds = new List<int>();
+
+            if (!string.IsNullOrEmpty(guardId))
+            {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(guardId)).FirstOrDefault();
+
+                // Convert boolean to string value
+                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                GuardId = int.Parse(guardId);
+                var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
+                if (clientSites != null && clientSites.Any())
+                {
+                    allowedSiteIds = clientSites.Select(s => s.ClientSiteId).ToList();
+                }
+            }
+            else
+            {
+                HttpContext.Session.SetInt32("GuardId", 0);
+                return Redirect(Url.Page("/Account/Login"));
+            }
+
+            DisplayItem = displayItem;
+
+            // Active guards
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                activeGuardDetails = activeGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            ActiveGuardCount = activeGuardDetails.Count();
+
+            // Inactive guards
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            if (allowedSiteIds.Any())
+            {
+                inActiveGuardDetails = inActiveGuardDetails
+                    .Where(g => allowedSiteIds.Contains(g.ClientSiteId))
+                    .ToList();
+            }
+            InActiveGuardCount = inActiveGuardDetails.Count();
+
             /*Api call Start */
             CallApi();
             /* Api call end */
-            DisplayItem = displayItem;
-            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
-            ActiveGuardCount = activeGuardDetails.Count();
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
-            InActiveGuardCount = inActiveGuardDetails.Count();
+            //DisplayItem = displayItem;
+            //var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            //ActiveGuardCount = activeGuardDetails.Count();
+            //var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            //InActiveGuardCount = inActiveGuardDetails.Count();
 
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
@@ -77,6 +125,8 @@ namespace CityWatch.Web.Pages.Radio
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
+
+            UserRole = "0";
             foreach (var item in UserId1)
             {
                 if (item.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")
@@ -111,7 +161,10 @@ namespace CityWatch.Web.Pages.Radio
             }
             else if (GuardId != 0)
             {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(LoginGuardId)).FirstOrDefault();
 
+                // Convert boolean to string value
+                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
                 return Page();

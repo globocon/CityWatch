@@ -82,18 +82,20 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public GuardViewModel Guard { get; set; }
         public bool IsRCAccess { get; set; }
 
-        
+
         public string Guid { get; set; }
+
+        public string UserRole { get; set; }
         public IActionResult OnGet(string displayItem)
         {
 
             //This Api call for update the values of the tables Start
-             CallApi();
+            CallApi();
             //This Api call for update the values of the tables end
 
             DisplayItem = displayItem;
 
-           
+
             SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
@@ -105,7 +107,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
 
-           
+
 
             var guidFromQuery = Request.Query["guid"];
 
@@ -122,6 +124,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
             List<int> allowedSiteIds = new List<int>();
             if (!string.IsNullOrEmpty(LoginGuardId))
             {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(LoginGuardId)).FirstOrDefault();
+
+                // Convert boolean to string value
+                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+
                 var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(LoginGuardId));
                 if (clientSites != null && clientSites.Any())
                 {
@@ -181,7 +188,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (GuardId != 0)
                 {
                     Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
-                    
+
 
                 }
                 HttpContext.Session.SetInt32("GuardId", GuardId);
@@ -193,7 +200,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
                 if (guard != null)
                 {
-                    if((guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    if ((guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
                     {
                         if (guard.IsAdminPowerUser)
                         {
@@ -228,15 +235,15 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         AuthUserHelper.IsAdminGlobal = false;
                     }
 
-                    
-                         _guardDataProvider.SaveGuardRCLoginDetails(new LoginUserRCHistory()
-                         {
-                             
-                             IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                             LoginTime = DateTime.Now,
-                             Id=0,
-                             GuardId = GuardId,
-                         });
+
+                    _guardDataProvider.SaveGuardRCLoginDetails(new LoginUserRCHistory()
+                    {
+
+                        IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                        LoginTime = DateTime.Now,
+                        Id = 0,
+                        GuardId = GuardId,
+                    });
                 }
 
 
@@ -244,13 +251,46 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
             // Check if the user is authenticated(Normal Admin Login)
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
-            {   /*Old Code for admin only*/
-                AuthUserHelper.IsAdminUserLoggedIn = true;
-                AuthUserHelper.IsAdminPowerUser = false;
-                AuthUserHelper.IsAdminGlobal = false;
-                HttpContext.Session.SetInt32("GuardId", 0);
+            {
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (role == "Administrator")
+                {
+                    // Admin login
+                    AuthUserHelper.IsAdminUserLoggedIn = true;
+                    AuthUserHelper.IsAdminPowerUser = false;
+                    AuthUserHelper.IsAdminGlobal = false;
+                    UserRole = "1";
+                    HttpContext.Session.SetInt32("GuardId", 0);
+                }
+                else if (role == "Guard")
+                {
+                    var sidnew = User.FindFirst(ClaimTypes.Sid)?.Value;
+
+                    int guardId = 0;
+                    int.TryParse(sidnew, out guardId);
+
+                    if (guardId > 0)
+                    {
+                        var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+
+                        // Convert boolean to string value
+                        UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                        HttpContext.Session.SetInt32("GuardId", guardId);
+
+                        AuthUserHelper.IsAdminUserLoggedIn = false;
+                    }
+                }
+                else
+                {
+                    // Normal user login (Role = "User")
+                    AuthUserHelper.IsAdminUserLoggedIn = false;
+                    HttpContext.Session.SetInt32("GuardId", 0);
+                }
+
                 return Page();
             }
+
             else if (GuardId != 0)
             {
 
@@ -265,7 +305,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             }
 
-          
+
         }
         //code added to save the duress button start
         public JsonResult OnPostSaveDuress()
@@ -379,7 +419,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 hasmartwand = detail.hasmartwand,
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
-                HR3 = CalculateHr3GroupStatus(detail.GuardId)
+                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                CompletedRounds = detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
             }).ToList();
 
             //// 5. Clean SiteName
@@ -420,9 +463,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
                 HR3 = CalculateHr3GroupStatus(detail.GuardId),
-                State=detail.State
+                State = detail.State,
+                CompletedRounds = detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
                 // Map other properties as needed
-            }).ToList().Where(x=>x.State== State);
+            }).ToList().Where(x => x.State == State);
             return new JsonResult(activeGuardDetailModels);
         }
         public IActionResult OnGetClientSiteActivityStatusClientSite(int ClientSiteId)
@@ -451,7 +497,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR1 = CalculateHr1GroupStatus(detail.GuardId),
                 HR2 = CalculateHr2GroupStatus(detail.GuardId),
                 HR3 = CalculateHr3GroupStatus(detail.GuardId),
-                State = detail.State
+                State = detail.State,
+                CompletedRounds = detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode
                 // Map other properties as needed
             }).ToList().Where(x => x.ClientSiteId == ClientSiteId);
             return new JsonResult(activeGuardDetailModels);
@@ -469,20 +518,20 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     if (HR1List.Any(x => x.ColourCodeStatus == "Red"))
                     {
-                        HR1= "Red";
+                        HR1 = "Red";
                     }
                     else if (HR1List.Any(x => x.ColourCodeStatus == "Yellow"))
                     {
-                        HR1= "Yellow";
+                        HR1 = "Yellow";
                     }
                     else
                     {
-                        HR1= "Green";
+                        HR1 = "Green";
                     }
                 }
             }
 
-            return HR1; 
+            return HR1;
         }
         public string CalculateHr2GroupStatus(int guardId)
         {
@@ -496,20 +545,20 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     if (HR2List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
                     {
-                        HR2= "Red";
+                        HR2 = "Red";
                     }
                     else if (HR2List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
                     {
-                        HR2= "Yellow";
+                        HR2 = "Yellow";
                     }
                     else
                     {
-                        HR2= "Green";
+                        HR2 = "Green";
                     }
                 }
             }
 
-            return HR2; 
+            return HR2;
         }
         public string CalculateHr3GroupStatus(int guardId)
         {
@@ -523,15 +572,15 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     if (HR3List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
                     {
-                        HR3= "Red";
+                        HR3 = "Red";
                     }
                     else if (HR3List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
                     {
-                        HR3= "Yellow";
+                        HR3 = "Yellow";
                     }
                     else
                     {
-                        HR3= "Green";
+                        HR3 = "Green";
                     }
                 }
             }
@@ -710,6 +759,18 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetActiveGuardSWDetails(clientSiteId, guardId));
         }
 
+
+        //for getting SW Details of Guards-start
+        public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
+        {
+
+
+
+
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificGuard(clientSiteId, guardId));
+        }
+
+
         //for getting SW details of Guards-end
 
         public IActionResult OnGetClientSiteNotAvailableStatus(string clientSiteIds)
@@ -723,7 +784,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
             //return new JsonResult(_guardLogDataProvider.GetGuards(id));
             //return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
-            
+
             return new JsonResult(ViewDataService.GetGuards().Where(x => x.Id == id).FirstOrDefault());
 
 
@@ -734,7 +795,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
         //SaveRadioStatus -start
         // New changes int notificationType added for identify the notfication type and  set guard =0
-        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus, bool active, int statusId, GuardLog tmzdata,int notificationType)
+        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus, bool active, int statusId, GuardLog tmzdata, int notificationType)
         {
             var success = true;
             var message = "success";
@@ -751,13 +812,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
 
                     var Subject = "Global Duress Alert Deactivated";
-                    var Notifications = "The duress alarm was deactivated by the CRO for the following reason"+ "<br/>" + "Reason:" +
-                     checkedStatus+ "<br/>"+
-                      (string.IsNullOrEmpty(ClientsiteDetails.Name) ? string.Empty : "Site: " + ClientsiteDetails.Name) + "<br/>" ;
+                    var Notifications = "The duress alarm was deactivated by the CRO for the following reason" + "<br/>" + "Reason:" +
+                     checkedStatus + "<br/>" +
+                      (string.IsNullOrEmpty(ClientsiteDetails.Name) ? string.Empty : "Site: " + ClientsiteDetails.Name) + "<br/>";
                     EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name);
                 }
 
-                
+
                 //Email send Duress Activate stop
 
                 var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -771,7 +832,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     RadioCheckStatusId = statusId,
                 }, tmzdata, loginguardid);
 
-                if(notificationType==1 && guardId==4)
+                if (notificationType == 1 && guardId == 4)
                 {
                     //Notifcation send to bruno if notfication type=4 
                     //for avoid this set gaurd =0 for this area02122024
@@ -820,7 +881,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
                     client.Send(messagenew);
                     client.Disconnect(true);
-                   
+
                 }
             }
 
@@ -1741,7 +1802,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
 
 
-        public void LogBookDetailsMsg(int Id, string Notifications, string Subject, GuardLog tmzdata,string ClientSiteName)
+        public void LogBookDetailsMsg(int Id, string Notifications, string Subject, GuardLog tmzdata, string ClientSiteName)
         {
             #region Logbook
             if (Id != null)
@@ -1798,7 +1859,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     }
                     else
                     {
-                        
+
 
                         /* Save the push message for reload to logbook on next day Start*/
                         var radioCheckPushMessages = new RadioCheckPushMessages()
@@ -1819,7 +1880,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + " : "+ ControlRoomMessage + " <br/> " + Notifications,
+                            Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm,
@@ -1947,7 +2008,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 }
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
 
@@ -2059,7 +2120,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         //code added for ActionList Send start
         public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode,
             string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5,
-            string CommentsForControlRoomOperator, GuardLog tmzdata,string textToCopy,int ClientSiteActionListId)
+            string CommentsForControlRoomOperator, GuardLog tmzdata, string textToCopy, int ClientSiteActionListId)
         {
             var success = true;
             var message = "success";
@@ -2077,13 +2138,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             var ActionListMessage = string.Empty;
 
-            if( !string.IsNullOrEmpty(textToCopy))
+            if (!string.IsNullOrEmpty(textToCopy))
             {
                 ActionListMessage = textToCopy;
                 ActionListMessage += "\r\n";
                 ActionListMessage += "\r\n";
             }
-            if(ClientSiteActionListId !=0)
+            if (ClientSiteActionListId != 0)
             {
                 var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == ClientSiteActionListId);
                 if (sopfiletype.Count() != 0)
@@ -2128,7 +2189,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             ActionListMessage += "\r\n";
             ActionListMessage += "========";
             ActionListMessage += "\r\n";
-            ActionListMessage += (string.IsNullOrEmpty(Notifications) ? string.Empty :  Notifications);
+            ActionListMessage += (string.IsNullOrEmpty(Notifications) ? string.Empty : Notifications);
             try
             {
 
@@ -2140,7 +2201,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
-                        
+
                         LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
 
 
@@ -2272,13 +2333,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
                 }
-                var sopAlarmfileType= _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
+                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
                 if (sopAlarmfileType.Count() != 0)
                 {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
+                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
                     rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
                 }
-                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
                 {
                     rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
@@ -2293,7 +2354,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             else
             {
                 var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
-               
+
                 //if null assign the value of the SOPFileNme
                 rtn = new RCActionList();
 
@@ -2333,7 +2394,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
 
             return new JsonResult(clientSites);
-        }  
+        }
 
         public JsonResult OnPostSearchClientsiteRCList(string searchTerm, int clientSiteId)
         {
@@ -2666,7 +2727,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         return StatusCode((int)response.StatusCode, $"API call failed with status code: {response.StatusCode}");
 
                     }
-                   
+
                 }
                 return StatusCode(200, $"Success");
             }
@@ -2848,7 +2909,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
         public JsonResult OnGetGuardDetails(int GuardID)
         {
-            
+
             return new JsonResult(ViewDataService.GetGuardsDetails(GuardID));
 
 
@@ -2856,7 +2917,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
         public JsonResult OnGetGuardRCLoginDetails()
         {
-           
+
             var data = _guardLogDataProvider.GetGuardRCLoginDetails();
             //var result = hrGroups.Select(group => new
             //{
@@ -2870,26 +2931,26 @@ namespace CityWatch.RadioCheck.Pages.Radio
             //            //course.CourseStatus
             //        }).ToList()
             //}).Where(group => group.Courses.Any()).ToList();
-            
+
             return new JsonResult(data);
         }
-        public JsonResult OnPostSaveActionListLater(RCActionListMessages objforMessage,  int[] ClientType, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs)
+        public JsonResult OnPostSaveActionListLater(RCActionListMessages objforMessage, int[] ClientType, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs)
         {
             var success = true;
             var message = "Success";
-            
+
             try
             {
 
-                objGuardLogs.GuardId= HttpContext.Session.GetInt32("GuardId") ?? 0;
+                objGuardLogs.GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
 
                 if (clientSiteId.Length == 0)
                 {
                     //var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x => x.Name).FirstOrDefault();
 
-                     clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x=>x.Id).ToArray();
+                    clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x => x.Id).ToArray();
 
-                  
+
 
                 }
                 objforMessage.IsState = false;
@@ -2898,12 +2959,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 objforMessage.IsSMSPersonal = false;
                 objforMessage.IsSMSSmartWand = false;
                 objforMessage.IsPersonalEmail = false;
-                
+
 
                 int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
                 if (id != 0)
                 {
-                    
+
                     _guardLogDataProvider.SaveRCActionListMessagesClientSites(id, clientSiteId);
                     objGuardLogs.RCActionListMessagesId = id;
                     if (objforMessage.Radiofrequencystatus == "OnceOff")
@@ -2929,7 +2990,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
         public JsonResult OnPostSaveGlobalNotificationTestMessagesLater(bool checkedState, string state, string Notifications, string Subject,
-           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime? messagetime,DateTime? endmessagetime,string radiofrequencystatus)
+           bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, RCActionListMessagesGuardLogs objGuardLogs, DateTime? messagetime, DateTime? endmessagetime, string radiofrequencystatus)
         {
             var success = true;
             var message = "success";
@@ -2940,7 +3001,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (checkedState == true)
                 {
                     clientSiteId = _guardLogDataProvider.GetClientSitesForState(state).Select(x => x.Id).ToArray();
-                   
+
 
                 }
                 if (chkClientType == true)
@@ -2949,10 +3010,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
 
                         clientSiteId = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId)).Select(x => x.Id).ToArray();
-                        
+
 
                     }
-                   
+
                 }
                 if (chkNationality == true)
                 {
@@ -2962,7 +3023,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 }
                 RCActionListMessages objforMessage = new RCActionListMessages();
                 objforMessage.Id = 0;
-                objforMessage.Notifications = Notifications ;
+                objforMessage.Notifications = Notifications;
                 objforMessage.Subject = Subject;
                 objforMessage.IsState = checkedState;
                 objforMessage.IsNational = chkNationality;
@@ -2976,7 +3037,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 objforMessage.Radiofrequencystatus = radiofrequencystatus;
                 objGuardLogs.GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 int id = _guardLogDataProvider.SaveRCActionListMessages(objforMessage);
-                
+
                 if (id != 0)
                 {
 
@@ -2991,7 +3052,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
                         objGuardLogs.EventDateTime = (DateTime)objforMessage.Endmessagetime;
                     }
-                    objGuardLogs.RemoteIPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    objGuardLogs.RemoteIPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     _guardLogDataProvider.SaveRCActionListMessagesGuardLogs(objGuardLogs);
                 }
 
@@ -3004,41 +3065,41 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnGetPendingMessages(bool IsNationality,bool IsState,bool IsClientType,string State,string ClientType,string clientsite)
+        public JsonResult OnGetPendingMessages(bool IsNationality, bool IsState, bool IsClientType, string State, string ClientType, string clientsite)
         {
             int[] ActionListIds = new int[] { 0 };
             int[] clientsiteIds = new int[] { 0 };
-            int[] ClientTypeId= new int[] { 0 };
-            if (IsNationality==true)
+            int[] ClientTypeId = new int[] { 0 };
+            if (IsNationality == true)
             {
 
                 clientsiteIds = _guardLogDataProvider.GetAllClientSites().Select(x => x.Id).ToArray();
             }
-            if(IsState==true)
+            if (IsState == true)
             {
                 clientsiteIds = _guardLogDataProvider.GetAllClientSites().Where(x => x.State == State).Select(x => x.Id).ToArray();
             }
-            if(IsClientType==true && clientsite == null)
+            if (IsClientType == true && clientsite == null)
             {
-                ClientTypeId= ClientType.Split(",").Select(int.Parse).ToArray();
+                ClientTypeId = ClientType.Split(",").Select(int.Parse).ToArray();
                 clientsiteIds = _guardLogDataProvider.GetAllClientSites().Where(x => ClientTypeId.Contains(x.TypeId)).Select(x => x.Id).ToArray();
             }
             if (clientsite != null)
             {
                 clientsiteIds = clientsite.Split(",").Select(int.Parse).ToArray();
-                ActionListIds = _configDataProvider.GetRCActionListMessagesClientSites().Where(x=>clientsiteIds.Contains(x.ClientSiteId)).Select(x => x.RCActionListMessagesId).ToArray();
+                ActionListIds = _configDataProvider.GetRCActionListMessagesClientSites().Where(x => clientsiteIds.Contains(x.ClientSiteId)).Select(x => x.RCActionListMessagesId).ToArray();
             }
             var result = _configDataProvider.GetRCActionListMessages(ActionListIds);
-           
+
             return new JsonResult(result);
         }
         public JsonResult OnGetFQValues()
         {
-           var fqValues = new List<SelectListItem>();
-            
-            fqValues.Add(new SelectListItem("Once Off","OnceOff"));
-            fqValues.Add(new SelectListItem("Every Day","EveryDay"));
-           
+            var fqValues = new List<SelectListItem>();
+
+            fqValues.Add(new SelectListItem("Once Off", "OnceOff"));
+            fqValues.Add(new SelectListItem("Every Day", "EveryDay"));
+
             return new JsonResult(fqValues);
         }
         public JsonResult OnPostDeletePendingMessages(int id)
@@ -3047,7 +3108,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             var message = "Success";
             try
             {
-                
+
                 _guardLogDataProvider.DeleteRCActionListMessagesClientSites(id);
                 _guardLogDataProvider.DeleteRCActionListMessages(id);
             }
@@ -3059,7 +3120,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             return new JsonResult(new { status = status, message = message });
         }
-        public JsonResult OnPostUpdateActionListLater(int id,string notifications,string frequency,string expiryDate)
+        public JsonResult OnPostUpdateActionListLater(int id, string notifications, string frequency, string expiryDate)
         {
             var success = true;
             var message = "Success";
@@ -3071,7 +3132,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 var objforMessage = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.Id == id).FirstOrDefault();
 
                 objforMessage.Notifications = notifications;
-                if(frequency == "Once Off")
+                if (frequency == "Once Off")
                 {
                     objforMessage.Radiofrequencystatus = "OnceOff";
                     objforMessage.messagetime = Convert.ToDateTime(expiryDate);

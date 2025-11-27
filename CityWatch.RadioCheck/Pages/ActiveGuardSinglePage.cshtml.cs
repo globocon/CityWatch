@@ -22,8 +22,10 @@ using System.Threading.Tasks;
 using CityWatch.Data.Services;
 using CityWatch.RadioCheck.Services;
 using CityWatch.Web.Models;
+using CityWatch.RadioCheck.Helpers;
+using CityWatch.Web.Pages.Radio;
 
-namespace CityWatch.Web.Pages.Radio
+namespace CityWatch.RadioCheck.Pages.Radio
 {
     public class ActiveGuardSinglePage : PageModel
     {
@@ -54,6 +56,7 @@ namespace CityWatch.Web.Pages.Radio
         public int ActiveGuardCount { get; set; }
         public string DisplayItem { get; set; }
         public GuardViewModel Guard { get; set; }
+        public string UserRole { get; set; }
         public IActionResult OnGet(string displayItem)
         {
             /*Api call Start */
@@ -76,8 +79,8 @@ namespace CityWatch.Web.Pages.Radio
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
-
-            var guidFromQuery =  HttpContext.Session.GetString("Guid");
+            UserRole = "0";
+           var guidFromQuery =  HttpContext.Session.GetString("Guid");
 
             if (!string.IsNullOrEmpty(guidFromQuery))
             {
@@ -138,24 +141,113 @@ namespace CityWatch.Web.Pages.Radio
             }
             
 
-            if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
+            if (!string.IsNullOrEmpty(LoginGuardId))
             {
                
-                UserId = int.Parse(loginUserId);
+               
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                if (GuardId != 0)
+                {
+                    Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+
+                }
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                HttpContext.Session.SetInt32("loginUserId", UserId);
+                ViewData["GuardId"] = GuardId;
+
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(GuardId).FirstOrDefault();
+                // Convert boolean to string value
+                UserRole = guard.IsRCFusionAccess ? "1" : "0";
+                if (guard != null)
+                {
+                    if ((guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Page();
+                    }
+                    if ((guard.IsAdminSOPToolsAccess) && (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess || guard.IsRCLiteAccess))
+                    {
+
+                        AuthUserHelper.IsAdminPowerUser = true;
+                        return Page();
+                    }
+                    if (guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                    {
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Redirect(Url.Page("/Admin/Settings"));
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminPowerUser = false;
+                    }
+                    if (guard.IsAdminGlobal)
+                    {
+                        AuthUserHelper.IsAdminGlobal = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminGlobal = false;
+                    }
+
+
+                 
+                }
                 return Page();
             }
+
+
             // Check if the user is authenticated(Normal Admin Login)
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
-            {   /*Old Code for admin only*/
-              
-                HttpContext.Session.SetInt32("GuardId", 0);
+            {
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (role == "Administrator")
+                {
+                  
+
+                    HttpContext.Session.SetInt32("GuardId", 0);
+                    UserRole = "1";
+                }
+                else if (role == "Guard")
+                {
+                    var sidnew = User.FindFirst(ClaimTypes.Sid)?.Value;
+
+                    int guardId = 0;
+                    int.TryParse(sidnew, out guardId);
+
+                    if (guardId > 0)
+                    {
+                        var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+
+                        // Convert boolean to string value
+                        UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                        HttpContext.Session.SetInt32("GuardId", guardId);
+
+                       
+                    }
+                }
+                else
+                {
+                    // Normal user login (Role = "User")
+                  
+                    HttpContext.Session.SetInt32("GuardId", 0);
+                }
                 return Page();
             }
             else if (GuardId != 0)
             {
+                var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(LoginGuardId)).FirstOrDefault();
 
+                // Convert boolean to string value
+                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
                 return Page();
