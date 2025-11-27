@@ -90,6 +90,21 @@ namespace CityWatch.Kpi.Models
             }
         }
 
+        public decimal WandFqAverage
+        {
+            get
+            {
+                var values = _dailyKpiResults
+                    .Where(z => z.WandScanFq.HasValue && z.WandScanFq.Value > 0)
+                    .Select(z => z.WandScanFq.Value)
+                    .ToList();
+
+                return values.Count > 0
+      ? values.Select(x => (decimal)x).Average()
+      : 0m;
+            }
+        }
+
         public decimal WandPatrolsPercentage
         {
             get
@@ -120,6 +135,25 @@ namespace CityWatch.Kpi.Models
                 }
 
                 return decimal.Zero;
+            }
+        }
+
+        public decimal WandFqPercentage
+        {
+            get
+            {
+                var values = _dailyKpiResults
+                    .Where(z => z.WandScanFq.HasValue && z.WandScanFq.Value > 0)
+                    .Select(z => z.WandScanFq.Value)
+                    .ToList();
+
+                if (values.Count == 0)
+                    return 0m;
+
+                decimal avg = values.Average(x => (decimal)x);
+                decimal max = values.Max();
+
+                return (avg / max) * 100;
             }
         }
 
@@ -287,6 +321,18 @@ namespace CityWatch.Kpi.Models
                 var data = _dailyKpiResults.Where(z => z.ActualEmployeeHours.GetValueOrDefault() > 0);
                 if (data.Any())
                     return data.Sum(y => y.ActualEmployeeHours.Value);
+                return decimal.Zero;
+            }
+        }
+
+
+        public decimal TotalFq
+        {
+            get
+            {
+                var data = _dailyKpiResults.Where(z => z.WandScanFq.GetValueOrDefault() > 0);
+                if (data.Any())
+                    return data.Sum(y => y.WandScanFq.Value);
                 return decimal.Zero;
             }
         }

@@ -132,14 +132,18 @@ $(function () {
             { data: 'wandScanCount' },
             { data: 'wandScanCountPerHr', width: '75px' },
             { data: 'wandPatrolsRatio', width: '110px' },
+            { data: 'wandScanFq', width: '50px' },  // <-- NEW COLUMN
             { data: 'effortCounterImage', width: '50px' },
             { data: 'effortCounterWand', width: '50px' },
+           
             { data: 'isAcceptableLogFreq' },
             { data: 'incidentCount' },
             { data: 'hasFireOrAlarm' },
+         
             { data: 'imagesTarget', visible: false },
             { data: 'wandScansTarget', visible: false },
             { data: 'dailyKpiClientSiteId', visible: false },
+          
         ],
         'createdRow': function (row, data, index) {
             if (data.imageCountPerHr === null) {
@@ -161,21 +165,21 @@ $(function () {
             }
 
             if (data.isAcceptableLogFreq === null) {
-                $('td', row).eq(11).html('-');
+                $('td', row).eq(12).html('-');
             }
             else {
                 const val = data.isAcceptableLogFreq ? '< 2hr' : '> 2hr';
                 const cellColor = data.isAcceptableLogFreq ? 'cell-avg-above-limit' : 'cell-below-limit';
-                $('td', row).eq(11).html(val);
-                $('td', row).eq(11).addClass(cellColor);
+                $('td', row).eq(12).html(val);
+                $('td', row).eq(12).addClass(cellColor);
             }
 
             if (data.incidentCount) {
-                $('td', row).eq(12).addClass('cell-has-ir');
+                $('td', row).eq(13).addClass('cell-has-ir');
             }
 
             if (data.hasFireOrAlarm) {
-                $('td', row).eq(13).addClass('cell-fire-alarm');
+                $('td', row).eq(14).addClass('cell-fire-alarm');
             }
         }
     });
@@ -278,6 +282,10 @@ $(function () {
         $('#report_footer_1').find('th:eq(2)').text(parseFloat(response.data.imageCountAverage).toFixed(2));
         $('#report_footer_1').find('th:eq(4)').text(parseFloat(response.data.wandScanAverage).toFixed(2));
         $('#report_footer_1').find('th:eq(5)').text(parseFloat(response.data.wandPatrolsAverage).toFixed(2));
+
+        // footer row 1 - averages
+        $('#report_footer_1').find('th:eq(6)').text(parseFloat(response.data.wandFqAverage).toFixed(2));
+
         $('#report_footer_1').find('th:eq(7)').text(parseInt(response.data.notInAcceptableLogFreqCount));
         $('#report_footer_1').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
         $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
@@ -307,6 +315,11 @@ $(function () {
         $('#report_footer_2').find('th:eq(4)').text(wandCountPercentage + ' %');
 
         $('#report_footer_2').find('th:eq(5)').text(parseFloat(response.data.wandPatrolsPercentage).toFixed(2) + ' %');
+
+
+        // footer row 2 - percentage
+        $('#report_footer_2').find('th:eq(6)').text(parseFloat(response.data.wandFqPercentage).toFixed(2) + ' %');
+      
 
         const siteScorePercentage = response.data.siteScorePercentage ? parseFloat(response.data.siteScorePercentage).toFixed(2) : 0;
         if (siteScorePercentage >= 100)

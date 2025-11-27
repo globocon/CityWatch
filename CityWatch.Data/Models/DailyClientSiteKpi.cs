@@ -37,5 +37,8 @@ namespace CityWatch.Data.Models
         public bool? IsAcceptableLogFreq { get; set; }
 
         public int? WandScanNFCandBLE { get; set; } = 0;
+
+        public int? WandScanFq { get; set; } = 0;
+
     }
 }
