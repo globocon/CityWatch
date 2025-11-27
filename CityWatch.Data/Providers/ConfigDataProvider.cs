@@ -996,7 +996,7 @@ namespace CityWatch.Data.Providers
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
         { 
-            var calendarevents= _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
+            var calendarevents= _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo.Replace("-PH", ""))).ToList();
             if(calendarevents.Count()>0)
             {
                 foreach (var item in calendarevents)
@@ -1005,6 +1005,10 @@ namespace CityWatch.Data.Providers
                     item.States= string.Join(",", states);
                     if (item.IsPublicHoliday)
                     {
+                        if (item.ReferenceNo.EndsWith("-PH", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.ReferenceNo = item.ReferenceNo.Replace("-PH", "");
+                        }
                         item.ReferenceNo = item.ReferenceNo + "-PH";
                     }
                 }
