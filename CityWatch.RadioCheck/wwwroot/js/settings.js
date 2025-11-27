@@ -297,8 +297,10 @@ let editStates = function (value, record, $cell, $displayEl, id, $grid) {
 
         // Count total states
         totalStates = data.length;
-        if (record.isPublicHoliday == true) {
-            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="' + record.isPublicHoliday + '" disabled> Is PH </label>');
+        let isPH = (record.isPublicHoliday + "").toString().toLowerCase() === "true";
+        if (isPH) {
+            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="checked" disabled> Is PH </label>');
+            $chkIsPublicHoliday.prop("checked", true);
             if (arr.length == totalStates) {
                 $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>ALL ▼</button>');
 
@@ -434,6 +436,8 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
+        { width: 0, field: 'isPublicHoliday', title: 'Expiry', editor: false, hidden: true },
+        { width: 0, field: 'states', title: 'Repeat', editor: false, hidden:true },
         {
             width: 220, title: 'PH', editor: stateMultiEditor, renderer: editStates },
        // { width: 270, renderer: editBroadcastCalendarEvents },
@@ -477,8 +481,10 @@ function stateMultiEditor($container, value, record) {
     const $btndrp = $container.find("#btnDropdownState");
         const $listBox = $container.find(".dropdown-list");
     const $checkbox = $container.find(".ph-flag");
-    $checkbox.prop("checked", record.isPublicHoliday);
-    if ($checkbox.is(":checked")) {
+    
+    let isPH = (record.isPublicHoliday + "").toString().toLowerCase() === "true";
+    if (isPH) {
+        $checkbox.prop("checked", true);
         // Enable button & checklist
         $btndrp.prop("disabled", false);
         $listBox.find("input.state-item").prop("disabled", false);
@@ -487,6 +493,8 @@ function stateMultiEditor($container, value, record) {
     } else {
         // Disable everything
         //$btndrp.prop("disabled", true);
+        $checkbox.prop("checked", false);
+        $btndrp.prop("disabled", true);
         $listBox.hide();
         //$listBox.find("input.state-item").prop("disabled", true);
     }
@@ -644,13 +652,13 @@ if (gridBroadCastBannerCalendarEvents) {
         const data = $.extend(true, {}, record);
         data.states = statesvalue;
         data.isPublicHoliday = isHoliday;
-        if (isHoliday) {
+        
             if (data.referenceNo.endsWith('-PH')) {
                 data.referenceNo = data.referenceNo.replace(/-PH$/, '');
 
                
             }
-        }
+        
             if (isNaN(data.referenceNo)) {
                 $.notify('Reference number should only contains numbers. !!!',
                     {
@@ -815,7 +823,8 @@ if (gridBroadCastBannerCalendarEvents) {
 
     const bg_color_pale_yellow = '#fcf8d1';
     gridBroadCastBannerCalendarEvents.on('rowDataBound', function (e, $row, id, record) {
-        if (record.isPublicHoliday) {
+        let isPH = (record.isPublicHoliday + "").toString().toLowerCase() === "true";
+        if (isPH) {
            
                 $row.css('background-color', bg_color_pale_yellow);
             

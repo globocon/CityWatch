@@ -2676,16 +2676,19 @@ namespace CityWatch.Data.Providers
 
             if (calendarEvents.id == -1)
             {
-                var calendarEventsnew = new BroadcastBannerCalendarEvents()
-                {
-                    TextMessage = calendarEvents.TextMessage,
-                    ExpiryDate = calendarEvents.ExpiryDate,
-                    StartDate = calendarEvents.StartDate,
-                    ReferenceNo = calendarEvents.ReferenceNo,
-                    RepeatYearly = calendarEvents.RepeatYearly,
-                    IsPublicHoliday = calendarEvents.IsPublicHoliday,
-                };
-                _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
+                //var calendarEventsnew = new BroadcastBannerCalendarEvents()
+                //{
+                //    id=0,
+                //    TextMessage = calendarEvents.TextMessage,
+                //    ExpiryDate = calendarEvents.ExpiryDate,
+                //    StartDate = calendarEvents.StartDate,
+                //    ReferorenceNo = calendarEvents.ReferenceNo,
+                //    RepeatYearly = calendarEvents.RepeatYearly,
+                //    IsPublicHoliday = calendarEvents.IsPublicHoliday,
+                //};
+                calendarEvents.id = 0;
+                _context.BroadcastBannerCalendarEvents.Add(calendarEvents);
+
             }
             else
             {
@@ -2701,7 +2704,8 @@ namespace CityWatch.Data.Providers
                 calendarEventsUpdate.IsPublicHoliday = calendarEvents.IsPublicHoliday;
             }
             _context.SaveChanges();
-            if(calendarEvents.IsPublicHoliday==true && calendarEvents.States!=null)
+           
+            if (calendarEvents.IsPublicHoliday==true && calendarEvents.States!=null)
             {
                
                 string[] states = calendarEvents.States.Split(',');
