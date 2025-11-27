@@ -344,6 +344,7 @@ namespace CityWatch.Data
         public DbSet<KeyVehicleLogDocketHistory> KeyVehicleLogDocketHistory { get; set; }
         public DbSet<InActiveGuardsDetails> InActiveGuardsDetails { get; set; }
         public DbSet<MobileAppUpgrade> MobileAppUpgrade { get; set; }
+        public DbSet <PublicHolidayStates> PublicHolidayStates { get; set; }
     }
 
 

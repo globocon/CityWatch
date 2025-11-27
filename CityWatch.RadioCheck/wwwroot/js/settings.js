@@ -286,6 +286,138 @@ $('#add_calendar_events').on('click', function () {
         }).edit(-1);
     }
 });
+let statesvalue;
+let isHoliday = false;
+
+let editStates = function (value, record, $cell, $displayEl, id, $grid) {
+    var data = $grid.data();
+    let arr = record.states.split(","); 
+    let totalStates = 0;
+    $.get("/Admin/Settings?handler=ClientStates", function (data) {
+
+        // Count total states
+        totalStates = data.length;
+        if (record.isPublicHoliday == true) {
+            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="' + record.isPublicHoliday + '" disabled> Is PH </label>');
+            if (arr.length == totalStates) {
+                $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>ALL ▼</button>');
+
+                $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+            }
+            else {
+                let displayValues = arr.length > 1
+                    ? arr.slice(0, 1).join(", ") + " ..."   // e.g., "NSW, VIC ..."
+                    : arr.join(", ");
+                $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>' + displayValues + ' ▼</button>');
+
+                $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+            }
+        }
+        else {
+
+            $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" disabled> Is PH </label>');
+            $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>ALL ▼</button>');
+
+            $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
+
+        }
+    });
+   
+    
+        //.append($delete).append($update).append($cancel);
+
+//    const html = `
+//        <div class="state-editor" style="display:flex; align-items:center; gap:10px;">
+   
+//    <label class="mb-0">
+//        <input type="checkbox" class="ph-flag"> Is PH
+//    </label>
+
+//    <div class="dropdown-checklist" style="flex-grow:1;white-space:nowrap;">
+//        <button type="button" id="btnDropdownState" class="btn dropdown-btn" style="width:100%; text-align:left;">
+//            ALL ▼
+//        </button>
+
+//        <div class="dropdown-list card p-2" style="display:none; max-height:150px; overflow-y:auto;">
+//        </div>
+//    </div>
+
+//</div>
+//    `;
+
+//    $displayEl.append(html);
+//    $displayEl.children("div").first().css({
+//        padding: "0",
+//        margin: "0",
+//        display: "flex",
+//        alignItems: "center",
+//        gap: "10px"
+//    });
+//    const $textbox = $displayEl.find(".ph-textbox");
+//    const $btndrp = $displayEl.find("#btnDropdownState");
+//    const $listBox = $displayEl.find(".dropdown-list");
+//    const $checkbox = $displayEl.find(".ph-flag");
+   
+
+//    $listBox.append(`
+//                <label style="display:block;">
+//                    <input type="checkbox" class="state-item state-all" value="ALL"> ALL
+//                </label>
+//            `);
+//    $.get("/Admin/Settings?handler=ClientStates", function (data) {
+
+//        data.forEach(item => {
+//            $listBox.append(`
+//                <label style="display:block;">
+//                    <input type="checkbox" class="state-item" value="${item.name}"> ${item.name}
+//                </label>
+//            `);
+//        });
+
+//        // Restore old values
+
+
+//        if (record.states) {
+//            let arr = record.states.split(",").map(s => s.trim());
+//            arr.forEach(v => {
+//                $listBox.find(`input[value="${v}"]`).prop("checked", true);
+//            });
+//            $textbox.val(record.states);
+//            statesvalue = record.states;
+//            // If all normal states selected → check ALL
+//            const totalNormal = $listBox.find(".state-item").not(".state-all").length;
+//            const selectedNormal = $listBox.find(".state-item:checked").not(".state-all").length;
+
+//            if (totalNormal === selectedNormal) {
+//                $listBox.find(".state-all").prop("checked", true);
+//                $btndrp.html("ALL ▼");
+
+//            }
+//            else {
+//                $btndrp.html(statesvalue + " ▼");
+//            }
+//        }
+
+        
+
+//    });
+
+//    $checkbox.prop("checked", record.isPublicHoliday);
+//    if ($checkbox.is(":checked")) {
+//        // Enable button & checklist
+//        $btndrp.prop("disabled", false);
+//        $listBox.find("input.state-item").prop("disabled", false);
+
+//    } else {
+//        // Disable everything
+//        //$btndrp.prop("disabled", true);
+//        $listBox.hide();
+//        //$listBox.find("input.state-item").prop("disabled", true);
+//    }
+//    let $row = $grid.find(`tr[data-id="${id}"]`);
+
+//    let $div = $grid.closest('tr').find("div[data-role='display']");
+}
 
 let gridBroadCastBannerCalendarEvents;
 gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
@@ -302,31 +434,238 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
-        { width: 100, field: 'isPublicHoliday', title: 'PH', type: 'checkbox', align: 'center', editor: true },
+        {
+            width: 220, title: 'PH', editor: stateMultiEditor, renderer: editStates },
+       // { width: 270, renderer: editBroadcastCalendarEvents },
     ],
+    
+
+   
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+       
     }
 });
+//var editBroadcastCalendarEvents;
+
+function stateMultiEditor($container, value, record) {
+
+  
+   
+        const html = `
+        <div class="state-editor" style="display:flex; align-items:center; gap:10px;">
+            <label  class="mb-0" style="white-space:nowrap;">
+                <input type="checkbox" class="ph-flag" /> Is PH
+            </label>
+            <input type="hidden" class="form-control ph-textbox mb-1" placeholder="All" readonly />
+
+            <div class="dropdown-checklist"  style="flex-grow:1;white-space:nowrap;">
+                <button type="button" id="btnDropdownState" class="btn  dropdown-btn" style="width:100%; text-align:left;">
+                    ALL ▼
+                </button>
+
+                <div class="dropdown-list card p-2" style="display:none; max-height:150px; overflow-y:auto;">
+                </div>
+            </div>
+
+        </div>
+    `;
+
+        $container.append(html);
+
+        const $textbox = $container.find(".ph-textbox");
+    const $btndrp = $container.find("#btnDropdownState");
+        const $listBox = $container.find(".dropdown-list");
+    const $checkbox = $container.find(".ph-flag");
+    $checkbox.prop("checked", record.isPublicHoliday);
+    if ($checkbox.is(":checked")) {
+        // Enable button & checklist
+        $btndrp.prop("disabled", false);
+        $listBox.find("input.state-item").prop("disabled", false);
+
+
+    } else {
+        // Disable everything
+        //$btndrp.prop("disabled", true);
+        $listBox.hide();
+        //$listBox.find("input.state-item").prop("disabled", true);
+    }
+    
+        $listBox.append(`
+                <label style="display:block;">
+                    <input type="checkbox" class="state-item state-all" value="ALL"> ALL
+                </label>
+            `);
+        $.get("/Admin/Settings?handler=ClientStates", function (data) {
+
+            data.forEach(item => {
+                $listBox.append(`
+                <label style="display:block;">
+                    <input type="checkbox" class="state-item" value="${item.name}"> ${item.name}
+                </label>
+            `);
+            });
+
+            // Restore old values
+           
+
+                if (record.states) {
+                    let arr = record.states.split(",").map(s => s.trim());
+                    arr.forEach(v => {
+                        $listBox.find(`input[value="${v}"]`).prop("checked", true);
+                    });
+                    $textbox.val(record.states);
+                    statesvalue = $textbox.val();
+                    // If all normal states selected → check ALL
+                    const totalNormal = $listBox.find(".state-item").not(".state-all").length;
+                    const selectedNormal = $listBox.find(".state-item:checked").not(".state-all").length;
+
+                    if (totalNormal === selectedNormal) {
+                        $listBox.find(".state-all").prop("checked", true);
+                        $btndrp.html("ALL ▼");
+
+                    }
+                    else {
+                        $btndrp.html(statesvalue +" ▼");
+                    }
+                }
+            
+            $btndrp.on("click", function () {
+                $listBox.toggle();
+            });
+            $container.on("change", ".state-item", function () {
+
+                const isAll = $(this).hasClass("state-all");
+
+                // -------------------------
+                // If ALL checkbox is clicked
+                // -------------------------
+                if (isAll) {
+                    if ($(this).is(":checked")) {
+                        // Check all except ALL
+                        $listBox.find(".state-item").not(".state-all").prop("checked", true);
+                    } else {
+                        // Uncheck all except ALL
+                        $listBox.find(".state-item").not(".state-all").prop("checked", false);
+                    }
+                }
+
+                // -------------------------
+                // If any normal item is unchecked → uncheck ALL
+                // -------------------------
+                if (!$(this).hasClass("state-all") && !$(this).is(":checked")) {
+                    $listBox.find(".state-all").prop("checked", false);
+                }
+
+                // -------------------------
+                // If all normal items selected → check ALL
+                // -------------------------
+                const totalNormal = $listBox.find(".state-item").not(".state-all").length;
+                const selectedNormal = $listBox.find(".state-item:checked").not(".state-all").length;
+
+                if (totalNormal === selectedNormal) {
+                    $listBox.find(".state-all").prop("checked", true);
+                }
+
+                // -------------------------
+                // Update textbox (exclude ALL)
+                // -------------------------
+                let selectedList = [];
+
+                $listBox.find(".state-item:checked").not(".state-all").each(function () {
+                    selectedList.push($(this).val());
+                });
+
+                $textbox.val(selectedList.join(", "));
+                statesvalue = $textbox.val();
+                $btndrp.html(statesvalue + " ▼");
+            });
+
+            $checkbox.on("change", function () {
+
+                let row = $(this).closest("tr");   // Get current grid row
+
+                let btnDrp = row.find(".dropdown-btn"); // dropdown button ONLY
+                let listBox = row.find(".dropdown-list"); // checklist ONLY
+                let firstCol = row.find('td').eq(1);
+                let input = firstCol.find('input');
+
+                let val = input.length          // edit mode
+                    ? input.val().trim()
+                    : firstCol.text().trim();   // normal mode
+                val = String(val || "");
+                if ($(this).is(":checked")) {
+
+                    btnDrp.prop("disabled", false);
+                    listBox.hide();
+                    isHoliday = true;
+                    
+                    if (!val.endsWith('-PH')) {
+                        let newVal = val + '-PH';
+
+                        if (input.length)
+                            input.val(newVal);      // update editor
+                        else
+                            firstCol.text(newVal);
+                    }
+
+                } else {
+                    isHoliday = false;
+                    btnDrp.prop("disabled", true);
+                    listBox.hide();
+                    //listBox.find("input.state-item").prop("disabled", true);
+
+                    // IMPORTANT: Do NOT touch update/cancel
+                     row.find(".update-btn, .cancel-btn").prop("disabled", false);
+                    if (val.endsWith('-PH')) {
+                        let newVal = val.replace(/-PH$/, '');
+
+                        if (input.length)
+                            input.val(newVal);
+                        else
+                            firstCol.text(newVal);
+                    }
+                }
+            });
+
+
+        });
+    
+
+}
+
+
+
+
 
 if (gridBroadCastBannerCalendarEvents) {
+  
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+        data.states = statesvalue;
+        data.isPublicHoliday = isHoliday;
+        if (isHoliday) {
+            if (data.referenceNo.endsWith('-PH')) {
+                data.referenceNo = data.referenceNo.replace(/-PH$/, '');
 
-        if (isNaN(data.referenceNo)) {
-            $.notify('Reference number should only contains numbers. !!!',
-                {
-                    align: "center",
-                    verticalAlign: "top",
-                    color: "#fff",
-                    background: "#D44950",
-                    blur: 0.4,
-                    delay: 0
-                }
-            );
-            gridBroadCastBannerCalendarEvents.edit(id);
-            return;
+               
+            }
         }
+            if (isNaN(data.referenceNo)) {
+                $.notify('Reference number should only contains numbers. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.edit(id);
+                return;
+            }
+        //}
         if ((data.formattedStartDate == '') || (data.formattedExpiryDate == '') || (data.formattedStartDate == undefined) || (data.formattedExpiryDate == undefined)) {
             $.notify('Please check start date and expiry date. !!!',
                 {
@@ -420,6 +759,68 @@ if (gridBroadCastBannerCalendarEvents) {
                 if (isBroadCastCalendareventsAdding)
                     isBroadCastCalendareventsAdding = false;
             });
+        }
+    });
+    //gridBroadCastBannerCalendarEvents.on('change', 'input[type="checkbox"]', function () {
+
+    //    let row = $(this).closest('tr');
+
+    //    // FIRST COLUMN (value may be in a <td> OR an <input>)
+    //    let firstCol = row.find('td').eq(1);
+    //    let input = firstCol.find('input');
+
+    //    let val = input.length          // edit mode
+    //        ? input.val().trim()
+    //        : firstCol.text().trim();   // normal mode
+    //    val = String(val || "");
+
+    //    // OTHER COLUMNS
+    //    let tqColumn = row.find('td').eq(6);
+    //    let tqColumnDropdown = row.find('td').eq(7);
+
+    //    let tqInput = tqColumnDropdown.find('select');
+    //    let tqInputbutton = tqColumnDropdown.find('button');
+    //    let tqInputNew = tqColumn.find('input[type="checkbox"]:visible');
+
+
+    //    if ($(this).is(':checked')) {
+
+    //        tqInput.prop('disabled', false);
+    //        tqInputbutton.prop('disabled', false);
+
+    //        if (!val.endsWith('-PH')) {
+    //            let newVal = val + '-PH';
+
+    //            if (input.length)
+    //                input.val(newVal);      // update editor
+    //            else
+    //                firstCol.text(newVal);  // update cell
+    //        }
+
+    //    } else {
+
+    //        tqInput.prop('disabled', true);
+    //        tqInputbutton.prop('disabled', true);
+
+    //        if (val.endsWith('-PH')) {
+    //            let newVal = val.replace(/-PH$/, '');
+
+    //            if (input.length)
+    //                input.val(newVal);
+    //            else
+    //                firstCol.text(newVal);
+    //        }
+    //    }
+    //});
+
+    const bg_color_pale_yellow = '#fcf8d1';
+    gridBroadCastBannerCalendarEvents.on('rowDataBound', function (e, $row, id, record) {
+        if (record.isPublicHoliday) {
+           
+                $row.css('background-color', bg_color_pale_yellow);
+            
+          
+            /* add for check if dark mode is on end*/
         }
     });
 }

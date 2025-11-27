@@ -750,6 +750,45 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     border-radius: .25rem;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
-    
+.state-editor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    position: relative;
+}
+
+.ph-label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.dropdown-checklist {
+    position: relative;
+}
+
+.dropdown-btn {
+    width: 110px;
+    padding: 2px 8px;
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 140px;
+    background: white;
+    z-index: 99999;
+    border: 1px solid #ccc;
+    padding: 6px;
+    display: none;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+    .dropdown-list label {
+        display: block;
+    }
+   
     
 

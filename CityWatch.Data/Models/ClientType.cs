@@ -14,5 +14,7 @@ namespace CityWatch.Data.Models
 
         [NotMapped]
         public bool IsSubDomainEnabled { get; set; }
+        [NotMapped]
+        public string Country { get { return "Australia"; } }
     }
 }

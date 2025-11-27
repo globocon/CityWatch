@@ -25,6 +25,8 @@ using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
 using static Dropbox.Api.Files.SearchMatchType;
 using static Dropbox.Api.TeamLog.PaperDownloadFormat;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
+
 //using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -289,6 +291,8 @@ namespace CityWatch.Data.Providers
 
         //public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate);
         //public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, DateTime date);
+        void SavePHStates(int CalendarEventId, string[] States);
+        void DeletePHStates(int CalendarEventId);
 
     }
 
@@ -2697,6 +2701,16 @@ namespace CityWatch.Data.Providers
                 calendarEventsUpdate.IsPublicHoliday = calendarEvents.IsPublicHoliday;
             }
             _context.SaveChanges();
+            if(calendarEvents.IsPublicHoliday==true && calendarEvents.States!=null)
+            {
+               
+                string[] states = calendarEvents.States.Split(',');
+                SavePHStates(calendarEvents.id, states);
+            }
+            else
+            {
+                DeletePHStates(calendarEvents.id);
+            }
         }
 
         public void DeleteCalendarEvents(int id)
@@ -2710,6 +2724,7 @@ namespace CityWatch.Data.Providers
 
             _context.BroadcastBannerCalendarEvents.Remove(calendarEventsToDelete);
             _context.SaveChanges();
+            DeletePHStates(id);
         }
         //to add functions for Calendar events -end
 
@@ -3897,6 +3912,42 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+        public void SavePHStates(int CalendarEventId, string[] States)
+        {
+
+            var getPHStates = _context.PublicHolidayStates.Where(x => x.CalendarEventId == CalendarEventId).ToList();
+            if (getPHStates.Count() > 0)
+            {
+                DeletePHStates(CalendarEventId);
+            }
+            PublicHolidayStates  publicHolidayStates = new PublicHolidayStates();
+            if (States.Count() > 0)
+            {
+                foreach (var item in States)
+                {
+                    publicHolidayStates.Id = 0;
+                    publicHolidayStates.CalendarEventId = CalendarEventId;
+                    publicHolidayStates.State = item;
+                    publicHolidayStates.IsDeleted = false;
+                    _context.PublicHolidayStates .Add(publicHolidayStates);
+                    _context.SaveChanges();
+                }
+                
+            }
+           
+
+        }
+        public void DeletePHStates(int CalendarEventId)
+        {
+            var phStatesToDelete = _context.PublicHolidayStates.Where(x => x.CalendarEventId == CalendarEventId).ToList();
+            if (phStatesToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in phStatesToDelete)
+            {
+                item.IsDeleted = true;
+                _context.SaveChanges();
+            }
         }
     }
 

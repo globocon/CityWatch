@@ -810,5 +810,9 @@ namespace CityWatch.RadioCheck.Pages.Admin
         {
             return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
         }
+        public JsonResult OnGetClientStates()
+        {
+            return new JsonResult(_guardLogDataProvider.GetStates());
+        }
     }
 }
