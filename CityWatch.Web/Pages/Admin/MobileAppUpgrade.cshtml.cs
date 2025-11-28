@@ -112,7 +112,7 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
 
-            return new JsonResult(new { success, message });            
+            return new JsonResult(new { success = success, message = message });            
         }
                 
         public JsonResult OnPostDeleteAppVersion(int id)
@@ -129,7 +129,7 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
 
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success = success, message = message });
         }
 
         public JsonResult OnPostRollBackToAppVersion(int recordId)
@@ -146,7 +146,7 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
 
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success = success, message = message });
         }
 
         private string GetCurrentUrl()
