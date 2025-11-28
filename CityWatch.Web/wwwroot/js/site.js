@@ -7952,27 +7952,23 @@ $("#btnSaveUpgrade").on("click", function () {
     formData.append("AppVersionMajor", $("#AppVersionMajor").val());
     formData.append("AppVersionMinor", $("#AppVersionMinor").val());
     formData.append("AppVersionPatch", $("#AppVersionPatch").val());
-    formData.append("AppVersionNotes", $("#AppVersionNotes").val());
-    alert("1");
+    formData.append("AppVersionNotes", $("#AppVersionNotes").val());    
     var file = $("#AppVersionFileUpload").prop('files')[0];
     if (file) {
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || 'apk'.indexOf(fileExtn) < 0) {
             alert('Please select a valid file type');
             return false;
-        }
-        alert("2");
+        }        
         formData.append("AppVersionFileUpload", file);
     }
     else {
         alert("Please select a file to upload.");
         return;
-    }
-    alert("3");
+    }    
     // Show progress bar
     $("#uploadProgressContainer").removeClass("d-none");
-    $("#uploadProgressBar").css("width", "0%").text("0%");
-    alert("4");
+    $("#uploadProgressBar").css("width", "0%").text("0%");    
     $.ajax({
         url: '/Admin/MobileAppUpgrade?handler=NewAppVersionUpload',
         type: 'POST',
