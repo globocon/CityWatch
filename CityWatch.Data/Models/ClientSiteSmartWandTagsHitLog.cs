@@ -57,5 +57,10 @@ namespace CityWatch.Data.Models
         public string GPScoordinates { get; set; }
         public bool IsSynced { get; set; }
         public Guid UniqueRecordId { get; set; }
+        public DateTime? EventDateTimeLocal { get; set; }
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+        public string EventDateTimeZone { get; set; }
+        public string EventDateTimeZoneShort { get; set; }
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
     }
 }

@@ -459,16 +459,14 @@ namespace CityWatch.Web.API
         //}
 
 
-
-        [HttpGet("PostActivity")]
-        public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
+        [HttpPost("PostActivity")]
+        public IActionResult PostActivity([FromBody] PostActivityRequest request,int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
             int scanningType = 0, string tagUID = "NA")
         {
             try
             {
-                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-                var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(guardId, clientsiteId, userId, activityString,
-                    gps, IPAddress, DateTime.Today, systemEntry, scanningType, tagUID);
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";               
+                var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
 
                 if (!IsSuccessR)
                 {
@@ -483,6 +481,30 @@ namespace CityWatch.Web.API
             }
 
         }
+
+        //[HttpGet("PostActivity")]
+        //public IActionResult PostActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
+        //    int scanningType = 0, string tagUID = "NA")
+        //{
+        //    try
+        //    {
+        //        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        //        var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(guardId, clientsiteId, userId, activityString,
+        //            gps, IPAddress, DateTime.Today, systemEntry, scanningType, tagUID);
+
+        //        if (!IsSuccessR)
+        //        {
+        //            return BadRequest(new { message = msgR });
+        //        }
+
+        //        return Ok(new { message = msgR, guardLoginId = guardLoginIdR });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        //    }
+
+        //}
 
 
 
