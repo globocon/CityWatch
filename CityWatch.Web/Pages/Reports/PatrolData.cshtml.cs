@@ -418,7 +418,7 @@ namespace CityWatch.Web.Pages.Reports
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
             var sitePercentage = patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray();
             var excludedAreas = new[] { "Select", "0" };
-            var areaWardPercentage = patrolDataReport.AreaWardPercentage.Where(z => !excludedAreas.Contains(z.Key)).OrderByDescending(z => z.Key).ToArray();
+            var areaWardPercentage = patrolDataReport.AreaWardPercentage.Where(z => !excludedAreas.Contains(z.Key)).OrderBy(z => z.Key).ToArray();
             var eventTypePercentage = patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray();
             var eventTypeCount = patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray();
             var colorCodePercentage = patrolDataReport.ColorCodePercentage.OrderBy(z => z.Key).ToArray();
