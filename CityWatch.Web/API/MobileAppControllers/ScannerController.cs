@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
@@ -64,8 +65,8 @@ namespace CityWatch.Web.API
             }
         }
 
-        [HttpGet("GetNFCtagInfoData")]
-        public async Task<IActionResult> GetNFCtagInfoData(int siteId, string TagUid, int GuardId, int UserId, int? SmartWandId = null)
+        [HttpGet("GetScannerTagInfoData")]
+        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId,int TagsTypeId, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -74,7 +75,8 @@ namespace CityWatch.Web.API
 
             try
             {
-                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandNFCHitLogRecord(siteId, TagUid, GuardId, UserId, false, Guid.NewGuid(), DateTime.UtcNow, SmartWandId);
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false, 
+                    Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
                 TagFound = TagFoundR;
@@ -92,7 +94,6 @@ namespace CityWatch.Web.API
         public async Task<IActionResult> SyncOfflineSmartWandTagHitData([FromBody] List<ClientSiteSmartWandTagsHitLogCacheOffline> offlineRecords)
         {
             var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-            bool systemEntry = true;
             if (offlineRecords != null && offlineRecords.Count > 0)
             {
                 foreach (var offlineRecord in offlineRecords)
@@ -100,16 +101,31 @@ namespace CityWatch.Web.API
                     try
                     {
                         //Save tag hit 
-                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandNFCHitLogRecord(offlineRecord.LoggedInClientSiteId,
+                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
                             offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
-                            offlineRecord.HitUtcDateTime, offlineRecord.SmartWandId);
+                            offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.SmartWandId);
 
                         if (IsSuccessR)
                         {
+                            PostActivityRequest request = new PostActivityRequest()
+                            {
+                                guardId = offlineRecord.LoggedInGuardId,
+                                clientsiteId = offlineRecord.LoggedInClientSiteId,
+                                userId = offlineRecord.LoggedInUserId,
+                                activityString = TagInfoLabelR,
+                                gps = offlineRecord.GPScoordinates,
+                                systemEntry = true,
+                                scanningType = offlineRecord.TagsTypeId,
+                                tagUID = offlineRecord.TagUId,
+                                EventDateTimeLocal = offlineRecord.EventDateTimeLocal,
+                                EventDateTimeLocalWithOffset = offlineRecord.EventDateTimeLocalWithOffset,
+                                EventDateTimeZone = offlineRecord.EventDateTimeZone,
+                                EventDateTimeZoneShort = offlineRecord.EventDateTimeZoneShort,
+                                EventDateTimeUtcOffsetMinute = offlineRecord.EventDateTimeUtcOffsetMinute,
+                            };
+
                             //Create Logbook entries                        
-                            var (IsSuccessLR, msgLR, guardLoginIdLR) = _mobileAppDataServices.PostMobileLogActivity(offlineRecord.LoggedInGuardId,
-                                offlineRecord.LoggedInClientSiteId, offlineRecord.LoggedInUserId, TagInfoLabelR, offlineRecord.GPScoordinates, IPAddress,
-                                offlineRecord.HitLocalDateTime, systemEntry, offlineRecord.TagsTypeId, offlineRecord.TagUId);
+                            var (IsSuccessLR, msgLR, guardLoginIdLR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
 
                             offlineRecord.IsSynced = true;
                             Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
