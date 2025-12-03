@@ -328,11 +328,13 @@ namespace CityWatch.Kpi.Models
                     return decimal.Zero;
 
                 decimal totalExpected = (decimal)data.Sum(x => x.EmployeeHours);
-
-                decimal totalVariation = (decimal)data.Sum(x =>
+                var act = data.Where(z => z.ActualEmployeeHours != null && z.ActualEmployeeHours != 0).ToList();
+                decimal totalVariation = (decimal)data.Where(z => z.ActualEmployeeHours != null && z.ActualEmployeeHours > 0).Sum(x =>
                     x.ActualEmployeeHours.GetValueOrDefault() - x.EmployeeHours
                 );
                 decimal result = totalExpected + totalVariation;
+                if (result == 0)
+                    return totalExpected;
                 return result;   // Final Actual Value
             }
         }
