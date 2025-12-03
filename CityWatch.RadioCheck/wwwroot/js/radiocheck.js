@@ -532,7 +532,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'guardName',
             width: '15%',
-            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
+          //  orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
 
                 if (showButtonsActive) {
