@@ -318,7 +318,7 @@ $(function () {
 
 
         // footer row 2 - percentage
-        $('#report_footer_2').find('th:eq(6)').text(parseFloat(response.data.wandFqPercentage).toFixed(2) + ' %');
+        $('#report_footer_2').find('th:eq(6)').text();
       
 
         const siteScorePercentage = response.data.siteScorePercentage ? parseFloat(response.data.siteScorePercentage).toFixed(2) : 0;

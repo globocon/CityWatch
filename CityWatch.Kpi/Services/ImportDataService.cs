@@ -7,9 +7,13 @@ using CityWatch.Kpi.Models;
 using Dropbox.Api;
 using Dropbox.Api.Common;
 using Dropbox.Api.Files;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -311,97 +315,225 @@ namespace CityWatch.Kpi.Services
             return dailyLogCounts;
         }
 
-
-
-
         private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
-    List<DateTime> kpiDates,
-    int clientSiteId)
+      List<DateTime> kpiDates,
+      int clientSiteId)
         {
-            var result = new Dictionary<DateTime, DailyIrCount>();
+            if (kpiDates == null || kpiDates.Count == 0)
+                return new Dictionary<DateTime, DailyIrCount>();
 
-            DateTime fromDate = kpiDates.Min();
-            DateTime toDate = kpiDates.Max().AddDays(1); // include entire end date
+            DateTime fromDate = kpiDates.Min().Date;
+            DateTime toDate = kpiDates.Max().Date;
 
-            // ---- STEP 1: Load UTC offset for this client site ----
-            var site = _dbContext.ClientSiteKpiSettings
+            // 1. Load timezone
+            var timezone = await _dbContext.ClientSiteKpiSettings
                 .Where(x => x.ClientSiteId == clientSiteId)
-                .Select(x => new
-                {
-                    x.ClientSiteId,
-                    UtcString = x.UTC ?? "+10:00"
-                })
-                .FirstOrDefault();
+                .Select(x => x.TimezoneString)
+                .FirstOrDefaultAsync()
+                ?? "AUS Eastern Standard Time";
 
-            if (site == null)
-                throw new Exception("ClientSiteKpiSettings missing UTC value.");
+            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
 
-            // Parse "+05:30" → TimeSpan
-            if (!TimeSpan.TryParse(site.UtcString, out TimeSpan offset))
-                offset = TimeSpan.Zero;
-
-            // ---- STEP 2: Convert local date range → UTC ----
-            DateTime fromUtc = fromDate - offset;
-            DateTime toUtc = toDate - offset;
-
-            // ---- STEP 3: Get all hits for this site within UTC range ----
-            var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
-                .Where(x =>
-                    x.HitUtcDateTime >= fromUtc &&
-                    x.HitUtcDateTime < toUtc &&
-                    (x.LoggedInClientSiteId == clientSiteId ||
-                     (x.TagLinkedClientSiteId.HasValue &&
-                      x.TagLinkedClientSiteId.Value == clientSiteId)))
-                .ToList();
-
-            // ---- STEP 4: Convert UTC → Local using the SAME logic ----
-            var localLogs = logs
-                .Select(l => new
-                {
-                    TagUId = l.TagUId,
-                    LocalDate = (l.HitUtcDateTime + offset).Date
-                })
-                .ToList();
-
-            // ---- STEP 5: Load tags for FQ (same site) ----
-            var tags = _dbContext.ClientSiteSmartWandTags
+            // 2. Load tags
+            var siteTags = await _dbContext.ClientSiteSmartWandTags
                 .Where(t => t.ClientSiteId == clientSiteId && !t.IsDeleted)
-                .Select(t => new { t.UId, t.FqBypass })
+                .Select(t => new
+                {
+                    t.UId,
+                    t.FqBypass
+                })
+                .ToListAsync();
+
+            // 3. Load hits
+            var rawHits = await _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(h => h.LoggedInClientSiteId == clientSiteId)
+                .ToListAsync();
+
+            // Convert all hit dates into local time
+            var tagHitsLocal = rawHits
+                .Select(h => new
+                {
+                    h.TagUId,
+                    LocalDate = TimeZoneInfo.ConvertTimeFromUtc(h.HitUtcDateTime, tz).Date
+                })
+                .Where(h => h.LocalDate >= fromDate && h.LocalDate <= toDate)
                 .ToList();
 
-            // ---- STEP 6: Per day calculation ----
-            for (var date = fromDate; date < toDate; date = date.AddDays(1))
-            {
-                var hitsForDay = localLogs
-                    .Where(x => x.LocalDate == date.Date)
-                    .ToList();
+            // 4. Generate all dates (CROSS JOIN equivalent)
+            var allDates = Enumerable.Range(0, (toDate - fromDate).Days + 1)
+                                     .Select(i => fromDate.AddDays(i))
+                                     .ToList();
 
-                // Count all scans per tag
-                var perTagCounts = tags
-                    .Select(t => new
+            // 5. CROSS JOIN tags × dates and count hits
+            var tagScanCounts =
+                (from t in siteTags
+                 from d in allDates   // CROSS JOIN
+                 let scanCount = tagHitsLocal.Count(h => h.TagUId == t.UId &&
+                                                        h.LocalDate == d)
+                 select new
+                 {
+                     Date = d,
+                     t.FqBypass,
+                     ScanCount = scanCount
+                 }).ToList();
+
+            // 6. Completed Rounds = MIN(scanCount) among non-bypass tags
+            var result = tagScanCounts
+                .Where(x => x.FqBypass == false)
+                .GroupBy(x => x.Date)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new DailyIrCount
                     {
-                        t.UId,
-                        t.FqBypass,
-                        ScanCount = hitsForDay.Count(h => h.TagUId == t.UId)
-                    })
-                    .ToList();
+                        Date = g.Key,
+                        Count = g.Min(x => x.ScanCount)
+                    });
 
-                // FQ = min scans among NON-bypass tags
-                int fq = perTagCounts
-                    .Where(x => x.FqBypass == false)
-                    .Select(x => x.ScanCount)
-                    .DefaultIfEmpty(0)
-                    .Min();
-
-                result[date.Date] = new DailyIrCount
+            // 7. Ensure KPI dates exist
+            foreach (var date in kpiDates.Select(x => x.Date))
+            {
+                if (!result.ContainsKey(date))
                 {
-                    Date = date.Date,
-                    Count = fq
-                };
+                    result[date] = new DailyIrCount
+                    {
+                        Date = date,
+                        Count = 0
+                    };
+                }
             }
 
             return result;
         }
+
+
+
+
+        //   private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
+        //List<DateTime> kpiDates,
+        //int clientSiteId)
+        //   {
+        //       if (kpiDates == null || !kpiDates.Any())
+        //           return new Dictionary<DateTime, DailyIrCount>();
+
+        //       DateTime fromDate = kpiDates.Min();
+        //       DateTime toDate = kpiDates.Max();
+        //       // 1. Load timezone (default fallback same as SP)
+        //       var timezone = await _dbContext.ClientSiteKpiSettings
+        //           .Where(x => x.ClientSiteId == clientSiteId)
+        //           .Select(x => x.TimezoneString)
+        //           .FirstOrDefaultAsync()
+        //           ?? "AUS Eastern Standard Time";
+
+        //       TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+        //       // 2. Equivalent to SiteTags CTE
+        //       var siteTags = await _dbContext.ClientSiteSmartWandTags
+        //           .Where(x => x.IsDeleted == false && x.ClientSiteId == clientSiteId)
+        //           .Select(x => new
+        //           {
+        //               x.ClientSiteId,
+        //               TagUId = x.UId,
+        //               x.FqBypass
+        //           })
+        //           .ToListAsync();
+
+        //       // 3. Equivalent to TagHits CTE  
+        //       var tagHits = await _dbContext.ClientSiteSmartWandTagsHitLogs
+        //           .Where(x => x.LoggedInClientSiteId == clientSiteId)
+        //           .ToListAsync();
+
+        //       var tagHitsLocal = tagHits
+        //           .Select(h =>
+        //           {
+        //               var localDate = TimeZoneInfo.ConvertTimeFromUtc(h.HitUtcDateTime, tz).Date;
+
+        //               return new
+        //               {
+        //                   ClientSiteId = h.LoggedInClientSiteId,
+        //                   h.TagUId,
+        //                   HitLocalDate = localDate
+        //               };
+        //           })
+        //           .Where(h => h.HitLocalDate >= fromDate.Date && h.HitLocalDate <= toDate.Date)
+        //           .ToList();
+
+        //       // 4. Equivalent to TagScanCounts CTE  
+        //       var tagScanCounts =
+        //           from t in siteTags
+        //           join h in tagHitsLocal
+        //               on new { t.ClientSiteId, t.TagUId } equals new { h.ClientSiteId, h.TagUId }
+        //               into gj
+        //           from hit in gj.DefaultIfEmpty()
+        //           group hit by new
+        //           {
+        //               t.ClientSiteId,
+        //               t.TagUId,
+        //               t.FqBypass,
+        //               Date = hit?.HitLocalDate
+        //           }
+        //           into g
+        //           select new
+        //           {
+        //               g.Key.ClientSiteId,
+        //               g.Key.TagUId,
+        //               g.Key.FqBypass,
+        //               g.Key.Date,
+        //               ScanCount = g.Count(x => x != null)
+        //           };
+
+        //       var tagScanList = tagScanCounts.ToList();
+
+        //       // 5. Final SELECT (Completed rounds per date)
+        //       var result =
+        //           tagScanList
+        //           .Where(x => x.FqBypass == false)         // Only non-bypassed tags
+        //           .Where(x => x.Date != null)         // Prevent null
+        //           .GroupBy(x => x.Date.Value)
+        //           .Select(g => new DailyIrCount
+        //           {
+        //               Date = g.Key,
+        //               Count = g.Min(x => x.ScanCount)
+        //           })
+        //           .OrderBy(x => x.Date)
+        //           .ToList();
+
+        //       // FIX: return dictionary
+        //       return result.ToDictionary(x => x.Date, x => x);
+
+        //       //// Get the date range
+        //       //DateTime fromDate = kpiDates.Min();
+        //       //DateTime toDate = kpiDates.Max();
+        //       //// Create strongly-typed SQL parameters
+        //       //var pClientId = new SqlParameter("@ClientId", clientSiteId);
+
+        //       //var pFrom = new SqlParameter("@FromDate", fromDate)
+        //       //{
+        //       //    DbType = System.Data.DbType.Date
+        //       //};
+
+        //       //var pTo = new SqlParameter("@ToDate", toDate)
+        //       //{
+        //       //    DbType = System.Data.DbType.Date
+        //       //};
+
+        //       //// ⭐ IMPORTANT: use named parameters, NOT {0},{1},{2}
+        //       //var spResult =  _dbContext.Set<DailyNFCCount>()
+        //       //    .FromSqlRaw(
+        //       //        "EXEC GetCompletedRoundsPerDate @ClientId, @FromDate, @ToDate",
+        //       //        pClientId, pFrom, pTo)
+        //       //    .ToList();
+        //       //// Call the stored procedure
+        //       ////        var spResult = await _dbContext.Set<DailyIrCount>()
+        //       ////.FromSqlRaw(
+        //       ////    "EXEC [dbo].[GetCompletedRoundsPerDate] @ClientId = {0}, @FromDate = {1}, @ToDate = {2}",
+        //       ////    clientSiteId, fromDate, toDate)
+        //       ////.ToListAsync();
+
+        //       //var result = spResult.ToDictionary(x => x.Date, x => x);
+
+        //       //return result;
+        //   }
+
 
 
 

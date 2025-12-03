@@ -32,7 +32,7 @@ namespace CityWatch.Kpi.Services
 {
     public interface IReportGenerator
     {
-        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false,bool IsDownselect=false, int CriticalDocumentID=0);
+        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false, bool IsDownselect = false, int CriticalDocumentID = 0);
         public string GeneratePdfTimesheetReport(int clientSiteId);
     }
 
@@ -92,7 +92,7 @@ namespace CityWatch.Kpi.Services
                 IO.Directory.CreateDirectory(_graphImageRootDir);
         }
 
-        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused,bool IsDownselect,int CriticalDocumentID)
+        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused, bool IsDownselect, int CriticalDocumentID)
         {
             var _clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
             if (_clientSiteKpiSetting == null)
@@ -203,8 +203,8 @@ namespace CityWatch.Kpi.Services
             var headerTable = CreateReportHeader(_clientSiteKpiSetting);
             doc.Add(headerTable);
 
-            
-           
+
+
             doc.Close();
             pdfDoc.Close();
 
@@ -241,7 +241,7 @@ namespace CityWatch.Kpi.Services
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph(string.Empty)));
 
-          
+
 
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
@@ -344,13 +344,18 @@ namespace CityWatch.Kpi.Services
              .Add(new Paragraph($"{monthlyKpiResult.WandPatrolsPercentage:0.00}%")));
 
 
-            table.AddCell(new Cell(1, 1)
-            .SetFontSize(CELL_FONT_SIZE)
-            .SetTextAlignment(TextAlignment.RIGHT)
-            .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-            .Add(new Paragraph($"{monthlyKpiResult.WandFqPercentage:0.00}%"))); // *** Fq Column Added Here ***
+            //table.AddCell(new Cell(1, 1)
+            //.SetFontSize(CELL_FONT_SIZE)
+            //.SetTextAlignment(TextAlignment.RIGHT)
+            //.SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+            //.Add(new Paragraph($"{monthlyKpiResult.WandFqPercentage:0.00}%"))); // *** Fq Column Added Here ***
 
-           
+            table.AddCell(new Cell(1, 1)
+    .SetFontSize(CELL_FONT_SIZE)
+    .SetTextAlignment(TextAlignment.RIGHT)
+    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
+    .Add(new Paragraph("")));
+
 
             table.AddCell(new Cell(1, 1)
                .SetFontSize(CELL_FONT_SIZE)
@@ -624,7 +629,7 @@ namespace CityWatch.Kpi.Services
 
             //Missing Fq column — add blank cell
             table.AddCell(CreateDataCell(item.WandScanFq.ToString()));
-           
+
 
             //DAILY LOG 2HR TIMER
             cellColor = string.Empty;
@@ -848,7 +853,7 @@ namespace CityWatch.Kpi.Services
 
             return kpiGuardTable;
         }
-        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect,int CriticalDocumentID)
+        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
 
             var guards = monthlyDataGuard
@@ -871,7 +876,7 @@ namespace CityWatch.Kpi.Services
             var HTList = new List<HrSettings>();
             if (IsDownselect == true)
             {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id,CriticalDocumentID);
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
             }
             else
             {
@@ -889,13 +894,14 @@ namespace CityWatch.Kpi.Services
                 {
                     var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                     var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                    if (SelctedStateExist.Count!=0 && SelctedSiteExist.Count != 0) {
+                    if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                    {
                         shouldAddCells = true;
                     }
-                  
-                    else if (SelctedSiteExist.Count != 0 )
+
+                    else if (SelctedSiteExist.Count != 0)
                     {
-                        if(SelctedStateExist.Count != 0)
+                        if (SelctedStateExist.Count != 0)
                         {
                             shouldAddCells = true;
                         }
@@ -903,7 +909,7 @@ namespace CityWatch.Kpi.Services
                         {
                             shouldAddCells = true;
                         }
-                        
+
                     }
                 }
                 else
@@ -919,22 +925,23 @@ namespace CityWatch.Kpi.Services
             int[] countsArray = complianceDataCounts.ToArray();
             int largestNumber = referenceNoCount;
 
-            
+
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
-            
+
             // #### P1#213S_Colum width -- 11-07-2024 - Binoy Start
             var rc = UnitValue.CreatePercentArray(largestNumber + 2);
-            int restcolwidth=0;
-            if (largestNumber > 0) {
+            int restcolwidth = 0;
+            if (largestNumber > 0)
+            {
                 var totcols = largestNumber + 2;
                 var tottblwidth = 523; // Total width of Table as per iText7 documentation
-                 restcolwidth = ((tottblwidth - 130) / (totcols - 2));
+                restcolwidth = ((tottblwidth - 130) / (totcols - 2));
             }
             if (Id == 1)
             {
-                columnPercentages= new float[largestNumber + 3];
-                rc= UnitValue.CreatePercentArray(largestNumber + 3);
+                columnPercentages = new float[largestNumber + 3];
+                rc = UnitValue.CreatePercentArray(largestNumber + 3);
                 if (largestNumber > 0)
                 {
                     var totcols = largestNumber + 3;
@@ -963,13 +970,13 @@ namespace CityWatch.Kpi.Services
                 }
                 j++;
             }
-                        
+
             var kpiGuardTable = new Table(rc).UseAllAvailableWidth();
             // #### P1#213S_Colum width -- 11-07-2024 - Binoy End
 
             //var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
 
-            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState,IsDownselect,CriticalDocumentID);
+            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
 
             var GropuNamee1 = RemoveBrackets(hrGroupName);
             int maxComplianceCount = 0;
@@ -1000,10 +1007,10 @@ namespace CityWatch.Kpi.Services
                 {
                     string DOH = guard.DateEnrolled.HasValue
                             ? guard.DateEnrolled.Value.ToString("dd/MM/yyyy")
-                            : string.Empty; 
+                            : string.Empty;
                     kpiGuardTable.AddCell(CreateDataCell(DOH));
                 }
-                   
+
 
                 var HTList1 = _viewDataService.GetHRSettings(Id);
 
@@ -1035,7 +1042,7 @@ namespace CityWatch.Kpi.Services
 
                         else if (SelctedSiteExist.Count != 0)
                         {
-                            if(SelctedStateExist.Count != 0)
+                            if (SelctedStateExist.Count != 0)
                             {
                                 var filteredItem = new FilteredHrSettings
                                 {
@@ -1063,9 +1070,9 @@ namespace CityWatch.Kpi.Services
                                 // Add the filtered item to the filterHR list
                                 FilterHR.Add(filteredItem);
                             }
-                           
+
                         }
-                        
+
                     }
                     else
                     {
@@ -1163,9 +1170,9 @@ namespace CityWatch.Kpi.Services
                             {
                                 kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                             }
-                            
+
                         }
-                        
+
                         else
                         {
                             cellColor = "white";
@@ -1206,7 +1213,7 @@ namespace CityWatch.Kpi.Services
             string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
             return Regex.Replace(input, pattern, string.Empty);
         }
-       
+
         private Table CreateGuardDetailsLicenseAndComplianceHR1(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
             int HTListCount = 0;
@@ -1282,8 +1289,8 @@ namespace CityWatch.Kpi.Services
                 .Add(CreateGuardDetailsLicenseAndComplianceHRTbl3(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID)));
             }
             return graphTable;
-        
-    }
+
+        }
 
         private Table CreateGuardDetailsLicenseAndComplianceHRTbl1(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
@@ -1380,7 +1387,7 @@ namespace CityWatch.Kpi.Services
             return kpiGuardTable1;
 
         }
-       
+
         private Table CreateGuardDetailsLicenseAndComplianceHRTbl3(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
 
@@ -1453,7 +1460,7 @@ namespace CityWatch.Kpi.Services
 
             return filteredList;
         }
-        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect, int CriticalDocumentID)
+        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
 
             float[] columnPercentages = new float[2];
@@ -1462,7 +1469,7 @@ namespace CityWatch.Kpi.Services
 
             CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
             var HTList = new List<HrSettings>();
-            if (IsDownselect==true)
+            if (IsDownselect == true)
             {
                 HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
             }
@@ -1470,7 +1477,7 @@ namespace CityWatch.Kpi.Services
             {
                 HTList = _viewDataService.GetHRSettings(Id);
             }
-             
+
             if (HTList.Count > 0)
             {
                 foreach (var item in HTList)
@@ -1486,7 +1493,7 @@ namespace CityWatch.Kpi.Services
                             kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
                             kpiGuardTable1.AddCell(CreateDataCell(item.Description));
                         }
-                        else if (SelctedSiteExist.Count != 0 )
+                        else if (SelctedSiteExist.Count != 0)
                         {
                             if (SelctedStateExist.Count != 0)
                             {
@@ -1499,7 +1506,7 @@ namespace CityWatch.Kpi.Services
                                 kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
                                 kpiGuardTable1.AddCell(CreateDataCell(item.Description));
                             }
-                            
+
                         }
                     }
                     else
@@ -1670,7 +1677,7 @@ namespace CityWatch.Kpi.Services
                 throw;
             }
         }
-        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState,bool IsDownselect,int CriticalDocumentID)
+        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
             //if (hrGroupname == "HR3 (Special)")
@@ -1729,7 +1736,7 @@ namespace CityWatch.Kpi.Services
                                       .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                                       .Add(new Paragraph().Add(new Text(hrGroupname))));
                 }
-                   
+
                 char[] suffixes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
                 foreach (var item in HTList)
@@ -1754,7 +1761,7 @@ namespace CityWatch.Kpi.Services
                         }
                         else if (SelctedSiteExist.Count != 0)
                         {
-                            if(SelctedStateExist.Count != 0)
+                            if (SelctedStateExist.Count != 0)
                             {
                                 var referenceNo = item.ReferenceNo;
 
@@ -1772,7 +1779,7 @@ namespace CityWatch.Kpi.Services
                                     .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                                     .Add(new Paragraph().Add(new Text(referenceNo))));
                             }
-                            
+
                         }
                     }
                     else
@@ -1794,7 +1801,7 @@ namespace CityWatch.Kpi.Services
                 {
                     table.AddCell(CreateHeaderCell("DOH"));
                 }
-               
+
 
                 var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
                 List<GuardComplianceAndLicense> monthlyDataGuardComplianceData1 = null; // Declare and initialize HRGroupList
@@ -1831,9 +1838,9 @@ namespace CityWatch.Kpi.Services
                             {
                                 table.AddCell(CreateHeaderCell(""));
                             }
-                            
+
                         }
-                        
+
                     }
                     else
                     {
@@ -1932,7 +1939,7 @@ namespace CityWatch.Kpi.Services
             var colorCodeChartImage = GetChartImage(patrolDataReport.ColorCodePercentage.OrderByDescending(z => z.Value).ToArray());
             chartDataTable.AddCell(GetChartImageCell(colorCodeChartImage));
 
-           
+
             return chartDataTable;
         }
 
