@@ -26,6 +26,17 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="kvschedule-tab" data-toggle="tab" href="#kvschedule" role="tab" aria-controls="kvschedule-tab" aria-selected="true">KV</a>
         </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link"
+               id="pcarrutes-tab"
+               data-toggle="tab"
+               href="#pcarrutes"
+               role="tab"
+               aria-controls="pcarrutes"
+               aria-selected="true">
+                PCAR Routes
+            </a>
+        </li>
     </ul>
 
     <div class="tab-content p-3">
@@ -345,6 +356,33 @@
                 </div>
             </div>
         </div>
+
+        @* //PCAR Rute *@
+        <div class="tab-pane" id="pcarrutes" role="tabpanel" aria-labelledby="pcarrutes-tab">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="form-group row">
+                        <div class="text-right pl-2">
+                            <button class="btn btn-success mb-3"
+                                    id="add_kpi_pcarrutes"
+                                    data-toggle="modal"
+                                    data-target="#pcar-modal">
+                                <i class="fa fa-plus mr-2"></i>Add PCAR Rutes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table" id="kpi_send_pcarrutes"></table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 <partial name="_SchedulePopup" />

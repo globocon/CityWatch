@@ -429,6 +429,10 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         guard.IsMobileAppPlusTags = true;
                     }
+                    else if (val ==17)
+                    {
+                        guard.IsPCARAccess = true;
+                    }
                 }
             }
             if (!ModelState.IsValid)

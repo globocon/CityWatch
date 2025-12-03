@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using static Dropbox.Api.Files.WriteMode;
 
 
@@ -60,6 +61,7 @@ namespace CityWatch.Kpi.Services
         public List<SelectListItem> KPITelematicsList();
         public KPITelematicsField GetMobileNo(int Id);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
+        List<SelectListItem> getSmartWandForTourmodel();
     }
 
     public class ViewDataService : IViewDataService
@@ -666,6 +668,30 @@ namespace CityWatch.Kpi.Services
                 }
             }
             return Enumerable.Empty<string>();
+        }
+
+
+        public List<SelectListItem> getSmartWandForTourmodel()
+        {
+            var items = new List<SelectListItem>
+    {
+        new SelectListItem("Select", "", true)
+    };
+
+            var smartWandList = _configDataProvider.GetSmartWandList();
+
+            // Pattern to match [R<number>]
+            string pattern = @"\[R\d+\]";
+
+            items.AddRange(smartWandList.Select(sw =>
+                new SelectListItem
+                {
+                    Text =sw.SmartWandId+" "+ Regex.Replace(sw.PhoneNumber, pattern, "").Trim(),
+                    Value = sw.Id.ToString()
+                }
+            ));
+
+            return items;
         }
 
     }

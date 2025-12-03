@@ -7,53 +7,74 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Roster;
 
 }
-<div class="row">
-    <div class="col-sm-2"></div>
-    @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
-   {
-    <div class="col-sm-2" style="padding-top:90px">
-        <div class="col-sm-2" style="padding-left:29px"> <h3>BOOKING</h3></div>
-        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
-            <a href="javascript:void(0);" id="AnBooking">
-                <img src="~/images/CalendarWithHand.png" class="center" />
-               
-            </a>
-        </div>
-        </div>
-    }
-    else
-    {
-        <div class="col-sm-2" style="padding-top:90px" >
-            <div class="col-sm-2" style="padding-left:29px"> <h3>BOOKING</h3></div>
-            <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
-                <a href="javascript:void(0);" id="AnBooking" disabled>
-                    <img src="~/images/CalendarWithHand.png" class="center" />
+<div class="row  text-center" style="padding-top:90px;">
 
+
+
+
+ 
+
+        <!-- BOOKING -->
+        <div class="col-sm-3">
+            <h3>BOOKING</h3>
+
+        @if (AuthUserHelper.IsAdminUserLoggedIn
+            || AuthUserHelper.IsAdminGlobal
+            || AuthUserHelper.IsAdminPowerUser
+            || AuthUserHelper.IsAdminAuditor
+            || AuthUserHelper.IsAdminThirdParty
+            || AuthUserHelper.IsAdminInvestigator)
+        {
+                <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                    <a href="javascript:void(0);" id="AnBooking">
+                        <img src="~/images/CalendarWithHand.png" class="center" />
+                    </a>
+                </div>
+        }
+        else
+        {
+                <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto; opacity:0.4;">
+                    <a href="javascript:void(0);" id="AnBooking" disabled style="pointer-events:none;">
+                        <img src="~/images/CalendarWithHand.png" class="center" />
+                    </a>
+                </div>
+        }
+        </div>
+
+        <!-- ROSTERS -->
+        <div class="col-sm-3">
+            <h3>ROSTERS</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                <a href="https://app.guardhousehq.com/au/account/login/" id="Ancompanysop3">
+                    <img src="~/images/calender.png" class="center" />
                 </a>
             </div>
         </div>
-    }
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2" style="padding-top:90px">
-        <div class="col-sm-2" style="padding-left:29px"> <h3>ROSTERS</h3></div>
-        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
-            <a href="https://app.guardhousehq.com/au/account/login/" id="Ancompanysop3">
-                <img src="~/images/calender.png" class="center" />
-            </a>
+
+        <!-- PCAR ROUTE -->
+        <div class="col-sm-3">
+            <h3>PCAR ROUTE</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto; text-align:center;">
+                <a href="javascript:void(0);" id="AnPcarCars">
+                    <i class="fa fa-car" style="font-size:48px;"></i>
+                </a>
+            </div>
         </div>
-    </div>
-    
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2" style="padding-top:90px">
-        <div class="col-sm-2"> <h3>TIMESHEETS</h3></div>
-        <div id="dvcompanysop1" style="width:149px;border: 3px solid grey;padding: 50px;margin: 20px;">
-            <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
-                <img src="~/images/Timesheet.jpg" class="center" />
-            </a>
+
+        <!-- TIMESHEETS -->
+        <div class="col-sm-3">
+            <h3>TIMESHEETS</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
+                    <img src="~/images/Timesheet.jpg" class="center" />
+                </a>
+            </div>
         </div>
-    </div>
-    
+
 </div>
+
+    
+
 @* <div id="dvDownloadSelecterOuter">
     <h3>Timesheet</h3> <!-- Heading outside the div -->
     <div>

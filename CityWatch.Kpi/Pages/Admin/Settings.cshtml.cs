@@ -28,6 +28,7 @@ using CityWatch.Common.Services;
 using System.Security.Policy;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -1848,6 +1849,79 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+
+
+        public JsonResult OnPostCreateProfile(int routeId, string pcarroutename, int smartwandallocation)
+        {
+            if (string.IsNullOrWhiteSpace(pcarroutename))
+                return new JsonResult(new { success = false, message = "Route name is required." });
+
+            // NEW VALIDATION
+            if (smartwandallocation == 0)
+                return new JsonResult(new { success = false, message = "Please select at least one Smart Wand Allocation." });
+
+            // Call your validated save method
+            var result = _kpiSchedulesDataProvider.SavePcarrouteMaster(
+                routeId == 0 ? (int?)null : routeId,
+                pcarroutename,
+                smartwandallocation
+            );
+
+            // Validation failed?
+            if (!result.success)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = result.message
+                });
+            }
+
+            // Success — return new or updated route
+            return new JsonResult(new
+            {
+                success = true,
+                message = result.message,
+                routeId = result.route.Id
+            });
+        }
+
+
+
+        public JsonResult OnPostDeletePCarProfile(int RouteId)
+        {
+
+
+            var result = _kpiSchedulesDataProvider.DeletePcarrouteProfile(RouteId);
+
+            if (!result)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = "Failed to delete profile."
+                });
+            }
+
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Profile deleted successfully.",
+                routeId = RouteId
+            });
+        }
+
+
+        public JsonResult OnPostSaveRouteDetails(PcarRouteDetailViewModel model)
+        {
+            if (model.PcarRouteId == 0 || model.ClientSiteIds == null || !model.ClientSiteIds.Any())
+                return new JsonResult(new { success = false, message = "Invalid Profile or Client Sites." });
+
+            _kpiSchedulesDataProvider.SavePcarrouteDetails(model);
+            return new JsonResult(new { success = true });
+        }
+
+
         public JsonResult OnGetKpiTimesheetSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -2400,6 +2474,37 @@ namespace CityWatch.Kpi.Pages.Admin
 
            
         }
+
+
+        public JsonResult OnGetPCARProfiles()
+        {
+           
+            return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesAll());
+                
+
+
+        }
+
+        public JsonResult OnGetPCARRouteDetails(int id)
+        {
+           
+            return (_configDataProvider.GetPCARRouteDetails(id));
+
+        }
+
+        public JsonResult OnPostRemovePcarRouteSites([FromBody] RemoveRouteSitesModel model)
+        {
+            var result = _configDataProvider.RemovePCarDeatils(model.PcarRouteId, model.ClientSiteIds);
+
+            return new JsonResult(new { success = result });
+        }
+
+        public class RemoveRouteSitesModel
+        {
+            public int PcarRouteId { get; set; }
+            public List<int> ClientSiteIds { get; set; }
+        }
+
         public JsonResult OnPostSaveKpiKVSchedule(KpiKVScheduleViewModel kpiSendKVViewModel)
         {
             var results = new List<ValidationResult>();

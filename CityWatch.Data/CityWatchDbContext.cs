@@ -231,6 +231,10 @@ namespace CityWatch.Data
         public DbSet<HandoverNotes> HandoverNotes { get; set; }
         public DbSet<MobileLogActivityProfile> MobileLogActivityProfile { get; set; }
 
+        //  PCAR Route Master and Detail
+        public DbSet<PcarRoute> PcarRoute { get; set; }
+        public DbSet<PcarRouteDetails> PcarRouteDetails { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
@@ -241,7 +245,11 @@ namespace CityWatch.Data
             modelBuilder.Entity<SiteTagStatusPendingNew>().HasNoKey();
             modelBuilder.Entity<GuardLogDto>().HasNoKey();
             modelBuilder.Entity<GuardLogRawProjection>().HasNoKey();
-            
+            modelBuilder.Entity<PcarRoute>()
+          .HasMany(r => r.RouteDetails)
+          .WithOne(d => d.PcarRoute)
+          .HasForeignKey(d => d.PcarRouteId)
+          .OnDelete(DeleteBehavior.Cascade);
 
 
         }
