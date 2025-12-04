@@ -843,24 +843,25 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 //hide fq column based on the user role 
 clientSiteActiveGuards.column("completedRoundsCol:name").visible(userRole === "1");
 
+//ordering issue commented by jisha start -04-12-2025
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
-$(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
-    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
-    var index = clientSiteActiveGuards.column(this).index();
-    var currentOrder = clientSiteActiveGuards.order()[0];
-    if (index === 3) {
-        if (currentOrder[1] === 'asc') {
-            clientSiteActiveGuards.order([groupColumnSortAlias, 'desc']).draw();
-        }
+//$(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
+//    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired
+//    var index = clientSiteActiveGuards.column(this).index();
+//    var currentOrder = clientSiteActiveGuards.order()[0];
+//    if (index === 3) {
+//        if (currentOrder[1] === 'asc') {
+//            clientSiteActiveGuards.order([groupColumnSortAlias, 'desc']).draw();
+//        }
 
-        else {
-            clientSiteActiveGuards.order([groupColumnSortAlias, 'asc']).draw();
-        }
-    }
-});
-// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
-
+//        else {
+//            clientSiteActiveGuards.order([groupColumnSortAlias, 'asc']).draw();
+//        }
+//    }
+//});
+//// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
+//ordering issue commented by jisha end -04-12-2025
 $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
@@ -4600,7 +4601,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         {
             data: 'guardName',
             width: '20%',
-            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
+            //orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
 
                 if (showButtonsActivesinglepage) {
@@ -4890,25 +4891,26 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnWandTagdetails', f
 });
 
 clientSiteActiveGuardsSinglePage.column("completedRoundsCol:name").visible(userRoleSinglePage === "1");
-// Order by the grouping
-// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
-$(clientSiteActiveGuardsSinglePage.table().header()).on('click', 'th', function () {
-    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
-    var index = clientSiteActiveGuardsSinglePage.column(this).index();
-    var currentOrder = clientSiteActiveGuardsSinglePage.order()[0];
-    if (index === 3) {
-        if (currentOrder[1] === 'asc') {
-            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'desc']).draw();
-        }
+//ordering issue commented by jisha start -04-12-2025
+//// Order by the grouping
+//// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+//$(clientSiteActiveGuardsSinglePage.table().header()).on('click', 'th', function () {
+//    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired
+//    var index = clientSiteActiveGuardsSinglePage.column(this).index();
+//    var currentOrder = clientSiteActiveGuardsSinglePage.order()[0];
+//    if (index === 3) {
+//        if (currentOrder[1] === 'asc') {
+//            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'desc']).draw();
+//        }
 
-        else {
-            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'asc']).draw();
-        }
-    }
-});
-// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
+//        else {
+//            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'asc']).draw();
+//        }
+//    }
+//});
+//// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
-
+//ordering issue commented by jisha end -04-12-2025
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
 
 
