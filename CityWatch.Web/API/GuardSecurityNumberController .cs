@@ -310,30 +310,30 @@ namespace CityWatch.Web.API
             }
         }
 
-        [HttpGet("EnterGuardLogin")]
-        public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId, string gps)
+        [HttpPost("EnterGuardLogin")]
+        public IActionResult EnterGuardLogin([FromBody] PostActivityRequest request)
         {
             try
             {
 
-                if (guardId <= 0 || clientsiteId <= 0)
+                if (request.guardId <= 0 || request.clientsiteId <= 0)
                     return BadRequest(new { message = "Invalid guard ID or client site ID." });
 
                 var logBookType = LogBookType.DailyGuardLog;
-                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(request.clientsiteId, logBookType);
 
                 if (logBookId <= 0)
                     return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
                 // Get Guard Login ID
                 var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, request.guardId, request.clientsiteId, request.userId, IPAddress);
 
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
 
                 // Default GPS coordinates (should be replaced with actual values if available)
-                var gpsCoordinates = gps;
+                var gpsCoordinates = request.gps;
 
                 // Create a log entry
                 var signInEntry = new GuardLog
@@ -341,19 +341,19 @@ namespace CityWatch.Web.API
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                     EventDateTime = DateTime.Now,
-                    Notes = "Logbook Logged In (Mob App)",
-                    IsSystemEntry = true,
-                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    Notes = request.activityString ?? "Logbook Logged In (Mob App)",
+                    IsSystemEntry = request.systemEntry,
+                    EventDateTimeLocal = request.EventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = request.EventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = request.EventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                     GpsCoordinates = gpsCoordinates
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
 
-                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
+                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
 
                 return Ok(new { message = "Guard successfully logged in.", guardLoginId , TourMode = (int)clientsiteDetails.PatrolTourMode});
             }
@@ -364,6 +364,59 @@ namespace CityWatch.Web.API
 
         }
 
+        //[HttpGet("EnterGuardLogin")]
+        //public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId, string gps)
+        //{
+        //    try
+        //    {
+
+        //        if (guardId <= 0 || clientsiteId <= 0)
+        //            return BadRequest(new { message = "Invalid guard ID or client site ID." });
+
+        //        var logBookType = LogBookType.DailyGuardLog;
+        //        var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+        //        if (logBookId <= 0)
+        //            return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+        //        // Get Guard Login ID
+        //        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        //        var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
+
+        //        if (guardLoginId <= 0)
+        //            return BadRequest(new { message = "Guard login failed." });
+
+        //        // Default GPS coordinates (should be replaced with actual values if available)
+        //        var gpsCoordinates = gps;
+
+        //        // Create a log entry
+        //        var signInEntry = new GuardLog
+        //        {
+        //            ClientSiteLogBookId = logBookId,
+        //            GuardLoginId = guardLoginId,
+        //            EventDateTime = DateTime.Now,
+        //            Notes = "Logbook Logged In (Mob App)",
+        //            IsSystemEntry = true,
+        //            EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+        //            EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+        //            EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+        //            EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+        //            EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+        //            GpsCoordinates = gpsCoordinates
+        //        };
+
+        //        _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+        //        var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
+
+        //        return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        //    }
+
+        //}
 
 
         [HttpGet("GetActivities")]
