@@ -1,6 +1,8 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -230,6 +232,12 @@ namespace CityWatch.Data.Providers
         List<SmartWandTagsType> GetSmartWandTagsType();
         List<RCActionListMessages> GetRCActionListMessages(int[] Ids);
         List<RCActionListMessagesClientsites> GetRCActionListMessagesClientSites();
+
+        public List<ClientSiteSmartWand> GetSmartWandList();
+
+        public JsonResult GetPCARRouteDetails(int id);
+
+        public bool RemovePCarDeatils(int PcarRouteId, List<int> siteIds);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -544,7 +552,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.SOP = staffdocument.SOP;
                     documentToUpdate.ClientSite = staffdocument.ClientSite;
                     documentToUpdate.FilePath = staffdocument.FilePath;
-                   // documentToUpdate.SubDomainId = staffdocument.SubDomainId;
+                    // documentToUpdate.SubDomainId = staffdocument.SubDomainId;
                 }
             }
             _context.SaveChanges();
@@ -995,14 +1003,14 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerCalendarEvents.Count();
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
-        { 
-            var calendarevents= _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo.Replace("-PH", ""))).ToList();
-            if(calendarevents.Count()>0)
+        {
+            var calendarevents = _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo.Replace("-PH", ""))).ToList();
+            if (calendarevents.Count() > 0)
             {
                 foreach (var item in calendarevents)
                 {
-                    string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id && x.IsDeleted==false).Select(x => x.State).ToArray(); 
-                    item.States= string.Join(",", states);
+                    string[] states = _context.PublicHolidayStates.Where(x => x.CalendarEventId == item.id && x.IsDeleted == false).Select(x => x.State).ToArray();
+                    item.States = string.Join(",", states);
                     if (item.IsPublicHoliday)
                     {
                         if (item.ReferenceNo.EndsWith("-PH", StringComparison.OrdinalIgnoreCase))
@@ -1512,7 +1520,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Attempts)
                 .Include(x => x.CertificateExpiryYears)
 
-                .Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted==false)
+                .Where(x => x.HRSettingsId == hrSettingsId && x.IsDeleted == false)
                 .ToList();
 
 
@@ -1574,7 +1582,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == id && x.IsDeleted==false).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestQuestionsAnswers.Where(x => x.TrainingTestQuestionsId == id && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return result;
 
@@ -1621,7 +1629,7 @@ namespace CityWatch.Data.Providers
         {
 
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x =>  x.IsDeleted == false).OrderBy(x => x.Id).ToList();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
 
             return result.Count;
@@ -1642,7 +1650,7 @@ namespace CityWatch.Data.Providers
 
 
 
-            var result = _context.TrainingTestFeedbackQuestions.Where(x =>  x.QuestionNoId == questionumberId && x.IsDeleted == false).OrderBy(x => x.Id).FirstOrDefault();
+            var result = _context.TrainingTestFeedbackQuestions.Where(x => x.QuestionNoId == questionumberId && x.IsDeleted == false).OrderBy(x => x.Id).FirstOrDefault();
 
             return result;
 
@@ -1660,7 +1668,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetCourseDocuments()
         {
-            return _context.TrainingCourses.Where(x=> x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
+            return _context.TrainingCourses.Where(x => x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
         }
         public void DeleteCourseDocument(int id)
         {
@@ -1738,7 +1746,7 @@ namespace CityWatch.Data.Providers
         {
             // Retrieve documents of the specified type
             var courseDocList = _context.TrainingCourseCertificate
-                .Where(x => x.HRSettingsId == type && x.IsDeleted==false)
+                .Where(x => x.HRSettingsId == type && x.IsDeleted == false)
                 .ToList();
 
 
@@ -1877,7 +1885,7 @@ namespace CityWatch.Data.Providers
 
         public List<TrainingCourseCertificate> GetCourseCertificateDocuments()
         {
-            return _context.TrainingCourseCertificate.Where(x =>  x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
+            return _context.TrainingCourseCertificate.Where(x => x.IsDeleted == false).OrderBy(x => x.FileName).ToList();
         }
         public void DeleteCourseCertificateDocument(int id)
         {
@@ -1975,7 +1983,7 @@ namespace CityWatch.Data.Providers
         }
         public List<TrainingCourses> GetTrainingCourses(int hrSettingsId, int tqNumberId)
         {
-            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted==false).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingCourses.Where(x => x.HRSettingsId == hrSettingsId && x.TQNumberId == tqNumberId && x.IsDeleted == false).OrderBy(x => x.Id).ToList();
             return course;
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardCorrectQuestions(int guardId, int trainingCourseId)
@@ -2101,7 +2109,7 @@ namespace CityWatch.Data.Providers
             {
                 int[] questionnumbers = result.Select(x => x.TrainingTestFeedbackQuestionsId).ToArray();
                 //questions = _context.TrainingTestFeedbackQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.HRSettingsId == hrSettingsId && x.IsDeleted == false).FirstOrDefault();
-                questions = _context.TrainingTestFeedbackQuestions.Where(x => !questionnumbers.Contains(x.Id) &&  x.IsDeleted == false).FirstOrDefault();
+                questions = _context.TrainingTestFeedbackQuestions.Where(x => !questionnumbers.Contains(x.Id) && x.IsDeleted == false).FirstOrDefault();
 
             }
 
@@ -2125,7 +2133,7 @@ namespace CityWatch.Data.Providers
         //}
         public int GetFeedbackQuestionCount()
         {
-            var course = _context.TrainingTestFeedbackQuestions.Where(x =>  x.IsDeleted == false).OrderBy(x => x.Id).ToList();
+            var course = _context.TrainingTestFeedbackQuestions.Where(x => x.IsDeleted == false).OrderBy(x => x.Id).ToList();
 
             return course.Count;
 
@@ -2224,7 +2232,7 @@ namespace CityWatch.Data.Providers
             return await _context.ClientSiteMobileCrowdControl.AsNoTracking().FirstOrDefaultAsync(d => d.ClientSiteId == siteId);
         }
         public async Task<List<ClientSiteMobileCrowdControlGuards>> GetCrowdControlLocationDataForSite(int siteId)
-        {            
+        {
             //ClientSiteMobileCrowdControlGuards
             return await _context.ClientSiteMobileCrowdControlGuards.AsNoTracking().Where(d => d.ClientSiteId == siteId).ToListAsync();
         }
@@ -2284,7 +2292,7 @@ namespace CityWatch.Data.Providers
         {
             var startTest = _context.GuardTrainingAndAssessmentPractical.Where(x => x.GuardId == guardId && x.HRSettingsId == hrsettingsId).
                 Include(x => x.TrainingLocation)
-                .Include(x=>x.TrainingInstructor)
+                .Include(x => x.TrainingInstructor)
                 .OrderBy(x => x.Id).ToList();
             return startTest;
         }
@@ -2335,7 +2343,7 @@ namespace CityWatch.Data.Providers
             //||
             //_context.TrainingTestFeedbackQuestions.Any(tfq => tfq.HRSettingsId == x.HRSettingsId && tfq.IsDeleted == false)
 
-        //)
+            //)
             //)
             ).ToList();
 
@@ -2477,8 +2485,8 @@ namespace CityWatch.Data.Providers
         public List<TrainingTestQuestions> GetTrainingTestQuestions()
         {
 
-            
-            var trainigCourses = _context.TrainingTestQuestions.Where(x =>  x.IsDeleted == false).ToList();
+
+            var trainigCourses = _context.TrainingTestQuestions.Where(x => x.IsDeleted == false).ToList();
 
             return trainigCourses;
 
@@ -2489,7 +2497,7 @@ namespace CityWatch.Data.Providers
             var courseDocList = _context.TrainingCourseInstructor
                 .ToList();
 
-        
+
             return courseDocList;
         }
         public List<SmartWandTagsType> GetSmartWandTagsType()
@@ -2502,11 +2510,11 @@ namespace CityWatch.Data.Providers
             // Retrieve documents of the specified type
             var courseDocList = _context.RCActionListMessages
                 .Where(x => (x.IsDeleted == false)
-                && ((Ids.Count()==0) || (Ids.Contains(x.Id))))
+                && ((Ids.Count() == 0) || (Ids.Contains(x.Id))))
                 .ToList();
             foreach (var item in courseDocList)
             {
-                if(item.Radiofrequencystatus == "EveryDay")
+                if (item.Radiofrequencystatus == "EveryDay")
                 {
                     item.ExpiryDate = item.Endmessagetime?.ToString("dd-MMM-yyyy");
                     item.FQ = "E";
@@ -2516,23 +2524,104 @@ namespace CityWatch.Data.Providers
                     item.ExpiryDate = item.messagetime?.ToString("dd-MMM-yyyy");
                     item.FQ = "O";
                 }
-                
+
             }
 
             return courseDocList;
         }
         public List<RCActionListMessagesClientsites> GetRCActionListMessagesClientSites()
         {
-           
+
             var clientSiteList = _context.RCActionListMessagesClientsites
                 .Where(x => x.IsDeleted == false)
                 .ToList();
-            
+
 
             return clientSiteList;
         }
 
+        public List<ClientSiteSmartWand> GetSmartWandList()
+        {
+            var smartWands = _context.ClientSiteSmartWands
+                                     .Where(sw => sw.IsDeleted == false &&
+                                                  _context.ClientSites
+                                                          .Where(cs => cs.PatrolTourMode == PatrolTouringMode.PCAR)
+                                                          .Select(cs => cs.Id)
+                                                          .Contains(sw.ClientSiteId))
+                                     .OrderBy(sw => sw.Id)
+                                     .ToList();
+
+            return smartWands;
+        }
+
+
+        public JsonResult GetPCARRouteDetails(int id)
+        {
+            var route = _context.PcarRoute
+                .Include(r => r.RouteDetails)
+                .ThenInclude(rd => rd.ClientSite)
+                .ThenInclude(cs => cs.ClientType)
+                .FirstOrDefault(r => r.Id == id);
+
+            if (route == null) return new JsonResult(null);
+
+            return new JsonResult(new
+            {
+                id = route.Id,
+                pcarroutename = route.Pcarroutename,
+                smartwandallocation = route.Smartwandallocation,
+                routeDetails = route.RouteDetails.Select(rd => new
+                {
+                    clientSiteId = rd.ClientSiteId,
+                    clientSiteName = rd.ClientSite.Name,
+                    clientTypeName = rd.ClientSite.ClientType?.Name,
+                    startMon = rd.StartMon,
+                    endMon = rd.EndMon,
+                    visitMon = rd.VisitMon,
+                    startTue = rd.StartTue,
+                    endTue = rd.EndTue,
+                    visitTue = rd.VisitTue,
+                    startWed = rd.StartWed,
+                    endWed = rd.EndWed,
+                    visitWed = rd.VisitWed,
+                    startThu = rd.StartThu,
+                    endThu = rd.EndThu,
+                    visitThu = rd.VisitThu,
+                    startFri = rd.StartFri,
+                    endFri = rd.EndFri,
+                    visitFri = rd.VisitFri,
+                    startSat = rd.StartSat,
+                    endSat = rd.EndSat,
+                    visitSat = rd.VisitSat,
+                    startSun = rd.StartSun,
+                    endSun = rd.EndSun,
+                    visitSun = rd.VisitSun,
+                    startPho = rd.StartPho,
+                    endPho = rd.EndPho,
+                    visitPho = rd.VisitPho
+                }).ToList()
+            });
+        }
+
+
+        public bool RemovePCarDeatils(int PcarRouteId, List<int> siteIds)
+        {
+            var route = _context.PcarRoute
+              .Include(r => r.RouteDetails)
+              .FirstOrDefault(r => r.Id == PcarRouteId);
+
+            if (route == null)
+                return false;
+
+            // Remove selected route details
+            var detailsToRemove = route.RouteDetails.Where(rd => siteIds.Contains(rd.ClientSiteId)).ToList();
+            _context.PcarRouteDetails.RemoveRange(detailsToRemove);
+            _context.SaveChanges();
+            return true;
+        }
+
     }
+
 
 
 

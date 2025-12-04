@@ -903,6 +903,722 @@ $(function () {
     });
 
     //kv-schedule-end
+    //pcar satrt dileep 02122025
+   
+    $('#pcar-modal').on('show.bs.modal', function () {
+        $(this).find('input, select, textarea').val('');
+    });
+
+    function schButtonRendererPCAR(value, record) {
+        let buttonHtml = '';
+
+        // Edit button
+        buttonHtml += '<button class="btn btn-outline-primary mr-2 edit-pcar-route" ' +
+            'data-route-id="' + record.id + '" ' +
+            'data-toggle="modal" data-target="#pcar-modal">' +
+            '<i class="fa fa-pencil mr-2"></i>Edit</button>';
+
+        // Delete button
+        buttonHtml += '<button class="btn btn-outline-danger del-pcar-route mr-2" ' +
+            'data-route-id="' + record.id + '">' +
+            '<i class="fa fa-trash mr-2"></i>Delete</button>';
+
+        return buttonHtml;
+    }
+
+ 
+
+    gridPCARSchedules = $('#kpi_send_pcarrutes').grid({
+        dataSource: '/Admin/Settings?handler=PCARProfiles',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            // Route Name
+            { field: 'pcarroutename', title: 'Route Name', width: 150 },
+
+            // Smart Wand allocation (SmartWandId + Phone)
+            {
+                field: 'smartwandallocation',
+                title: 'Smart Wand',
+                width: 150,
+                renderer: function (value, record) {
+                    if (record.smartWandId && record.phoneNumber) {
+                        return record.smartWandId + " (" + record.phoneNumber + ")";
+                    }
+                    return value;
+                }
+            },
+
+            // Sites as badges
+            {
+                field: 'sites',
+                title: 'Sites',
+                width: 300,
+                renderer: function (value, record) {
+                    if (!value) return "";
+                    return value
+                        .split(',')
+                        .map(s => `<span class="badge badge-info mr-1">${s.trim()}</span>`)
+                        .join(" ");
+                }
+            },
+            // Action buttons (existing)
+            { width: 150, renderer: schButtonRendererPCAR }
+        ],
+
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    $('#btnSavePcCarrute').on('click', function (e) {
+        
+        var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Pho'];
+        var hasError = false;
+        var errorMsg = '';
+        var timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        var anyDayFilled = false; // track if at least one day is fully filled
+
+        for (var i = 0; i < days.length; i++) {
+            var day = days[i];
+
+            var startVal = ($('#start' + day).val() || '').trim();
+            var endVal = ($('#end' + day).val() || '').trim();
+            var visitRaw = $('#visit' + day).val();
+            var visitVal = visitRaw !== null && visitRaw !== undefined ? visitRaw.trim() : '';
+            var visitNum = Number(visitVal);
+
+            // Check if any field in the row is entered
+            var anyFieldEntered = startVal !== '' || endVal !== '' || visitNum > 0;
+            var allFieldsFilled = startVal !== '' && endVal !== '' && visitNum > 0;
+
+            // Track if at least one day is fully filled
+            if (allFieldsFilled) anyDayFilled = true;
+
+            // If partially filled → error
+            if (anyFieldEntered && !allFieldsFilled) {
+                hasError = true;
+                errorMsg = 'Start, End, and Visits (>0) must be filled for partially entered day: ' + day;
+                break;
+            }
+
+            // If fully filled, validate time format
+            if (allFieldsFilled) {
+                if (!timeRegex.test(startVal)) {
+                    hasError = true;
+                    errorMsg = 'Start Time for ' + day + ' must be in HH:MM format (24-hour).';
+                    break;
+                }
+                if (!timeRegex.test(endVal)) {
+                    hasError = true;
+                    errorMsg = 'End Time for ' + day + ' must be in HH:MM format (24-hour).';
+                    break;
+                }
+
+                // Check End > Start
+                if (startVal >= endVal) {
+                    hasError = true;
+                    errorMsg = 'End Time must be greater than Start Time for ' + day;
+                    break;
+                }
+            }
+        }
+
+        // If no day is fully filled → error
+        if (!anyDayFilled) {
+            hasError = true;
+            errorMsg = 'Please fill at least one day completely with Start, End, and Visits (>0).';
+        }
+
+        if (hasError) {
+            alert(errorMsg);
+            return false; // stop save
+        }
+
+        // ===== continue with save logic here =====
+
+        
+        var routeId = $('#TimeSheetscheduleIdpcr').val();
+
+            if (!routeId || routeId === "0") {
+                alert("Please create a profile first!");
+                return;
+            }
+
+            // Get selected client site ID(s) from the dropdown
+            var selectedSites = $('#clientSitesTimesheetPCR').val(); // Array of selected site IDs
+
+            if (!selectedSites || selectedSites.length === 0) {
+                alert("Please select at least one client site.");
+                return;
+            }
+
+            // Collect schedule details
+            var scheduleData = {
+                PcarRouteId: routeId,
+                ClientSiteIds: selectedSites, // only the selected sites
+                StartMon: $('#startMon').val(),
+                EndMon: $('#endMon').val(),
+                VisitMon: $('#visitMon').val(),
+                StartTue: $('#startTue').val(),
+                EndTue: $('#endTue').val(),
+                VisitTue: $('#visitTue').val(),
+                StartWed: $('#startWed').val(),
+                EndWed: $('#endWed').val(),
+                VisitWed: $('#visitWed').val(),
+                StartThu: $('#startThu').val(),
+                EndThu: $('#endThu').val(),
+                VisitThu: $('#visitThu').val(),
+                StartFri: $('#startFri').val(),
+                EndFri: $('#endFri').val(),
+                VisitFri: $('#visitFri').val(),
+                StartSat: $('#startSat').val(),
+                EndSat: $('#endSat').val(),
+                VisitSat: $('#visitSat').val(),
+                StartSun: $('#startSun').val(),
+                EndSun: $('#endSun').val(),
+                VisitSun: $('#visitSun').val(),
+                StartPho: $('#startPho').val(),
+                EndPho: $('#endPho').val(),
+                VisitPho: $('#visitPho').val()
+            };
+
+            $.ajax({
+                url: '/Admin/Settings?handler=SaveRouteDetails',
+                type: 'POST',
+                data: scheduleData,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success) {
+                    alert('Schedule Details Saved Successfully');
+                    // Reload updated route details
+                    const selectedSiteId = $('#clientSitesTimesheetPCR').val(); // get current site
+                    if (selectedSiteId) {
+                        loadRouteDetailsForSite(selectedSiteId);
+                    }
+                } else {
+                    alert(data.message);
+                }
+            });
+
+        
+
+    });
+
+
+
+    $('#btnCreatePcarProfile').on('click', function () {  
+        var name = $('#pcarroutename').val();
+        var smartWand = $('#smartwandallocation').val();
+
+        $.ajax({
+            url: '/Admin/Settings?handler=CreateProfile',
+            type: 'POST',
+            data: { routeId: $('#TimeSheetscheduleIdpcr').val() ,pcarroutename: name, smartwandallocation: smartWand },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#TimeSheetscheduleIdpcr').val(data.routeId);
+                togglePcarBottomSection();
+                alert('Profile Created Successfully');
+            } else {
+                alert(data.message);
+            }
+        });
+      
+    });
+
+
+    $('#clientTypeNameTimesheetpcr').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSitesTimesheetPCR').html('');
+            $('#clientSitesTimesheetPCR').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSitesTimesheetPCR').html('');
+            $('#clientSitesTimesheetPCR').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSitesTimesheetPCR').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
+
+
+    //$('#btnSavePcCarrute').on('click', function () {
+    //    var routeId = $('#TimeSheetscheduleIdpcr').val();
+
+    //    if (!routeId || routeId === "0") {
+    //        alert("Please create a profile first!");
+    //        return;
+    //    }
+
+    //    // Get selected client site ID(s) from the dropdown
+    //    var selectedSites = $('#clientSitesTimesheetPCR').val(); // Array of selected site IDs
+
+    //    if (!selectedSites || selectedSites.length === 0) {
+    //        alert("Please select at least one client site.");
+    //        return;
+    //    }
+
+    //    // Collect schedule details
+    //    var scheduleData = {
+    //        PcarRouteId: routeId,
+    //        ClientSiteIds: selectedSites, // only the selected sites
+    //        StartMon: $('#startMon').val(),
+    //        EndMon: $('#endMon').val(),
+    //        VisitMon: $('#visitMon').val(),
+    //        StartTue: $('#startTue').val(),
+    //        EndTue: $('#endTue').val(),
+    //        VisitTue: $('#visitTue').val(),
+    //        StartWed: $('#startWed').val(),
+    //        EndWed: $('#endWed').val(),
+    //        VisitWed: $('#visitWed').val(),
+    //        StartThu: $('#startThu').val(),
+    //        EndThu: $('#endThu').val(),
+    //        VisitThu: $('#visitThu').val(),
+    //        StartFri: $('#startFri').val(),
+    //        EndFri: $('#endFri').val(),
+    //        VisitFri: $('#visitFri').val(),
+    //        StartSat: $('#startSat').val(),
+    //        EndSat: $('#endSat').val(),
+    //        VisitSat: $('#visitSat').val(),
+    //        StartSun: $('#startSun').val(),
+    //        EndSun: $('#endSun').val(),
+    //        VisitSun: $('#visitSun').val(),
+    //        StartPho: $('#startPho').val(),
+    //        EndPho: $('#endPho').val(),
+    //        VisitPho: $('#visitPho').val()
+    //    };
+
+    //    $.ajax({
+    //        url: '/Admin/Settings?handler=SaveRouteDetails',
+    //        type: 'POST',
+    //        data: scheduleData,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (data) {
+    //        if (data.success) {
+    //            alert('Schedule Details Saved Successfully');
+    //            // Reload updated route details
+    //            const selectedSiteId = $('#clientSitesTimesheetPCR').val(); // get current site
+    //            if (selectedSiteId) {
+    //                loadRouteDetailsForSite(selectedSiteId);
+    //            }
+    //        } else {
+    //            alert(data.message);
+    //        }
+    //    });
+    //});
+
+    function loadRouteDetailsForSite(siteId) {
+        const routeId = $('#TimeSheetscheduleIdpcr').val();
+        if (!routeId || !siteId) return;
+
+        $.ajax({
+            url: '/Admin/Settings?handler=PCARRouteDetails&id=' + routeId,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            // Store routeDetails globally if needed
+            currentRouteDetails = data.routeDetails;
+
+            // Clear previous options
+            $('#selectedSitesTimeSheetpcar').empty();
+            // Populate dropdown with route details
+            $.each(data.routeDetails, function (index, item) {
+                $('#selectedSitesTimeSheetpcar').append(
+                    '<option value="' + item.clientSiteId + '">' + item.clientSiteName + '</option>'
+                );
+            });
+            updateSelectedSitesCountPCAR();
+            // Find details for the selected site
+            const rd = currentRouteDetails.find(x => x.clientSiteId == siteId);
+            if (rd) {
+                fillScheduleInputs(rd); // Fill the time/visit inputs
+            } else {
+                clearScheduleInputs();
+            }
+
+            // Make sure the site is selected in the dropdown
+            $('#clientSitesTimesheetPCR').val(siteId).trigger('change');
+        });
+    }
+
+
+
+    $(document).on('click', '.edit-pcar-route', function () {
+        var routeId = $(this).data('route-id');
+        $('#TimeSheetscheduleIdpcr').val(routeId);
+        togglePcarBottomSection();
+        loadPCARRoute(routeId); // your AJAX function to fill modal
+    });
+
+    $(document).on('click', '.del-pcar-route', function () {
+        var routeId = $(this).data('route-id');
+        if (!routeId || routeId === 0) {
+            alert('Invalid profile ID.');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this PCAR Profile and Rutes ? This action cannot be undone.')) return;
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DeletePCarProfile',
+            type: 'POST',
+            data: { RouteId: routeId }, // plain form data
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                alert(data.message || 'Profile deleted successfully.');
+
+                // Reload the grid
+                if (gridPCARSchedules) {
+                    gridPCARSchedules.reload();
+                }
+            } else {
+                alert(data.message || 'Failed to delete profile.');
+            }
+        });
+      
+    });
+
+    let currentRouteDetails = [];
+    function loadPCARRoute(routeId) {
+        $('#loader').show();
+
+        $.ajax({
+            url: '/Admin/Settings?handler=PCARRouteDetails&id=' + routeId,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+
+            currentRouteDetails = data.routeDetails || [];
+            
+            $('#pcarroutename').val(data.pcarroutename);
+            $('#smartwandallocation').val(data.smartwandallocation);
+            // Loop through routeDetails and add options
+          
+
+
+            // Clear previous options
+            $('#selectedSitesTimeSheetpcar').empty();
+
+            // Add new options from your data
+            $.each(data.routeDetails, function (index, item) {
+                $('#selectedSitesTimeSheetpcar').append(
+                    '<option value="' + item.clientSiteId + '">' + item.clientSiteName + '</option>'
+                );
+            });
+
+            if (currentRouteDetails.length > 0) {
+                // Get first route detail to pre-select Client Type and Site
+                const firstDetail = currentRouteDetails[0];
+
+                $('#clientTypeNameTimesheetpcr option').filter(function () {
+                    return $(this).text().startsWith(firstDetail.clientTypeName); // match the name portion
+                }).prop('selected', true).change();
+                // Wait a little or check when sites are loaded
+                
+
+                // Wait for client sites to populate, then select the site
+                const waitForSites = setInterval(function () {
+                    if ($('#clientSitesTimesheetPCR option[value="' + firstDetail.clientSiteId + '"]').length > 0) {
+                        clearInterval(waitForSites);
+
+                        // Select site
+                        $('#clientSitesTimesheetPCR').val(firstDetail.clientSiteId).trigger('change');
+                    }
+                }, 100);
+
+            }
+
+            
+            $('#selectedSitesCountTimesheetpcar').text($('#selectedSitesTimeSheetpcar option').length);
+
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+
+    function selectClientSite(siteId) {
+        const interval = setInterval(function () {
+            const siteOption = $('#clientSitesTimesheetPCR option[value="' + siteId + '"]');
+            if (siteOption.length > 0) {
+                $('#clientSitesTimesheetPCR').val(siteId);
+                clearInterval(interval);
+            }
+        }, 100);
+    }
+
+    // Bind change event
+    $('#clientSitesTimesheetPCR').on('change', function () {
+        const elem = $(this).find(":selected");
+        const siteId = elem.val();
+
+        if (siteId !== '') {
+           
+
+            // 2️⃣ Load route details for this site
+            const rd = currentRouteDetails.find(x => x.clientSiteId == siteId);
+            if (rd) {
+                fillScheduleInputs(rd);
+            } else {
+                clearScheduleInputs();
+            }
+        }
+    });
+
+    // Fill schedule inputs from route detail object
+    function fillScheduleInputs(rd) {
+        $('#startMon').val(rd.startMon);
+        $('#endMon').val(rd.endMon);
+        $('#visitMon').val(rd.visitMon);
+
+        $('#startTue').val(rd.startTue);
+        $('#endTue').val(rd.endTue);
+        $('#visitTue').val(rd.visitTue);
+
+        $('#startWed').val(rd.startWed);
+        $('#endWed').val(rd.endWed);
+        $('#visitWed').val(rd.visitWed);
+
+        $('#startThu').val(rd.startThu);
+        $('#endThu').val(rd.endThu);
+        $('#visitThu').val(rd.visitThu);
+
+        $('#startFri').val(rd.startFri);
+        $('#endFri').val(rd.endFri);
+        $('#visitFri').val(rd.visitFri);
+
+        $('#startSat').val(rd.startSat);
+        $('#endSat').val(rd.endSat);
+        $('#visitSat').val(rd.visitSat);
+
+        $('#startSun').val(rd.startSun);
+        $('#endSun').val(rd.endSun);
+        $('#visitSun').val(rd.visitSun);
+
+        $('#startPho').val(rd.startPho);
+        $('#endPho').val(rd.endPho);
+        $('#visitPho').val(rd.visitPho);
+    }
+
+    // Clear all schedule inputs
+    function clearScheduleInputs() {
+        $('#startMon, #endMon, #visitMon, #startTue, #endTue, #visitTue, #startWed, #endWed, #visitWed, #startThu, #endThu, #visitThu, #startFri, #endFri, #visitFri, #startSat, #endSat, #visitSat, #startSun, #endSun, #visitSun, #startPho, #endPho, #visitPho').val('');
+    }
+
+
+    $('#editSelectedSiteTimesheetpcr').on('click', function () {
+        const selectedOption = $('#selectedSitesTimeSheetpcar option:selected');
+
+        if (selectedOption.length === 0) {
+            alert('Please select a site to edit');
+            return;
+        }
+
+        if (selectedOption.length > 1) {
+            alert('Select only one site to edit');
+            return;
+        }
+
+        const clientSiteId = selectedOption.val();
+
+        // Get the route detail for this site
+        const rd = currentRouteDetails.find(x => x.clientSiteId == clientSiteId);
+
+        if (!rd) {
+            alert('Route details not found for this site');
+            return;
+        }
+
+        if (currentRouteDetails.length > 0) {
+            // Get first route detail to pre-select Client Type and Site
+            const firstDetail = rd;
+
+            $('#clientTypeNameTimesheetpcr option').filter(function () {
+                return $(this).text().startsWith(firstDetail.clientTypeName); // match the name portion
+            }).prop('selected', true).change();
+            // Wait a little or check when sites are loaded
+
+
+            // Wait for client sites to populate, then select the site
+            const waitForSites = setInterval(function () {
+                if ($('#clientSitesTimesheetPCR option[value="' + firstDetail.clientSiteId + '"]').length > 0) {
+                    clearInterval(waitForSites);
+
+                    // Select site
+                    $('#clientSitesTimesheetPCR').val(firstDetail.clientSiteId).trigger('change');
+                }
+            }, 100);
+
+        }
+
+        // 3️⃣ Optionally, populate the schedule inputs directly
+        loadRouteDetailsForSite(clientSiteId);
+    });
+
+
+    //$('#selectedSitesTimeSheetpcar').on('change', function () {
+    //    const selectedOption = $(this).find(':selected');
+
+    //    if (selectedOption.length === 0) {
+    //        clearScheduleInputs();
+    //        return;
+    //    }
+
+    //    if (selectedOption.length > 1) {
+    //        // If multiple selected, you can choose to clear or ignore
+    //        clearScheduleInputs();
+    //        return;
+    //    }
+
+    //    const clientSiteId = selectedOption.val();
+
+    //    // Get the route detail for this site
+    //    const rd = currentRouteDetails.find(x => x.clientSiteId == clientSiteId);
+
+    //    if (!rd) {
+    //        alert('Route details not found for this site');
+    //        return;
+    //    }
+
+    //    if (currentRouteDetails.length > 0) {
+    //        // Get first route detail to pre-select Client Type and Site
+    //        const firstDetail = rd;
+
+    //        $('#clientTypeNameTimesheetpcr option').filter(function () {
+    //            return $(this).text().startsWith(firstDetail.clientTypeName); // match the name portion
+    //        }).prop('selected', true).change();
+    //        // Wait a little or check when sites are loaded
+
+
+    //        // Wait for client sites to populate, then select the site
+    //        const waitForSites = setInterval(function () {
+    //            if ($('#clientSitesTimesheetPCR option[value="' + firstDetail.clientSiteId + '"]').length > 0) {
+    //                clearInterval(waitForSites);
+
+    //                // Select site
+    //                $('#clientSitesTimesheetPCR').val(firstDetail.clientSiteId).trigger('change');
+    //            }
+    //        }, 100);
+
+    //    }
+
+    //    // 3️⃣ Optionally, populate the schedule inputs directly
+    //    loadRouteDetailsForSite(clientSiteId);
+    //    $('#selectedSitesTimeSheetpcar').val(clientSiteId);
+    //});
+
+    $('#removeSelectedSitesTimesheetpcr').on('click', function () {
+        const selectedOptions = $('#selectedSitesTimeSheetpcar option:selected');
+
+        if (selectedOptions.length === 0) {
+            alert('Please select at least one site to remove.');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to remove the selected site(s)?')) {
+            return;
+        }
+
+        // Collect IDs of selected sites
+        const siteIds = selectedOptions.map(function () {
+            return $(this).val();
+        }).get();
+
+        // AJAX call to remove from database
+        $.ajax({
+            url: '/Admin/Settings?handler=RemovePcarRouteSites', // your handler
+            type: 'POST',
+            data: JSON.stringify({ PcarRouteId: $('#TimeSheetscheduleIdpcr').val(), ClientSiteIds: siteIds }),
+            contentType: 'application/json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                // Remove from dropdown
+                selectedOptions.remove();
+                updateSelectedSitesCountPCAR(); // update badge count
+                clearScheduleInputs(); // clear schedule inputs if needed
+                alert('Selected site(s) removed successfully.');
+                // ⬇ Reload the UI
+                loadPCARRoute($('#TimeSheetscheduleIdpcr').val());
+                if (gridPCARSchedules) {
+                    gridPCARSchedules.reload();
+                }
+            } else {
+                alert(data.message || 'Failed to remove site(s).');
+            }
+        });
+    });
+
+    // Function to update badge count
+    function updateSelectedSitesCountPCAR() {
+        const count = $('#selectedSitesTimeSheetpcar option').length;
+        $('#selectedSitesCountTimesheetpcar').text(count);
+    }
+
+    // Optional: clear schedule inputs after removing site
+    function clearScheduleInputs() {
+        $('input[id^="start"], input[id^="end"], input[id^="visit"]').val('');
+    }
+
+    $('#add_kpi_pcarrutes').on('click', function () {
+        clearScheduleInputs();   // <-- this is clearing everything
+        $('#TimeSheetscheduleIdpcr').val(0);
+        togglePcarBottomSection();
+        $('#selectedSitesTimeSheetpcar').empty();
+    });
+
+    $('#pcar-modal').on('hidden.bs.modal', function () {
+        if (gridPCARSchedules) {
+            gridPCARSchedules.reload();
+        }
+    });
+
+    function togglePcarBottomSection() {
+        var id = parseInt($("#TimeSheetscheduleIdpcr").val());
+        var $bottomSection = $("#pcar-bottom-section");
+        var $btnProfile = $("#btnCreatePcarProfile");
+
+        if (id > 0) {
+            // Enable bottom section
+            $bottomSection.css({
+                "pointer-events": "auto",
+                "opacity": "1"
+            });
+
+            // Change button text
+            $btnProfile.html('<i class="fa fa-pencil mr-1"></i>Update Profile');
+            $btnProfile.removeClass('btn-success').addClass('btn-warning'); // optional style change
+        } else {
+            // Disable bottom section
+            $bottomSection.css({
+                "pointer-events": "none",
+                "opacity": "0.4"
+            });
+
+            // Reset button text
+            $btnProfile.html('<i class="fa fa-plus mr-1"></i>Create Profile');
+            $btnProfile.removeClass('btn-warning').addClass('btn-success'); // optional style change
+        }
+    }
+
+    // Call this function on modal load or whenever the ID changes
+    $(document).ready(function () {
+        togglePcarBottomSection();
+    });
+
+    //pcar end 
+
     $('#btnSaveTimesheetSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
         var options = $('#selectedSitesTimeSheet option');

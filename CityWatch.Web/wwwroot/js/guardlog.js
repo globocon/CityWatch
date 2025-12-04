@@ -5275,6 +5275,9 @@ $(function () {
         if (data.isMobileAppPlusTags) {
             selectedValues.push(16);
         }
+        if (data.isPCARAccess) {
+            selectedValues.push(17);
+        }
 
         selectedValues.forEach(function (value) {
 

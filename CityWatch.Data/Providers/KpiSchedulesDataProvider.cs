@@ -1,8 +1,11 @@
 ﻿using CityWatch.Data.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Providers
 {
@@ -14,7 +17,7 @@ namespace CityWatch.Data.Providers
         void DeleteSendSchedule(int id);
         void DeleteSendScheduleTimesheet(int id);
         List<KpiSendScheduleJob> GetAllKpiSendScheduleJobs();
-         List<KpiSendScheduleJobsTimeSheet> GetAllKpiSendScheduleJobsTimesheet();
+        List<KpiSendScheduleJobsTimeSheet> GetAllKpiSendScheduleJobsTimesheet();
         int SaveSendScheduleJob(KpiSendScheduleJob sendScheduleJob);
         int SaveSendScheduleJobTimesheet(KpiSendScheduleJobsTimeSheet sendScheduleJob);
         List<KpiSendScheduleSummaryNote> GetKpiSendScheduleSummaryNotes(int scheduleId);
@@ -38,6 +41,15 @@ namespace CityWatch.Data.Providers
         List<KpiSendScheduleJobsKV> GetAllKpiSendScheduleJobsKV();
         int SaveSendScheduleJobKV(KpiSendScheduleJobsKV sendScheduleJob);
         List<ClientSiteKpiNote> GetClientSiteKpiNotesAndHRRecords(int id);
+
+        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(
+   int? routeId, string routeName, int smartwandId);
+
+        public bool SavePcarrouteDetails(PcarRouteDetailViewModel model);
+
+        public List<PcarRouteGridDto> GetPCARProfilesAll();
+
+        public bool DeletePcarrouteProfile(int routeId);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -75,7 +87,7 @@ namespace CityWatch.Data.Providers
             .Select(z => z.ClientSite.Id)
             .Distinct()
             .ToList();
-            
+
             var list = _context.KpiSendSchedules
                .Include(z => z.KpiSendScheduleSummaryImage)
                .Include(z => z.KpiSendScheduleClientSites)
@@ -90,7 +102,7 @@ namespace CityWatch.Data.Providers
 
                     if (distinctClientSiteIds.Contains(item2.ClientSiteId))
                     {
-                        
+
                         selectedSiteSchedule.Add(item);
                     }
                     else
@@ -161,7 +173,7 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == scheduleId);
         }
-        public KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId,int GuardId)
+        public KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId, int GuardId)
         {
             var distinctClientSiteIds = _context.GuardLogins
           .Where(z => z.GuardId == GuardId)
@@ -175,7 +187,7 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientSite)
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == scheduleId);
-            foreach(var li in KpiSendSchedule.KpiSendScheduleClientSites)
+            foreach (var li in KpiSendSchedule.KpiSendScheduleClientSites)
             {
                 if (!distinctClientSiteIds.Contains(li.ClientSiteId))
                 {
@@ -278,17 +290,213 @@ namespace CityWatch.Data.Providers
                 schedule.Time = sendSchedule.Time;
                 schedule.EmailTo = sendSchedule.EmailTo;
                 schedule.NextRunOn = sendSchedule.NextRunOn;
-                
+
                 schedule.ProjectName = sendSchedule.ProjectName;
-               
+
                 schedule.EmailBcc = sendSchedule.EmailBcc;
-               
+
 
                 if (updateClientSites)
                     schedule.KpiSendTimesheetClientSites = sendSchedule.KpiSendTimesheetClientSites;
             }
             _context.SaveChanges();
         }
+
+        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(
+     int? routeId, string routeName, int smartwandId)
+        {
+            // Normalize name for comparison
+            string normalizedName = routeName.Trim().ToLower();
+
+            // Validation: Check duplicate name (excluding the same record when editing)
+            bool nameExists = _context.PcarRoute
+                .Any(r => r.Pcarroutename.ToLower() == normalizedName &&
+                          (!routeId.HasValue || r.Id != routeId.Value));
+
+            if (nameExists)
+            {
+                return (false, "A profile with this route name already exists.", null);
+            }
+
+            // Validation: Check SmartWand allocation (must be unique)
+            bool smartwandExists = _context.PcarRoute
+                .Any(r => r.Smartwandallocation == smartwandId &&
+                          (!routeId.HasValue || r.Id != routeId.Value));
+
+            if (smartwandExists)
+            {
+                return (false, "This SmartWand is already assigned to another route profile.", null);
+            }
+
+            PcarRoute route;
+
+            if (routeId.HasValue && routeId > 0)
+            {
+                //  EDIT EXISTING
+                route = _context.PcarRoute.FirstOrDefault(r => r.Id == routeId.Value);
+
+                if (route == null)
+                    return (false, "Route not found.", null);
+
+                route.Pcarroutename = routeName;
+                route.Smartwandallocation = smartwandId;
+
+                _context.PcarRoute.Update(route);
+            }
+            else
+            {
+                //  CREATE NEW
+                route = new PcarRoute
+                {
+                    Pcarroutename = routeName,
+                    Smartwandallocation = smartwandId
+                };
+
+                _context.PcarRoute.Add(route);
+            }
+
+            _context.SaveChanges();
+            return (true, "Route saved successfully.", route);
+        }
+
+
+        public bool DeletePcarrouteProfile(int routeId)
+        {
+            try
+            {
+                // Load the route along with its details
+                var route = _context.PcarRoute
+                    .Include(r => r.RouteDetails)
+                    .FirstOrDefault(r => r.Id == routeId);
+
+                //if (route == null)
+                //    return false; // No route found
+
+                // Remove associated route details first
+                if (route.RouteDetails != null && route.RouteDetails.Any())
+                {
+                    _context.PcarRouteDetails.RemoveRange(route.RouteDetails);
+                }
+
+                // Remove the route itself
+                _context.PcarRoute.Remove(route);
+
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log exception if needed
+                return false;
+            }
+        }
+
+
+        public bool SavePcarrouteDetails(PcarRouteDetailViewModel model)
+        {
+            if (model.ClientSiteIds == null || !model.ClientSiteIds.Any())
+                return false;
+
+            try
+            {
+                foreach (var siteId in model.ClientSiteIds)
+                {
+                    // Check if a detail already exists for this route & site
+                    var existingDetail = _context.PcarRouteDetails
+                        .FirstOrDefault(d => d.PcarRouteId == model.PcarRouteId && d.ClientSiteId == siteId);
+
+                    if (existingDetail != null)
+                    {
+                        // Update existing record
+                        existingDetail.StartMon = model.StartMon;
+                        existingDetail.EndMon = model.EndMon;
+                        existingDetail.VisitMon = model.VisitMon;
+
+                        existingDetail.StartTue = model.StartTue;
+                        existingDetail.EndTue = model.EndTue;
+                        existingDetail.VisitTue = model.VisitTue;
+
+                        existingDetail.StartWed = model.StartWed;
+                        existingDetail.EndWed = model.EndWed;
+                        existingDetail.VisitWed = model.VisitWed;
+
+                        existingDetail.StartThu = model.StartThu;
+                        existingDetail.EndThu = model.EndThu;
+                        existingDetail.VisitThu = model.VisitThu;
+
+                        existingDetail.StartFri = model.StartFri;
+                        existingDetail.EndFri = model.EndFri;
+                        existingDetail.VisitFri = model.VisitFri;
+
+                        existingDetail.StartSat = model.StartSat;
+                        existingDetail.EndSat = model.EndSat;
+                        existingDetail.VisitSat = model.VisitSat;
+
+                        existingDetail.StartSun = model.StartSun;
+                        existingDetail.EndSun = model.EndSun;
+                        existingDetail.VisitSun = model.VisitSun;
+
+                        existingDetail.StartPho = model.StartPho;
+                        existingDetail.EndPho = model.EndPho;
+                        existingDetail.VisitPho = model.VisitPho;
+                    }
+                    else
+                    {
+                        // Add new record
+                        var detail = new PcarRouteDetails
+                        {
+                            PcarRouteId = model.PcarRouteId,
+                            ClientSiteId = siteId,
+                            StartMon = model.StartMon,
+                            EndMon = model.EndMon,
+                            VisitMon = model.VisitMon,
+
+                            StartTue = model.StartTue,
+                            EndTue = model.EndTue,
+                            VisitTue = model.VisitTue,
+
+                            StartWed = model.StartWed,
+                            EndWed = model.EndWed,
+                            VisitWed = model.VisitWed,
+
+                            StartThu = model.StartThu,
+                            EndThu = model.EndThu,
+                            VisitThu = model.VisitThu,
+
+                            StartFri = model.StartFri,
+                            EndFri = model.EndFri,
+                            VisitFri = model.VisitFri,
+
+                            StartSat = model.StartSat,
+                            EndSat = model.EndSat,
+                            VisitSat = model.VisitSat,
+
+                            StartSun = model.StartSun,
+                            EndSun = model.EndSun,
+                            VisitSun = model.VisitSun,
+
+                            StartPho = model.StartPho,
+                            EndPho = model.EndPho,
+                            VisitPho = model.VisitPho
+                        };
+
+                        _context.PcarRouteDetails.Add(detail);
+                    }
+                }
+
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Ideally log the exception
+                return false;
+            }
+        }
+
+
+
+
         public void DeleteSendSchedule(int id)
         {
             var recordToDelete = _context.KpiSendSchedules.SingleOrDefault(x => x.Id == id);
@@ -452,6 +660,30 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(y => y.ClientType)
                 .ToList();
         }
+
+
+        public List<PcarRouteGridDto> GetPCARProfilesAll()
+        {
+            string pattern = @"\[R\d+\]";
+            var routes = _context.PcarRoute
+     .Include(r => r.SmartWand)  // Include linked SmartWand
+     .Include(r => r.RouteDetails)
+         .ThenInclude(rd => rd.ClientSite)          
+
+     .Select(r =>  new PcarRouteGridDto
+     {
+         Id = r.Id,
+         Pcarroutename = r.Pcarroutename,
+         Smartwandallocation = r.Smartwandallocation,
+         SmartWandId = r.SmartWand.SmartWandId,
+         PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim() ,
+         Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
+     })
+     .ToList();
+
+            return routes;
+        }
+
         public void DeleteSendScheduleKV(int id)
         {
             var recordToDelete = _context.KpiSendKVSchedules.SingleOrDefault(x => x.Id == id);
@@ -496,4 +728,18 @@ namespace CityWatch.Data.Providers
         }
 
     }
+
+
+    public class PcarRouteGridDto
+    {
+        public int Id { get; set; }
+        public string Pcarroutename { get; set; }
+        public int Smartwandallocation { get; set; }
+        public string SmartWandId { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Sites { get; set; }
+    }
+
+
+
 }
