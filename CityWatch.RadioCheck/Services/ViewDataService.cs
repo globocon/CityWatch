@@ -25,7 +25,7 @@ namespace CityWatch.RadioCheck.Services
         List<GuardViewModel> GetActiveGuards();
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
         List<SelectListItem> ProviderList();
-        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
+        List<ClientSite> GetUserClientSitesHavingAccess(int[] typeId, int? userId, string searchTerm, string searchTermtwo);
         public List<SelectListItem> KPITelematicsList();
         public Guard GetGuardsDetails(int GuardID);
     }
@@ -231,10 +231,10 @@ namespace CityWatch.RadioCheck.Services
         }
 
 
-        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo)
+        public List<ClientSite> GetUserClientSitesHavingAccess(int[] typeId, int? userId, string searchTerm, string searchTermtwo)
         {
             var results = new List<ClientSite>();
-            var clientSites = _clientDataProvider.GetClientSites(typeId);
+            var clientSites = _clientDataProvider.GetClientSites(null).Where(x=> typeId.Contains(x.TypeId)).ToList();
             if (userId == null)
                 results = clientSites;
             else
