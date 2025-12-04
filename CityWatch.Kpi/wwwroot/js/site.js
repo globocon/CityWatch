@@ -1147,6 +1147,14 @@ $(function () {
             data.map(function (site) {
                 $('#clientSitesTimesheetPCR').append('<option value="' + site.value + '">' + site.text + '</option>');
             });
+
+            // ⬇⬇⬇ THE IMPORTANT PART (FIX) ⬇⬇⬇
+            if (window.firstDetailToSelect) {
+                $('#clientSitesTimesheetPCR')
+                    .val(window.firstDetailToSelect.clientSiteId)
+                    .trigger('change');
+            }
+            // ⬆⬆⬆ END FIX ⬆⬆⬆
         });
     });
 
@@ -1319,7 +1327,7 @@ $(function () {
             if (currentRouteDetails.length > 0) {
                 // Get first route detail to pre-select Client Type and Site
                 const firstDetail = currentRouteDetails[0];
-
+                window.firstDetailToSelect = firstDetail; // <-- ADD THIS
                 $('#clientTypeNameTimesheetpcr option').filter(function () {
                     return $(this).text().startsWith(firstDetail.clientTypeName); // match the name portion
                 }).prop('selected', true).change();
@@ -1327,14 +1335,20 @@ $(function () {
                 
 
                 // Wait for client sites to populate, then select the site
-                const waitForSites = setInterval(function () {
-                    if ($('#clientSitesTimesheetPCR option[value="' + firstDetail.clientSiteId + '"]').length > 0) {
-                        clearInterval(waitForSites);
+                //let attempts = 0;
+                //const waitForSites = setInterval(function () {
+                //    attempts++;
 
-                        // Select site
-                        $('#clientSitesTimesheetPCR').val(firstDetail.clientSiteId).trigger('change');
-                    }
-                }, 100);
+                //    if ($('#clientSitesTimesheetPCR option[value="' + firstDetail.clientSiteId + '"]').length > 0) {
+                //        clearInterval(waitForSites);
+                //        $('#clientSitesTimesheetPCR').val(firstDetail.clientSiteId).trigger('change');
+                //    }
+
+                //    if (attempts > 100) { // 10 seconds max
+                //        clearInterval(waitForSites);
+                //    }
+
+                //}, 100);
 
             }
 
