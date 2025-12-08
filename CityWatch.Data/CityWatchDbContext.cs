@@ -234,6 +234,8 @@ namespace CityWatch.Data
         //  PCAR Route Master and Detail
         public DbSet<PcarRoute> PcarRoute { get; set; }
         public DbSet<PcarRouteDetails> PcarRouteDetails { get; set; }
+        public DbSet<DailyWandFq> DailyWandFq { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

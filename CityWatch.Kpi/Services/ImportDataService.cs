@@ -316,94 +316,76 @@ namespace CityWatch.Kpi.Services
         }
 
         private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
-      List<DateTime> kpiDates,
-      int clientSiteId)
+    List<DateTime> kpiDates,
+    int clientSiteId)
         {
-            if (kpiDates == null || kpiDates.Count == 0)
-                return new Dictionary<DateTime, DailyIrCount>();
+            var result = new Dictionary<DateTime, DailyIrCount>();
 
-            DateTime fromDate = kpiDates.Min().Date;
-            DateTime toDate = kpiDates.Max().Date;
-
-            // 1. Load timezone
-            var timezone = await _dbContext.ClientSiteKpiSettings
-                .Where(x => x.ClientSiteId == clientSiteId)
-                .Select(x => x.TimezoneString)
-                .FirstOrDefaultAsync()
-                ?? "AUS Eastern Standard Time";
-
-            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-
-            // 2. Load tags
-            var siteTags = await _dbContext.ClientSiteSmartWandTags
-                .Where(t => t.ClientSiteId == clientSiteId && !t.IsDeleted)
-                .Select(t => new
-                {
-                    t.UId,
-                    t.FqBypass
-                })
-                .ToListAsync();
-
-            // 3. Load hits
-            var rawHits = await _dbContext.ClientSiteSmartWandTagsHitLogs
-                .Where(h => h.LoggedInClientSiteId == clientSiteId)
-                .ToListAsync();
-
-            // Convert all hit dates into local time
-            var tagHitsLocal = rawHits
-                .Select(h => new
-                {
-                    h.TagUId,
-                    LocalDate = TimeZoneInfo.ConvertTimeFromUtc(h.HitUtcDateTime, tz).Date
-                })
-                .Where(h => h.LocalDate >= fromDate && h.LocalDate <= toDate)
-                .ToList();
-
-            // 4. Generate all dates (CROSS JOIN equivalent)
-            var allDates = Enumerable.Range(0, (toDate - fromDate).Days + 1)
-                                     .Select(i => fromDate.AddDays(i))
-                                     .ToList();
-
-            // 5. CROSS JOIN tags × dates and count hits
-            var tagScanCounts =
-                (from t in siteTags
-                 from d in allDates   // CROSS JOIN
-                 let scanCount = tagHitsLocal.Count(h => h.TagUId == t.UId &&
-                                                        h.LocalDate == d)
-                 select new
-                 {
-                     Date = d,
-                     t.FqBypass,
-                     ScanCount = scanCount
-                 }).ToList();
-
-            // 6. Completed Rounds = MIN(scanCount) among non-bypass tags
-            var result = tagScanCounts
-                .Where(x => x.FqBypass == false)
-                .GroupBy(x => x.Date)
-                .ToDictionary(
-                    g => g.Key,
-                    g => new DailyIrCount
-                    {
-                        Date = g.Key,
-                        Count = g.Min(x => x.ScanCount)
-                    });
-
-            // 7. Ensure KPI dates exist
-            foreach (var date in kpiDates.Select(x => x.Date))
+            try
             {
-                if (!result.ContainsKey(date))
+                if (kpiDates == null || !kpiDates.Any())
+                    return result;
+
+                var onlyDates = kpiDates.Select(d => d.Date).ToList();
+                var fromDate = onlyDates.Min();
+                var toDate = onlyDates.Max();
+
+                // Load from the new DailyWandFq table
+                var fqRows = await _dbContext.DailyWandFq
+                    .Where(x => x.ClientSiteId == clientSiteId
+                                && x.FqDate >= fromDate
+                                && x.FqDate <= toDate)
+                    .OrderBy(x => x.FqDate)
+                    .ToListAsync();
+
+                // Add existing dates
+                foreach (var fq in fqRows)
                 {
-                    result[date] = new DailyIrCount
+                    result[fq.FqDate] = new DailyIrCount
                     {
-                        Date = date,
-                        Count = 0
+                        Date = fq.FqDate,
+                        Count = fq.Fq
                     };
+                }
+
+                // Fill missing KPI dates with zero
+                foreach (var date in onlyDates)
+                {
+                    if (!result.ContainsKey(date))
+                    {
+                        result[date] = new DailyIrCount
+                        {
+                            Date = date,
+                            Count = 0
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // optional: log the exception (if you have logging)
+                Console.WriteLine("GetDailyFqCounts Error: " + ex.Message);
+
+                // ensure a safe return value
+                foreach (var date in kpiDates)
+                {
+                    var d = date.Date;
+                    if (!result.ContainsKey(d))
+                    {
+                        result[d] = new DailyIrCount
+                        {
+                            Date = d,
+                            Count = 0
+                        };
+                    }
                 }
             }
 
             return result;
         }
+
+
+
 
 
 
