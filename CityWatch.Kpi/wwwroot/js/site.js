@@ -2397,9 +2397,8 @@ $(function () {
             { width: 250, field: 'address', title: 'Address', hidden: true },
             { width: 250, field: 'landLine', title: 'Site Land Line', hidden: true },
             { width: 250, field: 'guardLogEmailTo', title: 'Email Recipients', hidden: true },
-            { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
-
-            { width: 100, field: 'hasSettings', title: 'Settings Available?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
+            { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : '<i class="fa"></i>'; } },
+            { width: 100, field: 'hasSettings', title: 'Settings Available?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : '<i class="fa"></i>'; } },
             { width: 100, renderer: settingsButtonRenderer },
         ],
         initialized: function (e) {
@@ -2419,7 +2418,8 @@ $(function () {
 
     });
     $('#btnSearchSites').on('click', function () {
-        gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val(), userId: $('#hid_userIdSettings').val() });
+        //gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val(), userId: $('#hid_userIdSettings').val() });
+        reloadClientSiteSettings();
     });
 
     $('#cs_client_type').on('change', function () {
@@ -2483,7 +2483,19 @@ $(function () {
     });
 
 
+    $('#kpi-settings-modal').on('hidden.bs.modal', function (event) {
+        reloadClientSiteSettings();
+    });
 
+    function reloadClientSiteSettings() {
+        let type = $('#cs_client_type').val();
+        let searchTerm = $('#search_sites_settings').val();
+        let userId = $('#hid_userIdSettings').val();
+               
+        gridClientSiteSettings.dataSource = `/Admin/Settings?handler=ClientSiteWithSettings&type=${type}&searchTerm=${searchTerm}&userId=${userId}`;
+
+        gridClientSiteSettings.reload();
+    }
 
 
 
