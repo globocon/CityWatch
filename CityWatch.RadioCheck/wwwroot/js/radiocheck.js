@@ -1089,7 +1089,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             action: function (e, dt, node, config) {
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
-                const newPageUrl = '/GlobeMapNoActivity';
+                /*const newPageUrl = '/GlobeMapNoActivity';*/
+                const newPageUrl = '/GlobeMap';
                 window.open(newPageUrl, '_blank');
             }
         },
@@ -3916,7 +3917,8 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             action: function (e, dt, node, config) {
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
-                const newPageUrl = '/GlobeMapNoActivity';
+                //const newPageUrl = '/GlobeMapNoActivity';
+                const newPageUrl = '/GlobeMap';
                 window.open(newPageUrl, '_blank');
             }
         },
@@ -4436,7 +4438,8 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             action: function (e, dt, node, config) {
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
-                const newPageUrl = '/GlobeMapNoActivity';
+                //const newPageUrl = '/GlobeMapNoActivity';
+                const newPageUrl = '/GlobeMap';
                 window.open(newPageUrl, '_blank');
             }
         },

@@ -471,8 +471,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }).ToList().Where(x => x.State == State);
             return new JsonResult(activeGuardDetailModels);
         }
-        public IActionResult OnGetClientSiteActivityStatusClientSite(int ClientSiteId)
+        public IActionResult OnGetClientSiteActivityStatusClientSite(string ClientSiteId)
         {
+            int[] siteIds= ClientSiteId?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
             {
@@ -502,7 +503,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 haswandtags = detail.haswandtags,
                 TourMode = detail.TourMode
                 // Map other properties as needed
-            }).ToList().Where(x => x.ClientSiteId == ClientSiteId);
+            }).ToList().Where(x => siteIds.Contains(x.ClientSiteId));
+            //.Where(x => x.ClientSiteId == ClientSiteId);
             return new JsonResult(activeGuardDetailModels);
         }
         //code added for HR LED Start
@@ -718,10 +720,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
             inActiveGuardDetails = inActiveGuardDetails.Where(x => x.State == State).ToList();
             return new JsonResult(inActiveGuardDetails);
         }
-        public IActionResult OnGetClientSiteInActivityStatusClientSite(int ClientSiteId)
+        public IActionResult OnGetClientSiteInActivityStatusClientSite(string  ClientSites)
         {
+            
+            int[] ClientSiteId = ClientSites?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
-            inActiveGuardDetails = inActiveGuardDetails.Where(x => x.ClientSiteId == ClientSiteId).ToList();
+            inActiveGuardDetails = inActiveGuardDetails.Where(x => ClientSiteId.Contains(x.ClientSiteId) ).ToList();
             return new JsonResult(inActiveGuardDetails);
         }
         //for getting logBookDetails of Guards-start
