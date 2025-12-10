@@ -86,4 +86,30 @@ namespace CityWatch.Data.Models
         public ClientSite ClientSite { get; set; }
     }
 
+
+    public class PcarRouteDailyVisits
+    {
+        public int Id { get; set; }
+
+        public int SmartWandId { get; set; }
+        public int SiteId { get; set; }
+        public int GuardId { get; set; }
+
+        public int LoginUserId { get; set; }
+        public int LoginSiteId { get; set; }
+
+        public string VisitName { get; set; }
+        public int VisitNumber { get; set; }
+        public string DayName { get; set; }
+
+        public int PcarRouteId { get; set; }
+        public int PcarRouteDetailsId { get; set; }
+
+        public string TimeOn { get; set; }
+        public string TimeOff { get; set; }
+
+        public string GpsCoordinates { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
 }

@@ -1,9 +1,12 @@
 ﻿using CityWatch.Data.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CityWatch.Data.Providers.AppConfigurationProvider;
+using static Dropbox.Api.Paper.UserOnPaperDocFilter;
 
 namespace CityWatch.Data.Providers
 {
@@ -19,6 +22,7 @@ namespace CityWatch.Data.Providers
         void DeleteMobileAppUpgrade(int id);
         void UpdateDownloadCount(int id);
         void RollBackToVersion(int recordId);
+        public PcarRouteResult GetPcarDetails(string mobiledevId);
     }
 
     public class AppConfigurationProvider : IAppConfigurationProvider
@@ -168,5 +172,148 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException("Record not found for rollback.");
             }
         }
+
+        public class VisitDto
+        {
+            public string VisitName { get; set; }
+
+            // Visit already saved today?
+            public bool IsCheckedToday { get; set; }
+
+            // These two values MUST be returned from API for the popup
+            public string SavedTimeOnSite { get; set; }
+            public string SavedTimeOffSite { get; set; }
+
+            // Optional: To disable modification in MAUI cleanly
+            public bool IsReadOnly => IsCheckedToday;
+        }
+
+        public class PcarRouteResponse
+        {
+            public int SmartWandId { get; set; }   // New
+            public int SiteId { get; set; }        // New
+            public string DayName { get; set; }    // New
+            public int PcarRouteId { get; set; }           // New
+            public int PcarRouteDetailsId { get; set; }    // New
+            public string SiteName { get; set; }
+            public string Address { get; set; }
+            public string GPSLocation { get; set; }  // ADD THIS
+            public int VisitCount { get; set; }
+            public List<VisitDto> Visits { get; set; }
+        }
+
+        public class PcarRouteResult
+        {
+           
+            public bool Success { get; set; }
+            public string Message { get; set; }
+            public List<PcarRouteResponse> Data { get; set; }
+        }
+
+
+        public PcarRouteResult GetPcarDetails(string mobiledevId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(mobiledevId))
+                    return new PcarRouteResult { Success = false, Message = "Device ID is required" };
+
+                var smartWand = _context.ClientSiteSmartWands
+                    .FirstOrDefault(x => x.DeviceId != null &&
+                                         x.DeviceId.Trim().ToLower() == mobiledevId.Trim().ToLower());
+
+                if (smartWand == null)
+                    return new PcarRouteResult { Success = false, Message = "SmartWand not found for this device" };
+
+                var route = _context.PcarRoute
+                    .Include(r => r.RouteDetails)
+                    .ThenInclude(d => d.ClientSite)
+                    .FirstOrDefault(r => r.Smartwandallocation == smartWand.Id);
+
+                if (route == null)
+                    return new PcarRouteResult { Success = false, Message = "Route not found for this device" };
+
+                var today = DateTime.Today;
+                string dayName = today.DayOfWeek.ToString().Substring(0, 3);
+
+                // Load saved visits for today
+                var savedVisits = _context.PcarRouteDailyVisits
+                    .Where(v => v.SmartWandId == smartWand.Id && v.CreatedAt.Date == today)
+                    .Select(v => new
+                    {
+                        v.SiteId,
+                        v.VisitName,
+                        v.TimeOn,
+                        v.TimeOff
+                    })
+                    .ToList();
+
+                var response = route.RouteDetails.Select(rd =>
+                {
+                    int visitCount = today.DayOfWeek switch
+                    {
+                        DayOfWeek.Monday => rd.VisitMon,
+                        DayOfWeek.Tuesday => rd.VisitTue,
+                        DayOfWeek.Wednesday => rd.VisitWed,
+                        DayOfWeek.Thursday => rd.VisitThu,
+                        DayOfWeek.Friday => rd.VisitFri,
+                        DayOfWeek.Saturday => rd.VisitSat,
+                        DayOfWeek.Sunday => rd.VisitSun,
+                        _ => 0
+                    };
+
+                    return new PcarRouteResponse
+                    {
+                        SmartWandId = smartWand.Id,
+                        SiteId = rd.ClientSite.Id,
+                        PcarRouteId = route.Id,
+                        PcarRouteDetailsId = rd.Id,
+                        DayName = dayName,
+                        SiteName = rd.ClientSite.Name,
+                        Address = rd.ClientSite.Address,
+                        GPSLocation = rd.ClientSite.Gps,
+                        VisitCount = visitCount,
+                        Visits = Enumerable.Range(1, visitCount)
+                            .Select(i =>
+                            {
+                                var visitName = $"Visit {i}";
+
+                                // Find matching saved visit
+                                var saved = savedVisits
+                                    .FirstOrDefault(sv =>
+                                        sv.SiteId == rd.ClientSite.Id &&
+                                        sv.VisitName == visitName);
+
+                                return new VisitDto
+                                {
+                                    VisitName = visitName,
+                                    IsCheckedToday = saved != null,
+                                    SavedTimeOnSite = saved?.TimeOn,
+                                    SavedTimeOffSite = saved?.TimeOff
+                                };
+                            })
+                            .ToList()
+                    };
+                }).ToList();
+
+                return new PcarRouteResult
+                {
+                    Success = true,
+                    Message = "Success",
+                    Data = response
+                };
+            }
+            catch (Exception ex)
+            {
+                return new PcarRouteResult
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                };
+            }
+        }
+
+
+
     }
 }

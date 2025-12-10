@@ -2965,7 +2965,105 @@ namespace CityWatch.Web.API
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet("GetPcarDetails")]
+        public IActionResult GetPcarDetails(string deviceId)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId))
+                return BadRequest(new { message = "Device ID is required" });
+
+            var result = _viewDataService.GetPcarDetailsFromDevice(deviceId);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost]
+        [Route("SaveVisitTime")]
+        public async Task<IActionResult> SaveVisitTime([FromBody] VisitSaveDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new { Success = false, Message = "Invalid request" });
+            }
+
+            try
+            {
+                var visit = new PcarRouteDailyVisits
+                {
+                    SmartWandId = dto.SmartWandId,
+                    SiteId = dto.SiteId,
+                    GuardId = dto.GuardId,
+
+                    LoginUserId = dto.LoginUserId,
+                    LoginSiteId = dto.LoginSiteId,
+
+                    VisitName = dto.VisitName,
+                    VisitNumber = dto.VisitNumber,
+                    DayName = dto.DayName,
+
+                    PcarRouteId = dto.PcarRouteId,
+                    PcarRouteDetailsId = dto.PcarRouteDetailsId,
+
+                    TimeOn = dto.TimeOn,
+                    TimeOff = dto.TimeOff,
+
+                    GpsCoordinates = dto.GpsCoordinates,
+                    CreatedAt = DateTime.Now
+                };
+
+                await _guardLogDataProvider.SavePcarSaveVisitTimeAsync(visit);
+
+                
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Saved successfully",
+                    Data = visit
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Error saving data: " + ex.Message
+                });
+            }
+        }
+
+
+
+
     }
+
+
+    public class VisitSaveDto
+    {
+        public int SmartWandId { get; set; }
+        public int SiteId { get; set; }
+        public string DayName { get; set; }
+
+        public int PcarRouteId { get; set; }
+        public int PcarRouteDetailsId { get; set; }
+
+        public string VisitName { get; set; }
+        public int VisitNumber { get; set; }
+
+        public int GuardId { get; set; }
+
+        // NEW FIELDS
+        public string GpsCoordinates { get; set; }
+        public int LoginUserId { get; set; }
+        public int LoginSiteId { get; set; }
+
+        public string TimeOn { get; set; }
+        public string TimeOff { get; set; }
+    }
+
 
 
     public class SiteTagStatusPending
