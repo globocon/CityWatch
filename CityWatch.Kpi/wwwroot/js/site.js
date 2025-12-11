@@ -2695,10 +2695,10 @@ $(function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
 
-            $("#ClientSiteKpiNote_Id").val(result.id);
+            //$("#ClientSiteKpiNote_Id").val(result.id);
             $("textarea[id='ClientSiteKpiNote_Notes']").val(result.notes);
             $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(result.notes));
-            $("#ClientSiteKpiNote_ForMonth").val(result.forMonth);
+            //$("#ClientSiteKpiNote_ForMonth").val(result.forMonth);
             $("#ClientSiteKpiNote_HRRecords").val(result.hrRecords);
         }).fail(function () { });
     });
