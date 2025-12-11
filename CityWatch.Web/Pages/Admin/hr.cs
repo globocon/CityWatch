@@ -367,72 +367,79 @@ namespace CityWatch.Web.Pages.Admin
                     if (val == 1)
                     {
                         guard.IsLB_KV_IR = true;
+                        guard.IsMobileAppAccess = true;
                     }
                     else if (val == 2)
                     {
-                        guard.IsSTATS = true
-    ;
+                        
+                        guard.IsMobileAppPlusTags = true;
+                        
                     }
                     else if (val == 3)
                     {
-                        guard.IsSTATSChartsAccess = true;
+                        guard.IsPCARAccess = true;
                     }
                     else if (val == 4)
                     {
-                        guard.IsKPIAccess = true;
+                        guard.IsRCLiteAccess = true;
+                       
                     }
                     else if (val == 5)
                     {
-                        guard.IsRCLiteAccess = true;
+                        guard.IsRCAccess = true;
                     }
                     else if (val == 6)
                     {
-                        guard.IsRCAccess = true;
+                        guard.IsRCHRAccess = true;
                     }
                     else if (val == 7)
                     {
-                        guard.IsRCHRAccess = true;
+                        guard.IsRCFusionAccess = true;
                     }
                     else if (val == 8)
                     {
-                        guard.IsRCFusionAccess = true;
+                        guard.IsSTATS = true;
+                        
                     }
                     else if (val == 9)
                     {
-                        guard.IsAdminPowerUser = true;
+                        guard.IsSTATSChartsAccess = true;
+                       
                     }
                     else if (val == 10)
                     {
-                        guard.IsAdminSOPToolsAccess = true;
+                       
+                        guard.IsKPIAccess = true;
                     }
                     else if (val == 11)
                     {
-                        guard.IsAdminAuditorAccess = true;
+                        guard.IsAdminPowerUser = true;
+                        
                     }
                     else if (val == 12)
                     {
-                        guard.IsAdminInvestigatorAccess = true;
+                        guard.IsAdminSOPToolsAccess = true;
+                       
                     }
                     else if (val == 13)
                     {
-                        guard.IsAdminThirdPartyAccess = true;
+                        
+                        guard.IsAdminAuditorAccess = true;
                     }
                     else if (val == 14)
                     {
-                        guard.IsAdminGlobal = true;
+                        
+                        guard.IsAdminInvestigatorAccess = true;
                     }
                     else if (val == 15)
                     {
-                        guard.IsMobileAppAccess = true;
+                        guard.IsAdminThirdPartyAccess = true;
                     }
                     else if (val == 16)
                     {
-                        guard.IsMobileAppPlusTags = true;
+                        guard.IsAdminGlobal = true;
                     }
-                    else if (val ==17)
-                    {
-                        guard.IsPCARAccess = true;
-                    }
+                    
                 }
             }
             if (!ModelState.IsValid)
