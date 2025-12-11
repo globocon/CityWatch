@@ -2791,7 +2791,7 @@ $(function () {
                     console.log('Load operation completed!');
 
                     $('#kpi-tab').tab('show');
-                    $('#contracted-manning-tab').tab('show');
+                    $('#siteKpiSettings-tab').tab('show');
                     window.sharedVariable = data.clientSiteId;
                     console.log('Load operation completed!');
 

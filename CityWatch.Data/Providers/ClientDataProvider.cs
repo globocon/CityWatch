@@ -5,6 +5,7 @@ using iText.Commons.Actions.Contexts;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
+using iText.StyledXmlParser.Jsoup.Select;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -17,6 +18,7 @@ using SMSGlobal.Response;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
@@ -733,9 +735,37 @@ namespace CityWatch.Data.Providers
 
             if (entityState == EntityState.Modified)
             {
-                //_context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);
-                _context.ClientSiteKpiSettings.Update(setting);
-                _context.SaveChanges();
+                // Dileep - 11 Dec 2025
+                // Fix: When updating the settings, some manning-related fields were being overwritten incorrectly.
+                // The following fields are now preserved using existing database values:
+                // TimezoneString, ScheduleIsActive, and KPITelematicsFieldID.
+                // This resolves the issue where saving the settings did not correctly retain manning data
+                // such as Contract Manager, Select, Schedule is Active, Time Zone (UTC +11:00), and Status (Ongoing).
+                try
+                {
+                    var existingData = _context.ClientSiteKpiSettings
+    .FirstOrDefault(x => x.ClientSiteId == setting.ClientSiteId);
+
+                    // Copy needed fields
+                    setting.TimezoneString = existingData.TimezoneString;
+                    setting.ScheduleisActive = existingData.ScheduleisActive;
+                    setting.KPITelematicsFieldID = existingData.KPITelematicsFieldID;
+                    setting.CrmSupplierForSettings = existingData.CrmSupplierForSettings;
+                    
+
+                    // Detach the tracked entity to avoid conflict
+                    _context.Entry(existingData).State = EntityState.Detached;
+
+                    // Now update safely
+                    _context.ClientSiteKpiSettings.Update(setting);
+                    _context.SaveChanges();
+
+                }
+                catch(Exception ex)
+                {
+
+
+                }
             }
         }
 
