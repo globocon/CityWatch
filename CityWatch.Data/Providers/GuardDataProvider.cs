@@ -361,7 +361,7 @@ namespace CityWatch.Data.Providers
                 //P1-273 access levels-start
                 guard.IsSTATSChartsAccess = false;
                 guard.IsRCFusionAccess = false;
-                guard.IsMobileAppAccess = true;
+                guard.IsMobileAppAccess = false;
                 guard.IsMobileAppPlusTags = false;
                 guard.IsPCARAccess = false;
 
