@@ -412,6 +412,8 @@ namespace CityWatch.Data.Providers
 
         public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
 
+        Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7740,6 +7742,16 @@ namespace CityWatch.Data.Providers
 
             return missingIds.FirstOrDefault();
         }
+
+        public async Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit)
+        {
+            if (dailyVisit == null)
+                throw new ArgumentNullException(nameof(dailyVisit));
+
+            _context.PcarRouteDailyVisits.Add(dailyVisit);
+            await _context.SaveChangesAsync();
+        }
+
     }
 
 

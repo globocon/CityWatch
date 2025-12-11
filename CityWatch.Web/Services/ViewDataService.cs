@@ -28,6 +28,7 @@ using System.Xml.Schema;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 using Microsoft.Office.Interop;
+using static CityWatch.Data.Providers.AppConfigurationProvider;
 
 
 namespace CityWatch.Web.Services
@@ -209,6 +210,7 @@ namespace CityWatch.Web.Services
         public void DeleteMobileAppUpgrade(int id);
         public void UpdateDownloadCount(int id);
         public void RollBackToVersion(int recordId);
+        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId);
 
     }
 
@@ -3135,6 +3137,12 @@ namespace CityWatch.Web.Services
         public void RollBackToVersion(int recordId)
         {
             _appConfigurationProvider.RollBackToVersion(recordId);
+        }
+
+
+        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId)
+        {
+            return _appConfigurationProvider.GetPcarDetails(deviceId);
         }
 
     }
