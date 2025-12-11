@@ -734,17 +734,18 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         }
 
-        public JsonResult OnGetClientSitesNew(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
+        public JsonResult OnGetClientSitesNew(int? page, int? limit, string typeId, string searchTerm, string searchTermtwo)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            var ClientTypeIds = typeId?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             if (GuardId == 0)
             {
-                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(ClientTypeIds, null, searchTerm, searchTermtwo));
 
             }
             else
             {
-                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, GuardId, searchTerm, searchTermtwo));
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(ClientTypeIds, GuardId, searchTerm, searchTermtwo));
 
             }
         }
