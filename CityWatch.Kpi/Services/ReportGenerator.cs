@@ -123,15 +123,24 @@ namespace CityWatch.Kpi.Services
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableData));
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
             doc.Add(tableLayout);
-
+             
             if (_settings.GuardListOn)
             {
-                doc.Add(new AreaBreak());
+                //doc.Add(new AreaBreak());
 
-                doc.Add(headerTable);
+                //doc.Add(headerTable);
                 var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
                 var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
-                doc.Add(tableGuardData);
+                //p2-145 – Telematics Error-start
+                foreach (var table in tableGuardData)// if contains multiple tables
+                {
+                    doc.Add(new AreaBreak());
+
+                    doc.Add(headerTable);
+                    doc.Add(table);          // Table implements IBlockElement
+                    //doc.Add(new AreaBreak()); // Optional: new page per table
+                }
+                //p2-145 – Telematics Error-end
                 if (monthlyDataGuard.Count > 0)
                 {
                     // To add 3rd Page 
@@ -738,43 +747,153 @@ namespace CityWatch.Kpi.Services
             return null;
         }
 
-        private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
+        //private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
+        //{
+        //    var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 })).UseAllAvailableWidth();
+        //    CreateGuardReportHeader(kpiGuardTable, fromDate);
+        //    foreach (var data in monthlyKpiGuardData)
+        //    {
+        //        kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dd")));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
+
+        //        var Shift1GuardName = (data.Shift1GuardName.Length > 0 ? data.Shift1GuardName.Split("\n")[0] : string.Empty);
+        //        Shift1GuardName = Shift1GuardName.Length > 16 ? Shift1GuardName.Substring(0, 16) : Shift1GuardName; ;
+        //        kpiGuardTable.AddCell(CreateDataCell(Shift1GuardName));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo.Length > 0 ? data.Shift1GuardSecurityNo.Split("\n")[0] : string.Empty));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr1.Length > 0 ? data.Shift1GuardHr1.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr2.Length > 0 ? data.Shift1GuardHr2.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr3.Length > 0 ? data.Shift1GuardHr3.Split(",")[0] : string.Empty)));
+
+        //        var Shift2GuardName = (data.Shift2GuardName.Length > 0 ? data.Shift2GuardName.Split("\n")[0] : string.Empty);
+        //        Shift2GuardName = Shift2GuardName.Length > 16 ? Shift2GuardName.Substring(0, 16) : Shift2GuardName; ;
+        //        kpiGuardTable.AddCell(CreateDataCell(Shift2GuardName));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo.Length > 0 ? data.Shift2GuardSecurityNo.Split("\n")[0] : string.Empty));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr1.Length > 0 ? data.Shift2GuardHr1.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr2.Length > 0 ? data.Shift2GuardHr2.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr3.Length > 0 ? data.Shift2GuardHr3.Split(",")[0] : string.Empty)));
+
+        //        var Shift3GuardName = (data.Shift3GuardName.Length > 0 ? data.Shift3GuardName.Split("\n")[0] : string.Empty);
+        //        Shift3GuardName = Shift3GuardName.Length > 16 ? Shift3GuardName.Substring(0, 16) : Shift3GuardName; ;
+        //        kpiGuardTable.AddCell(CreateDataCell(Shift3GuardName));
+        //        kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo.Length > 0 ? data.Shift3GuardSecurityNo.Split("\n")[0] : string.Empty));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr1.Length > 0 ? data.Shift3GuardHr1.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr2.Length > 0 ? data.Shift3GuardHr2.Split(",")[0] : string.Empty)));
+        //        kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr3.Length > 0 ? data.Shift3GuardHr3.Split(",")[0] : string.Empty)));
+        //    }
+        //    return kpiGuardTable;
+        //}
+
+        //p2-145 – Telematics Error-start
+        private List<Table> CreateGuardReportData( List<DailyKpiGuard> monthlyKpiGuardData,DateTime fromDate)
         {
-            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 })).UseAllAvailableWidth();
-            CreateGuardReportHeader(kpiGuardTable, fromDate);
-            foreach (var data in monthlyKpiGuardData)
+            var tables = new List<Table>();
+
+            // Determine max guards (from Shift Block 1,2 & 3)
+            int maxTables = monthlyKpiGuardData
+            .Select(day => new[]
             {
-                kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dd")));
-                kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
-                kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
+                Split(day.Shift1GuardName, '\n').Count,
+                Split(day.Shift2GuardName, '\n').Count,
+                Split(day.Shift3GuardName, '\n').Count
+            }.Max())
+            .Max();
 
-                var Shift1GuardName = (data.Shift1GuardName.Length > 0 ? data.Shift1GuardName.Split("\n")[0] : string.Empty);
-                Shift1GuardName = Shift1GuardName.Length > 16 ? Shift1GuardName.Substring(0, 16) : Shift1GuardName; ;
-                kpiGuardTable.AddCell(CreateDataCell(Shift1GuardName));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo.Length > 0 ? data.Shift1GuardSecurityNo.Split("\n")[0] : string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr1.Length > 0 ? data.Shift1GuardHr1.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr2.Length > 0 ? data.Shift1GuardHr2.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr3.Length > 0 ? data.Shift1GuardHr3.Split(",")[0] : string.Empty)));
+            for (int guardIndex = 0; guardIndex < maxTables; guardIndex++)
+            {
+                var kpiGuardTable = new Table(
+                    UnitValue.CreatePercentArray(
+                        new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 }
+                    )
+                ).UseAllAvailableWidth();
 
-                var Shift2GuardName = (data.Shift2GuardName.Length > 0 ? data.Shift2GuardName.Split("\n")[0] : string.Empty);
-                Shift2GuardName = Shift2GuardName.Length > 16 ? Shift2GuardName.Substring(0, 16) : Shift2GuardName; ;
-                kpiGuardTable.AddCell(CreateDataCell(Shift2GuardName));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo.Length > 0 ? data.Shift2GuardSecurityNo.Split("\n")[0] : string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr1.Length > 0 ? data.Shift2GuardHr1.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr2.Length > 0 ? data.Shift2GuardHr2.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr3.Length > 0 ? data.Shift2GuardHr3.Split(",")[0] : string.Empty)));
+                CreateGuardReportHeader(kpiGuardTable, fromDate);
 
-                var Shift3GuardName = (data.Shift3GuardName.Length > 0 ? data.Shift3GuardName.Split("\n")[0] : string.Empty);
-                Shift3GuardName = Shift3GuardName.Length > 16 ? Shift3GuardName.Substring(0, 16) : Shift3GuardName; ;
-                kpiGuardTable.AddCell(CreateDataCell(Shift3GuardName));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo.Length > 0 ? data.Shift3GuardSecurityNo.Split("\n")[0] : string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr1.Length > 0 ? data.Shift3GuardHr1.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr2.Length > 0 ? data.Shift3GuardHr2.Split(",")[0] : string.Empty)));
-                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr3.Length > 0 ? data.Shift3GuardHr3.Split(",")[0] : string.Empty)));
+                foreach (var data in monthlyKpiGuardData)
+                {
+                    AddDayRow(kpiGuardTable, data, guardIndex);
+                }
+
+                tables.Add(kpiGuardTable);
             }
-            return kpiGuardTable;
+
+            return tables;
         }
+        private void AddDayRow(Table table, DailyKpiGuard data, int index)
+        {
+            table.AddCell(CreateDataCell(data.Date.ToString("dd")));
+            table.AddCell(CreateDataCell(data.Date.ToString("dddd")));
+            table.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? ""));
+            table.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? ""));
+
+            AddShiftCells(
+                table,
+                data.Shift1GuardName,
+                data.Shift1GuardSecurityNo,
+                data.Shift1GuardHr1,
+                data.Shift1GuardHr2,
+                data.Shift1GuardHr3,
+                index
+            );
+
+            AddShiftCells(
+                table,
+                data.Shift2GuardName,
+                data.Shift2GuardSecurityNo,
+                data.Shift2GuardHr1,
+                data.Shift2GuardHr2,
+                data.Shift2GuardHr3,
+                index
+            );
+
+            AddShiftCells(
+                table,
+                data.Shift3GuardName,
+                data.Shift3GuardSecurityNo,
+                data.Shift3GuardHr1,
+                data.Shift3GuardHr2,
+                data.Shift3GuardHr3,
+                index
+            );
+        }
+        private void AddShiftCells(
+            Table table,
+            string names,
+            string secNos,
+            string hr1,
+            string hr2,
+            string hr3,
+            int index)
+        {
+            var nameList = names.Split("\n").ToArray();
+            var secList = secNos.Split("\n").ToArray();
+            var h1 = hr1.Split(",").ToArray();
+            var h2 = hr2.Split(",").ToArray();
+            var h3 = hr3.Split(",").ToArray();
+
+            table.AddCell(CreateDataCell(index < nameList.Length ? nameList[index] : ""));
+            table.AddCell(CreateDataCell(index < secList.Length ? secList[index] : ""));
+            table.AddCell(CreateHrDataCell(index < h1.Length ? h1[index] : ""));
+            table.AddCell(CreateHrDataCell(index < h2.Length ? h2[index] : ""));
+            table.AddCell(CreateHrDataCell(index < h3.Length ? h3[index] : ""));
+        }
+
+        private Cell CreateDataCell(object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        private List<string> Split(string value, char separator)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? new List<string>()
+                : value.Split(separator).Select(x => x.Trim()).ToList();
+        }
+
+        //p2-145 – Telematics Error-end
+
+
 
         private Table CreateGuardDetailsData(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance)
         {
