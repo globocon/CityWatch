@@ -85,6 +85,50 @@
             border-radius: 5px !important;
             font-size: 14px;
         }
+        .flashing-red {
+          width: 18px;
+          height: 18px;
+          background: red;
+          border-radius: 50%;
+          animation: flash 1s infinite;
+        }
+        .icon-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+}
+
+        .green-dot {
+            background-color: green;
+        }
+
+        .orange-dot {
+            background-color: orange;
+        }
+
+        .red-dot {
+            background-color: red;
+        }
+
+        .flashing-red-dot {
+            background-color: red;
+            animation: flash 1s infinite;
+        }
+
+        .flash {
+            animation: flash 1s infinite;
+        }
+            @@keyframes flash {
+                0% { opacity: 1; }
+                50% { opacity: 0.2; }
+                100% { opacity: 1; }
+            }
+
+        .blinking {
+            animation: blink 1s infinite;
+        }
+
+       
     </style>
 </head>
 <body>
@@ -111,7 +155,7 @@
                 foreach (var clientType in sortedClientTypes)
                 {
                     var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
-                        <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
                 }
             }
         </select>
@@ -127,7 +171,7 @@
         <label>Search</label>
         <input type="text" id="txtSearchMap" style="width:153px" />
         <div style="display:inline-block;float:right;margin-top:12px">
-            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+            @* Auto refresh in <span id="clockRefresh">03 min 00 sec</span> *@
             <button type="button" class="btn btn-sm btn-success" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
 
         </div>
@@ -176,9 +220,9 @@
             nIntervId = null;
             location.reload();
         }
-        setInterval(() => {
-            location.reload();
-        }, 180000);
+        // setInterval(() => {
+        //     location.reload();
+        // }, 180000);
         const urlParams = new URLSearchParams(window.location.search);
         const clientSiteIds = urlParams.get('clientSiteIds');
 
@@ -233,10 +277,21 @@
                             const markerColor = getColorFromAlert(alertColor);
 
                             if (gps) {
+                                if (record.isEnabled == 1) {
+                                    
+                                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                                    L.marker([lat, lng], { icon: createCustomDuressIcon("red",true) })
+                                        .bindPopup('<strong>SiteName:</strong>' + siteName + '<br>' + '<strong>Phone Number:</strong>' + phoneNumber + '<br>' + '<strong>Address:</strong>' + address + '<br>' + '<strong>GuardName:</strong>' + GuardName)
+                                        .addTo(map);
+
+                                
+                                }
+                                else { 
                                 const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
                                 L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
                                     .bindPopup('<strong>SiteName:</strong>' + siteName + '<br>' + '<strong>Phone Number:</strong>' + phoneNumber + '<br>' + '<strong>Address:</strong>' + address + '<br>' + '<strong>GuardName:</strong>' + GuardName)
                                     .addTo(map);
+                                }
 
                             }
                         });
@@ -244,7 +299,33 @@
                     .catch(error => console.error('Error:', error));
             })
         .catch(error => console.error('Error:', error));
-       
+        function createCustomDuressIcon(color, isFlashing = false) {
+
+            // let classes = `marker-dot marker-${color}`;
+            let blinkClass = isFlashing ? 'blinking' : '';
+
+            
+                return L.divIcon({
+                    className: 'custom-marker',
+                            html: `<div class= "${blinkClass}" style="background-color:${color}; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div> `,
+                    iconSize: [25, 25],
+                });
+            // }
+            // else {
+            //     return L.divIcon({
+            //         className: 'custom-marker',
+            //         html: `<div style="background-color:${color}; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>`,
+            //         iconSize: [25, 25],
+            //     });
+            // }
+            alert(isFlashing);
+            // return L.divIcon({
+            //     className: classes,
+            //     html: `<div class="${classes}"></div>`,
+            //     iconSize: [20, 20],
+            //     iconAnchor: [10, 10]
+            // });
+        }
         function stripHtml(input) {
             const doc = new DOMParser().parseFromString(input, 'text/html');
             return doc.body.textContent || "";
@@ -372,10 +453,20 @@
                         const markerColor = getColorFromAlert(alertColor);
 
                         if (gps) {
-                            const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                            if (record.isEnabled == 1) {
+                                const duressMarker = new google.maps.marker.AdvancedMarkerElement({
+                                    position: { lat: guard.lat, lng: guard.lng },
+                                    content: document.createElement("div"),
+                                });
+
+                                duressMarker.content.classList.add("flashing-red");
+                            }
+                            else {
+                                const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
                             L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
                                 .bindPopup('<strong>SiteName:</strong>' + siteName + '<br>' + '<strong>Phone Number:</strong>' + phoneNumber + '<br>' + '<strong>Address:</strong>' + address + '<br>' + '<strong>GuardName:</strong>' + GuardName)
                                 .addTo(map);
+                            }
                         }
                     });
                 })
