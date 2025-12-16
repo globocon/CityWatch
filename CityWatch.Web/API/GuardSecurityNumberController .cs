@@ -29,6 +29,7 @@ using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
@@ -41,6 +42,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 
 namespace CityWatch.Web.API
@@ -114,20 +116,22 @@ namespace CityWatch.Web.API
 
             if (guard == null)
             {
-                return NotFound(new
-                {
-                    message = "A guard with given security license number not found. If you are a new guard, tick 'New Guard?' to register and login.",
-                    isActive = false
-                });
+                //return NotFound(new
+                //{
+                //    message = "User not found. Please check if input is correct. If you are a new, Please click Register.",
+                //    isActive = false
+                //});
+                return NotFound("User not found. Please check if input is correct.\n If you are new, Please click Register.");
             }
 
             if (!guard.IsActive)
             {
-                return Unauthorized(new
-                {
-                    message = "A guard with given security license number is disabled. Please contact admin to activate.",
-                    isActive = false
-                });
+                //return Unauthorized(new
+                //{
+                //    message = "A guard with given security license number is disabled. Please contact admin to activate.",
+                //    isActive = false
+                //});
+                return Unauthorized("A guard with given security license number is disabled.\n Please contact admin to activate.");
             }
 
             if (!guard.IsMobileAppAccess && !guard.IsMobileAppPlusTags)
@@ -355,7 +359,7 @@ namespace CityWatch.Web.API
 
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
 
-                return Ok(new { message = "Guard successfully logged in.", guardLoginId , TourMode = (int)clientsiteDetails.PatrolTourMode});
+                return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode });
             }
             catch (Exception ex)
             {
@@ -513,12 +517,12 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("PostActivity")]
-        public IActionResult PostActivity([FromBody] PostActivityRequest request,int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
+        public IActionResult PostActivity([FromBody] PostActivityRequest request, int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
             int scanningType = 0, string tagUID = "NA")
         {
             try
             {
-                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";               
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
                 var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
 
                 if (!IsSuccessR)
@@ -2030,7 +2034,7 @@ namespace CityWatch.Web.API
                     //"click here</a> to download the Incident Report, which are unlimited in size.</p>";
                     //messageHtml = messageHtml + "<p>File name : " + blobName + "</p>";
 
-                   
+
                     string folder = new string(blobName.Take(8).ToArray());
 
                     // Encode file name for safe URL
@@ -3017,7 +3021,7 @@ namespace CityWatch.Web.API
 
                 await _guardLogDataProvider.SavePcarSaveVisitTimeAsync(visit);
 
-                
+
                 return Ok(new
                 {
                     Success = true,
@@ -3036,10 +3040,86 @@ namespace CityWatch.Web.API
         }
 
 
+        [HttpGet("GetStates")]
+        public IActionResult GetStates()
+        {
+            var result = _viewDataService.States;
+            foreach (var state in result)
+            {
+                if (state.Value.ToLower() == "select" || state.Text.ToLower() == "select")
+                {
+                    result.Remove(state);
+                    break;
+                }
+            }
+            return Ok(result);
+        }
 
+        [HttpPost]
+        [Route("RegisterNewGuardFromMobile")]
+        public async Task<IActionResult> RegisterNewGuardFromMobile([FromBody] NewGuard request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new { Success = false, Message = "Invalid request" });
+            }
+
+            var initalsUsed = string.Empty;
+            try
+            {
+                var RegisterGuard = new Guard
+                {
+                    Id = -1,
+                    Name = request.Name,
+                    Initial = request.Initial,
+                    SecurityNo = request.SecurityNo,
+                    Gender = request.Gender,
+                    Mobile = request.Mobile,
+                    Email = request.Email,
+                    State = request.State,
+                    IsLB_KV_IR = request.IsLB_KV_IR,
+                    IsMobileAppAccess = request.IsMobileAppAccess,
+                };
+
+                if (!TryValidateModel(RegisterGuard))
+                {
+                    var errorMessage = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+
+                    return  StatusCode(500, new
+                    {
+                        IsSuccess = false,
+                        message = "Error saving data: " + errorMessage,
+                        Data = new NewGuard()
+                    });
+                }
+                
+                var g = _guardDataProvider.UpdateGuard(RegisterGuard, request.State, out initalsUsed);
+                var msg = "Guard registered successfully.";
+                if (initalsUsed != RegisterGuard.Initial)
+                {
+                    RegisterGuard.Initial = initalsUsed;
+                    msg += $" Initials changed to {initalsUsed} due to duplication.";
+                }
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    message = msg,
+                    Data = RegisterGuard
+                });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    IsSuccess = false,
+                    message = "Error saving data: " + ex.Message,
+                    Data = new NewGuard()
+                });
+            }
+        }
 
     }
-
 
     public class VisitSaveDto
     {
@@ -3189,6 +3269,20 @@ namespace CityWatch.Web.API
     {
         public double lat { get; set; }
         public double lng { get; set; }
+    }
+
+    public class NewGuard
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string SecurityNo { get; set; }
+        public string Initial { get; set; }
+        public string Gender { get; set; }
+        public string State { get; set; }
+        public string Mobile { get; set; }
+        public string Email { get; set; }
+        public bool IsLB_KV_IR { get; set; }
+        public bool IsMobileAppAccess { get; set; }
     }
 
 }
