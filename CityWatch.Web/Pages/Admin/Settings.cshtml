@@ -237,11 +237,17 @@
 
                                 <select class="form-control" id="sel_client_type">
                                     <option value="">All</option>
-
-                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
-                                    {
-                                        <option value="@item.Id">@item.Name</option>
-                                    }
+                                   
+                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    
+                                        @* @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        } *@
+                                    
                                 </select>
 
                             </div>
@@ -1786,7 +1792,7 @@
                                 <div class="col-md-3">
                                     <select class="form-control" id="sel_client_type">
                                         <option value="">All</option>
-                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                         {
                                             <option value="@item.Id">@item.Name</option>
                                         }
@@ -2404,7 +2410,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }
@@ -2740,7 +2746,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }
@@ -3076,7 +3082,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }

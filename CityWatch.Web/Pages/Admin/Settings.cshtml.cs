@@ -201,7 +201,8 @@ namespace CityWatch.Web.Pages.Admin
         {
             // return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId));
             //p1-259 counter-start
-            var clienttypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+            //var clienttypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+            var clienttypes = _viewDataService.GetUserClientTypesHavingAccess(null);// for getting access to global admin also
             foreach (var item in clienttypes)
             {
                 item.ClientSiteCount = _viewDataService.GetClientTypeCount(item.Id);
@@ -217,7 +218,7 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
         {
-            return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm, searchTermtwo));
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
         }
         public JsonResult OnGetClientSitesExcel(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
         {
