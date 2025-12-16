@@ -50,6 +50,7 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IConfiguration _configuration;
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly IUserDataProvider _userDataProvider;
+        private readonly AiService _ai;
         [BindProperty]
         public IncidentRequest Report { get; set; }
         public List<SelectListItem> ClientSites { get; set; }
@@ -72,7 +73,8 @@ namespace CityWatch.Web.Pages.Incident
             IGuardLogDataProvider guardLogDataProvider,
             IConfiguration configuration,
             ISiteEventLogDataProvider siteEventLogDataProvider,
-             IUserDataProvider userDataProvider
+             IUserDataProvider userDataProvider,
+             AiService ai
             )
         {
             _WebHostEnvironment = webHostEnvironment;
@@ -88,6 +90,7 @@ namespace CityWatch.Web.Pages.Incident
             _configuration = configuration;
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _userDataProvider = userDataProvider;
+            _ai = ai;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
@@ -1757,6 +1760,23 @@ namespace CityWatch.Web.Pages.Incident
             var TruckConfigText = CorrectGrammar(textToCheck);
 
             return new JsonResult(new { TruckConfigText });
+        }
+
+
+        public async Task<JsonResult> OnGetAiButtonOpenAIApi(string textToCheck)
+        {
+            if (string.IsNullOrWhiteSpace(textToCheck))
+            {
+                return new JsonResult(new { success = false, message = "Text is empty" });
+            }
+
+            var resultText = await _ai.TestAsync(textToCheck);
+
+            return new JsonResult(new
+            {
+                success = true,
+                correctedText = resultText
+            });
         }
         public async Task<string> CorrectGrammar(string textToCheck)
         {
