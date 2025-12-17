@@ -5269,9 +5269,9 @@ $(function () {
             selectedValues.push(13);
         }
 
-        if (data.isMobileAppAccess) {
-            selectedValues.push(15);
-        }
+        //if (data.isMobileAppAccess) {
+        //    selectedValues.push(15);
+        //}
         if (data.isMobileAppPlusTags) {
             selectedValues.push(16);
         }
