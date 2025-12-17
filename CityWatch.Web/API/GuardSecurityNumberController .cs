@@ -73,6 +73,7 @@ namespace CityWatch.Web.API
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
+        private readonly IAlertEmailServices _alertEmailServices;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
@@ -83,7 +84,7 @@ namespace CityWatch.Web.API
             IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
-            IMobileAppDataServices mobileAppDataServices)
+            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices)
         {
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
@@ -103,6 +104,7 @@ namespace CityWatch.Web.API
             _appConfigurationProvider = appConfigurationProvider;
             _userAuthentication = userAuthentication;
             _mobileAppDataServices = mobileAppDataServices;
+            _alertEmailServices = alertEmailServices;
         }
 
         [HttpGet("GetGuardDetails/{securityNumber}")]
@@ -358,6 +360,19 @@ namespace CityWatch.Web.API
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
 
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
+
+                try
+                {
+                    if (request.IsNewGuard)
+                    {
+                        var _nwGuard = _guardDataProvider.GetGuardDetailsUsingId(request.guardId).FirstOrDefault();
+                        _alertEmailServices.SendNewGuardRegisterAlertMail(_nwGuard, clientsiteDetails.Name);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error sending new guard registration email: " + ex.Message);
+                }
 
                 return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode });
             }
