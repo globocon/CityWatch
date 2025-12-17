@@ -18,6 +18,6 @@ namespace CityWatch.Web.Models
         public string EventDateTimeZone { get; set; }
         public string EventDateTimeZoneShort { get; set; }
         public int? EventDateTimeUtcOffsetMinute { get; set; }
-
+        public bool IsNewGuard { get; set; } = false;
     }
 }

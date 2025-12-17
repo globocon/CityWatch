@@ -33,13 +33,14 @@ namespace CityWatch.Web.Pages.Guard
         public readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
         private readonly EmailOptions _EmailOptions;
+        private readonly IAlertEmailServices _alertEmailServices;
         public LoginModel(IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
             IClientSiteWandDataProvider clientSiteWandDataProvider,
             IConfigDataProvider configDataProvider,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions, IAlertEmailServices alertEmailServices)
         {
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
@@ -48,6 +49,7 @@ namespace CityWatch.Web.Pages.Guard
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _configDataProvider = configDataProvider;
             _EmailOptions = emailOptions.Value;
+            _alertEmailServices = alertEmailServices;
         }
 
         [BindProperty]
@@ -113,7 +115,7 @@ namespace CityWatch.Web.Pages.Guard
                     ClientNameTitle = "Citywatch Security";
                 }
             }
-         }
+        }
 
         public JsonResult OnPostLoginGuard()
         {
@@ -141,10 +143,10 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 //p1-266 checking whether guard has access in login 
-                
 
 
-                    GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
+
+                GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
                 GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
 
@@ -158,7 +160,7 @@ namespace CityWatch.Web.Pages.Guard
                     EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
                     PlayNotificationSound = false,
                     GpsCoordinates = GPSCoordinates,
-                   
+
                 };
                 // Task p6#73_TimeZone issue -- added by Binoy - End
 
@@ -188,171 +190,178 @@ namespace CityWatch.Web.Pages.Guard
                 if (GuardLogin.Guard.IsLB_KV_IR)
                 {
                     _guardLogDataProvider.SaveUserLoginHistoryDetails(new LoginUserHistory()
-                {
-                    LoginUserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
-                    IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                    LoginTime = DateTime.Now,
-                    ClientSiteId= GuardLogin.ClientSite.Id,
-                    GuardId= GuardLogin.Guard.Id,
-                });
-                //Save history for the Guard Login end
-                if (LogBookType == LogBookType.DailyGuardLog)
-                {
-                    // Task p6#73_TimeZone issue -- modified by Binoy
-                    
-                    
+                    {
+                        LoginUserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
+                        IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                        LoginTime = DateTime.Now,
+                        ClientSiteId = GuardLogin.ClientSite.Id,
+                        GuardId = GuardLogin.Guard.Id,
+                    });
+                    //Save history for the Guard Login end
+                    if (LogBookType == LogBookType.DailyGuardLog)
+                    {
+                        // Task p6#73_TimeZone issue -- modified by Binoy
+
+
                         CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
                             eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-                   
-                }
-                if (LogBookType == LogBookType.VehicleAndKeyLog)
-                {
-                    
+
+                    }
+                    if (LogBookType == LogBookType.VehicleAndKeyLog)
+                    {
+
                         CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
                         eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-                    
-                }
 
-                if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
-                {
-                    var previousDayLogBook = _clientDataProvider.GetClientSiteLogBook(GuardLogin.ClientSite.Id, LogBookType.VehicleAndKeyLog, DateTime.Today.AddDays(-1));
-                    if (previousDayLogBook != null)
-                    {
-                        _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                     }
 
-                }
-                //logBookId entry for radio checklist-start
-
-                /* Previous days push message show only for petrol cars*/
-                /*Citywatch M1 - Romeo Patrol Cars*/
-                /* get previous day push messages Start */
-                if (isNewLogBook)
-                {
-
-
-                    if (IsLoginInKeyVehOrLogBook)
+                    if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
                     {
-                        /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
-                        if (GuardLogin.ClientSite.Id == 625)
+                        var previousDayLogBook = _clientDataProvider.GetClientSiteLogBook(GuardLogin.ClientSite.Id, LogBookType.VehicleAndKeyLog, DateTime.Today.AddDays(-1));
+                        if (previousDayLogBook != null)
                         {
-                            var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
-                            if (previousPuShMessages != null)
-                            {
-                                _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId, guardLog);
-                            }
+                            _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                         }
-                        /* Check is duress enabled for this site*/
-                        var isDurssEnabled = _viewDataService.IsClientSiteDuressEnabled(GuardLogin.ClientSite.Id);
-                        if (isDurssEnabled)
+
+                    }
+                    //logBookId entry for radio checklist-start
+
+                    /* Previous days push message show only for petrol cars*/
+                    /*Citywatch M1 - Romeo Patrol Cars*/
+                    /* get previous day push messages Start */
+                    if (isNewLogBook)
+                    {
+
+
+                        if (IsLoginInKeyVehOrLogBook)
                         {
-                            /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
-                            var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
-                            if (previousDuressMessages != null)
+                            /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
+                            if (GuardLogin.ClientSite.Id == 625)
                             {
-                                _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId, guardLog);
-                            }
-                            var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
-                            if (clientSiteForLogbook.Count != 0)
-                            {
-                                if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                                var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                                if (previousPuShMessages != null)
                                 {
-                                    var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
-                                    if (previousDuressMessagesForControlRoom != null)
+                                    _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId, guardLog);
+                                }
+                            }
+                            /* Check is duress enabled for this site*/
+                            var isDurssEnabled = _viewDataService.IsClientSiteDuressEnabled(GuardLogin.ClientSite.Id);
+                            if (isDurssEnabled)
+                            {
+                                /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
+                                var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                                if (previousDuressMessages != null)
+                                {
+                                    _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId, guardLog);
+                                }
+                                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                                if (clientSiteForLogbook.Count != 0)
+                                {
+                                    if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
                                     {
-                                        foreach (var items in previousDuressMessagesForControlRoom)
+                                        var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                                        if (previousDuressMessagesForControlRoom != null)
                                         {
-                                            _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, guardLog);
+                                            foreach (var items in previousDuressMessagesForControlRoom)
+                                            {
+                                                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, guardLog);
+                                            }
+                                            //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
                                         }
-                                        //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+
                                     }
 
                                 }
-
                             }
-                        }
 
+                        }
                     }
-                }
-                /* get previous day push messages end */
+                    /* get previous day push messages end */
 
-                var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, logBookId);
-                if (gaurdlogin.Count != 0)
-                {
-                    foreach (var item in gaurdlogin)
+                    var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, logBookId);
+                    if (gaurdlogin.Count != 0)
                     {
-                        var logbookcl = new GuardLogin();
-
-                        logbookcl.Id = item.Id;
-                        logbookcl.ClientSiteId = item.ClientSiteLogBook.ClientSiteId;
-                        logbookcl.GuardId = item.GuardId;
-
-
-                        //signInEntry.GuardLogin = logbookcl;
-                        var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
-                        if (radioChecklist.Count == 0)
+                        foreach (var item in gaurdlogin)
                         {
-                            /*remove NotificationType=1 no guard on duty (NotificationType=1)*/
-                            _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
+                            var logbookcl = new GuardLogin();
 
-                            var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                            logbookcl.Id = item.Id;
+                            logbookcl.ClientSiteId = item.ClientSiteLogBook.ClientSiteId;
+                            logbookcl.GuardId = item.GuardId;
+
+
+                            //signInEntry.GuardLogin = logbookcl;
+                            var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
+                            if (radioChecklist.Count == 0)
                             {
-                                ClientSiteId = logbookcl.ClientSiteId,
-                                GuardId = logbookcl.GuardId,
-                                GuardLoginTime = DateTime.Now,
-                                /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
-                                OnDuty = GuardLogin.OnDuty,
-                                OffDuty = GuardLogin.OffDuty,
-                                GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
-                                GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
-                                GuardLoginTimeZone = guardLog.EventDateTimeZone,
-                                GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
-                                GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
-                            };
-                            _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
-                        }
-                        else
-                        {
-                            /* Check if the NotificationType == 1 the remove  notification and insert the orginal login*/
-                            var select = radioChecklist.Where(x => x.NotificationType == 1).ToList();
-                            if (select.Count != 0)
-                            {
-                                /*remove NotificationType=1*/
+                                /*remove NotificationType=1 no guard on duty (NotificationType=1)*/
                                 _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
-                                var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
-                                if (radioChecklistNew.Count == 0)
-                                {
-                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                                    {
-                                        ClientSiteId = logbookcl.ClientSiteId,
-                                        GuardId = logbookcl.GuardId,
-                                        GuardLoginTime = DateTime.Now,
-                                        /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
-                                        OnDuty = GuardLogin.OnDuty,
-                                        OffDuty = GuardLogin.OffDuty,
-                                        GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
-                                        GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
-                                        GuardLoginTimeZone = guardLog.EventDateTimeZone,
-                                        GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
-                                        GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
 
-                                    };
-                                    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                {
+                                    ClientSiteId = logbookcl.ClientSiteId,
+                                    GuardId = logbookcl.GuardId,
+                                    GuardLoginTime = DateTime.Now,
+                                    /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
+                                    OnDuty = GuardLogin.OnDuty,
+                                    OffDuty = GuardLogin.OffDuty,
+                                    GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
+                                    GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                                    GuardLoginTimeZone = guardLog.EventDateTimeZone,
+                                    GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                                    GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
+                                };
+                                _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                            }
+                            else
+                            {
+                                /* Check if the NotificationType == 1 the remove  notification and insert the orginal login*/
+                                var select = radioChecklist.Where(x => x.NotificationType == 1).ToList();
+                                if (select.Count != 0)
+                                {
+                                    /*remove NotificationType=1*/
+                                    _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
+                                    var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
+                                    if (radioChecklistNew.Count == 0)
+                                    {
+                                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                        {
+                                            ClientSiteId = logbookcl.ClientSiteId,
+                                            GuardId = logbookcl.GuardId,
+                                            GuardLoginTime = DateTime.Now,
+                                            /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
+                                            OnDuty = GuardLogin.OnDuty,
+                                            OffDuty = GuardLogin.OffDuty,
+                                            GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
+                                            GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                                            GuardLoginTimeZone = guardLog.EventDateTimeZone,
+                                            GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                                            GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
+
+                                        };
+                                        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                                    }
                                 }
                             }
+
+
                         }
 
 
                     }
+                    //logBookId entry for radio checklist-end
 
+                    HttpContext.Session.SetInt32("LogBookId", logBookId);
+                    HttpContext.Session.SetInt32("GuardLoginId", guardLoginId);
 
-                }
-                //logBookId entry for radio checklist-end
+                    //GuardLogin.ClientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
+                    if (GuardLogin.IsNewGuard)
+                    {
+                        var _nwGuard = _guardDataProvider.GetGuardDetailsUsingId(GuardLogin.Guard.Id).FirstOrDefault();
+                        _alertEmailServices.SendNewGuardRegisterAlertMail(_nwGuard, GuardLogin.ClientSite.Name);
+                    }
 
-                HttpContext.Session.SetInt32("LogBookId", logBookId);
-                HttpContext.Session.SetInt32("GuardLoginId", guardLoginId);
-
-                success = true;
+                    success = true;
                 }
                 else
                 {
@@ -407,7 +416,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     AuthUserHelper.IsAdminGlobal = true;
                 }
-                
+
                 else
                 {
                     AuthUserHelper.IsAdminGlobal = false;
@@ -423,7 +432,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
 
-                if(guard.IsAdminInvestigatorAccess)
+                if (guard.IsAdminInvestigatorAccess)
                 {
                     AuthUserHelper.IsAdminInvestigator = true;
                 }
@@ -526,11 +535,11 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
 
-                
+
 
             }
 
-           
+
             return new JsonResult(new { guard, lastLogin, HR1, HR2, HR3, guardLockStatusBasedOnRedDoc });
         }
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
@@ -545,7 +554,7 @@ namespace CityWatch.Web.Pages.Guard
                 // Directly use the item without filtering again
                 hrGroupStatusesNew.Add(new HRGroupStatusNew
                 {
-                    documentDescription=item.Description,
+                    documentDescription = item.Description,
                     Status = 1,
                     GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
                                                          // Generate the color code based on the current item
@@ -621,7 +630,7 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             var positionIdDefault = _clientDataProvider.GetContractedManningDetailsForSpecificSite(siteName);
-            var success = positionIdDefault !=string.Empty;
+            var success = positionIdDefault != string.Empty;
 
             return new JsonResult(new { success, positionIdDefault });
         }
@@ -632,7 +641,7 @@ namespace CityWatch.Web.Pages.Guard
             var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().SingleOrDefault(z => z.ClientSite.Name == clientSiteName & z.SmartWandId == smartWandNo);
             return new JsonResult(_viewDataService.CheckWandIsInUse(smartWand.Id, guardId));
         }
-        public JsonResult OnGetCheckIsWandAvailableNew(string clientSiteName, string smartWandNo, int? guardId,int ClientSiteID)
+        public JsonResult OnGetCheckIsWandAvailableNew(string clientSiteName, string smartWandNo, int? guardId, int ClientSiteID)
         {
             var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().SingleOrDefault(z => z.ClientSite.Name == clientSiteName & z.SmartWandId == smartWandNo);
             var smartwantinuse = _viewDataService.CheckWandIsInUse(smartWand.Id, guardId);
@@ -725,7 +734,7 @@ namespace CityWatch.Web.Pages.Guard
             var hrdocLockforThisGurad = false;
             var initalsUsed = string.Empty;
             var strResult = string.Empty;
-           
+
             if (!string.IsNullOrEmpty(guardLicNo))
             {
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
@@ -743,18 +752,18 @@ namespace CityWatch.Web.Pages.Guard
 
                         // Get the number of days
                         int daysBetween = Math.Abs(difference.Days);
-                        if (daysBetween < 60 )
-                            {
+                        if (daysBetween < 60)
+                        {
                             success = false;
                         }
-                            else
-                            {
+                        else
+                        {
                             var incidentreport = _clientDataProvider.GetLastIncidentReportsByGuardId(guard.Id);
                             strResult = "It’s been a while since you logged in! Your account is now reactivated. You can log in now";
                             success = true;
                             if (incidentreport != null)
                             {
-                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(),lastLogin.ClientSite.Name, incidentreport.ReportDateTime.ToString());
+                                var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), lastLogin.ClientSite.Name, incidentreport.ReportDateTime.ToString());
                                 SendEmailNew(emailBody, daysBetween);
                             }
                             else
@@ -762,13 +771,13 @@ namespace CityWatch.Web.Pages.Guard
                                 var emailBody = GiveGuardLoginEmailNotification(guard.Name, guard.SecurityNo, clientSiteName, guard.Provider, daysBetween, lastLogin.LoginDate.ToString(), lastLogin.ClientSite.Name, null);
                                 SendEmailNew(emailBody, daysBetween);
                             }
-                            
+
                         }
 
                     }
                     else
                     { success = false; }
-                    
+
                 }
             }
 
@@ -778,30 +787,30 @@ namespace CityWatch.Web.Pages.Guard
 
 
         }
-        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo,string clientSite,string Provider,int daysbetween,string lastLoginDate,string lastloginclientsite, string incidentReportDate)
+        public string GiveGuardLoginEmailNotification(string guardname, string licenseNo, string clientSite, string Provider, int daysbetween, string lastLoginDate, string lastloginclientsite, string incidentReportDate)
         {
             var sb = new StringBuilder();
 
             var messageBody = string.Empty;
             messageBody = $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Name of Guard</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{guardname}</td>";
-            messageBody= messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{licenseNo}</td>";
+            messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>License</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{licenseNo}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{clientSite}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Provider</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{Provider}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known sign in date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastLoginDate}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known site</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{lastloginclientsite}</td>";
             messageBody = messageBody + $" <tr><td style=\"width:2% ;border: 1px solid #000000;\"><b>Last known IR date</b></td><td style=\"width:5% ;border: 1px solid #000000;\">{incidentReportDate}</td>";
 
-            sb.Append("Hi , <br/><br/>Following guard is trying to login after "+ daysbetween + " days. <br/><br/>");
+            sb.Append("Hi , <br/><br/>Following guard is trying to login after " + daysbetween + " days. <br/><br/>");
             sb.Append(" <table width=\"50%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
             sb.Append(" <tr><td style=\"width:2% ;border: 1px solid #000000;text-align:center \" colspan=\"2\"><b>Guard Details</b></td></tr>");
             sb.Append(messageBody);
             sb.Append("");
-            
-            
+
+
             //mailBodyHtml.Append("");
             return sb.ToString();
         }
-        private void SendEmailNew(string mailBodyHtml,int daysbetween)
+        private void SendEmailNew(string mailBodyHtml, int daysbetween)
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
@@ -817,9 +826,9 @@ namespace CityWatch.Web.Pages.Guard
                 foreach (var address in GetToEmailAddressList(toAddressNew))
                     message.To.Add(address);
             }
-            
 
-            message.Subject = "Guard login after " + daysbetween +" days.";
+
+            message.Subject = "Guard login after " + daysbetween + " days.";
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
             var builder = new BodyBuilder()
             {
@@ -846,7 +855,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return emailAddressList;
         }
-        public bool CheckIfGuardNeedToBlockForHRDocumnetLock(int guardId,string ClientSiteName)
+        public bool CheckIfGuardNeedToBlockForHRDocumnetLock(int guardId, string ClientSiteName)
         {
             var HR1 = "Grey";
             var HR2 = "Grey";
@@ -936,7 +945,7 @@ namespace CityWatch.Web.Pages.Guard
                                         }
                                     }
                                 }
-                              
+
                                 var enabledHrSettingsList2 = hrdoumnetWithLockfortheSite;
                                 if (!guardLockStatusBasedOnRedDoc && enabledHrSettingsList2.Count > 0)
                                 {
@@ -950,10 +959,10 @@ namespace CityWatch.Web.Pages.Guard
                                                    redDescriptionParts[1] == document.HrSettings.Description;
                                         }));
 
-                                   
+
                                 }
 
-                               
+
                                 //if(!guardLockStatusBasedOnRedDoc)
                                 //{
                                 //  var  guardLockStatusBasedOnAvaliableDoc2 = false;
@@ -1032,7 +1041,7 @@ namespace CityWatch.Web.Pages.Guard
                     guardLogin.OnDuty = GuardLogin.OnDuty;
                     guardLogin.OffDuty = GuardLogin.OffDuty;
                     guardLogin.UserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
-                    guardLogin.IPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    guardLogin.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                 }
             }
             else
@@ -1209,6 +1218,6 @@ namespace CityWatch.Web.Pages.Guard
         }
 
 
-     
+
     }
 }

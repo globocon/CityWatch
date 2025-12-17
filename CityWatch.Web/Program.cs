@@ -69,6 +69,7 @@ builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ICertificateGenerator, CertificateGenerator>();
 builder.Services.AddScoped<IRPLCertificateGeneratorService, RPLCertificateGeneratorService>();
 builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
+builder.Services.AddScoped<IAlertEmailServices, AlertEmailServices>();
 
 builder.Services.AddRazorPages(options =>
 {
