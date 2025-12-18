@@ -367,6 +367,7 @@ namespace CityWatch.Web.Pages.Admin
                     if (val == 1)
                     {
                         guard.IsLB_KV_IR = true;
+                        guard.IsMobileAppAccess = true;
                     }
                     else if (val == 2)
                     {
@@ -431,10 +432,10 @@ namespace CityWatch.Web.Pages.Admin
 
                         guard.IsAdminGlobal = true;
                     }
-                    else if (val == 15)
-                    {
-                        guard.IsMobileAppAccess = true;
-                    }
+                    //else if (val == 15)
+                    //{
+                    //    guard.IsMobileAppAccess = true;
+                    //}
                     else if (val == 16)
                     {
                         guard.IsMobileAppPlusTags = true;

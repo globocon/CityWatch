@@ -316,7 +316,7 @@ namespace CityWatch.Data.Providers
         //code added to get Guard Access
         public List<GuardAccess> GetGuardAccess()
         {
-            return _context.GuardAccess.OrderBy(x => x.Id).ToList();
+            return _context.GuardAccess.Where(x=>x.IsDeleted==false).OrderBy(x => x.CredentialOrder).ToList();
         }
         //code added to search client name
         public List<ClientSite> GetUserClientSites(string type, string searchTerm)
