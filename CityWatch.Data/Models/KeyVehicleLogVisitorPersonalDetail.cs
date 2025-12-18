@@ -59,6 +59,7 @@ namespace CityWatch.Data.Models
         public string CRMId { get; set; }
         public string BDMList { get; set; }
         public string POIId { get; set; }
+        public string DiverPersonalPhoneNumber { get; set; }
 
         [NotMapped]
         public string POIOrBDM { get; set; }
