@@ -566,6 +566,11 @@ namespace CityWatch.Web.Pages.Guard
 
                 }
 
+                if (!string.IsNullOrWhiteSpace(keyVehicleLogDetails.DiverPersonalPhoneNumber))
+                {
+                    keyVehicleLogDetails.KeyVehicleLogProfile.MobileNumber =
+                        keyVehicleLogDetails.DiverPersonalPhoneNumber;
+                }
 
 
                 keyVehicleLogDetails.Attachments = _viewDataService.GetKeyVehicleLogAttachments(
