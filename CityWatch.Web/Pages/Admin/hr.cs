@@ -2910,6 +2910,24 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, fileName });
         }
+        public JsonResult OnPostSaveEquipments(KPITelematicsField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                record.TypeId = 2;
+                _guardLogDataProvider.SaveKPITelematics(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
 
     }
 
