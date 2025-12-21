@@ -3100,14 +3100,14 @@ namespace CityWatch.Web.API
                 {
                     var errorMessage = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
 
-                    return  StatusCode(500, new
+                    return StatusCode(500, new
                     {
                         IsSuccess = false,
                         message = "Error saving data: " + errorMessage,
                         Data = new NewGuard()
                     });
                 }
-                
+
                 var g = _guardDataProvider.UpdateGuard(RegisterGuard, request.State, out initalsUsed);
                 var msg = "Guard registered successfully.";
                 if (initalsUsed != RegisterGuard.Initial)
@@ -3133,6 +3133,79 @@ namespace CityWatch.Web.API
                 });
             }
         }
+
+        #region "HR Records"
+
+        [HttpGet("ValidateGuardPinForHrRecordAccess")]
+        public IActionResult ValidateGuardPinForHrRecordAccess(int guardId, string key)
+        {
+            var AccessPermission = false;
+            int? LoggedInUserId = 0;
+            string SuccessMessage = string.Empty;
+            int? SuccessCode = 0;
+            int? GuId = 0;
+            try
+            {
+
+                (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage) = _viewDataService.ValidateGuardHrPin(guardId, key);
+                return Ok(new { issuccess = true, message = SuccessMessage, data = AccessPermission });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while validating the PIN.{ex.Message}",
+                    data = AccessPermission
+                });
+            }
+        }
+
+        [HttpGet("GetGuardHrRecords")]
+        public IActionResult GetGuardHrRecords(int guardId)
+        {
+            try
+            {
+                var result = _viewDataService.GetGuardLicenseAndComplianceData(guardId);
+                var returnResult = result.Select(x => new GuardComplianceAndLicenseDTO
+                {
+                    Id = x.Id,
+                    GuardId = x.GuardId,
+                    Description = x.Description,
+                    ExpiryDate = x.ExpiryDate,
+                    FileName = x.FileName,
+                    FileUrl = x.FileUrl,
+                    HrGroupText = x.HrGroupText,
+                    CurrentDateTime = x.CurrentDateTime,
+                    Reminder1 = x.Reminder1,
+                    Reminder2 = x.Reminder2,
+                    LicenseNo = x.LicenseNo,
+                    DateType = x.DateType,
+                    IsDateFilterEnabledHidden = x.IsDateFilterEnabledHidden,
+                    HRBanEdit = x.HRBanEdit,
+                    IsLogin = x.IsLogin,
+                    StatusColor = x.StatusColor
+                }).ToList();
+
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = "Successfully retrieved guard compliance details.",
+                    data = returnResult
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while retriving hr records.{ex.Message}",
+                    guardcomplianceandlicense = new List<GuardComplianceAndLicense>()
+                });
+            }
+        }
+        #endregion "HR Records"
 
     }
 
@@ -3298,6 +3371,33 @@ namespace CityWatch.Web.API
         public string Email { get; set; }
         public bool IsLB_KV_IR { get; set; }
         public bool IsMobileAppAccess { get; set; }
+    }
+
+    public class GuardComplianceAndLicenseDTO
+    {
+        public int Id { get; set; }
+        public int GuardId { get; set; }
+        public string Description { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public string FileName { get; set; }
+        public string FileUrl { get; set; }
+
+        public HrGroup? HrGroup { get; set; }
+        public string HrGroupText { get; set; }
+
+        //[ForeignKey("GuardId")]
+        //public Guard Guard { get; set; }
+
+        public string CurrentDateTime { get; set; }
+        public int Reminder1 { get; set; }
+        public int Reminder2 { get; set; }
+        public string LicenseNo { get; set; }
+        public bool DateType { get; set; }
+        public bool IsDateFilterEnabledHidden { get; set; }
+        public bool HRBanEdit { get; set; }
+        public string IsLogin { get; set; }
+        public string StatusColor { get; set; }
+
     }
 
 }
