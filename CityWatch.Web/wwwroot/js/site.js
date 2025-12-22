@@ -7664,8 +7664,36 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         for (let i = 1; i <= maxSmartWands; i++) {
             smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`, `IMEI`);
         }
+        //get total counts for each quipments
+        const equipmentTypeMaxCount = {};
 
-        const headers = [...baseHeaders, ...smartWandHeaders];
+        rawData.forEach(item => {
+            const equipments = Array.isArray(item.equipments) ? item.equipments : [];
+
+            equipments.forEach(eq => {
+                const count = Array.isArray(eq.items) ? eq.items.length : 0;
+
+                if (!equipmentTypeMaxCount[eq.equipmentType] ||
+                    count > equipmentTypeMaxCount[eq.equipmentType]) {
+                    equipmentTypeMaxCount[eq.equipmentType] = count;
+                }
+            });
+        });
+        //dynamically add equipment names as heaaders and serialno as headers
+        const equipmentHeaders = [];
+
+        Object.entries(equipmentTypeMaxCount).forEach(([equipmentType, maxCount]) => {
+            for (let i = 1; i <= maxCount; i++) {
+                equipmentHeaders.push(
+                    `${equipmentType}${i}`,
+                    'SerialNo'
+                    //,
+                    //`${equipmentType}${i}_Brand`,
+                    //`${equipmentType}${i}_SerialNo`
+                );
+            }
+        });
+        const headers = [...baseHeaders, ...smartWandHeaders, ...equipmentHeaders];
         const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 25]; // Example widths
 
 
@@ -7693,7 +7721,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                 const clientSite = item.clientSite || {};
                 const clientType = clientSite.clientType?.name || '';
                 const smartWands = Array.isArray(item.smartWands) ? item.smartWands : [];
-
+                const equipments = Array.isArray(item.equipments) ? item.equipments : [];
                 // Base data for the row
                 const rowData = [
                     clientType,
@@ -7714,7 +7742,18 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                     const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
                     rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '', smartWand.imei || '');
                 }
+               
+                Object.entries(equipmentTypeMaxCount).forEach(([equipmentType, maxCount]) => {
 
+                    // find equipment matching this type
+                    const equipment = equipments.find(eq => eq.equipmentType === equipmentType);
+                    
+                    for (let i = 0; i < maxCount; i++) {
+                        const item = equipment?.items?.[i];
+                        rowData.push(item?.brand || '', item?.serialNumber || '');
+                        
+                    }
+                });
                 return rowData;
             })
         ];
