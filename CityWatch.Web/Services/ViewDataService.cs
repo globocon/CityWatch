@@ -1892,7 +1892,31 @@ namespace CityWatch.Web.Services
             }
 
             var clientSiteSmartWands = _clientDataProvider.GetClientSmartWand();
+            //p2-171-equipment -start
+            var siteEquipments = _clientSiteWandDataProvider.GetClientSiteEquipments(); // to get all the site equipments
+            var groupedEquipments = siteEquipments
+            .GroupBy(x => new    // to group by client site id and Equipment types
+            {
+                x.ClientSiteId,
+                EquipmentType = x.KPITelematicsField.Name
+            })
+            .Select(g => new
+            {
+                g.Key.ClientSiteId,  // display client site id , equipment types and items under each equipment
+                Equipment = new SiteEquipmentsViewModelcs
+                {
+                    EquipmentType = g.Key.EquipmentType,
+                    Items = g.Select(i => new EquipmentItemDetails
+                    {
+                        Id = i.Id,
+                        SerialNumber = i.SerialNo,
+                        Brand = i.Brand
+                    }).ToList()
+                }
+            })
+            .ToList();
 
+            //p2-171-equipment -end
             // Join ClientSite with ClientSiteSmartWands using ClientSiteId
             var finalResults = results
                 .Select(clientSite => new ClientSiteWithWands
@@ -1900,6 +1924,10 @@ namespace CityWatch.Web.Services
                     ClientSite = clientSite,
                     SmartWands = clientSiteSmartWands
                         .Where(smartWand => smartWand.ClientSiteId == clientSite.Id)
+                        .ToList(),
+                    Equipments = groupedEquipments
+                        .Where(e => e.ClientSiteId == clientSite.Id)
+                        .Select(e => e.Equipment)
                         .ToList()
                 })
                 .ToList();
@@ -1910,6 +1938,9 @@ namespace CityWatch.Web.Services
         {
             public ClientSite ClientSite { get; set; }
             public List<ClientSiteSmartWand> SmartWands { get; set; }
+            //p2-171-equipmets--start
+            public List<SiteEquipmentsViewModelcs> Equipments { get; set; } // to get the quipments
+            //p2-171-equipmets--end
         }
         //p1-191 HR Files Task 3-start
 

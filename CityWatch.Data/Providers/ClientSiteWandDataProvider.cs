@@ -35,6 +35,9 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
         List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
         ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid);
+        List<SiteEquipmentsDetails> GetClientSiteEquipments();
+        void SaveClientSiteEquipments(SiteEquipmentsDetails siteEquipmentsDetails);
+        void DeleteClientSiteEquipments(int id);
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -415,6 +418,57 @@ namespace CityWatch.Data.Providers
                 .OrderByDescending(x => x.HitUtcDateTime)
                 .Take(1)
                 .SingleOrDefault();
+        }
+        public List<SiteEquipmentsDetails> GetClientSiteEquipments()
+        {
+            var siteEquipments = _dbContext.SiteEquipmentsDetails
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
+                .Include(x => x.KPITelematicsField)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+            foreach (var item in siteEquipments)
+            {
+                item.Equipment = item.KPITelematicsField.Name;
+            }
+            return siteEquipments;
+        }
+        public void SaveClientSiteEquipments(SiteEquipmentsDetails siteEquipmentsDetails)
+        {
+            if (siteEquipmentsDetails == null)
+                throw new ArgumentNullException();
+
+          
+            if (siteEquipmentsDetails.Id == 0)
+            {
+               
+
+                
+                _dbContext.SiteEquipmentsDetails.Add(siteEquipmentsDetails);
+            }
+            else
+            {
+               
+                var clientSiteEquipmentTagToUpdate = _dbContext.SiteEquipmentsDetails.SingleOrDefault(x => x.Id == siteEquipmentsDetails.Id);
+                if (clientSiteEquipmentTagToUpdate != null)
+                {
+                    clientSiteEquipmentTagToUpdate.Brand = siteEquipmentsDetails.Brand;
+                    clientSiteEquipmentTagToUpdate.ClientSiteId = siteEquipmentsDetails.ClientSiteId;
+                    clientSiteEquipmentTagToUpdate.EquipmentId = siteEquipmentsDetails.EquipmentId;
+                    clientSiteEquipmentTagToUpdate.SerialNo = siteEquipmentsDetails.SerialNo;
+                    clientSiteEquipmentTagToUpdate.IsDeleted = false;
+
+                }
+            }
+            _dbContext.SaveChanges();
+        }
+        public void DeleteClientSiteEquipments(int id)
+        {
+            var deleteClientSiteEquipments = _dbContext.SiteEquipmentsDetails.SingleOrDefault(x => x.Id == id);
+            if (deleteClientSiteEquipments != null)
+                deleteClientSiteEquipments.IsDeleted = true;
+            //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
+
+            _dbContext.SaveChanges();
         }
     }
 }

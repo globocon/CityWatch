@@ -2016,6 +2016,202 @@ function renderderegisterDevice(value, record) {
         }
     });
     //wand tags-end
+    //p2-171-equipments-start
+    var editPositionGridRender;
+    editPositionGridRender = function (value, record, $cell, $displayEl, id, $grid) {
+
+        var isNewRow = record.id <= 0;
+
+        var $edit = $('<button class="btn btn-outline-primary ml-2">' +
+            '<i class="gj-icon pencil" style="font-size:15px"></i></button>')
+            .attr('data-key', id);
+
+        var $delete = $('<button type="button" class="btn btn-outline-danger ml-2">' +
+            '<i class="fa fa-trash"></i></button>')
+            .attr('data-key', id);
+
+        var $update = $('<button class="btn btn-outline-success ml-2">' +
+            '<i class="fa fa-check"></i></button>')
+            .attr('data-key', id);
+
+        var $cancel = $('<button class="btn btn-outline-secondary ml-2">' +
+            '<i class="fa fa-times"></i></button>')
+            .attr('data-key', id);
+
+        /* ---------- BUTTON EVENTS ---------- */
+
+        $edit.on('click', function () {
+            $grid.edit(id);
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+
+        $delete.on('click', function () {
+            $grid.removeRow(id);
+        });
+
+        $update.on('click', function () {
+            $grid.update(id);
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+
+        $cancel.on('click', function () {
+            $grid.cancel(id);
+
+            if (isNewRow) {
+                $grid.removeRow(id);   // optional: remove new row on cancel
+            } else {
+                $edit.show();
+                $delete.show();
+                $update.hide();
+                $cancel.hide();
+            }
+        });
+
+        /* ---------- INITIAL VISIBILITY ---------- */
+
+        if (isNewRow) {
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        } else {
+            $update.hide();
+            $cancel.hide();
+        }
+
+        $displayEl.empty()
+            .append($edit)
+            .append($delete)
+            .append($update)
+            .append($cancel);
+    };
+
+    //var editPositionGridRender;
+    //editPositionGridRender = function (value, record, $cell, $displayEl, id, $grid) {
+    //    var data = $grid.data(),
+    //        $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+    //        $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+    //        $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+    //        $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+    //    $edit.on('click', function (e) {
+    //        $grid.edit($(this).data('key'));
+    //        $edit.hide();
+    //        $delete.hide();
+    //        $update.show();
+    //        $cancel.show();
+    //    });
+    //    $delete.on('click', function (e) {
+    //        $grid.removeRow($(this).data('key'));
+    //    });
+    //    $update.on('click', function (e) {
+    //        $grid.update($(this).data('key'));
+    //        $edit.show();
+    //        $delete.show();
+    //        $update.hide();
+    //        $cancel.hide();
+    //    });
+    //    $cancel.on('click', function (e) {
+    //        $grid.cancel($(this).data('key'));
+    //        $edit.show();
+    //        $delete.show();
+    //        $update.hide();
+    //        $cancel.hide();
+    //    });
+    //    $displayEl.empty().append($edit).append($delete).append($update).append($cancel);
+    //}
+    let gridSiteEquipmentsTags;
+    gridSiteEquipmentsTags = $('#cs-siteequipments-tags').grid({
+        dataSource: '/admin/settings?handler=SiteEquipmentSettings&clientSiteId=' + $('#gl_client_site_id').val(),
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command', managementColumn: false },
+        columns: [
+            
+            { width: '150', field: 'equipment', title: 'Equipment', align: 'center', type: 'dropdown', editor: { dataSource: '/admin/settings?handler=Equipments', valueField: 'name', textField: 'name' } },
+
+            { width: '500', field: 'brand', title: 'Brand/Description', sortable: true, editor: true },
+            {
+                width: '200',field: 'serialNo',title: 'Serial No',align: 'center',editor: true 
+            },
+            { renderer: editPositionGridRender, align: 'center' }
+
+        ],
+
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    let isSiteEquipmentsAdding = false;
+
+
+    if (gridSiteEquipmentsTags) {
+        gridSiteEquipmentsTags.on('rowDataChanged', function (e, id, record) {
+
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+
+            $.ajax({
+                url: '/admin/settings?handler=SiteEquipmentSettings',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                if (result.success) {
+                    gridSiteEquipmentsTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                } else {
+                    gridSiteEquipmentsTags.edit(id);
+                    alert(result.message);
+                }
+
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isSiteEquipmentsAdding)
+                    isSiteEquipmentsAdding = false;
+            });
+
+
+
+        });
+
+        gridSiteEquipmentsTags.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this  equipment details?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/admin/settings?handler=DeleteSiteEquipmentSettings',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gridSiteEquipmentsTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isSiteEquipmentsAdding)
+                        isSiteEquipmentsAdding = false;
+                });
+            }
+        });
+    }
+
+    $('#add_SiteEquipment_tag').on('click', function () {
+
+        if (isSiteEquipmentsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isSiteEquipmentsAdding = true;
+            gridSiteEquipmentsTags.addRow({ 'id': -1, 'serialNo': '', equipmentId: '', brand: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+        }
+    });
+    //p2-171-equipments-end
 });
 
 

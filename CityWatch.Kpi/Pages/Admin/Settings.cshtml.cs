@@ -2633,6 +2633,54 @@ namespace CityWatch.Kpi.Pages.Admin
             };
             return new JsonResult(clientSiteKpiNote);
         }
+        public JsonResult OnGetEquipments()
+        {
+            return new JsonResult(_guardLogDataProvider.GetKPITelemarics(2).OrderBy(x => x.Name).ToList());
+        }
+        public JsonResult OnGetSiteEquipmentSettings(int clientSiteId)
+        {
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteEquipments().Where(z => z.ClientSiteId == clientSiteId).OrderBy(x => x.KPITelematicsField.Name).ToList());
+        }
+        public JsonResult OnPostSiteEquipmentSettings(SiteEquipmentsDetails record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if (record.Equipment != null)
+                {
+                    record.EquipmentId = _guardLogDataProvider.GetKPITelemarics(2).SingleOrDefault(x => x.Name == record.Equipment).Id;
+                }
+                if(record.Id <0)
+                {
+                    record.Id = 0;
+                }
+                _clientSiteWandDataProvider.SaveClientSiteEquipments(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success = success, message = message });
+        }
+        public JsonResult OnPostDeleteSiteEquipmentSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.DeleteClientSiteEquipments(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
     }
 
 

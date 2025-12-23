@@ -4533,8 +4533,24 @@
 
     $('#KPITelematicsfields_types').on('change', function () {
         const selKvlFieldTypeId = $('#KPITelematicsfields_types').val();
-        gridKPITelematicsFields.clear();
-        gridKPITelematicsFields.reload({ typeId: selKvlFieldTypeId });
+        if (selKvlFieldTypeId == 1) {
+            $('#add_KPI_Telematics_fields').show();
+            gridKPITelematicsFields.show();
+            gridKPITelematicsFields.clear();
+            gridKPITelematicsFields.reload({ typeId: selKvlFieldTypeId });
+            $('#add_Equipments').hide();
+            gridEquipments.hide();
+        }
+        else if (selKvlFieldTypeId == 2) {
+          
+            $('#add_Equipments').show();
+            gridEquipments.show();
+            gridEquipments.clear();
+            gridEquipments.reload({ typeId: selKvlFieldTypeId });
+            $('#add_KPI_Telematics_fields').hide();
+            gridKPITelematicsFields.hide();
+        }
+        
     });
 
     //$('#add_KPI_Telematics_fields').on('click', function () {
@@ -4666,6 +4682,102 @@
     }
 
     //p5 - Issue - 20 - Instructor - start
+    /* p2-171--equipment-start*/
+    let gridEquipments;
+    let isEquipmentAdding = false;
+    gridEquipments = $('#tbl_Equipment_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=KPITelematics',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+
+            { field: 'name', title: 'Type', width: 300, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '200px');
+            // $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#add_Equipments').on('click', function () {
+        const selFieldTypeId = $('#KPITelematicsfields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_Equipment_fields tr').length;
+
+
+        if (isEquipmentAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isEquipmentAdding = true;
+            gridEquipments.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+    if (gridEquipments) {
+        gridEquipments.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+           
+            let isValid = true;
+            let errorMessage = "";
+
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveEquipments',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) {
+
+                    
+
+                    gridEquipments.reload({ typeId: $('#KPITelematicsfields_types').val() });
+                }
+                else {
+                    alert(result.message);
+                    
+                    gridEquipments.edit(id);
+
+
+                }
+
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isEquipmentAdding)
+                    isEquipmentAdding = false;
+            });
+        });
+
+        gridEquipments.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteKPITelematics',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridEquipments.reload({ typeId: $('#KPITelematicsfields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isEquipmentAdding)
+                        isEquipmentAdding = false;
+                });
+            }
+        });
+
+    }
+   /* p2 - 171--equipment - end*/
     if (gridTAFields) {
         gridTAFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -4774,6 +4886,11 @@
         $('#add_duressappMultimedia_fields').hide();
 
         //p5 - Issue - 20 - Instructor - end
+        //p2-Issue-171--equipment-start
+        gridEquipments.hide();
+        $('#add_Equipments').hide();
+        
+        //p2-Issue-171--equipment-end
 
     }
 
@@ -4814,7 +4931,11 @@
             $('#ta_field_types').hide();
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
 
+            //p2-Issue-171--equipment-end
         }
         else if ($('#report_module_types').val() == 2) {
             $('#fieldSettings').show();
@@ -4852,7 +4973,11 @@
             $('#ta_field_types').hide();
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
 
+            //p2-Issue-171--equipment-end
         }
         else if ($('#report_module_types').val() == 3) {
             $('#fieldSettings').hide();
@@ -4891,6 +5016,11 @@
             $('#ta_field_types').hide();
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
+
+            //p2-Issue-171--equipment-end
         }
         else if ($('#report_module_types').val() == 5) {
             $('#fieldSettings').show();
@@ -4909,7 +5039,7 @@
 
             $('#lblFieldType').show();
             $('#KPITelematicsfields_types').show();
-            $('#add_KPI_Telematics_fields').show();
+            $('#add_KPI_Telematics_fields').hide();
             $('#add_field_settings').hide();
             $('#add_dosanddonts_fields').hide();
             $('#add_kvl_fields').hide();
@@ -4918,7 +5048,7 @@
             gridKvlFields.hide();
             gridDosAndDontsFields.hide();
             gridAreaReportFields.hide();
-            gridKPITelematicsFields.show();
+            gridKPITelematicsFields.hide();
 
 
             $('#report_field_types').val('');
@@ -4929,6 +5059,11 @@
             $('#ta_field_types').hide();
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
+
+            //p2-Issue-171--equipment-end
         }
         else if ($('#report_module_types').val() == 4) {
             $('#fieldSettings').hide();
@@ -4971,7 +5106,11 @@
             $('#add_ta_fields').show();
             gridTAFields.show();
             gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
 
+            //p2-Issue-171--equipment-end
         }
         else if ($('#report_module_types').val() == 6) {
             $('#fieldSettings').show();
@@ -5012,6 +5151,11 @@
             $('#add_ta_fields').hide();
             gridTAFields.hide();
             gridTAFields.reload({ typeId: $('#ta_field_types').val() });
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
+
+            //p2-Issue-171--equipment-end
 
         }
         else {
@@ -5043,6 +5187,11 @@
             $('#ta_field_types').hide();
             $('#add_ta_fields').hide();
             /*p5-Issue-20-Instructor-end*/
+            //p2-Issue-171--equipment-start
+            gridEquipments.hide();
+            $('#add_Equipments').hide();
+
+            //p2-Issue-171--equipment-end
 
         }
     });
@@ -7515,8 +7664,36 @@ $("#btnDownloadClientSiteExcel").click(async function () {
         for (let i = 1; i <= maxSmartWands; i++) {
             smartWandHeaders.push(`SmartWand${i}`, `SIMProvider`, `IMEI`);
         }
+        //get total counts for each quipments
+        const equipmentTypeMaxCount = {};
 
-        const headers = [...baseHeaders, ...smartWandHeaders];
+        rawData.forEach(item => {
+            const equipments = Array.isArray(item.equipments) ? item.equipments : [];
+
+            equipments.forEach(eq => {
+                const count = Array.isArray(eq.items) ? eq.items.length : 0;
+
+                if (!equipmentTypeMaxCount[eq.equipmentType] ||
+                    count > equipmentTypeMaxCount[eq.equipmentType]) {
+                    equipmentTypeMaxCount[eq.equipmentType] = count;
+                }
+            });
+        });
+        //dynamically add equipment names as heaaders and serialno as headers
+        const equipmentHeaders = [];
+
+        Object.entries(equipmentTypeMaxCount).forEach(([equipmentType, maxCount]) => {
+            for (let i = 1; i <= maxCount; i++) {
+                equipmentHeaders.push(
+                    `${equipmentType}${i}`,
+                    'SerialNo'
+                    //,
+                    //`${equipmentType}${i}_Brand`,
+                    //`${equipmentType}${i}_SerialNo`
+                );
+            }
+        });
+        const headers = [...baseHeaders, ...smartWandHeaders, ...equipmentHeaders];
         const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 25]; // Example widths
 
 
@@ -7544,7 +7721,7 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                 const clientSite = item.clientSite || {};
                 const clientType = clientSite.clientType?.name || '';
                 const smartWands = Array.isArray(item.smartWands) ? item.smartWands : [];
-
+                const equipments = Array.isArray(item.equipments) ? item.equipments : [];
                 // Base data for the row
                 const rowData = [
                     clientType,
@@ -7565,7 +7742,18 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                     const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
                     rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '', smartWand.imei || '');
                 }
+               
+                Object.entries(equipmentTypeMaxCount).forEach(([equipmentType, maxCount]) => {
 
+                    // find equipment matching this type
+                    const equipment = equipments.find(eq => eq.equipmentType === equipmentType);
+                    
+                    for (let i = 0; i < maxCount; i++) {
+                        const item = equipment?.items?.[i];
+                        rowData.push(item?.brand || '', item?.serialNumber || '');
+                        
+                    }
+                });
                 return rowData;
             })
         ];
