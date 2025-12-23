@@ -5649,7 +5649,7 @@ namespace CityWatch.Data.Providers
 
                     KpiTelematicsUpdate.Mobile = kpitelematics.Mobile;
                     KpiTelematicsUpdate.Email = kpitelematics.Email;
-                    KpiTelematicsUpdate.TypeId = 1;
+                    KpiTelematicsUpdate.TypeId = kpitelematics.TypeId;
                 }
             }
             _context.SaveChanges();
