@@ -8,6 +8,8 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Presentation;
+using MailKit.Net.Smtp;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
@@ -18,22 +20,22 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Office.Interop.PowerPoint;
 using MimeKit;
+using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Macs;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
-using MailKit.Net.Smtp;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
-using System.Text;
-using Org.BouncyCastle.Crypto.Generators;
-using Microsoft.Office.Interop.PowerPoint;
+using Presentation = Microsoft.Office.Interop.PowerPoint.Presentation;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -759,8 +761,9 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
         {
-            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
-            if(AuthUserHelper.IsAdminUserLoggedIn){
+            var GuardDetails = _viewDataService.GetGuardLicenseAndComplianceData(guardId);
+            if (AuthUserHelper.IsAdminUserLoggedIn)
+            {
                 foreach (var guard in GuardDetails)
                 {
                     guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
@@ -1891,16 +1894,10 @@ namespace CityWatch.Web.Pages.Admin
         //Dos and Donts-end
         public IActionResult OnGetGuardLicenseAndCompliancForGuardse(int guardId)
         {
-            //ViewData["Guard_Id"] = guardId;
-            //ViewData["Guard_License"] = _guardDataProvider.GetGuardLicenses(guardId);
-            //ViewData["Guard_Compliance"] = _guardDataProvider.GetGuardCompliances(guardId);
+            
+            //return new JsonResult(_guardDataProvider.GetGuards().Where(x => x.Id == guardId));
 
-            //return new PartialViewResult
-            //{
-            //    ViewName = "_GuardAdditionalDetails",
-            //    ViewData = new ViewDataDictionary(ViewData)
-            //};
-            return new JsonResult(_guardDataProvider.GetGuards().Where(x => x.Id == guardId));
+            return new JsonResult(_viewDataService.GetLicenseAndCompliancForGuards(guardId));
         }
         public IActionResult OnGetExpiredDocuments(int guardId)
         {
@@ -2120,50 +2117,57 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostGuardHrDocLoginConformation(int guardId, string key)
         {
+            //var AccessPermission = false;
+            //int? LoggedInUserId = 0;
+            //string SuccessMessage = string.Empty;
+            //int? SuccessCode = 0;
+            //int? GuId = 0;
+            //AuthUserHelper.IsAdminPowerUser = false;
+            //AuthUserHelper.IsAdminGlobal = false;
+
+            //if (!string.IsNullOrEmpty(key))
+            //{
+            //    var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+            //    if (guard == null)
+            //    {
+            //        SuccessMessage = "Invalid PIN";
+
+            //    }
+            //    else
+            //    {
+
+            //        var firstGuard = guard.FirstOrDefault();
+            //        if (firstGuard != null && firstGuard.Pin != null)
+            //        {
+
+            //            if (guard.FirstOrDefault().Pin.Trim() == key.Trim())
+            //            {
+
+            //                AccessPermission = true;
+            //            }
+            //            else
+            //            {
+            //                SuccessMessage = "Invalid PIN";
+            //            }
+            //        }
+            //        else
+            //        {
+            //            SuccessMessage = "No PIN Set for you";
+
+            //        }
+
+            //    }
+
+
+
+            //}
+
             var AccessPermission = false;
             int? LoggedInUserId = 0;
             string SuccessMessage = string.Empty;
             int? SuccessCode = 0;
             int? GuId = 0;
-            AuthUserHelper.IsAdminPowerUser = false;
-            AuthUserHelper.IsAdminGlobal = false;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
-                if (guard == null)
-                {
-                    SuccessMessage = "Invalid PIN";
-
-                }
-                else
-                {
-
-                    var firstGuard = guard.FirstOrDefault();
-                    if (firstGuard != null && firstGuard.Pin != null)
-                    {
-
-                        if (guard.FirstOrDefault().Pin.Trim() == key.Trim())
-                        {
-
-                            AccessPermission = true;
-                        }
-                        else
-                        {
-                            SuccessMessage = "Invalid PIN";
-                        }
-                    }
-                    else
-                    {
-                        SuccessMessage = "No PIN Set for you";
-
-                    }
-
-                }
-
-
-
-            }
+            (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage) = _viewDataService.ValidateGuardHrPin(guardId, key);
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 

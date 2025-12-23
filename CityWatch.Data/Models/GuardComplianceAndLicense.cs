@@ -61,7 +61,42 @@ namespace CityWatch.Data.Models
         public bool HRBanEdit { get; set; }
         [NotMapped]
         public string IsLogin { get; set; }
+     
+        [NotMapped]
+        public string StatusColor
+        {
+            get
+            {
+                // Default
+                var statusColor = "green";
 
+                // If DateType is true → always green
+                if (DateType)
+                    return "green";
+
+                // If ExpiryDate exists
+                if (ExpiryDate.HasValue)
+                {
+                    var currentDate = DateTime.UtcNow.Date;
+                    var expiryDate = ExpiryDate.Value.Date;
+
+                    var daysDifference = (expiryDate - currentDate).TotalDays;
+
+                    // Expired → red (highest priority)
+                    if (expiryDate < currentDate && !DateType)
+                    {
+                        statusColor = "red";
+                    }
+                    // Expiring within 45 days → yellow
+                    else if (daysDifference <= 45)
+                    {
+                        statusColor = "yellow";
+                    }
+                }
+
+                return statusColor;
+            }
+        }
 
     }
 }

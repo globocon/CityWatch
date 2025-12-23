@@ -3,6 +3,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
@@ -10,9 +11,11 @@ using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Humanizer;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.Office.Interop;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
 using System;
@@ -25,10 +28,9 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Schema;
+using static CityWatch.Data.Providers.AppConfigurationProvider;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
-using Microsoft.Office.Interop;
-using static CityWatch.Data.Providers.AppConfigurationProvider;
 
 
 namespace CityWatch.Web.Services
@@ -211,6 +213,9 @@ namespace CityWatch.Web.Services
         public void UpdateDownloadCount(int id);
         public void RollBackToVersion(int recordId);
         public PcarRouteResult GetPcarDetailsFromDevice(string deviceId);
+        public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key);
+        public List<Guard> GetLicenseAndCompliancForGuards(int guardId);
+        public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId);
 
     }
 
@@ -3143,6 +3148,59 @@ namespace CityWatch.Web.Services
         public PcarRouteResult GetPcarDetailsFromDevice(string deviceId)
         {
             return _appConfigurationProvider.GetPcarDetails(deviceId);
+        }
+
+        public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key) 
+        {
+            bool AccessPermission = false;
+            int? LoggedInUserId = 0;
+            int? GuId = 0;
+            string SuccessMessage = string.Empty;
+            int? SuccessCode = 0;
+            AuthUserHelper.IsAdminPowerUser = false;
+            AuthUserHelper.IsAdminGlobal = false;
+
+            if (!string.IsNullOrEmpty(key))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+                if (guard == null)
+                {
+                    SuccessMessage = "Invalid PIN";
+                }
+                else
+                {
+                    var firstGuard = guard.FirstOrDefault();
+                    if (firstGuard != null && firstGuard.Pin != null)
+                    {
+                        if (guard.FirstOrDefault().Pin.Trim() == key.Trim())
+                        {
+                            AccessPermission = true;
+                        }
+                        else
+                        {
+                            SuccessMessage = "Invalid PIN";
+                        }
+                    }
+                    else
+                    {
+                        SuccessMessage = "No PIN Set for you";
+                    }
+                }
+            }
+
+            return (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage);
+        }
+
+        public List<Guard> GetLicenseAndCompliancForGuards(int guardId) 
+        { 
+            var result = _guardDataProvider.GetGuards().Where(x => x.Id == guardId).ToList();
+            return result;
+        }
+
+        public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId)
+        {
+            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
+            return GuardDetails;
         }
 
     }
