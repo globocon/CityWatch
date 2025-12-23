@@ -413,19 +413,22 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
 
         Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit);
-
+        
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
     {
         private readonly CityWatchDbContext _context;
         private readonly ILogbookDataService _logbookDataService;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
         public GuardLogDataProvider(CityWatchDbContext context,
-            ILogbookDataService logbookDataService)
+            ILogbookDataService logbookDataService, 
+            IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _context = context;
             _logbookDataService = logbookDataService;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
@@ -5656,7 +5659,19 @@ namespace CityWatch.Data.Providers
             var KPITelematicsToDelete = _context.KPITelematicsField.SingleOrDefault(x => x.Id == id);
             if (KPITelematicsToDelete == null)
                 throw new InvalidOperationException();
-
+            //p2-171--equipmts-start
+            if(KPITelematicsToDelete.TypeId == 2)// to check whether this is an equipment type
+            {
+                var siteEquipmentDetails = _context.SiteEquipmentsDetails.Where(x => x.EquipmentId == id && x.IsDeleted == false).ToList(); // get all the equipments under this euipment typ and delete it  
+                if(siteEquipmentDetails.Count()>0)
+                {
+                    foreach(var item in siteEquipmentDetails)
+                    {
+                        _clientSiteWandDataProvider.DeleteClientSiteEquipments(item.Id); 
+                    }
+                }
+            }
+            //p2-171--equipmts-end
             _context.Remove(KPITelematicsToDelete);
             _context.SaveChanges();
         }
