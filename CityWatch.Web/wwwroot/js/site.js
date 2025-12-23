@@ -4758,7 +4758,7 @@
         });
 
         gridEquipments.on('rowRemoving', function (e, id, record) {
-            if (confirm('Are you sure want to delete this field?')) {
+            if (confirm('Are you sure want to delete this Equipment type and its related Equipments?')) {
                 $.ajax({
                     url: '/Admin/GuardSettings?handler=DeleteKPITelematics',
                     data: { id: record },
