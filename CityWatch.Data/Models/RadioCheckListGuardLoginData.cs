@@ -18,6 +18,7 @@ namespace CityWatch.Data.Models
         public string LogBookCreatedTime { get; set; }
         public string Notes { get; set; }
         public string GPSCoordinates { get; set; }
+        
 
     }
 }

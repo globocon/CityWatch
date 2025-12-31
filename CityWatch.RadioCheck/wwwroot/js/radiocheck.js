@@ -236,6 +236,32 @@ if ($.fn.DataTable.isDataTable('#clientSiteActiveGuards')) {
 }
 let userRole = $("#hdnUserRole").val();  // "1" or "0"
 
+// Project 4 , Task 134, Audio notification Added by jisha-start
+function UpdatePlayedNotification(clientSiteId, guardId) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=RCClientStatusUpdateNotificationSound',
+        data: { clientSiteId: clientSiteId, guardId: guardId },
+        dataType: 'json',
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+       
+        return;
+    });
+}
+
+let audiourlnew = '/NotificationSound/mixkit-bell-notification-933.wav'
+
+let notificationQueue = [];
+let isPlaying = 0;
+let playedNotifications = new Set();
+
+const audionew = new Audio(audiourlnew);
+audionew.loop = true;
+
+
+
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
     dom: 'Bfrtip',
@@ -534,6 +560,18 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '15%',
             orderable: true, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             orderData: [groupColumnSortAlias], // Task new code to fix the arrow issue
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                
+                    //cell.classList.add('bg-danger');
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+                    if (rowData.playNotificationSoundCount > 0) {
+                        isPlaying = 1;
+                        //UpdatePlayedNotification(rowData.clientSiteId, rowData.guardId);
+                    }
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+                
+
+            },
             render: function (value, type, data) {
 
                 if (showButtonsActive) {
@@ -650,9 +688,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
                 }
             }
-            
 
-          
+
+
         },
 
 
@@ -697,7 +735,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
-        
+
         (showButtonsActive ? {
             data: null,
             width: '5%',
@@ -730,7 +768,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-                
+
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
 
@@ -752,13 +790,13 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-               
+
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
-                return '<span style="display:none;">' + value + '</span>' +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
                         '"></i>';
                 }
                 else {
@@ -773,21 +811,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-              
+
                  if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
-                return '<span style="display:none;">' + value + '</span>' +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
+                        '"></i>';
                 }
                 else {
                     return '<i class="fa fa-circle text-muted"></i>';
                 }
             }
         },
-       
+
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
@@ -837,10 +875,29 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     last2 = group;
                 }
             });
+       
+            PlayNotificationAlarm();
+        
+       
+        //var firstValue = firstRowData.clientSiteId;
+        
     },
-
+   
 });
-
+function PlayNotificationAlarm() {
+    if (isPlaying == 1) {
+        //audio.muted = false; // New browser rule doesn't lets audio play automatically        
+        audionew.play();
+        //setting timer to play for 1 sec
+        setTimeout(() => {
+            audionew.pause();
+            audionew.currentTime = 0; // Works as audio stop
+        }, 2000);
+        isPlaying = 0;;
+        //UpdateDuressAlarmPlayed();
+       /* UpdatePlayedNotification(clientSiteId, guardId);*/
+    }
+}
 //hide fq column based on the user role 
 clientSiteActiveGuards.column("completedRoundsCol:name").visible(userRole === "1");
 

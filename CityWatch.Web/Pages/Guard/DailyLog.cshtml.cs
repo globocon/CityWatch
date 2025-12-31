@@ -272,6 +272,7 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                GuardLog.PlayNotificationSound = false;
                 _guardLogDataProvider.SaveGuardLog(GuardLog);
                 var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(GuardLog.GuardLoginId));
                 foreach (var item in guardlogins)
@@ -858,7 +859,9 @@ namespace CityWatch.Web.Pages.Guard
                         EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
                         EventDateTimeZone = tmdata.EventDateTimeZone,
                         EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
-                        EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
+                        EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+                        PlayNotificationSound = true
+                        
                     };
 
                     _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);

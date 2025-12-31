@@ -413,6 +413,7 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
 
         Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit);
+        void UpdateNotificationSoundForRCClientSites(int logBookId);
 
     }
 
@@ -542,7 +543,8 @@ namespace CityWatch.Data.Providers
         public List<int> GetGuardLogsNotAcknowledgedForNotificationSound()
         {
             //List<int?> returnId = null;
-            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).Select(x => x.Id).ToList();
+            //var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).Select(x => x.Id).ToList();
+            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x =>  x.PlayNotificationSound == true).Select(x => x.Id).ToList();
             //var returnId = TonotifySoundList.Select(x => x.Id).ToList();
             var returnId = TonotifySoundList;
             //foreach (var t in TonotifySoundList)
@@ -7750,6 +7752,17 @@ namespace CityWatch.Data.Providers
 
             _context.PcarRouteDailyVisits.Add(dailyVisit);
             await _context.SaveChangesAsync();
+        }
+        public void UpdateNotificationSoundForRCClientSites(int logBookId)
+        {
+            
+                var ControlRoomLog = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.Id == logBookId).SingleOrDefault();
+                if (ControlRoomLog != null)
+                {
+                    ControlRoomLog.PlayNotificationSound = false;
+                    _context.SaveChanges();
+                }
+               
         }
 
     }

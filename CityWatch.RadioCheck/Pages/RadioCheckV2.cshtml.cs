@@ -422,7 +422,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR3 = CalculateHr3GroupStatus(detail.GuardId),
                 CompletedRounds = detail.CompletedRounds,
                 haswandtags = detail.haswandtags,
-                TourMode = detail.TourMode
+                TourMode = detail.TourMode,
+                PlayNotificationSoundCount=detail.PlayNotificationSoundCount
             }).ToList();
 
             //// 5. Clean SiteName
@@ -3163,6 +3164,17 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
+        public JsonResult OnPostRCClientStatusUpdateNotificationSound(int clientSiteId, int guardId)
+        {
+            var det = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.ClientSiteId == clientSiteId && x.GuardId == guardId && x.PlayNotificationSound == true).ToList();
+            foreach (var item in det)
+            {
+                int id = Convert.ToInt32(item.Id);
+                _guardLogDataProvider.UpdateNotificationSoundForRCClientSites(id);
+            }
+            
+            return new JsonResult(new { status = "Ok" });
+        }
 
 
     }

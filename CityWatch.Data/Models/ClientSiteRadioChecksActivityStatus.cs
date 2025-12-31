@@ -62,6 +62,7 @@ namespace CityWatch.Data.Models
         public string CRMSupplier { get; set; }
 
         public string UTCOffset { get; set; }
+        public bool? PlayNotificationSound { get; set; }
 
     }
 }

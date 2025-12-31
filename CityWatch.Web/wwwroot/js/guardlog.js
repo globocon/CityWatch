@@ -1363,10 +1363,29 @@ $(function () {
     // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
     let audiourl = '/NotificationSound/mixkit-bell-notification-933.wav'
     const audio = new Audio(audiourl);
+    // Project 4 , Task 134, Audio notification Added by jisha
+    audio.preload = "auto";
+    let audioUnlocked = false;
+
     let audioplayedlist = [];
     let isControlRoomLogBook = $('#inpHdisControlRoomLogBook').val() == 'false' ? false : true;
     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
+    function unlockAudio() {
+        if (audioUnlocked) return;
 
+        audio.play()
+            .then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                audioUnlocked = true;
+                console.log("Audio unlocked");
+            })
+            .catch(() => { });
+    }
+
+    ["touchstart"].forEach(evt => {
+        document.addEventListener(evt, unlockAudio, { once: true });
+    });
     let gridGuardLog;
 
     let gridGuardLogSettings = {
@@ -1944,7 +1963,7 @@ $(function () {
                 }).done(function (result) {
                     if (result != null && result.length > 0) {
                         //Can be repeated if needed using loop through id in result
-                        audio.play();
+                        audio.play().catch(() => { });;
                         audioplayedlist = [];
                         result.forEach((item) => {
                             audioplayedlist.push(item);
@@ -1955,7 +1974,7 @@ $(function () {
             }
             else if (audioplayedlist.length > 0) {
                 // Play notification sound
-                audio.play();
+                audio.play().catch(() => { });;
                 UpdatePlayedNotification();
             }
         });

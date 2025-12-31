@@ -1,0 +1,1 @@
+alter table ClientSiteRadioChecksActivityStatus add [PlayNotificationSound] [bit] NULL
