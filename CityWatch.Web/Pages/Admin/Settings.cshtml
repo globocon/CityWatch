@@ -237,11 +237,17 @@
 
                                 <select class="form-control" id="sel_client_type">
                                     <option value="">All</option>
-
-                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
-                                    {
-                                        <option value="@item.Id">@item.Name</option>
-                                    }
+                                   
+                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    
+                                        @* @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        } *@
+                                    
                                 </select>
 
                             </div>
@@ -655,6 +661,7 @@
                         <select class="form-control" id="KPITelematicsfields_types">
                             <option value="">None</option>
                             <option value="1">Contract Managers</option>
+                            <option value="2">Equipment</option>
                         </select>
                         @*p1-196 Rationalization Of Menu Changes-end*@
                         <select class="form-control" id="ta_field_types">
@@ -698,6 +705,7 @@
                             <button class="btn btn-success mb-3" id="add_duressapp_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_duressappMultimedia_fields" data-toggle="modal" data-target="#DuressAppMiltimedia-modal"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                             <button class="btn btn-success mb-3" id="add_DuressAppAudio" data-toggle="modal" data-target="#DuressAppAudio-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
+                            <button class="btn btn-success mb-3" id="add_Equipments"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                         </div>
                         <table class="table" id="field_settings"></table>
                         <table class="table" id="field_settings_Area" hidden></table>
@@ -708,6 +716,7 @@
                         <table class="table" id="tbl_duressapp_fields"></table>
                         <table class="table" id="tbl_duressappLog_fields"></table>
                         <table class="table" id="tbl_duressappMultimedia_fields"></table>
+                        <table class="table" id="tbl_Equipment_fields"></table>
                     </div>
                 </div>
                 <div class="row" style="display:none" id="positionSettings">
@@ -1786,7 +1795,7 @@
                                 <div class="col-md-3">
                                     <select class="form-control" id="sel_client_type">
                                         <option value="">All</option>
-                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                        @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                         {
                                             <option value="@item.Id">@item.Name</option>
                                         }
@@ -2404,7 +2413,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }
@@ -2740,7 +2749,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }
@@ -3076,7 +3085,7 @@
                                     <div class="col-md-3">
                                         <select class="form-control" id="sel_client_type">
                                             <option value="">All</option>
-                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
                                             }
@@ -3508,6 +3517,7 @@
                                     <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                     <button class="btn btn-success mb-3" id="add_KPI_Telematics_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                     <button class="btn btn-success mb-3" id="add_ta_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                    <button class="btn btn-success mb-3" id="add_Equipments"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                 </div>
                                 <table class="table" id="field_settings"></table>
                                 <table class="table" id="field_settings_Area" hidden></table>
@@ -3516,6 +3526,7 @@
                                 <table class="table" id="tbl_kpitelematics_fields"></table>
                                 <table class="table" id="tbl_ta_fields"></table>
                                 <table class="table" id="tbl_duressapp_fields"></table>
+                                <table class="table" id="tbl_Equipment_fields"></table>
 
                             </div>
                         </div>

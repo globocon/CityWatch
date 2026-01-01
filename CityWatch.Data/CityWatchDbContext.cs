@@ -358,6 +358,7 @@ namespace CityWatch.Data
         public DbSet<InActiveGuardsDetails> InActiveGuardsDetails { get; set; }
         public DbSet<MobileAppUpgrade> MobileAppUpgrade { get; set; }
         public DbSet <PublicHolidayStates> PublicHolidayStates { get; set; }
+        public DbSet<SiteEquipmentsDetails> SiteEquipmentsDetails { get; set; }
     }
 
 

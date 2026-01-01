@@ -8,6 +8,7 @@ using CityWatch.Data.Helpers;
 using System.Security.Cryptography;
 using System.Threading;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
+using System.Threading.Tasks;
 
 namespace CityWatch.Data.Providers
 {
@@ -38,7 +39,7 @@ namespace CityWatch.Data.Providers
         List<GuardCompliance> GetGuardCompliances(int guardId);
         HrSettings GetHRRefernceNo(int HRid, string Description);
         List<HrSettings> GetHRDesc(int HRid);
-        HrSettings GetHRDescEditBan(int DescriptionID);
+        Task<HrSettings> GetHRDescEditBanAsync(int DescriptionID);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
@@ -361,7 +362,7 @@ namespace CityWatch.Data.Providers
                 //P1-273 access levels-start
                 guard.IsSTATSChartsAccess = false;
                 guard.IsRCFusionAccess = false;
-                guard.IsMobileAppAccess = false;
+                guard.IsMobileAppAccess = guard.IsMobileAppAccess;
                 guard.IsMobileAppPlusTags = false;
                 guard.IsPCARAccess = false;
 
@@ -874,13 +875,13 @@ namespace CityWatch.Data.Providers
             return descriptions;
         }
 
-        public HrSettings GetHRDescEditBan(int DescriptionID)
+        public async Task<HrSettings> GetHRDescEditBanAsync(int DescriptionID)
         {
-            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+            var descriptions = await  _context.HrSettings.Include(z => z.HRGroups)
                  .Include(z => z.ReferenceNoNumbers)
                  .Include(z => z.ReferenceNoAlphabets)
                  .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(x => x.Id == DescriptionID).FirstOrDefault();
+                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(x => x.Id == DescriptionID).FirstOrDefaultAsync();
 
             return descriptions;
         }

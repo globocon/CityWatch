@@ -8,6 +8,8 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Presentation;
+using MailKit.Net.Smtp;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
@@ -18,22 +20,22 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Office.Interop.PowerPoint;
 using MimeKit;
+using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Macs;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
-using MailKit.Net.Smtp;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
-using System.Text;
-using Org.BouncyCastle.Crypto.Generators;
-using Microsoft.Office.Interop.PowerPoint;
+using Presentation = Microsoft.Office.Interop.PowerPoint.Presentation;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -49,7 +51,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
-        private readonly string _reportRootDir; 
+        private readonly string _reportRootDir;
         private readonly EmailOptions _EmailOptions;
         public string ClientNameTitle { get; set; }
 
@@ -122,7 +124,7 @@ namespace CityWatch.Web.Pages.Admin
                     ClientNameTitle = "Citywatch Security";
                 }
             }
-                if (!AuthUserHelper.IsAdminUserLoggedIn)
+            if (!AuthUserHelper.IsAdminUserLoggedIn)
                 return Redirect(Url.Page("/Account/Unauthorized"));
 
             return Page();
@@ -249,7 +251,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
         }
-       
+
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {
             var success = false;
@@ -367,6 +369,7 @@ namespace CityWatch.Web.Pages.Admin
                     if (val == 1)
                     {
                         guard.IsLB_KV_IR = true;
+                        guard.IsMobileAppAccess = true;
                     }
                     else if (val == 2)
                     {
@@ -399,7 +402,7 @@ namespace CityWatch.Web.Pages.Admin
                     else if (val == 8)
                     {
                         guard.IsRCFusionAccess = true;
-                        
+
                     }
                     else if (val == 9)
                     {
@@ -431,10 +434,10 @@ namespace CityWatch.Web.Pages.Admin
 
                         guard.IsAdminGlobal = true;
                     }
-                    else if (val == 15)
-                    {
-                        guard.IsMobileAppAccess = true;
-                    }
+                    //else if (val == 15)
+                    //{
+                    //    guard.IsMobileAppAccess = true;
+                    //}
                     else if (val == 16)
                     {
                         guard.IsMobileAppPlusTags = true;
@@ -496,7 +499,7 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                 guardId = _guardDataProvider.SaveLanguageDetails(guard);
+                guardId = _guardDataProvider.SaveLanguageDetails(guard);
             }
             catch (Exception ex)
             {
@@ -514,12 +517,12 @@ namespace CityWatch.Web.Pages.Admin
             {
                 status,
                 message,
-               
+
             });
         }
-            public JsonResult OnPostExportGuardsToExcel(bool active, bool inactive, int[] guardIdsFilter)
+        public JsonResult OnPostExportGuardsToExcel(bool active, bool inactive, int[] guardIdsFilter)
         {
-             return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active,inactive, guardIdsFilter) });
+            return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active, inactive, guardIdsFilter) });
             //return new JsonResult("message");
         }
         public JsonResult OnGetClientStates()
@@ -758,8 +761,9 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
         {
-            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
-            if(AuthUserHelper.IsAdminUserLoggedIn){
+            var GuardDetails = _viewDataService.GetGuardLicenseAndComplianceData(guardId);
+            if (AuthUserHelper.IsAdminUserLoggedIn)
+            {
                 foreach (var guard in GuardDetails)
                 {
                     guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
@@ -842,7 +846,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                _guardDataProvider.DeleteGuardLicense(id);
+                _viewDataService.DeleteGuardHrDocument(id);
                 success = true;
             }
             catch (Exception ex)
@@ -856,36 +860,14 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
-        public JsonResult OnGetHRDescriptionBanDetails(int DescriptionID)
+        public async Task<JsonResult> OnGetHRDescriptionBanDetailsAsync(int DescriptionID)
         {
-            var DescVal = _guardDataProvider.GetHRDescEditBan(DescriptionID);
+            var DescVal = await _viewDataService.GetHRDescriptionBanDetailsAsync(DescriptionID);
             return new JsonResult(DescVal);
         }
-            public JsonResult OnGetHRDescription(int HRid, int GuardID)
-        {
-            var DescVal = _guardDataProvider.GetHRDesc(HRid);
-            var combinedDataList = new List<CombinedData>();
-            foreach (var item in DescVal)
-            {
-                var GropuNamee = RemoveBrackets(item.GroupName);
-                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
-                {
-                    // var NewDesc = item.ReferenceNo+ item.Description;
-                    var NewDesc = item.Description;
-                    var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, NewDesc, GuardID);
-                    var combinedData = new CombinedData
-                    {
-                        HRGroupId = HRid,
-                        Description = item.Description,
-                        UsedDescription = UsedDesc?.Description,
-                        ReferenceNo = item.ReferenceNo,
-                        ID=item.Id,
-                    };
-                    combinedDataList.Add(combinedData);
-                }
-
-            }
-
+        public JsonResult OnGetHRDescription(int HRid, int GuardID)
+        {            
+            var combinedDataList = _viewDataService.GetHRDescription(HRid, GuardID);
             return new JsonResult(combinedDataList);
         }
         private string RemoveBrackets(string input)
@@ -899,14 +881,7 @@ namespace CityWatch.Web.Pages.Admin
             return Regex.Replace(input, pattern, string.Empty);
         }
 
-        public class CombinedData
-        {
-            public int HRGroupId { get; set; }
-            public string Description { get; set; }
-            public string UsedDescription { get; set; }
-            public string ReferenceNo { get; set; }
-            public int ID { get; set; }
-        }
+        
         //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         //{
         //    ModelState.Remove("guardComplianceandlicense.Id");
@@ -1085,51 +1060,53 @@ namespace CityWatch.Web.Pages.Admin
                                 .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
                 });
             }
-            if (!string.IsNullOrEmpty(guardComplianceandlicense.Description))
-            {
-                guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
-            }
-            var status = true;
-            var dbxUploaded = true;
-            var message = "Success";
-            //Check Description Used or not start
-            var UsedDesc = new GuardComplianceAndLicense();
-            var GropuNamee = RemoveBrackets(guardComplianceandlicense.HrGroupText);
-            GropuNamee = GropuNamee.Replace(" ", "");
-            if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup1))
-            {
-                UsedDesc = _guardDataProvider.GetDescriptionUsed(hrGroup1, guardComplianceandlicense.Description, guardComplianceandlicense.GuardId);
-            }
-            if (UsedDesc != null && guardComplianceandlicense.Id == 0)
-            {
-                status = false;
-                message = "The type of document you are trying to upload already exists. If it is a newer version, please EDIT the existing document instead, change the expiry date,and then add the latest document";
-            }
-            else
-            {
-                //Check Description Used or not stop
-                if (guardComplianceandlicense.Id == 0)
-                {
-                    string extension = Path.GetExtension(guardComplianceandlicense.FileName);
-                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
-                    guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
-                }
+            //if (!string.IsNullOrEmpty(guardComplianceandlicense.Description))
+            //{
+            //    guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
+            //}
+            //var status = true;
+            //var dbxUploaded = true;
+            //var message = "Success";
+            ////Check Description Used or not start
+            //var UsedDesc = new GuardComplianceAndLicense();
+            //var GropuNamee = RemoveBrackets(guardComplianceandlicense.HrGroupText);
+            //GropuNamee = GropuNamee.Replace(" ", "");
+            //if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup1))
+            //{
+            //    UsedDesc = _guardDataProvider.GetDescriptionUsed(hrGroup1, guardComplianceandlicense.Description, guardComplianceandlicense.GuardId);
+            //}
+            //if (UsedDesc != null && guardComplianceandlicense.Id == 0)
+            //{
+            //    status = false;
+            //    message = "The type of document you are trying to upload already exists. If it is a newer version, please EDIT the existing document instead, change the expiry date,and then add the latest document";
+            //}
+            //else
+            //{
+            //    //Check Description Used or not stop
+            //    if (guardComplianceandlicense.Id == 0)
+            //    {
+            //        string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+            //        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+            //        guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
+            //    }
 
-                try
-                {
-                    dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
-                    guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
-                    guardComplianceandlicense.Reminder1 = 45;
-                    guardComplianceandlicense.Reminder2 = 7;
-                    _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
-                }
-                catch (Exception ex)
-                {
-                    status = false;
-                    message = ex.Message;
-                }
-            }
-            return new JsonResult(new { status, dbxUploaded, message });
+            //    try
+            //    {
+            //        dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
+            //        guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+            //        guardComplianceandlicense.Reminder1 = 45;
+            //        guardComplianceandlicense.Reminder2 = 7;
+            //        _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        status = false;
+            //        message = ex.Message;
+            //    }
+            //}
+
+            (bool status, bool dbxUploaded, IEnumerable<string> msg) = _viewDataService.SaveOrUpdateGuardComplianceandlicanseNew(guardComplianceandlicense);
+            return new JsonResult(new { status, dbxUploaded, msg });
         }
         public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
         {
@@ -1378,7 +1355,7 @@ namespace CityWatch.Web.Pages.Admin
                         AuthUserHelper.IsAdminAuditor = false;
                     }
 
-                    if(guard.IsAdminInvestigatorAccess)
+                    if (guard.IsAdminInvestigatorAccess)
                     {
                         AuthUserHelper.IsAdminInvestigator = true;
 
@@ -1472,7 +1449,7 @@ namespace CityWatch.Web.Pages.Admin
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
                                 }
                                 SuccessCode = 1;
-                               
+
                             }
                             else
                             {
@@ -1589,7 +1566,7 @@ namespace CityWatch.Web.Pages.Admin
 
                         if (guard.IsActive)
                         {
-                            if (guard.IsAdminGlobal ||guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                            if (guard.IsAdminGlobal || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;
@@ -1622,13 +1599,13 @@ namespace CityWatch.Web.Pages.Admin
 
                         if (guard.IsActive)
                         {
-                            
-                                AccessPermission = true;
-                                GuId = guard.Id;
-                               
-                                SuccessCode = 1;
-                            
-                           
+
+                            AccessPermission = true;
+                            GuId = guard.Id;
+
+                            SuccessCode = 1;
+
+
                         }
                         else
                         {
@@ -1657,14 +1634,14 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
-        public JsonResult OnPostSaveMobileNo(string mobileNo,int GuardID)
+        public JsonResult OnPostSaveMobileNo(string mobileNo, int GuardID)
         {
             var status = true;
             _guardDataProvider.SaveGuardMobileNo(GuardID, mobileNo);
             return new JsonResult(new { status });
         }
 
-            private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
+        private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
         {
             guardLicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardLicense.GuardId);
             var existingGuardLicense = _guardDataProvider.GetGuardLicense(guardLicense.Id);
@@ -1674,7 +1651,7 @@ namespace CityWatch.Web.Pages.Admin
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardLicense.GuardId.ToString(), guardLicense.FileName);
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardLicense.Guard)}/{guardLicense.LicenseNo}/{guardLicense.FileName}");
-            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+            return _viewDataService.UploadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
 
         private bool UploadGuardComplianceToDropbox(GuardCompliance guardCompliance)
@@ -1687,7 +1664,7 @@ namespace CityWatch.Web.Pages.Admin
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardCompliance.GuardId.ToString(), guardCompliance.FileName);
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardCompliance.Guard)}/{guardCompliance.ReferenceNo}/{guardCompliance.FileName}");
-            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+            return _viewDataService.UploadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
         private bool UploadGuardComplianceandLicenseToDropbox(GuardComplianceAndLicense guardComplianceandlicense)
         {
@@ -1707,42 +1684,9 @@ namespace CityWatch.Web.Pages.Admin
             //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
 
 
-            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+            return _viewDataService.UploadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
-        private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
-        {
-            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
-            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
-            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
-                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
-                return true;
-
-
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
-            var DropboxDir = _guardDataProvider.GetDrobox();
-            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guardComplianceandlicense.Guard, DropboxDir.DropboxDir)}/{guardComplianceandlicense.FileName}");
-
-            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
-        }
-        private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
-        {
-            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
-                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
-
-            bool uploaded = false;
-            try
-            {
-                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
-                //if (uploaded && System.IO.File.Exists(fileToUpload))
-                //    System.IO.File.Delete(fileToUpload);
-            }
-            catch
-            {
-            }
-
-            return uploaded;
-        }
+       
         //Dos and Donts-start
         public JsonResult OnGetDosandDontsFields(int typeId)
         {
@@ -1767,7 +1711,7 @@ namespace CityWatch.Web.Pages.Admin
                             return new JsonResult(new { success = false, message = "Reference number should only contains numbers. !!!" });
                         }
 
-                        var eventReferenceExists = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x=>x.ReferenceNo==record.ReferenceNo);
+                        var eventReferenceExists = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x => x.ReferenceNo == record.ReferenceNo);
                         if (eventReferenceExists.Count() > 0)
                         {
                             return new JsonResult(new { success = false, message = "Similar reference number already exists !!!" });
@@ -1794,7 +1738,7 @@ namespace CityWatch.Web.Pages.Admin
                         } while (refok == false);
                         record.ReferenceNo = newrefnumb;
                     }
-                   
+
                 }
                 else
                 {
@@ -1890,16 +1834,10 @@ namespace CityWatch.Web.Pages.Admin
         //Dos and Donts-end
         public IActionResult OnGetGuardLicenseAndCompliancForGuardse(int guardId)
         {
-            //ViewData["Guard_Id"] = guardId;
-            //ViewData["Guard_License"] = _guardDataProvider.GetGuardLicenses(guardId);
-            //ViewData["Guard_Compliance"] = _guardDataProvider.GetGuardCompliances(guardId);
 
-            //return new PartialViewResult
-            //{
-            //    ViewName = "_GuardAdditionalDetails",
-            //    ViewData = new ViewDataDictionary(ViewData)
-            //};
-            return new JsonResult(_guardDataProvider.GetGuards().Where(x => x.Id == guardId));
+            //return new JsonResult(_guardDataProvider.GetGuards().Where(x => x.Id == guardId));
+
+            return new JsonResult(_viewDataService.GetLicenseAndCompliancForGuards(guardId));
         }
         public IActionResult OnGetExpiredDocuments(int guardId)
         {
@@ -2119,50 +2057,57 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostGuardHrDocLoginConformation(int guardId, string key)
         {
+            //var AccessPermission = false;
+            //int? LoggedInUserId = 0;
+            //string SuccessMessage = string.Empty;
+            //int? SuccessCode = 0;
+            //int? GuId = 0;
+            //AuthUserHelper.IsAdminPowerUser = false;
+            //AuthUserHelper.IsAdminGlobal = false;
+
+            //if (!string.IsNullOrEmpty(key))
+            //{
+            //    var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+            //    if (guard == null)
+            //    {
+            //        SuccessMessage = "Invalid PIN";
+
+            //    }
+            //    else
+            //    {
+
+            //        var firstGuard = guard.FirstOrDefault();
+            //        if (firstGuard != null && firstGuard.Pin != null)
+            //        {
+
+            //            if (guard.FirstOrDefault().Pin.Trim() == key.Trim())
+            //            {
+
+            //                AccessPermission = true;
+            //            }
+            //            else
+            //            {
+            //                SuccessMessage = "Invalid PIN";
+            //            }
+            //        }
+            //        else
+            //        {
+            //            SuccessMessage = "No PIN Set for you";
+
+            //        }
+
+            //    }
+
+
+
+            //}
+
             var AccessPermission = false;
             int? LoggedInUserId = 0;
             string SuccessMessage = string.Empty;
             int? SuccessCode = 0;
             int? GuId = 0;
-            AuthUserHelper.IsAdminPowerUser = false;
-            AuthUserHelper.IsAdminGlobal = false;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
-                if (guard == null)
-                {
-                    SuccessMessage = "Invalid PIN";
-
-                }
-                else
-                {
-
-                    var firstGuard = guard.FirstOrDefault();
-                    if (firstGuard != null && firstGuard.Pin != null)
-                    {
-
-                        if (guard.FirstOrDefault().Pin.Trim() == key.Trim())
-                        {
-
-                            AccessPermission = true;
-                        }
-                        else
-                        {
-                            SuccessMessage = "Invalid PIN";
-                        }
-                    }
-                    else
-                    {
-                        SuccessMessage = "No PIN Set for you";
-
-                    }
-
-                }
-
-
-
-            }
+            (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage) = _viewDataService.ValidateGuardHrPin(guardId, key);
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
@@ -2186,7 +2131,7 @@ namespace CityWatch.Web.Pages.Admin
 
             }
 
-            return new JsonResult(new { AccessPermission,SuccessMessage });
+            return new JsonResult(new { AccessPermission, SuccessMessage });
         }
 
 
@@ -2213,10 +2158,10 @@ namespace CityWatch.Web.Pages.Admin
             }
             else
             {
-              
-                    SuccessMessage = "Enter your New PIN";
 
-                
+                SuccessMessage = "Enter your New PIN";
+
+
 
             }
 
@@ -2228,11 +2173,11 @@ namespace CityWatch.Web.Pages.Admin
             _guardDataProvider.SetNotes(ClientSiteID, Notes);
             return new JsonResult(new { SuccessMessage });
         }
-            public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
+        public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId, string searchKeyNo)
         {
-          
+
             return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
-           
+
         }
 
 
@@ -2247,8 +2192,8 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { data = _guardLogDataProvider.GetLanguageDetails(guardId) });
         }
 
-        
-        public JsonResult OnPostResetGaurdHrPin(int guardId,string siteName )
+
+        public JsonResult OnPostResetGaurdHrPin(int guardId, string siteName)
         {
             var message = string.Empty;
             var success = false;
@@ -2336,7 +2281,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-        public string GetPasswordResetEmail(string userName, string temporaryPassword,string siteName)
+        public string GetPasswordResetEmail(string userName, string temporaryPassword, string siteName)
         {
             var sb = new StringBuilder();
 
@@ -2455,8 +2400,8 @@ namespace CityWatch.Web.Pages.Admin
             .OrderBy(x => x.GroupName)
             .ThenBy(x => x.referenceNo)
             .ThenBy(x => x.referenceNoAlphabetsName);
-            
-            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Where(x => Path.HasExtension(x.FileName)).Select(x=>x.HRSettingsId).ToArray();
+
+            int[] hrSettingsIdWithCourses = _configDataProvider.GetCourseDocuments().Where(x => Path.HasExtension(x.FileName)).Select(x => x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithQuestions = _configDataProvider.GetTrainingTestQuestions().Select(x => x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithCourseCertificates = _configDataProvider.GetCourseCertificateDocuments().Select(x => x.HRSettingsId).ToArray();
             int[] hrSettingsIdWithCourseInstructors = _configDataProvider.GetCourseAllInstructor().Select(x => x.HRSettingsId).ToArray();
@@ -2470,12 +2415,12 @@ namespace CityWatch.Web.Pages.Admin
             foreach (var item in newjResult)
             {
                 var coursesList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(item.Id).Where(x => Path.HasExtension(x.FileName)).ToList();
-                
+
                 var testQuestionsSettingsList = _configDataProvider.GetTrainingTestQuestionsColor(item.Id).ToList();
-                
+
                 var courseCertificatesList = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.HRSettingsId == item.Id).ToList();
                 var courseInstructorList = _configDataProvider.GetCourseAllInstructor().Where(x => x.HRSettingsId == item.Id).ToList();
-                if (coursesList.Count() > 0 && testQuestionsSettingsList.Count() > 0 && courseCertificatesList.Count() > 0 && courseInstructorList.Count()>0)
+                if (coursesList.Count() > 0 && testQuestionsSettingsList.Count() > 0 && courseCertificatesList.Count() > 0 && courseInstructorList.Count() > 0)
                 {
                     item.CourseColour = "Green";
 
@@ -2495,7 +2440,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             var success = false;
             var message = string.Empty;
-            
+
             try
             {
 
@@ -2521,7 +2466,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        
+
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "DuressAppAudio");
                         if (!Directory.Exists(staffDocsFolder))
                             Directory.CreateDirectory(staffDocsFolder);
@@ -2542,24 +2487,24 @@ namespace CityWatch.Web.Pages.Admin
 
 
             var Label = Request.Form["label"];
-           
+
             var Name = Request.Form["name"];
             int Id = Convert.ToInt32(Request.Form["id"]);
 
             var type = 1;
 
             _guardLogDataProvider.SaveDuressApp(new DuressAppField()
-                {
-                    
-                    Name = Name,
-                   TypeId= type,
-                   Label= Label,
-                   Id= Id
+            {
+
+                Name = Name,
+                TypeId = type,
+                Label = Label,
+                Id = Id
 
             });
 
-                success = true;
-           
+            success = true;
+
 
             return new JsonResult(new { success, message });
         }
@@ -2640,7 +2585,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetGuardTrainingAndAssessmentTabByAdmin(int guardId)
         {
-                return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
+            return new JsonResult(_guardDataProvider.GetGuardTrainingAndAssessment(guardId));
         }
         public JsonResult OnPostUploadGuardAttachmentForCertificates()
         {
@@ -2649,10 +2594,10 @@ namespace CityWatch.Web.Pages.Admin
 
             var guardId = Request.Form["guardId"];
             int courseId = Convert.ToInt32(Request.Form["courseId"]);
-          
+
             var fileName = string.Empty;
-            
-            int hrIdInt= _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
+
+            int hrIdInt = _configDataProvider.GetTrainingCoursesWithCourseId(courseId).FirstOrDefault().HRSettingsId;
 
             var LicenseNo = _guardDataProvider.GetActiveGuards().Where(x => x.Id == Convert.ToInt32(guardId)).FirstOrDefault().SecurityNo;
 
@@ -2660,7 +2605,7 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                if (files.Count == 1 )
+                if (files.Count == 1)
                 {
                     var file = files[0];
                     fileName = file.FileName;
@@ -2669,7 +2614,7 @@ namespace CityWatch.Web.Pages.Admin
                     string extension = ""; string newFileName = ""; var formattedDate = "";
 
                     extension = Path.GetExtension(fileName).ToLower();
-                 
+
 
 
                     //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
@@ -2678,7 +2623,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo,"CertificateDocuments", coursename);
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo, "CertificateDocuments", coursename);
 
                     if (!Directory.Exists(guardUploadDir))
                         Directory.CreateDirectory(guardUploadDir);
@@ -2736,11 +2681,12 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 var courses = _configDataProvider.GetCourseDocsUsingSettingsId(id);
-                var hrsettinglist=_configDataProvider.GetHrSettingById(id);
-                var referenceNumber = _guardDataProvider.GetReferenceNoNumbers().Where(x=>x.Id==hrsettinglist.ReferenceNoNumberId && x.IsDeleted==false).FirstOrDefault().Name + _guardDataProvider.GetReferenceNoAlphabets().Where(x=>x.Id==hrsettinglist.ReferenceNoAlphabetId && x.IsDeleted==false).FirstOrDefault().Name;
+                var hrsettinglist = _configDataProvider.GetHrSettingById(id);
+                var referenceNumber = _guardDataProvider.GetReferenceNoNumbers().Where(x => x.Id == hrsettinglist.ReferenceNoNumberId && x.IsDeleted == false).FirstOrDefault().Name + _guardDataProvider.GetReferenceNoAlphabets().Where(x => x.Id == hrsettinglist.ReferenceNoAlphabetId && x.IsDeleted == false).FirstOrDefault().Name;
                 var hrreferenceNumber = "HR" + referenceNumber;
 
-                if (courses != null) {
+                if (courses != null)
+                {
                     foreach (var course in courses)
                     {
                         var document = _configDataProvider.GetCourseDocuments().SingleOrDefault(x => x.Id == course.Id);
@@ -2759,7 +2705,7 @@ namespace CityWatch.Web.Pages.Admin
                                     System.IO.File.Delete(outputPath);
                             }
                             _configDataProvider.DeleteCourseDocument(course.Id);
-                            
+
                         }
                     }
                     string folderPathnew = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Course");
@@ -2773,14 +2719,14 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
                 var tqSettings = _configDataProvider.GetTQSettings(id).FirstOrDefault();
-                if(tqSettings!=null)
+                if (tqSettings != null)
                 {
                     _configDataProvider.DeleteTQSettings(tqSettings.Id);
                 }
-                var courseQuestions= _configDataProvider.GetTrainingTestQuestionsWithHrSettings(id);
-                if(courseQuestions!=null)
+                var courseQuestions = _configDataProvider.GetTrainingTestQuestionsWithHrSettings(id);
+                if (courseQuestions != null)
                 {
-                    foreach(var courseQuestion in courseQuestions)
+                    foreach (var courseQuestion in courseQuestions)
                     {
                         _guardLogDataProvider.DeleteTestQuestions(courseQuestion.Id);
                     }
@@ -2788,12 +2734,12 @@ namespace CityWatch.Web.Pages.Admin
                 var courseInstructors = _configDataProvider.GetCourseAllInstructor().Where(x => x.HRSettingsId == id).ToList();
                 if (courseInstructors.Count() > 0)
                 {
-                    foreach(var instructor in courseInstructors)
+                    foreach (var instructor in courseInstructors)
                     {
                         _guardLogDataProvider.DeleteTrainingCourseInstructor(instructor.Id);
                     }
                 }
-                
+
                 var certificates = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(id);
                 if (certificates != null)
                 {
@@ -2815,7 +2761,7 @@ namespace CityWatch.Web.Pages.Admin
                                     System.IO.File.Delete(outputPath);
                             }
                             _configDataProvider.DeleteCourseCertificateDocument(certificate.Id);
-                           
+
                         }
                     }
                     string folderPathCertificate = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
@@ -2856,7 +2802,7 @@ namespace CityWatch.Web.Pages.Admin
 
             var fileName = string.Empty;
 
-            int hrIdInt = _configDataProvider.GetCourseCertificateDocuments().Where(x=> x.Id == certificateId).FirstOrDefault().HRSettingsId;
+            int hrIdInt = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == certificateId).FirstOrDefault().HRSettingsId;
 
             var LicenseNo = _guardDataProvider.GetActiveGuards().Where(x => x.Id == Convert.ToInt32(guardId)).FirstOrDefault().SecurityNo;
 
@@ -2908,6 +2854,24 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { success, fileName });
+        }
+        public JsonResult OnPostSaveEquipments(KPITelematicsField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                record.TypeId = 2;
+                _guardLogDataProvider.SaveKPITelematics(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
         }
 
     }

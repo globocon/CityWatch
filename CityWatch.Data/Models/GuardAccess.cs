@@ -12,5 +12,7 @@ namespace CityWatch.Data.Models
         [Key]
         public int Id { get; set; }
         public string AccessName { get; set; }
+        public bool IsDeleted { get; set; }
+        public int CredentialOrder { get; set; }
     }
 }
