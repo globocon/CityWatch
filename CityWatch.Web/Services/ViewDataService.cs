@@ -1,8 +1,12 @@
-﻿using CityWatch.Data.Enums;
+﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.Web.API;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
@@ -10,11 +14,13 @@ using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Humanizer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Options;
 using Microsoft.Office.Interop;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
@@ -29,6 +35,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using static CityWatch.Data.Providers.AppConfigurationProvider;
+using static CityWatch.Web.Pages.Admin.GuardSettingsModel;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
@@ -216,7 +223,12 @@ namespace CityWatch.Web.Services
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key);
         public List<Guard> GetLicenseAndCompliancForGuards(int guardId);
         public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId);
-
+        public List<CombinedData> GetHRDescription(int HRid, int GuardID);
+        public Task<HrSettings> GetHRDescriptionBanDetailsAsync(int DescriptionID);
+        public (bool status, bool dbxUploaded, IEnumerable<string> msg) SaveOrUpdateGuardComplianceandlicanseNew(GuardComplianceAndLicense guardComplianceandlicense);
+        public bool UploadDocumentToDropbox(string fileToUpload, string dbxFilePath);
+        public Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName);
+        public void DeleteGuardHrDocument(int hrDocId);
     }
 
     public class ViewDataService : IViewDataService
@@ -230,6 +242,10 @@ namespace CityWatch.Web.Services
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly ILogbookDataService _logbookDataService;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly Settings _settings;
+        private readonly string _reportRootDir;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -239,7 +255,10 @@ namespace CityWatch.Web.Services
             IGuardLogDataProvider guardLogDataProvider,
             IGuardSettingsDataProvider guardSettingsDataProvider,
             ILogbookDataService logbookDataService,
-            IAppConfigurationProvider appConfigurationProvider)
+            IAppConfigurationProvider appConfigurationProvider,
+             IWebHostEnvironment webHostEnvironment,
+             IDropboxService dropboxUploadService,
+             IOptions<Settings> settings)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -250,6 +269,10 @@ namespace CityWatch.Web.Services
             _guardSettingsDataProvider = guardSettingsDataProvider;
             _logbookDataService = logbookDataService;
             _appConfigurationProvider = appConfigurationProvider;
+            _webHostEnvironment = webHostEnvironment;
+            _dropboxUploadService = dropboxUploadService;
+            _settings = settings.Value;
+            _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
         }
 
         public List<SelectListItem> Genders
@@ -3153,16 +3176,17 @@ namespace CityWatch.Web.Services
             var filename = mv.FileName;
             var platform = mv.AppType;
             _appConfigurationProvider.DeleteMobileAppUpgrade(id);
-            try {                
+            try
+            {
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Downloads", "MobileApp", platform, versionPath, filename);
                 if (File.Exists(filePath))
                     File.Delete(filePath);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //Log exception but do not throw as the main operation is already done
                 Console.WriteLine($"Error deleting mobile app file from server: {ex.Message}");
-            }                      
+            }
         }
 
         public void UpdateDownloadCount(int id)
@@ -3181,7 +3205,7 @@ namespace CityWatch.Web.Services
             return _appConfigurationProvider.GetPcarDetails(deviceId);
         }
 
-        public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key) 
+        public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key)
         {
             bool AccessPermission = false;
             int? LoggedInUserId = 0;
@@ -3222,8 +3246,8 @@ namespace CityWatch.Web.Services
             return (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage);
         }
 
-        public List<Guard> GetLicenseAndCompliancForGuards(int guardId) 
-        { 
+        public List<Guard> GetLicenseAndCompliancForGuards(int guardId)
+        {
             var result = _guardDataProvider.GetGuards().Where(x => x.Id == guardId).ToList();
             return result;
         }
@@ -3234,6 +3258,166 @@ namespace CityWatch.Web.Services
             return GuardDetails;
         }
 
+        public List<CombinedData> GetHRDescription(int HRid, int GuardID)
+        {
+            var DescVal = _guardDataProvider.GetHRDesc(HRid);
+            var combinedDataList = new List<CombinedData>();
+            foreach (var item in DescVal)
+            {
+                var GropuNamee = RemoveBrackets(item.GroupName);
+                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                {
+                    // var NewDesc = item.ReferenceNo+ item.Description;
+                    var NewDesc = item.Description;
+                    var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, NewDesc, GuardID);
+                    var combinedData = new CombinedData
+                    {
+                        HRGroupId = HRid,
+                        Description = item.Description,
+                        UsedDescription = UsedDesc?.Description,
+                        ReferenceNo = item.ReferenceNo,
+                        ID = item.Id,
+                    };
+                    combinedDataList.Add(combinedData);
+                }
+
+            }
+
+            return combinedDataList;
+
+        }
+
+        public async Task<HrSettings> GetHRDescriptionBanDetailsAsync(int DescriptionID)
+        {
+            var DescVal = await _guardDataProvider.GetHRDescEditBanAsync(DescriptionID);
+            return DescVal;
+        }
+
+        public (bool status, bool dbxUploaded, IEnumerable<string> msg) SaveOrUpdateGuardComplianceandlicanseNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+
+            if (!string.IsNullOrEmpty(guardComplianceandlicense.Description))
+            {
+                guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
+            }
+
+            //Check Description Used or not start
+            var UsedDesc = new GuardComplianceAndLicense();
+            var GropuNamee = RemoveBrackets(guardComplianceandlicense.HrGroupText);
+            GropuNamee = GropuNamee.Replace(" ", "");
+            if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup1))
+            {
+                UsedDesc = _guardDataProvider.GetDescriptionUsed(hrGroup1, guardComplianceandlicense.Description, guardComplianceandlicense.GuardId);
+            }
+            if (UsedDesc != null && guardComplianceandlicense.Id == 0)
+            {
+                status = false;
+                message = "The type of document you are trying to upload already exists. If it is a newer version, please EDIT the existing document instead, change the expiry date,and then add the latest document";
+            }
+            else
+            {
+                //Check Description Used or not stop
+                if (guardComplianceandlicense.Id == 0)
+                {
+                    string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+                    guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
+                }
+
+                try
+                {
+                    dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
+                    guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                    guardComplianceandlicense.Reminder1 = 45;
+                    guardComplianceandlicense.Reminder2 = 7;
+                    _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+                }
+                catch (Exception ex)
+                {
+                    status = false;
+                    message = ex.Message;
+                }
+            }
+
+            return (status, dbxUploaded, new List<string> { message });
+        }
+
+        public void DeleteGuardHrDocument(int hrDocId)
+        {
+            _guardDataProvider.DeleteGuardLicense(hrDocId); 
+        }
+
+        private string RemoveBrackets(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
+            return Regex.Replace(input, pattern, string.Empty);
+        }
+
+        private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
+            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
+                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
+                return true;
+
+
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
+            var DropboxDir = _guardDataProvider.GetDrobox();
+            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guardComplianceandlicense.Guard, DropboxDir.DropboxDir)}/{guardComplianceandlicense.FileName}");
+
+            return UploadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
+        public bool UploadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
+        }
+
+        public async Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile,string LicenseNo, string uploadFileName)
+        {
+            var PathToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", LicenseNo);
+            var fileToUpload = Path.Combine(PathToUpload, uploadFileName);
+            try
+            {
+                if (!Directory.Exists(PathToUpload))
+                {
+                    Directory.CreateDirectory(PathToUpload);
+                }
+                using (var stream = new FileStream(fileToUpload, FileMode.Create))
+                {
+                    await Docfile.CopyToAsync(stream);
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }            
+        }
+        
     }
 
     public class DropdownItemWithAddress
@@ -3270,5 +3454,14 @@ namespace CityWatch.Web.Services
         public string Label { get; set; }
         public string Url { get; set; }
         public Command PlayCommand { get; set; }
+    }
+
+    public class CombinedData
+    {
+        public int HRGroupId { get; set; }
+        public string Description { get; set; }
+        public string UsedDescription { get; set; }
+        public string ReferenceNo { get; set; }
+        public int ID { get; set; }
     }
 }
