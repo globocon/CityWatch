@@ -7841,6 +7841,32 @@ $('#btnAIButton').on('click', function () {
 });
 
 
+$('#btnAIButtonOpenAIApi').on('click', function () {
+
+    const userInput = $("#Report_Feedback").val();
+
+    if (!userInput) {
+        alert("Please Enter The Feedback");
+        return;
+    }
+
+    $.ajax({
+        url: "/Incident/Register?handler=AiButtonOpenAIApi",
+        type: "GET",
+        data: { textToCheck: userInput },
+        success: function (response) {
+            if (response.success) {
+                $("#Report_Feedback").val(response.correctedText);
+            }
+        },
+        error: function () {
+            alert("AI processing failed.");
+        }
+    });
+});
+
+
+
 
 let gridLogActivityProfiles;
 
