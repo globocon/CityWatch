@@ -3175,6 +3175,7 @@ namespace CityWatch.Web.API
                     ExpiryDate = x.ExpiryDate,
                     FileName = x.FileName,
                     FileUrl = x.FileUrl,
+                    HrGroup = x.HrGroup,
                     HrGroupText = x.HrGroupText,
                     CurrentDateTime = x.CurrentDateTime,
                     Reminder1 = x.Reminder1,
@@ -3205,6 +3206,158 @@ namespace CityWatch.Web.API
                 });
             }
         }
+
+
+        [HttpGet("GetHrGroupsList")]
+        public IActionResult GetHrGroupsList()
+        {
+            string SuccessMessage = string.Empty;
+
+            try
+            {
+                var list = _viewDataService.GetHRGroups();
+                return Ok(new { issuccess = true, message = SuccessMessage, data = list });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while retrieving HR Groups.{ex.Message}",
+                    data = new List<HRGroups>()
+                });
+            }
+        }
+
+        [HttpGet("GetHrGroupDescriptionsList")]
+        public IActionResult GetHrGroupDescriptionsList(int HRid, int GuardID)
+        {
+            string SuccessMessage = string.Empty;
+
+            try
+            {
+                var list = _viewDataService.GetHRDescription(HRid, GuardID);
+                return Ok(new { issuccess = true, message = SuccessMessage, data = list });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while retrieving HR Groups Descriptions.{ex.Message}",
+                    data = new List<HRGroups>()
+                });
+            }
+        }
+
+        [HttpGet("CheckForHrDescriptionBan")]
+        public async Task<IActionResult> CheckForHrDescriptionBan(int DescriptionID)
+        {
+            bool hrban = false;
+
+            try
+            {
+                var result = await _viewDataService.GetHRDescriptionBanDetailsAsync(DescriptionID);
+
+                if (result != null)
+                {
+                    hrban = result.HRBanEdit;
+                }
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = string.Empty,
+                    data = hrban
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while checking for HR Description Ban. {ex.Message}",
+                    data = hrban
+                });
+            }
+        }
+
+
+
+        [HttpPost("SaveHrRecordOfGuard")]
+        public async Task<IActionResult> SaveHrRecordOfGuard([FromForm] IFormFile Docfile, [FromForm] GuardComplianceAndLicenseDTO guardComplianceAndLicenseDTO)
+        {
+            //bool success = false;
+            //string message = "Uploaded successfully";
+            //var uploadedFiles = new List<string>();
+
+            try
+            {
+                var _guard = _guardDataProvider.GetGuardDetailsUsingId(guardComplianceAndLicenseDTO.GuardId).FirstOrDefault();
+
+                var guardComplianceAndLicense = new GuardComplianceAndLicense
+                {
+                    Id = guardComplianceAndLicenseDTO.Id,
+                    GuardId = guardComplianceAndLicenseDTO.GuardId,
+                    Description = guardComplianceAndLicenseDTO.Description,
+                    ExpiryDate = guardComplianceAndLicenseDTO.ExpiryDate,
+                    FileName = guardComplianceAndLicenseDTO.FileName,
+                    HrGroup = guardComplianceAndLicenseDTO.HrGroup,
+                    Guard = _guard,
+                    CurrentDateTime = guardComplianceAndLicenseDTO.CurrentDateTime,
+                    Reminder1 = guardComplianceAndLicenseDTO.Reminder1,
+                    Reminder2 = guardComplianceAndLicenseDTO.Reminder2,
+                    DateType = guardComplianceAndLicenseDTO.DateType,
+
+                };
+
+                // Upload file to server folder first
+                if (Docfile != null && Docfile.Length > 0)
+                {
+                    var fileuploaded = await _viewDataService.UploadHrDocumentFileToServer(Docfile, guardComplianceAndLicenseDTO.LicenseNo, guardComplianceAndLicenseDTO.FileName);
+                    if (!fileuploaded)
+                        return Ok(new { issuccess = false, message = $"Could not upload Hr document file.", data = false });
+                }
+                else if(guardComplianceAndLicenseDTO.Id <= 0)
+                {
+                    return Ok(new { issuccess = false, message = $"Hr document file is missing.", data = false });
+                }
+
+                if (!string.IsNullOrEmpty(guardComplianceAndLicense.Description))
+                {
+                    guardComplianceAndLicense.Description = Regex.Replace(guardComplianceAndLicense.Description, "[✔️❌]", "").Trim();
+                }
+
+                (bool status, bool dbxUploaded, IEnumerable<string> msg) = _viewDataService.SaveOrUpdateGuardComplianceandlicanseNew(guardComplianceAndLicense);
+                return Ok(new { issuccess = status, message = string.Join(",", msg.Where(x => !string.IsNullOrWhiteSpace(x))), data = dbxUploaded });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { issuccess = false, message = $"An error occurred while saving HR record of guard\n.{ex.Message}", data = false });
+            }
+
+
+
+        }
+
+        [HttpPost("DeleteHrRecordOfGuard")]
+        public async Task<IActionResult> DeleteHrRecordOfGuard([FromBody] int id)
+        {
+
+            var success = true;
+            var msg = "Hr Document deleted successfully.";
+            try
+            {
+                _viewDataService.DeleteGuardHrDocument(id);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                msg = ex.Message;
+            }
+            return Ok(new { IsSuccess = success, message = msg });
+        }
+
         #endregion "HR Records"
 
     }
