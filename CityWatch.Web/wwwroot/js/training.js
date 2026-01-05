@@ -675,15 +675,29 @@ $('#tbl_guard_trainingAndAssessment tbody').on('click', 'button[name=btn_InProgr
     //    headers: { 'RequestVerificationToken': token },
     //}).done(function (result) {
     //    if (result.success == true) {
+    var courseStatus = 2;
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=UpdateCoursesStatus',
+        data: {
+            'Id': data.id,
+            'TrainingCourseStatusId': courseStatus
+        },
+        // data: { id: record },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        if (result.success == true) {
             gridGuardTrainingAndAssessmentByAdmin.clear().draw();
             gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
             gridGuardTrainingAndAssessment.clear().draw();
             gridGuardTrainingAndAssessment.ajax.reload();
             GetClassroomLocation(1);
             window.open('/Guard/GuardStartTest?guid=' + $('#GuardLog_GuardLogin_GuardId').val() + '&&guardCourseId=' + data.id, "_blank");
-
-      /*  }*/
+        }
+        /*  }*/
         $('#loader').hide();
+    });
 
 
         //$.each(item1 in result)

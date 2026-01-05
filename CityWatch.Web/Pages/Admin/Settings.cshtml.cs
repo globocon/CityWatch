@@ -2833,7 +2833,7 @@ namespace CityWatch.Web.Pages.Admin
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
                 var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
                 //bool selected = false;
-                var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId);
+                var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId).FirstOrDefault();
                 var trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
                 //if (trainingSettings.Count == 0 || trainingSettingsQuestions.Count==0)
                 //{
@@ -2846,18 +2846,22 @@ namespace CityWatch.Web.Pages.Admin
                 //}
                 //if (selected == true)
                 //{
-                _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                if (result.Attempts < Convert.ToInt32(trainingSettings.Attempts.Name))
                 {
-                    Id = Id,
-                    GuardId = result.GuardId,
-                    TrainingCourseId = result.TrainingCourseId,
-                    TrainingCourseStatusId = TrainingCourseStatusId,
-                    Description = result.Description,
-                    HRGroupId = result.HRGroupId
-                    //,
-                    //IsCompleted = false
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = Id,
+                        GuardId = result.GuardId,
+                        TrainingCourseId = result.TrainingCourseId,
+                        TrainingCourseStatusId = TrainingCourseStatusId,
+                        Description = result.Description,
+                        HRGroupId = result.HRGroupId,
+                        Attempts = result.Attempts + 1
+                        //,
+                        //IsCompleted = false
 
-                });
+                    });
+                }
 
 
                 success = true;

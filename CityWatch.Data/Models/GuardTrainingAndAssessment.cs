@@ -57,6 +57,7 @@ namespace CityWatch.Data.Models
         public int RPLCount { get; set; }
         [NotMapped]
         public int hrSettingsId { get; set; }
+        public int Attempts { get; set; }
 
     }
 }
