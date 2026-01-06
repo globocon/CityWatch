@@ -23,6 +23,7 @@ namespace CityWatch.Data.Providers
         List<IncidentReportsPlatesLoaded> GetIncidentReportsPlates();
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
+        List<IncidentReport> GetIncidentReportsForDockets(DateTime fromReportDate, DateTime toReportDate);
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -193,6 +194,16 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(z => z.ClientSite)
                 .Include(z => z.ClientSitePoc)
                 .Include(z => z.ClientSiteLocation).ToList();
+        }
+        public List<IncidentReport> GetIncidentReportsForDockets(DateTime fromReportDate, DateTime toReportDate)
+        {
+            return _dbContext.IncidentReports
+                .Include(n => n.IncidentReportEventTypes)
+                .Include(n=>n.ClientSite)
+                .Include(n => n.ClientSite.ClientType)
+                .Where(x => x.ReportDateTime >= fromReportDate
+                            && x.ReportDateTime < toReportDate.AddDays(1) && x.ClientSite.IsActive == true)
+                .ToList();
         }
 
 

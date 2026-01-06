@@ -3437,7 +3437,7 @@ namespace CityWatch.Web.Services
             //}
             if (patrolRequest.SerialNo == null)
             {
-                incidentReports = _irDataProvider.GetIncidentReports(patrolRequest.FromDate, patrolRequest.ToDate)
+                incidentReports = _irDataProvider.GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
                .Where(z =>
                                (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
                                (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
