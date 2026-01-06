@@ -103,40 +103,78 @@
 
             <style>
                 .shift-card {
-                    font-size: 11px;
-                    padding: 2px 4px;
-                    margin-bottom: 2px;
-                    border-radius: 3px;
-                    color: white;
-                    cursor: pointer;
                     position: relative;
+                    background: #FFA500;
+                    color: white;
+                    padding: 5px 25px 5px 8px;
+                    margin-bottom: 3px;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 11px;
                 }
-                .status-pushed { background-color: #fd7e14; } /* Orange */
-                .status-accepted { background-color: #28a745; } /* Green */
-                .status-declined { background-color: #000000; } /* Black */
+                .shift-card.status-accepted {
+                    background: #28A745;
+                }
+                .shift-card.status-declined {
+                    background: #000000;
+                }
                 
                 .btn-delete-shift {
                     position: absolute;
                     cursor: pointer;
                     right: 2px;
-                    top: 0;
+                    top: 2px;
                     color: white;
                     background-color: #dc3545;
                     border-radius: 3px;
                     padding: 2px 5px;
                     font-size: 10px;
-                    display: none;
+                    opacity: 1;
+                    transition: background-color 0.2s;
                 }
                 .btn-delete-shift:hover {
                     background-color: #c82333;
                 }
-                .shift-card:hover .btn-delete-shift {
-                    display: block;
-                }
                 .shift-license {
                     font-size: 9px;
-                    color: #999;
+                    color: rgba(255,255,255,0.8);
                     margin-top: 2px;
+                }
+                .guard-icon {
+                    margin-right: 4px;
+                }
+                
+                /* Custom Popup Tooltip */
+                .shift-card-popup {
+                    position: absolute;
+                    background: white;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 1000;
+                    min-width: 200px;
+                    display: none;
+                    color: #333;
+                    font-size: 12px;
+                }
+                .shift-card:hover .shift-card-popup {
+                    display: block;
+                }
+                .popup-row {
+                    margin-bottom: 6px;
+                    display: flex;
+                }
+                .popup-row:last-child {
+                    margin-bottom: 0;
+                }
+                .popup-label {
+                    font-weight: bold;
+                    min-width: 70px;
+                    color: #666;
+                }
+                .popup-value {
+                    color: #333;
                 }
                 .site-select-wrapper {
     width: 320px;          /* FIXED WIDTH */
@@ -357,16 +395,17 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
-                                    var tooltipText = 'Name: ' + s.guardName + '\\n' +
-                                                     'License: ' + s.guardLicense + '\\n' +
-                                                     'State: ' + s.guardState + '\\n' +
-                                                     'Provider: ' + s.guardProvider;
-
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '" title="' + tooltipText + '">' +
-                                        '<div class="text-truncate">' + s.guardName + '</div>' +
+                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '">' +
+                                        '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
                                         '<div>' + s.shiftStart + '-' + s.shiftEnd + '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' +
+                                        '<div class="shift-card-popup">' +
+                                        '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
+                                        '</div>' +
                                         '</div>';
                                 });
 
