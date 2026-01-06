@@ -209,6 +209,17 @@
                         return { results: data.results };
                     },
                     cache: true
+                },
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true
+                    };
                 }
             }).on('select2:select', function (e) {
                 var data = e.params.data;
@@ -221,6 +232,9 @@
                         success: function (res) {
                             if (res.success) {
                                 currentGroupId = res.id;
+                                // Add the new project to the dropdown with its real ID
+                                var newOption = new Option(data.text, res.id, true, true);
+                                $('#project_name').append(newOption).trigger('change');
                                 loadRoster();
                             }
                         }
