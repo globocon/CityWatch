@@ -223,7 +223,9 @@
                 }
             }).on('select2:select', function (e) {
                 var data = e.params.data;
+                console.log('Project selected:', data);
                 if (data.newTag) {
+                    console.log('Creating new project:', data.text);
                     $.ajax({
                         url: '/roster/Booking?handler=CreateGroup',
                         type: 'POST',
@@ -231,16 +233,23 @@
                         data: { name: data.text },
                         success: function (res) {
                             if (res.success) {
+                                console.log('Project created successfully, ID:', res.id);
                                 currentGroupId = res.id;
                                 // Add the new project to the dropdown with its real ID
                                 var newOption = new Option(data.text, res.id, true, true);
-                                $('#project_name').append(newOption).trigger('change');
+                                $('#project_name').append(newOption).val(res.id).trigger('change');
                                 loadRoster();
+                            } else {
+                                console.error('Failed to create project:', res.message);
                             }
+                        },
+                        error: function(xhr) {
+                            console.error('AJAX error creating project:', xhr.responseText);
                         }
                     });
                 } else {
                     currentGroupId = data.id;
+                    console.log('Existing project selected, ID:', currentGroupId);
                     loadRoster();
                 }
             });
@@ -267,6 +276,7 @@
             });
 
             function loadRoster() {
+                console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
 
                 $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
@@ -314,9 +324,17 @@
             }
 
             $('#btnAddSite').on('click', function () {
+                console.log('Add Site clicked, currentGroupId:', currentGroupId);
                 if (!currentGroupId) {
-                    alert('Please select or create a project first.');
-                    return;
+                    // Try to fallback to the select value if it's a number
+                    var val = $('#project_name').val();
+                    if (val && !isNaN(val)) {
+                        currentGroupId = val;
+                        console.log('Recovered Group ID from select value:', currentGroupId);
+                    } else {
+                        alert('Please select or create a project first.');
+                        return;
+                    }
                 }
 
                 var selectedData = $('#search_site').select2('data');
@@ -432,7 +450,7 @@
             };
 
             $('#search_site').on('select2:select', function (e) {
-                $('.select2-selection__rendered').attr('title', e.params.data.text);
+                $(this).next().find('.select2-selection__rendered').attr('title', e.params.data.text);
             });
         });
     </script>
