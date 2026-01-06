@@ -107,38 +107,6 @@
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 }
                 
-                /* Animated Fade-in for roster grid */
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                
-                @keyframes slideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateX(-10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateX(0);
-                    }
-                }
-                
-                @keyframes pulse {
-                    0%, 100% {
-                        box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4);
-                    }
-                    50% {
-                        box-shadow: 0 0 0 6px rgba(255, 165, 0, 0);
-                    }
-                }
-                
                 /* Enhanced Table Styling */
                 #roster_grid {
                     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -159,7 +127,6 @@
                 
                 #roster_grid tbody tr {
                     transition: background-color 0.2s ease;
-                    animation: fadeInUp 0.4s ease-out;
                 }
                 
                 #roster_grid tbody tr:nth-child(even) {
@@ -188,7 +155,6 @@
                     font-size: 11px;
                     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    animation: slideIn 0.3s ease-out;
                     border-left: 3px solid rgba(255,255,255,0.3);
                 }
                 
@@ -199,7 +165,6 @@
                 
                 .shift-card.status-pushed {
                     background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
-                    animation: pulse 2s infinite;
                 }
                 
                 .shift-card.status-accepted {
@@ -262,7 +227,7 @@
                     font-size: 12px;
                     left: 105%;
                     top: 0;
-                    animation: slideIn 0.2s ease-out;
+                    transition: opacity 0.2s ease;
                 }
                 
                 .shift-card-popup::before {
