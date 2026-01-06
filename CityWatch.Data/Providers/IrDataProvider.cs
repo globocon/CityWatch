@@ -20,6 +20,9 @@ namespace CityWatch.Data.Providers
 
         public void UpdateTheSiteExpiringToExpired();
         List<IncidentReport> GetIncidentReports();
+        List<IncidentReportsPlatesLoaded> GetIncidentReportsPlates();
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -161,8 +164,39 @@ namespace CityWatch.Data.Providers
               
                 .ToList();
         }
+        public List<IncidentReportsPlatesLoaded> GetIncidentReportsPlates()
+        {
+            return _dbContext.IncidentReportsPlatesLoaded.ToList();
+
+        }
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(DateTime logFromDate, DateTime logToDate)
+        {
+            var results = _dbContext.KeyVehicleLogDocketHistory
+               .Where(z => z.KeyVehicleLog.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.KeyVehicleLog.EntryTime >= logFromDate && z.KeyVehicleLog.EntryTime < logToDate.AddDays(1))
+               .Include(z => z.KeyVehicleLog)
+               .Include(z => z.KeyVehicleLog.GuardLogin.Guard)
+               .Include(x => x.KeyVehicleLog.ClientSiteLocation)
+               .Include(x => x.KeyVehicleLog.ClientSitePoc);
+
+            results.Include(x => x.KeyVehicleLog.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
+
+            return results.OrderBy(z => z.KeyVehicleLog.EntryTime).ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
+        {
+            return _dbContext.KeyVehicleLogs.Where(x => ids.Contains(x.Id))
+                .Include(z => z.GuardLogin.Guard)
+                .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+                .Include(z => z.ClientSitePoc)
+                .Include(z => z.ClientSiteLocation).ToList();
+        }
+
 
     }
 
-  
+
 }
