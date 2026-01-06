@@ -49,7 +49,7 @@
                                 @for (int i = 0; i < 7; i++)
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">@currentDay.ToString("ddd") @currentDay.ToString("dd MMM")</th>
+                                    <th style="width: 12.14%;">@currentDay.ToString("ddd") @currentDay.ToString("dd MMM yyyy")</th>
                                 }
                             </tr>
                         </thead>

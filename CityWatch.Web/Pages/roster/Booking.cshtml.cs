@@ -64,7 +64,7 @@ namespace CityWatch.Web.Pages.roster
             }
 
             EndDate = StartDate.AddDays(6);
-            WeekRange = $"{StartDate:dd MMM} - {EndDate:dd MMM}";
+            WeekRange = $"{StartDate:dd MMM yyyy} - {EndDate:dd MMM yyyy}";
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
         }
