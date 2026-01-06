@@ -256,7 +256,30 @@ namespace CityWatch.Data
           .HasForeignKey(d => d.PcarRouteId)
           .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<RosterGroupSite>()
+                .HasOne(rgs => rgs.RosterGroup)
+                .WithMany(rg => rg.RosterGroupSites)
+                .HasForeignKey(rgs => rgs.RosterGroupId);
 
+            modelBuilder.Entity<RosterGroupSite>()
+                .HasOne(rgs => rgs.ClientSite)
+                .WithMany()
+                .HasForeignKey(rgs => rgs.ClientSiteId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.RosterGroup)
+                .WithMany(rg => rg.RosterSchedules)
+                .HasForeignKey(rs => rs.RosterGroupId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.ClientSite)
+                .WithMany()
+                .HasForeignKey(rs => rs.ClientSiteId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.Guard)
+                .WithMany()
+                .HasForeignKey(rs => rs.GuardId);
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -359,6 +382,9 @@ namespace CityWatch.Data
         public DbSet<MobileAppUpgrade> MobileAppUpgrade { get; set; }
         public DbSet <PublicHolidayStates> PublicHolidayStates { get; set; }
         public DbSet<SiteEquipmentsDetails> SiteEquipmentsDetails { get; set; }
+        public DbSet<RosterGroup> RosterGroups { get; set; }
+        public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
+        public DbSet<RosterSchedule> RosterSchedules { get; set; }
     }
 
 

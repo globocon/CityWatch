@@ -1,0 +1,425 @@
+@page
+@model CityWatch.Web.Pages.roster.BookingModel
+@{
+    ViewData["Title"] = "Booking";
+}
+<h1>@ViewData["Title"]</h1>
+
+<form id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label>Project Name</label>
+                    <select id="project_name" class="form-control" style="width: 100%"></select>
+                </div>
+                <div class="col-md-4 text-center">
+                    <label>&nbsp;</label>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <a href="/roster/Booking?startDate=@Model.PreviousWeek.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
+                        <span class="font-weight-bold" style="min-width: 120px;">@Model.WeekRange</span>
+                        <a href="/roster/Booking?startDate=@Model.NextWeek.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary btn-sm ml-2"><i class="fa fa-chevron-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <label>Add to Roster</label>
+                    <div class="d-flex align-items-center">
+                        <div class="position-relative site-select-wrapper">
+                            <i class="fa fa-search position-absolute site-search-icon"></i>
+                            <select id="search_site" class="form-control"></select>
+                        </div>
+                        <button class="btn btn-success ml-2" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
+                            <i class="fa fa-plus"></i> <span class="d-none d-lg-inline">Add Site</span>
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-bordered" id="roster_grid">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width: 15%;">Client Site</th>
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    var currentDay = Model.StartDate.AddDays(i);
+                                    <th style="width: 12.14%;">@currentDay.ToString("ddd") @currentDay.ToString("dd MMM")</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+
+            <!-- Add Shift Modal -->
+            <div class="modal fade" id="addShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add/Edit Shift</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="modalSiteId" />
+                            <input type="hidden" id="modalDayIndex" />
+                            <div class="form-group">
+                                <label>Guard</label>
+                                <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Provider Name (if no guard)</label>
+                                <input type="text" id="modalProviderName" class="form-control" />
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-6">
+                                    <label>Start Time</label>
+                                    <input type="time" id="modalShiftStart" class="form-control" value="08:00" />
+                                </div>
+                                <div class="col-6">
+                                    <label>End Time</label>
+                                    <input type="time" id="modalShiftEnd" class="form-control" value="16:00" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="btnSaveShift">Save Shift</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .shift-card {
+                    font-size: 11px;
+                    padding: 2px 4px;
+                    margin-bottom: 2px;
+                    border-radius: 3px;
+                    color: white;
+                    cursor: pointer;
+                    position: relative;
+                }
+                .status-pushed { background-color: #fd7e14; } /* Orange */
+                .status-accepted { background-color: #28a745; } /* Green */
+                .status-declined { background-color: #000000; } /* Black */
+                
+                .btn-delete-shift {
+                    position: absolute;
+                    right: 2px;
+                    top: 0;
+                    color: white;
+                    font-size: 10px;
+                    display: none;
+                }
+                .shift-card:hover .btn-delete-shift {
+                    display: block;
+                }
+                .site-select-wrapper {
+    width: 320px;          /* FIXED WIDTH */
+    min-width: 320px;
+    max-width: 320px;
+    position: relative;
+}
+
+.site-search-icon {
+    left: 15px;
+    top: 10px;
+    z-index: 5;
+    color: #999;
+}
+
+/* Select2 must NEVER resize */
+.select2-container {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Prevent text from expanding layout */
+.select2-selection__rendered {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+            </style>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var currentGroupId = null;
+            var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+
+            function getHeaders() {
+                var token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
+                return { "RequestVerificationToken": token };
+            }
+
+            // Site Search initialization
+            $('#search_site').select2({
+                placeholder: 'Search Client Site',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownAutoWidth: false,
+                width: '100%',
+                ajax: {
+                    url: '/roster/Booking?handler=SearchSites',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            // Project Name initialization
+            $('#project_name').select2({
+                placeholder: 'Search or Create Project',
+                tags: true,
+                theme: 'bootstrap4',
+                ajax: {
+                    url: '/roster/Booking?handler=SearchProjects',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                }
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+                if (data.newTag) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=CreateGroup',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: { name: data.text },
+                        success: function (res) {
+                            if (res.success) {
+                                currentGroupId = res.id;
+                                loadRoster();
+                            }
+                        }
+                    });
+                } else {
+                    currentGroupId = data.id;
+                    loadRoster();
+                }
+            });
+
+            // Guard Search initialization in Modal
+            $('#modalGuardId').select2({
+                placeholder: 'Select Guard',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchGuards',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            function loadRoster() {
+                if (!currentGroupId) return;
+
+                $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+
+                $.ajax({
+                    url: '/roster/Booking?handler=LoadRoster',
+                    type: 'GET',
+                    data: { groupId: currentGroupId, startDate: currentStartDate },
+                    success: function (res) {
+                        var tbody = $('#roster_grid tbody');
+                        tbody.empty();
+
+                        if (res.results.length === 0) {
+                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                            return;
+                        }
+
+                        res.results.forEach(function (row) {
+                            var rowHtml = '<tr id="row_' + row.siteId + '">' +
+                                '<td><div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div><small class="text-muted">' + row.clientTypeName + '</small></td>';
+                            
+                            row.days.forEach(function (daySchedules, index) {
+                                rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
+                                
+                                daySchedules.forEach(function (s) {
+                                    var statusClass = 'status-pushed';
+                                    if (s.status === 1) statusClass = 'status-accepted';
+                                    if (s.status === 2) statusClass = 'status-declined';
+
+                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '">' +
+                                        '<div class="text-truncate">' + s.guardName + '</div>' +
+                                        '<div>' + s.shiftStart + '-' + s.shiftEnd + '</div>' +
+                                        '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' +
+                                        '</div>';
+                                });
+
+                                rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button></td>';
+                            });
+
+                            rowHtml += '</tr>';
+                            tbody.append(rowHtml);
+                        });
+                    }
+                });
+            }
+
+            $('#btnAddSite').on('click', function () {
+                if (!currentGroupId) {
+                    alert('Please select or create a project first.');
+                    return;
+                }
+
+                var selectedData = $('#search_site').select2('data');
+                if (selectedData && selectedData.length > 0) {
+                    var siteId = selectedData[0].id;
+                    
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddSiteToGroup',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: { groupId: currentGroupId, siteId: siteId },
+                        success: function (res) {
+                            if (res.success) {
+                                loadRoster();
+                                $('#search_site').val(null).trigger('change');
+                            }
+                        }
+                    });
+                } else {
+                    alert('Please select a site to add.');
+                }
+            });
+
+            // Add Guard Button
+            $('#roster_grid').on('click', '.btn-add-guard', function () {
+                var siteId = $(this).data('site');
+                var dayIndex = $(this).data('day');
+                
+                $('#modalSiteId').val(siteId);
+                $('#modalDayIndex').val(dayIndex);
+                $('#modalGuardId').val(null).trigger('change');
+                $('#modalProviderName').val('');
+                $('#addShiftModal').modal('show');
+            });
+
+            // Save Shift
+            $('#btnSaveShift').on('click', function () {
+                var siteId = $('#modalSiteId').val();
+                var dayIndex = $('#modalDayIndex').val();
+                var guardData = $('#modalGuardId').select2('data');
+                var guardId = guardData.length > 0 ? guardData[0].id : null;
+                var providerName = $('#modalProviderName').val();
+                var startTime = $('#modalShiftStart').val();
+                var endTime = $('#modalShiftEnd').val();
+
+                if (!guardId && !providerName) {
+                    alert('Please select a guard or enter a provider name.');
+                    return;
+                }
+
+                // Calculate actual DateTimes
+                var shiftDate = new Date(currentStartDate);
+                shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                var dateStr = shiftDate.toISOString().split('T')[0];
+                var startDateTime = dateStr + 'T' + startTime;
+                var endDateTime = dateStr + 'T' + endTime;
+
+                $.ajax({
+                    url: '/roster/Booking?handler=AddShift',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: {
+                        groupId: currentGroupId,
+                        siteId: siteId,
+                        start: startDateTime,
+                        end: endDateTime,
+                        guardId: guardId,
+                        providerName: providerName
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            $('#addShiftModal').modal('hide');
+                            loadRoster();
+                        }
+                    }
+                });
+            });
+
+            // Click shift to cycle status
+            $('#roster_grid').on('click', '.shift-card', function () {
+                var shiftId = $(this).data('id');
+                var currentStatus = parseInt($(this).data('status'));
+                var nextStatus = (currentStatus + 1) % 3;
+
+                $.ajax({
+                    url: '/roster/Booking?handler=UpdateStatus',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { id: shiftId, status: nextStatus },
+                    success: function (res) {
+                        if (res.success) {
+                            loadRoster();
+                        }
+                    }
+                });
+            });
+
+            window.deleteShift = function(id, event) {
+                event.stopPropagation();
+                if (confirm('Delete this shift?')) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=DeleteShift',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: { id: id },
+                        success: function (res) {
+                            if (res.success) {
+                                loadRoster();
+                            }
+                        }
+                    });
+                }
+            };
+
+            $('#search_site').on('select2:select', function (e) {
+                $('.select2-selection__rendered').attr('title', e.params.data.text);
+            });
+        });
+    </script>
+}
