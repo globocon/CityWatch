@@ -20,9 +20,9 @@
                 <div class="col-md-4 text-center">
                     <label>&nbsp;</label>
                     <div class="d-flex justify-content-center align-items-center">
-                        <a href="/roster/Booking?startDate=@Model.PreviousWeek.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
+                        <a href="#" id="btnPrevWeek" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
                         <span class="font-weight-bold" style="min-width: 120px;">@Model.WeekRange</span>
-                        <a href="/roster/Booking?startDate=@Model.NextWeek.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary btn-sm ml-2"><i class="fa fa-chevron-right"></i></a>
+                        <a href="#" id="btnNextWeek" class="btn btn-outline-secondary btn-sm ml-2"><i class="fa fa-chevron-right"></i></a>
                     </div>
                 </div>
                 <div class="col-md-5">
@@ -163,13 +163,34 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            var currentGroupId = null;
+            var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
+            var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
             function getHeaders() {
                 var token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
                 return { "RequestVerificationToken": token };
             }
+
+            // Week navigation handlers
+            $('#btnPrevWeek').on('click', function(e) {
+                e.preventDefault();
+                var url = '/roster/Booking?startDate=' + previousWeekDate;
+                if (currentGroupId) {
+                    url += '&groupId=' + currentGroupId;
+                }
+                window.location.href = url;
+            });
+
+            $('#btnNextWeek').on('click', function(e) {
+                e.preventDefault();
+                var url = '/roster/Booking?startDate=' + nextWeekDate;
+                if (currentGroupId) {
+                    url += '&groupId=' + currentGroupId;
+                }
+                window.location.href = url;
+            });
 
             // Site Search initialization
             $('#search_site').select2({
@@ -253,6 +274,24 @@
                     loadRoster();
                 }
             });
+
+            // Restore selected project if groupId is in URL
+            if (currentGroupId) {
+                console.log('Restoring project selection, ID:', currentGroupId);
+                $.ajax({
+                    url: '/roster/Booking?handler=SearchProjects',
+                    dataType: 'json',
+                    data: { search: '' },
+                    success: function(data) {
+                        var project = data.results.find(function(p) { return p.id == currentGroupId; });
+                        if (project) {
+                            var option = new Option(project.text, project.id, true, true);
+                            $('#project_name').append(option).trigger('change');
+                            loadRoster();
+                        }
+                    }
+                });
+            }
 
             // Guard Search initialization in Modal
             $('#modalGuardId').select2({

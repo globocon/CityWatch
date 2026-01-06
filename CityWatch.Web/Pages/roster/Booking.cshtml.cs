@@ -38,8 +38,9 @@ namespace CityWatch.Web.Pages.roster
         public string WeekRange { get; set; }
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
+        public int? SelectedGroupId { get; set; }
 
-        public void OnGet(DateTime? startDate)
+        public void OnGet(DateTime? startDate, int? groupId)
         {
             var timesheet = _clientDataProvider.GetTimesheetDetails();
             DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
@@ -67,6 +68,7 @@ namespace CityWatch.Web.Pages.roster
             WeekRange = $"{StartDate:dd MMM yyyy} - {EndDate:dd MMM yyyy}";
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
+            SelectedGroupId = groupId;
         }
 
         public JsonResult OnGetSearchProjects(string search)
