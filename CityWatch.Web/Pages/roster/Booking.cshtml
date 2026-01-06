@@ -117,14 +117,26 @@
                 
                 .btn-delete-shift {
                     position: absolute;
+                    cursor: pointer;
                     right: 2px;
                     top: 0;
                     color: white;
+                    background-color: #dc3545;
+                    border-radius: 3px;
+                    padding: 2px 5px;
                     font-size: 10px;
                     display: none;
                 }
+                .btn-delete-shift:hover {
+                    background-color: #c82333;
+                }
                 .shift-card:hover .btn-delete-shift {
                     display: block;
+                }
+                .shift-license {
+                    font-size: 9px;
+                    color: #999;
+                    margin-top: 2px;
                 }
                 .site-select-wrapper {
     width: 320px;          /* FIXED WIDTH */
@@ -345,9 +357,15 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '">' +
+                                    var tooltipText = 'Name: ' + s.guardName + '\\n' +
+                                                     'License: ' + s.guardLicense + '\\n' +
+                                                     'State: ' + s.guardState + '\\n' +
+                                                     'Provider: ' + s.guardProvider;
+
+                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '" title="' + tooltipText + '">' +
                                         '<div class="text-truncate">' + s.guardName + '</div>' +
                                         '<div>' + s.shiftStart + '-' + s.shiftEnd + '</div>' +
+                                        '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' +
                                         '</div>';
                                 });

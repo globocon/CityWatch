@@ -101,21 +101,23 @@ namespace CityWatch.Web.Pages.roster
                 siteId = gs.ClientSiteId,
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
-                days = Enumerable.Range(0, 7).Select(d =>
+                days = Enumerable.Range(0, 7).Select(dayOffset =>
                 {
-                    var date = startDate.AddDays(d);
-                    var daySchedules = schedules
-                        .Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == date.Date)
+                    var targetDate = startDate.AddDays(dayOffset);
+                    return schedules
+                        .Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
                         .Select(s => new
                         {
                             id = s.Id,
-                            guardId = s.GuardId,
-                            guardName = s.Guard?.Name ?? s.ProviderName ?? "Unknown",
+                            guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
+                            guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
+                            guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                            guardProvider = s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : s.ProviderName,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             status = (int)s.Status
-                        }).ToList();
-                    return daySchedules;
+                        })
+                        .ToList();
                 }).ToList()
             }).ToList();
 
@@ -188,7 +190,13 @@ namespace CityWatch.Web.Pages.roster
         {
             var guards = _context.Guards
                 .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
-                .Select(x => new { id = x.Id, text = x.Name })
+                .Select(x => new { 
+                    id = x.Id, 
+                    text = x.Name + (string.IsNullOrEmpty(x.SecurityNo) ? "" : " - " + x.SecurityNo),
+                    license = x.SecurityNo ?? "N/A",
+                    state = x.State ?? "N/A",
+                    provider = x.Provider ?? "N/A"
+                })
                 .ToList();
 
             return new JsonResult(new { results = guards });
