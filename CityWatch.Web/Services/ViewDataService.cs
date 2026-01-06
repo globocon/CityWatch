@@ -229,7 +229,9 @@ namespace CityWatch.Web.Services
         public bool UploadDocumentToDropbox(string fileToUpload, string dbxFilePath);
         public Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName);
         public void DeleteGuardHrDocument(int hrDocId);
-    }
+        //p3-42-Dockets-start
+        List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest);
+    }//p3-42-Dockets-end
 
     public class ViewDataService : IViewDataService
     {
@@ -246,6 +248,7 @@ namespace CityWatch.Web.Services
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
         private readonly string _reportRootDir;
+        private readonly IIrDataProvider _irDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -258,7 +261,7 @@ namespace CityWatch.Web.Services
             IAppConfigurationProvider appConfigurationProvider,
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
-             IOptions<Settings> settings)
+             IOptions<Settings> settings, IIrDataProvider irDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -273,6 +276,7 @@ namespace CityWatch.Web.Services
             _dropboxUploadService = dropboxUploadService;
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
+            _irDataProvider = irDataProvider;
         }
 
         public List<SelectListItem> Genders
@@ -3417,7 +3421,50 @@ namespace CityWatch.Web.Services
                 return false;
             }            
         }
-        
+        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest)
+        {
+            IEnumerable<IncidentReport> incidentReports;
+            IEnumerable<KeyVehicleLogDocketHistory> docketHistories;
+            IEnumerable<IncidentReportsPlatesLoaded> incidentReportsPlatesLoaded;
+            IEnumerable<KeyVehicleLog> keyVehicleLogs;
+            int[] irIdsFromPlates = null;
+            //if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+            //{
+
+            //    //int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
+            //    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
+            //    //irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
+            //}
+            if (patrolRequest.SerialNo == null)
+            {
+                incidentReports = _irDataProvider.GetIncidentReports(patrolRequest.FromDate, patrolRequest.ToDate)
+               .Where(z =>
+                               (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                               (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
+                               (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                               // New Code Added for ColourCode filter
+                               (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                                   // &&
+                                   // New Code Added for Serial number
+                                   //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
+
+
+                                   );
+            }
+            else
+            {
+                incidentReports = _irDataProvider.GetIncidentReports()
+                .Where(z => z.SerialNo == patrolRequest.SerialNo);
+            }
+            incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => incidentReports.Select(z => z.Id).ToArray().Contains(x.IncidentReportId)).ToList();
+            docketHistories = _irDataProvider.GetKeyVehicleLogsWithDockets(patrolRequest.FromDate, patrolRequest.ToDate).Where(x => incidentReportsPlatesLoaded.Select(z => z.PlateId).ToArray().Contains(x.KeyVehicleLog.PlateId) && incidentReportsPlatesLoaded.Select(z => z.TruckNo).ToArray().Contains(x.KeyVehicleLog.VehicleRego)).ToList();
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            return docketHistories.Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields)).ToList();
+
+
+
+        }
+
     }
 
     public class DropdownItemWithAddress
