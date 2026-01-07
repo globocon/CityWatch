@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using iText.Kernel.Pdf.Annot;
 using iText.Layout.Element;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
@@ -96,6 +97,21 @@ namespace CityWatch.Data.Services
         {
            
             IEnumerable<IncidentReport> incidentReports;
+            //p3-42--Dockets-start
+            IEnumerable<KeyVehicleLogDocketHistory> docketHistories;
+            IEnumerable<IncidentReportsPlatesLoaded> incidentReportsPlatesLoaded;
+            IEnumerable<KeyVehicleLog> keyVehicleLogs;
+            int[] irIdsFromPlates = null;
+            //if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+            //{
+            //    docketHistories = _irDataProvider.GetKeyVehicleLogsWithDockets(patrolRequest.FromDate, patrolRequest.ToDate).ToList();
+            //    int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
+            //    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
+            //    incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => keyVehicleLogs.Select(z => z.PlateId).ToArray().Contains(x.PlateId) && keyVehicleLogs.Select(z => z.VehicleRego).ToArray().Contains(x.TruckNo)).ToList();
+            //    irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
+            //}
+            //p3-42--Dockets-end
+
             if (patrolRequest.SerialNo == null)
             {
                 incidentReports = _irDataProvider.GetIncidentReports(patrolRequest.FromDate, patrolRequest.ToDate)
@@ -111,7 +127,49 @@ namespace CityWatch.Data.Services
                                    // New Code Added for Serial number
                                    //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
 
-                                   ));
+                                   )
+                                   //p3-42--Dockets-start
+                                   ||
+                            (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly && 
+                            //irIdsFromPlates.Contains(z.Id) &&
+                        (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                        (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
+                        (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                        // New Code Added for ColourCode filter
+                        (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                            // &&
+                            // New Code Added for Serial number
+                            //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
+
+                            )
+
+                                   //p3-42--Dockets-end
+
+                                   );
+                if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+                {
+                    docketHistories = _irDataProvider.GetKeyVehicleLogsWithDocketsWithoutDate().ToList();
+                   
+                    int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
+                    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
+                    var plateIds = keyVehicleLogs.Select(z => z.PlateId).ToHashSet();
+                    var vehicleRegos = keyVehicleLogs.Select(z => z.VehicleRego).ToHashSet();
+
+                    incidentReportsPlatesLoaded =
+                        _irDataProvider.GetIncidentReportsPlates()
+                        .Where(x => plateIds.Contains(x.PlateId) && vehicleRegos.Contains(x.TruckNo))
+                        .ToList();
+                    irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
+
+                    if (irIdsFromPlates != null && irIdsFromPlates.Length > 0)
+                    {
+                        incidentReports = incidentReports.Where(x => irIdsFromPlates.Contains(x.Id));
+                    }
+                    else
+                    {
+                        incidentReports = Enumerable.Empty<IncidentReport>();
+                    }
+                }
             }
             else
             {

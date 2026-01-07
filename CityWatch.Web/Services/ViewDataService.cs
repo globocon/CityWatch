@@ -230,8 +230,14 @@ namespace CityWatch.Web.Services
         public Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName);
         public void DeleteGuardHrDocument(int hrDocId);
 
+        //p3-42-Dockets-start
+        List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest);
+    }//p3-42-Dockets-end
+
+
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
     }
+
 
     public class ViewDataService : IViewDataService
     {
@@ -248,6 +254,7 @@ namespace CityWatch.Web.Services
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
         private readonly string _reportRootDir;
+        private readonly IIrDataProvider _irDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -260,7 +267,7 @@ namespace CityWatch.Web.Services
             IAppConfigurationProvider appConfigurationProvider,
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
-             IOptions<Settings> settings)
+             IOptions<Settings> settings, IIrDataProvider irDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -275,6 +282,7 @@ namespace CityWatch.Web.Services
             _dropboxUploadService = dropboxUploadService;
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
+            _irDataProvider = irDataProvider;
         }
 
         public List<SelectListItem> Genders
@@ -3420,10 +3428,83 @@ namespace CityWatch.Web.Services
             }            
         }
 
+        public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest)
+        {
+            IEnumerable<IncidentReport> incidentReports;
+            IEnumerable<KeyVehicleLogDocketHistory> docketHistories;
+            IEnumerable<IncidentReportsPlatesLoaded> incidentReportsPlatesLoaded;
+
+            // 1️⃣ Get Incident Reports
+            if (patrolRequest.SerialNo == null)
+            {
+                incidentReports = _irDataProvider
+                    .GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
+                    .Where(z =>
+                        (patrolRequest.ClientTypes == null ||
+                            (z.ClientSiteId.HasValue &&
+                             patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name))) &&
+                        (patrolRequest.ClientSites == null ||
+                            (z.ClientSiteId.HasValue &&
+                             patrolRequest.ClientSites.Contains(z.ClientSite.Name))) &&
+                        (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                        (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                    );
+            }
+            else
+            {
+                // Keep date filter consistent
+                incidentReports = _irDataProvider
+                    .GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
+                    .Where(z => z.SerialNo == patrolRequest.SerialNo);
+            }
+
+            // 2️⃣ Extract IncidentReportIds once
+            var incidentReportIds = incidentReports
+                .Select(z => z.Id)
+                .ToHashSet();
+
+            if (!incidentReportIds.Any())
+                return new List<KeyVehicleLogDocketViewModel>();
+
+            // 3️⃣ Get plates linked to incident reports
+            incidentReportsPlatesLoaded = _irDataProvider
+                .GetIncidentReportsPlates()
+                .Where(x => incidentReportIds.Contains(x.IncidentReportId))
+                .ToList();
+
+            if (!incidentReportsPlatesLoaded.Any())
+                return new List<KeyVehicleLogDocketViewModel>();
+
+            // 4️⃣ Prepare lookup sets (performance fix)
+            var plateIds = incidentReportsPlatesLoaded
+                .Select(z => z.PlateId)
+                .ToHashSet();
+
+            var truckNos = incidentReportsPlatesLoaded
+                .Select(z => z.TruckNo)
+                .ToHashSet();
+
+            // 5️⃣ Get docket histories
+            docketHistories = _irDataProvider
+                .GetKeyVehicleLogsWithDocketsWithoutDate()
+                .Where(x =>
+                    plateIds.Contains(x.KeyVehicleLog.PlateId) &&
+                    truckNos.Contains(x.KeyVehicleLog.VehicleRego))
+                .ToList();
+
+            // 6️⃣ Build ViewModels
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+
+            return docketHistories
+                .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
+                .ToList();
+}
+
         public async Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
         {
             var currentCount = await _clientDataProvider.GetCrowdControlCount(JoinGaurd);
             return currentCount;
+
         }
 
 

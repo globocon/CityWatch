@@ -1995,18 +1995,18 @@ namespace CityWatch.Web.Pages.Reports
         }
         public IActionResult OnPostKeyVehicleSiteLogsWithDocket()
         {
-            int[] clientsiteIds =  _clientDataProvider.GetClientSites(null).Where(z =>
-            (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientType.Name)) &&
-                               (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.Name))).Select(x => x.Id).ToArray(); 
+            //int[] clientsiteIds =  _clientDataProvider.GetClientSites(null).Where(z =>
+            //(ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientType.Name)) &&
+            //                   (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.Name))).Select(x => x.Id).ToArray(); 
 
 
-            var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogsWithDockets(ReportRequest.FromDate, ReportRequest.ToDate, clientsiteIds)
-                .Where(x=>(ReportRequest.SerialNo.IsNullOrEmpty()) || x.Detail.DocketSerialNo==ReportRequest.SerialNo);
+            //var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogsWithDockets(ReportRequest.FromDate, ReportRequest.ToDate, clientsiteIds)
+            //.Where(x=>(ReportRequest.SerialNo.IsNullOrEmpty()) || x.Detail.DocketSerialNo==ReportRequest.SerialNo);
             //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-           
-            
-            
-       
+
+            var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogDocketHistoryWithIR(ReportRequest);
+
+
             //        // return new JsonResult(new { results, fileName });
             //        //duress entries per year-end
 
