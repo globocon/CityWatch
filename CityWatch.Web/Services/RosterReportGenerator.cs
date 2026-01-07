@@ -16,7 +16,7 @@ using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 
-using iText.IO.Font.Constants;
+using CityWatch.Data.Helpers;
 
 namespace CityWatch.Web.Services
 {
@@ -30,9 +30,9 @@ namespace CityWatch.Web.Services
         private readonly CityWatchDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        private const float MARGIN = 20f;
+        private const float MARGIN = 15f; // Match TimesheetReportGenerator
         private const float FONT_SIZE_HEADER = 12f;
-        private const float FONT_SIZE_CELL = 8f;
+        private const float FONT_SIZE_CELL = 7.5f; // Match TimesheetReportGenerator
 
         public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment)
         {
@@ -68,11 +68,10 @@ namespace CityWatch.Web.Services
                 document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
                 // Header
-                var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
                 var groupName = group.Name ?? "Unknown Project";
                 
                 document.Add(new Paragraph($"Roster: {groupName}")
-                    .SetFont(boldFont)
+                    .SetFont(PdfHelper.GetPdfFont())
                     .SetFontSize(16)
                     .SetTextAlignment(TextAlignment.CENTER));
 
@@ -97,7 +96,7 @@ namespace CityWatch.Web.Services
                 foreach (var site in groupSites)
                 {
                     // Site Cell
-                    var siteCell = new Cell().Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetBold());
+                    var siteCell = new Cell().Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
                     siteCell.Add(new Paragraph(site.ClientSite.ClientType?.Name ?? "").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
                     table.AddCell(siteCell);
 
@@ -124,7 +123,7 @@ namespace CityWatch.Web.Services
                                 .SetPadding(2)
                                 .SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
 
-                            shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetBold());
+                            shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()));
                             shiftBlock.Add(new Paragraph(timeRange).SetFontSize(6));
                             
                             dayCell.Add(shiftBlock);
@@ -143,9 +142,8 @@ namespace CityWatch.Web.Services
 
         private Cell CreateHeaderCell(string text)
         {
-            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             return new Cell()
-                .Add(new Paragraph(text).SetFont(boldFont).SetFontSize(FONT_SIZE_CELL))
+                .Add(new Paragraph(text).SetFont(PdfHelper.GetPdfFont()).SetFontSize(FONT_SIZE_CELL))
                 .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                 .SetTextAlignment(TextAlignment.CENTER);
         }
