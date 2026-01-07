@@ -316,7 +316,8 @@ namespace CityWatch.Web.Pages.Guard
                     TrainingCourseId = trainingCourseId,
                     TrainingCourseStatusId = 1,
                     Description = report.Description,
-                    HRGroupId = report.HRGroupId
+                    HRGroupId = report.HRGroupId,
+                    Attempts=report.Attempts
                     //,
                     //IsCompleted = false
 
