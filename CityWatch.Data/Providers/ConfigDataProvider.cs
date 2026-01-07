@@ -1876,6 +1876,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
+                    documentToUpdate.Attempts = trainingAssessment.Attempts; 
                     //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
 
                 }

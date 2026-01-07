@@ -190,8 +190,13 @@ namespace CityWatch.Web.Pages.Guard
                 int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, tqNumberId).FirstOrDefault().Id;
                 var guardCorrectQuestions = _configDataProvider.GetGuardCorrectQuestions(guardId, trainingCourseId);
                 int guardCorrectQuestionsCount = guardCorrectQuestions.Count();
-                float quotation = (guardCorrectQuestionsCount / TotalQuestions) * 100;
+                //float quotation = (guardCorrectQuestionsCount / TotalQuestions) * 100;
+                //double scoreAttainedbyguard = Math.Round(quotation, 2);
+                double quotation = TotalQuestions == 0
+                    ? 0: ((double)guardCorrectQuestionsCount / TotalQuestions) * 100;
+
                 double scoreAttainedbyguard = Math.Round(quotation, 2);
+                //string guardScore = scoreAttainedByGuard.ToString("0.00") + "%";
                 string guardScore = scoreAttainedbyguard.ToString() + "%";
                 var settings = _configDataProvider.GetTQSettings(hrSettingsId);
                 string PassMarkName = settings.FirstOrDefault().PassMark.Name;
