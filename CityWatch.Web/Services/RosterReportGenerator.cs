@@ -16,6 +16,8 @@ using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 
+using iText.IO.Font.Constants;
+
 namespace CityWatch.Web.Services
 {
     public interface IRosterReportGenerator
@@ -66,9 +68,12 @@ namespace CityWatch.Web.Services
                 document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
                 // Header
-                document.Add(new Paragraph($"Roster: {group.Name}")
+                var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                var groupName = group.Name ?? "Unknown Project";
+                
+                document.Add(new Paragraph($"Roster: {groupName}")
+                    .SetFont(boldFont)
                     .SetFontSize(16)
-                    .SetBold()
                     .SetTextAlignment(TextAlignment.CENTER));
 
                 document.Add(new Paragraph($"Week: {startDate:dd MMM yyyy} - {startDate.AddDays(6):dd MMM yyyy}")
@@ -138,8 +143,9 @@ namespace CityWatch.Web.Services
 
         private Cell CreateHeaderCell(string text)
         {
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             return new Cell()
-                .Add(new Paragraph(text).SetFontSize(FONT_SIZE_CELL).SetBold())
+                .Add(new Paragraph(text).SetFont(boldFont).SetFontSize(FONT_SIZE_CELL))
                 .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                 .SetTextAlignment(TextAlignment.CENTER);
         }
