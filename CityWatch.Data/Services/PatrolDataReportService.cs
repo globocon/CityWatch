@@ -152,11 +152,23 @@ namespace CityWatch.Data.Services
                    
                     int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
                     keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
-                    incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => keyVehicleLogs.Select(z => z.PlateId).ToArray().Contains(x.PlateId) && keyVehicleLogs.Select(z => z.VehicleRego).ToArray().Contains(x.TruckNo)).ToList();
+                    var plateIds = keyVehicleLogs.Select(z => z.PlateId).ToHashSet();
+                    var vehicleRegos = keyVehicleLogs.Select(z => z.VehicleRego).ToHashSet();
+
+                    incidentReportsPlatesLoaded =
+                        _irDataProvider.GetIncidentReportsPlates()
+                        .Where(x => plateIds.Contains(x.PlateId) && vehicleRegos.Contains(x.TruckNo))
+                        .ToList();
                     irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
 
-                    incidentReports = incidentReports.Where(x => irIdsFromPlates.Contains(x.Id)); 
-
+                    if (irIdsFromPlates != null && irIdsFromPlates.Length > 0)
+                    {
+                        incidentReports = incidentReports.Where(x => irIdsFromPlates.Contains(x.Id));
+                    }
+                    else
+                    {
+                        incidentReports = Enumerable.Empty<IncidentReport>();
+                    }
                 }
             }
             else

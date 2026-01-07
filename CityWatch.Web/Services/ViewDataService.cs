@@ -3426,44 +3426,73 @@ namespace CityWatch.Web.Services
             IEnumerable<IncidentReport> incidentReports;
             IEnumerable<KeyVehicleLogDocketHistory> docketHistories;
             IEnumerable<IncidentReportsPlatesLoaded> incidentReportsPlatesLoaded;
-            IEnumerable<KeyVehicleLog> keyVehicleLogs;
-            int[] irIdsFromPlates = null;
-            //if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
-            //{
 
-            //    //int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
-            //    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
-            //    //irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
-            //}
+            // 1️⃣ Get Incident Reports
             if (patrolRequest.SerialNo == null)
             {
-                incidentReports = _irDataProvider.GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
-               .Where(z =>
-                               (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
-                               (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
-                               (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
-                               // New Code Added for ColourCode filter
-                               (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
-                                   // &&
-                                   // New Code Added for Serial number
-                                   //(patrolRequest.SerialNo == null || z.SerialNo == patrolRequest.SerialNo)
-
-
-                                   );
+                incidentReports = _irDataProvider
+                    .GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
+                    .Where(z =>
+                        (patrolRequest.ClientTypes == null ||
+                            (z.ClientSiteId.HasValue &&
+                             patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name))) &&
+                        (patrolRequest.ClientSites == null ||
+                            (z.ClientSiteId.HasValue &&
+                             patrolRequest.ClientSites.Contains(z.ClientSite.Name))) &&
+                        (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
+                        (patrolRequest.ColourCode == 0 || z.ColourCode == patrolRequest.ColourCode)
+                    );
             }
             else
             {
-                incidentReports = _irDataProvider.GetIncidentReports()
-                .Where(z => z.SerialNo == patrolRequest.SerialNo);
+                // Keep date filter consistent
+                incidentReports = _irDataProvider
+                    .GetIncidentReportsForDockets(patrolRequest.FromDate, patrolRequest.ToDate)
+                    .Where(z => z.SerialNo == patrolRequest.SerialNo);
             }
-            incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => incidentReports.Select(z => z.Id).ToArray().Contains(x.IncidentReportId)).ToList();
-            docketHistories = _irDataProvider.GetKeyVehicleLogsWithDocketsWithoutDate().Where(x => incidentReportsPlatesLoaded.Select(z => z.PlateId).ToArray().Contains(x.KeyVehicleLog.PlateId) && incidentReportsPlatesLoaded.Select(z => z.TruckNo).ToArray().Contains(x.KeyVehicleLog.VehicleRego)).ToList();
+
+            // 2️⃣ Extract IncidentReportIds once
+            var incidentReportIds = incidentReports
+                .Select(z => z.Id)
+                .ToHashSet();
+
+            if (!incidentReportIds.Any())
+                return new List<KeyVehicleLogDocketViewModel>();
+
+            // 3️⃣ Get plates linked to incident reports
+            incidentReportsPlatesLoaded = _irDataProvider
+                .GetIncidentReportsPlates()
+                .Where(x => incidentReportIds.Contains(x.IncidentReportId))
+                .ToList();
+
+            if (!incidentReportsPlatesLoaded.Any())
+                return new List<KeyVehicleLogDocketViewModel>();
+
+            // 4️⃣ Prepare lookup sets (performance fix)
+            var plateIds = incidentReportsPlatesLoaded
+                .Select(z => z.PlateId)
+                .ToHashSet();
+
+            var truckNos = incidentReportsPlatesLoaded
+                .Select(z => z.TruckNo)
+                .ToHashSet();
+
+            // 5️⃣ Get docket histories
+            docketHistories = _irDataProvider
+                .GetKeyVehicleLogsWithDocketsWithoutDate()
+                .Where(x =>
+                    plateIds.Contains(x.KeyVehicleLog.PlateId) &&
+                    truckNos.Contains(x.KeyVehicleLog.VehicleRego))
+                .ToList();
+
+            // 6️⃣ Build ViewModels
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            return docketHistories.Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields)).ToList();
 
-
-
+            return docketHistories
+                .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
+                .ToList();
         }
+
 
     }
 
