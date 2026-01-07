@@ -42,7 +42,7 @@ namespace CityWatch.Web.Services
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
-            _imageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
         }
 
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate)
@@ -76,7 +76,7 @@ namespace CityWatch.Web.Services
                 var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
 
                 // Logo
-                var logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                var logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
                 if (File.Exists(logoPath))
                 {
                     var cwLogo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
