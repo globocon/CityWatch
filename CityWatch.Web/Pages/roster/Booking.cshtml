@@ -42,21 +42,33 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <table class="table table-bordered" id="roster_grid">
-                        <thead class="thead-light">
-                            <tr>
-                                <th style="width: 15%;">Client Site</th>
-                                @for (int i = 0; i < 7; i++)
-                                {
-                                    var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">@currentDay.ToString("ddd") @currentDay.ToString("dd MMM yyyy")</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rows will be added dynamically -->
-                        </tbody>
-                    </table>
+                    <div id="roster-empty-state" class="text-center p-5 my-3 bg-white border rounded" style="box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
+                            <i class="fa fa-calendar-plus-o"></i>
+                        </div>
+                        <h4 class="text-secondary mb-3" style="font-weight: 300;">Ready to start rostering?</h4>
+                        <p class="text-muted mb-0" style="font-size: 1.1em;">
+                            Please <strong class="text-primary">select a project</strong> or <strong class="text-primary">create a new one</strong> from the dropdown above to view the roster grid.
+                        </p>
+                    </div>
+
+                    <div id="roster-grid-container" style="display: none;">
+                        <table class="table table-bordered" id="roster_grid">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 15%;">Client Site</th>
+                                    @for (int i = 0; i < 7; i++)
+                                    {
+                                        var currentDay = Model.StartDate.AddDays(i);
+                                        <th style="width: 12.14%;">@currentDay.ToString("ddd") @currentDay.ToString("dd MMM yyyy")</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 </div>
             </div>
@@ -348,6 +360,19 @@
                 return { "RequestVerificationToken": token };
             }
 
+            function toggleRosterView(showGrid) {
+                if (showGrid) {
+                    $('#roster-empty-state').hide();
+                    $('#roster-grid-container').show();
+                } else {
+                    $('#roster-empty-state').show();
+                    $('#roster-grid-container').hide();
+                }
+            }
+
+            // Initial toggle based on whether we have a group ID
+            toggleRosterView(!!currentGroupId);
+
             // Week navigation handlers
             $('#btnPrevWeek').on('click', function(e) {
                 e.preventDefault();
@@ -434,6 +459,7 @@
                                 // Add the new project to the dropdown with its real ID
                                 var newOption = new Option(data.text, res.id, true, true);
                                 $('#project_name').append(newOption).val(res.id).trigger('change');
+                                toggleRosterView(true);
                                 loadRoster();
                             } else {
                                 console.error('Failed to create project:', res.message);
@@ -446,6 +472,7 @@
                 } else {
                     currentGroupId = data.id;
                     console.log('Existing project selected, ID:', currentGroupId);
+                    toggleRosterView(true);
                     loadRoster();
                 }
             });
@@ -462,6 +489,7 @@
                         if (project) {
                             var option = new Option(project.text, project.id, true, true);
                             $('#project_name').append(option).trigger('change');
+                            toggleRosterView(true);
                             loadRoster();
                         }
                     }
