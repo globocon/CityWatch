@@ -229,9 +229,15 @@ namespace CityWatch.Web.Services
         public bool UploadDocumentToDropbox(string fileToUpload, string dbxFilePath);
         public Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName);
         public void DeleteGuardHrDocument(int hrDocId);
+
         //p3-42-Dockets-start
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest);
     }//p3-42-Dockets-end
+
+
+        public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+    }
+
 
     public class ViewDataService : IViewDataService
     {
@@ -3421,6 +3427,7 @@ namespace CityWatch.Web.Services
                 return false;
             }            
         }
+
         public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest)
         {
             IEnumerable<IncidentReport> incidentReports;
@@ -3491,6 +3498,13 @@ namespace CityWatch.Web.Services
             return docketHistories
                 .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
                 .ToList();
+}
+
+        public async Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
+        {
+            var currentCount = await _clientDataProvider.GetCrowdControlCount(JoinGaurd);
+            return currentCount;
+
         }
 
 

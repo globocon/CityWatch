@@ -17,6 +17,7 @@ namespace CityWatch.Data.Models
         public int GuardId { get; set; }
         public int Pcount { get; set; }
         public string Location { get; set; }
+        public int BadgeNo { get; set; }
         public DateTime? CrowdControlDate { get; set; }
         public DateTime? GuardLastUpdateTime { get; set; }
         public DateTime? ArchivedOn { get; set; }

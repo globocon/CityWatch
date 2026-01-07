@@ -413,7 +413,8 @@ namespace CityWatch.Data.Providers
         public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
 
         Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit);
-        
+        public List<MobileCrowdControlReportData> GetMobileCrowdControlLogs(int clientSiteId, int logBookId, DateTime logFromDate, DateTime logToDate);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -423,7 +424,7 @@ namespace CityWatch.Data.Providers
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
         public GuardLogDataProvider(CityWatchDbContext context,
-            ILogbookDataService logbookDataService, 
+            ILogbookDataService logbookDataService,
             IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _context = context;
@@ -580,7 +581,7 @@ namespace CityWatch.Data.Providers
             //   .Include(z => z.GuardLogin.Guard)
             //   .ToList();
             var data = _context.GuardLogs
-               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog              
+               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
                        && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
                        (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
                .Include(z => z.GuardLogin.Guard);
@@ -1912,7 +1913,7 @@ namespace CityWatch.Data.Providers
      .Where(wand => !wand.IsDeleted)
      .ToLookup(wand => wand.ClientSiteId);
 
-                var wandTages = _context.ClientSiteSmartWandTags.Where(wand=>!wand.IsDeleted).ToLookup(wand => wand.ClientSiteId);
+                var wandTages = _context.ClientSiteSmartWandTags.Where(wand => !wand.IsDeleted).ToLookup(wand => wand.ClientSiteId);
 
                 foreach (var item in allValues)
                 {
@@ -4008,7 +4009,7 @@ namespace CityWatch.Data.Providers
                                     EventDateTime = DateTime.Now,
                                     //Notes = "Duress Alarm De-Activated by Control Room",
                                     Notes = clientSiteRadioCheck.Status,
-                                    
+
                                     IrEntryType = IrEntryType.Notification,
                                     IsSystemEntry = true,
                                     EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -5660,14 +5661,14 @@ namespace CityWatch.Data.Providers
             if (KPITelematicsToDelete == null)
                 throw new InvalidOperationException();
             //p2-171--equipmts-start
-            if(KPITelematicsToDelete.TypeId == 2)// to check whether this is an equipment type
+            if (KPITelematicsToDelete.TypeId == 2)// to check whether this is an equipment type
             {
                 var siteEquipmentDetails = _context.SiteEquipmentsDetails.Where(x => x.EquipmentId == id && x.IsDeleted == false).ToList(); // get all the equipments under this euipment typ and delete it  
-                if(siteEquipmentDetails.Count()>0)
+                if (siteEquipmentDetails.Count() > 0)
                 {
-                    foreach(var item in siteEquipmentDetails)
+                    foreach (var item in siteEquipmentDetails)
                     {
-                        _clientSiteWandDataProvider.DeleteClientSiteEquipments(item.Id); 
+                        _clientSiteWandDataProvider.DeleteClientSiteEquipments(item.Id);
                     }
                 }
             }
@@ -6299,7 +6300,7 @@ namespace CityWatch.Data.Providers
             var GuardLogs = _context.GuardLogs
                 .AsNoTracking()
                 .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
-                           // z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+                            // z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate &&
                             (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
@@ -6319,7 +6320,7 @@ namespace CityWatch.Data.Providers
             //            activityTypes.Contains(z.ActivityType)) // Check if ActivityType is in the list
             //.ToList();
             //Modified by Dileep on 30-09-2023 to append ActivityDescription to Notes for KV type
-            var activityTypes = new[] { "SW", "KV", "LB" ,"IR"};
+            var activityTypes = new[] { "SW", "KV", "LB", "IR" };
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                 .AsNoTracking()
@@ -6344,10 +6345,9 @@ namespace CityWatch.Data.Providers
                     case "LB":
                         if (item.LBId != null)
                         {
-                            item.IrEntryType = GuardLogs
-                                .Where(x => x.Id == item.LBId)
-                                .Select(x => x.IrEntryType)
-                                .FirstOrDefault();
+                            var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
+                            item.IrEntryType = tmplog.IrEntryType;
+                            item.gpsCoordinates = tmplog.GpsCoordinates;
                         }
                         break;  // Ensure break is always hit
 
@@ -6368,26 +6368,26 @@ namespace CityWatch.Data.Providers
                 .FirstOrDefault();
 
             // Convert GuardLogs to the same model
-        //    var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
-        //    {
-        //        ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
-        //        NotificationCreatedTime = log.EventDateTime,
-        //        LBId = log.Id,
-        //        Notes = log.Notes,
-        //        ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
-        //        SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
-        //        GuardName = log.GuardLogin?.Guard != null
-        //? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
-        //: null, // Null check for Guard
-        //        EventDateTimeZoneShort = checkGMT,
-        //        EventDateTime = log.EventDateTime,
-        //        EventDateTimeLocal = log.EventDateTimeLocal,
-        //        gpsCoordinates = log.GpsCoordinates,
-        //        GuardId = log.GuardLogin?.GuardId,
-        //        IrEntryType = log.IrEntryType,
-        //        IsIRReportTypeEntry = log.IsIRReportTypeEntry
+            //    var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+            //    {
+            //        ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+            //        NotificationCreatedTime = log.EventDateTime,
+            //        LBId = log.Id,
+            //        Notes = log.Notes,
+            //        ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+            //        SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+            //        GuardName = log.GuardLogin?.Guard != null
+            //? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+            //: null, // Null check for Guard
+            //        EventDateTimeZoneShort = checkGMT,
+            //        EventDateTime = log.EventDateTime,
+            //        EventDateTimeLocal = log.EventDateTimeLocal,
+            //        gpsCoordinates = log.GpsCoordinates,
+            //        GuardId = log.GuardLogin?.GuardId,
+            //        IrEntryType = log.IrEntryType,
+            //        IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
-        //    }).ToList();
+            //    }).ToList();
 
             // Update SW data with timezone and datetime adjustments
             if (!string.IsNullOrEmpty(checkGMT))
@@ -6417,7 +6417,7 @@ namespace CityWatch.Data.Providers
                     IsRearfile = guardLogDocumentImages.IsRearfile,
                     IsTwentyfivePercentfile = guardLogDocumentImages.IsTwentyfivePercentfile,
                     GuardLogId = guardLogDocumentImages.GuardLogId,
-                    IsVideo= guardLogDocumentImages.IsVideo
+                    IsVideo = guardLogDocumentImages.IsVideo
 
                 });
             }
@@ -6487,7 +6487,7 @@ namespace CityWatch.Data.Providers
             var data = _context.ClientSiteRadioChecksActivityStatus_History
                 .AsNoTracking()
                .Where(z => z.EventDateTime >= FromDate && z.EventDateTime < ToDate.AddDays(1))
-               .Include(z=>z.ClientSite).ThenInclude(x => x.ClientType)               
+               .Include(z => z.ClientSite).ThenInclude(x => x.ClientType)
                .ToList();
 
             var returnData = data.OrderBy(z => z.EventDateTime)
@@ -7525,13 +7525,13 @@ namespace CityWatch.Data.Providers
         {
 
 
-            var rcActionListMessagesClientsites = _context.RCActionListMessagesClientsites.Where (x => x.RCActionListMessagesId == id);
+            var rcActionListMessagesClientsites = _context.RCActionListMessagesClientsites.Where(x => x.RCActionListMessagesId == id);
             foreach (var item in rcActionListMessagesClientsites)
             {
                 item.IsDeleted = true;
                 _context.SaveChanges();
             }
-            
+
 
 
         }
@@ -7542,7 +7542,7 @@ namespace CityWatch.Data.Providers
             var rcActionListMessagesClientsites = _context.RCActionListMessages.Where(x => x.Id == id).FirstOrDefault();
 
             rcActionListMessagesClientsites.IsDeleted = true;
-            
+
             _context.SaveChanges();
 
 
@@ -7572,7 +7572,7 @@ namespace CityWatch.Data.Providers
      //(z.WAND_TAG_ENTRY_TYPE == (ScanningType)1 || z.WAND_TAG_ENTRY_TYPE == (ScanningType)2)
      )
     .Include(z => z.LoggedInClientSite)
-    .Include(z=> z.LoggedInClientSite.ClientType)
+    .Include(z => z.LoggedInClientSite.ClientType)
   .Include(z => z.LoggedInGuard)
     .ToList();
 
@@ -7619,14 +7619,14 @@ namespace CityWatch.Data.Providers
 
                         // 25% images
                         var twentyFiveFiles = g
-                            .Where(x => x.IsTwentyfivePercentfile==true && !string.IsNullOrEmpty(x.ImagePath))
+                            .Where(x => x.IsTwentyfivePercentfile == true && !string.IsNullOrEmpty(x.ImagePath))
                             .Select(x => x.ImagePath)
                             .Distinct()
                             .ToList();
 
                         // Rear images
                         var rearFiles = g
-                            .Where(x => x.IsRearfile==true && !string.IsNullOrEmpty(x.ImagePath))
+                            .Where(x => x.IsRearfile == true && !string.IsNullOrEmpty(x.ImagePath))
                             .Select(x => x.ImagePath)
                             .Distinct()
                             .ToList();
@@ -7654,7 +7654,7 @@ namespace CityWatch.Data.Providers
 
                             // Clickable image URLs
                             ImageUrls = twentyFiveFiles,
-                            RearFileUrls= rearFiles
+                            RearFileUrls = rearFiles
                         };
                     })
                     .OrderByDescending(x => x.Id)
@@ -7719,7 +7719,7 @@ namespace CityWatch.Data.Providers
                 dockets.DocketSerialNo = _KeyVehicleLogDocketHistory.DocketSerialNo;
                 dockets.DocketReason = _KeyVehicleLogDocketHistory.DocketReason;
             }
-            
+
             _context.SaveChanges();
         }
 
@@ -7744,9 +7744,9 @@ namespace CityWatch.Data.Providers
             var results = _context.KeyVehicleLogDocketHistory.Where(x => x.KeyVehicleLogId == keyvehiclelogid).ToList();
             return results;
         }
-        public int GetLatestQuestionNumber(int hrsettingsId,int tqnumberId)
+        public int GetLatestQuestionNumber(int hrsettingsId, int tqnumberId)
         {
-            var questionIds = _context.TrainingTestQuestions.Where(x=>x.HRSettingsId==hrsettingsId && x.TQNumberId==tqnumberId)
+            var questionIds = _context.TrainingTestQuestions.Where(x => x.HRSettingsId == hrsettingsId && x.TQNumberId == tqnumberId)
                           .Select(q => q.QuestionNoId);
 
             var missingIds = _context.TrainingTestQuestionNumbers
@@ -7767,6 +7767,127 @@ namespace CityWatch.Data.Providers
 
             _context.PcarRouteDailyVisits.Add(dailyVisit);
             await _context.SaveChangesAsync();
+        }
+
+
+        public List<MobileCrowdControlReportData> GetMobileCrowdControlLogs(int clientSiteId, int logBookId, DateTime logFromDate, DateTime logToDate)
+        {
+            var _allGuards = _context.Guards.AsNoTracking().ToList();
+            var _guardCombinedData = _context.ClientSiteMobileCrowdControlGuardsHistory
+                                        .AsNoTracking()
+                                        .Where(z => z.ClientSiteId == clientSiteId
+                                                    && z.CrowdControlDate.HasValue
+                                                    && z.CrowdControlDate.Value >= logFromDate
+                                                    && z.CrowdControlDate.Value <= logToDate
+                                                    && z.BadgeNo != 0)
+                                        .Select(z => new
+                                        {
+                                            z.GuardId,
+                                            CrowdControlDate = z.CrowdControlDate.Value,
+                                            z.BadgeNo,
+                                            z.Pcount
+                                        })
+                                    .Concat(
+                                        _context.ClientSiteMobileCrowdControlGuards
+                                            .AsNoTracking()
+                                            .Where(z => z.ClientSiteId == clientSiteId
+                                                        && z.CrowdControlDate.HasValue
+                                                        && z.CrowdControlDate.Value >= logFromDate
+                                                        && z.CrowdControlDate.Value <= logToDate
+                                                        && z.BadgeNo != 0)
+                                            .Select(z => new
+                                            {
+                                                z.GuardId,
+                                                CrowdControlDate = z.CrowdControlDate.Value,
+                                                z.BadgeNo,
+                                                z.Pcount
+                                            })
+                                    )
+                                    .GroupBy(x => new
+                                    {
+                                        x.GuardId,
+                                        x.BadgeNo,
+                                        x.CrowdControlDate
+                                    })
+                                    .Select(g => new
+                                    {
+                                        GuardId = g.Key.GuardId,
+                                        CrowdControlDate = g.Key.CrowdControlDate,
+                                        BadgeNo = g.Key.BadgeNo,
+                                        TotalPcount = g.Sum(x => x.Pcount)
+                                    })
+                                    .ToList();
+
+
+            var _totalCountCombinedData = _context.ClientSiteMobileCrowdControlHistory
+                                        .AsNoTracking()
+                                        .Where(z => z.ClientSiteId == clientSiteId
+                                                    && z.CrowdControlDate.HasValue
+                                                    && z.CrowdControlDate.Value >= logFromDate
+                                                    && z.CrowdControlDate.Value <= logToDate)
+                                        .Select(z => new
+                                        {
+                                            CrowdControlDate = z.CrowdControlDate.Value,
+                                            z.Tcount
+                                        })
+                                    .Concat(
+                                        _context.ClientSiteMobileCrowdControl
+                                            .AsNoTracking()
+                                            .Where(z => z.ClientSiteId == clientSiteId
+                                                        && z.CrowdControlDate.HasValue
+                                                        && z.CrowdControlDate.Value >= logFromDate
+                                                        && z.CrowdControlDate.Value <= logToDate)
+                                            .Select(z => new
+                                            {
+                                                CrowdControlDate = z.CrowdControlDate.Value,
+                                                z.Tcount
+                                            })
+                                    )
+                                    .GroupBy(x => new
+                                    {
+                                        x.CrowdControlDate
+                                    })
+                                    .Select(g => new
+                                    {
+                                        CrowdControlDate = g.Key.CrowdControlDate,
+                                        TotalPcount = g.Sum(x => x.Tcount)
+                                    })
+                                    .ToList();
+
+
+            List<MobileCrowdControlReportData> mobileCrowdControlReportData = new List<MobileCrowdControlReportData>();
+
+            if (_guardCombinedData.Any())
+            {
+                foreach (var guardData in _guardCombinedData)
+                {
+                    var _guard = _allGuards.Where(z => z.Id == guardData.GuardId).FirstOrDefault();
+                    mobileCrowdControlReportData.Add(new MobileCrowdControlReportData
+                    {
+                        ClientSiteId = clientSiteId,
+                        ClientSiteLogBookId = logBookId,
+                        ColHeaderName = $"CC No. {guardData.BadgeNo}",
+                        CrowdControlDate = guardData.CrowdControlDate,
+                        CellValue = _guard.Initial
+                    });
+                }
+
+                mobileCrowdControlReportData = mobileCrowdControlReportData.OrderBy(z => z.CrowdControlDate).ThenBy(z => z.ColHeaderName).ToList();
+
+                foreach (var crowdTotalCount in _totalCountCombinedData.OrderBy(x => x.CrowdControlDate))
+                {
+                    mobileCrowdControlReportData.Add(new MobileCrowdControlReportData
+                    {
+                        ClientSiteId = clientSiteId,
+                        ClientSiteLogBookId = logBookId,
+                        ColHeaderName = $"Head Count",
+                        CrowdControlDate = crowdTotalCount.CrowdControlDate,
+                        CellValue = $"{crowdTotalCount.TotalPcount}"
+                    });
+                }
+            }
+
+            return mobileCrowdControlReportData;
         }
 
     }
@@ -7819,13 +7940,13 @@ namespace CityWatch.Data.Providers
 
     public class SiteTagStatusPending
     {
-       
+
         public string LabelDescription { get; set; }   // Tag label / description
         public string TagType { get; set; }            // NFC, BLE, Other
         public int RoundNumber { get; set; }           // Round number
         public int TodayScanCount { get; set; }
-        
-      
+
+
 
     }
 
