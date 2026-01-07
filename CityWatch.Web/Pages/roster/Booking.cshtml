@@ -223,6 +223,19 @@
                     margin-right: 5px;
                     opacity: 0.9;
                 }
+
+                .btn-delete-site {
+                    color: #dc3545;
+                    cursor: pointer;
+                    font-size: 14px;
+                    margin-left: 8px;
+                    transition: transform 0.2s ease;
+                }
+
+                .btn-delete-site:hover {
+                    color: #c82333;
+                    transform: scale(1.2);
+                }
                 
                 /* Enhanced Custom Popup Tooltip */
                 .shift-card-popup {
@@ -559,7 +572,8 @@
 
                         res.results.forEach(function (row) {
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
-                                '<td><div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div><small class="text-muted">' + row.clientTypeName + '</small></td>';
+                                '<td><div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div><small class="text-muted">' + row.clientTypeName + '</small>' +
+                                '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i></td>';
                             
                             row.days.forEach(function (daySchedules, index) {
                                 rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
@@ -734,9 +748,35 @@
                 }
             };
 
+            // Expose function for onclick
+            window.deleteSiteFromGroup = function(siteId, siteName) {
+                if (!confirm('Are you sure you want to remove "' + siteName + '" from this group? \n\nThis will permanently delete all un-pushed shifts for this site in this group.')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/roster/Booking?handler=DeleteSiteFromGroup',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { groupId: currentGroupId, siteId: siteId },
+                    success: function (res) {
+                        if (res.success) {
+                            loadRoster();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error deleting site:', xhr);
+                        alert('An error occurred while removing the site.');
+                    }
+                });
+            };
+
             $('#search_site').on('select2:select', function (e) {
                 $(this).next().find('.select2-selection__rendered').attr('title', e.params.data.text);
             });
         });
     </script>
 }
+```

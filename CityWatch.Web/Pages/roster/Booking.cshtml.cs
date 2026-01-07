@@ -134,6 +134,33 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = providers });
         }
 
+        public async Task<IActionResult> OnPostDeleteSiteFromGroup(int groupId, int siteId)
+        {
+            // 1. Remove site from group
+            var groupSite = await _context.RosterGroupSites
+                .FirstOrDefaultAsync(x => x.RosterGroupId == groupId && x.ClientSiteId == siteId);
+
+            if (groupSite != null)
+            {
+                _context.RosterGroupSites.Remove(groupSite);
+
+                // 2. Cascade delete all shifts for this site in this group
+                var shifts = await _context.RosterSchedules
+                    .Where(x => x.RosterGroupId == groupId && x.ClientSiteId == siteId)
+                    .ToListAsync();
+                
+                if (shifts.Any())
+                {
+                    _context.RosterSchedules.RemoveRange(shifts);
+                }
+
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+
+            return new JsonResult(new { success = false, message = "Site not found in group." });
+        }
+
         public async Task<IActionResult> OnPostAddSiteToGroup(int groupId, int siteId)
         {
             var exists = await _context.RosterGroupSites.AnyAsync(x => x.RosterGroupId == groupId && x.ClientSiteId == siteId);
