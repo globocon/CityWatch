@@ -3457,7 +3457,7 @@ namespace CityWatch.Web.Services
                 .Where(z => z.SerialNo == patrolRequest.SerialNo);
             }
             incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => incidentReports.Select(z => z.Id).ToArray().Contains(x.IncidentReportId)).ToList();
-            docketHistories = _irDataProvider.GetKeyVehicleLogsWithDockets(patrolRequest.FromDate, patrolRequest.ToDate).Where(x => incidentReportsPlatesLoaded.Select(z => z.PlateId).ToArray().Contains(x.KeyVehicleLog.PlateId) && incidentReportsPlatesLoaded.Select(z => z.TruckNo).ToArray().Contains(x.KeyVehicleLog.VehicleRego)).ToList();
+            docketHistories = _irDataProvider.GetKeyVehicleLogsWithDocketsWithoutDate().Where(x => incidentReportsPlatesLoaded.Select(z => z.PlateId).ToArray().Contains(x.KeyVehicleLog.PlateId) && incidentReportsPlatesLoaded.Select(z => z.TruckNo).ToArray().Contains(x.KeyVehicleLog.VehicleRego)).ToList();
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             return docketHistories.Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields)).ToList();
 

@@ -102,14 +102,14 @@ namespace CityWatch.Data.Services
             IEnumerable<IncidentReportsPlatesLoaded> incidentReportsPlatesLoaded;
             IEnumerable<KeyVehicleLog> keyVehicleLogs;
             int[] irIdsFromPlates = null;
-            if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
-            {
-                docketHistories = _irDataProvider.GetKeyVehicleLogsWithDockets(patrolRequest.FromDate, patrolRequest.ToDate).ToList();
-                int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
-                keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
-                incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => keyVehicleLogs.Select(z => z.PlateId).ToArray().Contains(x.PlateId) && keyVehicleLogs.Select(z => z.VehicleRego).ToArray().Contains(x.TruckNo)).ToList();
-                irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
-            }
+            //if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+            //{
+            //    docketHistories = _irDataProvider.GetKeyVehicleLogsWithDockets(patrolRequest.FromDate, patrolRequest.ToDate).ToList();
+            //    int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
+            //    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
+            //    incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => keyVehicleLogs.Select(z => z.PlateId).ToArray().Contains(x.PlateId) && keyVehicleLogs.Select(z => z.VehicleRego).ToArray().Contains(x.TruckNo)).ToList();
+            //    irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
+            //}
             //p3-42--Dockets-end
 
             if (patrolRequest.SerialNo == null)
@@ -130,7 +130,8 @@ namespace CityWatch.Data.Services
                                    )
                                    //p3-42--Dockets-start
                                    ||
-                            (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly && irIdsFromPlates.Contains(z.Id) &&
+                            (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly && 
+                            //irIdsFromPlates.Contains(z.Id) &&
                         (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
                         (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
                         (patrolRequest.Position == null || z.Position == patrolRequest.Position) &&
@@ -145,6 +146,18 @@ namespace CityWatch.Data.Services
                                    //p3-42--Dockets-end
 
                                    );
+                if (patrolRequest.DataFilter == PatrolDataFilter.DocketOnly)
+                {
+                    docketHistories = _irDataProvider.GetKeyVehicleLogsWithDocketsWithoutDate().ToList();
+                   
+                    int[] keyVehicleLogIds = docketHistories.Select(x => x.KeyVehicleLogId).Distinct().ToArray();
+                    keyVehicleLogs = _irDataProvider.GetKeyVehicleLogByIds(keyVehicleLogIds);
+                    incidentReportsPlatesLoaded = _irDataProvider.GetIncidentReportsPlates().Where(x => keyVehicleLogs.Select(z => z.PlateId).ToArray().Contains(x.PlateId) && keyVehicleLogs.Select(z => z.VehicleRego).ToArray().Contains(x.TruckNo)).ToList();
+                    irIdsFromPlates = incidentReportsPlatesLoaded.Select(x => x.IncidentReportId).Distinct().ToArray();
+
+                    incidentReports = incidentReports.Where(x => irIdsFromPlates.Contains(x.Id)); 
+
+                }
             }
             else
             {

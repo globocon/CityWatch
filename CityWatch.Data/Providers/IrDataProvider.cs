@@ -24,6 +24,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDockets(DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<IncidentReport> GetIncidentReportsForDockets(DateTime fromReportDate, DateTime toReportDate);
+        List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDocketsWithoutDate();
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -205,7 +206,21 @@ namespace CityWatch.Data.Providers
                             && x.ReportDateTime < toReportDate.AddDays(1) && x.ClientSite.IsActive == true)
                 .ToList();
         }
+        public List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsWithDocketsWithoutDate()
+        {
+            var results = _dbContext.KeyVehicleLogDocketHistory
+               .Where(z => z.KeyVehicleLog.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog)
+               .Include(z => z.KeyVehicleLog)
+               .Include(z => z.KeyVehicleLog.GuardLogin.Guard)
+               .Include(x => x.KeyVehicleLog.ClientSiteLocation)
+               .Include(x => x.KeyVehicleLog.ClientSitePoc);
 
+            results.Include(x => x.KeyVehicleLog.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
+
+            return results.OrderBy(z => z.KeyVehicleLog.EntryTime).ToList();
+        }
 
     }
 
