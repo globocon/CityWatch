@@ -124,6 +124,16 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = rosterData });
         }
 
+        public JsonResult OnGetSearchProviders(string search)
+        {
+            var providers = _viewDataService.ProviderList
+                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select" && (string.IsNullOrEmpty(search) || x.Text.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                .Select(x => new { id = x.Value, text = x.Text })
+                .ToList();
+
+            return new JsonResult(new { results = providers });
+        }
+
         public async Task<IActionResult> OnPostAddSiteToGroup(int groupId, int siteId)
         {
             var exists = await _context.RosterGroupSites.AnyAsync(x => x.RosterGroupId == groupId && x.ClientSiteId == siteId);
@@ -135,20 +145,43 @@ namespace CityWatch.Web.Pages.roster
                     ClientSiteId = siteId
                 });
                 await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
             }
-            return new JsonResult(new { success = true });
-        }
-
-        public async Task<IActionResult> OnPostCreateGroup(string name)
-        {
-            var group = new RosterGroup { Name = name };
-            _context.RosterGroups.Add(group);
-            await _context.SaveChangesAsync();
-            return new JsonResult(new { success = true, id = group.Id });
+            return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
         public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName)
         {
+            // Validation 1: Start Date < End Date
+            if (start >= end)
+            {
+                return new JsonResult(new { success = false, message = "Shift End Time must be greater than Start Time." });
+            }
+
+            // Validation 2: Guard OR Provider must be selected
+            if (!guardId.HasValue && string.IsNullOrEmpty(providerName))
+            {
+                return new JsonResult(new { success = false, message = "Please select a Guard or a Subcontractor Provider." });
+            }
+
+            // Validation 3: Conflict Detection (If Guard is selected)
+            if (guardId.HasValue)
+            {
+                var conflict = await _context.RosterSchedules
+                    .Where(x => x.GuardId == guardId && !x.IsDeleted &&
+                                ((start >= x.ShiftStart && start < x.ShiftEnd) ||
+                                 (end > x.ShiftStart && end <= x.ShiftEnd) ||
+                                 (start <= x.ShiftStart && end >= x.ShiftEnd)))
+                    .Include(x => x.ClientSite)
+                    .FirstOrDefaultAsync();
+
+                if (conflict != null)
+                {
+                    var guard = await _context.Guards.FindAsync(guardId);
+                    return new JsonResult(new { success = false, message = $"Conflict: Guard {guard.Name} is currently assigned to {conflict.ClientSite.Name} from {conflict.ShiftStart:HH:mm} to {conflict.ShiftEnd:HH:mm}." });
+                }
+            }
+
             var schedule = new RosterSchedule
             {
                 RosterGroupId = groupId,

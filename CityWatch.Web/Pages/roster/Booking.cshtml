@@ -91,8 +91,8 @@
                                 <select id="modalGuardId" class="form-control" style="width: 100%"></select>
                             </div>
                             <div class="form-group">
-                                <label>Provider Name (if no guard)</label>
-                                <input type="text" id="modalProviderName" class="form-control" />
+                                <label>Provider (Subcontractor)</label>
+                                <select id="modalProviderId" class="form-control" style="width: 100%"></select>
                             </div>
                             <div class="form-group row">
                                 <div class="col-6">
@@ -517,6 +517,27 @@
                 minimumInputLength: 1
             });
 
+            // Provider Search initialization in Modal
+            $('#modalProviderId').select2({
+                placeholder: 'Select Provider (Optional)',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchProviders',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            });
+
             function loadRoster() {
                 console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
@@ -599,6 +620,8 @@
                             if (res.success) {
                                 loadRoster();
                                 $('#search_site').val(null).trigger('change');
+                            } else {
+                                alert(res.message);
                             }
                         }
                     });
@@ -615,7 +638,7 @@
                 $('#modalSiteId').val(siteId);
                 $('#modalDayIndex').val(dayIndex);
                 $('#modalGuardId').val(null).trigger('change');
-                $('#modalProviderName').val('');
+                $('#modalProviderId').val(null).trigger('change');
                 $('#addShiftModal').modal('show');
             });
 
@@ -623,14 +646,25 @@
             $('#btnSaveShift').on('click', function () {
                 var siteId = $('#modalSiteId').val();
                 var dayIndex = $('#modalDayIndex').val();
+                
                 var guardData = $('#modalGuardId').select2('data');
-                var guardId = guardData.length > 0 ? guardData[0].id : null;
-                var providerName = $('#modalProviderName').val();
+                var guardId = (guardData && guardData.length > 0) ? guardData[0].id : null;
+                
+                var providerData = $('#modalProviderId').select2('data');
+                var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
 
+                // Client-side Validation 1: At least one selected
                 if (!guardId && !providerName) {
-                    alert('Please select a guard or enter a provider name.');
+                    alert('Please select either a Guard OR a Provider.');
+                    return;
+                }
+                
+                // Client-side Validation 2: Time check
+                if (startTime >= endTime) {
+                    alert('End Time must be after Start Time.');
                     return;
                 }
 
@@ -657,6 +691,8 @@
                         if (res.success) {
                             $('#addShiftModal').modal('hide');
                             loadRoster();
+                        } else {
+                            alert(res.message);
                         }
                     }
                 });
