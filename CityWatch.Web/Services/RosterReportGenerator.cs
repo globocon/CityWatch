@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 
 using CityWatch.Data.Helpers;
+using iText.IO.Image;
 
 namespace CityWatch.Web.Services
 {
@@ -25,10 +26,13 @@ namespace CityWatch.Web.Services
         Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate);
     }
 
+
+
     public class RosterReportGenerator : IRosterReportGenerator
     {
         private readonly CityWatchDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _imageRootDir;
 
         private const float MARGIN = 15f; // Match TimesheetReportGenerator
         private const float FONT_SIZE_HEADER = 12f;
@@ -38,6 +42,7 @@ namespace CityWatch.Web.Services
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _imageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "images");
         }
 
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate)
@@ -67,18 +72,38 @@ namespace CityWatch.Web.Services
                 var document = new Document(pdf);
                 document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
-                // Header
-                var groupName = group.Name ?? "Unknown Project";
-                
-                document.Add(new Paragraph($"Roster: {groupName}")
-                    .SetFont(PdfHelper.GetPdfFont())
-                    .SetFontSize(16)
-                    .SetTextAlignment(TextAlignment.CENTER));
+                // Header Table
+                var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
 
-                document.Add(new Paragraph($"Week: {startDate:dd MMM yyyy} - {startDate.AddDays(6):dd MMM yyyy}")
-                    .SetFontSize(12)
+                // Logo
+                var logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                if (File.Exists(logoPath))
+                {
+                    var cwLogo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                    headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                }
+                else
+                {
+                    headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                }
+
+                // Title Section
+                var groupName = group.Name ?? "Unknown Project";
+                var titleCell = new Cell()
+                    .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
+                    .Add(new Paragraph($"Week: {startDate:dd MMM yyyy} - {startDate.AddDays(6):dd MMM yyyy}").SetFontSize(12))
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetMarginBottom(10));
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetBorder(Border.NO_BORDER);
+                
+                headerTable.AddCell(titleCell);
+
+                // Empty Right Cell (can be used for site image later if needed)
+                headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+                document.Add(headerTable);
+                document.Add(new Paragraph("\n")); // Spacer
 
                 // Grid Table
                 // Columns: Site (20%), Mon(11.4%), Tue... Sun
