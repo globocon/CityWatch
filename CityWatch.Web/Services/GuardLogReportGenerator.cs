@@ -1289,7 +1289,7 @@ namespace CityWatch.Web.Services
 
                         var paragraphGPS = new Paragraph()
                             .Add(siteImage)
-                            .SetTextAlignment(TextAlignment.CENTER); // Align content properly
+                            .SetTextAlignment(TextAlignment.RIGHT); // Align content properly
 
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)
@@ -1438,7 +1438,7 @@ namespace CityWatch.Web.Services
 
                         var paragraphGPS = new Paragraph()
                             .Add(siteImage)
-                            .SetTextAlignment(TextAlignment.CENTER); // Align content properly
+                            .SetTextAlignment(TextAlignment.RIGHT); // Align content properly
 
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)

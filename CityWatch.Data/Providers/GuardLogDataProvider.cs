@@ -6345,10 +6345,9 @@ namespace CityWatch.Data.Providers
                     case "LB":
                         if (item.LBId != null)
                         {
-                            item.IrEntryType = GuardLogs
-                                .Where(x => x.Id == item.LBId)
-                                .Select(x => x.IrEntryType)
-                                .FirstOrDefault();
+                            var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
+                            item.IrEntryType = tmplog.IrEntryType;
+                            item.gpsCoordinates = tmplog.GpsCoordinates;
                         }
                         break;  // Ensure break is always hit
 
@@ -7827,7 +7826,7 @@ namespace CityWatch.Data.Providers
                                                     && z.CrowdControlDate.Value >= logFromDate
                                                     && z.CrowdControlDate.Value <= logToDate)
                                         .Select(z => new
-                                        {                                            
+                                        {
                                             CrowdControlDate = z.CrowdControlDate.Value,
                                             z.Tcount
                                         })
@@ -7845,7 +7844,7 @@ namespace CityWatch.Data.Providers
                                             })
                                     )
                                     .GroupBy(x => new
-                                    {                                        
+                                    {
                                         x.CrowdControlDate
                                     })
                                     .Select(g => new
@@ -7858,7 +7857,7 @@ namespace CityWatch.Data.Providers
 
             List<MobileCrowdControlReportData> mobileCrowdControlReportData = new List<MobileCrowdControlReportData>();
 
-            if(_guardCombinedData.Any() )
+            if (_guardCombinedData.Any())
             {
                 foreach (var guardData in _guardCombinedData)
                 {
@@ -7875,7 +7874,7 @@ namespace CityWatch.Data.Providers
 
                 mobileCrowdControlReportData = mobileCrowdControlReportData.OrderBy(z => z.CrowdControlDate).ThenBy(z => z.ColHeaderName).ToList();
 
-                foreach (var crowdTotalCount in _totalCountCombinedData.OrderBy(x=> x.CrowdControlDate))
+                foreach (var crowdTotalCount in _totalCountCombinedData.OrderBy(x => x.CrowdControlDate))
                 {
                     mobileCrowdControlReportData.Add(new MobileCrowdControlReportData
                     {
