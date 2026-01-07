@@ -71,5 +71,22 @@ namespace CityWatch.Web.API
             return Ok("Ok");
         }
 
+
+        //// For Testing Purpose Only not used in Production
+        //[HttpGet("GetCurrentCrowdControlData")]
+        //public async Task<IActionResult> GetCurrentCrowdControlData(MobileCrowdControlGuard JoinGaurd)
+        //{
+        //    try
+        //    {
+        //        var currentCount = await _viewDataService.GetCrowdControlCount(JoinGaurd);
+        //        return Ok(currentCount);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        //    }
+        //}
+
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using iText.Layout.Element;
+﻿using Dropbox.Api.TeamLog;
+using iText.Layout.Element;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,6 +30,7 @@ namespace CityWatch.Data.Models
         public int GuardId { get; set; }
         public int Pcount { get; set; }
         public string Location { get; set; }
+        public int BadgeNo { get; set; }
         public DateTime? CrowdControlDate { get; set; }
         public DateTime? GuardLastUpdateTime { get; set; }
 
@@ -40,6 +42,7 @@ namespace CityWatch.Data.Models
         public int UserId { get; set; }
         public int GuardId { get; set; }
         public string Location { get; set; }
+        public int BadgeNo { get; set; }
     }
 
     public class ClientSiteMobileCrowdControlData

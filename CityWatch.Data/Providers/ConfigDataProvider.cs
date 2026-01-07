@@ -2429,6 +2429,7 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = c.ClientSiteId,
                         UserId = c.UserId,
                         GuardId = c.GuardId,
+                        BadgeNo = c.BadgeNo,
                         Pcount = c.Pcount,
                         Location = c.Location,
                         CrowdControlDate = c.CrowdControlDate,
