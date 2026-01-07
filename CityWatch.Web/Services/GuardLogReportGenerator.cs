@@ -26,6 +26,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using static Dropbox.Api.FileProperties.PropertiesSearchMode;
 using static Dropbox.Api.Files.WriteMode;
 using static System.Net.WebRequestMethods;
 using IO = System.IO;
@@ -135,9 +136,11 @@ namespace CityWatch.Web.Services
 
                 var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
                 var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
-                if (customFieldLogs.Any() || patrolCarLogs.Any())
+                var crowdControlLogs = _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
+                if (customFieldLogs.Any() || patrolCarLogs.Any() || crowdControlLogs.Any())
                 {
-                    var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+                    //var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
+                    var addlFieldLogs = CreateCustomFieldCrowdControlLogsAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
                     doc.Add(addlFieldLogs);
                 }
 
@@ -336,8 +339,9 @@ namespace CityWatch.Web.Services
             return reportPdfPath;
         }
 
-        private Table CreateCustomFieldAndPatrolCarLogsTable(List<CustomFieldLog> customFieldLogs, List<PatrolCarLog> patrolCarLogs)
+        private Table CreateCustomFieldAndPatrolCarLogsTable(List<CustomFieldLog> customFieldLogs, List<PatrolCarLog> patrolCarLogs, List<MobileCrowdControlReportData> crowdControlLogs)
         {
+            // Old Method not used now 06-01-2026
             var addlLogsTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetMarginBottom(5);
 
             var tableLeft = CreateCustomFieldLogsTable(customFieldLogs);
@@ -359,6 +363,69 @@ namespace CityWatch.Web.Services
             return addlLogsTable;
 
         }
+
+        private Table CreateCustomFieldCrowdControlLogsAndPatrolCarLogsTable(List<CustomFieldLog> customFieldLogs, List<PatrolCarLog> patrolCarLogs, List<MobileCrowdControlReportData> crowdControlLogs)
+        {
+            // Parent table: 2 columns (Left | Right)
+            var addlLogsTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            /* ---------------- LEFT CELL (STACKED ROWS) ---------------- */
+
+            // Nested table for left cell (1 column, multiple rows)
+            var leftInnerTable = new Table(1).UseAllAvailableWidth();
+
+            // Row 1: Custom Field Logs (only if not empty)
+            if (customFieldLogs != null && customFieldLogs.Any())
+            {
+                var customFieldTable = CreateCustomFieldLogsTable(customFieldLogs);
+
+                leftInnerTable.AddCell(new Cell()
+                        .SetBorder(Border.NO_BORDER).SetPadding(0)
+                        .Add(customFieldTable)
+                );
+            }
+
+            // Crowd Control Logs (row depends on CustomFieldLogs existence)
+            if (crowdControlLogs != null && crowdControlLogs.Any())
+            {
+                var crowdControlTable = CreateCrowdControlLogsTable(crowdControlLogs);
+
+                leftInnerTable.AddCell(new Cell()
+                        .SetBorder(Border.NO_BORDER).SetPaddingTop(5).SetPaddingBottom(0)
+                        .Add(crowdControlTable)
+                );
+            }
+
+            //To add dummy table when both custom field and crowd control logs are null
+            if (customFieldLogs == null && crowdControlLogs == null)
+            {
+                var customFieldTable = CreateCustomFieldLogsTable(customFieldLogs);
+
+                leftInnerTable.AddCell(new Cell()
+                        .SetBorder(Border.NO_BORDER).SetPadding(0)
+                        .Add(customFieldTable)
+                );
+            }
+
+            // Wrap nested left table into parent cell
+            addlLogsTable.AddCell(new Cell()
+                    .SetBorder(Border.NO_BORDER).SetPaddingLeft(0).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                    .Add(leftInnerTable)
+            );
+
+            /* ---------------- RIGHT CELL ---------------- */
+
+            var patrolCarTable = CreatePatrolCarLogsTable(patrolCarLogs);
+
+            addlLogsTable.AddCell(new Cell()
+                    .SetBorder(Border.NO_BORDER).SetPaddingRight(0).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                    .Add(patrolCarTable)
+            );
+
+            return addlLogsTable;
+        }
+
+
 
         private Table CreateCustomFieldLogsTable(List<CustomFieldLog> customFieldLogs)
         {
@@ -428,6 +495,75 @@ namespace CityWatch.Web.Services
             }
 
             return customFieldLogsTable;
+        }
+
+        private Table CreateCrowdControlLogsTable(List<MobileCrowdControlReportData> crowdControlLogs)
+        {
+            if (!crowdControlLogs.Any())
+            {
+                return new Table(1);
+            }
+
+            var fieldNames = crowdControlLogs.Where(x=> x.ColHeaderName != "Head Count").Select(x => x.ColHeaderName).Distinct().ToList();
+            var rows = new List<Dictionary<string, string>>();
+
+            var columns = new Dictionary<string, string>();
+            columns.Add("timeSlot", "23:59");
+
+            foreach (var fieldName in fieldNames)
+            {
+                var fieldValue = crowdControlLogs.SingleOrDefault(z => z.ColHeaderName == fieldName)?.CellValue;
+                columns.Add(fieldName, fieldValue);
+            }
+            //rows.Add(columns);
+
+            fieldNames.Add("Head Count");
+            var totfieldValue = crowdControlLogs.SingleOrDefault(z => z.ColHeaderName == "Head Count")?.CellValue;
+            columns.Add("Head Count", totfieldValue);
+            rows.Add(columns);
+
+            // count (total column count) = no of fields + time slot field
+            var crowdControlLogsTable = new Table(fieldNames.Count() + 1).UseAllAvailableWidth();
+
+            var cellForColumnHeadingForTimeSlot = new Cell()
+                      .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                      .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK))
+                      .Add(new Paragraph("Time Slot")
+                      .SetFontSize(CELL_FONT_SIZE));
+            crowdControlLogsTable.AddCell(cellForColumnHeadingForTimeSlot);
+            foreach (var coloumnHeadingForCustomFieldName in crowdControlLogs.Select(x => x.ColHeaderName).Distinct())
+            {
+                var cellForColumnHeadingCustomFieldName = new Cell()
+                   .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                   .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK))
+                   .Add(new Paragraph(coloumnHeadingForCustomFieldName)
+                   .SetFontSize(CELL_FONT_SIZE));
+                crowdControlLogsTable.AddCell(cellForColumnHeadingCustomFieldName);
+            }
+
+            foreach (var row in rows)
+            {
+                var cellForTimeSlotField = new Cell()
+                   .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                   .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                   .Add(new Paragraph(row["timeSlot"])
+                   .SetFontSize(CELL_FONT_SIZE));
+                crowdControlLogsTable.AddCell(cellForTimeSlotField);
+                foreach (var field in row)
+                {
+                    if (field.Key != "timeSlot")
+                    {
+                        var cellForFields = new Cell()
+                        .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                        .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .Add(new Paragraph(field.Value ?? string.Empty).SetTextAlignment(TextAlignment.CENTER));
+                        crowdControlLogsTable.AddCell(cellForFields);
+                    }
+                }
+            }
+
+            return crowdControlLogsTable;
         }
 
         private Table CreatePatrolCarLogsTable(List<PatrolCarLog> patrolCarLogs)
@@ -945,10 +1081,11 @@ namespace CityWatch.Web.Services
 
                 var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
                 var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
-
-                if (customFieldLogs.Any() || patrolCarLogs.Any())
+                var crowdControlLogs = _guardLogDataProvider.GetMobileCrowdControlLogs(clientSiteLogBooks.FirstOrDefault().ClientSite.Id, clientSiteLogBooks.FirstOrDefault().Id, clientSiteLogBooks.FirstOrDefault().Date, clientSiteLogBooks.FirstOrDefault().Date).ToList();
+                if (customFieldLogs.Any() || patrolCarLogs.Any() || crowdControlLogs.Any())
                 {
-                    var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+                    //var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
+                    var addlFieldLogs = CreateCustomFieldCrowdControlLogsAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
                     doc.Add(addlFieldLogs);
                 }
 
@@ -1397,9 +1534,11 @@ namespace CityWatch.Web.Services
 
             var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
             var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
-            if (customFieldLogs.Any() || patrolCarLogs.Any())
+            var crowdControlLogs = _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
+            if (customFieldLogs.Any() || patrolCarLogs.Any() || crowdControlLogs.Any())
             {
-                var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+                //var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
+                var addlFieldLogs = CreateCustomFieldCrowdControlLogsAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
                 doc.Add(addlFieldLogs);
             }
 

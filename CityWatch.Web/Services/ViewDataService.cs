@@ -229,6 +229,8 @@ namespace CityWatch.Web.Services
         public bool UploadDocumentToDropbox(string fileToUpload, string dbxFilePath);
         public Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName);
         public void DeleteGuardHrDocument(int hrDocId);
+
+        public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
     }
 
     public class ViewDataService : IViewDataService
@@ -3417,7 +3419,14 @@ namespace CityWatch.Web.Services
                 return false;
             }            
         }
-        
+
+        public async Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
+        {
+            var currentCount = await _clientDataProvider.GetCrowdControlCount(JoinGaurd);
+            return currentCount;
+        }
+
+
     }
 
     public class DropdownItemWithAddress

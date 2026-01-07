@@ -316,7 +316,7 @@ namespace CityWatch.Data.Providers
         //code added to get Guard Access
         public List<GuardAccess> GetGuardAccess()
         {
-            return _context.GuardAccess.Where(x=>x.IsDeleted==false).OrderBy(x => x.CredentialOrder).ToList();
+            return _context.GuardAccess.Where(x => x.IsDeleted == false).OrderBy(x => x.CredentialOrder).ToList();
         }
         //code added to search client name
         public List<ClientSite> GetUserClientSites(string type, string searchTerm)
@@ -751,7 +751,7 @@ namespace CityWatch.Data.Providers
                     setting.ScheduleisActive = existingData.ScheduleisActive;
                     setting.KPITelematicsFieldID = existingData.KPITelematicsFieldID;
                     setting.CrmSupplierForSettings = existingData.CrmSupplierForSettings;
-                    
+
 
                     // Detach the tracked entity to avoid conflict
                     _context.Entry(existingData).State = EntityState.Detached;
@@ -761,7 +761,7 @@ namespace CityWatch.Data.Providers
                     _context.SaveChanges();
 
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
 
 
@@ -927,10 +927,10 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
-        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId,  DateTime fromDate, DateTime toDate)
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, DateTime fromDate, DateTime toDate)
         {
             return _context.ClientSiteLogBooks
-                .Where(z => z.ClientSiteId == clientSiteId  && z.Date >= fromDate && z.Date <= toDate)
+                .Where(z => z.ClientSiteId == clientSiteId && z.Date >= fromDate && z.Date <= toDate)
                 .ToList();
         }
 
@@ -947,10 +947,10 @@ namespace CityWatch.Data.Providers
                  .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == date);
         }
 
-        public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId,  DateTime date)
+        public ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, DateTime date)
         {
             return _context.ClientSiteLogBooks
-                 .SingleOrDefault(z => z.ClientSiteId == clientSiteId  && z.Date == date);
+                 .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Date == date);
         }
         public ClientSite GetClientSiteName(int clientSiteId)
         {
@@ -2734,10 +2734,10 @@ namespace CityWatch.Data.Providers
                 calendarEventsUpdate.IsPublicHoliday = calendarEvents.IsPublicHoliday;
             }
             _context.SaveChanges();
-           
-            if (calendarEvents.IsPublicHoliday==true && calendarEvents.States!=null)
+
+            if (calendarEvents.IsPublicHoliday == true && calendarEvents.States != null)
             {
-               
+
                 string[] states = calendarEvents.States.Split(',');
                 SavePHStates(calendarEvents.id, states);
             }
@@ -3651,6 +3651,7 @@ namespace CityWatch.Data.Providers
                     GuardCountToUpdate.Pcount += GuardCountData.Pcount;
                     GuardCountToUpdate.GuardLastUpdateTime = _Ct;
                     GuardCountToUpdate.CrowdControlDate = _CrowdControlDate;
+                    GuardCountToUpdate.BadgeNo = GuardCountData.BadgeNo;
                 }
                 else
                 {
@@ -3660,6 +3661,7 @@ namespace CityWatch.Data.Providers
                     }
                     GuardCountToUpdate.GuardLastUpdateTime = _Ct;
                     GuardCountToUpdate.CrowdControlDate = _CrowdControlDate;
+                    GuardCountToUpdate.BadgeNo = GuardCountData.BadgeNo;
                 }
             }
             else
@@ -3672,6 +3674,7 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = currentCount.ClientSiteId,
                         UserId = GuardCountData.UserId,
                         GuardId = GuardCountData.GuardId,
+                        BadgeNo = GuardCountData.BadgeNo,
                         CrowdControlDate = _CrowdControlDate,
                         CrowdControlId = currentCount.Id,
                         GuardLastUpdateTime = _Ct,
@@ -3687,6 +3690,7 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = currentCount.ClientSiteId,
                         UserId = GuardCountData.UserId,
                         GuardId = GuardCountData.GuardId,
+                        BadgeNo = GuardCountData.BadgeNo,
                         CrowdControlDate = _CrowdControlDate,
                         CrowdControlId = currentCount.Id,
                         GuardLastUpdateTime = _Ct,
@@ -3735,6 +3739,7 @@ namespace CityWatch.Data.Providers
                     ClientSiteId = JoinGaurd.ClientSiteId,
                     UserId = JoinGaurd.UserId,
                     GuardId = JoinGaurd.GuardId,
+                    BadgeNo = JoinGaurd.BadgeNo,
                     CrowdControlDate = currentCount.CrowdControlDate,
                     CrowdControlId = currentCount.Id,
                     GuardLastUpdateTime = DateTime.UtcNow,
@@ -3742,8 +3747,12 @@ namespace CityWatch.Data.Providers
                     Id = 0
                 };
                 _context.Add(NewGuardSignin);
-                await _context.SaveChangesAsync();
             }
+            else
+            {
+                NewGuardSignin.BadgeNo = JoinGaurd.BadgeNo;
+            }
+            await _context.SaveChangesAsync();
 
             currentCount.ClientSiteCrowdControlGuards = new List<ClientSiteMobileCrowdControlGuards>() { NewGuardSignin };
             return currentCount;
@@ -3838,6 +3847,7 @@ namespace CityWatch.Data.Providers
                     CrowdControlDate = currentCount.CrowdControlDate,
                     CrowdControlId = currentCount.Id,
                     GuardLastUpdateTime = DateTime.UtcNow,
+                    BadgeNo = JoinGaurd.BadgeNo,
                     Pcount = 0,
                     Id = 0
                 };
@@ -3856,6 +3866,7 @@ namespace CityWatch.Data.Providers
                     Pcount = NewGuardSignin.Pcount,
                     CrowdControlDate = NewGuardSignin.CrowdControlDate,
                     GuardLastUpdateTime = NewGuardSignin.GuardLastUpdateTime,
+                    BadgeNo = NewGuardSignin.BadgeNo,
                     ArchivedOn = DateTime.UtcNow,
                     ArchivedMode = "Reset by Guard.",
                     ArchivedGuardId = JoinGaurd.GuardId,
@@ -3925,23 +3936,23 @@ namespace CityWatch.Data.Providers
         {
             var _clientSite = _context.ClientSites
                 .FirstOrDefault(x => x.Id == siteId && x.IsActive);
-       
+
 
             if (_clientSite == null)
             {
                 throw new Exception("Client site not found or inactive.");
             }
-          
+
             _clientSite.MobAppShowClientTypeandSite = mobAppShowClientTypeandSite;
             _context.SaveChanges();
         }
-        
+
         public List<ClientSite> GetClientSitesWithMultipleTypesIds(int[] typeId)
         {
 
 
             return _context.ClientSites
-                .Where(x => (typeId.Length==0 || typeId.Contains(x.TypeId))  && x.IsActive == true)
+                .Where(x => (typeId.Length == 0 || typeId.Contains(x.TypeId)) && x.IsActive == true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
@@ -3955,7 +3966,7 @@ namespace CityWatch.Data.Providers
             {
                 DeletePHStates(CalendarEventId);
             }
-            PublicHolidayStates  publicHolidayStates = new PublicHolidayStates();
+            PublicHolidayStates publicHolidayStates = new PublicHolidayStates();
             if (States.Count() > 0)
             {
                 foreach (var item in States)
@@ -3964,12 +3975,12 @@ namespace CityWatch.Data.Providers
                     publicHolidayStates.CalendarEventId = CalendarEventId;
                     publicHolidayStates.State = item;
                     publicHolidayStates.IsDeleted = false;
-                    _context.PublicHolidayStates .Add(publicHolidayStates);
+                    _context.PublicHolidayStates.Add(publicHolidayStates);
                     _context.SaveChanges();
                 }
-                
+
             }
-           
+
 
         }
         public void DeletePHStates(int CalendarEventId)

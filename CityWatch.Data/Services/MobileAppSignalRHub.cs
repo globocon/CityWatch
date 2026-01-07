@@ -45,9 +45,9 @@ namespace CityWatch.Data.Services
         //    return currentCount;
         //}
 
-        public Task<ClientSiteMobileCrowdControl> GetCurrentCrowdControlData(MobileCrowdControlGuard JoinGaurd)
+        public async Task<ClientSiteMobileCrowdControl> GetCurrentCrowdControlData(MobileCrowdControlGuard JoinGaurd)
         {
-            var currentCount = _clientDataProvider.GetCrowdControlCount(JoinGaurd);
+            var currentCount = await _clientDataProvider.GetCrowdControlCount(JoinGaurd);
             return currentCount;
         }
 
