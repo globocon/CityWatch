@@ -817,7 +817,7 @@
             // Handle PDF Download
             $('#btnDownloadPdf').on('click', function() {
                 if (!currentGroupId) return;
-                var startDateStr = currentStartDate.toISOString().split('T')[0];
+                var startDateStr = currentStartDate;
                 var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
                 window.open(url, '_blank');
             });
