@@ -20,17 +20,20 @@ namespace CityWatch.Web.Pages.roster
         private readonly IViewDataService _viewDataService;
         private readonly CityWatchDbContext _context;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IRosterReportGenerator _rosterReportGenerator;
 
         public BookingModel(
             ILogger<BookingModel> logger, 
             IViewDataService viewDataService,
             CityWatchDbContext context,
-            IClientDataProvider clientDataProvider)
+            IClientDataProvider clientDataProvider,
+            IRosterReportGenerator rosterReportGenerator)
         {
             _logger = logger;
             _viewDataService = viewDataService;
             _context = context;
             _clientDataProvider = clientDataProvider;
+            _rosterReportGenerator = rosterReportGenerator;
         }
 
         public DateTime StartDate { get; set; }
@@ -260,6 +263,37 @@ namespace CityWatch.Web.Pages.roster
                 .ToList();
 
             return new JsonResult(new { results = guards });
+        }
+
+        public async Task<IActionResult> OnPostDeleteGroup(int groupId)
+        {
+            var group = await _context.RosterGroups.FindAsync(groupId);
+            if (group != null)
+            {
+                // Delete all associated data
+                var sites = await _context.RosterGroupSites.Where(x => x.RosterGroupId == groupId).ToListAsync();
+                _context.RosterGroupSites.RemoveRange(sites);
+
+                var schedules = await _context.RosterSchedules.Where(x => x.RosterGroupId == groupId).ToListAsync();
+                _context.RosterSchedules.RemoveRange(schedules);
+
+                _context.RosterGroups.Remove(group);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Project not found." });
+        }
+
+        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate)
+        {
+            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate);
+            if (pdfBytes != null)
+            {
+                var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();
+                var fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            return NotFound();
         }
 
         public JsonResult OnGetSearchSites(string search)

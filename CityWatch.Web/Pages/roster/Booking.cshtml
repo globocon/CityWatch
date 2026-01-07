@@ -15,7 +15,13 @@
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label>Project Name</label>
-                    <select id="project_name" class="form-control" style="width: 100%"></select>
+                    <div class="d-flex">
+                        <select id="project_name" class="form-control" style="width: 100%;"></select>
+                        <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
+                            <button class="btn btn-outline-danger btn-sm" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                            <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-4 text-center">
                     <label>&nbsp;</label>
@@ -776,6 +782,59 @@
             $('#search_site').on('select2:select', function (e) {
                 $(this).next().find('.select2-selection__rendered').attr('title', e.params.data.text);
             });
+            
+            // Handle Project Deletion
+            $('#btnDeleteGroup').on('click', function() {
+                if (!currentGroupId) return;
+                var groupName = $('#project_name').select2('data')[0].text;
+                
+                if (!confirm('CRITICAL WARNING:\n\nAre you sure you want to delete the project "' + groupName + '"?\n\nThis will PERMANENTLY DELETE ALL SITES AND SHIFTS associated with this project.\n\nType "DELETE" to confirm.')) {
+                    return;
+                }
+                
+                var verification = prompt("Type 'DELETE' to confirm deletion:");
+                if (verification !== 'DELETE') {
+                    alert('Deletion cancelled.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/roster/Booking?handler=DeleteGroup',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { groupId: currentGroupId },
+                    success: function (res) {
+                        if (res.success) {
+                            alert('Project deleted successfully.');
+                            window.location.reload();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            });
+
+            // Handle PDF Download
+            $('#btnDownloadPdf').on('click', function() {
+                if (!currentGroupId) return;
+                var startDateStr = currentStartDate.toISOString().split('T')[0];
+                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
+                window.open(url, '_blank');
+            });
+
+            // Show/Hide actions based on selection
+            $('#project_name').on('select2:select', function(e) {
+                $('#project_actions').show();
+            });
+            $('#project_name').on('select2:unselect', function(e) {
+                $('#project_actions').hide();
+            });
+            
+            // Check initial state
+            if (currentGroupId) {
+                 $('#project_actions').show();
+            }
+
         });
     </script>
 }
