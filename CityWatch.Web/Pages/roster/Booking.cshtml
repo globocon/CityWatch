@@ -639,10 +639,13 @@
                         // Ensure we don't pick up the temporary tag ID
                         var pid = projectData[0].id;
                         
-                        // If ID matches text, it might be a temporary tag that hasn't been replaced yet? 
-                        // But we replaced it in success callback.
-                        currentGroupId = pid;
-                        console.log('Recovered Group ID from Select2 data:', currentGroupId);
+                        // Check if ID is numeric (real database ID)
+                        if (!isNaN(pid) && parseInt(pid) > 0) {
+                            currentGroupId = pid;
+                            console.log('Recovered Group ID from Select2 data:', currentGroupId);
+                        } else {
+                            console.warn('Ignored non-numeric Group ID from Select2 data:', pid);
+                        }
                     }
                 }
 
