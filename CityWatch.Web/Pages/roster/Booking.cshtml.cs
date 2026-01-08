@@ -284,6 +284,25 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "Project not found." });
         }
 
+        public async Task<IActionResult> OnPostCreateGroup(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Project name is required." });
+            }
+
+            var group = new RosterGroup
+            {
+                Name = name,
+                IsDeleted = false
+            };
+
+            _context.RosterGroups.Add(group);
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, id = group.Id });
+        }
+
         public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate)
         {
             var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate);

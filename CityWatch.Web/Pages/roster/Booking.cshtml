@@ -639,6 +639,7 @@
                         data: { groupId: currentGroupId, siteId: siteId },
                         success: function (res) {
                             if (res.success) {
+                                toggleRosterView(true);
                                 loadRoster();
                                 $('#search_site').val(null).trigger('change');
                             } else {
