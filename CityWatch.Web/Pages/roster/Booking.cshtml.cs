@@ -166,6 +166,11 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<IActionResult> OnPostAddSiteToGroup(int groupId, int siteId)
         {
+            if (groupId <= 0)
+            {
+                return new JsonResult(new { success = false, message = "Invalid Project ID. Please select a valid project." });
+            }
+
             var exists = await _context.RosterGroupSites.AnyAsync(x => x.RosterGroupId == groupId && x.ClientSiteId == siteId);
             if (!exists)
             {
