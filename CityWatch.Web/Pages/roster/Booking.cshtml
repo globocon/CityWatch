@@ -631,16 +631,19 @@
 
             $('#btnAddSite').on('click', function () {
                 console.log('Add Site clicked, currentGroupId:', currentGroupId);
+                
+                // Robust Fallback: Check Select2 data directly
                 if (!currentGroupId) {
-                    // Try to fallback to the select value if it's a number
-                    var val = $('#project_name').val();
-                    if (val && !isNaN(val)) {
-                        currentGroupId = val;
-                        console.log('Recovered Group ID from select value:', currentGroupId);
-                    } else {
-                        alert('Please select or create a project first.');
-                        return;
+                    var projectData = $('#project_name').select2('data');
+                    if (projectData && projectData.length > 0) {
+                        currentGroupId = projectData[0].id;
+                        console.log('Recovered Group ID from Select2 data:', currentGroupId);
                     }
+                }
+
+                if (!currentGroupId) {
+                    alert('Please select or create a project first.');
+                    return;
                 }
 
                 var selectedData = $('#search_site').select2('data');
