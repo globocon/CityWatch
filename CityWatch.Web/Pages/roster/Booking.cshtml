@@ -479,6 +479,11 @@
                                 // Add the new project to the dropdown with its real ID
                                 var newOption = new Option(data.text, res.id, true, true);
                                 $('#project_name').append(newOption).val(res.id).trigger('change');
+                                
+                                // Update URL without reloading
+                                var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?groupId=' + res.id;
+                                window.history.pushState({ path: newUrl }, '', newUrl);
+
                                 toggleRosterView(true);
                                 loadRoster();
                             } else {
@@ -492,6 +497,11 @@
                 } else {
                     currentGroupId = data.id;
                     console.log('Existing project selected, ID:', currentGroupId);
+                    
+                    // Update URL without reloading
+                    var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?groupId=' + currentGroupId;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+
                     toggleRosterView(true);
                     loadRoster();
                 }
@@ -511,6 +521,11 @@
                             $('#project_name').append(option).trigger('change');
                             toggleRosterView(true);
                             loadRoster();
+                        } else {
+                            // Group ID exists in URL but project not found (e.g. deleted)
+                            console.warn('Project ID ' + currentGroupId + ' not found. Resetting view.');
+                            currentGroupId = null;
+                            toggleRosterView(false);
                         }
                     }
                 });
@@ -808,7 +823,9 @@
                     success: function (res) {
                         if (res.success) {
                             alert('Project deleted successfully.');
-                            window.location.reload();
+                            alert('Project deleted successfully.');
+                            // Redirect to clear query parameters
+                            window.location.href = '/roster/Booking';
                         } else {
                             alert(res.message);
                         }
