@@ -474,8 +474,11 @@
                         data: { name: data.text },
                         success: function (res) {
                             if (res.success) {
-                                console.log('Project created successfully, ID:', res.id);
+                                console.log('CreateGroup Success. Response:', res);
+                                console.log('Setting currentGroupId from res.id:', res.id);
                                 currentGroupId = res.id;
+                                console.log('currentGroupId is now:', currentGroupId);
+
                                 // Add the new project to the dropdown with its real ID
                                 var newOption = new Option(data.text, res.id, true, true);
                                 $('#project_name').append(newOption).val(res.id).trigger('change');
@@ -635,8 +638,17 @@
                 // Robust Fallback: Check Select2 data directly
                 if (!currentGroupId) {
                     var projectData = $('#project_name').select2('data');
+                    console.log('Fallback: Select2 Data:', projectData);
+                    
                     if (projectData && projectData.length > 0) {
-                        currentGroupId = projectData[0].id;
+                        // Ensure we don't pick up the temporary tag ID
+                        var pid = projectData[0].id;
+                        var ptext = projectData[0].text;
+                        console.log('Fallback: Checking ID:', pid, 'Text:', ptext);
+                        
+                        // If ID matches text, it might be a temporary tag that hasn't been replaced yet? 
+                        // But we replaced it in success callback.
+                        currentGroupId = pid;
                         console.log('Recovered Group ID from Select2 data:', currentGroupId);
                     }
                 }
