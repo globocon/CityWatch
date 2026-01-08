@@ -6346,10 +6346,19 @@ namespace CityWatch.Data.Providers
                         if (item.LBId != null)
                         {
                             var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
-                            item.IrEntryType = tmplog.IrEntryType;
-                            item.gpsCoordinates = tmplog.GpsCoordinates;
+                            item.IrEntryType = tmplog?.IrEntryType ?? null;
+                            item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
                         }
                         break;  // Ensure break is always hit
+
+                    case "SW":
+                        if (item.LBId != null)
+                        {
+                            var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
+                            item.IrEntryType = tmplog?.IrEntryType ?? null;
+                            item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
+                        }
+                        break;
 
                     case "IR":
                         if (item.IRId != null)
