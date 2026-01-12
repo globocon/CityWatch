@@ -238,6 +238,10 @@ namespace CityWatch.Data.Providers
         public JsonResult GetPCARRouteDetails(int id);
 
         public bool RemovePCarDeatils(int PcarRouteId, List<int> siteIds);
+
+        List<PayRate> GetPayRates();
+        void SavePayRate(PayRate payRate);
+        void DeletePayRate(int id);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -247,6 +251,43 @@ namespace CityWatch.Data.Providers
         public ConfigDataProvider(CityWatchDbContext context)
         {
             _context = context;
+        }
+
+        public List<PayRate> GetPayRates()
+        {
+            return _context.PayRates.Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
+        }
+
+        public void SavePayRate(PayRate payRate)
+        {
+            if (payRate.Id == 0)
+            {
+                _context.PayRates.Add(payRate);
+            }
+            else
+            {
+                var existing = _context.PayRates.SingleOrDefault(x => x.Id == payRate.Id);
+                if (existing != null)
+                {
+                    existing.Description = payRate.Description;
+                    existing.SellRateToClient = payRate.SellRateToClient;
+                    existing.Comms1 = payRate.Comms1;
+                    existing.Comms2 = payRate.Comms2;
+                    existing.GuardPayRate = payRate.GuardPayRate;
+                    existing.Currency = payRate.Currency;
+                }
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeletePayRate(int id)
+        {
+            var existing = _context.PayRates.SingleOrDefault(x => x.Id == id);
+            if (existing != null)
+            {
+                existing.IsDeleted = true;
+                _context.SaveChanges();
+            }
         }
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
