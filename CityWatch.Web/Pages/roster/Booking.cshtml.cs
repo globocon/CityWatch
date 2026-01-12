@@ -185,7 +185,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId)
         {
             // Validation 1: Start Date < End Date
             if (start >= end)
@@ -225,11 +225,27 @@ namespace CityWatch.Web.Pages.roster
                 ShiftEnd = end,
                 GuardId = guardId,
                 ProviderName = providerName,
-                Status = RosterShiftStatus.Pushed
+                Status = RosterShiftStatus.Pushed,
+                PayRateId = payRateId
             };
             _context.RosterSchedules.Add(schedule);
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true, id = schedule.Id });
+        }
+
+        public JsonResult OnGetSearchPayRates(string search)
+        {
+            var rates = _context.PayRates
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Description.Contains(search)))
+                .Select(x => new
+                {
+                    id = x.Id,
+                    text = x.Description,
+                    rate = x.GuardPayRate
+                })
+                .ToList();
+
+            return new JsonResult(new { results = rates });
         }
 
         public async Task<IActionResult> OnPostUpdateStatus(int id, int status)

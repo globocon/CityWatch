@@ -110,6 +110,16 @@
                                     <input type="time" id="modalShiftEnd" class="form-control" value="16:00" />
                                 </div>
                             </div>
+                            <div class="form-group row">
+                                <div class="col-6">
+                                    <label>Position</label>
+                                    <select id="modalPositionId" class="form-control" style="width: 100%"></select>
+                                </div>
+                                <div class="col-6">
+                                    <label>Pay Rate</label>
+                                    <input type="text" id="modalPayRate" class="form-control" readonly />
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -573,6 +583,35 @@
                 },
                 minimumInputLength: 0
             });
+            
+            // Position Search initialization in Modal
+            $('#modalPositionId').select2({
+                placeholder: 'Select Position',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchPayRates',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+                // Auto-populate pay rate
+                if (data.rate !== null && data.rate !== undefined) {
+                    $('#modalPayRate').val('$' + parseFloat(data.rate).toFixed(2));
+                }
+            }).on('select2:unselect', function (e) {
+                $('#modalPayRate').val('');
+            });
 
             function loadRoster() {
                 console.log('Loading roster for Group ID:', currentGroupId);
@@ -688,6 +727,8 @@
                 $('#modalDayIndex').val(dayIndex);
                 $('#modalGuardId').val(null).trigger('change');
                 $('#modalProviderId').val(null).trigger('change');
+                $('#modalPositionId').val(null).trigger('change');
+                $('#modalPayRate').val('');
                 $('#addShiftModal').modal('show');
             });
 
@@ -701,6 +742,9 @@
                 
                 var providerData = $('#modalProviderId').select2('data');
                 var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+                
+                var positionData = $('#modalPositionId').select2('data');
+                var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -734,7 +778,8 @@
                         start: startDateTime,
                         end: endDateTime,
                         guardId: guardId,
-                        providerName: providerName
+                        providerName: providerName,
+                        payRateId: payRateId
                     },
                     success: function (res) {
                         if (res.success) {
