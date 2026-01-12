@@ -101,15 +101,23 @@ function initializePayRatesGrid() {
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'description', title: 'Description', width: 200 },
-            { field: 'sellRateToClient', title: 'Sell Rate to Client', width: 100 },
-            { field: 'comms1', title: 'Comms 1', width: 100 },
-            { field: 'comms2', title: 'Comms 2', width: 100 },
-            { field: 'guardPayRate', title: 'Guard Pay Rate', width: 100 },
+            { field: 'description', title: 'Description', width: 200, align: 'left' },
+            { field: 'sellRateToClient', title: 'Sell Rate to Client', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'comms1', title: 'Comms 1', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'guardPayRate', title: 'Guard Pay Rate', width: 100, align: 'center', renderer: currencyRenderer },
             { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
         ],
-        pager: { limit: 10, sizes: [10, 20, 50, 100] }
+        pager: { limit: 10, sizes: [10, 20, 50, 100] },
+        initialized: function (e) {
+            $('#tbl_pay_rates thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
     });
+}
+
+function currencyRenderer(value, record) {
+    if (value === null || value === undefined) return '$0.00';
+    return '$' + parseFloat(value).toFixed(2);
 }
 
 function payRatesActionRenderer(value, record) {
