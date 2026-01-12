@@ -260,6 +260,11 @@ namespace CityWatch.Data.Providers
 
         public void SavePayRate(PayRate payRate)
         {
+            if (_context.PayRates.Any(x => x.Description == payRate.Description && x.Id != payRate.Id && !x.IsDeleted))
+            {
+                throw new Exception("A Pay Rate with this description already exists.");
+            }
+
             if (payRate.Id == 0)
             {
                 _context.PayRates.Add(payRate);
