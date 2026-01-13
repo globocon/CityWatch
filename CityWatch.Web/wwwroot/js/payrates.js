@@ -17,7 +17,7 @@ $(document).ready(function () {
         $('#txtComms1').val('');
         $('#txtComms2').val('');
         $('#txtGuardPayRate').val('');
-        $('#pay_rates_currency').val('AUD'); // Default to AUD
+
         $('#modalTitlePayRate').text('Add Pay Rate');
     });
 
@@ -52,6 +52,7 @@ $(document).ready(function () {
                 if (result.success) {
                     $('#payRatesModal').modal('hide');
                     gridPayRates.reload();
+                    $('#pay_rates_currency').val('AUD');
                 } else {
                     alert(result.message);
                 }
