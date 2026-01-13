@@ -1506,7 +1506,7 @@ gridSchedules = $('#rc_linked_duress').grid({
         { field: 'groupName', title: 'Group Name', width: 100 },
         { field: 'clientTypes', title: 'Client Types', width: 100 },
         { field: 'clientSites', title: 'Client Sites', width: 180 },
-        { title: 'Linked Services', renderer: schLinkedServices ,width: 180 },
+        { title: 'Linked Services', renderer: schLinkedServices ,width: 120 },
         { width: 75, renderer: schButtonRenderer },
     ],
     initialized: function (e) {

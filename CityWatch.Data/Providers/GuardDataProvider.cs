@@ -119,6 +119,7 @@ namespace CityWatch.Data.Providers
         void RemoveGuardRcClientSiteAccess(int guardId);
         List<InActiveGuardsDetails> GetInActiveGuardDetails();
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
+        int GetClientSiteIdFromLogbook(int logbookId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1396,6 +1397,11 @@ namespace CityWatch.Data.Providers
 
 
         }
-
+        public int GetClientSiteIdFromLogbook(int logbookId)
+        {
+            var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().ClientSiteId;
+            return lbdt;
+        }
+        
     }
 }
