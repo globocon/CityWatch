@@ -17,6 +17,7 @@ $(document).ready(function () {
         $('#txtComms1').val('');
         $('#txtComms2').val('');
         $('#txtGuardPayRate').val('');
+        $('#pay_rates_currency').val(['AUD']); // Default to AUD
         $('#modalTitlePayRate').text('Add Pay Rate');
     });
 
@@ -27,7 +28,8 @@ $(document).ready(function () {
         var comms1 = $('#txtComms1').val();
         var comms2 = $('#txtComms2').val();
         var guardPayRate = $('#txtGuardPayRate').val();
-        var currency = $('#pay_rates_currency').val();
+        var currencyVal = $('#pay_rates_currency').val();
+        var currency = currencyVal ? currencyVal.join(',') : '';
 
         if (description == '' || sellRate == '' || comms1 == '' || comms2 == '' || guardPayRate == '') {
             alert('All fields are required.');
@@ -106,6 +108,7 @@ function initializePayRatesGrid() {
             { field: 'comms1', title: 'Comms 1', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'guardPayRate', title: 'Guard Pay Rate', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'currency', title: 'Currency', width: 80, align: 'center' },
             { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
         ],
         pager: { limit: 10, sizes: [10, 20, 50, 100] },
@@ -122,18 +125,23 @@ function currencyRenderer(value, record) {
 
 function payRatesActionRenderer(value, record) {
     return '<div class="text-center">' +
-        '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+        '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ', \'' + (record.currency || '') + '\')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
         '<button onclick="deletePayRate(' + record.id + ')" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
         '</div>';
 }
 
-function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate) {
+function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate, currency) {
     $('#payRateId').val(id);
     $('#txtPayRateDescription').val(description);
     $('#txtSellRate').val(sellRate);
     $('#txtComms1').val(comms1);
     $('#txtComms2').val(comms2);
     $('#txtGuardPayRate').val(guardPayRate);
+    if (currency) {
+        $('#pay_rates_currency').val(currency.split(','));
+    } else {
+        $('#pay_rates_currency').val(['AUD']);
+    }
     $('#payRatesModal').modal('show');
     $('#modalTitlePayRate').text('Edit Pay Rate');
 }
