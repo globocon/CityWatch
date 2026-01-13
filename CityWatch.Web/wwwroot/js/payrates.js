@@ -17,7 +17,7 @@ $(document).ready(function () {
         $('#txtComms1').val('');
         $('#txtComms2').val('');
         $('#txtGuardPayRate').val('');
-        $('#pay_rates_currency').val(['AUD']); // Default to AUD
+        $('#pay_rates_currency').val('AUD'); // Default to AUD
         $('#modalTitlePayRate').text('Add Pay Rate');
     });
 
@@ -28,8 +28,7 @@ $(document).ready(function () {
         var comms1 = $('#txtComms1').val();
         var comms2 = $('#txtComms2').val();
         var guardPayRate = $('#txtGuardPayRate').val();
-        var currencyVal = $('#pay_rates_currency').val();
-        var currency = currencyVal ? currencyVal.join(',') : '';
+        var currency = $('#pay_rates_currency').val();
 
         if (description == '' || sellRate == '' || comms1 == '' || comms2 == '' || guardPayRate == '') {
             alert('All fields are required.');
@@ -138,9 +137,9 @@ function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate
     $('#txtComms2').val(comms2);
     $('#txtGuardPayRate').val(guardPayRate);
     if (currency) {
-        $('#pay_rates_currency').val(currency.split(','));
+        $('#pay_rates_currency').val(currency);
     } else {
-        $('#pay_rates_currency').val(['AUD']);
+        $('#pay_rates_currency').val('AUD');
     }
     $('#payRatesModal').modal('show');
     $('#modalTitlePayRate').text('Edit Pay Rate');

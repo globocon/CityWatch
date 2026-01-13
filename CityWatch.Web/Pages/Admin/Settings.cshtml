@@ -4212,6 +4212,33 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div id="PayRatesDiv" style="display:none">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <div class="form-group row">
+                                                <label class="col-form-label col-md-4">Currency</label>
+                                                <div class="col-md-8">
+                                                    <select class="form-control" id="pay_rates_currency">
+                                                        <option value="AUD" selected>AUD</option>
+                                                        <option value="USD">USD</option>
+                                                        <option value="GBP">GBP</option>
+                                                        <option value="EUR">EUR</option>
+                                                        <option value="NZD">NZD</option>
+                                                        <option value="CAD">CAD</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9 text-right">
+                                            <button class="btn btn-success mb-3" id="add_pay_rates"><i class="fa fa-plus mr-2"></i>Add Pay Rate</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <table class="table table-bordered table-sm" id="tbl_pay_rates" style="width:100%"></table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
@@ -5325,17 +5352,7 @@
                     <label for="txtGuardPayRate">Guard Pay Rate</label>
                     <input type="number" class="form-control" id="txtGuardPayRate" placeholder="Enter Guard Pay Rate">
                 </div>
-                <div class="form-group">
-                    <label for="pay_rates_currency">Currency</label>
-                    <select class="form-control" id="pay_rates_currency" multiple="multiple">
-                        <option value="AUD" selected>AUD</option>
-                        <option value="USD">USD</option>
-                        <option value="GBP">GBP</option>
-                        <option value="EUR">EUR</option>
-                        <option value="NZD">NZD</option>
-                        <option value="CAD">CAD</option>
-                    </select>
-                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
