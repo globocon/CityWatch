@@ -1526,15 +1526,15 @@ function schLinkedServices(value, record) {
     let buttonHtml = `<div class="linked-services">`;
 
     buttonHtml += `<label>
-            <input type="checkbox" ${record.linkedServices?.includes("LB") ? "checked" : ""} disabled> LB
+            <input type="checkbox" ${record.isLB === true ? "checked" : ""} disabled> LB
         </label>`;
 
     buttonHtml += `<label>
-            <input type="checkbox" ${record.linkedServices?.includes("KV") ? "checked" : ""} disabled> KV
+           <input type="checkbox" ${record.isKV === true ? "checked" : ""} disabled> KV
         </label>`;
 
     buttonHtml += `<label>
-            <input type="checkbox" ${record.linkedServices?.includes("SW") ? "checked" : ""} disabled> SW
+           <input type="checkbox" ${record.isSW === true ? "checked" : ""} disabled> SW
         </label>`;
 
     buttonHtml += `</div>`;
@@ -1676,16 +1676,18 @@ $('#btnSavelinkedDuress').on('click', function () {
     var options = $('#selectedSites option');
     //var services = $('#linkedService option');
     var serve = $('#linkedService').val().join(',');
-    var services = serve.split(',');
+    //var services = serve.split(',');
     options.each(function () {
         const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
         $('#frm_kpi_schedule').append(elem);
     });
-    services.forEach(function (value) {
-        const elem = '<input type="hidden" name="linkedServices" value="' + value + '">';
-        $('#frm_kpi_schedule').append(elem);
-    });
-
+    //services.forEach(function (value) {
+    //    const elem = '<input type="hidden" name="LinkedServices" value="' + value + '">';
+    //    $('#frm_kpi_schedule').append(elem);
+    //});
+    //const elem1 = '<input type="hidden" name="LinkedServices" value="' + serve + '">';
+    //$('#frm_kpi_schedule').append(elem1);
+    var result = $('#frm_kpi_schedule').serialize();
     $.ajax({
         url: '/Admin/Settings?handler=SaveRCLinkedDuress',
         type: 'POST',
