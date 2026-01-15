@@ -1506,6 +1506,7 @@ gridSchedules = $('#rc_linked_duress').grid({
         { field: 'groupName', title: 'Group Name', width: 100 },
         { field: 'clientTypes', title: 'Client Types', width: 100 },
         { field: 'clientSites', title: 'Client Sites', width: 180 },
+        { title: 'Linked Services', renderer: schLinkedServices ,width: 120 },
         { width: 75, renderer: schButtonRenderer },
     ],
     initialized: function (e) {
@@ -1521,6 +1522,24 @@ function schButtonRenderer(value, record) {
     return buttonHtml;
 }
 
+function schLinkedServices(value, record) {
+    let buttonHtml = `<div class="linked-services">`;
+
+    buttonHtml += `<label>
+            <input type="checkbox" ${record.linkedServices?.includes("LB") ? "checked" : ""} disabled> LB
+        </label>`;
+
+    buttonHtml += `<label>
+            <input type="checkbox" ${record.linkedServices?.includes("KV") ? "checked" : ""} disabled> KV
+        </label>`;
+
+    buttonHtml += `<label>
+            <input type="checkbox" ${record.linkedServices?.includes("SW") ? "checked" : ""} disabled> SW
+        </label>`;
+
+    buttonHtml += `</div>`;
+    return buttonHtml;
+}
 
 
 $('#clientTypeName').on('change', function () {
@@ -1603,6 +1622,27 @@ function linkedDuressModalOnEdit(scheduleId) {
             $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             updateSelectedSitesCount();
         });
+        var selectedValues = [];
+        if (data.isLB) {
+            selectedValues.push('LB');
+        }
+        if (data.isKV) {
+            selectedValues.push('KV');
+        }
+        if (data.isSW) {
+            selectedValues.push('SW');
+        }
+        //$.each(data.linkedServices, function (index, item) {
+        //    selectedValues.push(item);
+           
+        //});
+        selectedValues.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
+        $("#linkedService").multiselect();
+        $("#linkedService").val(selectedValues);
+        $("#linkedService").multiselect("refresh");
         $('#GroupName').val(data.groupName);
         
     }).always(function () {
@@ -1624,12 +1664,25 @@ $('#rc_linked_duress').on('click', '.del-schedule', function () {
     }
 
 });
-
+$('#linkedService').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
 $('#btnSavelinkedDuress').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSites option');
+    //var services = $('#linkedService option');
+    var serve = $('#linkedService').val().join(',');
+    var services = serve.split(',');
     options.each(function () {
         const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+        $('#frm_kpi_schedule').append(elem);
+    });
+    services.forEach(function (value) {
+        const elem = '<input type="hidden" name="linkedServices" value="' + value + '">';
         $('#frm_kpi_schedule').append(elem);
     });
 
