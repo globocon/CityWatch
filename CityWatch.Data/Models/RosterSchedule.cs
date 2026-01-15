@@ -34,6 +34,11 @@ namespace CityWatch.Data.Models
 
         public RosterShiftStatus Status { get; set; }
 
+        public int? PayRateId { get; set; }
+
+        [ForeignKey("PayRateId")]
+        public virtual PayRate PayRate { get; set; }
+
         public bool IsDeleted { get; set; }
     }
 }

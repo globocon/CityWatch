@@ -3730,6 +3730,43 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
+        public JsonResult OnGetPayRatesList(int? page, int? limit)
+        {
+            return new JsonResult(_configDataProvider.GetPayRates());
+        }
+
+        public JsonResult OnPostSavePayRate(PayRate payRate)
+        {
+             var success = false;
+            var message = "Saved successfully";
+            try
+            {
+                _configDataProvider.SavePayRate(payRate);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeletePayRate(int id)
+        {
+            var success = false;
+            var message = "Deleted successfully";
+            try
+            {
+                _configDataProvider.DeletePayRate(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
     }
     public class helpDocttype
     {

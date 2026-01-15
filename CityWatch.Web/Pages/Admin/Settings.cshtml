@@ -1378,6 +1378,36 @@
                                     </thead>
                                 </table>
 
+                                <div id="PayRatesDiv" style="display:none">
+                                    <style>
+                                        #tbl_pay_rates td {
+                                            vertical-align: middle;
+                                        }
+                                    </style>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group row">
+                                                <label class="col-form-label col-md-4">Currency</label>
+                                                <div class="col-md-8">
+                                                    <select class="form-control" id="pay_rates_currency">
+                                                        <option value="AUD" selected>AUD</option>
+                                                        <option value="USD">USD</option>
+                                                        <option value="GBP">GBP</option>
+                                                        <option value="EUR">EUR</option>
+                                                        <option value="NZD">NZD</option>
+                                                        <option value="CAD">CAD</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9 text-right">
+                                             <button class="btn btn-success mb-3" id="add_pay_rates"><i class="fa fa-plus mr-2"></i>Add Pay Rate</button>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered table-sm" width="100%" id="tbl_pay_rates">
+                                    </table>
+                                </div>
+
                                 <div id="SettingsDiv" style="display:none">
                                     <div class="form-group row">
                                         <div class="col-md-8">
@@ -4187,6 +4217,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
 
                         </div>
@@ -5266,4 +5297,46 @@
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="~/js/payrates.js" asp-append-version="true"></script>
 }
+
+<div class="modal fade" id="payRatesModal" tabindex="-1" role="dialog" aria-labelledby="payRatesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitlePayRate">Add Pay Rate</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="payRateId" value="0" />
+                <div class="form-group">
+                    <label for="txtPayRateDescription">Description</label>
+                    <input type="text" class="form-control" id="txtPayRateDescription" placeholder="Enter Description">
+                </div>
+                <div class="form-group">
+                    <label for="txtSellRate">Sell Rate to Client</label>
+                    <input type="number" class="form-control" id="txtSellRate" placeholder="Enter Sell Rate">
+                </div>
+                <div class="form-group">
+                    <label for="txtComms1">Comms 1</label>
+                    <input type="number" class="form-control" id="txtComms1" placeholder="Enter Comms 1">
+                </div>
+                <div class="form-group">
+                    <label for="txtComms2">Comms 2</label>
+                    <input type="number" class="form-control" id="txtComms2" placeholder="Enter Comms 2">
+                </div>
+                <div class="form-group">
+                    <label for="txtGuardPayRate">Guard Pay Rate</label>
+                    <input type="number" class="form-control" id="txtGuardPayRate" placeholder="Enter Guard Pay Rate">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSavePayRate">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
