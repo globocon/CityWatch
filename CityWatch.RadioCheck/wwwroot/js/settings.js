@@ -1674,13 +1674,15 @@ $('#linkedService').multiselect({
 $('#btnSavelinkedDuress').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSites option');
-    var services = $('#linkedService option');
+    //var services = $('#linkedService option');
+    var serve = $('#linkedService').val().join(',');
+    var services = serve.split(',');
     options.each(function () {
         const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
         $('#frm_kpi_schedule').append(elem);
     });
-    services.each(function () {
-        const elem = '<input type="hidden" name="linkedServices" value="' + $(this).val() + '">';
+    services.forEach(function (value) {
+        const elem = '<input type="hidden" name="linkedServices" value="' + value + '">';
         $('#frm_kpi_schedule').append(elem);
     });
 
