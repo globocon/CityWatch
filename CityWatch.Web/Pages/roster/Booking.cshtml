@@ -113,7 +113,16 @@
                             <div class="form-group row">
                                 <div class="col-6">
                                     <label>Position</label>
-                                    <select id="modalPositionId" class="form-control" style="width: 100%"></select>
+                                    <select id="modalPositionId" class="form-control" style="width: 100%">
+                                        <option></option>
+                                        @if(Model.PayRatesList != null)
+                                        {
+                                            foreach(var rate in Model.PayRatesList)
+                                            {
+                                                <option value="@rate.Id" data-rate="@rate.GuardPayRate">@rate.Description</option>
+                                            }
+                                        }
+                                    </select>
                                 </div>
                                 <div class="col-6">
                                     <label>Pay Rate</label>
@@ -589,25 +598,13 @@
                 placeholder: 'Select Position',
                 theme: 'bootstrap4',
                 allowClear: true,
-                dropdownParent: $('#addShiftModal'),
-                ajax: {
-                    url: '/roster/Booking?handler=SearchPayRates',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return { search: params.term };
-                    },
-                    processResults: function (data) {
-                        return { results: data.results };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 0
+                dropdownParent: $('#addShiftModal')
             }).on('select2:select', function (e) {
-                var data = e.params.data;
+                var element = $(e.params.data.element);
+                var rate = element.data('rate');
                 // Auto-populate pay rate
-                if (data.rate !== null && data.rate !== undefined) {
-                    $('#modalPayRate').val('$' + parseFloat(data.rate).toFixed(2));
+                if (rate !== null && rate !== undefined) {
+                    $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
                 }
             }).on('select2:unselect', function (e) {
                 $('#modalPayRate').val('');

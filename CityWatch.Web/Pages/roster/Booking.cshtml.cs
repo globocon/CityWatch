@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using CityWatch.Data;
@@ -42,6 +43,7 @@ namespace CityWatch.Web.Pages.roster
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
+        public List<PayRate> PayRatesList { get; set; }
 
         public void OnGet(DateTime? startDate, int? groupId)
         {
@@ -72,6 +74,10 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
             SelectedGroupId = groupId;
+
+            PayRatesList = _context.PayRates
+                .Where(x => !x.IsDeleted)
+                .ToList();
         }
 
         public JsonResult OnGetSearchProjects(string search)
