@@ -26,6 +26,7 @@ using CityWatch.RadioCheck.Services;
 using CityWatch.RadioCheck.Helpers;
 using System.ComponentModel.DataAnnotations;
 using DocumentFormat.OpenXml.Spreadsheet;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.RadioCheck.Pages.Admin
 {
@@ -780,7 +781,25 @@ namespace CityWatch.RadioCheck.Pages.Admin
             var results = new List<ValidationResult>();
             if (!Validator.TryValidateObject(rcLinkedDuressViewModel, new ValidationContext(rcLinkedDuressViewModel), results, true))
                 return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
-            var rclinkedDuress = RCLinkedDuressViewModel.ToDataModel(rcLinkedDuressViewModel);
+            if (rcLinkedDuressViewModel.LinkedServices != null)
+            {
+                foreach (var item in rcLinkedDuressViewModel.LinkedServices)
+                {
+                    if (item == "LB")
+                    {
+                        rcLinkedDuressViewModel.IsLB = true;
+                    }
+                    if (item == "KV")
+                    {
+                        rcLinkedDuressViewModel.IsKV = true;
+                    }
+                    if (item == "SW")
+                    {
+                        rcLinkedDuressViewModel.IsSW = true;
+                    }
+                }
+            }
+                var rclinkedDuress = RCLinkedDuressViewModel.ToDataModel(rcLinkedDuressViewModel);
             var success = true;
             var message = "Saved successfully";
             if (_clientDataProvider.CheckAlreadyExistTheGroupName(rclinkedDuress, true))

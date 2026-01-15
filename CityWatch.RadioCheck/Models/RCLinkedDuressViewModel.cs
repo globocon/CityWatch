@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace CityWatch.Kpi.Models
@@ -22,19 +23,22 @@ namespace CityWatch.Kpi.Models
         [Required]
         [Display(Name = "Group Name")]
         public string GroupName { get; set; }
-
-        public string[] LinkedServices { get; set; }
-
+        [NotMapped]
+        public List<string> LinkedServices { get; set; }
+        public bool IsLB { get; set; }
+        public bool IsKV { get; set; }
+        public bool IsSW { get; set; }
         public static RCLinkedDuressMaster ToDataModel(RCLinkedDuressViewModel viewModel)
         {
+            
             return new RCLinkedDuressMaster()
             {
                 Id = viewModel.Id,
                 GroupName= viewModel.GroupName,
                 RCLinkedDuressClientSites = viewModel.ClientSiteIds.Select(z => new RCLinkedDuressClientSites() { RCLinkedId = viewModel.Id, ClientSiteId = z }).ToList(),
-                IsLB = viewModel.LinkedServices != null && viewModel.LinkedServices.Any(s => string.Equals(s, "LB", StringComparison.OrdinalIgnoreCase)),
-                IsKV = viewModel.LinkedServices != null && viewModel.LinkedServices.Any(s => string.Equals(s, "KV", StringComparison.OrdinalIgnoreCase)),
-                IsSW = viewModel.LinkedServices != null && viewModel.LinkedServices.Any(s => string.Equals(s, "SW", StringComparison.OrdinalIgnoreCase)),
+                IsLB = viewModel.IsLB ,
+                IsKV = viewModel.IsKV,
+                IsSW = viewModel.IsSW,
 
             };
         }
@@ -66,7 +70,9 @@ namespace CityWatch.Kpi.Models
                 ClientTypes = string.Join(", ", dataModel.RCLinkedDuressClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct()),
                 ClientSites = string.Join(", ", dataModel.RCLinkedDuressClientSites.Select(z => z.ClientSite.Name).Distinct()),
                 GroupName = dataModel.GroupName,
-                LinkedServices = linkedServices.ToArray()
+                IsLB = dataModel.IsLB,
+                IsSW=dataModel.IsSW,
+                IsKV=dataModel.IsKV
             };
 
         }
