@@ -1,12 +1,13 @@
 
 var gridPayRates;
 
+
 $(document).ready(function () {
-    // Initial check (in case page loads with Pay Rates selected, though unlikely with default)
-    checkPayRatesVisibility();
+    // Initial check (in case page loads with Pay Rates selected)
+    initPayRatesGridIfSelected();
 
     $('#hr_settings_fields_types').on('change', function () {
-        checkPayRatesVisibility();
+        initPayRatesGridIfSelected();
     });
 
     $('#add_pay_rates').on('click', function () {
@@ -64,35 +65,15 @@ $(document).ready(function () {
     });
 });
 
-function checkPayRatesVisibility() {
+function initPayRatesGridIfSelected() {
     var selectedValue = $('#hr_settings_fields_types').val();
     if (selectedValue == '9') { // 9 is PayRates enum value
-        $('#PayRatesDiv').show();
-
-        // Hide other elements that site.js might have shown
-        $('#add_hr_settings').hide();
-        $('#add_criticalDocuments').hide();
-        $('#add_lote').hide();
-        $('#add_location').hide();
-        $('#SettingsDiv').hide();
-        $('#TimesheetDiv').hide();
-        $('#ClassroomLocationDiv').hide();
-
-        // Hide other tables by their ID + wrapper
-        $('#tbl_hr_settings').closest('.gj-grid-wrapper').hide();
-        $('#tbl_license_type').closest('.gj-grid-wrapper').hide();
-        $('#tbl_CriticalDocument').closest('.gj-grid-wrapper').hide();
-        $('#tbl_language').closest('.gj-grid-wrapper').hide();
-        $('#tbl_classroomLocation').closest('.gj-grid-wrapper').hide();
-        $('#tbl_hr_settings_with_CourseLibrary').closest('.gj-grid-wrapper').hide();
 
         if (typeof gridPayRates === 'undefined') {
             initializePayRatesGrid();
         } else {
             gridPayRates.reload();
         }
-    } else {
-        $('#PayRatesDiv').hide();
     }
 }
 

@@ -6647,6 +6647,7 @@ if (gridLanguage) {
 }
 
 $('#hr_settings_fields_types').on('change', function () {
+    $('#PayRatesDiv').hide();
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
     if ($('#hr_settings_fields_types').val() == 1) {
         gridHrSettings.show();
@@ -6805,6 +6806,22 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettingswithCourseLibrary.clear();
         gridHrSettingswithCourseLibrary.reload();
 
+    }
+    else if ($('#hr_settings_fields_types').val() == 9) {
+        $('#PayRatesDiv').show();
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
+        gridHrSettingswithCourseLibrary.hide();
     }
     else {
         gridLicenseTypes.hide();
