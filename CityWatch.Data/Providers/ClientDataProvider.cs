@@ -3181,6 +3181,9 @@ namespace CityWatch.Data.Providers
 
 
                 schedule.GroupName = linkedDuress.GroupName.Trim();
+                schedule.IsKV = linkedDuress.IsKV;
+                schedule.IsLB = linkedDuress.IsLB;
+                schedule.IsSW = linkedDuress.IsSW;
                 if (updateClientSites)
                     schedule.RCLinkedDuressClientSites = linkedDuress.RCLinkedDuressClientSites;
             }

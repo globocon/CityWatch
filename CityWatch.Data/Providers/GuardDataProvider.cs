@@ -119,6 +119,7 @@ namespace CityWatch.Data.Providers
         void RemoveGuardRcClientSiteAccess(int guardId);
         List<InActiveGuardsDetails> GetInActiveGuardDetails();
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
+        int GetClientSiteIdFromLogbook(int logbookId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -362,7 +363,8 @@ namespace CityWatch.Data.Providers
                 //P1-273 access levels-start
                 guard.IsSTATSChartsAccess = false;
                 guard.IsRCFusionAccess = false;
-                guard.IsMobileAppAccess = guard.IsMobileAppAccess;
+                //guard.IsMobileAppAccess = guard.IsMobileAppAccess;
+                guard.IsMobileAppAccess = true;
                 guard.IsMobileAppPlusTags = false;
                 guard.IsPCARAccess = false;
 
@@ -1396,6 +1398,11 @@ namespace CityWatch.Data.Providers
 
 
         }
-
+        public int GetClientSiteIdFromLogbook(int logbookId)
+        {
+            var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().ClientSiteId;
+            return lbdt;
+        }
+        
     }
 }

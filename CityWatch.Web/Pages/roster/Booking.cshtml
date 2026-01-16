@@ -110,6 +110,25 @@
                                     <input type="time" id="modalShiftEnd" class="form-control" value="16:00" />
                                 </div>
                             </div>
+                            <div class="form-group row">
+                                <div class="col-6">
+                                    <label>Position</label>
+                                    <select id="modalPositionId" class="form-control" style="width: 100%">
+                                        <option></option>
+                                        @if(Model.PayRatesList != null)
+                                        {
+                                            foreach(var rate in Model.PayRatesList)
+                                            {
+                                                <option value="@rate.Id" data-rate="@rate.GuardPayRate">@rate.Description</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label>Pay Rate</label>
+                                    <input type="text" id="modalPayRate" class="form-control" readonly />
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -451,7 +470,7 @@
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
+                minimumInputLength: 0,
                 createTag: function (params) {
                     var term = $.trim(params.term);
                     if (term === '') {
@@ -573,6 +592,23 @@
                 },
                 minimumInputLength: 0
             });
+            
+            // Position Search initialization in Modal
+            $('#modalPositionId').select2({
+                placeholder: 'Select Position',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal')
+            }).on('select2:select', function (e) {
+                var element = $(e.params.data.element);
+                var rate = element.data('rate');
+                // Auto-populate pay rate
+                if (rate !== null && rate !== undefined) {
+                    $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
+                }
+            }).on('select2:unselect', function (e) {
+                $('#modalPayRate').val('');
+            });
 
             function loadRoster() {
                 console.log('Loading roster for Group ID:', currentGroupId);
@@ -688,6 +724,8 @@
                 $('#modalDayIndex').val(dayIndex);
                 $('#modalGuardId').val(null).trigger('change');
                 $('#modalProviderId').val(null).trigger('change');
+                $('#modalPositionId').val(null).trigger('change');
+                $('#modalPayRate').val('');
                 $('#addShiftModal').modal('show');
             });
 
@@ -701,6 +739,9 @@
                 
                 var providerData = $('#modalProviderId').select2('data');
                 var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+                
+                var positionData = $('#modalPositionId').select2('data');
+                var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -734,7 +775,8 @@
                         start: startDateTime,
                         end: endDateTime,
                         guardId: guardId,
-                        providerName: providerName
+                        providerName: providerName,
+                        payRateId: payRateId
                     },
                     success: function (res) {
                         if (res.success) {

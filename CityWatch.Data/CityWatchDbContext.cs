@@ -385,6 +385,7 @@ namespace CityWatch.Data
         public DbSet<RosterGroup> RosterGroups { get; set; }
         public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
         public DbSet<RosterSchedule> RosterSchedules { get; set; }
+        public DbSet<PayRate> PayRates { get; set; }
     }
 
 

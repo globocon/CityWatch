@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using CityWatch.Data;
@@ -42,6 +43,7 @@ namespace CityWatch.Web.Pages.roster
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
+        public List<PayRate> PayRatesList { get; set; }
 
         public void OnGet(DateTime? startDate, int? groupId)
         {
@@ -72,6 +74,10 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
             SelectedGroupId = groupId;
+
+            PayRatesList = _context.PayRates
+                .Where(x => !x.IsDeleted)
+                .ToList();
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -185,7 +191,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId)
         {
             // Validation 1: Start Date < End Date
             if (start >= end)
@@ -225,11 +231,27 @@ namespace CityWatch.Web.Pages.roster
                 ShiftEnd = end,
                 GuardId = guardId,
                 ProviderName = providerName,
-                Status = RosterShiftStatus.Pushed
+                Status = RosterShiftStatus.Pushed,
+                PayRateId = payRateId
             };
             _context.RosterSchedules.Add(schedule);
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true, id = schedule.Id });
+        }
+
+        public JsonResult OnGetSearchPayRates(string search)
+        {
+            var rates = _context.PayRates
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Description.Contains(search)))
+                .Select(x => new
+                {
+                    id = x.Id,
+                    text = x.Description,
+                    rate = x.GuardPayRate
+                })
+                .ToList();
+
+            return new JsonResult(new { results = rates });
         }
 
         public async Task<IActionResult> OnPostUpdateStatus(int id, int status)

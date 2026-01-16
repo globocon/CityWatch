@@ -414,6 +414,7 @@ namespace CityWatch.Data.Providers
 
         Task SavePcarSaveVisitTimeAsync(PcarRouteDailyVisits dailyVisit);
         public List<MobileCrowdControlReportData> GetMobileCrowdControlLogs(int clientSiteId, int logBookId, DateTime logFromDate, DateTime logToDate);
+        List<GuardLog> GetGuardLogswithClientSiteIds(int[] clientSiteIds, DateTime logDate);
 
     }
 
@@ -7898,7 +7899,37 @@ namespace CityWatch.Data.Providers
 
             return mobileCrowdControlReportData;
         }
+        public List<GuardLog> GetGuardLogswithClientSiteIds(int[] clientSiteIds, DateTime logDate)
+        {
+            var result = new List<GuardLog>();
+            
+                
+                if (clientSiteIds != null)
+                {
+                    //var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
+                    var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => clientSiteIds.Contains(x.ClientSiteId) && x.Date == logDate.Date).Select(x => x.Id).ToList();
+                    if (clientSiteLogBook.Count != 0)
+                    {
+                        
+                        result = _context.GuardLogs
+                          .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId))
+                          .Include(z => z.ClientSiteLogBook)
+                          .Include(z => z.GuardLogin.Guard)
+                          .OrderBy(z => z.Id)
+                          .ThenBy(z => z.EventDateTime)
+                          .ToList();
 
+                    }
+                }
+                else
+                {
+                    return result;
+                }
+
+
+
+            return result;
+        }
     }
 
 

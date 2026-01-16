@@ -13,6 +13,10 @@ namespace CityWatch.Data.Models
         [Required]
         public string GroupName { get; set; }
         public ICollection<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
+        public bool IsLB { get; set; }
+        public bool IsKV { get; set; }
+        public bool IsSW { get; set; }
+
 
 
     }
