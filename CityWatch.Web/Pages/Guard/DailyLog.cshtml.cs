@@ -210,7 +210,7 @@ namespace CityWatch.Web.Pages.Guard
                     if (rcLinkedDetails.IsLB == true)
                     {
                         int[] ids = clientSites.Select(x => x.ClientSiteId).ToArray();
-                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today);
+                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x=> x.IsSystemEntry==false);
                         foreach (var guardlog in otherguardlogs)
                         {
                             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
