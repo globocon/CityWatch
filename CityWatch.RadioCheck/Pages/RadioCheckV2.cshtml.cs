@@ -417,9 +417,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 LatestDate = detail.LatestDate,
                 ShowColor = detail.ShowColor,
                 hasmartwand = detail.hasmartwand,
-                HR1 = CalculateHr1GroupStatus(detail.GuardId),
-                HR2 = CalculateHr2GroupStatus(detail.GuardId),
-                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                HR1 = detail.HR1,
+                HR2 = detail.HR2,
+                HR3 = detail.HR3,
                 CompletedRounds = detail.CompletedRounds,
                 haswandtags = detail.haswandtags,
                 TourMode = detail.TourMode
