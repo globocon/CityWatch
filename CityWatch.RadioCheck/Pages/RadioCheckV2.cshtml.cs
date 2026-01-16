@@ -90,7 +90,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
 
             //This Api call for update the values of the tables Start
-            CallApi();
+            Task.Run(() => CallApi());
             //This Api call for update the values of the tables end
 
             DisplayItem = displayItem;
