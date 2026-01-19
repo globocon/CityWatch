@@ -238,6 +238,9 @@ namespace CityWatch.Data.Providers
         void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId, bool isControlRoomLogBook);
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
+        List<GuardLog> GetGuardLogsNotAcknowledgedForNotificationSound(int logBookId);
+        bool GuardLogsUpdateNotificationSoundStatus(int guardLogId);
+
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
@@ -557,6 +560,27 @@ namespace CityWatch.Data.Providers
             //}            
             return returnId;
         }
+
+        public List<GuardLog> GetGuardLogsNotAcknowledgedForNotificationSound(int logBookId)
+        {
+            return _context.GuardLogs
+                .Where(x => x.ClientSiteLogBookId == logBookId && x.PlayNotificationSound == true)
+                .Include(x => x.GuardLogin.Guard)
+                .ToList();
+        }
+
+        public bool GuardLogsUpdateNotificationSoundStatus(int guardLogId)
+        {
+            var log = _context.GuardLogs.FirstOrDefault(x => x.Id == guardLogId);
+            if (log != null)
+            {
+                log.PlayNotificationSound = false;
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
         // Project 4 , Task 48, Audio notification, By Binoy -- End
 
         public bool HasNewLogs(int logBookId, int lastLogId)
