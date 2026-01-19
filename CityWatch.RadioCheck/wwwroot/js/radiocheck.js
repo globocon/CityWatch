@@ -97,40 +97,15 @@ function ClearTimerAndReload() {
 
 
 
-let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
-    // ... existing DataTable config ...
-});
-
 // p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 var audioplayedlist = [];
 var audioNotification = new Audio('/NotificationSound/mixkit-bell-notification-933.wav');
 
 function checkForUnreadMessages() {
-    var logBookId = $('#hdnLogBookId').val(); // Ensure this hidden field exists or get it from somewhere else
-    if (!logBookId) {
-        // Fallback if hdnLogBookId is not available, try to parse from URL or other source if needed.
-        // For RadioCheckV2, we might strictly need to know which LogBook we are monitoring.
-        // However, the requirement implies monitoring replies from the Guard.
-        // Let's assume for now we might need to rely on the page context.
-        // Wait, RadioCheckV2 monitors a specific ClientSite.
-    }
-
-    // In RadioCheckV2, we usually have a context.
-    // If we are just polling for the specific client site loaded:
-    var clientSiteId = new URLSearchParams(window.location.search).get('Id');
-    // We might need to get the LogBookId via AJAX if not present.
-    // But wait, the backend method GetGuardLogsNotAcknowledgedForNotificationSound takes logBookId.
-    // The previous implementation relied on the Grid or a hidden field.
-
-    // Let's try to find if hdnLogBookId exists in the Razor view.
-    // If not, we might need to add it or fetch it.
+    var logBookId = $('#hdnLogBookId').val();
 }
 
-// Actually, looking at previous attempts, I should implement the polling carefully.
-// The user said "when gaurd send back reply... show the reply".
-
 $(document).ready(function () {
-    // ...
     setInterval(checkUnreadMessages, 5000); // Poll every 5 seconds
 });
 
@@ -190,49 +165,51 @@ window.acknowledgeMessage = function (logId, sliderId) {
 };
 // p4#48 AudioNotification - Binoy - 12-01-2024 -- End
 
-paging: false,
+let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
+
+    paging: false,
     ordering: false,
-        info: false,
-            searching: false,
-                fixedColumns: {
-    left: 1
-},
-scrollCollapse: true,
-    scrollX: true,
-        autoWidth: false,
-            ajax: {
-    url: '/Radio/Check?handler=ClientSiteActivityStatus',
-        datatype: 'json',
-            data: function (d) {
-                d.clientSiteIds = $('#rcClientSiteId').val().join(',');
-            },
-    dataSrc: ''
-},
-columns: [
-    { data: 'activityStatus.clientSite.name' },
-    { data: 'guardLicenseNo' },
-    {
-        data: 'activityStatus.status',
-        width: '9%',
-        className: "text-center",
-        render: function (value, type, data) {
-            if (value === null) return 'N/A';
-            return value === true ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
-        }
+    info: false,
+    searching: false,
+    fixedColumns: {
+        left: 1
     },
-    { data: 'recentActivity' },
-    {
-        targets: -1,
-        data: null,
-        width: '12%',
-        defaultContent: '',
-        render: function (value, type, data) {
-            if (data.guardLicenseNo !== '-' && data.activityStatus.status === false) {
-                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+    scrollCollapse: true,
+    scrollX: true,
+    autoWidth: false,
+    ajax: {
+        url: '/Radio/Check?handler=ClientSiteActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = $('#rcClientSiteId').val().join(',');
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'activityStatus.clientSite.name' },
+        { data: 'guardLicenseNo' },
+        {
+            data: 'activityStatus.status',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value === true ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },
+        { data: 'recentActivity' },
+        {
+            targets: -1,
+            data: null,
+            width: '12%',
+            defaultContent: '',
+            render: function (value, type, data) {
+                if (data.guardLicenseNo !== '-' && data.activityStatus.status === false) {
+                    return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+                }
             }
         }
-    }
-]
+    ]
 });
 
 
