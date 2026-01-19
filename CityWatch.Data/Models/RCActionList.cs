@@ -41,6 +41,14 @@ namespace CityWatch.Data.Models
         public List<string> SmartWandID { get; set; }
         [NotMapped]
         public List<string> SOPAlarmFilePath { get; set; }
+        [NotMapped]
+        public int ClientSiteStatus { get; set; }
+        [NotMapped]
+        public DateTime? ExpiredDate { get; set; }
+
+        [NotMapped]
+        public string FormattedExpiredDate { get { return ExpiredDate.HasValue ? ExpiredDate.Value.ToString("dd MMM yyyy") : string.Empty; } }
+
 
     }
 }

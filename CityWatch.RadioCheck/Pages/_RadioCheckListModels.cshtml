@@ -458,28 +458,43 @@
                                             </div>
                                         </div>
                                         @* p4-137-traffic-lights-start *@
-                                        <div class="form-group row">
+                                        <div class="col-md-12 d-flex justify-content-center">
 
-                                            <div class="col-md-4">
+    <!-- Ongoing -->
+    <div class="mr-5 text-center">
+        <i class="fa fa-circle mr-2 traffic-status text-muted" id="trafficOngoing"></i>
+        <span>Ongoing</span>
+    </div>
 
-                                               
+    <!-- Expiring -->
+    <div class="mr-5 text-center">
+        <i class="fa fa-circle mr-2 traffic-status text-muted" id="trafficExpiring"></i>
+        <span>Expiring</span>
+    </div>
 
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div><i class="fa fa-circle  mr-2 text-muted" id="trafficOngoing"></i>Ongoing</div>
-                                                <div><i class="fa fa-circle  mr-2 text-muted" id="trafficExpiring"></i>Expiring</div>
-                                                <div>
-                                                    <i class="fa fa-circle  mr-2 text-muted" id="trafficExpired"></i>Expired
-                                                    <label class="mt-3" id="lblExpiredDate" hidden></label>
-                                                    <label class="mt-3" id="lblExpiredWarning" hidden></label>
-                                                </div>
+    <!-- Expired -->
+    <div class="mr-5 d-flex flex-column align-items-start">
 
-                                            </div>
-                                            <div class="col-md-4">
-                                               
-                                            </div>
-                                        
-                                        </div>
+        <!-- Line 1: icon + Expired + date -->
+        <div class="d-flex align-items-center">
+            <i class="fa fa-circle mr-2 traffic-status text-danger" id="trafficExpired"></i>
+            <span class="mr-2">Expired</span>
+           
+            <span id="lblExpiredDate">31 Dec 2021</span>
+        </div>
+
+        <!-- Line 2: description -->
+        <div id="lblExpiredWarning"
+             class="text-danger mt-1"
+             style="max-width: 280px;"
+             hidden>
+            Site is inactive – please confirm with Citywatch if guarding is actually required
+        </div>
+
+    </div>
+
+</div>
+
                                         @* p4-137-traffic-lights-end *@
 
                                     </form>

@@ -2354,6 +2354,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     rtn.SOPFileNme = null;
                 }
+                rtn.ClientSiteStatus = LandLine.Status;
+                rtn.ExpiredDate = LandLine.StatusDate;
             }
             else
             {
@@ -2382,6 +2384,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     rtn.SOPFileNme = null;
                 }
+                rtn.ClientSiteStatus = LandLine.Status;
+                rtn.ExpiredDate = LandLine.StatusDate;
             }
             return new JsonResult(rtn);
         }
