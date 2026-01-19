@@ -2749,11 +2749,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(data);
         }
 
-        public JsonResult OnGetFQValues()
-        {
-            var fqValues = _guardLogDataProvider.GetDailyWandFqValues();
-            return new JsonResult(fqValues);
-        }
+
 
         public JsonResult OnGetCheckUnreadMessages()
         {
