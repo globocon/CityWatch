@@ -1989,16 +1989,15 @@ $(function () {
                     UpdatePlayedNotification();
                 }
             }
-        }
         });
         // Project 4 , Task 48, Audio notification, Added By Binoy -- End
     }
 
-// Visual Notification Slider Logic
-function showNotificationSlider() {
-    // 1. Inject CSS if not present
-    if ($('#cro-notification-style').length === 0) {
-        var css = `
+    // Visual Notification Slider Logic
+    function showNotificationSlider() {
+        // 1. Inject CSS if not present
+        if ($('#cro-notification-style').length === 0) {
+            var css = `
                 .cro-notification-slider {
                     position: fixed;
                     bottom: 20px;
@@ -2035,12 +2034,12 @@ function showNotificationSlider() {
                     color: #ffcccc;
                 }
             `;
-        $('<style id="cro-notification-style">').prop('type', 'text/css').html(css).appendTo('head');
-    }
+            $('<style id="cro-notification-style">').prop('type', 'text/css').html(css).appendTo('head');
+        }
 
-    // 2. Inject HTML if not present
-    if ($('#cro-notification-slider').length === 0) {
-        var html = `
+        // 2. Inject HTML if not present
+        if ($('#cro-notification-slider').length === 0) {
+            var html = `
                 <div id="cro-notification-slider" class="cro-notification-slider">
                     <div class="cro-notification-content">
                         <span>You have message from CRO</span>
@@ -2048,2401 +2047,2383 @@ function showNotificationSlider() {
                     </div>
                 </div>
             `;
-        $('body').append(html);
+            $('body').append(html);
+        }
+
+        // 3. Show Slider
+        setTimeout(function () {
+            $('#cro-notification-slider').addClass('show');
+        }, 100);
+
+        // Auto-hide after 10 seconds (optional, but good UX)
+        // setTimeout(closeNotificationSlider, 10000); 
     }
 
-    // 3. Show Slider
-    setTimeout(function () {
-        $('#cro-notification-slider').addClass('show');
-    }, 100);
+    // Make close function global so onclick works
+    window.closeNotificationSlider = function () {
+        $('#cro-notification-slider').removeClass('show');
+    };
 
-    // Auto-hide after 10 seconds (optional, but good UX)
-    // setTimeout(closeNotificationSlider, 10000); 
-}
-
-// Make close function global so onclick works
-window.closeNotificationSlider = function () {
-    $('#cro-notification-slider').removeClass('show');
-};
-
-// Project 4 , Task 48, Audio notification, Added By Binoy -- Start
-function UpdatePlayedNotification() {
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    $.ajax({
-        url: '/Guard/DailyLog?handler=GuardLogsUpdateNotificationSoundStatus',
-        data: { logBookId: audioplayedlist, isControlRoomLogBook: isControlRoomLogBook },
-        dataType: 'json',
-        type: 'POST',
-        headers: { 'RequestVerificationToken': token },
-    }).done(function (result) {
-        audioplayedlist = [];
-        return;
-    });
-}
-// Project 4 , Task 48, Audio notification, Added By Binoy -- End
-
-let gridGuardLogPreviousDay;
-
-gridGuardLogPreviousDay = $('#guard_daily_log_previous_day').grid({
-    dataSource: '/Guard/DailyLog?handler=GuardLogs',
-    params: { logBookId: $('#previousLogBookId').val(), logBookDate: $('#previousLogBookDateString').val() },
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command', managementColumn: false },
-    columns: [
-        { field: 'clientSiteId', hidden: true },
-        { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
-        { field: 'notes', title: 'Event / Notes', width: 400, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-        { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } }
-    ],
-    initialized: function (e) {
-        $('#wrapper_previous_day_log').hide();
-        if ($('#previousLogBookId').val() !== '') {
-            $('#wrapper_previous_day_log').show();
-        }
-    }
-});
-
-jQuery("#GuardLog_Notes").blur(function () {
-    /*timer pause while editing*/
-    isPaused = false;
-});
-$('#GuardLog_Notes').click(function (e) {
-    /*timer pause while editing*/
-    isPaused = true;
-});
-$('#GuardLog_Notes').on('keydown', function (e) {
-    /*timer pause while editing*/
-    isPaused = true;
-    if (e.which === 13) {
-        addGuardLog();
-    }
-});
-
-$('#add_new_log').on('click', function () {
-    /*timer pause while editing*/
-    isPaused = false;
-    addGuardLog();
-});
-
-function addGuardLog() {
-    const today = new Date();
-    $('#GuardLog_EventDateTime').val(today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear() + ' ' + $('#new_log_time').val());
-    $('#GuardLog_TimePartOnly').val($('#new_log_time').val());
-    $('#loader').show();
-    $('#validation-summary ul').html('');
-    // Task p6#73_TimeZone issue -- added by Binoy -- Start
-    var form = document.getElementById('form_newlog');
-    var formData = new FormData(form);
-    fillRefreshLocalTimeZoneDetails(formData, "GuardLog", true);
-    // Task p6#73_TimeZone issue -- added by Binoy -- End
-    $.ajax({
-        url: '/Guard/DailyLog?handler=SaveGuardLog',
-        data: formData,
-        processData: false,
-        contentType: false,
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.success) {
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-            $('#GuardLog_Notes').val('');
-        }
-        else {
-            displayValidationSummary(result.errors);
-        }
-    }).fail(function () {
-        alert('Error saving entry. Please logout and login again');
-    }).always(function () {
-        $('#loader').hide();
-    });
-};
-$('#save_HandoverNotes').on('click', function () {
-    clearGuardValidationSummary('HandOvervalidationSummary');
-    isPaused = false;
-    const Notes = $('#NotesHandover').val();
-    if (Notes == '') {
-        displayGuardValidationSummary('HandOvervalidationSummary', 'Handover Notes required');
-        return;
-    }
-    // Validate the length of securityLicenseNo
-
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveHandovernotes',
-        type: 'POST',
-        data: {
-            ClientSiteID: $('#ClientSiteID').val(),
-            Notes: Notes
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (SuccessMessage) {
-        if (SuccessMessage) {
-
-            alert('saved Successfully');
-            $('#Handover-modal').modal('hide');
-        } else {
-            // displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
-        }
-    }).fail(function () {
-        console.error("Error in the first AJAX request.");
-    }).always(function () {
-        console.log("First AJAX request completed.");
-    });
-
-});
-$('#guard_offduty').on('click', function (e) {
-    e.preventDefault();
-    if (confirm('Are you sure you want to end your shift?')) {
-        $('#loader').show();
-        // Task p6#73_TimeZone issue -- added by Binoy - Start
-        var tmdata = {
-            'EventDateTimeLocal': null,
-            'EventDateTimeLocalWithOffset': null,
-            'EventDateTimeZone': null,
-            'EventDateTimeZoneShort': null,
-            'EventDateTimeUtcOffsetMinute': null,
-        };
-
-        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
-        // Task p6#73_TimeZone issue -- added by Binoy - End
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    function UpdatePlayedNotification() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
-            url: '/Guard/DailyLog?handler=UpdateOffDuty',
-            data: { guardLoginId: $('#GuardLog_GuardLoginId').val(), clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(), tmdata: tmdata },
+            url: '/Guard/DailyLog?handler=GuardLogsUpdateNotificationSoundStatus',
+            data: { logBookId: audioplayedlist, isControlRoomLogBook: isControlRoomLogBook },
+            dataType: 'json',
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            audioplayedlist = [];
+            return;
+        });
+    }
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
+
+    let gridGuardLogPreviousDay;
+
+    gridGuardLogPreviousDay = $('#guard_daily_log_previous_day').grid({
+        dataSource: '/Guard/DailyLog?handler=GuardLogs',
+        params: { logBookId: $('#previousLogBookId').val(), logBookDate: $('#previousLogBookDateString').val() },
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command', managementColumn: false },
+        columns: [
+            { field: 'clientSiteId', hidden: true },
+            { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
+            { field: 'notes', title: 'Event / Notes', width: 400, editor: logBookNotesEditor, renderer: renderLogBookNotes },
+            { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } }
+        ],
+        initialized: function (e) {
+            $('#wrapper_previous_day_log').hide();
+            if ($('#previousLogBookId').val() !== '') {
+                $('#wrapper_previous_day_log').show();
+            }
+        }
+    });
+
+    jQuery("#GuardLog_Notes").blur(function () {
+        /*timer pause while editing*/
+        isPaused = false;
+    });
+    $('#GuardLog_Notes').click(function (e) {
+        /*timer pause while editing*/
+        isPaused = true;
+    });
+    $('#GuardLog_Notes').on('keydown', function (e) {
+        /*timer pause while editing*/
+        isPaused = true;
+        if (e.which === 13) {
+            addGuardLog();
+        }
+    });
+
+    $('#add_new_log').on('click', function () {
+        /*timer pause while editing*/
+        isPaused = false;
+        addGuardLog();
+    });
+
+    function addGuardLog() {
+        const today = new Date();
+        $('#GuardLog_EventDateTime').val(today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear() + ' ' + $('#new_log_time').val());
+        $('#GuardLog_TimePartOnly').val($('#new_log_time').val());
+        $('#loader').show();
+        $('#validation-summary ul').html('');
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('form_newlog');
+        var formData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLog", true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveGuardLog',
+            data: formData,
+            processData: false,
+            contentType: false,
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
-            if (result.status) {
-                window.location.replace('/Guard/Login?t=gl');
-            } else {
-                alert(result.message);
+            if (result.success) {
+                gridGuardLog.clear();
+                gridGuardLog.reload();
+                $('#GuardLog_Notes').val('');
+            }
+            else {
+                displayValidationSummary(result.errors);
             }
         }).fail(function () {
-            alert('error');
+            alert('Error saving entry. Please logout and login again');
         }).always(function () {
             $('#loader').hide();
         });
-    }
-});
+    };
+    $('#save_HandoverNotes').on('click', function () {
+        clearGuardValidationSummary('HandOvervalidationSummary');
+        isPaused = false;
+        const Notes = $('#NotesHandover').val();
+        if (Notes == '') {
+            displayGuardValidationSummary('HandOvervalidationSummary', 'Handover Notes required');
+            return;
+        }
+        // Validate the length of securityLicenseNo
 
-function displayValidationSummary(errors) {
-    const summaryDiv = document.getElementById('validation-summary');
-    summaryDiv.className = "validation-summary-errors";
-    summaryDiv.querySelector('ul').innerHTML = '';
-    errors.forEach(function (item) {
-        const li = document.createElement('li');
-        li.appendChild(document.createTextNode(item.errorList[0]));
-        summaryDiv.querySelector('ul').appendChild(li);
-    });
-}
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveHandovernotes',
+            type: 'POST',
+            data: {
+                ClientSiteID: $('#ClientSiteID').val(),
+                Notes: Notes
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (SuccessMessage) {
+            if (SuccessMessage) {
 
-//function displayCustomFieldsValidationSummary(errors) {
-//    const summaryDiv = document.getElementById('custom-field-validation');
-//    summaryDiv.className = "validation-summary-errors";
-//    summaryDiv.querySelector('ul').innerHTML = '';
-//    errors.forEach(function (item) {
-//        const li = document.createElement('li');
-//        li.appendChild(document.createTextNode(item));
-//        summaryDiv.querySelector('ul').appendChild(li);
-//    });
-//}
-
-//*************** Admin Site Log  *************** //
-
-//Daily Log
-const today = new Date();
-const start = new Date(today.getFullYear(), today.getMonth(), 2);
-$('#dglAudtitFromDate').val(start.toISOString().substr(0, 10));
-var systemDate = $('#dglAudtitToDateVal').val();
-//var dateObject = new Date().toISOString().substr(0, 10);
-$('#dglAudtitToDate').val(systemDate);
-
-let gridsiteLog;
-gridsiteLog = $('#dgl_site_log').grid({
-    dataSource: '/Admin/AuditSiteLog?handler=DailyGuardSiteLogs',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    grouping: { groupBy: 'Date' },
-    primaryKey: 'id',
-    columns: [
-        { field: 'clientSiteId', hidden: true },
-        { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTime(value, record, false); } },
-        {
-            field: 'notes', title: 'Event / Notes', width: 440,
-            renderer: function (value, record) {
-                if (record.isIRReportTypeEntry == true) {
-
-                    return record.notes + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '.pdf" target="_blank">          Click here</a>';
-                }
-                else {
-                    return record.notes;
-                }
+                alert('saved Successfully');
+                $('#Handover-modal').modal('hide');
+            } else {
+                // displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
             }
-        },
-        { field: 'guardInitials', title: 'Guard Initials', width: 60, renderer: renderGuardInitialColumn }
-    ],
-    paramNames: { page: 'pageNo' },
-    pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
-});
-$('#dgl_site_log').parent().find('.gj-dropdown li').each(function () {
-    if ($(this).text().trim() === '0') {
-        $(this).text('All');
-    }
-});
-$('#expand_dgl_audits').on('click', function () {
-    gridsiteLog.expandAll();
-});
+        }).fail(function () {
+            console.error("Error in the first AJAX request.");
+        }).always(function () {
+            console.log("First AJAX request completed.");
+        });
 
-$('#collapse_dgl_audits').on('click', function () {
-    gridsiteLog.collapseAll();
-});
-
-if (gridsiteLog) {
-    const bg_color_pale_yellow = '#fcf8d1';
-    const bg_color_pale_red = '#ffcccc';
-    const bg_color_white = '#ffffff';
-    const irEntryTypeIsAlarm = 2;
-    const noguardonduty_eventType = 1;
-
-    gridsiteLog.on('rowDataBound', function (e, $row, id, record) {
-        let rowColor = bg_color_white;
-        if (record.irEntryType) {
-            rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
-        } else if (record.eventType === noguardonduty_eventType) {
-            rowColor = bg_color_pale_red;
-        }
-        $row.css('background-color', rowColor);
     });
-}
+    $('#guard_offduty').on('click', function (e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to end your shift?')) {
+            $('#loader').show();
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
 
-$('#dglClientSiteId').select2({
-    placeholder: 'Select',
-    theme: 'bootstrap4'
-});
-
-
-
-$('#dglClientType').on('change', function () {
-    const clientTypeId = $(this).val();
-    const clientSiteControl = $('#dglClientSiteId');
-    var selectedOption = $(this).find("option:selected");
-    var selectedText = selectedOption.text();
-    $("#vklClientType").val(selectedText);
-    $("#vklClientType").multiselect("refresh");
-    gridsiteLog.clear();
-
-    const clientSiteControlvkl = $('#vklClientSiteId');
-    keyVehicleLogReport.clear().draw();
-    clientSiteControlvkl.html('');
-
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            $('#dglClientSiteId').append(new Option('Select', '', true, true));
-            data.map(function (site) {
-                $('#dglClientSiteId').append(new Option(site.name, site.id, false, false));
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+            // Task p6#73_TimeZone issue -- added by Binoy - End
+            $.ajax({
+                url: '/Guard/DailyLog?handler=UpdateOffDuty',
+                data: { guardLoginId: $('#GuardLog_GuardLoginId').val(), clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(), tmdata: tmdata },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    window.location.replace('/Guard/Login?t=gl');
+                } else {
+                    alert(result.message);
+                }
+            }).fail(function () {
+                alert('error');
+            }).always(function () {
+                $('#loader').hide();
             });
-            /* vkl multiselect */
-            data.map(function (site) {
-                clientSiteControlvkl.append('<option value="' + site.id + '">' + site.name + '</option>');
-            });
-            clientSiteControlvkl.multiselect('rebuild');
         }
     });
 
-
-});
-
-//if ($('#dglClientType').val() != null && $('#dglClientType').val() != '' && $('#dglClientType').val() != undefined) {
-//    var value = $('#dglClientType').val()
-//    $('#dglClientType').val(value)
-//    $('#dglClientType').change();
-//}
-$('#dglClientSiteId').on('change', function () {
-    const clientTypeId = $(this).val();
-    $("#vklClientSiteId").val(clientTypeId);
-    $("#vklClientSiteId").multiselect("refresh");
-
-
-
-
-});
-
-$('#btnGenerateDglAuditReport').on('click', function () {
-
-    if ($('#dglClientSiteId').val() === '') {
-        alert('Please select a client site');
-        return;
+    function displayValidationSummary(errors) {
+        const summaryDiv = document.getElementById('validation-summary');
+        summaryDiv.className = "validation-summary-errors";
+        summaryDiv.querySelector('ul').innerHTML = '';
+        errors.forEach(function (item) {
+            const li = document.createElement('li');
+            li.appendChild(document.createTextNode(item.errorList[0]));
+            summaryDiv.querySelector('ul').appendChild(li);
+        });
     }
 
-    gridsiteLog.reload({
-        clientSiteId: $('#dglClientSiteId').val(),
-        logFromDate: $('#dglAudtitFromDate').val(),
-        logToDate: $('#dglAudtitToDate').val(),
-        excludeSystemLogs: $('#excludeSystemLog').prop("checked"),
-        keywordDownSelect: $('#GuardLogKeydownselect').val(),
+    //function displayCustomFieldsValidationSummary(errors) {
+    //    const summaryDiv = document.getElementById('custom-field-validation');
+    //    summaryDiv.className = "validation-summary-errors";
+    //    summaryDiv.querySelector('ul').innerHTML = '';
+    //    errors.forEach(function (item) {
+    //        const li = document.createElement('li');
+    //        li.appendChild(document.createTextNode(item));
+    //        summaryDiv.querySelector('ul').appendChild(li);
+    //    });
+    //}
+
+    //*************** Admin Site Log  *************** //
+
+    //Daily Log
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 2);
+    $('#dglAudtitFromDate').val(start.toISOString().substr(0, 10));
+    var systemDate = $('#dglAudtitToDateVal').val();
+    //var dateObject = new Date().toISOString().substr(0, 10);
+    $('#dglAudtitToDate').val(systemDate);
+
+    let gridsiteLog;
+    gridsiteLog = $('#dgl_site_log').grid({
+        dataSource: '/Admin/AuditSiteLog?handler=DailyGuardSiteLogs',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        grouping: { groupBy: 'Date' },
+        primaryKey: 'id',
+        columns: [
+            { field: 'clientSiteId', hidden: true },
+            { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTime(value, record, false); } },
+            {
+                field: 'notes', title: 'Event / Notes', width: 440,
+                renderer: function (value, record) {
+                    if (record.isIRReportTypeEntry == true) {
+
+                        return record.notes + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '.pdf" target="_blank">          Click here</a>';
+                    }
+                    else {
+                        return record.notes;
+                    }
+                }
+            },
+            { field: 'guardInitials', title: 'Guard Initials', width: 60, renderer: renderGuardInitialColumn }
+        ],
+        paramNames: { page: 'pageNo' },
+        pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
     });
-});
+    $('#dgl_site_log').parent().find('.gj-dropdown li').each(function () {
+        if ($(this).text().trim() === '0') {
+            $(this).text('All');
+        }
+    });
+    $('#expand_dgl_audits').on('click', function () {
+        gridsiteLog.expandAll();
+    });
 
-$('#auditlog-zip-modal').on('show.bs.modal', function (event) {
-    $('#btn-auditlog-zip-download').attr('href', '#');
-    $('#btn-auditlog-zip-download').hide();
-    $('#auditlog-zip-msg').show();
+    $('#collapse_dgl_audits').on('click', function () {
+        gridsiteLog.collapseAll();
+    });
 
-    if (logBookTypeForAuditZip === 1)
-        downloadDailyGuardLogZipFile();
-    else
-        downloadKeyVehicleLogZipFile();
-});
+    if (gridsiteLog) {
+        const bg_color_pale_yellow = '#fcf8d1';
+        const bg_color_pale_red = '#ffcccc';
+        const bg_color_white = '#ffffff';
+        const irEntryTypeIsAlarm = 2;
+        const noguardonduty_eventType = 1;
 
-function downloadDailyGuardLogZipFile() {
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=DownloadDailyGuardLogZip',
-        type: 'POST',
-        dataType: 'json',
-        data: {
+        gridsiteLog.on('rowDataBound', function (e, $row, id, record) {
+            let rowColor = bg_color_white;
+            if (record.irEntryType) {
+                rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
+            } else if (record.eventType === noguardonduty_eventType) {
+                rowColor = bg_color_pale_red;
+            }
+            $row.css('background-color', rowColor);
+        });
+    }
+
+    $('#dglClientSiteId').select2({
+        placeholder: 'Select',
+        theme: 'bootstrap4'
+    });
+
+
+
+    $('#dglClientType').on('change', function () {
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#dglClientSiteId');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+        $("#vklClientType").val(selectedText);
+        $("#vklClientType").multiselect("refresh");
+        gridsiteLog.clear();
+
+        const clientSiteControlvkl = $('#vklClientSiteId');
+        keyVehicleLogReport.clear().draw();
+        clientSiteControlvkl.html('');
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#dglClientSiteId').append(new Option('Select', '', true, true));
+                data.map(function (site) {
+                    $('#dglClientSiteId').append(new Option(site.name, site.id, false, false));
+                });
+                /* vkl multiselect */
+                data.map(function (site) {
+                    clientSiteControlvkl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControlvkl.multiselect('rebuild');
+            }
+        });
+
+
+    });
+
+    //if ($('#dglClientType').val() != null && $('#dglClientType').val() != '' && $('#dglClientType').val() != undefined) {
+    //    var value = $('#dglClientType').val()
+    //    $('#dglClientType').val(value)
+    //    $('#dglClientType').change();
+    //}
+    $('#dglClientSiteId').on('change', function () {
+        const clientTypeId = $(this).val();
+        $("#vklClientSiteId").val(clientTypeId);
+        $("#vklClientSiteId").multiselect("refresh");
+
+
+
+
+    });
+
+    $('#btnGenerateDglAuditReport').on('click', function () {
+
+        if ($('#dglClientSiteId').val() === '') {
+            alert('Please select a client site');
+            return;
+        }
+
+        gridsiteLog.reload({
             clientSiteId: $('#dglClientSiteId').val(),
             logFromDate: $('#dglAudtitFromDate').val(),
             logToDate: $('#dglAudtitToDate').val(),
-
-            keywordDownSelect: $('#GuardLogKeydownselect').val()
-
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (!response.success) {
-            $('#auditlog-zip-modal').modal('hide');
-            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
-        } else {
-            $('#btn-auditlog-zip-download').attr('href', response.fileName);
-            $('#btn-auditlog-zip-download').show();
-            $('#auditlog-zip-msg').hide();
-        }
-    });
-}
-
-function downloadKeyVehicleLogZipFile() {
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
-    $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
-
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=DownloadKeyVehicleLogZip',
-        type: 'POST',
-        dataType: 'json',
-        data: $('#form_kvl_auditlog_request').serialize(),
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (!response.success) {
-            $('#auditlog-zip-modal').modal('hide');
-            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
-        } else {
-            $('#btn-auditlog-zip-download').attr('href', response.fileName);
-            $('#btn-auditlog-zip-download').show();
-            $('#auditlog-zip-msg').hide();
-        }
-    });
-}
-
-let logBookTypeForAuditZip;
-$('#btnDownloadDglAuditZip').on('click', function () {
-    $('#vklClientType').val('');
-    $('#vklClientSiteId').val('');
-    logBookTypeForAuditZip = 1;
-    if ($('#dglClientSiteId').val() === '') {
-        alert('Please select a client site');
-        return;
-    }
-    $('#auditlog-zip-modal').modal('show');
-});
-
-//$('#duress_btn').on('click', function () {
-//    $.ajax({
-//        url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-//        data: {
-//            clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-//            guardLoginId: $('#GuardLog_GuardLoginId').val(),
-//            logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-//            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-//        },
-//        type: 'POST',
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//    }).done(function (result) {
-//        if (result.status) {
-//            $('#duress_btn').removeClass('normal').addClass('active');
-//            $("#duress_status").addClass('font-weight-bold');
-//            $("#duress_status").text("Active");
-//        }
-//        gridGuardLog.clear();
-//        gridGuardLog.reload();
-//    });
-//});
-
-//Vehicle key Log
-
-$('#btn_reset_vklfilter').on('click', function () {
-    $('#KeyVehicleLogAuditLogRequest_VehicleRego').val('');
-    $('#KeyVehicleLogAuditLogRequest_CompanyName').val('');
-    $('#KeyVehicleLogAuditLogRequest_PersonName').val('');
-    $('#KeyVehicleLogAuditLogRequest_PersonType').val('');
-    $('#KeyVehicleLogAuditLogRequest_EntryReason').val('');
-    $('#KeyVehicleLogAuditLogRequest_Product').val('');
-    $('#KeyVehicleLogAuditLogRequest_TruckConfig').val('');
-    $('#KeyVehicleLogAuditLogRequest_TrailerType').val('');
-    $('#vklSitePOC').val('');
-
-    $('#vklSiteLoc').val('');
-    $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
-    $('#listKeyVehicleLogAuditLogRequestKeyNo').val(null).trigger('change');
-});
-
-$('#btnDownloadVklAuditZip').on('click', function () {
-    $('#dglClientType').val('');
-    $('#dglClientSiteId').val('');
-    logBookTypeForAuditZip = 2;
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    $('#auditlog-zip-modal').modal('show');
-});
-
-const todayDate = new Date();
-const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
-$('#vklAudtitFromDate').val(startDate.toISOString().substr(0, 10));
-//$('#vklAudtitToDate').val(new Date().toISOString().substr(0, 10));
-$('#vklAudtitToDate').val(systemDate);
-
-
-// TODO: Duplicate function definition - take out
-function getTimeFromDateTime(value) {
-    const mins = (value.getMinutes() < 10 ? '0' : '') + value.getMinutes();
-    const hours = (value.getHours() < 10 ? '0' : '') + value.getHours();
-    return hours + ':' + mins;
-}
-
-function convertDateTimeString(value) {
-    return (value === null || value === undefined) ? '' : getTimeFromDateTime(new Date(value));
-}
-
-const groupColumn = 0;
-let keyVehicleLogReport = $('#vkl_site_log').DataTable({
-    lengthMenu: [[75, 100, -1], [75, 100, "All"]],
-    pageLength: 100,
-    paging: true,
-    ordering: false,
-    order: [[groupColumn, 'asc']],
-    info: false,
-    searching: true,
-    scrollX: true,
-    data: [],
-    columns: [
-        { data: 'groupText', visible: false },
-        { data: 'detail.clientSiteLogBook.clientSite.name' },
-        { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.exitTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.timeSlotNo' },
-        { data: 'detail.vehicleRego' },
-        { data: 'plate' },
-        { data: 'truckConfigText' },
-        { data: 'trailerTypeText' },
-        { data: 'detail.trailer1Rego' },
-        { data: 'detail.trailer2Rego' },
-        { data: 'detail.trailer3Rego' },
-        { data: 'detail.trailer4Rego' },
-        { data: 'detail.keyNo' },
-        { data: 'detail.companyName' },
-        { data: 'detail.personName' },
-        { data: 'detail.mobileNumber' },
-        { data: 'personTypeText' },
-        { data: 'clientSitePocName' },
-        { data: 'clientSiteLocationName' },
-        { data: 'purposeOfEntry' },
-        { data: 'detail.inWeight' },
-        { data: 'detail.outWeight' },
-        { data: 'detail.tareWeight' },
-        { data: 'detail.notes' },
-    ],
-    drawCallback: function () {
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        api.column(groupColumn, { page: 'current' })
-            .data()
-            .each(function (group, i) {
-                if (last !== group) {
-                    $(rows)
-                        .eq(i)
-                        .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
-
-                    last = group;
-                }
-            });
-    },
-});
-//for downloading keyvehicle logs-start
-let keyVehicleLogReportnew = $('#vkl_site_lognew').DataTable({
-    lengthMenu: [[75, 100, -1], [75, 100, "All"]],
-    pageLength: 100,
-    hidden: true,
-    paging: false,
-    ordering: false,
-    order: [[groupColumn, 'asc']],
-    info: false,
-    searching: true,
-    scrollX: true,
-    data: [],
-    columns: [
-        { data: 'groupText', visible: false },
-        { data: 'detail.clientSiteLogBook.clientSite.name' },
-        { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.exitTime', 'render': function (value) { return convertDateTimeString(value); } },
-        { data: 'detail.timeSlotNo' },
-        { data: 'detail.vehicleRego' },
-        { data: 'plate' },
-        { data: 'truckConfigText' },
-        { data: 'trailerTypeText' },
-        { data: 'detail.trailer1Rego' },
-        { data: 'detail.trailer2Rego' },
-        { data: 'detail.trailer3Rego' },
-        { data: 'detail.trailer4Rego' },
-        { data: 'detail.keyNo' },
-        { data: 'detail.companyName' },
-        { data: 'detail.personName' },
-        { data: 'detail.mobileNumber' },
-        { data: 'personTypeText' },
-        { data: 'clientSitePocName' },
-        { data: 'clientSiteLocationName' },
-        { data: 'purposeOfEntry' },
-        { data: 'detail.inWeight' },
-        { data: 'detail.outWeight' },
-        { data: 'detail.tareWeight' },
-        { data: 'detail.notes' },
-    ],
-    drawCallback: function () {
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        api.column(groupColumn, { page: 'current' })
-            .data()
-            .each(function (group, i) {
-                if (last !== group) {
-                    $(rows)
-                        .eq(i)
-                        .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
-
-                    last = group;
-                }
-            });
-    },
-});
-//for downloading keyvehicle logs-end
-$('#listKeyVehicleLogAuditLogRequestKeyNo').select2({
-    placeholder: "Select",
-    theme: 'bootstrap4',
-    allowClear: true,
-    ajax: {
-        url: '/Admin/AuditSiteLog?handler=ClientSiteKeys',
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return {
-                clientSiteIds: $('#vklClientSiteId').val().join(';'),
-                searchKeyNo: params.term,
-            }
-        },
-        processResults: function (data) {
-            return {
-                results: $.map(data, function (item) {
-                    return {
-                        text: item.keyNo,
-                        id: item.id,
-                        title: item.description
-                    }
-                })
-            };
-        },
-        cache: true
-    }
-}).on("select2:select", function (e) {
-    $('#KeyVehicleLogAuditLogRequest_KeyNo').val(e.params.data.text);
-})
-    .on("select2:clear", function (e) {
-        $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
-    });
-
-$('#vklClientSiteId').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-
-$('#vklClientSiteIdTimesheet').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-$('#vklClientSiteId').on('change', function () {
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-
-
-
-    const clientSitePocControl = $('#vklSitePOC');
-    const clientSiteLocControl = $('#vklSiteLoc');
-
-
-
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=ClientSiteLocationsAndPocs&clientSiteIds=' + $(this).val().join(';'),
-        type: 'GET',
-        datatype: 'json',
-    }).done(function (data) {
-        clientSitePocControl.html('');
-        clientSiteLocControl.html('');
-        data.sitePocs.map(function (result) {
-
-            clientSitePocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
+            excludeSystemLogs: $('#excludeSystemLog').prop("checked"),
+            keywordDownSelect: $('#GuardLogKeydownselect').val(),
         });
-        data.siteLocations.map(function (result) {
-            clientSiteLocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
-        });
-        clientSitePocControl.multiselect('rebuild');
-        clientSiteLocControl.multiselect('rebuild');
-    });
-});
-
-$('#vklClientType').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-
-// for selecting more than one POI
-$('#vklPersonOfInterest').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-// for selecting more than one Site Poc-start
-$('#vklSitePOC').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-// for selecting more than one Site Poc-end
-// for selecting more than one Site Loc-start
-$('#vklSiteLoc').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-// for selecting more than one Site Loc-end
-$('#vklClientTypeTimesheet').on('change', function () {
-    //gridsitefusionLog.clear();
-    const clientTypeId = $(this).val();
-    const clientSiteControl = $('#vklClientSiteIdTimesheet');
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            data.map(function (site) {
-                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
-            });
-            clientSiteControl.multiselect('rebuild');
-        }
-
     });
 
-
-});
-$('#vklClientSiteIdTimesheet').on('change', function () {
-    var selectedOptions = $(this).val();  // Get selected values
-    $('#startDateTimesheetBulk').val('');
-    $('#endDateTimesheetBulk').val('');
-    $('#frequency').val('');
-    if (selectedOptions && selectedOptions.length > 0) {
-        var selectedSitesList = $('#selectedSitesList');
-        selectedSitesList.empty();  // Clear previous list
-
-        // Add selected options to modal list
-        selectedOptions.forEach(function (siteId) {
-            var selectedText = $('#vklClientSiteIdTimesheet option[value="' + siteId + '"]').text();
-            selectedSitesList.append('<li>' + selectedText + '</li>');
-        });
-
-        // Show the modal
-        $('#timesheetBulkModal').modal('show');
-    }
-});
-$('#vklPersonOfInterest').on('change', function () {
-    const personOfInterestId = $(this).val();
-    $("#vklPersonOfInterest").val(personOfInterestId);
-    $("#vklPersonOfInterest").multiselect("refresh");
-
-
-
-
-});
-$('#vklClientType').on('change', function () {
-
-    const clientType = $(this).val().join(';');
-    const clientSiteControl = $('#vklClientSiteId');
-    keyVehicleLogReport.clear().draw();
-
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            data.map(function (site) {
-                clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
-            });
-            clientSiteControl.multiselect('rebuild');
-        }
-    });
-});
-
-$('#btnGenerateVklAuditReport').on('click', function () {
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    if (window.myChart1 != undefined)
-        window.myChart1.destroy();
-    if (window.myChart2 != undefined)
-        window.myChart2.destroy();
-    if (window.myChart3 != undefined)
-        window.myChart3.destroy();
-    if (window.myChart4 != undefined)
-        window.myChart4.destroy();
-    if (window.myChart5 != undefined)
-        window.myChart5.destroy();
-    if (window.myChart6 != undefined)
-        window.myChart6.destroy();
-    if (window.myChart7 != undefined)
-        window.myChart7.destroy();
-    if (window.myChart8 != undefined)
-        window.myChart8.destroy();
-    if (window.myChart9 != undefined)
-        window.myChart9.destroy();
-    if (window.myChart10 != undefined)
-        window.myChart10.destroy();
-    if (window.myChart11 != undefined)
-        window.myChart11.destroy();
-    if (window.myChart12 != undefined)
-        window.myChart12.destroy();
-    if (window.myChart13 != undefined)
-        window.myChart13.destroy();
-    //calculate month difference-start
-    var date1 = new Date($('#vklAudtitFromDate').val());
-    var date2 = new Date($('#vklAudtitToDate').val());
-    var monthdiff = monthDiff(date1, date2);
-    if (monthdiff > 6) {
-        alert('Date Range is  greater than 6 months');
-        return false;
-    }
-
-    //calculate month difference-end
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
-    $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
-
-    $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
-    $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
-    //$('#KeyVehicleLogAuditLogRequest_KeyVehicleDownselect').val($('#KeyVehicleKeydownselect').val());
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
-        type: 'POST',
-        dataType: 'json',
-        data: $('#form_kvl_auditlog_request').serialize(),
-    }).done(function (response) {
-        $('#loader').hide();
-        keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
-
-        $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
-        if (response.kvtruckentriesForWeekNewCount != 0) {
-            drawPieChartUsingChartJsKVEntriesForWeek(response.chartData.kvtruckentriesForWeekNew);
-        }
-
-        $('#count_by_kventriespermonth').html(response.kvtruckentriesForMonthNewCount);
-        if (response.kvtruckentriesForMonthNewCount != 0) {
-            drawPieChartUsingChartJsKVEntriesForMonth(response.chartData.kvtruckentriesForMonthNew);
-        }
-        $('#count_by_kventriesperyear').html(response.kvtruckentriesForYearNewCount);
-        if (response.kvtruckentriesForYearNewCount != 0) {
-            drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
-        }
-    });
-});
-function drawPieChartUsingChartJsKVEntriesForWeek(dataValue) {
-
-    var labels = dataValue.map(function (e) {
-        return e.dateRange;
-    });
-    var data2 = dataValue.map(function (e) {
-        return e.recordCount;
-    });
-    // Data for the pie chart
-    const data = {
-        labels: labels,
-        datasets: [{
-            data: data2, // Values for each slice
-
-        },
-        ],
-        datalabels: {
-            // display labels for this specific dataset
-            display: true
-        }
-    };
-
-
-    var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_forweek");
-    var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_forweek1");
-    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
-    if (canvas !== null) {
-        const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_forweek').getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        window.myChart7 = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 2,
-                        bottom: 2
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value;
-
-                        },
-
-                        outsidePadding: 4,
-                        textMargin: 4
-
-                    },
-
-                }
-
-            },
-
-
-        });
-
-
-    }
-
-
-
-    if (canvas2 !== null) {
-        const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_forweek1').getContext('2d');
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-        window.myChart8 = new Chart(ctx2, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 20,
-                        bottom: 20
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value + '%';
-
-                        },
-                        position: 'outside',
-                        outsidePadding: 10,
-                        textMargin: 10
-
-                    },
-
-                }
-
-            },
-
-
-        });
-    }
-
-
-    //if (canvas3 !== null) {
-    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
-    //    window.myChart6 = new Chart(ctx3, {
-    //        type: 'pie',
-    //        data: {
-    //            labels: labels,
-    //            datasets: [{
-    //                label: '# of Votes',
-    //                data: data2,
-    //                backgroundColor: getColors(15),
-    //                borderColor: [
-    //                    'rgba(255, 99, 132, 1)',
-    //                    'rgba(54, 162, 235, 1)',
-    //                    'rgba(255, 206, 86, 1)',
-    //                    'rgba(75, 192, 192, 1)',
-    //                    'rgba(153, 102, 255, 1)',
-    //                    'rgba(255, 159, 64, 1)'
-    //                ],
-    //                borderWidth: 0
-    //            }]
-    //        },
-    //        options: {
-    //            layout: {
-    //                padding: {
-    //                    left: 10,
-    //                    right: 10,
-    //                    top: 20,
-    //                    bottom: 20
-    //                }
-    //            },
-    //            maintainAspectRatio: false,
-    //            plugins: {
-    //                tooltip: {
-    //                    enabled: true,
-    //                    callbacks: {
-    //                        label: function (context) {
-    //                            let label = context.label + '(' + context.formattedValue + '%)'
-    //                            return label;
-    //                        }
-    //                    }
-    //                },
-    //                legend: {
-    //                    position: 'right',
-    //                    labels: {
-    //                        font: {
-    //                            family: 'Arial',
-    //                            size: 11
-    //                        },
-
-    //                        boxWidth: 10,
-    //                        boxHeight: 10,
-    //                        generateLabels(chart) {
-    //                            const data = chart.data;
-    //                            if (data.labels.length && data.datasets.length) {
-    //                                const { labels: { pointStyle } } = chart.legend.options;
-
-    //                                return data.labels.map((label, i) => {
-    //                                    const meta = chart.getDatasetMeta(0);
-    //                                    const style = meta.controller.getStyle(i);
-
-    //                                    return {
-    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
-    //                                        fillStyle: style.backgroundColor,
-    //                                        strokeStyle: style.borderColor,
-    //                                        lineWidth: style.borderWidth,
-    //                                        borderWidth: 0,
-    //                                        pointStyle: pointStyle,
-    //                                        hidden: !chart.getDataVisibility(i),
-
-    //                                        // Extra data used for toggling the correct item
-    //                                        index: i
-    //                                    };
-    //                                });
-    //                            }
-    //                            return [];
-    //                        }
-    //                    }
-    //                },
-    //                labels: {
-    //                    /* render:"value",*/
-    //                    render: (args) => {
-
-    //                        return args.value + '%';
-
-    //                    },
-    //                    position: 'outside',
-    //                    outsidePadding: 10,
-    //                    textMargin: 10
-
-    //                },
-
-    //            }
-
-    //        },
-
-
-    //    });
-    //}
-
-    function getColors(length) {
-        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
-            "#7f7f7f", "#bcbd22", "#17becf",
-            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
-        let colors = [];
-
-        for (let i = 0; i < length; i++) {
-            colors.push(pallet[i % (pallet.length - 1)]);
-        }
-
-        return colors;
-    }
-    //// Configuration options
-    //const options = {
-    //    responsive: false,
-    //    plugins: {
-    //        legend: {
-    //            position: 'right',
-    //            onClick: function (event, legendItem) {
-    //                const index = legendItem.index;
-    //                const meta = this.chart.getDatasetMeta(0);
-    //                meta.data[index].hidden = !meta.data[index].hidden;
-    //                this.chart.update();
-    //            }
-    //        },
-    //        datalabels: {
-    //            backgroundColor: function (context) {
-    //                return context.dataset.backgroundColor;
-    //            },
-    //            borderColor: 'white',
-    //            borderRadius: 25,
-    //            borderWidth: 2,
-    //            color: 'white',
-    //            display: function (context) {
-    //                var dataset = context.dataset;
-    //                var count = dataset.data.length;
-    //                var value = dataset.data[context.dataIndex];
-    //                return value > count * 1.5;
-    //            }
-    //        }
-    //    }
-
-    //};
-
-    //// Create the pie chart
-    //var canvas = document.getElementById("myPieChart");
-    //if (canvas !== null) {
-    //    const ctx = document.getElementById('myPieChart').getContext('2d');
-    //    const myPieChart = new Chart(ctx, {
-    //        type: 'pie',
-    //        data: data,
-    //        options: options
-    //    });
-
-    //}
-
-}
-function drawPieChartUsingChartJsKVEntriesForMonth(dataValue) {
-
-    var labels = dataValue.map(function (e) {
-        return e.dateRange;
-    });
-    var data2 = dataValue.map(function (e) {
-        return e.recordCount;
-    });
-    // Data for the pie chart
-    const data = {
-        labels: labels,
-        datasets: [{
-            data: data2, // Values for each slice
-
-        },
-        ],
-        datalabels: {
-            // display labels for this specific dataset
-            display: true
-        }
-    };
-
-
-    var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_formonth");
-    var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_formonth1");
-    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
-    if (canvas !== null) {
-        const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_formonth').getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        window.myChart9 = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 2,
-                        bottom: 2
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value;
-
-                        },
-
-                        outsidePadding: 4,
-                        textMargin: 4
-
-                    },
-
-                }
-
-            },
-
-
-        });
-
-
-    }
-
-
-
-    if (canvas2 !== null) {
-        const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_formonth1').getContext('2d');
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-        window.myChart10 = new Chart(ctx2, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 20,
-                        bottom: 20
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value + '%';
-
-                        },
-                        position: 'outside',
-                        outsidePadding: 10,
-                        textMargin: 10
-
-                    },
-
-                }
-
-            },
-
-
-        });
-    }
-
-
-    //if (canvas3 !== null) {
-    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
-    //    window.myChart6 = new Chart(ctx3, {
-    //        type: 'pie',
-    //        data: {
-    //            labels: labels,
-    //            datasets: [{
-    //                label: '# of Votes',
-    //                data: data2,
-    //                backgroundColor: getColors(15),
-    //                borderColor: [
-    //                    'rgba(255, 99, 132, 1)',
-    //                    'rgba(54, 162, 235, 1)',
-    //                    'rgba(255, 206, 86, 1)',
-    //                    'rgba(75, 192, 192, 1)',
-    //                    'rgba(153, 102, 255, 1)',
-    //                    'rgba(255, 159, 64, 1)'
-    //                ],
-    //                borderWidth: 0
-    //            }]
-    //        },
-    //        options: {
-    //            layout: {
-    //                padding: {
-    //                    left: 10,
-    //                    right: 10,
-    //                    top: 20,
-    //                    bottom: 20
-    //                }
-    //            },
-    //            maintainAspectRatio: false,
-    //            plugins: {
-    //                tooltip: {
-    //                    enabled: true,
-    //                    callbacks: {
-    //                        label: function (context) {
-    //                            let label = context.label + '(' + context.formattedValue + '%)'
-    //                            return label;
-    //                        }
-    //                    }
-    //                },
-    //                legend: {
-    //                    position: 'right',
-    //                    labels: {
-    //                        font: {
-    //                            family: 'Arial',
-    //                            size: 11
-    //                        },
-
-    //                        boxWidth: 10,
-    //                        boxHeight: 10,
-    //                        generateLabels(chart) {
-    //                            const data = chart.data;
-    //                            if (data.labels.length && data.datasets.length) {
-    //                                const { labels: { pointStyle } } = chart.legend.options;
-
-    //                                return data.labels.map((label, i) => {
-    //                                    const meta = chart.getDatasetMeta(0);
-    //                                    const style = meta.controller.getStyle(i);
-
-    //                                    return {
-    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
-    //                                        fillStyle: style.backgroundColor,
-    //                                        strokeStyle: style.borderColor,
-    //                                        lineWidth: style.borderWidth,
-    //                                        borderWidth: 0,
-    //                                        pointStyle: pointStyle,
-    //                                        hidden: !chart.getDataVisibility(i),
-
-    //                                        // Extra data used for toggling the correct item
-    //                                        index: i
-    //                                    };
-    //                                });
-    //                            }
-    //                            return [];
-    //                        }
-    //                    }
-    //                },
-    //                labels: {
-    //                    /* render:"value",*/
-    //                    render: (args) => {
-
-    //                        return args.value + '%';
-
-    //                    },
-    //                    position: 'outside',
-    //                    outsidePadding: 10,
-    //                    textMargin: 10
-
-    //                },
-
-    //            }
-
-    //        },
-
-
-    //    });
-    //}
-
-    function getColors(length) {
-        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
-            "#7f7f7f", "#bcbd22", "#17becf",
-            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
-        let colors = [];
-
-        for (let i = 0; i < length; i++) {
-            colors.push(pallet[i % (pallet.length - 1)]);
-        }
-
-        return colors;
-    }
-    //// Configuration options
-    //const options = {
-    //    responsive: false,
-    //    plugins: {
-    //        legend: {
-    //            position: 'right',
-    //            onClick: function (event, legendItem) {
-    //                const index = legendItem.index;
-    //                const meta = this.chart.getDatasetMeta(0);
-    //                meta.data[index].hidden = !meta.data[index].hidden;
-    //                this.chart.update();
-    //            }
-    //        },
-    //        datalabels: {
-    //            backgroundColor: function (context) {
-    //                return context.dataset.backgroundColor;
-    //            },
-    //            borderColor: 'white',
-    //            borderRadius: 25,
-    //            borderWidth: 2,
-    //            color: 'white',
-    //            display: function (context) {
-    //                var dataset = context.dataset;
-    //                var count = dataset.data.length;
-    //                var value = dataset.data[context.dataIndex];
-    //                return value > count * 1.5;
-    //            }
-    //        }
-    //    }
-
-    //};
-
-    //// Create the pie chart
-    //var canvas = document.getElementById("myPieChart");
-    //if (canvas !== null) {
-    //    const ctx = document.getElementById('myPieChart').getContext('2d');
-    //    const myPieChart = new Chart(ctx, {
-    //        type: 'pie',
-    //        data: data,
-    //        options: options
-    //    });
-
-    //}
-
-}
-function drawPieChartUsingChartJsKVEntriesForYear(dataValue) {
-
-    var labels = dataValue.map(function (e) {
-        return e.dateRange;
-    });
-    var data2 = dataValue.map(function (e) {
-        return e.recordCount;
-    });
-    // Data for the pie chart
-    const data = {
-        labels: labels,
-        datasets: [{
-            data: data2, // Values for each slice
-
-        },
-        ],
-        datalabels: {
-            // display labels for this specific dataset
-            display: true
-        }
-    };
-
-
-    var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_foryear");
-    var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_foryear1");
-    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
-    if (canvas !== null) {
-        const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_foryear').getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        window.myChart11 = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 2,
-                        bottom: 2
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value;
-
-                        },
-
-                        outsidePadding: 4,
-                        textMargin: 4
-
-                    },
-
-                }
-
-            },
-
-
-        });
-
-
-    }
-
-
-
-    if (canvas2 !== null) {
-        const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_foryear1').getContext('2d');
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-        window.myChart12 = new Chart(ctx2, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '# of Votes',
-                    data: data2,
-                    backgroundColor: getColors(15),
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 20,
-                        bottom: 20
-                    }
-                },
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
-                                return label;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                family: 'Arial',
-                                size: 11
-                            },
-
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            generateLabels(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const { labels: { pointStyle } } = chart.legend.options;
-
-                                    return data.labels.map((label, i) => {
-                                        const meta = chart.getDatasetMeta(0);
-                                        const style = meta.controller.getStyle(i);
-
-                                        return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
-                                            fillStyle: style.backgroundColor,
-                                            strokeStyle: style.borderColor,
-                                            lineWidth: style.borderWidth,
-                                            borderWidth: 0,
-                                            pointStyle: pointStyle,
-                                            hidden: !chart.getDataVisibility(i),
-
-                                            // Extra data used for toggling the correct item
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    labels: {
-                        /* render:"value",*/
-                        render: (args) => {
-
-                            return args.value + '%';
-
-                        },
-                        position: 'outside',
-                        outsidePadding: 10,
-                        textMargin: 10
-
-                    },
-
-                }
-
-            },
-
-
-        });
-    }
-
-
-    //if (canvas3 !== null) {
-    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
-    //    window.myChart6 = new Chart(ctx3, {
-    //        type: 'pie',
-    //        data: {
-    //            labels: labels,
-    //            datasets: [{
-    //                label: '# of Votes',
-    //                data: data2,
-    //                backgroundColor: getColors(15),
-    //                borderColor: [
-    //                    'rgba(255, 99, 132, 1)',
-    //                    'rgba(54, 162, 235, 1)',
-    //                    'rgba(255, 206, 86, 1)',
-    //                    'rgba(75, 192, 192, 1)',
-    //                    'rgba(153, 102, 255, 1)',
-    //                    'rgba(255, 159, 64, 1)'
-    //                ],
-    //                borderWidth: 0
-    //            }]
-    //        },
-    //        options: {
-    //            layout: {
-    //                padding: {
-    //                    left: 10,
-    //                    right: 10,
-    //                    top: 20,
-    //                    bottom: 20
-    //                }
-    //            },
-    //            maintainAspectRatio: false,
-    //            plugins: {
-    //                tooltip: {
-    //                    enabled: true,
-    //                    callbacks: {
-    //                        label: function (context) {
-    //                            let label = context.label + '(' + context.formattedValue + '%)'
-    //                            return label;
-    //                        }
-    //                    }
-    //                },
-    //                legend: {
-    //                    position: 'right',
-    //                    labels: {
-    //                        font: {
-    //                            family: 'Arial',
-    //                            size: 11
-    //                        },
-
-    //                        boxWidth: 10,
-    //                        boxHeight: 10,
-    //                        generateLabels(chart) {
-    //                            const data = chart.data;
-    //                            if (data.labels.length && data.datasets.length) {
-    //                                const { labels: { pointStyle } } = chart.legend.options;
-
-    //                                return data.labels.map((label, i) => {
-    //                                    const meta = chart.getDatasetMeta(0);
-    //                                    const style = meta.controller.getStyle(i);
-
-    //                                    return {
-    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
-    //                                        fillStyle: style.backgroundColor,
-    //                                        strokeStyle: style.borderColor,
-    //                                        lineWidth: style.borderWidth,
-    //                                        borderWidth: 0,
-    //                                        pointStyle: pointStyle,
-    //                                        hidden: !chart.getDataVisibility(i),
-
-    //                                        // Extra data used for toggling the correct item
-    //                                        index: i
-    //                                    };
-    //                                });
-    //                            }
-    //                            return [];
-    //                        }
-    //                    }
-    //                },
-    //                labels: {
-    //                    /* render:"value",*/
-    //                    render: (args) => {
-
-    //                        return args.value + '%';
-
-    //                    },
-    //                    position: 'outside',
-    //                    outsidePadding: 10,
-    //                    textMargin: 10
-
-    //                },
-
-    //            }
-
-    //        },
-
-
-    //    });
-    //}
-
-    function getColors(length) {
-        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
-            "#7f7f7f", "#bcbd22", "#17becf",
-            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
-        let colors = [];
-
-        for (let i = 0; i < length; i++) {
-            colors.push(pallet[i % (pallet.length - 1)]);
-        }
-
-        return colors;
-    }
-    //// Configuration options
-    //const options = {
-    //    responsive: false,
-    //    plugins: {
-    //        legend: {
-    //            position: 'right',
-    //            onClick: function (event, legendItem) {
-    //                const index = legendItem.index;
-    //                const meta = this.chart.getDatasetMeta(0);
-    //                meta.data[index].hidden = !meta.data[index].hidden;
-    //                this.chart.update();
-    //            }
-    //        },
-    //        datalabels: {
-    //            backgroundColor: function (context) {
-    //                return context.dataset.backgroundColor;
-    //            },
-    //            borderColor: 'white',
-    //            borderRadius: 25,
-    //            borderWidth: 2,
-    //            color: 'white',
-    //            display: function (context) {
-    //                var dataset = context.dataset;
-    //                var count = dataset.data.length;
-    //                var value = dataset.data[context.dataIndex];
-    //                return value > count * 1.5;
-    //            }
-    //        }
-    //    }
-
-    //};
-
-    //// Create the pie chart
-    //var canvas = document.getElementById("myPieChart");
-    //if (canvas !== null) {
-    //    const ctx = document.getElementById('myPieChart').getContext('2d');
-    //    const myPieChart = new Chart(ctx, {
-    //        type: 'pie',
-    //        data: data,
-    //        options: options
-    //    });
-
-    //}
-
-}
-$('#btncount_by_kventriesPerWeek').on('click', function () {
-    $('#modelKVEntriesForweek').modal('show');
-});
-$('#btncount_by_kventriesPerMonth').on('click', function () {
-    $('#modelKVEntriesFormonth').modal('show');
-});
-$('#btncount_by_kventriesPerYear').on('click', function () {
-    $('#modelKVEntriesForyear').modal('show');
-});
-//code addded  to download Excel start for auditsite key vehicle-start
-$("#btnDownloadVklAuditExcel").click(function () {
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    //calculate month difference-start
-    var date1 = new Date($('#vklAudtitFromDate').val());
-    var date2 = new Date($('#vklAudtitToDate').val());
-    var monthdiff = monthDiff(date1, date2);
-    if (monthdiff > 6) {
-        alert('Date Range is  greater than 6 months');
-        return false;
-    }
-    //calculate month difference-end
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
-    $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
-    $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
-
-    $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
-    $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
-        type: 'POST',
-        dataType: 'json',
-        data: $('#form_kvl_auditlog_request').serialize(),
-    }).done(function (response) {
-        $('#loader').hide();
-        keyVehicleLogReportnew.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
-        /*p1-218 search download select-start*/
-        var searchtext = keyVehicleLogReport.search();
-        keyVehicleLogReportnew.search(searchtext).draw();
-        /*p1-218 search download select-end*/
-        var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
-
-        var type = 'xlsx';
-        var name = Key + '.';
-
-        var data = document.getElementById('vkl_site_lognew');
-
-
-        // Check if all columns are empty
-        var isEmptyTable = true;
-        var rows = data.getElementsByTagName('tr');
-        for (var i = 0; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName('td');
-            for (var j = 1; j < cells.length; j++) {
-                if (cells[j].textContent.trim() !== '') {
-                    isEmptyTable = false;
-                    break;
-                }
-            }
-        }
-
-        if (isEmptyTable) {
-            // Create a message row with the desired text
-            var messageRow = document.createElement('tr');
-            var messageCell = document.createElement('td');
-            messageCell.innerText = 'No data available in table';
-            messageRow.appendChild(messageCell);
-
-            // Create a new table with the message
-            var tableClone = document.createElement('table');
-            var tbody = document.createElement('tbody');
-            tbody.appendChild(messageRow);
-            tableClone.appendChild(tbody);
-        } else {
-            // Clone the table and remove the last column
-            var tableClone = data.cloneNode(true);
-            //var rows = tableClone.getElementsByTagName('tr');
-            //for (var i = 0; i < rows.length; i++) {
-            //    var lastCell = rows[i].lastElementChild;
-            //    if (lastCell) {
-            //        rows[i].removeChild(lastCell);
-            //    }
-            //}
-        }
-
-
-
-
-        var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogs" });
-
-        // Use XLSX.writeFile to generate and download the Excel file
-        XLSX.writeFile(excelFile, name + type);
+    $('#auditlog-zip-modal').on('show.bs.modal', function (event) {
+        $('#btn-auditlog-zip-download').attr('href', '#');
+        $('#btn-auditlog-zip-download').hide();
+        $('#auditlog-zip-msg').show();
+
+        if (logBookTypeForAuditZip === 1)
+            downloadDailyGuardLogZipFile();
+        else
+            downloadKeyVehicleLogZipFile();
     });
 
-});
-//code addded  to download Excel start for auditsite key vehicle-end
-
-
-//$('#btnDisableDataCollection').on('click', function () {
-//    $.ajax({
-//        url: '/Admin/GuardSettings?handler=UpdateSiteDataCollection',
-//        type: 'POST',
-//        data: {
-//            clientSiteId: $('#gl_client_site_id').val(),
-//            disabled: $('#cbxDisableDataCollection').is(":checked")
-//        },
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-//    }).done(function () {
-//        alert("Saved successfully");
-//    });
-//});
-
-//code addded  to download Excel start
-
-//$("#add_Downloadbtn").click(function () {
-
-//    var Key = $('#site-settings-for').html();
-
-//    var type = 'xlsx';
-//    var name = Key + '.';
-//    var data = document.getElementById('cs_client_site_keys');
-
-//    // Check if all columns are empty
-//    var isEmptyTable = true;
-//    var rows = data.getElementsByTagName('tr');
-//    for (var i = 0; i < rows.length; i++) {
-//        var cells = rows[i].getElementsByTagName('td');
-//        for (var j = 1; j < cells.length; j++) {
-//            if (cells[j].textContent.trim() !== '') {
-//                isEmptyTable = false;
-//                break;
-//            }
-//        }
-//    }
-
-//    if (isEmptyTable) {
-//        // Create a message row with the desired text
-//        var messageRow = document.createElement('tr');
-//        var messageCell = document.createElement('td');
-//        messageCell.innerText = 'No data available in table';
-//        messageRow.appendChild(messageCell);
-
-//        // Create a new table with the message
-//        var tableClone = document.createElement('table');
-//        var tbody = document.createElement('tbody');
-//        tbody.appendChild(messageRow);
-//        tableClone.appendChild(tbody);
-//    } else {
-//        // Clone the table and remove the last column
-//        var tableClone = data.cloneNode(true);
-//        var rows = tableClone.getElementsByTagName('tr');
-//        for (var i = 0; i < rows.length; i++) {
-//            var lastCell = rows[i].lastElementChild;
-//            if (lastCell) {
-//                rows[i].removeChild(lastCell);
-//            }
-//        }
-//    }
-
-
-
-
-//    var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
-
-//    // Use XLSX.writeFile to generate and download the Excel file
-//    XLSX.writeFile(excelFile, name + type);
-//});
-//code addded  to download Excel end
-
-//$('#ClientSiteCustomField_Name').editableSelect({
-//    effects: 'slide'
-//});
-
-//$('#ClientSiteCustomField_TimeSlot').editableSelect({
-//    effects: 'slide'
-//});
-
-function settingsButtonRenderer(value, record) {
-    return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#gl-site-settings-modal" ' +
-        'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
-        '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
-        '" data-cs-name="' + record.clientSiteName + '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-}
-
-$('#gl-site-settings-modal').on('shown.bs.modal', function (event) {
-    const button = $(event.relatedTarget);
-    const siteId = button.data('cs-id');
-    const siteName = button.data('cs-name');
-    const siteEmail = button.data('cs-email');
-    const duressEmail = button.data('cs-duressemail');
-    const duressSms = button.data('cs-duresssms');
-    const landLine = button.data('cs-landline');
-    const isDataCollectionEnabled = button.data('cs-datacollection-enabled');
-
-    const guardLogEmailTo = button.data('cs-guardlog-emailto');
-    const isUpdateDailyLog = button.data('cs-dbx-upload');
-    $('#site-settings-for').html(siteName);
-    $('#gl_client_site_id').val(siteId);
-    $('#ClientSiteKey_ClientSiteId').val(siteId);
-    //$('#ClientSiteCustomField_ClientSiteId').val(siteId);
-    //$('#gs_site_email').val(siteEmail);
-    //$('#gs_duress_email').val(duressEmail);
-    //$('#gs_duress_sms').val(duressSms);
-    //$('#gs_land_line').val(landLine);
-    //$('#gs_email_recipients').val(guardLogEmailTo);
-    //$('#enableLogDump').prop('checked', false);
-    $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
-    //if (isUpdateDailyLog)
-    //    $('#enableLogDump').prop('checked', true);
-    gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    loadCustomFields();
-    gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    gridClientSiteKeys.ajax.reload();
-    /*for manifest options-start*/
-    GetClientSiteToggle();
-    /*for manifest options - end*/
-});
-
-$('#gl-site-settings-modal').on('hide.bs.modal', function (event) {
-    gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
-});
-
-$('#btnSearchSitesOnDailyGuard').on('click', function () {
-    gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
-});
-
-$('#search_sites_guard_settings').on('keydown', function (e) {
-    if (e.which === 13) {
-        gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
-    }
-});
-
-let gridLogSiteSettings;
-
-gridLogSiteSettings = $('#gl_site_settings').grid({
-    dataSource: '/Admin/GuardSettings?handler=ClientSiteWithLogSettings',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    columns: [
-        { width: 150, field: 'clientTypeName', title: 'Client Type' },
-        { width: 250, field: 'clientSiteName', title: 'Client Site' },
-        { width: 250, field: 'siteEmail', title: 'Site Email', hidden: true },
-        { width: 250, field: 'landLine', title: 'Site Land Line', hidden: true },
-        { width: 250, field: 'guardLogEmailTo', title: 'Email Recipients', hidden: true },
-        { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
-        { width: 50, field: 'hasSettings', title: 'Settings Available?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
-        { width: 100, renderer: settingsButtonRenderer },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
-});
-
-$('#gl_client_type').on('change', function () {
-    gridLogSiteSettings.reload({ type: $(this).val(), searchTerm: $('#search_sites_guard_settings').val() });
-});
-
-//let gridSitePatrolCars;
-//gridSitePatrolCars = $('#cs-patrol-cars').grid({
-//    dataSource: '/Admin/GuardSettings?handler=PatrolCar',
-//    uiLibrary: 'bootstrap4',
-//    iconsLibrary: 'fontawesome',
-//    primaryKey: 'id',
-//    inlineEditing: { mode: 'command' },
-//    columns: [
-//        { width: 250, field: 'model', title: 'Model', editor: true },
-//        { width: 250, field: 'rego', title: 'Rego', editor: true },
-//        { width: 250, field: 'id', title: 'Id', hidden: true }
-//    ],
-//    initialized: function (e) {
-//        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-//    }
-//});
-
-//if (gridSitePatrolCars) {
-//    gridSitePatrolCars.on('rowDataChanged', function (e, id, record) {
-//        const data = $.extend(true, {}, record);
-//        const token = $('input[name="__RequestVerificationToken"]').val();
-//        $.ajax({
-//            url: '/Admin/GuardSettings?handler=PatrolCar',
-//            data: { record: data },
-//            type: 'POST',
-//            headers: { 'RequestVerificationToken': token },
-//        }).done(function () {
-//            gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//        }).fail(function () {
-//            console.log('error');
-//        }).always(function () {
-//            if (isPatrolCarAdding)
-//                isPatrolCarAdding = false;
-//        });
-//    });
-
-//    gridSitePatrolCars.on('rowRemoving', function (e, id, record) {
-//        if (confirm('Are you sure want to delete this patrol car details?')) {
-//            const token = $('input[name="__RequestVerificationToken"]').val();
-//            $.ajax({
-//                url: '/Admin/GuardSettings?handler=DeletePatrolCar',
-//                data: { id: record },
-//                type: 'POST',
-//                headers: { 'RequestVerificationToken': token },
-//            }).done(function () {
-//                gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//            }).fail(function () {
-//                console.log('error');
-//            }).always(function () {
-//                if (isPatrolCarAdding)
-//                    isPatrolCarAdding = false;
-//            });
-//        }
-//    });
-//}
-
-//let isPatrolCarAdding = false;
-//$('#add_patrol_car').on('click', function () {
-
-//    if (isPatrolCarAdding) {
-//        alert('Unsaved changes in the grid. Refresh the page');
-//    } else {
-//        isPatrolCarAdding = true;
-//        gridSitePatrolCars.addRow({ 'id': -1, 'model': '', rego: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-//    }
-//});
-
-
-let gritdSmartWands;
-gritdSmartWands = $('#cs-smart-wands').grid({
-    dataSource: '/Admin/GuardSettings?handler=SmartWandSettings',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command' },
-    columns: [
-        { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
-        { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
-});
-
-if (gritdSmartWands) {
-    gritdSmartWands.on('rowDataChanged', function (e, id, record) {
-        const data = $.extend(true, {}, record);
-        const token = $('input[name="__RequestVerificationToken"]').val();
+    function downloadDailyGuardLogZipFile() {
         $.ajax({
-            url: '/Admin/GuardSettings?handler=SmartWandSettings',
-            data: { record: data },
+            url: '/Admin/AuditSiteLog?handler=DownloadDailyGuardLogZip',
             type: 'POST',
-            headers: { 'RequestVerificationToken': token },
-        }).done(function () {
-            gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-        }).fail(function () {
-            console.log('error');
-        }).always(function () {
-            if (isSmartWandAdding)
-                isSmartWandAdding = false;
+            dataType: 'json',
+            data: {
+                clientSiteId: $('#dglClientSiteId').val(),
+                logFromDate: $('#dglAudtitFromDate').val(),
+                logToDate: $('#dglAudtitToDate').val(),
+
+                keywordDownSelect: $('#GuardLogKeydownselect').val()
+
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (!response.success) {
+                $('#auditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            } else {
+                $('#btn-auditlog-zip-download').attr('href', response.fileName);
+                $('#btn-auditlog-zip-download').show();
+                $('#auditlog-zip-msg').hide();
+            }
+        });
+    }
+
+    function downloadKeyVehicleLogZipFile() {
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=DownloadKeyVehicleLogZip',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_kvl_auditlog_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (!response.success) {
+                $('#auditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            } else {
+                $('#btn-auditlog-zip-download').attr('href', response.fileName);
+                $('#btn-auditlog-zip-download').show();
+                $('#auditlog-zip-msg').hide();
+            }
+        });
+    }
+
+    let logBookTypeForAuditZip;
+    $('#btnDownloadDglAuditZip').on('click', function () {
+        $('#vklClientType').val('');
+        $('#vklClientSiteId').val('');
+        logBookTypeForAuditZip = 1;
+        if ($('#dglClientSiteId').val() === '') {
+            alert('Please select a client site');
+            return;
+        }
+        $('#auditlog-zip-modal').modal('show');
+    });
+
+    //$('#duress_btn').on('click', function () {
+    //    $.ajax({
+    //        url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+    //        data: {
+    //            clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+    //            guardLoginId: $('#GuardLog_GuardLoginId').val(),
+    //            logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+    //            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+    //        },
+    //        type: 'POST',
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (result.status) {
+    //            $('#duress_btn').removeClass('normal').addClass('active');
+    //            $("#duress_status").addClass('font-weight-bold');
+    //            $("#duress_status").text("Active");
+    //        }
+    //        gridGuardLog.clear();
+    //        gridGuardLog.reload();
+    //    });
+    //});
+
+    //Vehicle key Log
+
+    $('#btn_reset_vklfilter').on('click', function () {
+        $('#KeyVehicleLogAuditLogRequest_VehicleRego').val('');
+        $('#KeyVehicleLogAuditLogRequest_CompanyName').val('');
+        $('#KeyVehicleLogAuditLogRequest_PersonName').val('');
+        $('#KeyVehicleLogAuditLogRequest_PersonType').val('');
+        $('#KeyVehicleLogAuditLogRequest_EntryReason').val('');
+        $('#KeyVehicleLogAuditLogRequest_Product').val('');
+        $('#KeyVehicleLogAuditLogRequest_TruckConfig').val('');
+        $('#KeyVehicleLogAuditLogRequest_TrailerType').val('');
+        $('#vklSitePOC').val('');
+
+        $('#vklSiteLoc').val('');
+        $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
+        $('#listKeyVehicleLogAuditLogRequestKeyNo').val(null).trigger('change');
+    });
+
+    $('#btnDownloadVklAuditZip').on('click', function () {
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        logBookTypeForAuditZip = 2;
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        $('#auditlog-zip-modal').modal('show');
+    });
+
+    const todayDate = new Date();
+    const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
+    $('#vklAudtitFromDate').val(startDate.toISOString().substr(0, 10));
+    //$('#vklAudtitToDate').val(new Date().toISOString().substr(0, 10));
+    $('#vklAudtitToDate').val(systemDate);
+
+
+    // TODO: Duplicate function definition - take out
+    function getTimeFromDateTime(value) {
+        const mins = (value.getMinutes() < 10 ? '0' : '') + value.getMinutes();
+        const hours = (value.getHours() < 10 ? '0' : '') + value.getHours();
+        return hours + ':' + mins;
+    }
+
+    function convertDateTimeString(value) {
+        return (value === null || value === undefined) ? '' : getTimeFromDateTime(new Date(value));
+    }
+
+    const groupColumn = 0;
+    let keyVehicleLogReport = $('#vkl_site_log').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        paging: true,
+        ordering: false,
+        order: [[groupColumn, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'detail.clientSiteLogBook.clientSite.name' },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.exitTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.timeSlotNo' },
+            { data: 'detail.vehicleRego' },
+            { data: 'plate' },
+            { data: 'truckConfigText' },
+            { data: 'trailerTypeText' },
+            { data: 'detail.trailer1Rego' },
+            { data: 'detail.trailer2Rego' },
+            { data: 'detail.trailer3Rego' },
+            { data: 'detail.trailer4Rego' },
+            { data: 'detail.keyNo' },
+            { data: 'detail.companyName' },
+            { data: 'detail.personName' },
+            { data: 'detail.mobileNumber' },
+            { data: 'personTypeText' },
+            { data: 'clientSitePocName' },
+            { data: 'clientSiteLocationName' },
+            { data: 'purposeOfEntry' },
+            { data: 'detail.inWeight' },
+            { data: 'detail.outWeight' },
+            { data: 'detail.tareWeight' },
+            { data: 'detail.notes' },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(groupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+    //for downloading keyvehicle logs-start
+    let keyVehicleLogReportnew = $('#vkl_site_lognew').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        hidden: true,
+        paging: false,
+        ordering: false,
+        order: [[groupColumn, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'detail.clientSiteLogBook.clientSite.name' },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.exitTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.timeSlotNo' },
+            { data: 'detail.vehicleRego' },
+            { data: 'plate' },
+            { data: 'truckConfigText' },
+            { data: 'trailerTypeText' },
+            { data: 'detail.trailer1Rego' },
+            { data: 'detail.trailer2Rego' },
+            { data: 'detail.trailer3Rego' },
+            { data: 'detail.trailer4Rego' },
+            { data: 'detail.keyNo' },
+            { data: 'detail.companyName' },
+            { data: 'detail.personName' },
+            { data: 'detail.mobileNumber' },
+            { data: 'personTypeText' },
+            { data: 'clientSitePocName' },
+            { data: 'clientSiteLocationName' },
+            { data: 'purposeOfEntry' },
+            { data: 'detail.inWeight' },
+            { data: 'detail.outWeight' },
+            { data: 'detail.tareWeight' },
+            { data: 'detail.notes' },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(groupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+    //for downloading keyvehicle logs-end
+    $('#listKeyVehicleLogAuditLogRequestKeyNo').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/AuditSiteLog?handler=ClientSiteKeys',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    clientSiteIds: $('#vklClientSiteId').val().join(';'),
+                    searchKeyNo: params.term,
+                }
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item.keyNo,
+                            id: item.id,
+                            title: item.description
+                        }
+                    })
+                };
+            },
+            cache: true
+        }
+    }).on("select2:select", function (e) {
+        $('#KeyVehicleLogAuditLogRequest_KeyNo').val(e.params.data.text);
+    })
+        .on("select2:clear", function (e) {
+            $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
+        });
+
+    $('#vklClientSiteId').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+    $('#vklClientSiteIdTimesheet').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#vklClientSiteId').on('change', function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+
+
+        const clientSitePocControl = $('#vklSitePOC');
+        const clientSiteLocControl = $('#vklSiteLoc');
+
+
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSiteLocationsAndPocs&clientSiteIds=' + $(this).val().join(';'),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSitePocControl.html('');
+            clientSiteLocControl.html('');
+            data.sitePocs.map(function (result) {
+
+                clientSitePocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.siteLocations.map(function (result) {
+                clientSiteLocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            clientSitePocControl.multiselect('rebuild');
+            clientSiteLocControl.multiselect('rebuild');
         });
     });
 
-    gritdSmartWands.on('rowRemoving', function (e, id, record) {
-        if (confirm('Are you sure want to delete this smart wand details?')) {
+    $('#vklClientType').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+    // for selecting more than one POI
+    $('#vklPersonOfInterest').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    // for selecting more than one Site Poc-start
+    $('#vklSitePOC').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    // for selecting more than one Site Poc-end
+    // for selecting more than one Site Loc-start
+    $('#vklSiteLoc').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    // for selecting more than one Site Loc-end
+    $('#vklClientTypeTimesheet').on('change', function () {
+        //gridsitefusionLog.clear();
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#vklClientSiteIdTimesheet');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+
+        });
+
+
+    });
+    $('#vklClientSiteIdTimesheet').on('change', function () {
+        var selectedOptions = $(this).val();  // Get selected values
+        $('#startDateTimesheetBulk').val('');
+        $('#endDateTimesheetBulk').val('');
+        $('#frequency').val('');
+        if (selectedOptions && selectedOptions.length > 0) {
+            var selectedSitesList = $('#selectedSitesList');
+            selectedSitesList.empty();  // Clear previous list
+
+            // Add selected options to modal list
+            selectedOptions.forEach(function (siteId) {
+                var selectedText = $('#vklClientSiteIdTimesheet option[value="' + siteId + '"]').text();
+                selectedSitesList.append('<li>' + selectedText + '</li>');
+            });
+
+            // Show the modal
+            $('#timesheetBulkModal').modal('show');
+        }
+    });
+    $('#vklPersonOfInterest').on('change', function () {
+        const personOfInterestId = $(this).val();
+        $("#vklPersonOfInterest").val(personOfInterestId);
+        $("#vklPersonOfInterest").multiselect("refresh");
+
+
+
+
+    });
+    $('#vklClientType').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#vklClientSiteId');
+        keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    });
+
+    $('#btnGenerateVklAuditReport').on('click', function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        if (window.myChart1 != undefined)
+            window.myChart1.destroy();
+        if (window.myChart2 != undefined)
+            window.myChart2.destroy();
+        if (window.myChart3 != undefined)
+            window.myChart3.destroy();
+        if (window.myChart4 != undefined)
+            window.myChart4.destroy();
+        if (window.myChart5 != undefined)
+            window.myChart5.destroy();
+        if (window.myChart6 != undefined)
+            window.myChart6.destroy();
+        if (window.myChart7 != undefined)
+            window.myChart7.destroy();
+        if (window.myChart8 != undefined)
+            window.myChart8.destroy();
+        if (window.myChart9 != undefined)
+            window.myChart9.destroy();
+        if (window.myChart10 != undefined)
+            window.myChart10.destroy();
+        if (window.myChart11 != undefined)
+            window.myChart11.destroy();
+        if (window.myChart12 != undefined)
+            window.myChart12.destroy();
+        if (window.myChart13 != undefined)
+            window.myChart13.destroy();
+        //calculate month difference-start
+        var date1 = new Date($('#vklAudtitFromDate').val());
+        var date2 = new Date($('#vklAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+
+        //calculate month difference-end
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
+
+        $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
+        //$('#KeyVehicleLogAuditLogRequest_KeyVehicleDownselect').val($('#KeyVehicleKeydownselect').val());
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_kvl_auditlog_request').serialize(),
+        }).done(function (response) {
+            $('#loader').hide();
+            keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+
+            $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
+            if (response.kvtruckentriesForWeekNewCount != 0) {
+                drawPieChartUsingChartJsKVEntriesForWeek(response.chartData.kvtruckentriesForWeekNew);
+            }
+
+            $('#count_by_kventriespermonth').html(response.kvtruckentriesForMonthNewCount);
+            if (response.kvtruckentriesForMonthNewCount != 0) {
+                drawPieChartUsingChartJsKVEntriesForMonth(response.chartData.kvtruckentriesForMonthNew);
+            }
+            $('#count_by_kventriesperyear').html(response.kvtruckentriesForYearNewCount);
+            if (response.kvtruckentriesForYearNewCount != 0) {
+                drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
+            }
+        });
+    });
+    function drawPieChartUsingChartJsKVEntriesForWeek(dataValue) {
+
+        var labels = dataValue.map(function (e) {
+            return e.dateRange;
+        });
+        var data2 = dataValue.map(function (e) {
+            return e.recordCount;
+        });
+        // Data for the pie chart
+        const data = {
+            labels: labels,
+            datasets: [{
+                data: data2, // Values for each slice
+
+            },
+            ],
+            datalabels: {
+                // display labels for this specific dataset
+                display: true
+            }
+        };
+
+
+        var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_forweek");
+        var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_forweek1");
+        //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+        if (canvas !== null) {
+            const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_forweek').getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            window.myChart7 = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 2,
+                            bottom: 2
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value;
+
+                            },
+
+                            outsidePadding: 4,
+                            textMargin: 4
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+
+
+        }
+
+
+
+        if (canvas2 !== null) {
+            const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_forweek1').getContext('2d');
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            window.myChart8 = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 20,
+                            bottom: 20
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value + '%';
+
+                            },
+                            position: 'outside',
+                            outsidePadding: 10,
+                            textMargin: 10
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+        }
+
+
+        //if (canvas3 !== null) {
+        //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        //    window.myChart6 = new Chart(ctx3, {
+        //        type: 'pie',
+        //        data: {
+        //            labels: labels,
+        //            datasets: [{
+        //                label: '# of Votes',
+        //                data: data2,
+        //                backgroundColor: getColors(15),
+        //                borderColor: [
+        //                    'rgba(255, 99, 132, 1)',
+        //                    'rgba(54, 162, 235, 1)',
+        //                    'rgba(255, 206, 86, 1)',
+        //                    'rgba(75, 192, 192, 1)',
+        //                    'rgba(153, 102, 255, 1)',
+        //                    'rgba(255, 159, 64, 1)'
+        //                ],
+        //                borderWidth: 0
+        //            }]
+        //        },
+        //        options: {
+        //            layout: {
+        //                padding: {
+        //                    left: 10,
+        //                    right: 10,
+        //                    top: 20,
+        //                    bottom: 20
+        //                }
+        //            },
+        //            maintainAspectRatio: false,
+        //            plugins: {
+        //                tooltip: {
+        //                    enabled: true,
+        //                    callbacks: {
+        //                        label: function (context) {
+        //                            let label = context.label + '(' + context.formattedValue + '%)'
+        //                            return label;
+        //                        }
+        //                    }
+        //                },
+        //                legend: {
+        //                    position: 'right',
+        //                    labels: {
+        //                        font: {
+        //                            family: 'Arial',
+        //                            size: 11
+        //                        },
+
+        //                        boxWidth: 10,
+        //                        boxHeight: 10,
+        //                        generateLabels(chart) {
+        //                            const data = chart.data;
+        //                            if (data.labels.length && data.datasets.length) {
+        //                                const { labels: { pointStyle } } = chart.legend.options;
+
+        //                                return data.labels.map((label, i) => {
+        //                                    const meta = chart.getDatasetMeta(0);
+        //                                    const style = meta.controller.getStyle(i);
+
+        //                                    return {
+        //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+        //                                        fillStyle: style.backgroundColor,
+        //                                        strokeStyle: style.borderColor,
+        //                                        lineWidth: style.borderWidth,
+        //                                        borderWidth: 0,
+        //                                        pointStyle: pointStyle,
+        //                                        hidden: !chart.getDataVisibility(i),
+
+        //                                        // Extra data used for toggling the correct item
+        //                                        index: i
+        //                                    };
+        //                                });
+        //                            }
+        //                            return [];
+        //                        }
+        //                    }
+        //                },
+        //                labels: {
+        //                    /* render:"value",*/
+        //                    render: (args) => {
+
+        //                        return args.value + '%';
+
+        //                    },
+        //                    position: 'outside',
+        //                    outsidePadding: 10,
+        //                    textMargin: 10
+
+        //                },
+
+        //            }
+
+        //        },
+
+
+        //    });
+        //}
+
+        function getColors(length) {
+            let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+                "#7f7f7f", "#bcbd22", "#17becf",
+                "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+            let colors = [];
+
+            for (let i = 0; i < length; i++) {
+                colors.push(pallet[i % (pallet.length - 1)]);
+            }
+
+            return colors;
+        }
+        //// Configuration options
+        //const options = {
+        //    responsive: false,
+        //    plugins: {
+        //        legend: {
+        //            position: 'right',
+        //            onClick: function (event, legendItem) {
+        //                const index = legendItem.index;
+        //                const meta = this.chart.getDatasetMeta(0);
+        //                meta.data[index].hidden = !meta.data[index].hidden;
+        //                this.chart.update();
+        //            }
+        //        },
+        //        datalabels: {
+        //            backgroundColor: function (context) {
+        //                return context.dataset.backgroundColor;
+        //            },
+        //            borderColor: 'white',
+        //            borderRadius: 25,
+        //            borderWidth: 2,
+        //            color: 'white',
+        //            display: function (context) {
+        //                var dataset = context.dataset;
+        //                var count = dataset.data.length;
+        //                var value = dataset.data[context.dataIndex];
+        //                return value > count * 1.5;
+        //            }
+        //        }
+        //    }
+
+        //};
+
+        //// Create the pie chart
+        //var canvas = document.getElementById("myPieChart");
+        //if (canvas !== null) {
+        //    const ctx = document.getElementById('myPieChart').getContext('2d');
+        //    const myPieChart = new Chart(ctx, {
+        //        type: 'pie',
+        //        data: data,
+        //        options: options
+        //    });
+
+        //}
+
+    }
+    function drawPieChartUsingChartJsKVEntriesForMonth(dataValue) {
+
+        var labels = dataValue.map(function (e) {
+            return e.dateRange;
+        });
+        var data2 = dataValue.map(function (e) {
+            return e.recordCount;
+        });
+        // Data for the pie chart
+        const data = {
+            labels: labels,
+            datasets: [{
+                data: data2, // Values for each slice
+
+            },
+            ],
+            datalabels: {
+                // display labels for this specific dataset
+                display: true
+            }
+        };
+
+
+        var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_formonth");
+        var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_formonth1");
+        //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+        if (canvas !== null) {
+            const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_formonth').getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            window.myChart9 = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 2,
+                            bottom: 2
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value;
+
+                            },
+
+                            outsidePadding: 4,
+                            textMargin: 4
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+
+
+        }
+
+
+
+        if (canvas2 !== null) {
+            const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_formonth1').getContext('2d');
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            window.myChart10 = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 20,
+                            bottom: 20
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value + '%';
+
+                            },
+                            position: 'outside',
+                            outsidePadding: 10,
+                            textMargin: 10
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+        }
+
+
+        //if (canvas3 !== null) {
+        //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        //    window.myChart6 = new Chart(ctx3, {
+        //        type: 'pie',
+        //        data: {
+        //            labels: labels,
+        //            datasets: [{
+        //                label: '# of Votes',
+        //                data: data2,
+        //                backgroundColor: getColors(15),
+        //                borderColor: [
+        //                    'rgba(255, 99, 132, 1)',
+        //                    'rgba(54, 162, 235, 1)',
+        //                    'rgba(255, 206, 86, 1)',
+        //                    'rgba(75, 192, 192, 1)',
+        //                    'rgba(153, 102, 255, 1)',
+        //                    'rgba(255, 159, 64, 1)'
+        //                ],
+        //                borderWidth: 0
+        //            }]
+        //        },
+        //        options: {
+        //            layout: {
+        //                padding: {
+        //                    left: 10,
+        //                    right: 10,
+        //                    top: 20,
+        //                    bottom: 20
+        //                }
+        //            },
+        //            maintainAspectRatio: false,
+        //            plugins: {
+        //                tooltip: {
+        //                    enabled: true,
+        //                    callbacks: {
+        //                        label: function (context) {
+        //                            let label = context.label + '(' + context.formattedValue + '%)'
+        //                            return label;
+        //                        }
+        //                    }
+        //                },
+        //                legend: {
+        //                    position: 'right',
+        //                    labels: {
+        //                        font: {
+        //                            family: 'Arial',
+        //                            size: 11
+        //                        },
+
+        //                        boxWidth: 10,
+        //                        boxHeight: 10,
+        //                        generateLabels(chart) {
+        //                            const data = chart.data;
+        //                            if (data.labels.length && data.datasets.length) {
+        //                                const { labels: { pointStyle } } = chart.legend.options;
+
+        //                                return data.labels.map((label, i) => {
+        //                                    const meta = chart.getDatasetMeta(0);
+        //                                    const style = meta.controller.getStyle(i);
+
+        //                                    return {
+        //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+        //                                        fillStyle: style.backgroundColor,
+        //                                        strokeStyle: style.borderColor,
+        //                                        lineWidth: style.borderWidth,
+        //                                        borderWidth: 0,
+        //                                        pointStyle: pointStyle,
+        //                                        hidden: !chart.getDataVisibility(i),
+
+        //                                        // Extra data used for toggling the correct item
+        //                                        index: i
+        //                                    };
+        //                                });
+        //                            }
+        //                            return [];
+        //                        }
+        //                    }
+        //                },
+        //                labels: {
+        //                    /* render:"value",*/
+        //                    render: (args) => {
+
+        //                        return args.value + '%';
+
+        //                    },
+        //                    position: 'outside',
+        //                    outsidePadding: 10,
+        //                    textMargin: 10
+
+        //                },
+
+        //            }
+
+        //        },
+
+
+        //    });
+        //}
+
+        function getColors(length) {
+            let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+                "#7f7f7f", "#bcbd22", "#17becf",
+                "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+            let colors = [];
+
+            for (let i = 0; i < length; i++) {
+                colors.push(pallet[i % (pallet.length - 1)]);
+            }
+
+            return colors;
+        }
+        //// Configuration options
+        //const options = {
+        //    responsive: false,
+        //    plugins: {
+        //        legend: {
+        //            position: 'right',
+        //            onClick: function (event, legendItem) {
+        //                const index = legendItem.index;
+        //                const meta = this.chart.getDatasetMeta(0);
+        //                meta.data[index].hidden = !meta.data[index].hidden;
+        //                this.chart.update();
+        //            }
+        //        },
+        //        datalabels: {
+        //            backgroundColor: function (context) {
+        //                return context.dataset.backgroundColor;
+        //            },
+        //            borderColor: 'white',
+        //            borderRadius: 25,
+        //            borderWidth: 2,
+        //            color: 'white',
+        //            display: function (context) {
+        //                var dataset = context.dataset;
+        //                var count = dataset.data.length;
+        //                var value = dataset.data[context.dataIndex];
+        //                return value > count * 1.5;
+        //            }
+        //        }
+        //    }
+
+        //};
+
+        //// Create the pie chart
+        //var canvas = document.getElementById("myPieChart");
+        //if (canvas !== null) {
+        //    const ctx = document.getElementById('myPieChart').getContext('2d');
+        //    const myPieChart = new Chart(ctx, {
+        //        type: 'pie',
+        //        data: data,
+        //        options: options
+        //    });
+
+        //}
+
+    }
+    function drawPieChartUsingChartJsKVEntriesForYear(dataValue) {
+
+        var labels = dataValue.map(function (e) {
+            return e.dateRange;
+        });
+        var data2 = dataValue.map(function (e) {
+            return e.recordCount;
+        });
+        // Data for the pie chart
+        const data = {
+            labels: labels,
+            datasets: [{
+                data: data2, // Values for each slice
+
+            },
+            ],
+            datalabels: {
+                // display labels for this specific dataset
+                display: true
+            }
+        };
+
+
+        var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_foryear");
+        var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_foryear1");
+        //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+        if (canvas !== null) {
+            const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_foryear').getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            window.myChart11 = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 2,
+                            bottom: 2
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value;
+
+                            },
+
+                            outsidePadding: 4,
+                            textMargin: 4
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+
+
+        }
+
+
+
+        if (canvas2 !== null) {
+            const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_foryear1').getContext('2d');
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            window.myChart12 = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data2,
+                        backgroundColor: getColors(15),
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 20,
+                            bottom: 20
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.label + '(' + context.formattedValue + ')'
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: 'Arial',
+                                    size: 11
+                                },
+
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                generateLabels(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels: { pointStyle } } = chart.legend.options;
+
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+
+                                            return {
+                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                borderWidth: 0,
+                                                pointStyle: pointStyle,
+                                                hidden: !chart.getDataVisibility(i),
+
+                                                // Extra data used for toggling the correct item
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        labels: {
+                            /* render:"value",*/
+                            render: (args) => {
+
+                                return args.value + '%';
+
+                            },
+                            position: 'outside',
+                            outsidePadding: 10,
+                            textMargin: 10
+
+                        },
+
+                    }
+
+                },
+
+
+            });
+        }
+
+
+        //if (canvas3 !== null) {
+        //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        //    window.myChart6 = new Chart(ctx3, {
+        //        type: 'pie',
+        //        data: {
+        //            labels: labels,
+        //            datasets: [{
+        //                label: '# of Votes',
+        //                data: data2,
+        //                backgroundColor: getColors(15),
+        //                borderColor: [
+        //                    'rgba(255, 99, 132, 1)',
+        //                    'rgba(54, 162, 235, 1)',
+        //                    'rgba(255, 206, 86, 1)',
+        //                    'rgba(75, 192, 192, 1)',
+        //                    'rgba(153, 102, 255, 1)',
+        //                    'rgba(255, 159, 64, 1)'
+        //                ],
+        //                borderWidth: 0
+        //            }]
+        //        },
+        //        options: {
+        //            layout: {
+        //                padding: {
+        //                    left: 10,
+        //                    right: 10,
+        //                    top: 20,
+        //                    bottom: 20
+        //                }
+        //            },
+        //            maintainAspectRatio: false,
+        //            plugins: {
+        //                tooltip: {
+        //                    enabled: true,
+        //                    callbacks: {
+        //                        label: function (context) {
+        //                            let label = context.label + '(' + context.formattedValue + '%)'
+        //                            return label;
+        //                        }
+        //                    }
+        //                },
+        //                legend: {
+        //                    position: 'right',
+        //                    labels: {
+        //                        font: {
+        //                            family: 'Arial',
+        //                            size: 11
+        //                        },
+
+        //                        boxWidth: 10,
+        //                        boxHeight: 10,
+        //                        generateLabels(chart) {
+        //                            const data = chart.data;
+        //                            if (data.labels.length && data.datasets.length) {
+        //                                const { labels: { pointStyle } } = chart.legend.options;
+
+        //                                return data.labels.map((label, i) => {
+        //                                    const meta = chart.getDatasetMeta(0);
+        //                                    const style = meta.controller.getStyle(i);
+
+        //                                    return {
+        //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+        //                                        fillStyle: style.backgroundColor,
+        //                                        strokeStyle: style.borderColor,
+        //                                        lineWidth: style.borderWidth,
+        //                                        borderWidth: 0,
+        //                                        pointStyle: pointStyle,
+        //                                        hidden: !chart.getDataVisibility(i),
+
+        //                                        // Extra data used for toggling the correct item
+        //                                        index: i
+        //                                    };
+        //                                });
+        //                            }
+        //                            return [];
+        //                        }
+        //                    }
+        //                },
+        //                labels: {
+        //                    /* render:"value",*/
+        //                    render: (args) => {
+
+        //                        return args.value + '%';
+
+        //                    },
+        //                    position: 'outside',
+        //                    outsidePadding: 10,
+        //                    textMargin: 10
+
+        //                },
+
+        //            }
+
+        //        },
+
+
+        //    });
+        //}
+
+        function getColors(length) {
+            let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+                "#7f7f7f", "#bcbd22", "#17becf",
+                "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+            let colors = [];
+
+            for (let i = 0; i < length; i++) {
+                colors.push(pallet[i % (pallet.length - 1)]);
+            }
+
+            return colors;
+        }
+        //// Configuration options
+        //const options = {
+        //    responsive: false,
+        //    plugins: {
+        //        legend: {
+        //            position: 'right',
+        //            onClick: function (event, legendItem) {
+        //                const index = legendItem.index;
+        //                const meta = this.chart.getDatasetMeta(0);
+        //                meta.data[index].hidden = !meta.data[index].hidden;
+        //                this.chart.update();
+        //            }
+        //        },
+        //        datalabels: {
+        //            backgroundColor: function (context) {
+        //                return context.dataset.backgroundColor;
+        //            },
+        //            borderColor: 'white',
+        //            borderRadius: 25,
+        //            borderWidth: 2,
+        //            color: 'white',
+        //            display: function (context) {
+        //                var dataset = context.dataset;
+        //                var count = dataset.data.length;
+        //                var value = dataset.data[context.dataIndex];
+        //                return value > count * 1.5;
+        //            }
+        //        }
+        //    }
+
+        //};
+
+        //// Create the pie chart
+        //var canvas = document.getElementById("myPieChart");
+        //if (canvas !== null) {
+        //    const ctx = document.getElementById('myPieChart').getContext('2d');
+        //    const myPieChart = new Chart(ctx, {
+        //        type: 'pie',
+        //        data: data,
+        //        options: options
+        //    });
+
+        //}
+
+    }
+    $('#btncount_by_kventriesPerWeek').on('click', function () {
+        $('#modelKVEntriesForweek').modal('show');
+    });
+    $('#btncount_by_kventriesPerMonth').on('click', function () {
+        $('#modelKVEntriesFormonth').modal('show');
+    });
+    $('#btncount_by_kventriesPerYear').on('click', function () {
+        $('#modelKVEntriesForyear').modal('show');
+    });
+    //code addded  to download Excel start for auditsite key vehicle-start
+    $("#btnDownloadVklAuditExcel").click(function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#vklAudtitFromDate').val());
+        var date2 = new Date($('#vklAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+        //calculate month difference-end
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
+
+        $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_kvl_auditlog_request').serialize(),
+        }).done(function (response) {
+            $('#loader').hide();
+            keyVehicleLogReportnew.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            /*p1-218 search download select-start*/
+            var searchtext = keyVehicleLogReport.search();
+            keyVehicleLogReportnew.search(searchtext).draw();
+            /*p1-218 search download select-end*/
+            var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('vkl_site_lognew');
+
+
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogs" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+        });
+
+    });
+    //code addded  to download Excel start for auditsite key vehicle-end
+
+
+    //$('#btnDisableDataCollection').on('click', function () {
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=UpdateSiteDataCollection',
+    //        type: 'POST',
+    //        data: {
+    //            clientSiteId: $('#gl_client_site_id').val(),
+    //            disabled: $('#cbxDisableDataCollection').is(":checked")
+    //        },
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    //    }).done(function () {
+    //        alert("Saved successfully");
+    //    });
+    //});
+
+    //code addded  to download Excel start
+
+    //$("#add_Downloadbtn").click(function () {
+
+    //    var Key = $('#site-settings-for').html();
+
+    //    var type = 'xlsx';
+    //    var name = Key + '.';
+    //    var data = document.getElementById('cs_client_site_keys');
+
+    //    // Check if all columns are empty
+    //    var isEmptyTable = true;
+    //    var rows = data.getElementsByTagName('tr');
+    //    for (var i = 0; i < rows.length; i++) {
+    //        var cells = rows[i].getElementsByTagName('td');
+    //        for (var j = 1; j < cells.length; j++) {
+    //            if (cells[j].textContent.trim() !== '') {
+    //                isEmptyTable = false;
+    //                break;
+    //            }
+    //        }
+    //    }
+
+    //    if (isEmptyTable) {
+    //        // Create a message row with the desired text
+    //        var messageRow = document.createElement('tr');
+    //        var messageCell = document.createElement('td');
+    //        messageCell.innerText = 'No data available in table';
+    //        messageRow.appendChild(messageCell);
+
+    //        // Create a new table with the message
+    //        var tableClone = document.createElement('table');
+    //        var tbody = document.createElement('tbody');
+    //        tbody.appendChild(messageRow);
+    //        tableClone.appendChild(tbody);
+    //    } else {
+    //        // Clone the table and remove the last column
+    //        var tableClone = data.cloneNode(true);
+    //        var rows = tableClone.getElementsByTagName('tr');
+    //        for (var i = 0; i < rows.length; i++) {
+    //            var lastCell = rows[i].lastElementChild;
+    //            if (lastCell) {
+    //                rows[i].removeChild(lastCell);
+    //            }
+    //        }
+    //    }
+
+
+
+
+    //    var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
+
+    //    // Use XLSX.writeFile to generate and download the Excel file
+    //    XLSX.writeFile(excelFile, name + type);
+    //});
+    //code addded  to download Excel end
+
+    //$('#ClientSiteCustomField_Name').editableSelect({
+    //    effects: 'slide'
+    //});
+
+    //$('#ClientSiteCustomField_TimeSlot').editableSelect({
+    //    effects: 'slide'
+    //});
+
+    function settingsButtonRenderer(value, record) {
+        return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#gl-site-settings-modal" ' +
+            'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
+            '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
+            '" data-cs-name="' + record.clientSiteName + '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+    }
+
+    $('#gl-site-settings-modal').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const siteId = button.data('cs-id');
+        const siteName = button.data('cs-name');
+        const siteEmail = button.data('cs-email');
+        const duressEmail = button.data('cs-duressemail');
+        const duressSms = button.data('cs-duresssms');
+        const landLine = button.data('cs-landline');
+        const isDataCollectionEnabled = button.data('cs-datacollection-enabled');
+
+        const guardLogEmailTo = button.data('cs-guardlog-emailto');
+        const isUpdateDailyLog = button.data('cs-dbx-upload');
+        $('#site-settings-for').html(siteName);
+        $('#gl_client_site_id').val(siteId);
+        $('#ClientSiteKey_ClientSiteId').val(siteId);
+        //$('#ClientSiteCustomField_ClientSiteId').val(siteId);
+        //$('#gs_site_email').val(siteEmail);
+        //$('#gs_duress_email').val(duressEmail);
+        //$('#gs_duress_sms').val(duressSms);
+        //$('#gs_land_line').val(landLine);
+        //$('#gs_email_recipients').val(guardLogEmailTo);
+        //$('#enableLogDump').prop('checked', false);
+        $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
+        //if (isUpdateDailyLog)
+        //    $('#enableLogDump').prop('checked', true);
+        gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+        gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
+        loadCustomFields();
+        gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
+        gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
+        gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
+        gridClientSiteKeys.ajax.reload();
+        /*for manifest options-start*/
+        GetClientSiteToggle();
+        /*for manifest options - end*/
+    });
+
+    $('#gl-site-settings-modal').on('hide.bs.modal', function (event) {
+        gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
+    });
+
+    $('#btnSearchSitesOnDailyGuard').on('click', function () {
+        gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
+    });
+
+    $('#search_sites_guard_settings').on('keydown', function (e) {
+        if (e.which === 13) {
+            gridLogSiteSettings.reload({ type: $('#gl_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
+        }
+    });
+
+    let gridLogSiteSettings;
+
+    gridLogSiteSettings = $('#gl_site_settings').grid({
+        dataSource: '/Admin/GuardSettings?handler=ClientSiteWithLogSettings',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { width: 150, field: 'clientTypeName', title: 'Client Type' },
+            { width: 250, field: 'clientSiteName', title: 'Client Site' },
+            { width: 250, field: 'siteEmail', title: 'Site Email', hidden: true },
+            { width: 250, field: 'landLine', title: 'Site Land Line', hidden: true },
+            { width: 250, field: 'guardLogEmailTo', title: 'Email Recipients', hidden: true },
+            { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
+            { width: 50, field: 'hasSettings', title: 'Settings Available?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
+            { width: 100, renderer: settingsButtonRenderer },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    $('#gl_client_type').on('change', function () {
+        gridLogSiteSettings.reload({ type: $(this).val(), searchTerm: $('#search_sites_guard_settings').val() });
+    });
+
+    //let gridSitePatrolCars;
+    //gridSitePatrolCars = $('#cs-patrol-cars').grid({
+    //    dataSource: '/Admin/GuardSettings?handler=PatrolCar',
+    //    uiLibrary: 'bootstrap4',
+    //    iconsLibrary: 'fontawesome',
+    //    primaryKey: 'id',
+    //    inlineEditing: { mode: 'command' },
+    //    columns: [
+    //        { width: 250, field: 'model', title: 'Model', editor: true },
+    //        { width: 250, field: 'rego', title: 'Rego', editor: true },
+    //        { width: 250, field: 'id', title: 'Id', hidden: true }
+    //    ],
+    //    initialized: function (e) {
+    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    //    }
+    //});
+
+    //if (gridSitePatrolCars) {
+    //    gridSitePatrolCars.on('rowDataChanged', function (e, id, record) {
+    //        const data = $.extend(true, {}, record);
+    //        const token = $('input[name="__RequestVerificationToken"]').val();
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=PatrolCar',
+    //            data: { record: data },
+    //            type: 'POST',
+    //            headers: { 'RequestVerificationToken': token },
+    //        }).done(function () {
+    //            gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //        }).fail(function () {
+    //            console.log('error');
+    //        }).always(function () {
+    //            if (isPatrolCarAdding)
+    //                isPatrolCarAdding = false;
+    //        });
+    //    });
+
+    //    gridSitePatrolCars.on('rowRemoving', function (e, id, record) {
+    //        if (confirm('Are you sure want to delete this patrol car details?')) {
+    //            const token = $('input[name="__RequestVerificationToken"]').val();
+    //            $.ajax({
+    //                url: '/Admin/GuardSettings?handler=DeletePatrolCar',
+    //                data: { id: record },
+    //                type: 'POST',
+    //                headers: { 'RequestVerificationToken': token },
+    //            }).done(function () {
+    //                gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //            }).fail(function () {
+    //                console.log('error');
+    //            }).always(function () {
+    //                if (isPatrolCarAdding)
+    //                    isPatrolCarAdding = false;
+    //            });
+    //        }
+    //    });
+    //}
+
+    //let isPatrolCarAdding = false;
+    //$('#add_patrol_car').on('click', function () {
+
+    //    if (isPatrolCarAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isPatrolCarAdding = true;
+    //        gridSitePatrolCars.addRow({ 'id': -1, 'model': '', rego: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+    //    }
+    //});
+
+
+    let gritdSmartWands;
+    gritdSmartWands = $('#cs-smart-wands').grid({
+        dataSource: '/Admin/GuardSettings?handler=SmartWandSettings',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
+            { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    if (gritdSmartWands) {
+        gritdSmartWands.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
-                url: '/Admin/GuardSettings?handler=DeleteSmartWandSettings',
-                data: { id: record },
+                url: '/Admin/GuardSettings?handler=SmartWandSettings',
+                data: { record: data },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': token },
             }).done(function () {
@@ -4453,1512 +4434,1553 @@ if (gritdSmartWands) {
                 if (isSmartWandAdding)
                     isSmartWandAdding = false;
             });
-        }
-    });
-}
+        });
 
-let isSmartWandAdding = false;
-$('#add_smart_wand').on('click', function () {
-
-    if (isSmartWandAdding) {
-        alert('Unsaved changes in the grid. Refresh the page');
-    } else {
-        isSmartWandAdding = true;
-        gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-    }
-});
-/*  code added to 1000 pages in Excel */
-//let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
-//    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-//    paging: true,
-//    ordering: true,
-//    order: [[1, "asc"]],
-//    info: false,
-//    searching: true,
-//    autoWidth: false,
-//    ajax: {
-//        url: '/Admin/GuardSettings?handler=ClientSiteKeys',
-//        data: function (d) {
-//            d.clientSiteId = $('#ClientSiteKey_ClientSiteId').val();
-//        },
-//        dataSrc: ''
-//    },
-//    columns: [
-//        { data: 'id', visible: false },
-//        { data: 'keyNo', width: '4%' },
-//        { data: 'description', width: '12%', orderable: false },
-//        {
-//            targets: -1,
-//            orderable: false,
-//            width: '4%',
-//            data: null,
-//            defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-//                '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
-//            className: "text-center"
-//        },
-//    ],
-//});
-
-//$('#cs_client_site_keys tbody').on('click', '#btn_delete_cs_key', function () {
-//    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
-//    if (confirm('Are you sure want to delete this key?')) {
-//        $.ajax({
-//            type: 'POST',
-//            url: '/Admin/GuardSettings?handler=DeleteClientSiteKey',
-//            data: { 'id': data.id },
-//            dataType: 'json',
-//            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//        }).done(function () {
-//            gridClientSiteKeys.ajax.reload();
-//        });
-//    }
-//});
-
-//$('#cs_client_site_keys tbody').on('click', '#btn_edit_cs_key', function () {
-//    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
-//    loadClientSiteKeyModal(data);
-//});
-
-//$('#add_client_site_key').on('click', function () {
-//    resetClientSiteKeyModal();
-//    $('#client-site-key-modal').modal('show');
-//});
-
-//$('#btn_save_cs_key').on('click', function () {
-//    $.ajax({
-//        url: '/Admin/GuardSettings?handler=ClientSiteKey',
-//        data: $('#frm_add_key').serialize(),
-//        type: 'POST',
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//    }).done(function (result) {
-//        if (result.success) {
-//            $('#client-site-key-modal').modal('hide');
-//            gridClientSiteKeys.ajax.reload();
-//        } else {
-//            displaySiteKeyValidationSummary(result.message);
-//        }
-//    });
-//});
-
-//function loadClientSiteKeyModal(data) {
-//    $('#ClientSiteKey_Id').val(data.id);
-//    $('#ClientSiteKey_KeyNo').val(data.keyNo);
-//    $('#ClientSiteKey_Description').val(data.description);
-//    $('#csKeyValidationSummary').html('');
-//    $('#client-site-key-modal').modal('show');
-//}
-
-//function resetClientSiteKeyModal() {
-//    $('#ClientSiteKey_Id').val('');
-//    $('#ClientSiteKey_KeyNo').val('');
-//    $('#ClientSiteKey_Description').val('');
-//    $('#csKeyValidationSummary').html('');
-//    $('#client-site-key-modal').modal('hide');
-//}
-
-function displaySiteKeyValidationSummary(errors) {
-    $('#csKeyValidationSummary').removeClass('validation-summary-valid').addClass('validation-summary-errors');
-    $('#csKeyValidationSummary').html('');
-    $('#csKeyValidationSummary').append('<ul></ul>');
-    if (!Array.isArray(errors)) {
-        $('#csKeyValidationSummary ul').append('<li>' + errors + '</li>');
-    } else {
-        errors.forEach(function (item) {
-            if (item.indexOf(',') > 0) {
-                item.split(',').forEach(function (itemInner) {
-                    $('#csKeyValidationSummary ul').append('<li>' + itemInner + '</li>');
+        gritdSmartWands.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this smart wand details?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteSmartWandSettings',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isSmartWandAdding)
+                        isSmartWandAdding = false;
                 });
-            } else {
-                $('#csKeyValidationSummary ul').append('<li>' + item + '</li>');
             }
         });
     }
-}
 
-//$('#btnSaveGuardSiteSettings').on('click', function () {
-//    var isUpdateDailyLog = false;
+    let isSmartWandAdding = false;
+    $('#add_smart_wand').on('click', function () {
 
-//    const token = $('input[name="__RequestVerificationToken"]').val();
-//    if ($('#enableLogDump').is(":checked")) {
-//        isUpdateDailyLog = true;
-//    }
-//    $.ajax({
-//        url: '/Admin/GuardSettings?handler=SaveSiteEmail',
-//        type: 'POST',
-//        data: {
-//            siteId: $('#gl_client_site_id').val(),
-//            siteEmail: $('#gs_site_email').val(),
-//            enableLogDump: isUpdateDailyLog,
-//            landLine: $('#gs_land_line').val(),
-//            guardEmailTo: $('#gs_email_recipients').val(),
-//            duressEmail: $('#gs_duress_email').val(),
-//            duressSms: $('#gs_duress_sms').val()
-//        },
-//        headers: { 'RequestVerificationToken': token }
-//    }).done(function () {
-//        alert("Saved successfully");
-//    }).fail(function () {
-//        console.log("error");
-//    });
-//});
+        if (isSmartWandAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isSmartWandAdding = true;
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+        }
+    });
+    /*  code added to 1000 pages in Excel */
+    //let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
+    //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    //    paging: true,
+    //    ordering: true,
+    //    order: [[1, "asc"]],
+    //    info: false,
+    //    searching: true,
+    //    autoWidth: false,
+    //    ajax: {
+    //        url: '/Admin/GuardSettings?handler=ClientSiteKeys',
+    //        data: function (d) {
+    //            d.clientSiteId = $('#ClientSiteKey_ClientSiteId').val();
+    //        },
+    //        dataSrc: ''
+    //    },
+    //    columns: [
+    //        { data: 'id', visible: false },
+    //        { data: 'keyNo', width: '4%' },
+    //        { data: 'description', width: '12%', orderable: false },
+    //        {
+    //            targets: -1,
+    //            orderable: false,
+    //            width: '4%',
+    //            data: null,
+    //            defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+    //                '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+    //            className: "text-center"
+    //        },
+    //    ],
+    //});
 
-//$('#btnSaveCustomFields').on('click', function () {
-//    $('#custom-field-validation ul').html('');
-//    $.ajax({
-//        url: '/Admin/GuardSettings?handler=CustomFields',
-//        type: 'POST',
-//        DataType: 'json',
-//        data: $('#frm_custom_field').serialize(),
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//    }).done(function (result) {
-//        if (!result.status)
-//            displayCustomFieldsValidationSummary(result.message[0].split(','));
-//        else {
-//            loadCustomFields();
-//            gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//        }
-//    }).fail(function () {
-//        console.log("error");
-//    });
-//});
+    //$('#cs_client_site_keys tbody').on('click', '#btn_delete_cs_key', function () {
+    //    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
+    //    if (confirm('Are you sure want to delete this key?')) {
+    //        $.ajax({
+    //            type: 'POST',
+    //            url: '/Admin/GuardSettings?handler=DeleteClientSiteKey',
+    //            data: { 'id': data.id },
+    //            dataType: 'json',
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function () {
+    //            gridClientSiteKeys.ajax.reload();
+    //        });
+    //    }
+    //});
 
-//function loadCustomFields() {
-//    $.ajax({
-//        url: '/Admin/GuardSettings?handler=CustomFields',
-//        type: 'GET',
-//        dataType: 'json'
-//    }).done(function (data) {
-//        const ulFields = $('#ClientSiteCustomField_Name').siblings('ul.es-list');
-//        $('#ClientSiteCustomField_Name').val('');
-//        ulFields.html('');
-//        data.fieldNames.map(function (result) {
-//            ulFields.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
-//        });
+    //$('#cs_client_site_keys tbody').on('click', '#btn_edit_cs_key', function () {
+    //    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
+    //    loadClientSiteKeyModal(data);
+    //});
 
-//        const ulSlots = $('#ClientSiteCustomField_TimeSlot').siblings('ul.es-list');
-//        $('#ClientSiteCustomField_TimeSlot').val('');
-//        ulSlots.html('');
-//        data.slots.map(function (result) {
-//            ulSlots.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
-//        });
-//    });
-//}
+    //$('#add_client_site_key').on('click', function () {
+    //    resetClientSiteKeyModal();
+    //    $('#client-site-key-modal').modal('show');
+    //});
 
-//let gridSiteCustomFields;
+    //$('#btn_save_cs_key').on('click', function () {
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=ClientSiteKey',
+    //        data: $('#frm_add_key').serialize(),
+    //        type: 'POST',
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (result.success) {
+    //            $('#client-site-key-modal').modal('hide');
+    //            gridClientSiteKeys.ajax.reload();
+    //        } else {
+    //            displaySiteKeyValidationSummary(result.message);
+    //        }
+    //    });
+    //});
 
-//function renderSiteCustomFieldsManagement(value, record, $cell, $displayEl) {
-//    let $deleteBtn = $('<button class="btn btn-outline-danger mr-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>');
-//    let $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>');
-//    let $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide();
-//    let $cancelBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
+    //function loadClientSiteKeyModal(data) {
+    //    $('#ClientSiteKey_Id').val(data.id);
+    //    $('#ClientSiteKey_KeyNo').val(data.keyNo);
+    //    $('#ClientSiteKey_Description').val(data.description);
+    //    $('#csKeyValidationSummary').html('');
+    //    $('#client-site-key-modal').modal('show');
+    //}
+
+    //function resetClientSiteKeyModal() {
+    //    $('#ClientSiteKey_Id').val('');
+    //    $('#ClientSiteKey_KeyNo').val('');
+    //    $('#ClientSiteKey_Description').val('');
+    //    $('#csKeyValidationSummary').html('');
+    //    $('#client-site-key-modal').modal('hide');
+    //}
+
+    function displaySiteKeyValidationSummary(errors) {
+        $('#csKeyValidationSummary').removeClass('validation-summary-valid').addClass('validation-summary-errors');
+        $('#csKeyValidationSummary').html('');
+        $('#csKeyValidationSummary').append('<ul></ul>');
+        if (!Array.isArray(errors)) {
+            $('#csKeyValidationSummary ul').append('<li>' + errors + '</li>');
+        } else {
+            errors.forEach(function (item) {
+                if (item.indexOf(',') > 0) {
+                    item.split(',').forEach(function (itemInner) {
+                        $('#csKeyValidationSummary ul').append('<li>' + itemInner + '</li>');
+                    });
+                } else {
+                    $('#csKeyValidationSummary ul').append('<li>' + item + '</li>');
+                }
+            });
+        }
+    }
+
+    //$('#btnSaveGuardSiteSettings').on('click', function () {
+    //    var isUpdateDailyLog = false;
+
+    //    const token = $('input[name="__RequestVerificationToken"]').val();
+    //    if ($('#enableLogDump').is(":checked")) {
+    //        isUpdateDailyLog = true;
+    //    }
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=SaveSiteEmail',
+    //        type: 'POST',
+    //        data: {
+    //            siteId: $('#gl_client_site_id').val(),
+    //            siteEmail: $('#gs_site_email').val(),
+    //            enableLogDump: isUpdateDailyLog,
+    //            landLine: $('#gs_land_line').val(),
+    //            guardEmailTo: $('#gs_email_recipients').val(),
+    //            duressEmail: $('#gs_duress_email').val(),
+    //            duressSms: $('#gs_duress_sms').val()
+    //        },
+    //        headers: { 'RequestVerificationToken': token }
+    //    }).done(function () {
+    //        alert("Saved successfully");
+    //    }).fail(function () {
+    //        console.log("error");
+    //    });
+    //});
+
+    //$('#btnSaveCustomFields').on('click', function () {
+    //    $('#custom-field-validation ul').html('');
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=CustomFields',
+    //        type: 'POST',
+    //        DataType: 'json',
+    //        data: $('#frm_custom_field').serialize(),
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (!result.status)
+    //            displayCustomFieldsValidationSummary(result.message[0].split(','));
+    //        else {
+    //            loadCustomFields();
+    //            gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //        }
+    //    }).fail(function () {
+    //        console.log("error");
+    //    });
+    //});
+
+    //function loadCustomFields() {
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=CustomFields',
+    //        type: 'GET',
+    //        dataType: 'json'
+    //    }).done(function (data) {
+    //        const ulFields = $('#ClientSiteCustomField_Name').siblings('ul.es-list');
+    //        $('#ClientSiteCustomField_Name').val('');
+    //        ulFields.html('');
+    //        data.fieldNames.map(function (result) {
+    //            ulFields.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
+    //        });
+
+    //        const ulSlots = $('#ClientSiteCustomField_TimeSlot').siblings('ul.es-list');
+    //        $('#ClientSiteCustomField_TimeSlot').val('');
+    //        ulSlots.html('');
+    //        data.slots.map(function (result) {
+    //            ulSlots.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
+    //        });
+    //    });
+    //}
+
+    //let gridSiteCustomFields;
+
+    //function renderSiteCustomFieldsManagement(value, record, $cell, $displayEl) {
+    //    let $deleteBtn = $('<button class="btn btn-outline-danger mr-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>');
+    //    let $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>');
+    //    let $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide();
+    //    let $cancelBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
 
 
-//    $deleteBtn.on('click', function (e) {
-//        gridSiteCustomFields.removeRow($(this).data('id'));
-//    });
+    //    $deleteBtn.on('click', function (e) {
+    //        gridSiteCustomFields.removeRow($(this).data('id'));
+    //    });
 
-//    $editBtn.on('click', function (e) {
-//        gridSiteCustomFields.edit($(this).data('id'));
-//        $editBtn.hide();
-//        $deleteBtn.hide();
-//        $updateBtn.show();
-//        $cancelBtn.show();
-//    });
+    //    $editBtn.on('click', function (e) {
+    //        gridSiteCustomFields.edit($(this).data('id'));
+    //        $editBtn.hide();
+    //        $deleteBtn.hide();
+    //        $updateBtn.show();
+    //        $cancelBtn.show();
+    //    });
 
-//    $updateBtn.on('click', function (e) {
-//        gridSiteCustomFields.update($(this).data('id'));
-//        $editBtn.show();
-//        $deleteBtn.show();
-//        $updateBtn.hide();
-//        $cancelBtn.hide();
-//    });
+    //    $updateBtn.on('click', function (e) {
+    //        gridSiteCustomFields.update($(this).data('id'));
+    //        $editBtn.show();
+    //        $deleteBtn.show();
+    //        $updateBtn.hide();
+    //        $cancelBtn.hide();
+    //    });
 
-//    $cancelBtn.on('click', function (e) {
-//        gridSiteCustomFields.cancel($(this).data('id'));
-//        $editBtn.show();
-//        $deleteBtn.show();
-//        $updateBtn.hide();
-//        $cancelBtn.hide();
-//    });
+    //    $cancelBtn.on('click', function (e) {
+    //        gridSiteCustomFields.cancel($(this).data('id'));
+    //        $editBtn.show();
+    //        $deleteBtn.show();
+    //        $updateBtn.hide();
+    //        $cancelBtn.hide();
+    //    });
 
-//    $displayEl.empty().append($editBtn)
-//        .append($deleteBtn)
-//        .append($updateBtn)
-//        .append($cancelBtn);
-//}
+    //    $displayEl.empty().append($editBtn)
+    //        .append($deleteBtn)
+    //        .append($updateBtn)
+    //        .append($cancelBtn);
+    //}
 
-//gridSiteCustomFields = $('#cs-custom-fields').grid({
-//    dataSource: '/Admin/GuardSettings?handler=ClientSiteCustomFields',
-//    data: { clientSiteId: $('#gl_client_site_id').val() },
-//    uiLibrary: 'bootstrap4',
-//    iconsLibrary: 'fontawesome',
-//    primaryKey: 'id',
-//    inlineEditing: { mode: 'command', managementColumn: false },
-//    columns: [
-//        { field: 'timeSlot', title: 'Time Slot', editor: true },
-//        { field: 'name', title: 'Field Name', editor: true },
-//        { renderer: renderSiteCustomFieldsManagement }
-//    ],
-//    initialized: function (e) {
-//        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-//    }
-//});
+    //gridSiteCustomFields = $('#cs-custom-fields').grid({
+    //    dataSource: '/Admin/GuardSettings?handler=ClientSiteCustomFields',
+    //    data: { clientSiteId: $('#gl_client_site_id').val() },
+    //    uiLibrary: 'bootstrap4',
+    //    iconsLibrary: 'fontawesome',
+    //    primaryKey: 'id',
+    //    inlineEditing: { mode: 'command', managementColumn: false },
+    //    columns: [
+    //        { field: 'timeSlot', title: 'Time Slot', editor: true },
+    //        { field: 'name', title: 'Field Name', editor: true },
+    //        { renderer: renderSiteCustomFieldsManagement }
+    //    ],
+    //    initialized: function (e) {
+    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    //    }
+    //});
 
-//if (gridSiteCustomFields) {
-//    gridSiteCustomFields.on('rowDataChanged', function (e, id, record) {
-//        const data = $.extend(true, {}, record);
-//        const token = $('input[name="__RequestVerificationToken"]').val();
-//        $.ajax({
-//            url: '/Admin/GuardSettings?handler=CustomFields',
-//            data: { clientSiteCustomField: record },
-//            type: 'POST',
-//            headers: { 'RequestVerificationToken': token },
-//        }).done(function (result) {
-//            if (result.status) gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//            else alert(result.message);
-//        }).fail(function () {
-//            console.log('error');
-//        }).always(function () {
+    //if (gridSiteCustomFields) {
+    //    gridSiteCustomFields.on('rowDataChanged', function (e, id, record) {
+    //        const data = $.extend(true, {}, record);
+    //        const token = $('input[name="__RequestVerificationToken"]').val();
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=CustomFields',
+    //            data: { clientSiteCustomField: record },
+    //            type: 'POST',
+    //            headers: { 'RequestVerificationToken': token },
+    //        }).done(function (result) {
+    //            if (result.status) gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //            else alert(result.message);
+    //        }).fail(function () {
+    //            console.log('error');
+    //        }).always(function () {
 
-//        });
-//    });
+    //        });
+    //    });
 
-//    gridSiteCustomFields.on('rowRemoving', function (e, id, record) {
-//        if (confirm('Are you sure want to delete this entry?')) {
-//            const token = $('input[name="__RequestVerificationToken"]').val();
-//            $.ajax({
-//                url: '/Admin/GuardSettings?handler=DeleteClientSiteCustomField',
-//                data: { id: record },
-//                type: 'POST',
-//                headers: { 'RequestVerificationToken': token },
-//            }).done(function (result) {
-//                if (!result.success) alert(result.message);
-//                else {
-//                    loadCustomFields();
-//                    gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//                }
-//            }).fail(function () {
-//                console.log('error');
-//            });
-//        }
-//    });
-//}
+    //    gridSiteCustomFields.on('rowRemoving', function (e, id, record) {
+    //        if (confirm('Are you sure want to delete this entry?')) {
+    //            const token = $('input[name="__RequestVerificationToken"]').val();
+    //            $.ajax({
+    //                url: '/Admin/GuardSettings?handler=DeleteClientSiteCustomField',
+    //                data: { id: record },
+    //                type: 'POST',
+    //                headers: { 'RequestVerificationToken': token },
+    //            }).done(function (result) {
+    //                if (!result.success) alert(result.message);
+    //                else {
+    //                    loadCustomFields();
+    //                    gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //                }
+    //            }).fail(function () {
+    //                console.log('error');
+    //            });
+    //        }
+    //    });
+    //}
 
-//let gridSitePocs;
-//gridSitePocs = $('#cs-pocs').grid({
-//    dataSource: '/Admin/GuardSettings?handler=SitePocs',
-//    uiLibrary: 'bootstrap4',
-//    iconsLibrary: 'fontawesome',
-//    primaryKey: 'id',
-//    inlineEditing: { mode: 'command' },
-//    columns: [
-//        { width: 120, field: 'name', title: 'Name', editor: true }
-//    ],
-//    initialized: function (e) {
-//        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-//    }
-//});
+    //let gridSitePocs;
+    //gridSitePocs = $('#cs-pocs').grid({
+    //    dataSource: '/Admin/GuardSettings?handler=SitePocs',
+    //    uiLibrary: 'bootstrap4',
+    //    iconsLibrary: 'fontawesome',
+    //    primaryKey: 'id',
+    //    inlineEditing: { mode: 'command' },
+    //    columns: [
+    //        { width: 120, field: 'name', title: 'Name', editor: true }
+    //    ],
+    //    initialized: function (e) {
+    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    //    }
+    //});
 
-//if (gridSitePocs) {
-//    gridSitePocs.on('rowDataChanged', function (e, id, record) {
-//        const data = $.extend(true, {}, record);
-//        $.ajax({
-//            url: '/Admin/GuardSettings?handler=SitePoc',
-//            data: { record: data },
-//            type: 'POST',
-//            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//        }).done(function (result) {
-//            if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//            else alert(result.message);
-//        }).fail(function () {
-//            alert('error');
-//        }).always(function () {
-//            if (isSitePocAdding)
-//                isSitePocAdding = false;
-//        });
-//    });
+    //if (gridSitePocs) {
+    //    gridSitePocs.on('rowDataChanged', function (e, id, record) {
+    //        const data = $.extend(true, {}, record);
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=SitePoc',
+    //            data: { record: data },
+    //            type: 'POST',
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function (result) {
+    //            if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //            else alert(result.message);
+    //        }).fail(function () {
+    //            alert('error');
+    //        }).always(function () {
+    //            if (isSitePocAdding)
+    //                isSitePocAdding = false;
+    //        });
+    //    });
 
-//    gridSitePocs.on('rowRemoving', function (e, id, record) {
-//        if (confirm('Are you sure want to delete this site POC details?')) {
-//            $.ajax({
-//                url: '/Admin/GuardSettings?handler=DeleteSitePoc',
-//                data: { id: record },
-//                type: 'POST',
-//                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//            }).done(function (result) {
-//                if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//                else alert(result.message);
-//            }).fail(function () {
-//                aler('error');
-//            }).always(function () {
-//                if (isSitePocAdding)
-//                    isSitePocAdding = false;
-//            });
-//        }
-//    });
-//}
+    //    gridSitePocs.on('rowRemoving', function (e, id, record) {
+    //        if (confirm('Are you sure want to delete this site POC details?')) {
+    //            $.ajax({
+    //                url: '/Admin/GuardSettings?handler=DeleteSitePoc',
+    //                data: { id: record },
+    //                type: 'POST',
+    //                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //            }).done(function (result) {
+    //                if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //                else alert(result.message);
+    //            }).fail(function () {
+    //                aler('error');
+    //            }).always(function () {
+    //                if (isSitePocAdding)
+    //                    isSitePocAdding = false;
+    //            });
+    //        }
+    //    });
+    //}
 
-//let isSitePocAdding = false;
-//$('#add_site_poc').on('click', function () {
+    //let isSitePocAdding = false;
+    //$('#add_site_poc').on('click', function () {
 
-//    if (isSitePocAdding) {
-//        alert('Unsaved changes in the grid. Refresh the page');
-//    } else {
-//        isSitePocAdding = true;
-//        gridSitePocs.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-//    }
-//});
+    //    if (isSitePocAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isSitePocAdding = true;
+    //        gridSitePocs.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+    //    }
+    //});
 
-//let gridSiteLocations;
-//gridSiteLocations = $('#cs-locations').grid({
-//    dataSource: '/Admin/GuardSettings?handler=SiteLocations',
-//    uiLibrary: 'bootstrap4',
-//    iconsLibrary: 'fontawesome',
-//    primaryKey: 'id',
-//    inlineEditing: { mode: 'command' },
-//    columns: [
-//        { width: 120, field: 'name', title: 'Name', editor: true }
-//    ],
-//    initialized: function (e) {
-//        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-//    }
-//});
+    //let gridSiteLocations;
+    //gridSiteLocations = $('#cs-locations').grid({
+    //    dataSource: '/Admin/GuardSettings?handler=SiteLocations',
+    //    uiLibrary: 'bootstrap4',
+    //    iconsLibrary: 'fontawesome',
+    //    primaryKey: 'id',
+    //    inlineEditing: { mode: 'command' },
+    //    columns: [
+    //        { width: 120, field: 'name', title: 'Name', editor: true }
+    //    ],
+    //    initialized: function (e) {
+    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    //    }
+    //});
 
-//if (gridSiteLocations) {
-//    gridSiteLocations.on('rowDataChanged', function (e, id, record) {
-//        const data = $.extend(true, {}, record);
-//        $.ajax({
-//            url: '/Admin/GuardSettings?handler=SiteLocation',
-//            data: { record: data },
-//            type: 'POST',
-//            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//        }).done(function (result) {
-//            if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//            else alert(result.message);
-//        }).fail(function () {
-//            alert('error');
-//        }).always(function () {
-//            if (isSiteLocationAdding)
-//                isSiteLocationAdding = false;
-//        });
-//    });
+    //if (gridSiteLocations) {
+    //    gridSiteLocations.on('rowDataChanged', function (e, id, record) {
+    //        const data = $.extend(true, {}, record);
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=SiteLocation',
+    //            data: { record: data },
+    //            type: 'POST',
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function (result) {
+    //            if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //            else alert(result.message);
+    //        }).fail(function () {
+    //            alert('error');
+    //        }).always(function () {
+    //            if (isSiteLocationAdding)
+    //                isSiteLocationAdding = false;
+    //        });
+    //    });
 
-//    gridSiteLocations.on('rowRemoving', function (e, id, record) {
-//        if (confirm('Are you sure want to delete this site location details?')) {
-//            $.ajax({
-//                url: '/Admin/GuardSettings?handler=DeleteSiteLocation',
-//                data: { id: record },
-//                type: 'POST',
-//                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//            }).done(function (result) {
-//                if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
-//                else alert(result.message);
-//            }).fail(function () {
-//                aler('error');
-//            }).always(function () {
-//                if (isSiteLocationAdding)
-//                    isSiteLocationAdding = false;
-//            });
-//        }
-//    });
-//}
+    //    gridSiteLocations.on('rowRemoving', function (e, id, record) {
+    //        if (confirm('Are you sure want to delete this site location details?')) {
+    //            $.ajax({
+    //                url: '/Admin/GuardSettings?handler=DeleteSiteLocation',
+    //                data: { id: record },
+    //                type: 'POST',
+    //                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //            }).done(function (result) {
+    //                if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //                else alert(result.message);
+    //            }).fail(function () {
+    //                aler('error');
+    //            }).always(function () {
+    //                if (isSiteLocationAdding)
+    //                    isSiteLocationAdding = false;
+    //            });
+    //        }
+    //    });
+    //}
 
-//let isSiteLocationAdding = false;
-//$('#add_site_location').on('click', function () {
+    //let isSiteLocationAdding = false;
+    //$('#add_site_location').on('click', function () {
 
-//    if (isSiteLocationAdding) {
-//        alert('Unsaved changes in the grid. Refresh the page');
-//    } else {
-//        isSiteLocationAdding = true;
-//        gridSiteLocations.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-//    }
-//});
+    //    if (isSiteLocationAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isSiteLocationAdding = true;
+    //        gridSiteLocations.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+    //    }
+    //});
 
-/****** Guards *******/
+    /****** Guards *******/
 
-function renderGuardActiveCell(value, type, data) {
-    if (type === 'display') {
-        let cellValue;
+    function renderGuardActiveCell(value, type, data) {
+        if (type === 'display') {
+            let cellValue;
 
-        if (value) {
-            // Check if data.guardlogins.logindate is present
-            if (data.loginDate) {
-                cellValue = '<i class="fa fa-check-circle text-success"></i>' +
-                    '[' +
-                    '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' +
-                    ']<input type="hidden" id="GuardId" value="' + data.id + '">';
+            if (value) {
+                // Check if data.guardlogins.logindate is present
+                if (data.loginDate) {
+                    cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                        '[' +
+                        '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' +
+                        ']<input type="hidden" id="GuardId" value="' + data.id + '">';
+                } else {
+                    cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                        '<input type="hidden" id="GuardId" value="' + data.id + '">';
+                }
             } else {
-                cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                cellValue = '<i class="fa fa-times-circle text-danger"></i>' +
                     '<input type="hidden" id="GuardId" value="' + data.id + '">';
             }
-        } else {
-            cellValue = '<i class="fa fa-times-circle text-danger"></i>' +
-                '<input type="hidden" id="GuardId" value="' + data.id + '">';
-        }
 
-        // Add enrollment date if available
-        if (data.dateEnrolled) {
-            cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(data.dateEnrolled), null, ' ') + '</span>';
-        }
-        return cellValue;
-    }
-    return value;
-}
-
-
-function renderGuardActiveCellHrValues(value, type, data) {
-
-    if (data.hR1Status == 'green') {
-        return '<i class="fa fa-circle text-success mr-2"></i>';
-    }
-    else if (data.hR1Status == 'red') {
-        return '<i class="fa fa-circle text-danger mr-2"></i>';
-    }
-    else if (data.hR1Status == 'yellow') {
-        return '<i class="fa fa-circle text-warning mr-2"></i>';
-    }
-
-
-}
-
-function format_guards_child_row(d) {
-    var val = d;
-    return val;
-}
-
-var guardSettingsDataLoaded = false;
-var guardSettings = $('#guard_settings').DataTable({
-    pageLength: 50,
-    autoWidth: false,
-    ajax: '/Admin/GuardSettings?handler=Guards',
-    processing: true,
-    language: {
-        'loadingRecords': '&nbsp;',
-        'processing': 'Loading data please wait...'
-    },
-    columns: [{
-        className: 'dt-control',
-        orderable: false,
-        data: null,
-        width: '2%',
-        defaultContent: '',
-    },
-    { data: 'name', width: "10%" },
-    { data: 'securityNo', width: "10%" },
-    { data: 'initial', width: "5%" },
-    { data: 'state', width: "5%" },
-    { data: 'provider', width: "13%" },
-    { data: 'clientSites', orderable: false, width: "15%" },
-    { data: 'pin', width: "1%", visible: false },
-    { data: 'loginDate', visible: false },
-    { data: 'isTerminated', visible: false },
-
-    { data: 'gender', width: "5%" },
-    {
-        data: 'isActive', name: 'isactive', className: "text-center", width: "4%", 'render': function (value, type, data) {
-            return renderGuardActiveCell(value, type, data);
-        }
-    },
-
-
-    {
-        data: 'hR1Status', name: 'hR1Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
-            return renderGuardActiveCellHrValues(value, type, data);
-        }
-    },
-    {
-        data: 'hR2Status', name: 'hR2Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
-            return renderGuardActiveCellHr2Values(value, type, data);
-        }
-    },
-
-    {
-        data: 'hR3Status', name: 'hR3Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
-            return renderGuardActiveCellHr3Values(value, type, data);
-        }
-    },
-
-
-
-    { data: 'hr1Description', name: 'hr1Description', width: "2%", visible: false, searchable: true },
-    { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
-    { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
-
-    { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
-
-    {
-        targets: -1,
-        data: null,
-        defaultContent: '<button  class="btn btn-outline-primary  mb-1" name="btn_edit_guard"><i class="fa fa-pencil"></i></button>' + '<img src="/images/Timesheet.jpg" style="width: 96%;height: 96%;" alt="Image" class="clickable-image" style="cursor: pointer;" alt="Timesheet" name="btn_timesheet"/>',
-        orderable: false,
-        className: "text-center",
-        width: "0%"
-    },
-    { data: 'dateEnrolled', visible: false },
-    { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
-    ],
-    initComplete: function (settings, json) {
-        $('#chkbxfilterGuardActive').prop("disabled", false);
-        $('#chkbxfilterGuardInActive').prop("disabled", false);
-        guardSettingsDataLoaded = true;
-        $('#chkbxfilterGuardActive').trigger('click');
-    }
-}).on('preInit.dt', function (e, settings) {
-    $('#chkbxfilterGuardActive').prop("disabled", true);
-    $('#chkbxfilterGuardInActive').prop("disabled", true);
-    guardSettingsDataLoaded = false;
-});
-
-
-
-
-function renderGuardActiveCellHrValues(value, type, data) {
-
-    if (data.hR1Status == 'Green') {
-        return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
-    }
-    else if (data.hR1Status == 'Red') {
-        return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
-    }
-    else if (data.hR1Status == 'Yellow') {
-        return '<i class="fa fa-circle text-warning"></i></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
-    }
-    else {
-        return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
-    }
-
-
-}
-
-function renderGuardActiveCellHr2Values(value, type, data) {
-
-    if (data.hR2Status == 'Green') {
-        return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
-    }
-    else if (data.hR2Status == 'Red') {
-        return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
-    }
-    else if (data.hR2Status == 'Yellow') {
-        return '<i class="fa fa-circle text-warning"></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
-    }
-    else {
-        return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
-    }
-
-
-}
-
-function renderGuardActiveCellHr3Values(value, type, data) {
-
-    if (data.hR3Status == 'Green') {
-        return '<i class="fa fa-circle text-success"></i><span style="color: #f8f9fa;font-size:1px;">green</span>';
-    }
-    else if (data.hR3Status == 'Red') {
-        return '<i class="fa fa-circle text-danger"></i><span style="color: #f8f9fa;font-size:1px;">red</span>';
-    }
-    else if (data.hR3Status == 'Yellow') {
-        return '<i class="fa fa-circle text-warning"></i><span style="color: #f8f9fa;font-size:1px;">yellow</span>';
-    }
-    else {
-        return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
-    }
-
-
-}
-
-//$('#btn_refresh_guard_top').on('click', function () {
-//    if (guardSettings) {   
-//        guardSettings.clear().draw();
-//        guardSettings.ajax.reload();            
-//    }        
-//});
-
-$('#chkbxfilterGuardActive').on('click', function () {
-    var thisCheck = $(this);
-    if (guardSettingsDataLoaded) {
-        if (thisCheck.is(':checked')) {
-            $('#chkbxfilterGuardInActive').prop("checked", false);
-        }
-        filterActiveInActiveGuards(guardSettings);
-    }
-});
-
-$('#chkbxfilterGuardInActive').on('click', function () {
-    var thisCheck = $(this);
-    if (guardSettingsDataLoaded) {
-        if (thisCheck.is(':checked')) {
-            $('#chkbxfilterGuardActive').prop("checked", false);
-        }
-        filterActiveInActiveGuards(guardSettings);
-    }
-});
-
-function filterActiveInActiveGuards(table) {
-    let filter = '';
-    let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
-    let guardActive = $('#chkbxfilterGuardActive').is(':checked');
-    let regex = true;
-    let smart = true;
-
-    if (guardActive)
-        filter = 'true';
-    else if (guardInActive)
-        filter = 'false';
-
-    //table.search(filter.value, regex, smart).draw();
-    table.column('isactive:name').search(filter, regex, smart).draw();
-}
-
-
-// Initialize Select2
-$('#list_HrSearchandEdit_keys').select2({
-    placeholder: "Select",
-    theme: 'bootstrap4',
-    allowClear: true,
-    ajax: {
-        url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
-        dataType: 'json',
-        delay: 250,
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        data: function (params) {
-            // Determine hrgroupId based on which checkbox is checked
-            let hrgroupId = 0; // default value
-
-            if ($('#chkbxHR1').is(':checked')) {
-                hrgroupId = 1;
-            } else if ($('#chkbxHR2').is(':checked')) {
-                hrgroupId = 2;
-            } else if ($('#chkbxHR3').is(':checked')) {
-                hrgroupId = 3;
+            // Add enrollment date if available
+            if (data.dateEnrolled) {
+                cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(data.dateEnrolled), null, ' ') + '</span>';
             }
-
-            return {
-                hrgroupId: hrgroupId,
-                searchKeyNo: params.term,
-            };
-        },
-        processResults: function (data) {
-            // Store results in the Select2 instance for later filtering
-            $('#list_HrSearchandEdit_keys').data('select2-data', data);
-            return {
-                results: $.map(data, function (item) {
-                    return {
-                        text: item.referenceNo + ' ' + item.description,
-                        id: item.id,
-                        title: item.description
-                    };
-                })
-            };
-        },
-        cache: true
-    },
-    // Enable searching through the loaded data
-    minimumInputLength: 0,
-}).on("select2:select", function (e) {
-
-    // when select it will filter the grid
-    const kvlStatusFilter = e.params.data.text;
-    //var kvlStatusFilter = 'green';
-    if (kvlStatusFilter !== 0) {
-
-
-        var filter = 'true'; // or 'false'
-        var regex = false;   // No need for regex
-        var smart = false;   // Exact match only
-        if ($('#chkbxHR1').is(':checked')) {
-
-            $('#chkbxHR2').prop('checked', false);
-            $('#chkbxHR3').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hr1Description:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
-
-
+            return cellValue;
         }
-        else if ($('#chkbxHR2').is(':checked')) {
-
-            $('#chkbxHR1').prop('checked', false);
-            $('#chkbxHR3').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hr2Description:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
+        return value;
+    }
 
 
+    function renderGuardActiveCellHrValues(value, type, data) {
+
+        if (data.hR1Status == 'green') {
+            return '<i class="fa fa-circle text-success mr-2"></i>';
         }
-        else if ($('#chkbxHR3').is(':checked')) {
-
-            $('#chkbxHR1').prop('checked', false);
-            $('#chkbxHR2').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hr3Description:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
-
-
+        else if (data.hR1Status == 'red') {
+            return '<i class="fa fa-circle text-danger mr-2"></i>';
         }
+        else if (data.hR1Status == 'yellow') {
+            return '<i class="fa fa-circle text-warning mr-2"></i>';
+        }
+
+
     }
 
-}).on("select2:clear", function (e) {
+    function format_guards_child_row(d) {
+        var val = d;
+        return val;
+    }
 
-    guardSettings.search('');
-    // Clear individual column searches
-    guardSettings.columns().search('');
-    // Redraw the table
-
-    // Clear the sorting
-    guardSettings.order([]).draw(false);
-    guardSettings.draw(false);
-    filterActiveInActiveGuards(guardSettings);
-
-    // Handle clear event
-});
-
-
-$('#list_HrSearchandEdit_keys').prop('disabled', true);
-function reloadDropdown() {
-    $('#list_HrSearchandEdit_keys').val(null).trigger('change'); // Clear the current selection
-    //$('#list_HrSearchandEdit_keys').select2('open'); // Open the dropdown to reload data
-}
-
-
-
-$('#KeyVehicleLogAuditLogRequest_CompanyName').select2({
-    placeholder: "Select",
-    theme: 'bootstrap4',
-    allowClear: true,
-    ajax: {
-        url: '/Admin/GuardSettings?handler=KVCompanyDetails',
-        dataType: 'json',
-        delay: 250,
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        data: function (params) {
-
-
-            return {
-                clientSiteIds: $('#vklClientSiteId').val().join(';'),
-                searchKeyNo: params.term,
-            };
+    var guardSettingsDataLoaded = false;
+    var guardSettings = $('#guard_settings').DataTable({
+        pageLength: 50,
+        autoWidth: false,
+        ajax: '/Admin/GuardSettings?handler=Guards',
+        processing: true,
+        language: {
+            'loadingRecords': '&nbsp;',
+            'processing': 'Loading data please wait...'
         },
-        processResults: function (data) {
-            // Store results in the Select2 instance for later filtering
-            $('#KeyVehicleLogAuditLogRequest_CompanyName').data('select2-data', data);
-            return {
-                results: $.map(data, function (item) {
-                    return {
-                        text: item,
-                        id: item,
-                        title: item
-                    };
-                })
-            };
+        columns: [{
+            className: 'dt-control',
+            orderable: false,
+            data: null,
+            width: '2%',
+            defaultContent: '',
         },
-        cache: true
-    },
-    // Enable searching through the loaded data
-    minimumInputLength: 0,
-}).on("select2:select", function (e) {
+        { data: 'name', width: "10%" },
+        { data: 'securityNo', width: "10%" },
+        { data: 'initial', width: "5%" },
+        { data: 'state', width: "5%" },
+        { data: 'provider', width: "13%" },
+        { data: 'clientSites', orderable: false, width: "15%" },
+        { data: 'pin', width: "1%", visible: false },
+        { data: 'loginDate', visible: false },
+        { data: 'isTerminated', visible: false },
+
+        { data: 'gender', width: "5%" },
+        {
+            data: 'isActive', name: 'isactive', className: "text-center", width: "4%", 'render': function (value, type, data) {
+                return renderGuardActiveCell(value, type, data);
+            }
+        },
+
+
+        {
+            data: 'hR1Status', name: 'hR1Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHrValues(value, type, data);
+            }
+        },
+        {
+            data: 'hR2Status', name: 'hR2Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHr2Values(value, type, data);
+            }
+        },
+
+        {
+            data: 'hR3Status', name: 'hR3Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHr3Values(value, type, data);
+            }
+        },
 
 
 
-}).on("select2:clear", function (e) {
+        { data: 'hr1Description', name: 'hr1Description', width: "2%", visible: false, searchable: true },
+        { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
+        { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
+        { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
 
-
-    // Handle clear event
-});
-
-// Extend the Select2 search functionality to filter the loaded data
-
-//$('#guard_settings tbody').on('click', 'td.dt-control', function () {
-//    var tr = $(this).closest('tr');
-//    var row = guardSettings.row(tr);
-
-//    $.ajax({
-//        type: 'GET',
-//        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliance',
-//        data: { guardId: row.data().id },
-//    }).done(function (response) {
-//        if (row.child.isShown()) {
-//            row.child.hide();
-//            tr.removeClass('shown');
-//        } else {
-//            row.child(format_guards_child_row(response), 'bg-light').show();
-//            tr.addClass('shown');
-//        }
-//    });
-//});
-
-$('#cbIsActive').on('change', function () {
-    $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
-});
-
-$('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
-    resetGuardDetailsModal();
-    $('.btn-add-guard-addl-details').show();
-
-    var data = guardSettings.row($(this).parents('tr')).data();
-
-    $('#Guard_Name').val(data.name);
-    $('#Guard_SecurityNo').val(data.securityNo);
-    $('#Guard_Initial').val(data.initial);
-    $('#Guard_State').val(data.state);
-    $('#Guard_Provider').val(data.provider);
-    $('#Guard_Pin').val(data.pin);
-    $('#Guard_DOE').val(data.dateEnrolled);
-
-    $('#Guard_Mobile').val(data.mobile)
-    $('#Guard_Email').val(data.email)
-    $('#Guard_Id').val(data.id);
-    $('#cbIsActive').prop('checked', data.isActive);
-    $('#cbIsRCAccess').prop('checked', data.isRCAccess);
-    $('#cbIsKPIAccess').prop('checked', data.isKPIAccess);
-    $('#addGuardModal').modal('show');
-    $('#GuardLicense_GuardId').val(data.id);
-    $('#GuardCompliance_GuardId').val(data.id);
-    $('#GuardComplianceandlicense_GuardId').val(data.id);
-    $('#GuardComplianceandlicense_LicenseNo').val(data.securityNo);
-    //p1-224 RC Bypass For HR -start
-    $('#Guard_IsRCBypass').val(data.isRCBypass);
-    $('#cbIsRCBypass').prop('checked', data.isRCBypass);
-    $('#Guard_Gender').val(data.gender);
-    /*$('#Guard_Terminated').val(data.isTerminated);*/
-    let isTerminated = data.isTerminated ? "true" : "false"; // Convert boolean to string
-    $('#Guard_Terminated').val(isTerminated); //
-
-    $('#Guard_Terminated').prop('disabled', data.isActive);
-    //p1-224 RC Bypass For HR -end
-    // ;
-    var selectedValues = [];
-    if (data.isAdminGlobal) {
-        selectedValues.push(14);
-    }
-    if (data.isAdminPowerUser) {
-        selectedValues.push(9);
-    }
-    if (data.isRCLiteAccess) {
-        selectedValues.push(5);
-    }
-    if (data.isRCAccess) {
-        selectedValues.push(6);
-    }
-
-    if (data.isKPIAccess) {
-        selectedValues.push(4);
-    }
-    if (data.isLB_KV_IR) {
-        selectedValues.push(1);
-    }
-    if (data.isSTATS) {
-        selectedValues.push(2);
-    }
-    if (data.isSTATSChartsAccess) {
-        selectedValues.push(3);
-    }
-    if (data.isRCHRAccess) {
-        selectedValues.push(7);
-    }
-    if (data.isRCFusionAccess) {
-        selectedValues.push(8);
-    }
-    if (data.isAdminSOPToolsAccess) {
-        selectedValues.push(10);
-    }
-    if (data.isAdminAuditorAccess) {
-        selectedValues.push(11);
-    }
-    if (data.isAdminInvestigatorAccess) {
-        selectedValues.push(12);
-    }
-    if (data.isAdminThirdPartyAccess) {
-        selectedValues.push(13);
-    }
-
-    //if (data.isMobileAppAccess) {
-    //    selectedValues.push(15);
-    //}
-    if (data.isMobileAppPlusTags) {
-        selectedValues.push(16);
-    }
-    if (data.isPCARAccess) {
-        selectedValues.push(17);
-    }
-
-    selectedValues.forEach(function (value) {
-
-        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        {
+            targets: -1,
+            data: null,
+            defaultContent: '<button  class="btn btn-outline-primary  mb-1" name="btn_edit_guard"><i class="fa fa-pencil"></i></button>' + '<img src="/images/Timesheet.jpg" style="width: 96%;height: 96%;" alt="Image" class="clickable-image" style="cursor: pointer;" alt="Timesheet" name="btn_timesheet"/>',
+            orderable: false,
+            className: "text-center",
+            width: "0%"
+        },
+        { data: 'dateEnrolled', visible: false },
+        { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
+        ],
+        initComplete: function (settings, json) {
+            $('#chkbxfilterGuardActive').prop("disabled", false);
+            $('#chkbxfilterGuardInActive').prop("disabled", false);
+            guardSettingsDataLoaded = true;
+            $('#chkbxfilterGuardActive').trigger('click');
+        }
+    }).on('preInit.dt', function (e, settings) {
+        $('#chkbxfilterGuardActive').prop("disabled", true);
+        $('#chkbxfilterGuardInActive').prop("disabled", true);
+        guardSettingsDataLoaded = false;
     });
-    gridGuardLicensesAndLicence.clear().draw();
-    gridGuardLicensesAndLicence.ajax.reload();
-    gridGuardTrainingAndAssessmentByAdmin.clear().draw();
-    gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-    $("#Guard_Access").multiselect();
-    $("#Guard_Access").val(selectedValues);
-    $("#Guard_Access").multiselect("refresh");
 
 
-    if ($('#txt_IsAdminPowerUser').val() == 'True') {
-        if (data.isAdminGlobal) {
-            $('#cbIsActive').prop('disabled', true);
+
+
+    function renderGuardActiveCellHrValues(value, type, data) {
+
+        if (data.hR1Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
+        }
+        else if (data.hR1Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR1Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
         }
         else {
-            $('#cbIsActive').prop('disabled', false);
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
         }
-    }
-    var selectedlanguages = [];
-    data.languageDetails1.forEach(function (value) {
-        selectedlanguages.push(value.languageID)
-    })
-    var deletelanguagevalue = 1;
-    $(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", false);
-    if (selectedlanguages.length == 0) {
-        deletelanguagevalue = 4;
-        selectedlanguages.push(deletelanguagevalue);
-        //$(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", true);
-    }
-    selectedlanguages.forEach(function (value) {
 
-        $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-    });
-    $("#Guard_Lote").multiselect();
-    $("#Guard_Lote").val(selectedlanguages);
-    $("#Guard_Lote").multiselect("refresh");
 
-    if (data.guardRcSiteAccessCount > 0) {
-        $('#Guard_Rc_Access').val('1');
-        $('#btnGuardRcAccess').prop('disabled', false);
-        $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
-    } else {
-        $('#Guard_Rc_Access').val('0');
-        $('#btnGuardRcAccess').prop('disabled', true);
-        $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
     }
 
-});
-$('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
-    $('#TimesheetGuard_Id').val('-1');
-    $('#startDate').val('');
-    $('#endDate').val('');
-    $('#frequency').val('');
-    var data = guardSettings.row($(this).parents('tr')).data();
-    $('#TimesheetGuard_Id').val(data.id);
-    $('#timesheetModal').modal('show');
-});
-// Download Timesheet start
+    function renderGuardActiveCellHr2Values(value, type, data) {
 
-//    $('#btnDownloadTimesheet').on('click', function () {
-//    $.ajax({
-//        type: 'GET',
-//        url: '/Admin/Settings?handler=DownloadTimesheet',
-//        data: {
-//            startdate: $('#startDate').val(),
-//            endDate: $('#endDate').val(),
-//            frequency: $('#frequency').val(),
-//            guradid: $('#Guard_Id').val(),
-//        },
-//        xhrFields: {
-//            responseType: 'blob' // For handling binary data
-//        },
-//        success: function (data, textStatus, request) {
-//            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
-//            var fileName = '';
-//            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-//            var matches = filenameRegex.exec(contentDispositionHeader);
-//            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
-//            // Create a Blob with the PDF data and initiate the download
-//            var blob = new Blob([data], { type: 'application/pdf' });
-//            // // Create a temporary anchor element to trigger the download
-//            //var url = window.URL.createObjectURL(blob);
-//            // // Open the PDF in a new tab
-//            //var newTab = window.open(url, '_blank');
-
-//            const URL = window.URL || window.webkitURL;
-//            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
-//            const bloburl = URL.createObjectURL(blob);
-//            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
-//            const windowUrl = window.location.origin; // + window.location.pathname;
-//            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
-//            var newTab = window.open(`${viewerUrl}${objectUrl}`);
-//            if (!newTab) {
-//                // If the new tab was blocked, fallback to downloading the file
-//                var a = document.createElement('a');
-//                a.href = bloburl;
-//                a.download = downloadedFileName;
-//                a.click();
-//            }
-
-//            URL.revokeObjectURL(bloburl);
-//            URL.revokeObjectURL(objectUrl);
-
-//            //if (!newTab) {
-//            //    // If the new tab was blocked, fallback to downloading the file
-//            //    var a = document.createElement('a');
-//            //    a.href = url;
-//            //    a.download = downloadedFileName;
-//            //    a.click();
-//            //}
-//            //window.URL.revokeObjectURL(url);
-//        },
-//        error: function () {
-//            alert('Error while downloading the PDF.');
-//        }
-//    }).done(function (result) {
-
-//    });
-//});
-$('#btnDownloadTimesheet').on('click', function (e) {
-    var startDate = $('#startDate').val();
-    var endDate = $('#endDate').val();
-
-    // Check if both startDate and endDate have values
-    if (!startDate || !endDate) {
-        alert("Please select both start date and end date.");
-        return; // Exit the function if validation fails
-    }
-
-
-
-
-    $.ajax({
-        url: '/Admin/Settings?handler=DownloadTimesheet',
-        data: {
-            startdate: $('#startDate').val(),
-            endDate: $('#endDate').val(),
-            frequency: $('#frequency').val(),
-            guradid: $('#TimesheetGuard_Id').val(),
-        },
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (response.statusCode === -1) {
-
-        } else {
-
-
-
-
-
-            var newTab = window.open(response.fileName, '_blank');
-            if (!newTab) {
-
-                var a = document.createElement('a');
-                a.href = response.fileName;
-                a.download = "TimeSheet_Report";
-                a.click();
-            }
-
+        if (data.hR2Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
         }
-    });
-});
-$('#btnDownloadTimesheetFrequency').on('click', function (e) {
-    var Frequency = $('#frequency').val();
+        else if (data.hR2Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR2Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
+        }
+        else {
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
+        }
 
-    if (!Frequency) {
-        alert("Please select Instant Timesheet.");
-        return; // Exit the function if validation fails
+
     }
 
+    function renderGuardActiveCellHr3Values(value, type, data) {
 
-
-
-    $.ajax({
-        url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
-        data: {
-            frequency: $('#frequency').val(),
-            guradid: $('#TimesheetGuard_Id').val(),
-        },
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (response.statusCode === -1) {
-
-        } else {
-
-
-
-
-
-            var newTab = window.open(response.fileName, '_blank');
-            if (!newTab) {
-
-                var a = document.createElement('a');
-                a.href = response.fileName;
-                a.download = "TimeSheet_Report";
-                a.click();
-            }
-
+        if (data.hR3Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color: #f8f9fa;font-size:1px;">green</span>';
         }
-    });
-});
-
-//Download Timesheet stop
-$('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
-
-    $('#guardLogBookInfoModal').modal('show');
-    var GuardId = $(this).closest("td").find('#GuardId').val();
-    $('#txtGuardId').val($(this).closest("td").find('#GuardId').val());
-
-    //ActiveGuardsLogBookDetails.ajax.reload();
-
-    $('#ActiveGuardsLogBookDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
-    fetchGuardLogBookDetails(GuardId);
-    $("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();//to hide the header of the  table
-    $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
-    clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
-
-
-});
-
-function fetchGuardLogBookDetails(guardId) {
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=LastTimeLogin',
-        method: 'GET',
-        data: { guardId: guardId },
-        success: function (data) {
-            // Destroy the existing DataTable instance if it exists
-            if ($.fn.DataTable.isDataTable('#ActiveGuardsLogBookDetails')) {
-                $('#ActiveGuardsLogBookDetails').DataTable().destroy();
-            }
-
-            $('#ActiveGuardsLogBookDetails').DataTable({
-                autoWidth: false,
-                ordering: false,
-                searching: false,
-                paging: false,
-                info: false,
-                data: data, // Use the data fetched from the AJAX request
-                columns: [
-                    {
-                        data: 'loginTime',
-                        width: "4%",
-                        render: function (data, type, row) {
-                            // Convert the date string to a JavaScript Date object
-                            var date = new Date(data);
-
-                            // Format the date to display only the date part without the time
-                            var formattedDate = date.toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit'
-                            });
-                            var additionalData = row.eventDateTimeZoneShort;
-                            if (additionalData != null) {
-                                return formattedDate + ' (' + additionalData + ')';
-                            } else {
-                                return formattedDate;
-                            }
-                        }
-                    },
-                    {
-                        data: 'ipAddress', width: "2%",
-
-                    },
-                    {
-                        data: 'siteName', width: "16%",
-
-                    },
-
-
-
-
-                ]
-            });
-        },
-        error: function (xhr, status, error) {
-            console.error('Error fetching data:', error);
+        else if (data.hR3Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color: #f8f9fa;font-size:1px;">red</span>';
         }
-    });
-}
-const groupColumnnew = 1;
-let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuardsLastIncidentReportsDetails').DataTable({
-    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-    ordering: true,
-    "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
-    ],
-    order: [[groupColumnnew, 'asc']],
-    info: false,
-    searching: false,
-    autoWidth: false,
-    fixedHeader: true,
-    "scrollY": "150px", // Set the desired height for the scrollable area
-    "paging": false,
-    "footer": false,
-    "header": false,
-    ajax: {
-        url: '/Admin/Settings?handler=ClientSiteLastIncidentReportHistory',
-        datatype: 'json',
-        data: function (d) {
-            d.guardId = $('#txtGuardId').val();
-        },
-        dataSrc: ''
-    },
-    columns: [
-        { data: 'id', visible: false },
-        {
-            data: 'clientSite.name',
-            width: '20%',
-            render: function (value, type, data) {
+        else if (data.hR3Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i><span style="color: #f8f9fa;font-size:1px;">yellow</span>';
+        }
+        else {
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
+        }
 
-                return '<tr class="group group-start"><td class="' + (groupColumnnew == '1' ? 'bg-danger' : (groupColumnnew == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumnnew + '</td></tr>';
+
+    }
+
+    //$('#btn_refresh_guard_top').on('click', function () {
+    //    if (guardSettings) {   
+    //        guardSettings.clear().draw();
+    //        guardSettings.ajax.reload();            
+    //    }        
+    //});
+
+    $('#chkbxfilterGuardActive').on('click', function () {
+        var thisCheck = $(this);
+        if (guardSettingsDataLoaded) {
+            if (thisCheck.is(':checked')) {
+                $('#chkbxfilterGuardInActive').prop("checked", false);
             }
-        },
-        {
-            data: 'id',
-            width: '10%',
-            visible: false
-
-        },
-        {
-            data: 'fileName',
-            width: '20%'
-
-        },
-
-        {
-            data: 'id',
-            width: '9%',
-            className: "text-center",
-            visible: false
-
-        },
-        {
-            data: 'createdOn',
-            width: '9%',
-            className: "text-center",
-            render: function (value, type, data) {
-
-                // Convert the date string to a JavaScript Date object
-                var date = new Date(data.createdOnDateTimeLocal);
-
-                // Format the date to display only the date part without the time
-                var formattedDate = date.toLocaleDateString('en-GB', {
-                    //day: '2-digit',
-                    //month: '2-digit',
-                    //year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                var additionalData = data.createdOnDateTimeZoneShort;
-                if (additionalData != null) {
-                    return formattedDate + '(' + additionalData + ')';
-                } else {
-                    return formattedDate;
-                }
-
-            }
-        },
-
-
-    ],
-    drawCallback: function () {
-        $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        api.column(groupColumnnew, { page: 'current' })
-            .data()
-            .each(function (group, i) {
-                if (last !== group) {
-                    $(rows)
-                        .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
-
-                    last = group;
-                }
-            });
-    },
-});
-
-// P1#231 HR Download Excel for settings -start
-$("#btnDownloadGuardLogExcel").click(async function () {
-    const activeChecked = $('#chkbxfilterGuardActive').is(':checked');
-    const inactiveChecked = $('#chkbxfilterGuardInActive').is(':checked');
-    const currentDateTime = new Date().toISOString().split('T')[0];
-    const fileName = `Guards - ${currentDateTime}.xlsx`;
-
-
-
-    $('#loader').show(); // Show loader
-
-    var guardIds = [];
-
-    // Use the DataTable API to get the instance of the table
-    var table = $('#guard_settings').DataTable();
-
-    // Get the filtered rows only
-    table.rows({ filter: 'applied' }).every(function () {
-        var rowData = this.data(); // Get the data for each filtered row
-
-        // Assuming GuardId is a property in your row data
-        var guardIdValue = rowData.id; // Replace with the actual property if necessary
-
-        // Add the value directly to the array (as a string)
-        if (guardIdValue) {
-            guardIds.push(guardIdValue.toString()); // Store as a string
+            filterActiveInActiveGuards(guardSettings);
         }
     });
 
+    $('#chkbxfilterGuardInActive').on('click', function () {
+        var thisCheck = $(this);
+        if (guardSettingsDataLoaded) {
+            if (thisCheck.is(':checked')) {
+                $('#chkbxfilterGuardActive').prop("checked", false);
+            }
+            filterActiveInActiveGuards(guardSettings);
+        }
+    });
+
+    function filterActiveInActiveGuards(table) {
+        let filter = '';
+        let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
+        let guardActive = $('#chkbxfilterGuardActive').is(':checked');
+        let regex = true;
+        let smart = true;
+
+        if (guardActive)
+            filter = 'true';
+        else if (guardInActive)
+            filter = 'false';
+
+        //table.search(filter.value, regex, smart).draw();
+        table.column('isactive:name').search(filter, regex, smart).draw();
+    }
 
 
-
-
-    try {
-        // Fetch data from the server
-        const response = await $.ajax({
-            url: '/Admin/GuardSettings?handler=ExportGuardsToExcel',
-            type: 'POST',
-            dataType: "json",
+    // Initialize Select2
+    $('#list_HrSearchandEdit_keys').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
+            dataType: 'json',
+            delay: 250,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: function (params) {
+                // Determine hrgroupId based on which checkbox is checked
+                let hrgroupId = 0; // default value
+
+                if ($('#chkbxHR1').is(':checked')) {
+                    hrgroupId = 1;
+                } else if ($('#chkbxHR2').is(':checked')) {
+                    hrgroupId = 2;
+                } else if ($('#chkbxHR3').is(':checked')) {
+                    hrgroupId = 3;
+                }
+
+                return {
+                    hrgroupId: hrgroupId,
+                    searchKeyNo: params.term,
+                };
+            },
+            processResults: function (data) {
+                // Store results in the Select2 instance for later filtering
+                $('#list_HrSearchandEdit_keys').data('select2-data', data);
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item.referenceNo + ' ' + item.description,
+                            id: item.id,
+                            title: item.description
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        // Enable searching through the loaded data
+        minimumInputLength: 0,
+    }).on("select2:select", function (e) {
+
+        // when select it will filter the grid
+        const kvlStatusFilter = e.params.data.text;
+        //var kvlStatusFilter = 'green';
+        if (kvlStatusFilter !== 0) {
+
+
+            var filter = 'true'; // or 'false'
+            var regex = false;   // No need for regex
+            var smart = false;   // Exact match only
+            if ($('#chkbxHR1').is(':checked')) {
+
+                $('#chkbxHR2').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr1Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+
+
+            }
+            else if ($('#chkbxHR2').is(':checked')) {
+
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr2Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+
+
+            }
+            else if ($('#chkbxHR3').is(':checked')) {
+
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR2').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr3Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+
+
+            }
+        }
+
+    }).on("select2:clear", function (e) {
+
+        guardSettings.search('');
+        // Clear individual column searches
+        guardSettings.columns().search('');
+        // Redraw the table
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+
+        // Handle clear event
+    });
+
+
+    $('#list_HrSearchandEdit_keys').prop('disabled', true);
+    function reloadDropdown() {
+        $('#list_HrSearchandEdit_keys').val(null).trigger('change'); // Clear the current selection
+        //$('#list_HrSearchandEdit_keys').select2('open'); // Open the dropdown to reload data
+    }
+
+
+
+    $('#KeyVehicleLogAuditLogRequest_CompanyName').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=KVCompanyDetails',
+            dataType: 'json',
+            delay: 250,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: function (params) {
+
+
+                return {
+                    clientSiteIds: $('#vklClientSiteId').val().join(';'),
+                    searchKeyNo: params.term,
+                };
+            },
+            processResults: function (data) {
+                // Store results in the Select2 instance for later filtering
+                $('#KeyVehicleLogAuditLogRequest_CompanyName').data('select2-data', data);
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item,
+                            id: item,
+                            title: item
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        // Enable searching through the loaded data
+        minimumInputLength: 0,
+    }).on("select2:select", function (e) {
+
+
+
+    }).on("select2:clear", function (e) {
+
+
+
+        // Handle clear event
+    });
+
+    // Extend the Select2 search functionality to filter the loaded data
+
+    //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
+    //    var tr = $(this).closest('tr');
+    //    var row = guardSettings.row(tr);
+
+    //    $.ajax({
+    //        type: 'GET',
+    //        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliance',
+    //        data: { guardId: row.data().id },
+    //    }).done(function (response) {
+    //        if (row.child.isShown()) {
+    //            row.child.hide();
+    //            tr.removeClass('shown');
+    //        } else {
+    //            row.child(format_guards_child_row(response), 'bg-light').show();
+    //            tr.addClass('shown');
+    //        }
+    //    });
+    //});
+
+    $('#cbIsActive').on('change', function () {
+        $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
+    });
+
+    $('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
+        resetGuardDetailsModal();
+        $('.btn-add-guard-addl-details').show();
+
+        var data = guardSettings.row($(this).parents('tr')).data();
+
+        $('#Guard_Name').val(data.name);
+        $('#Guard_SecurityNo').val(data.securityNo);
+        $('#Guard_Initial').val(data.initial);
+        $('#Guard_State').val(data.state);
+        $('#Guard_Provider').val(data.provider);
+        $('#Guard_Pin').val(data.pin);
+        $('#Guard_DOE').val(data.dateEnrolled);
+
+        $('#Guard_Mobile').val(data.mobile)
+        $('#Guard_Email').val(data.email)
+        $('#Guard_Id').val(data.id);
+        $('#cbIsActive').prop('checked', data.isActive);
+        $('#cbIsRCAccess').prop('checked', data.isRCAccess);
+        $('#cbIsKPIAccess').prop('checked', data.isKPIAccess);
+        $('#addGuardModal').modal('show');
+        $('#GuardLicense_GuardId').val(data.id);
+        $('#GuardCompliance_GuardId').val(data.id);
+        $('#GuardComplianceandlicense_GuardId').val(data.id);
+        $('#GuardComplianceandlicense_LicenseNo').val(data.securityNo);
+        //p1-224 RC Bypass For HR -start
+        $('#Guard_IsRCBypass').val(data.isRCBypass);
+        $('#cbIsRCBypass').prop('checked', data.isRCBypass);
+        $('#Guard_Gender').val(data.gender);
+        /*$('#Guard_Terminated').val(data.isTerminated);*/
+        let isTerminated = data.isTerminated ? "true" : "false"; // Convert boolean to string
+        $('#Guard_Terminated').val(isTerminated); //
+
+        $('#Guard_Terminated').prop('disabled', data.isActive);
+        //p1-224 RC Bypass For HR -end
+        // ;
+        var selectedValues = [];
+        if (data.isAdminGlobal) {
+            selectedValues.push(14);
+        }
+        if (data.isAdminPowerUser) {
+            selectedValues.push(9);
+        }
+        if (data.isRCLiteAccess) {
+            selectedValues.push(5);
+        }
+        if (data.isRCAccess) {
+            selectedValues.push(6);
+        }
+
+        if (data.isKPIAccess) {
+            selectedValues.push(4);
+        }
+        if (data.isLB_KV_IR) {
+            selectedValues.push(1);
+        }
+        if (data.isSTATS) {
+            selectedValues.push(2);
+        }
+        if (data.isSTATSChartsAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isRCHRAccess) {
+            selectedValues.push(7);
+        }
+        if (data.isRCFusionAccess) {
+            selectedValues.push(8);
+        }
+        if (data.isAdminSOPToolsAccess) {
+            selectedValues.push(10);
+        }
+        if (data.isAdminAuditorAccess) {
+            selectedValues.push(11);
+        }
+        if (data.isAdminInvestigatorAccess) {
+            selectedValues.push(12);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(13);
+        }
+
+        //if (data.isMobileAppAccess) {
+        //    selectedValues.push(15);
+        //}
+        if (data.isMobileAppPlusTags) {
+            selectedValues.push(16);
+        }
+        if (data.isPCARAccess) {
+            selectedValues.push(17);
+        }
+
+        selectedValues.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardLicensesAndLicence.ajax.reload();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
+        $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(selectedValues);
+        $("#Guard_Access").multiselect("refresh");
+
+
+        if ($('#txt_IsAdminPowerUser').val() == 'True') {
+            if (data.isAdminGlobal) {
+                $('#cbIsActive').prop('disabled', true);
+            }
+            else {
+                $('#cbIsActive').prop('disabled', false);
+            }
+        }
+        var selectedlanguages = [];
+        data.languageDetails1.forEach(function (value) {
+            selectedlanguages.push(value.languageID)
+        })
+        var deletelanguagevalue = 1;
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", false);
+        if (selectedlanguages.length == 0) {
+            deletelanguagevalue = 4;
+            selectedlanguages.push(deletelanguagevalue);
+            //$(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", true);
+        }
+        selectedlanguages.forEach(function (value) {
+
+            $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val(selectedlanguages);
+        $("#Guard_Lote").multiselect("refresh");
+
+        if (data.guardRcSiteAccessCount > 0) {
+            $('#Guard_Rc_Access').val('1');
+            $('#btnGuardRcAccess').prop('disabled', false);
+            $('#btnGuardRcAccess').addClass('bg-transparent').css('cursor', 'pointer');
+        } else {
+            $('#Guard_Rc_Access').val('0');
+            $('#btnGuardRcAccess').prop('disabled', true);
+            $('#btnGuardRcAccess').removeClass('bg-transparent').css('cursor', 'not-allowed');
+        }
+
+    });
+    $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
+        $('#TimesheetGuard_Id').val('-1');
+        $('#startDate').val('');
+        $('#endDate').val('');
+        $('#frequency').val('');
+        var data = guardSettings.row($(this).parents('tr')).data();
+        $('#TimesheetGuard_Id').val(data.id);
+        $('#timesheetModal').modal('show');
+    });
+    // Download Timesheet start
+
+    //    $('#btnDownloadTimesheet').on('click', function () {
+    //    $.ajax({
+    //        type: 'GET',
+    //        url: '/Admin/Settings?handler=DownloadTimesheet',
+    //        data: {
+    //            startdate: $('#startDate').val(),
+    //            endDate: $('#endDate').val(),
+    //            frequency: $('#frequency').val(),
+    //            guradid: $('#Guard_Id').val(),
+    //        },
+    //        xhrFields: {
+    //            responseType: 'blob' // For handling binary data
+    //        },
+    //        success: function (data, textStatus, request) {
+    //            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+    //            var fileName = '';
+    //            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+    //            var matches = filenameRegex.exec(contentDispositionHeader);
+    //            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+    //            // Create a Blob with the PDF data and initiate the download
+    //            var blob = new Blob([data], { type: 'application/pdf' });
+    //            // // Create a temporary anchor element to trigger the download
+    //            //var url = window.URL.createObjectURL(blob);
+    //            // // Open the PDF in a new tab
+    //            //var newTab = window.open(url, '_blank');
+
+    //            const URL = window.URL || window.webkitURL;
+    //            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+    //            const bloburl = URL.createObjectURL(blob);
+    //            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+    //            const windowUrl = window.location.origin; // + window.location.pathname;
+    //            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+    //            var newTab = window.open(`${viewerUrl}${objectUrl}`);
+    //            if (!newTab) {
+    //                // If the new tab was blocked, fallback to downloading the file
+    //                var a = document.createElement('a');
+    //                a.href = bloburl;
+    //                a.download = downloadedFileName;
+    //                a.click();
+    //            }
+
+    //            URL.revokeObjectURL(bloburl);
+    //            URL.revokeObjectURL(objectUrl);
+
+    //            //if (!newTab) {
+    //            //    // If the new tab was blocked, fallback to downloading the file
+    //            //    var a = document.createElement('a');
+    //            //    a.href = url;
+    //            //    a.download = downloadedFileName;
+    //            //    a.click();
+    //            //}
+    //            //window.URL.revokeObjectURL(url);
+    //        },
+    //        error: function () {
+    //            alert('Error while downloading the PDF.');
+    //        }
+    //    }).done(function (result) {
+
+    //    });
+    //});
+    $('#btnDownloadTimesheet').on('click', function (e) {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+
+        // Check if both startDate and endDate have values
+        if (!startDate || !endDate) {
+            alert("Please select both start date and end date.");
+            return; // Exit the function if validation fails
+        }
+
+
+
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DownloadTimesheet',
             data: {
-                active: activeChecked,
-                inactive: inactiveChecked,
-                guardIdsFilter: guardIds
+                startdate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                frequency: $('#frequency').val(),
+                guradid: $('#TimesheetGuard_Id').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (response.statusCode === -1) {
+
+            } else {
+
+
+
+
+
+                var newTab = window.open(response.fileName, '_blank');
+                if (!newTab) {
+
+                    var a = document.createElement('a');
+                    a.href = response.fileName;
+                    a.download = "TimeSheet_Report";
+                    a.click();
+                }
+
+            }
+        });
+    });
+    $('#btnDownloadTimesheetFrequency').on('click', function (e) {
+        var Frequency = $('#frequency').val();
+
+        if (!Frequency) {
+            alert("Please select Instant Timesheet.");
+            return; // Exit the function if validation fails
+        }
+
+
+
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
+            data: {
+                frequency: $('#frequency').val(),
+                guradid: $('#TimesheetGuard_Id').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (response.statusCode === -1) {
+
+            } else {
+
+
+
+
+
+                var newTab = window.open(response.fileName, '_blank');
+                if (!newTab) {
+
+                    var a = document.createElement('a');
+                    a.href = response.fileName;
+                    a.download = "TimeSheet_Report";
+                    a.click();
+                }
+
+            }
+        });
+    });
+
+    //Download Timesheet stop
+    $('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
+
+        $('#guardLogBookInfoModal').modal('show');
+        var GuardId = $(this).closest("td").find('#GuardId').val();
+        $('#txtGuardId').val($(this).closest("td").find('#GuardId').val());
+
+        //ActiveGuardsLogBookDetails.ajax.reload();
+
+        $('#ActiveGuardsLogBookDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
+        fetchGuardLogBookDetails(GuardId);
+        $("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();//to hide the header of the  table
+        $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
+        clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
+
+
+    });
+
+    function fetchGuardLogBookDetails(guardId) {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=LastTimeLogin',
+            method: 'GET',
+            data: { guardId: guardId },
+            success: function (data) {
+                // Destroy the existing DataTable instance if it exists
+                if ($.fn.DataTable.isDataTable('#ActiveGuardsLogBookDetails')) {
+                    $('#ActiveGuardsLogBookDetails').DataTable().destroy();
+                }
+
+                $('#ActiveGuardsLogBookDetails').DataTable({
+                    autoWidth: false,
+                    ordering: false,
+                    searching: false,
+                    paging: false,
+                    info: false,
+                    data: data, // Use the data fetched from the AJAX request
+                    columns: [
+                        {
+                            data: 'loginTime',
+                            width: "4%",
+                            render: function (data, type, row) {
+                                // Convert the date string to a JavaScript Date object
+                                var date = new Date(data);
+
+                                // Format the date to display only the date part without the time
+                                var formattedDate = date.toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                });
+                                var additionalData = row.eventDateTimeZoneShort;
+                                if (additionalData != null) {
+                                    return formattedDate + ' (' + additionalData + ')';
+                                } else {
+                                    return formattedDate;
+                                }
+                            }
+                        },
+                        {
+                            data: 'ipAddress', width: "2%",
+
+                        },
+                        {
+                            data: 'siteName', width: "16%",
+
+                        },
+
+
+
+
+                    ]
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    }
+    const groupColumnnew = 1;
+    let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuardsLastIncidentReportsDetails').DataTable({
+        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+        ordering: true,
+        "columnDefs": [
+            { "visible": false, "targets": 1 } // Hide the group column initially
+        ],
+        order: [[groupColumnnew, 'asc']],
+        info: false,
+        searching: false,
+        autoWidth: false,
+        fixedHeader: true,
+        "scrollY": "150px", // Set the desired height for the scrollable area
+        "paging": false,
+        "footer": false,
+        "header": false,
+        ajax: {
+            url: '/Admin/Settings?handler=ClientSiteLastIncidentReportHistory',
+            datatype: 'json',
+            data: function (d) {
+                d.guardId = $('#txtGuardId').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'id', visible: false },
+            {
+                data: 'clientSite.name',
+                width: '20%',
+                render: function (value, type, data) {
+
+                    return '<tr class="group group-start"><td class="' + (groupColumnnew == '1' ? 'bg-danger' : (groupColumnnew == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumnnew + '</td></tr>';
+                }
+            },
+            {
+                data: 'id',
+                width: '10%',
+                visible: false
+
+            },
+            {
+                data: 'fileName',
+                width: '20%'
+
+            },
+
+            {
+                data: 'id',
+                width: '9%',
+                className: "text-center",
+                visible: false
+
+            },
+            {
+                data: 'createdOn',
+                width: '9%',
+                className: "text-center",
+                render: function (value, type, data) {
+
+                    // Convert the date string to a JavaScript Date object
+                    var date = new Date(data.createdOnDateTimeLocal);
+
+                    // Format the date to display only the date part without the time
+                    var formattedDate = date.toLocaleDateString('en-GB', {
+                        //day: '2-digit',
+                        //month: '2-digit',
+                        //year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    var additionalData = data.createdOnDateTimeZoneShort;
+                    if (additionalData != null) {
+                        return formattedDate + '(' + additionalData + ')';
+                    } else {
+                        return formattedDate;
+                    }
+
+                }
+            },
+
+
+        ],
+        drawCallback: function () {
+            $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(groupColumnnew, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+    // P1#231 HR Download Excel for settings -start
+    $("#btnDownloadGuardLogExcel").click(async function () {
+        const activeChecked = $('#chkbxfilterGuardActive').is(':checked');
+        const inactiveChecked = $('#chkbxfilterGuardInActive').is(':checked');
+        const currentDateTime = new Date().toISOString().split('T')[0];
+        const fileName = `Guards - ${currentDateTime}.xlsx`;
+
+
+
+        $('#loader').show(); // Show loader
+
+        var guardIds = [];
+
+        // Use the DataTable API to get the instance of the table
+        var table = $('#guard_settings').DataTable();
+
+        // Get the filtered rows only
+        table.rows({ filter: 'applied' }).every(function () {
+            var rowData = this.data(); // Get the data for each filtered row
+
+            // Assuming GuardId is a property in your row data
+            var guardIdValue = rowData.id; // Replace with the actual property if necessary
+
+            // Add the value directly to the array (as a string)
+            if (guardIdValue) {
+                guardIds.push(guardIdValue.toString()); // Store as a string
             }
         });
 
-        $('#loader').hide(); // Hide loader
-        console.log(response.data);
 
-        //const filteredData = response.data.filter(item => guardIds.includes(item.id));
-        // Ensure response contains data
-        const rawData = Array.isArray(response.data) ? response.data : [];
-        if (rawData.length === 0) {
-            console.error("No data available to export.");
-            alert("No data available to export.");
-            return;
+
+
+
+        try {
+            // Fetch data from the server
+            const response = await $.ajax({
+                url: '/Admin/GuardSettings?handler=ExportGuardsToExcel',
+                type: 'POST',
+                dataType: "json",
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                data: {
+                    active: activeChecked,
+                    inactive: inactiveChecked,
+                    guardIdsFilter: guardIds
+                }
+            });
+
+            $('#loader').hide(); // Hide loader
+            console.log(response.data);
+
+            //const filteredData = response.data.filter(item => guardIds.includes(item.id));
+            // Ensure response contains data
+            const rawData = Array.isArray(response.data) ? response.data : [];
+            if (rawData.length === 0) {
+                console.error("No data available to export.");
+                alert("No data available to export.");
+                return;
+            }
+
+            // Define headers and column widths
+
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'LOTE', 'Is Active', 'DOE', 'Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
+                /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
+                'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024', 'Q1 HRS 2025', 'Q2 HRS 2025', 'Q3 HRS 2025', 'Q4 HRS 2025'];
+            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
+
+
+
+
+            const ws = XLSX.utils.aoa_to_sheet([[]]);
+
+
+            //const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:J19'); // Ensure range is defined
+            //for (let row = range.s.r; row <= range.e.r; row++) {
+            //    for (let col = range.s.c; col <= range.e.c; col++) {
+            //        const cellAddress = { c: col, r: row };
+            //        const cellRef = XLSX.utils.encode_cell(cellAddress);
+            //        if (!ws[cellRef]) ws[cellRef] = {}; // Create the cell if it doesn't exist
+            //        ws[cellRef].s = {
+            //            fill: {
+            //                fgColor: { rgb: "FFFF00" } // Yellow background color
+            //            },
+            //            font: {
+            //                sz: 12, // Font size
+            //                bold: false, // Font weight
+            //                color: { rgb: "000000" } // Font color
+            //            },
+            //            alignment: {
+            //                horizontal: "center" // Center align text
+            //            }
+            //        };
+            //    }
+            //}
+
+            // Create the data rows
+            const dataRows = [headers, ...rawData.map(item => [
+                item.name,
+                item.securityNo,
+                item.initial,
+                item.state,
+                item.provider,
+                item.mobile,
+                item.email,
+                item.clientSites.replace('<br />', ' '),
+                item.gender,
+                item.guardLanguage.replace('<br />', ' '),
+                item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
+                item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
+                item.isTerminated ? 'Banned' : '',
+                item.hR1Status,
+                item.hR2Status,
+                item.hR3Status,
+                //item.q1JantoMarch2023,
+                //item.q2AprtoJune2023,
+                //item.q3JulytoSept2023,
+                //item.q4OcttoDec2023,
+                //item.q1JantoMarch2024,
+                //item.q2AprtoJune2024,
+                //item.q3JulytoSept2024,
+                item.q1HRS2023,
+                item.q2HRS2023,
+                item.q3HRS2023,
+                item.q4HRS2023,
+                item.q1HRS2024,
+                item.q2HRS2024,
+                item.q3HRS2024,
+                item.q4HRS2024,
+                item.q1HRS2025,
+                item.q2HRS2025,
+                item.q3HRS2025,
+                item.q4HRS2025,
+            ])];
+
+            // Update the worksheet with headers and data
+            XLSX.utils.sheet_add_aoa(ws, dataRows);
+
+            // Set column widths
+            ws['!cols'] = columnWidths.map(width => ({ wch: width }));
+
+            // Create a new workbook and append the worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Guards');
+
+            // Write the file
+            XLSX.writeFile(wb, fileName);
+        } catch (error) {
+            $('#loader').hide(); // Hide loader in case of error
+            console.error('Error fetching or processing data:', error); // Log error
+            alert("An error occurred while exporting data.");
         }
-
-        // Define headers and column widths
-
-        const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'LOTE', 'Is Active', 'DOE', 'Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
-            /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
-            'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024', 'Q1 HRS 2025', 'Q2 HRS 2025', 'Q3 HRS 2025', 'Q4 HRS 2025'];
-        const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
+    });
 
 
 
 
-        const ws = XLSX.utils.aoa_to_sheet([[]]);
+    $('.dropdownGuardHrFilter > button').prop('disabled', true);
+    $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').on('click', function () {
+        $(this).closest('.dropdown').find('button').html($(this).html());
+        const kvlStatusFilter = $(this).data('val');
+
+        if (kvlStatusFilter !== 0) {
+            var filter = 'true'; // or 'false'
+            var regex = true;   // No need for regex
+            var smart = false;   // Exact match only
+            if ($('#chkbxHR1').is(':checked')) {
+                $('#chkbxHR2').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hR1Status:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+            }
+            else if ($('#chkbxHR2').is(':checked')) {
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hR2Status:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+            }
+            else if ($('#chkbxHR3').is(':checked')) {
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR2').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hR3Status:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+            }
+            else {
+                // Clear global search
+                guardSettings.search('');
+
+                // Clear individual column searches
+                guardSettings.columns().search('');
+
+                // Redraw the table
+
+                // Clear the sorting
+                guardSettings.order([]).draw(false);
+                guardSettings.draw(false);
+                filterActiveInActiveGuards(guardSettings);
 
 
-        //const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:J19'); // Ensure range is defined
-        //for (let row = range.s.r; row <= range.e.r; row++) {
-        //    for (let col = range.s.c; col <= range.e.c; col++) {
-        //        const cellAddress = { c: col, r: row };
-        //        const cellRef = XLSX.utils.encode_cell(cellAddress);
-        //        if (!ws[cellRef]) ws[cellRef] = {}; // Create the cell if it doesn't exist
-        //        ws[cellRef].s = {
-        //            fill: {
-        //                fgColor: { rgb: "FFFF00" } // Yellow background color
-        //            },
-        //            font: {
-        //                sz: 12, // Font size
-        //                bold: false, // Font weight
-        //                color: { rgb: "000000" } // Font color
-        //            },
-        //            alignment: {
-        //                horizontal: "center" // Center align text
-        //            }
-        //        };
-        //    }
-        //}
+            }
 
-        // Create the data rows
-        const dataRows = [headers, ...rawData.map(item => [
-            item.name,
-            item.securityNo,
-            item.initial,
-            item.state,
-            item.provider,
-            item.mobile,
-            item.email,
-            item.clientSites.replace('<br />', ' '),
-            item.gender,
-            item.guardLanguage.replace('<br />', ' '),
-            item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
-            item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
-            item.isTerminated ? 'Banned' : '',
-            item.hR1Status,
-            item.hR2Status,
-            item.hR3Status,
-            //item.q1JantoMarch2023,
-            //item.q2AprtoJune2023,
-            //item.q3JulytoSept2023,
-            //item.q4OcttoDec2023,
-            //item.q1JantoMarch2024,
-            //item.q2AprtoJune2024,
-            //item.q3JulytoSept2024,
-            item.q1HRS2023,
-            item.q2HRS2023,
-            item.q3HRS2023,
-            item.q4HRS2023,
-            item.q1HRS2024,
-            item.q2HRS2024,
-            item.q3HRS2024,
-            item.q4HRS2024,
-            item.q1HRS2025,
-            item.q2HRS2025,
-            item.q3HRS2025,
-            item.q4HRS2025,
-        ])];
-
-        // Update the worksheet with headers and data
-        XLSX.utils.sheet_add_aoa(ws, dataRows);
-
-        // Set column widths
-        ws['!cols'] = columnWidths.map(width => ({ wch: width }));
-
-        // Create a new workbook and append the worksheet
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Guards');
-
-        // Write the file
-        XLSX.writeFile(wb, fileName);
-    } catch (error) {
-        $('#loader').hide(); // Hide loader in case of error
-        console.error('Error fetching or processing data:', error); // Log error
-        alert("An error occurred while exporting data.");
-    }
-});
-
-
-
-
-$('.dropdownGuardHrFilter > button').prop('disabled', true);
-$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').on('click', function () {
-    $(this).closest('.dropdown').find('button').html($(this).html());
-    const kvlStatusFilter = $(this).data('val');
-
-    if (kvlStatusFilter !== 0) {
-        var filter = 'true'; // or 'false'
-        var regex = true;   // No need for regex
-        var smart = false;   // Exact match only
-        if ($('#chkbxHR1').is(':checked')) {
-            $('#chkbxHR2').prop('checked', false);
-            $('#chkbxHR3').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hR1Status:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
-        }
-        else if ($('#chkbxHR2').is(':checked')) {
-            $('#chkbxHR1').prop('checked', false);
-            $('#chkbxHR3').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hR2Status:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
-        }
-        else if ($('#chkbxHR3').is(':checked')) {
-            $('#chkbxHR1').prop('checked', false);
-            $('#chkbxHR2').prop('checked', false);
-            // Apply the search filter to the 'isactive' column
-            guardSettings.column('hR3Status:name').search(kvlStatusFilter, regex, smart).draw();
-            guardSettings.ajax.reload();
         }
         else {
+
+            $('#chkbxHR1').prop('checked', false);
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
             // Clear global search
             guardSettings.search('');
 
@@ -5971,17 +5993,37 @@ $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').on('click', functi
             guardSettings.order([]).draw(false);
             guardSettings.draw(false);
             filterActiveInActiveGuards(guardSettings);
-
+            //$('#chkbxfilterGuardActive').prop("disabled", false);
+            //$('#chkbxfilterGuardInActive').prop("disabled", false);
+            //$('#chkbxfilterGuardActive').trigger('click');
 
         }
 
-    }
-    else {
+        filterActiveInActiveGuards(guardSettings);
 
-        $('#chkbxHR1').prop('checked', false);
-        $('#chkbxHR2').prop('checked', false);
-        $('#chkbxHR3').prop('checked', false);
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
+
+    });
+
+
+
+    $('#chkbxHR1').on('click', function () {
+        var thisCheck = $(this);
+        reloadDropdown();
+        if (thisCheck.is(':checked')) {
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
+            $('.dropdownGuardHrFilter > button').prop('disabled', false);
+
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
+        }
+        else {
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
+        }
+        $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
         // Clear global search
         guardSettings.search('');
 
@@ -5994,1077 +6036,1064 @@ $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').on('click', functi
         guardSettings.order([]).draw(false);
         guardSettings.draw(false);
         filterActiveInActiveGuards(guardSettings);
-        //$('#chkbxfilterGuardActive').prop("disabled", false);
-        //$('#chkbxfilterGuardInActive').prop("disabled", false);
-        //$('#chkbxfilterGuardActive').trigger('click');
-
-    }
-
-    filterActiveInActiveGuards(guardSettings);
-
-
-});
-
-
-
-$('#chkbxHR1').on('click', function () {
-    var thisCheck = $(this);
-    reloadDropdown();
-    if (thisCheck.is(':checked')) {
-        $('#chkbxHR2').prop('checked', false);
-        $('#chkbxHR3').prop('checked', false);
-        $('#chkbxLote').prop('checked', false);
-        $('.hrsearchandeditkeyslist').attr('hidden', false);
-        $('.languagedetailslist').attr('hidden', true)
-        $('.dropdownGuardHrFilter > button').prop('disabled', false);
-
-        $('#list_HrSearchandEdit_keys').prop('disabled', false);
-    }
-    else {
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
-        $('#list_HrSearchandEdit_keys').prop('disabled', true);
-    }
-    $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
-    // Clear global search
-    guardSettings.search('');
-
-    // Clear individual column searches
-    guardSettings.columns().search('');
-
-    // Redraw the table
-
-    // Clear the sorting
-    guardSettings.order([]).draw(false);
-    guardSettings.draw(false);
-    filterActiveInActiveGuards(guardSettings);
-    //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
-});
-$('#chkbxHR2').on('click', function () {
-    var thisCheck = $(this);
-    reloadDropdown();
-    if (thisCheck.is(':checked')) {
-        $('#chkbxHR1').prop('checked', false);
-        $('#chkbxHR3').prop('checked', false);
-        $('#chkbxLote').prop('checked', false);
-        $('.hrsearchandeditkeyslist').attr('hidden', false);
-        $('.languagedetailslist').attr('hidden', true)
-        $('.dropdownGuardHrFilter > button').prop('disabled', false);
-        $('#list_HrSearchandEdit_keys').prop('disabled', false);
-    }
-    else {
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
-        $('#list_HrSearchandEdit_keys').prop('disabled', true);
-    }
-    $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
-    // Clear global search
-    guardSettings.search('');
-
-    // Clear individual column searches
-    guardSettings.columns().search('');
-
-    // Redraw the table
-
-    // Clear the sorting
-    guardSettings.order([]).draw(false);
-    guardSettings.draw(false);
-    filterActiveInActiveGuards(guardSettings);
-    // $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
-});
-$('#chkbxHR3').on('click', function () {
-    var thisCheck = $(this);
-    reloadDropdown();
-    if (thisCheck.is(':checked')) {
-        $('#chkbxHR1').prop('checked', false);
-        $('#chkbxHR2').prop('checked', false);
-        $('#chkbxLote').prop('checked', false);
-        $('.hrsearchandeditkeyslist').attr('hidden', false);
-        $('.languagedetailslist').attr('hidden', true)
-        $('.dropdownGuardHrFilter > button').prop('disabled', false);
-        $('#list_HrSearchandEdit_keys').prop('disabled', false);
-
-    }
-    else {
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
-        $('#list_HrSearchandEdit_keys').prop('disabled', true);
-    }
-    $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
-    // Clear global search
-    guardSettings.search('');
-
-    // Clear individual column searches
-    guardSettings.columns().search('');
-
-    // Redraw the table
-
-    // Clear the sorting
-    guardSettings.order([]).draw(false);
-    guardSettings.draw(false);
-    filterActiveInActiveGuards(guardSettings);
-    //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
-});
-$('#chkbxLote').on('click', function () {
-    var thisCheck = $(this);
-    reloadDropdown();
-    if (thisCheck.is(':checked')) {
-        $('#chkbxHR1').prop('checked', false);
-        $('#chkbxHR2').prop('checked', false);
-        $('#chkbxHR3').prop('checked', false);
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
-        $('.hrsearchandeditkeyslist').attr('hidden', true);
-        $('.languagedetailslist').attr('hidden', false)
-
-
-        $("#list_Lote_keys").multiselect();
-        $("#list_Lote_keys").val('');
-        $("#list_Lote_keys").multiselect("refresh");
-    }
-    else {
-        $('.dropdownGuardHrFilter > button').prop('disabled', true);
-        $('#list_HrSearchandEdit_keys').prop('disabled', true);
-        $('.hrsearchandeditkeyslist').attr('hidden', false);
-        $('.languagedetailslist').attr('hidden', true)
-    }
-    $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
-    // Clear global search
-    guardSettings.search('');
-
-    // Clear individual column searches
-    guardSettings.columns().search('');
-
-    // Redraw the table
-
-    // Clear the sorting
-    guardSettings.order([]).draw(false);
-    guardSettings.draw(false);
-    filterActiveInActiveGuards(guardSettings);
-    //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
-});
-
-
-$('#list_Lote_keys').on('change', function () {
-    var selectedValues = $(this).val();
-
-    var laguages = '';
-    selectedValues.forEach(function (value) {
-        if (laguages == '') {
-            laguages = value;
+        //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+    });
+    $('#chkbxHR2').on('click', function () {
+        var thisCheck = $(this);
+        reloadDropdown();
+        if (thisCheck.is(':checked')) {
+            $('#chkbxHR1').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
+            $('.dropdownGuardHrFilter > button').prop('disabled', false);
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
         }
         else {
-            laguages = laguages + '|' + value;
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
         }
-    })
-    guardSettings.column('languages:name').search(laguages, true, false).draw();
-    guardSettings.ajax.reload();
+        $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
+        // Clear global search
+        guardSettings.search('');
 
+        // Clear individual column searches
+        guardSettings.columns().search('');
 
-})
+        // Redraw the table
 
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+        // $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+    });
+    $('#chkbxHR3').on('click', function () {
+        var thisCheck = $(this);
+        reloadDropdown();
+        if (thisCheck.is(':checked')) {
+            $('#chkbxHR1').prop('checked', false);
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxLote').prop('checked', false);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
+            $('.dropdownGuardHrFilter > button').prop('disabled', false);
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
 
-
-
-
-// P1#231 HR Download Excel for settings -end
-
-
-$('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
-    gridGuardLicenses.clear().draw();
-    gridGuardCompliances.clear().draw();
-    gridGuardLicensesAndLicence.clear().draw();
-    gridGuardTrainingAndAssessmentByAdmin.clear().draw();
-    $('.btn-add-guard-addl-details').hide();
-    resetGuardDetailsModal();
-    let value = 1;
-    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-    $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
-    // Initialize the multiselect dropdown
-    $("#Guard_Access").multiselect();
-    $("#Guard_Access").val(value);
-    $("#Guard_Access").multiselect("refresh");
-    $("#Guard_Lote").multiselect();
-    $("#Guard_Lote").val('');
-    $("#Guard_Lote").multiselect("refresh");
-    $('#addGuardModal').modal('show');
-
-});
-
-function resetGuardDetailsModal() {
-    $('#Guard_Name').val('');
-    $('#Guard_SecurityNo').val('');
-    $('#Guard_Initial').val('');
-    $('#Guard_State').val('');
-    $('#Guard_Provider').val('');
-    $('#Guard_Pin').val('');
-    $('#Guard_Email').val('');
-    $('#Guard_Mobile').val('');
-    $('#Guard_Mobile').val('+61 4');
-    $('#Guard_Id').val('-1');
-    $('#cbIsActive').prop('checked', true);
-    //p1-224 RC Bypass For HR -start
-    $('#cbIsRCAccess').prop('checked', false);
-    $('#cbIsKPIAccess').prop('checked', false);
-    $('#Guard_IsRCBypass').val(false);
-    $('#cbIsRCBypass').prop('checked', false);
-    //p1-224 RC Bypass For HR -end
-    $('#glValidationSummary').html('');
-    //p1-224 RC Bypass For HR -start
-    $('#Guard_Gender').val('');
-    //p1-224 RC Bypass For HR -end
-    $(".multiselect-option input[type=checkbox]").prop("checked", false);
-    $('#Guard_Terminated').val('');
-}
-
-$('#btn_save_guard, #btn_save_guard2').on('click', function () {
-    clearGuardValidationSummary('glValidationSummary');
-    $('#guard_saved_status').hide();
-    $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
-    $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
-    //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
-    //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
-    const pinNumber = $('#Guard_Pin').val();
-    if (pinNumber != '') {
-        if (pinNumber.length < 4 || pinNumber.length > 6) {
-            displayGuardValidationSummary('glValidationSummary', 'PIN Number must be between 4 and 6 characters');
-
-            return; // Stop execution if validation fails
         }
-    }
+        else {
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
+        }
+        $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
+        // Clear global search
+        guardSettings.search('');
 
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=Guards',
-        data: $('#frm_add_guard').serialize(),
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.status) {
-            $('#guardId').val(result.guardId);
-            $('#GuardLicense_GuardId').val(result.guardId);
-            $('#GuardCompliance_GuardId').val(result.guardId);
-            $('#GuardComplianceandlicense_GuardId').val(result.guardId);
-            if (result.initalsChangedMessage !== '') {
-                alert(result.initalsChangedMessage);
-                $('#Guard_Initial').val(result.initalsUsed);
+        // Clear individual column searches
+        guardSettings.columns().search('');
+
+        // Redraw the table
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+        //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+    });
+    $('#chkbxLote').on('click', function () {
+        var thisCheck = $(this);
+        reloadDropdown();
+        if (thisCheck.is(':checked')) {
+            $('#chkbxHR1').prop('checked', false);
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('.hrsearchandeditkeyslist').attr('hidden', true);
+            $('.languagedetailslist').attr('hidden', false)
+
+
+            $("#list_Lote_keys").multiselect();
+            $("#list_Lote_keys").val('');
+            $("#list_Lote_keys").multiselect("refresh");
+        }
+        else {
+            $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
+            $('.hrsearchandeditkeyslist').attr('hidden', false);
+            $('.languagedetailslist').attr('hidden', true)
+        }
+        $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
+        // Clear global search
+        guardSettings.search('');
+
+        // Clear individual column searches
+        guardSettings.columns().search('');
+
+        // Redraw the table
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+        //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+    });
+
+
+    $('#list_Lote_keys').on('change', function () {
+        var selectedValues = $(this).val();
+
+        var laguages = '';
+        selectedValues.forEach(function (value) {
+            if (laguages == '') {
+                laguages = value;
             }
-            $('#guard_saved_status').show().delay(2000).hide(0);
-            $('.btn-add-guard-addl-details').show();
-            /*   gridGuardLicenses.ajax.reload();*/
-            gridGuardLicensesAndLicence.clear().draw();
-            gridGuardLicensesAndLicence.ajax.reload();
-            guardSettings.ajax.reload(null, false);
-        } else {
-            displayGuardValidationSummary('glValidationSummary', result.message);
-        }
-    });
-});
-
-/****** Daily Guard  Custom Field Logs *******/
-let gridCustomFieldLogs;
-
-if ($('#custom_field_log').length === 1) {
-    $.ajax({
-        type: "GET",
-        url: '/Guard/DailyLog?handler=CustomFieldConfig&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-        contentType: "application/json",
-        async: false,
-        dataType: "json",
-
-        success: function (data) {
-            let columnData = [];
-            columnData.push({ renderer: renderCustomFieldLogManagement, align: 'center', width: 60 });
-
-            $.each(data, function (i, d) {
-                let colAlign = 'center', colEditor = true, colCssClass = 'text-center';
-                let colWidth = 80;
-                console.log(d.key);
-                if (d.key === 'timeSlot') {
-                    colAlign = 'center';
-                    colEditor = false;
-                    colWidth = 60;
-                }
-                else if (d.key === 'Romeo Plate + Initial' || d.key === 'Missed Patrols') {
-                    colCssClass = 'text-right';
-                }
-                columnData.push({ field: d.key, title: d.value, align: colAlign, editor: colEditor, width: colWidth, cssClass: colCssClass });
-            });
-
-            gridCustomFieldLogs = $('#custom_field_log').grid({
-                dataSource: '/Guard/DailyLog?handler=CustomFieldLogs' +
-                    '&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val() +
-                    '&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                uiLibrary: 'bootstrap4',
-                iconsLibrary: 'fontawesome',
-                primaryKey: 'timeSlot',
-                fontSize: '13px',
-                inlineEditing: { mode: 'command', managementColumn: false },
-                columns: columnData,
-                initialized: function (e) {
-                    $(e.target).find('thead tr th:first').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-                }
-            });
-        },
-        error: function (data) {
-            alert(data);
-        }
-    });
-}
-
-if (gridCustomFieldLogs) {
-    gridCustomFieldLogs.on('rowDataChanged', function (e, id, record) {
-        const data = $.extend(true, {}, record);
-        const token = $('input[name="__RequestVerificationToken"]').val();
-        $.ajax({
-            url: '/Guard/DailyLog?handler=SaveCustomFieldLog&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val(),
-            data: { records: data },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': token },
-        }).done(function (result) {
-            gridCustomFieldLogs.clear();
-            gridCustomFieldLogs.reload();
-        }).fail(function () {
-            console.log('error');
-        });
-    });
-
-    gridCustomFieldLogs.on('dataBound', function (e, records, totalRecords) {
-        $(this).hide();
-        $('#card_custom_field_log').addClass('d-none');
-        if (totalRecords > 0) {
-            $(this).show();
-            $('#card_custom_field_log').removeClass('d-none');
-        }
-    });
-}
-
-function renderCustomFieldLogManagement(value, record, $cell, $displayEl, id) {
-    var $editBtn = $('<button class="btn btn-outline-primary btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-pencil"></i></button>'),
-        $updateBtn = $('<button class="btn btn-outline-success btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-check-circle"></i></button>').hide(),
-        $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-times-circle"></i></button>').hide();
-
-    $editBtn.on('click', function (e) {
-        isPaused = true;
-        gridCustomFieldLogs.edit($(this).data('id'));
-        $editBtn.hide();
-        $updateBtn.show();
-        $cancelBtn.show();
-    });
-
-    $updateBtn.on('click', function (e) {
-        isPaused = false;
-        gridCustomFieldLogs.update($(this).data('id'));
-        $editBtn.show();
-        $updateBtn.hide();
-        $cancelBtn.hide();
-    });
-
-    $cancelBtn.on('click', function (e) {
-        isPaused = false;
-        gridCustomFieldLogs.cancel($(this).data('id'));
-        $editBtn.show();
-        $updateBtn.hide();
-        $cancelBtn.hide();
-    });
-
-    $displayEl.append($editBtn)
-        .append($updateBtn)
-        .append($cancelBtn);
-}
-
-/****** Daily Guard  Patrol Car Logs *******/
-function renderPatrolCar(value, record) {
-    patrolCar = record.clientSitePatrolCar.model;
-    rego = record.clientSitePatrolCar.rego;
-    return patrolCar + " - " + rego + " - KM @ 00:01 HRS";
-}
-
-function renderPatrolCarLogManagement(value, record, $cell, $displayEl, id) {
-
-    var $editBtn = $('<button class="btn btn-outline-primary btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-pencil"></i></button>'),
-        $updateBtn = $('<button class="btn btn-outline-success btn-dgl-edit mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle"></i></button>').hide(),
-        $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-times-circle"></i></button>').hide();
-
-    $editBtn.on('click', function (e) {
-        gridSitePatrolCarLogs.edit($(this).data('id'));
-        $editBtn.hide();
-        $updateBtn.show();
-        $cancelBtn.show();
-        /*timer pause while editing*/
-        isPaused = true;
-    });
-
-    $updateBtn.on('click', function (e) {
-        gridSitePatrolCarLogs.update($(this).data('id'));
-        $editBtn.show();
-        $updateBtn.hide();
-        $cancelBtn.hide();
-        /*timer pause while editing*/
-        isPaused = false;
-    });
-
-    $cancelBtn.on('click', function (e) {
-        gridSitePatrolCarLogs.cancel($(this).data('id'));
-        $editBtn.show();
-        $updateBtn.hide();
-        $cancelBtn.hide();
-        /*timer pause while editing*/
-        isPaused = false;
-    });
-
-    $displayEl.append($editBtn)
-        .append($updateBtn)
-        .append($cancelBtn);
-}
-
-let gridSitePatrolCarLogs;
-gridSitePatrolCarLogs = $('#patrol_cars_log').grid({
-    dataSource: '/Guard/DailyLog?handler=PatrolCarLogs&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val() + '&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    fontSize: '13px',
-    inlineEditing: { mode: 'command', managementColumn: false },
-    columns: [
-        { field: 'id', title: 'Id', hidden: true },
-        { field: 'patrolCarId', title: 'PatrolCarId', hidden: true, renderer: function (value, record) { return record.PatrolCarId; } },
-        { field: 'clientSiteLogBookId', title: 'ClientSiteLogBookId', hidden: true, renderer: function (value, record) { return record.clientSiteLogBookId; } },
-        { field: 'patrolCar', title: 'Patrol Cars', align: 'center', cssClass: "text-left", editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 75 },
-        { field: 'mileage', title: 'Kms', align: 'center', cssClass: "text-right", editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15 },
-        { renderer: renderPatrolCarLogManagement, align: 'center', width: 10 }
-    ],
-    initialized: function (e) {
-        var html = '<i class="fa fa-cogs" aria-hidden="true"></i>'
-        $(e.target).find('thead tr th:last').html(html);
-
-    }
-});
-
-if (gridSitePatrolCarLogs) {
-    gridSitePatrolCarLogs.on('rowDataChanged', function (e, id, record) {
-        const data = $.extend(true, {}, record);
-        const token = $('input[name="__RequestVerificationToken"]').val();
-        $.ajax({
-            url: '/Guard/DailyLog?handler=PatrolCarLog',
-            data: { record: data },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': token },
-        }).done(function (result) {
-            gridSitePatrolCarLogs.clear();
-            gridSitePatrolCarLogs.reload({
-                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val()
-            });
-        }).fail(function () {
-            console.log('error');
-        });
-    });
-
-    gridSitePatrolCarLogs.on('dataBound', function (e, records, totalRecords) {
-        $(this).hide();
-        $('#card_patrol_car').addClass('d-none');
-        if (totalRecords > 0) {
-            $(this).show();
-            $('#card_patrol_car').removeClass('d-none');
-        }
-    });
-}
-
-/****** Guard  Licenses *******/
-function resetGuardLicenseAddModal() {
-    $('#GuardLicense_Id').val('');
-    $('#GuardLicense_LicenseNo').val('');
-    $('#GuardLicense_LicenseType').val('');
-    $('#GuardLicense_Reminder1').val('45');
-    $('#GuardLicense_Reminder2').val('7');
-    $('#GuardLicense_ExpiryDate').val('');
-    $('#GuardLicense_FileName').val('');
-    $('#guardLicense_fileName').text('None');
-    clearGuardValidationSummary('licenseValidationSummary');
-}
-function resetGuardLicenseandComplianceAddModal() {
-    $('#GuardComplianceandlicense_Id').val('');
-    $('#Description').val('');
-    $('#LicanseTypeFilter').prop('checked', false);
-    $('#ComplianceDate').text('Expiry Date (DOE)');
-    $('#IsDateFilterEnabledHidden').val(false)
-    $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-    $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-        return new Date().toJSON().split('T')[0];
-    });
-    $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
-    $('#HRGroup').val('');
-    $(".es-list").empty();
-    $('#guardComplianceandlicense_fileName1').text('None');
-    $('#GuardComplianceandlicense_FileName1').val('');
-    $('#GuardComplianceandlicense_CurrentDateTime').val('');
-    clearGuardValidationSummary('compliancelicanseValidationSummary');
-}
-
-let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
-    autoWidth: false,
-    ordering: false,
-    searching: false,
-    paging: false,
-    info: false,
-    ajax: {
-        url: '/Admin/GuardSettings?handler=GuardLicense',
-        data: function (d) {
-            d.guardId = $('#GuardComplianceandlicense_GuardId').val();
-        },
-        dataSrc: ''
-    },
-    columns: [
-
-        { data: 'licenseNo', width: "10%" },
-        //{ data: 'licenseTypeName', width: "5%" },
-        {
-
-            data: 'licenseTypeText',
-            width: '5%',
-            render: function (data, type, row) {
-                if (type === 'display') {
-                    if (data === null) {
-                        return row.licenseTypeName;
-                    } else {
-                        return data;
-                    }
-                } else {
-                    return data;
-                }
+            else {
+                laguages = laguages + '|' + value;
             }
-        },
-        { data: 'expiryDate', width: '10%', orderable: true },
-        { data: 'reminder1', width: "3%" },
-        { data: 'reminder2', width: '3%' },
-        { data: 'fileName', width: '5%' },
-        {
-            targets: -1,
-            data: null,
-            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_license"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-                '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licence"><i class="fa fa-trash mr-2"></i>Delete</button>',
-            width: '12%'
-        }],
-    columnDefs: [{
-        targets: 5,
-        data: 'fileName',
-        render: function (data, type, row, meta) {
-            if (data)
-                return '<a href="' + row.fileUrl + '" target="_blank">' + data + '</a>';
-            return '-';
-        }
-    }],
-    'createdRow': function (row, data, index) {
-        if (data.expiryDate !== null) {
-            $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
-        }
-    },
-});
+        })
+        guardSettings.column('languages:name').search(laguages, true, false).draw();
+        guardSettings.ajax.reload();
 
 
-//To get the data in description dropdown start
-$('#Description').attr('placeholder', 'Select');
-$('#Description').editableSelect({
-    //filter: false,
-    effects: 'slide'
-}).on('select.editable-select', function (e, li) {
-    var check = '';
-    $('#GuardComplianceandlicense_FileName1').val('');
-    $('#guardComplianceandlicense_fileName1').text('None');
-    var sel = $('#Description option:selected');
-    $(this).data('cur_val', sel);
-    var display = sel.clone();
-    display.text($.trim(display.text()));
-    sel.replaceWith(display);
-    $(this).prop('selectedIndex', display.index());
-
-}).on(trig, function () {
-    if ($(this).prop('selectedIndex') == 0)
-        return;
-    var sel = $('#Description option:selected');
-    sel.replaceWith($('#Description').data('cur_val'));
-    $(this).prop('selectedIndex', 0);
-});
-$('#HRGroup').on('change', function () {
-    $('#Description').val('');
-    $('#GuardComplianceandlicense_FileName1').val('');
-    $('#guardComplianceandlicense_fileName1').text('None');
-    var Descriptionval = $('#HRGroup').val();
-    var GuardID = $('#GuardComplianceandlicense_GuardId').val();
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    const ulClients = $('#Description').siblings('ul.es-list');
-    ulClients.html('');
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=HRDescription',
-        type: 'GET',
-        data: {
-            HRid: Descriptionval,
-            GuardID: GuardID
-        },
-        headers: { 'RequestVerificationToken': token }
-    }).done(function (DescVal) {
-        DescVal.forEach(function (DescVals) {
-            var mark = ''; // Initialize the mark variable
-
-            if (DescVals.description != null) {
-                if (DescVals.usedDescription == null) {
-                    //mark = '❌';
-                    mark = '<i class="fa fa-close" style="font-size:24px;color:red"></i>'
-                    //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
-                    ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
-                        '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
-                        '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
-                        mark +
-                        '</li>');
-                }
-                else {
-                    mark = '<i class="fa fa-check" style="font-size:24px;color:green"></i>'
-                    //mark = '<span style="color: green !important;">✔️</span>';
-                    // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
-                    ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
-                        '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
-                        '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
-                        mark +
-                        '</li>');
-                }
-            }
-
-        });
     })
 
 
-});
 
 
 
-var trig = 'mousedown';
-$('#Description').on("change", function () {
-    let selectedItem = $('.es-visible.selected').val();
-    const token = $('input[name="__RequestVerificationToken"]').val();
+    // P1#231 HR Download Excel for settings -end
 
-    var sel = $('#Description option:selected');
-    $(this).data('cur_val', sel);
-    var display = sel.clone();
-    display.text($.trim(display.text()));
-    sel.replaceWith(display);
-    $(this).prop('selectedIndex', display.index());
 
-    let LoginVal = $('#hdnIsAdminLoggedIn1').val();
-    if (LoginVal == 'GuardLogin') {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
-            type: 'GET',
-            data: {
-                DescriptionID: selectedItem
-            },
-            headers: { 'RequestVerificationToken': token }
-        }).done(function (DescVal) {
-            if (DescVal.hrBanEdit == true) {
-                if (confirm("This description is restricted and cannot be added.")) {
-                    $('#Description').val('');
-                }
+    $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
+        gridGuardLicenses.clear().draw();
+        gridGuardCompliances.clear().draw();
+        gridGuardLicensesAndLicence.clear().draw();
+        gridGuardTrainingAndAssessmentByAdmin.clear().draw();
+        $('.btn-add-guard-addl-details').hide();
+        resetGuardDetailsModal();
+        let value = 1;
+        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
+        // Initialize the multiselect dropdown
+        $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(value);
+        $("#Guard_Access").multiselect("refresh");
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val('');
+        $("#Guard_Lote").multiselect("refresh");
+        $('#addGuardModal').modal('show');
 
+    });
+
+    function resetGuardDetailsModal() {
+        $('#Guard_Name').val('');
+        $('#Guard_SecurityNo').val('');
+        $('#Guard_Initial').val('');
+        $('#Guard_State').val('');
+        $('#Guard_Provider').val('');
+        $('#Guard_Pin').val('');
+        $('#Guard_Email').val('');
+        $('#Guard_Mobile').val('');
+        $('#Guard_Mobile').val('+61 4');
+        $('#Guard_Id').val('-1');
+        $('#cbIsActive').prop('checked', true);
+        //p1-224 RC Bypass For HR -start
+        $('#cbIsRCAccess').prop('checked', false);
+        $('#cbIsKPIAccess').prop('checked', false);
+        $('#Guard_IsRCBypass').val(false);
+        $('#cbIsRCBypass').prop('checked', false);
+        //p1-224 RC Bypass For HR -end
+        $('#glValidationSummary').html('');
+        //p1-224 RC Bypass For HR -start
+        $('#Guard_Gender').val('');
+        //p1-224 RC Bypass For HR -end
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $('#Guard_Terminated').val('');
+    }
+
+    $('#btn_save_guard, #btn_save_guard2').on('click', function () {
+        clearGuardValidationSummary('glValidationSummary');
+        $('#guard_saved_status').hide();
+        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
+        $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
+        //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
+        //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+        const pinNumber = $('#Guard_Pin').val();
+        if (pinNumber != '') {
+            if (pinNumber.length < 4 || pinNumber.length > 6) {
+                displayGuardValidationSummary('glValidationSummary', 'PIN Number must be between 4 and 6 characters');
+
+                return; // Stop execution if validation fails
             }
+        }
 
-        });
-    }
-
-
-}).on(trig, function () {
-    if ($(this).prop('selectedIndex') == 0)
-        return;
-    var sel = $('#Description option:selected');
-    sel.replaceWith($('#Description').data('cur_val'));
-    $(this).prop('selectedIndex', 0);
-});
-$(document).on("click", "#Description + ul.es-list", function () {
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    let selectedItem = $('.es-visible').val();
-    let LoginVal = $('#hdnIsAdminLoggedIn1').val();
-    if (LoginVal == 'GuardLogin') {
         $.ajax({
-            url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
-            type: 'GET',
-            data: {
-                DescriptionID: selectedItem
-            },
-            headers: { 'RequestVerificationToken': token }
-        }).done(function (DescVal) {
-            if (DescVal.hrBanEdit == true) {
-                if (confirm("This description is restricted and cannot be added.")) {
-                    $('#Description').val('');
-                }
-
-            }
-
-        });
-    }
-});
-//$('#Description').on("change", function () {
-//    var sel = $('#Description option:selected');
-//    $(this).data('cur_val', sel);
-//    var display = sel.clone();
-//    display.text($.trim(display.text()));
-//    sel.replaceWith(display);
-//    $(this).prop('selectedIndex', display.index());
-//}).on(trig, function () {
-//    if ($(this).prop('selectedIndex') == 0)
-//        return;
-//    var sel = $('#Description option:selected');
-//    sel.replaceWith($('#Description').data('cur_val'));
-//    $(this).prop('selectedIndex', 0);
-//});
-
-
-
-//To get the data in description dropdown stop
-//Gurad License and Compliance Form stop
-
-$('#btnAddGuardLicense,#btnAddGuardLicense2').on('click', function () {
-    resetGuardLicenseandComplianceAddModal();
-    $("#ComplianceHiddenDiv").css({
-        "pointer-events": "",
-        "opacity": ""
-    }).removeAttr("disabled");
-    const messageHtml2 = '';
-    $('#schRunStatusNew').html(messageHtml2);
-    $('#addGuardCompliancesLicenseModal').modal('show');
-});
-/*code added for Licence Type Dropdown Textbox start*/
-$('#GuardLicense_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
-    effects: 'slide'
-}).on('select.editable-select', function (e, li) {
-    $('#GuardLicense_License').val(li.text());
-});
-
-if ($('#GuardLicense_License').val() !== '') {
-    let itemToSelect = $('#GuardLicense_LicenseType').siblings('.es-list').find('li:contains("' + $('#GuardLicense_License').val() + '")')[0];
-    if (itemToSelect) {
-        $('#GuardLicense_LicenseType').editableSelect('select', $(itemToSelect));
-
-    }
-}
-/*code added for Licence Type Dropdown Textbox stop*/
-$('#tbl_guard_licenses tbody').on('click', 'button[name=btn_edit_guard_license]', function () {
-    resetGuardLicenseAddModal();
-    var data = gridGuardLicenses.row($(this).parents('tr')).data();
-    $('#GuardLicense_LicenseNo').val(data.licenseNo);
-    if (data.licenseTypeText == null) {
-        $('#GuardLicense_LicenseType').val(data.licenseTypeName);
-    }
-    else {
-        $('#GuardLicense_LicenseType').val(data.licenseTypeText);
-    }
-
-    $('#GuardLicense_Reminder1').val(data.reminder1);
-    $('#GuardLicense_Reminder2').val(data.reminder2);
-    if (data.expiryDate) {
-        $('#GuardLicense_ExpiryDate').val(data.expiryDate.split('T')[0]);
-    }
-    $('#GuardLicense_Id').val(data.id);
-    $('#GuardLicense_GuardId').val(data.guardId);
-    $('#GuardLicense_FileName').val(data.fileName);
-    $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
-    $('#addGuardLicenseModal').modal('show');
-});
-
-$('#tbl_guard_licenses tbody').on('click', 'button[name=btn_delete_guard_licence]', function () {
-    var data = gridGuardLicenses.row($(this).parents('tr')).data();
-    if (confirm('Are you sure want to delete this Guard License?')) {
-        $.ajax({
+            url: '/Admin/GuardSettings?handler=Guards',
+            data: $('#frm_add_guard').serialize(),
             type: 'POST',
-            url: '/Admin/GuardSettings?handler=DeleteGuardLicense',
-            data: { 'id': data.id },
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.success)
-                gridGuardLicenses.ajax.reload();
-        })
-    }
-});
-//Gurad License and Compliance Form start
-$('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
-    resetGuardLicenseandComplianceAddModal();
-    $("#ComplianceHiddenDiv").css({
-        "pointer-events": "none",
-        "opacity": "0.5"
-    }).attr("disabled", "disabled");
-    var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
-
-    if (data.expiryDate) {
-        $('#GuardComplianceAndLicense_ExpiryDate1').val(data.expiryDate.split('T')[0]);
-    }
-    $('#GuardComplianceandlicense_Id').val(data.id);
-    $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
-    $('#HRGroup').val(data.hrGroup);
-    $('#Description').val(data.description);
-    $('#GuardComplianceandlicense_GuardId').val(data.guardId);
-    $('#GuardComplianceandlicense_FileName1').val(data.fileName);
-    $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
-    if (data.dateType == true) {
-        $('#LicanseTypeFilter').prop('checked', true);
-        $('#ComplianceDate').text('Issue Date (DOI)');
-        $('#IsDateFilterEnabledHidden').val(true);
-    }
-    $('#addGuardCompliancesLicenseModal').modal('show');
-
-});
-$('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
-    var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
-    if (confirm('Are you sure want to delete this Guard License?')) {
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=DeleteGuardLicense',
-            data: { 'id': data.id },
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.success)
-                gridGuardLicensesAndLicence.ajax.reload();
-        })
-    }
-});
-//Gurad License and Compliance Form stop
-
-
-//$('#upload_license_file').on('change', function () {
-//    const file = $(this).get(0).files.item(0);
-//    const fileExtn = file.name.split('.').pop();
-//    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
-//        alert('Please select a valid file type');
-//        return false;
-//    }
-
-//    const formData = new FormData();
-//    formData.append("file", file);
-//    formData.append('guardId', $('#GuardLicense_GuardId').val());
-
-//    $.ajax({
-//        type: 'POST',
-//        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-//        data: formData,
-//        cache: false,
-//        contentType: false,
-//        processData: false,
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//    }).done(function (data) {
-//        $('#GuardLicense_FileName').val(data.fileName);
-//        $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
-//    }).fail(function () {
-//    }).always(function () {
-//        $('#upload_license_file').val('');
-//    });
-//});
-
-$('#delete_license_file').on('click', function () {
-    const guardLicenseId = $('#GuardLicense_Id').val();
-    if (!guardLicenseId || parseInt(guardLicenseId) <= 0)
-        return false;
-
-    if (confirm('Are you sure want to remove the attachment')) {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
-            type: 'POST',
-            data: {
-                id: guardLicenseId,
-                type: 'l'
-            },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
             if (result.status) {
-                $('#GuardLicense_FileName').val('');
-                $('#guardLicense_fileName').text('None');
-                gridGuardLicenses.ajax.reload();
+                $('#guardId').val(result.guardId);
+                $('#GuardLicense_GuardId').val(result.guardId);
+                $('#GuardCompliance_GuardId').val(result.guardId);
+                $('#GuardComplianceandlicense_GuardId').val(result.guardId);
+                if (result.initalsChangedMessage !== '') {
+                    alert(result.initalsChangedMessage);
+                    $('#Guard_Initial').val(result.initalsUsed);
+                }
+                $('#guard_saved_status').show().delay(2000).hide(0);
+                $('.btn-add-guard-addl-details').show();
+                /*   gridGuardLicenses.ajax.reload();*/
+                gridGuardLicensesAndLicence.clear().draw();
+                gridGuardLicensesAndLicence.ajax.reload();
+                guardSettings.ajax.reload(null, false);
+            } else {
+                displayGuardValidationSummary('glValidationSummary', result.message);
             }
-            else {
-                displayGuardValidationSummary('licenseValidationSummary', 'Delete failed.');
+        });
+    });
+
+    /****** Daily Guard  Custom Field Logs *******/
+    let gridCustomFieldLogs;
+
+    if ($('#custom_field_log').length === 1) {
+        $.ajax({
+            type: "GET",
+            url: '/Guard/DailyLog?handler=CustomFieldConfig&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+            contentType: "application/json",
+            async: false,
+            dataType: "json",
+
+            success: function (data) {
+                let columnData = [];
+                columnData.push({ renderer: renderCustomFieldLogManagement, align: 'center', width: 60 });
+
+                $.each(data, function (i, d) {
+                    let colAlign = 'center', colEditor = true, colCssClass = 'text-center';
+                    let colWidth = 80;
+                    console.log(d.key);
+                    if (d.key === 'timeSlot') {
+                        colAlign = 'center';
+                        colEditor = false;
+                        colWidth = 60;
+                    }
+                    else if (d.key === 'Romeo Plate + Initial' || d.key === 'Missed Patrols') {
+                        colCssClass = 'text-right';
+                    }
+                    columnData.push({ field: d.key, title: d.value, align: colAlign, editor: colEditor, width: colWidth, cssClass: colCssClass });
+                });
+
+                gridCustomFieldLogs = $('#custom_field_log').grid({
+                    dataSource: '/Guard/DailyLog?handler=CustomFieldLogs' +
+                        '&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val() +
+                        '&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                    uiLibrary: 'bootstrap4',
+                    iconsLibrary: 'fontawesome',
+                    primaryKey: 'timeSlot',
+                    fontSize: '13px',
+                    inlineEditing: { mode: 'command', managementColumn: false },
+                    columns: columnData,
+                    initialized: function (e) {
+                        $(e.target).find('thead tr th:first').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+                    }
+                });
+            },
+            error: function (data) {
+                alert(data);
             }
         });
     }
-});
 
-$('#btn_save_guard_license').on('click', function () {
-    clearGuardValidationSummary('licenseValidationSummary');
-    /*To get the text inside the product dropdown*/
-    var inputElement = document.querySelector(".es-input");
-    // Get the value of the input element
-    if (inputElement) { var inputValue = inputElement.value; $('#LicenseTypeOther').val(inputValue); }
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveGuardLicense',
-        data: $('#frm_add_license').serialize(),
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.status) {
-            $('#addGuardLicenseModal').modal('hide');
-            gridGuardLicenses.ajax.reload();
-            if (!result.dbxUploaded) {
-                displayGuardValidationSummary('licenseValidationSummary', 'License details saved successfully. However, upload to Dropbox failed.');
+    if (gridCustomFieldLogs) {
+        gridCustomFieldLogs.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Guard/DailyLog?handler=SaveCustomFieldLog&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val(),
+                data: { records: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                gridCustomFieldLogs.clear();
+                gridCustomFieldLogs.reload();
+            }).fail(function () {
+                console.log('error');
+            });
+        });
+
+        gridCustomFieldLogs.on('dataBound', function (e, records, totalRecords) {
+            $(this).hide();
+            $('#card_custom_field_log').addClass('d-none');
+            if (totalRecords > 0) {
+                $(this).show();
+                $('#card_custom_field_log').removeClass('d-none');
             }
-        } else {
-            displayGuardValidationSummary('licenseValidationSummary', result.message);
+        });
+    }
+
+    function renderCustomFieldLogManagement(value, record, $cell, $displayEl, id) {
+        var $editBtn = $('<button class="btn btn-outline-primary btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-pencil"></i></button>'),
+            $updateBtn = $('<button class="btn btn-outline-success btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-check-circle"></i></button>').hide(),
+            $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-times-circle"></i></button>').hide();
+
+        $editBtn.on('click', function (e) {
+            isPaused = true;
+            gridCustomFieldLogs.edit($(this).data('id'));
+            $editBtn.hide();
+            $updateBtn.show();
+            $cancelBtn.show();
+        });
+
+        $updateBtn.on('click', function (e) {
+            isPaused = false;
+            gridCustomFieldLogs.update($(this).data('id'));
+            $editBtn.show();
+            $updateBtn.hide();
+            $cancelBtn.hide();
+        });
+
+        $cancelBtn.on('click', function (e) {
+            isPaused = false;
+            gridCustomFieldLogs.cancel($(this).data('id'));
+            $editBtn.show();
+            $updateBtn.hide();
+            $cancelBtn.hide();
+        });
+
+        $displayEl.append($editBtn)
+            .append($updateBtn)
+            .append($cancelBtn);
+    }
+
+    /****** Daily Guard  Patrol Car Logs *******/
+    function renderPatrolCar(value, record) {
+        patrolCar = record.clientSitePatrolCar.model;
+        rego = record.clientSitePatrolCar.rego;
+        return patrolCar + " - " + rego + " - KM @ 00:01 HRS";
+    }
+
+    function renderPatrolCarLogManagement(value, record, $cell, $displayEl, id) {
+
+        var $editBtn = $('<button class="btn btn-outline-primary btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-pencil"></i></button>'),
+            $updateBtn = $('<button class="btn btn-outline-success btn-dgl-edit mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle"></i></button>').hide(),
+            $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-times-circle"></i></button>').hide();
+
+        $editBtn.on('click', function (e) {
+            gridSitePatrolCarLogs.edit($(this).data('id'));
+            $editBtn.hide();
+            $updateBtn.show();
+            $cancelBtn.show();
+            /*timer pause while editing*/
+            isPaused = true;
+        });
+
+        $updateBtn.on('click', function (e) {
+            gridSitePatrolCarLogs.update($(this).data('id'));
+            $editBtn.show();
+            $updateBtn.hide();
+            $cancelBtn.hide();
+            /*timer pause while editing*/
+            isPaused = false;
+        });
+
+        $cancelBtn.on('click', function (e) {
+            gridSitePatrolCarLogs.cancel($(this).data('id'));
+            $editBtn.show();
+            $updateBtn.hide();
+            $cancelBtn.hide();
+            /*timer pause while editing*/
+            isPaused = false;
+        });
+
+        $displayEl.append($editBtn)
+            .append($updateBtn)
+            .append($cancelBtn);
+    }
+
+    let gridSitePatrolCarLogs;
+    gridSitePatrolCarLogs = $('#patrol_cars_log').grid({
+        dataSource: '/Guard/DailyLog?handler=PatrolCarLogs&logBookId=' + $('#GuardLog_ClientSiteLogBookId').val() + '&clientSiteId=' + $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        fontSize: '13px',
+        inlineEditing: { mode: 'command', managementColumn: false },
+        columns: [
+            { field: 'id', title: 'Id', hidden: true },
+            { field: 'patrolCarId', title: 'PatrolCarId', hidden: true, renderer: function (value, record) { return record.PatrolCarId; } },
+            { field: 'clientSiteLogBookId', title: 'ClientSiteLogBookId', hidden: true, renderer: function (value, record) { return record.clientSiteLogBookId; } },
+            { field: 'patrolCar', title: 'Patrol Cars', align: 'center', cssClass: "text-left", editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 75 },
+            { field: 'mileage', title: 'Kms', align: 'center', cssClass: "text-right", editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15 },
+            { renderer: renderPatrolCarLogManagement, align: 'center', width: 10 }
+        ],
+        initialized: function (e) {
+            var html = '<i class="fa fa-cogs" aria-hidden="true"></i>'
+            $(e.target).find('thead tr th:last').html(html);
+
         }
-    }).always(function () {
-        $('#loader').hide();
     });
-});
 
-/****** Guard  Compliances *******/
+    if (gridSitePatrolCarLogs) {
+        gridSitePatrolCarLogs.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Guard/DailyLog?handler=PatrolCarLog',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                gridSitePatrolCarLogs.clear();
+                gridSitePatrolCarLogs.reload({
+                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val()
+                });
+            }).fail(function () {
+                console.log('error');
+            });
+        });
 
-function resetGuardComplianceAddModal() {
-    $('#GuardCompliance_Id').val('');
-    $('#GuardCompliance_ReferenceNo').val('');
-    $('#GuardCompliance_Description').val('');
-    $('#GuardCompliance_Reminder1').val('45');
-    $('#GuardCompliance_Reminder2').val('7');
-    $('#GuardCompliance_ExpiryDate').val('');
-    $('#GuardCompliance_FileName').val('');
-    $('#guardCompliance_fileName').text('None');
-    $('#GuardCompliance_HrGroup').val('');
-    clearGuardValidationSummary('complianceValidationSummary');
-}
+        gridSitePatrolCarLogs.on('dataBound', function (e, records, totalRecords) {
+            $(this).hide();
+            $('#card_patrol_car').addClass('d-none');
+            if (totalRecords > 0) {
+                $(this).show();
+                $('#card_patrol_car').removeClass('d-none');
+            }
+        });
+    }
 
-$('#btnAddGuardCompliance').on('click', function () {
-    resetGuardLicenseandComplianceAddModal();
+    /****** Guard  Licenses *******/
+    function resetGuardLicenseAddModal() {
+        $('#GuardLicense_Id').val('');
+        $('#GuardLicense_LicenseNo').val('');
+        $('#GuardLicense_LicenseType').val('');
+        $('#GuardLicense_Reminder1').val('45');
+        $('#GuardLicense_Reminder2').val('7');
+        $('#GuardLicense_ExpiryDate').val('');
+        $('#GuardLicense_FileName').val('');
+        $('#guardLicense_fileName').text('None');
+        clearGuardValidationSummary('licenseValidationSummary');
+    }
+    function resetGuardLicenseandComplianceAddModal() {
+        $('#GuardComplianceandlicense_Id').val('');
+        $('#Description').val('');
+        $('#LicanseTypeFilter').prop('checked', false);
+        $('#ComplianceDate').text('Expiry Date (DOE)');
+        $('#IsDateFilterEnabledHidden').val(false)
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
+        $('#HRGroup').val('');
+        $(".es-list").empty();
+        $('#guardComplianceandlicense_fileName1').text('None');
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#GuardComplianceandlicense_CurrentDateTime').val('');
+        clearGuardValidationSummary('compliancelicanseValidationSummary');
+    }
 
-    //$('#addGuardCompliancesModal').modal('show');
-    $('#addGuardCompliancesLicenseModal').modal('show');
-})
-
-let gridGuardCompliances = $('#tbl_guard_compliances').DataTable({
-    autoWidth: false,
-    ordering: false,
-    searching: false,
-    paging: false,
-    info: false,
-    ajax: {
-        url: '/Admin/GuardSettings?handler=GuardCompliances',
-        data: function (d) {
-            d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+    let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
+        autoWidth: false,
+        ordering: false,
+        searching: false,
+        paging: false,
+        info: false,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=GuardLicense',
+            data: function (d) {
+                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+            },
+            dataSrc: ''
         },
-        dataSrc: ''
-    },
-    columns: [
-        { data: 'referenceNo', width: "6%" },
-        { data: 'hrGroupText', width: "6%" },
-        { data: 'description', width: "7%" },
-        { data: 'expiryDate', width: "8%" },
-        { data: 'reminder1', width: "3%" },
-        { data: 'reminder2', width: "3%" },
-        {
+        columns: [
+
+            { data: 'licenseNo', width: "10%" },
+            //{ data: 'licenseTypeName', width: "5%" },
+            {
+
+                data: 'licenseTypeText',
+                width: '5%',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        if (data === null) {
+                            return row.licenseTypeName;
+                        } else {
+                            return data;
+                        }
+                    } else {
+                        return data;
+                    }
+                }
+            },
+            { data: 'expiryDate', width: '10%', orderable: true },
+            { data: 'reminder1', width: "3%" },
+            { data: 'reminder2', width: '3%' },
+            { data: 'fileName', width: '5%' },
+            {
+                targets: -1,
+                data: null,
+                defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_license"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+                    '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licence"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                width: '12%'
+            }],
+        columnDefs: [{
+            targets: 5,
             data: 'fileName',
             render: function (data, type, row, meta) {
                 if (data)
-                    var guardid = row.guardId;
-                return '<a href="/uploads/guards/' + guardid + '/' + data + '" target="_blank">' + data + '</a>';
+                    return '<a href="' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
-            },
-            width: "10%"
-        },
-
-        {
-            targets: -1,
-            data: null,
-            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_compliance"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-                '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_compliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
-            orderable: false,
-            width: "12%"
+            }
         }],
-    columnDefs: [{
-        targets: 5,
-        data: 'fileName',
-        render: function (data, type, row, meta) {
-            if (data)
-                return '<a href="' + row.fileUrl + '" target="_blank">' + data + '</a>';
-            return '-';
-        }
-    }],
-    'createdRow': function (row, data, index) {
-        if (data.expiryDate !== null) {
-            $('td', row).eq(3).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+        'createdRow': function (row, data, index) {
+            if (data.expiryDate !== null) {
+                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+            }
+        },
+    });
 
-        }
-    },
-});
 
-$('#tbl_guard_compliances tbody').on('click', 'button[name=btn_edit_guard_compliance]', function () {
-    resetGuardComplianceAddModal();
-    var data = gridGuardCompliances.row($(this).parents('tr')).data();
-    $('#GuardCompliance_ReferenceNo').val(data.referenceNo);
-    $('#GuardCompliance_Description').val(data.description);
-    $('#GuardCompliance_Reminder1').val(data.reminder1);
-    $('#GuardCompliance_Reminder2').val(data.reminder2);
-    if (data.expiryDate) {
-        $('#GuardCompliance_ExpiryDate').val(data.expiryDate.split('T')[0]);
-    }
-    $('#GuardCompliance_Id').val(data.id);
-    $('#GuardCompliance_FileName').val(data.fileName);
-    $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
-    $('#GuardCompliance_HrGroup').val(data.hrGroup);
-    $('#addGuardCompliancesModal').modal('show');
-});
+    //To get the data in description dropdown start
+    $('#Description').attr('placeholder', 'Select');
+    $('#Description').editableSelect({
+        //filter: false,
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+        var check = '';
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
+        var sel = $('#Description option:selected');
+        $(this).data('cur_val', sel);
+        var display = sel.clone();
+        display.text($.trim(display.text()));
+        sel.replaceWith(display);
+        $(this).prop('selectedIndex', display.index());
 
-$('#tbl_guard_compliances tbody').on('click', 'button[name=btn_delete_guard_compliance]', function () {
-    var data = gridGuardCompliances.row($(this).parents('tr')).data();
-    if (confirm('Are you sure want to delete this Guard Compliance?')) {
+    }).on(trig, function () {
+        if ($(this).prop('selectedIndex') == 0)
+            return;
+        var sel = $('#Description option:selected');
+        sel.replaceWith($('#Description').data('cur_val'));
+        $(this).prop('selectedIndex', 0);
+    });
+    $('#HRGroup').on('change', function () {
+        $('#Description').val('');
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
+        var Descriptionval = $('#HRGroup').val();
+        var GuardID = $('#GuardComplianceandlicense_GuardId').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const ulClients = $('#Description').siblings('ul.es-list');
+        ulClients.html('');
         $.ajax({
+            url: '/Admin/GuardSettings?handler=HRDescription',
+            type: 'GET',
+            data: {
+                HRid: Descriptionval,
+                GuardID: GuardID
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (DescVal) {
+            DescVal.forEach(function (DescVals) {
+                var mark = ''; // Initialize the mark variable
+
+                if (DescVals.description != null) {
+                    if (DescVals.usedDescription == null) {
+                        //mark = '❌';
+                        mark = '<i class="fa fa-close" style="font-size:24px;color:red"></i>'
+                        //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                            '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
+                            '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
+                            mark +
+                            '</li>');
+                    }
+                    else {
+                        mark = '<i class="fa fa-check" style="font-size:24px;color:green"></i>'
+                        //mark = '<span style="color: green !important;">✔️</span>';
+                        // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
+                        ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                            '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
+                            '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
+                            mark +
+                            '</li>');
+                    }
+                }
+
+            });
+        })
+
+
+    });
+
+
+
+    var trig = 'mousedown';
+    $('#Description').on("change", function () {
+        let selectedItem = $('.es-visible.selected').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        var sel = $('#Description option:selected');
+        $(this).data('cur_val', sel);
+        var display = sel.clone();
+        display.text($.trim(display.text()));
+        sel.replaceWith(display);
+        $(this).prop('selectedIndex', display.index());
+
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This description is restricted and cannot be added.")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+
+
+    }).on(trig, function () {
+        if ($(this).prop('selectedIndex') == 0)
+            return;
+        var sel = $('#Description option:selected');
+        sel.replaceWith($('#Description').data('cur_val'));
+        $(this).prop('selectedIndex', 0);
+    });
+    $(document).on("click", "#Description + ul.es-list", function () {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        let selectedItem = $('.es-visible').val();
+        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (LoginVal == 'GuardLogin') {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
+                type: 'GET',
+                data: {
+                    DescriptionID: selectedItem
+                },
+                headers: { 'RequestVerificationToken': token }
+            }).done(function (DescVal) {
+                if (DescVal.hrBanEdit == true) {
+                    if (confirm("This description is restricted and cannot be added.")) {
+                        $('#Description').val('');
+                    }
+
+                }
+
+            });
+        }
+    });
+    //$('#Description').on("change", function () {
+    //    var sel = $('#Description option:selected');
+    //    $(this).data('cur_val', sel);
+    //    var display = sel.clone();
+    //    display.text($.trim(display.text()));
+    //    sel.replaceWith(display);
+    //    $(this).prop('selectedIndex', display.index());
+    //}).on(trig, function () {
+    //    if ($(this).prop('selectedIndex') == 0)
+    //        return;
+    //    var sel = $('#Description option:selected');
+    //    sel.replaceWith($('#Description').data('cur_val'));
+    //    $(this).prop('selectedIndex', 0);
+    //});
+
+
+
+    //To get the data in description dropdown stop
+    //Gurad License and Compliance Form stop
+
+    $('#btnAddGuardLicense,#btnAddGuardLicense2').on('click', function () {
+        resetGuardLicenseandComplianceAddModal();
+        $("#ComplianceHiddenDiv").css({
+            "pointer-events": "",
+            "opacity": ""
+        }).removeAttr("disabled");
+        const messageHtml2 = '';
+        $('#schRunStatusNew').html(messageHtml2);
+        $('#addGuardCompliancesLicenseModal').modal('show');
+    });
+    /*code added for Licence Type Dropdown Textbox start*/
+    $('#GuardLicense_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+        $('#GuardLicense_License').val(li.text());
+    });
+
+    if ($('#GuardLicense_License').val() !== '') {
+        let itemToSelect = $('#GuardLicense_LicenseType').siblings('.es-list').find('li:contains("' + $('#GuardLicense_License').val() + '")')[0];
+        if (itemToSelect) {
+            $('#GuardLicense_LicenseType').editableSelect('select', $(itemToSelect));
+
+        }
+    }
+    /*code added for Licence Type Dropdown Textbox stop*/
+    $('#tbl_guard_licenses tbody').on('click', 'button[name=btn_edit_guard_license]', function () {
+        resetGuardLicenseAddModal();
+        var data = gridGuardLicenses.row($(this).parents('tr')).data();
+        $('#GuardLicense_LicenseNo').val(data.licenseNo);
+        if (data.licenseTypeText == null) {
+            $('#GuardLicense_LicenseType').val(data.licenseTypeName);
+        }
+        else {
+            $('#GuardLicense_LicenseType').val(data.licenseTypeText);
+        }
+
+        $('#GuardLicense_Reminder1').val(data.reminder1);
+        $('#GuardLicense_Reminder2').val(data.reminder2);
+        if (data.expiryDate) {
+            $('#GuardLicense_ExpiryDate').val(data.expiryDate.split('T')[0]);
+        }
+        $('#GuardLicense_Id').val(data.id);
+        $('#GuardLicense_GuardId').val(data.guardId);
+        $('#GuardLicense_FileName').val(data.fileName);
+        $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
+        $('#addGuardLicenseModal').modal('show');
+    });
+
+    $('#tbl_guard_licenses tbody').on('click', 'button[name=btn_delete_guard_licence]', function () {
+        var data = gridGuardLicenses.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this Guard License?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=DeleteGuardLicense',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success)
+                    gridGuardLicenses.ajax.reload();
+            })
+        }
+    });
+    //Gurad License and Compliance Form start
+    $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
+        resetGuardLicenseandComplianceAddModal();
+        $("#ComplianceHiddenDiv").css({
+            "pointer-events": "none",
+            "opacity": "0.5"
+        }).attr("disabled", "disabled");
+        var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
+
+        if (data.expiryDate) {
+            $('#GuardComplianceAndLicense_ExpiryDate1').val(data.expiryDate.split('T')[0]);
+        }
+        $('#GuardComplianceandlicense_Id').val(data.id);
+        $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
+        $('#HRGroup').val(data.hrGroup);
+        $('#Description').val(data.description);
+        $('#GuardComplianceandlicense_GuardId').val(data.guardId);
+        $('#GuardComplianceandlicense_FileName1').val(data.fileName);
+        $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+        if (data.dateType == true) {
+            $('#LicanseTypeFilter').prop('checked', true);
+            $('#ComplianceDate').text('Issue Date (DOI)');
+            $('#IsDateFilterEnabledHidden').val(true);
+        }
+        $('#addGuardCompliancesLicenseModal').modal('show');
+
+    });
+    $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
+        var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this Guard License?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=DeleteGuardLicense',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success)
+                    gridGuardLicensesAndLicence.ajax.reload();
+            })
+        }
+    });
+    //Gurad License and Compliance Form stop
+
+
+    //$('#upload_license_file').on('change', function () {
+    //    const file = $(this).get(0).files.item(0);
+    //    const fileExtn = file.name.split('.').pop();
+    //    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+    //        alert('Please select a valid file type');
+    //        return false;
+    //    }
+
+    //    const formData = new FormData();
+    //    formData.append("file", file);
+    //    formData.append('guardId', $('#GuardLicense_GuardId').val());
+
+    //    $.ajax({
+    //        type: 'POST',
+    //        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+    //        data: formData,
+    //        cache: false,
+    //        contentType: false,
+    //        processData: false,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (data) {
+    //        $('#GuardLicense_FileName').val(data.fileName);
+    //        $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
+    //    }).fail(function () {
+    //    }).always(function () {
+    //        $('#upload_license_file').val('');
+    //    });
+    //});
+
+    $('#delete_license_file').on('click', function () {
+        const guardLicenseId = $('#GuardLicense_Id').val();
+        if (!guardLicenseId || parseInt(guardLicenseId) <= 0)
+            return false;
+
+        if (confirm('Are you sure want to remove the attachment')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
+                type: 'POST',
+                data: {
+                    id: guardLicenseId,
+                    type: 'l'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#GuardLicense_FileName').val('');
+                    $('#guardLicense_fileName').text('None');
+                    gridGuardLicenses.ajax.reload();
+                }
+                else {
+                    displayGuardValidationSummary('licenseValidationSummary', 'Delete failed.');
+                }
+            });
+        }
+    });
+
+    $('#btn_save_guard_license').on('click', function () {
+        clearGuardValidationSummary('licenseValidationSummary');
+        /*To get the text inside the product dropdown*/
+        var inputElement = document.querySelector(".es-input");
+        // Get the value of the input element
+        if (inputElement) { var inputValue = inputElement.value; $('#LicenseTypeOther').val(inputValue); }
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveGuardLicense',
+            data: $('#frm_add_license').serialize(),
             type: 'POST',
-            url: '/Admin/GuardSettings?handler=DeleteGuardCompliance',
-            data: { 'id': data.id },
-            dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
-            if (result.success)
-                gridGuardCompliances.ajax.reload();
-        })
+            if (result.status) {
+                $('#addGuardLicenseModal').modal('hide');
+                gridGuardLicenses.ajax.reload();
+                if (!result.dbxUploaded) {
+                    displayGuardValidationSummary('licenseValidationSummary', 'License details saved successfully. However, upload to Dropbox failed.');
+                }
+            } else {
+                displayGuardValidationSummary('licenseValidationSummary', result.message);
+            }
+        }).always(function () {
+            $('#loader').hide();
+        });
+    });
+
+    /****** Guard  Compliances *******/
+
+    function resetGuardComplianceAddModal() {
+        $('#GuardCompliance_Id').val('');
+        $('#GuardCompliance_ReferenceNo').val('');
+        $('#GuardCompliance_Description').val('');
+        $('#GuardCompliance_Reminder1').val('45');
+        $('#GuardCompliance_Reminder2').val('7');
+        $('#GuardCompliance_ExpiryDate').val('');
+        $('#GuardCompliance_FileName').val('');
+        $('#guardCompliance_fileName').text('None');
+        $('#GuardCompliance_HrGroup').val('');
+        clearGuardValidationSummary('complianceValidationSummary');
     }
-});
-$('#btn_save_guard_compliancelicense').on('click', function () {
 
-    clearGuardValidationSummary('compliancelicanseValidationSummary');
-    let selectedItem = $('.es-visible').val();
-    var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
-    var HrVal = $('#HRGroup').val();
-    var DescVal = $('#Description').val();
-    var FileVa = $('#guardComplianceandlicense_fileName1').html();
-    var hiddenValue = $('#GuardComplianceandlicense_FileName1').val();
-    const messageHtml = '';
-    $('#schRunStatusNew').html(messageHtml);
+    $('#btnAddGuardCompliance').on('click', function () {
+        resetGuardLicenseandComplianceAddModal();
 
-    if (HrVal != '' && DescVal != '' && FileVa != 'None') {
+        //$('#addGuardCompliancesModal').modal('show');
+        $('#addGuardCompliancesLicenseModal').modal('show');
+    })
 
-        if (ExpirayDateVal == '') {
+    let gridGuardCompliances = $('#tbl_guard_compliances').DataTable({
+        autoWidth: false,
+        ordering: false,
+        searching: false,
+        paging: false,
+        info: false,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=GuardCompliances',
+            data: function (d) {
+                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'referenceNo', width: "6%" },
+            { data: 'hrGroupText', width: "6%" },
+            { data: 'description', width: "7%" },
+            { data: 'expiryDate', width: "8%" },
+            { data: 'reminder1', width: "3%" },
+            { data: 'reminder2', width: "3%" },
+            {
+                data: 'fileName',
+                render: function (data, type, row, meta) {
+                    if (data)
+                        var guardid = row.guardId;
+                    return '<a href="/uploads/guards/' + guardid + '/' + data + '" target="_blank">' + data + '</a>';
+                    return '-';
+                },
+                width: "10%"
+            },
 
-            alert('Please Enter the Expiry Date or Date of issue');
-            //if (confirm('Are you sure you not want to enter expiry Date')) {
-            //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-            //    $('#loader').show();
-            //    $.ajax({
-            //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
-            //        data: $('#frm_add_complianceandlicense').serialize(),
-            //        type: 'POST',
-            //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            //    }).done(function (result) {
-            //        if (result.status) {
-            //            $('#addGuardCompliancesLicenseModal').modal('hide');
-            //            const messageHtml1 = '';
-            //            $('#schRunStatusNew').html(messageHtml1);
-            //            gridGuardLicensesAndLicence.ajax.reload();
+            {
+                targets: -1,
+                data: null,
+                defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_compliance"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+                    '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_compliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                orderable: false,
+                width: "12%"
+            }],
+        columnDefs: [{
+            targets: 5,
+            data: 'fileName',
+            render: function (data, type, row, meta) {
+                if (data)
+                    return '<a href="' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                return '-';
+            }
+        }],
+        'createdRow': function (row, data, index) {
+            if (data.expiryDate !== null) {
+                $('td', row).eq(3).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
 
-            //            if (!result.dbxUploaded) {
-            //                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-            //            }
-            //        } else {
-            //            const messageHtml1 = '';
-            //            $('#schRunStatusNew').html(messageHtml1);
-            //            displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
-            //        }
-            //    }).always(function () {
-            //        $('#loader').hide();
-            //    });
+            }
+        },
+    });
 
-            //}
+    $('#tbl_guard_compliances tbody').on('click', 'button[name=btn_edit_guard_compliance]', function () {
+        resetGuardComplianceAddModal();
+        var data = gridGuardCompliances.row($(this).parents('tr')).data();
+        $('#GuardCompliance_ReferenceNo').val(data.referenceNo);
+        $('#GuardCompliance_Description').val(data.description);
+        $('#GuardCompliance_Reminder1').val(data.reminder1);
+        $('#GuardCompliance_Reminder2').val(data.reminder2);
+        if (data.expiryDate) {
+            $('#GuardCompliance_ExpiryDate').val(data.expiryDate.split('T')[0]);
+        }
+        $('#GuardCompliance_Id').val(data.id);
+        $('#GuardCompliance_FileName').val(data.fileName);
+        $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
+        $('#GuardCompliance_HrGroup').val(data.hrGroup);
+        $('#addGuardCompliancesModal').modal('show');
+    });
+
+    $('#tbl_guard_compliances tbody').on('click', 'button[name=btn_delete_guard_compliance]', function () {
+        var data = gridGuardCompliances.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this Guard Compliance?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=DeleteGuardCompliance',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success)
+                    gridGuardCompliances.ajax.reload();
+            })
+        }
+    });
+    $('#btn_save_guard_compliancelicense').on('click', function () {
+
+        clearGuardValidationSummary('compliancelicanseValidationSummary');
+        let selectedItem = $('.es-visible').val();
+        var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
+        var HrVal = $('#HRGroup').val();
+        var DescVal = $('#Description').val();
+        var FileVa = $('#guardComplianceandlicense_fileName1').html();
+        var hiddenValue = $('#GuardComplianceandlicense_FileName1').val();
+        const messageHtml = '';
+        $('#schRunStatusNew').html(messageHtml);
+
+        if (HrVal != '' && DescVal != '' && FileVa != 'None') {
+
+            if (ExpirayDateVal == '') {
+
+                alert('Please Enter the Expiry Date or Date of issue');
+                //if (confirm('Are you sure you not want to enter expiry Date')) {
+                //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                //    $('#loader').show();
+                //    $.ajax({
+                //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                //        data: $('#frm_add_complianceandlicense').serialize(),
+                //        type: 'POST',
+                //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                //    }).done(function (result) {
+                //        if (result.status) {
+                //            $('#addGuardCompliancesLicenseModal').modal('hide');
+                //            const messageHtml1 = '';
+                //            $('#schRunStatusNew').html(messageHtml1);
+                //            gridGuardLicensesAndLicence.ajax.reload();
+
+                //            if (!result.dbxUploaded) {
+                //                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                //            }
+                //        } else {
+                //            const messageHtml1 = '';
+                //            $('#schRunStatusNew').html(messageHtml1);
+                //            displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                //        }
+                //    }).always(function () {
+                //        $('#loader').hide();
+                //    });
+
+                //}
+            }
+            else {
+                $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                $('#loader').show();
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                    data: $('#frm_add_complianceandlicense').serialize(),
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.status) {
+                        $('#addGuardCompliancesLicenseModal').modal('hide');
+                        const messageHtml1 = '';
+                        $('#schRunStatusNew').html(messageHtml1);
+                        gridGuardLicensesAndLicence.ajax.reload();
+
+                        if (!result.dbxUploaded) {
+                            displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                        }
+                    } else {
+                        const messageHtml1 = '';
+                        $('#schRunStatusNew').html(messageHtml1);
+                        displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                    }
+                }).always(function () {
+                    $('#loader').hide();
+                });
+
+            }
         }
         else {
             $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            $('#loader').show();
             $('#loader').show();
             $.ajax({
                 url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
@@ -7091,600 +7120,293 @@ $('#btn_save_guard_compliancelicense').on('click', function () {
             });
 
         }
-    }
-    else {
-        $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-        $('#loader').show();
+
+
+
+
+
+    });
+
+    $('#btn_save_guard_compliance').on('click', function () {
+        clearGuardValidationSummary('complianceValidationSummary');
+
         $('#loader').show();
         $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
-            data: $('#frm_add_complianceandlicense').serialize(),
+            url: '/Admin/GuardSettings?handler=SaveGuardCompliance',
+            data: $('#frm_add_compliance').serialize(),
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
             if (result.status) {
-                $('#addGuardCompliancesLicenseModal').modal('hide');
-                const messageHtml1 = '';
-                $('#schRunStatusNew').html(messageHtml1);
-                gridGuardLicensesAndLicence.ajax.reload();
-
+                $('#addGuardCompliancesModal').modal('hide');
+                gridGuardCompliances.ajax.reload();
                 if (!result.dbxUploaded) {
-                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                    displayGuardValidationSummary('complianceValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
                 }
             } else {
-                const messageHtml1 = '';
-                $('#schRunStatusNew').html(messageHtml1);
-                displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                displayGuardValidationSummary('complianceValidationSummary', result.message);
             }
         }).always(function () {
             $('#loader').hide();
         });
+    });
 
-    }
+    //$('#upload_compliance_file').on('change', function () {
+    //    const file = $(this).get(0).files.item(0);
+    //    const fileExtn = file.name.split('.').pop();
+    //    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+    //        alert('Please select a valid file type');
+    //        return false;
+    //    }
 
+    //    const formData = new FormData();
+    //    formData.append("file", file);
+    //    formData.append('guardId', $('#GuardCompliance_GuardId').val());
 
+    //    $.ajax({
+    //        type: 'POST',
+    //        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+    //        data: formData,
+    //        cache: false,
+    //        contentType: false,
+    //        processData: false,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (data) {
+    //        $('#GuardCompliance_FileName').val(data.fileName);
+    //        $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
+    //    }).fail(function () {
+    //    }).always(function () {
+    //        $('#upload_compliance_file').val('');
+    //    });
+    //});
 
+    $('#upload_complianceandlicanse_file').on('change', function () {
+        const file = $(this).get(0).files; //.item(0); 
+        FileuploadFileChanged(file);
+    });
 
-
-});
-
-$('#btn_save_guard_compliance').on('click', function () {
-    clearGuardValidationSummary('complianceValidationSummary');
-
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveGuardCompliance',
-        data: $('#frm_add_compliance').serialize(),
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.status) {
-            $('#addGuardCompliancesModal').modal('hide');
-            gridGuardCompliances.ajax.reload();
-            if (!result.dbxUploaded) {
-                displayGuardValidationSummary('complianceValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-            }
-        } else {
-            displayGuardValidationSummary('complianceValidationSummary', result.message);
+    FileuploadFileChanged = function (allfile) {
+        const file = allfile.item(0); // allfile.get(0).files.item(0);
+        const fileExtn = "." + file.name.split('.').pop().toLowerCase();
+        console.log('fileExtn: ' + fileExtn);
+        if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
+            alert('Please select a valid file type');
+            return false;
         }
-    }).always(function () {
-        $('#loader').hide();
-    });
-});
+        var Desc = $('#Description').val();
+        var expiryDate = $('#GuardComplianceAndLicense_ExpiryDate1').val();
+        Desc = Desc.substring(3);
+        var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
+        formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
+        formData.append('Description', cleanText);
+        formData.append('HRID', $('#HRGroup').val());
+        formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
+        formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
+        if (Desc == '') {
+            (confirm('Please select Description and Expiry/Issue Date'))
+        }
+        if (expiryDate == '') {
+            (confirm('Please select the Expiry Date or Issue Date first, and then attach the document'))
+        }
+        else {
+            fileprocess(allfile);
 
-//$('#upload_compliance_file').on('change', function () {
-//    const file = $(this).get(0).files.item(0);
-//    const fileExtn = file.name.split('.').pop();
-//    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
-//        alert('Please select a valid file type');
-//        return false;
-//    }
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                $('#GuardComplianceandlicense_FileName1').val(data.fileName);
+                $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+                $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
+            }).fail(function () {
+            }).always(function () {
+                $('#upload_complianceandlicanse_file').val('');
+            });
+        }
 
-//    const formData = new FormData();
-//    formData.append("file", file);
-//    formData.append('guardId', $('#GuardCompliance_GuardId').val());
+    }
 
-//    $.ajax({
-//        type: 'POST',
-//        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-//        data: formData,
-//        cache: false,
-//        contentType: false,
-//        processData: false,
-//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//    }).done(function (data) {
-//        $('#GuardCompliance_FileName').val(data.fileName);
-//        $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
-//    }).fail(function () {
-//    }).always(function () {
-//        $('#upload_compliance_file').val('');
-//    });
-//});
 
-$('#upload_complianceandlicanse_file').on('change', function () {
-    const file = $(this).get(0).files; //.item(0); 
-    FileuploadFileChanged(file);
-});
-
-FileuploadFileChanged = function (allfile) {
-    const file = allfile.item(0); // allfile.get(0).files.item(0);
-    const fileExtn = "." + file.name.split('.').pop().toLowerCase();
-    console.log('fileExtn: ' + fileExtn);
-    if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
-        alert('Please select a valid file type');
+    $("#LoginConformationBtnRC").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConRc").modal("show");
         return false;
-    }
-    var Desc = $('#Description').val();
-    var expiryDate = $('#GuardComplianceAndLicense_ExpiryDate1').val();
-    Desc = Desc.substring(3);
-    var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
-    formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
-    formData.append('Description', cleanText);
-    formData.append('HRID', $('#HRGroup').val());
-    formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
-    formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
-    if (Desc == '') {
-        (confirm('Please select Description and Expiry/Issue Date'))
-    }
-    if (expiryDate == '') {
-        (confirm('Please select the Expiry Date or Issue Date first, and then attach the document'))
-    }
-    else {
-        fileprocess(allfile);
-
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardComplianceandlicense_FileName1').val(data.fileName);
-            $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
-            $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_complianceandlicanse_file').val('');
-        });
-    }
-
-}
-
-
-$("#LoginConformationBtnRC").on('click', function () {
-    $('#txt_securityLicenseNoRC').val('');
-    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
-    $("#modelGuardLoginConRc").modal("show");
-    return false;
-});
-/*Show login confirmation for IR*/
-$("#LoginConformationBtnIR").on('click', function () {
-    $('#txt_securityLicenseNoRC').val('');
-    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
-    $("#modelGuardLoginConIR").modal("show");
-    return false;
-});
-/*Show login confirmation for Patrol-start*/
-$("#LoginConformationBtnPatrols").on('click', function () {
-    $('#txt_securityLicenseNoPatrols').val('');
-    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
-    $("#modelGuardLoginConPatrol").modal("show");
-    return false;
-});
-/*Show login confirmation for Patrol-end*/
-/* Check if Guard can access IR*/
-/* Check if Guard can access the IR-start */
-/*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
-$('#btnGuardLoginIR').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNoIR').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryIR', 'Please enter the security license No ');
-    }
-    else {
-
-
-
-        /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-            type: 'POST',
-            data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'IR'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-
-            if (result.accessPermission) {
-                /* $('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginConIR').modal('hide');
-
-                clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-                window.location.href = '/Incident/Register';
-            }
-            else {
-
-                $('#txt_securityLicenseNo').val('');
-                /*$('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginConIR').modal('show');
-                if (result.successCode === 0) {
-                    if (result.successMessage == 'Mobile is null') {
-                        //var msg = '<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>';
-                        //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
-                        //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
-                        /*alert(msg);*/
-
-                        $('#alert-wand-in-use-modal').modal('show');
-
-                        $('#btn_confrim_wand_usok').click(function () {
-                            $('#GuardID').val(result.guId);
-                            clearGuardValidationSummary('MobileNovalidationSummary')
-                            $('#alert-wand-in-use-modal').modal('hide'); // Hide the first modal
-
-                            $('#mobileno-modal').modal('show'); // Show the second modal after the first one fully hides
-
-                        });
-                    }
-                    else {
-
-
-                        displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
-                    }
-
-                }
-            }
-        });
-
-
-        clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
-    }
-});
-/* Check if Guard can access the IR-END */
-
-$('#btnSavemobileNo').click(function () {
-    clearGuardValidationSummary('MobileNovalidationSummary')
-    var mobileNo = $('#mobileNo').val();
-    var GuardID = $('#GuardID').val();
-    if (mobileNo == '' || mobileNo == '+61 4') {
-        displayGuardValidationSummary('MobileNovalidationSummary', 'Please enter mobile number');
-        return;
-    }
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveMobileNo',
-        type: 'POST',
-        data: {
-            mobileNo: mobileNo,
-            GuardID: GuardID
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        $('#mobileno-modal').modal('hide');
     });
-    // Show the second modal after the first one fully hides
-
-});
-
-$('#btnGuardLoginRC').on('click', function () {
-    $('#Access_permission_RC_status').hide();
-    const securityLicenseNo = $('#txt_securityLicenseNoRC').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryRC', 'Please enter the security license No ');
-    }
-    else {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-            type: 'POST',
-            data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'RC'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.accessPermission) {
-                $('#txt_securityLicenseNoRC').val('');
-                $('#modelGuardLoginConRC').modal('hide');
-                clearGuardValidationSummary('GuardLoginValidationSummaryRC');
-                $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
-
-                /*window.location.href = '/Radio/Check';*/
-                window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-            }
-            else {
-                $('#txt_securityLicenseNoRC').val('');
-                if (result.successCode === 0) {
-                    displayGuardValidationSummary('GuardLoginValidationSummaryRC', result.successMessage);
-                }
-            }
-        });
-
-    }
-});
-/* Show login conformation popup for KPI */
-$("#LoginConformationBtnKPI").on('click', function () {
-    clearGuardValidationSummary('GuardLoginValidationSummary');
-    $('#txt_securityLicenseNo').val('');
-    $("#modelGuardLoginCon").modal("show");
-    return false;
-});
-/* Check if Guard can access the KPI */
-/* p1-203 Admin User Profile -start */
-$("#LoginConformationBtnC4iSettings").on('click', function () {
-    clearGuardValidationSummary('GuardLoginValidationSummary');
-    $('#txt_securityLicenseNoC4iSettings').val('');
-    $("#modelGuardLoginC4iSettingsPatrol").modal("show");
-    return false;
-});
-$("#LoginConformationBtnC4iSettingsThirdParty").on('click', function () {
-    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
-
-
-
-
-    /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-        type: 'POST',
-        data: {
-            securityLicenseNo: securityLicenseNo,
-            type: 'Settings'
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.accessPermission) {
-            /* $('#txt_securityLicenseNoIR').val('');*/
-            $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
-
-            clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
-            window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+    /*Show login confirmation for IR*/
+    $("#LoginConformationBtnIR").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConIR").modal("show");
+        return false;
+    });
+    /*Show login confirmation for Patrol-start*/
+    $("#LoginConformationBtnPatrols").on('click', function () {
+        $('#txt_securityLicenseNoPatrols').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConPatrol").modal("show");
+        return false;
+    });
+    /*Show login confirmation for Patrol-end*/
+    /* Check if Guard can access IR*/
+    /* Check if Guard can access the IR-start */
+    /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
+    $('#btnGuardLoginIR').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoIR').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryIR', 'Please enter the security license No ');
         }
         else {
 
-            // $('#txt_securityLicenseNo').val('');
-            /*$('#txt_securityLicenseNoIR').val('');*/
-            $('#modelGuardLoginC4iSettingsPatrol').modal('show');
-            if (result.successCode === 0) {
-                displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
-            }
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'IR'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConIR').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+                    window.location.href = '/Incident/Register';
+                }
+                else {
+
+                    $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConIR').modal('show');
+                    if (result.successCode === 0) {
+                        if (result.successMessage == 'Mobile is null') {
+                            //var msg = '<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>';
+                            //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
+                            //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
+                            /*alert(msg);*/
+
+                            $('#alert-wand-in-use-modal').modal('show');
+
+                            $('#btn_confrim_wand_usok').click(function () {
+                                $('#GuardID').val(result.guId);
+                                clearGuardValidationSummary('MobileNovalidationSummary')
+                                $('#alert-wand-in-use-modal').modal('hide'); // Hide the first modal
+
+                                $('#mobileno-modal').modal('show'); // Show the second modal after the first one fully hides
+
+                            });
+                        }
+                        else {
+
+
+                            displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
+                        }
+
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
         }
     });
+    /* Check if Guard can access the IR-END */
 
-});
-$("#AuditSiteLogsConformationBtnSettings").on('click', function () {
-    clearGuardValidationSummary('GuardLoginValidationSummary');
-    $('#txt_securityLicenseNoAuditSiteLog').val('');
-    $("#modelGuardLoginAuditSite").modal("show");
-    return false;
-});
-
-$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
-    clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
-    $('#txt_securityLicenseNoAuditSiteLogs').val('');
-    $("#modelGuardLoginAditLog").modal("show");
-    return false;
-});
-
-
-$('#btnGuardLoginAuditSiteLogs').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLogs').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', 'Please enter the security license No ');
-    }
-    else {
-
-
-
-        /* $('#txt_securityLicenseNoIR').val('');*/
-
-
+    $('#btnSavemobileNo').click(function () {
+        clearGuardValidationSummary('MobileNovalidationSummary')
+        var mobileNo = $('#mobileNo').val();
+        var GuardID = $('#GuardID').val();
+        if (mobileNo == '' || mobileNo == '+61 4') {
+            displayGuardValidationSummary('MobileNovalidationSummary', 'Please enter mobile number');
+            return;
+        }
         $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+            url: '/Admin/GuardSettings?handler=SaveMobileNo',
             type: 'POST',
             data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'Auditlog'
+                mobileNo: mobileNo,
+                GuardID: GuardID
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
-            if (result.accessPermission) {
-                /* $('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginAditLog').modal('hide');
-
-                clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
-                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
-            }
-            else {
-
-                // $('#txt_securityLicenseNo').val('');
-                /*$('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginAditLog').modal('show');
-                if (result.successCode === 0) {
-                    displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', result.successMessage);
-                }
-            }
+            $('#mobileno-modal').modal('hide');
         });
+        // Show the second modal after the first one fully hides
 
+    });
 
+    $('#btnGuardLoginRC').on('click', function () {
+        $('#Access_permission_RC_status').hide();
+        const securityLicenseNo = $('#txt_securityLicenseNoRC').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryRC', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'RC'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNoRC').val('');
+                    $('#modelGuardLoginConRC').modal('hide');
+                    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+                    $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
 
-
-
-
-    }
-});
-
-
-
-/* p1-203 Admin User Profile -start */
-
-//$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
-//    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
-
-
-
-
-//        /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-//        $.ajax({
-//            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-//            type: 'POST',
-//            data: {
-//                securityLicenseNo: securityLicenseNo,
-//                type: 'Settings'
-//            },
-//            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-//        }).done(function (result) {
-//            if (result.accessPermission) {
-//                /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-//                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
-//            }
-
-//        });
-
-
-
-//});
-/* Check if Guard can access the KPI */
-$('#btnGuardLoginKPI').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNo').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
-    }
-    else {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-            type: 'POST',
-            data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'KPI'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.accessPermission) {
-                $('#txt_securityLicenseNo').val('');
-                $('#modelGuardLoginCon').modal('hide');
-                window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;/*live server*/
-                /*window.location.href = 'https://localhost:44378/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*//*local testing*/
-                /*window.location.href = 'http://kpi.c4i-system.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId; /*test server*/
-                clearGuardValidationSummary('GuardLoginValidationSummary');
-            }
-            else {
-                $('#txt_securityLicenseNo').val('');
-                if (result.successCode === 0) {
-                    displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
+                    /*window.location.href = '/Radio/Check';*/
+                    window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
                 }
-            }
-        });
+                else {
+                    $('#txt_securityLicenseNoRC').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryRC', result.successMessage);
+                    }
+                }
+            });
 
-    }
-});
-
-
-
-$('#delete_compliance_file').on('click', function () {
-    const guardComplianceId = $('#GuardCompliance_Id').val();
-    if (!guardComplianceId || parseInt(guardComplianceId) <= 0)
+        }
+    });
+    /* Show login conformation popup for KPI */
+    $("#LoginConformationBtnKPI").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNo').val('');
+        $("#modelGuardLoginCon").modal("show");
         return false;
-
-    if (confirm('Are you sure want to remove the attachment')) {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
-            type: 'POST',
-            data: {
-                id: guardComplianceId,
-                type: 'c'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#GuardCompliance_FileName').val('');
-                $('#guardCompliance_fileName').text('None');
-                gridGuardCompliances.ajax.reload();
-            }
-            else {
-                displayGuardValidationSummary('complianceValidationSummary', 'Delete failed.');
-            }
-        });
-    }
-});
-$('#delete_complianceandlicense_file').on('click', function () {
-    const guardComplianceandlicenseId = $('#GuardComplianceandlicense_GuardId').val();
-    if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+    });
+    /* Check if Guard can access the KPI */
+    /* p1-203 Admin User Profile -start */
+    $("#LoginConformationBtnC4iSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoC4iSettings').val('');
+        $("#modelGuardLoginC4iSettingsPatrol").modal("show");
         return false;
+    });
+    $("#LoginConformationBtnC4iSettingsThirdParty").on('click', function () {
+        const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
 
-    if (confirm('Are you sure want to remove the attachment')) {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
-            type: 'POST',
-            data: {
-                id: guardComplianceandlicenseId,
-                type: 'c'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#GuardComplianceandlicense_fileName1').val('');
-                $('#guardComplianceandlicense_fileName1').text('None');
-                gridGuardCompliances.ajax.reload();
-            }
-            else {
-                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
-            }
-        });
-    }
-});
-
-/* Check if Guard can access the patrol -start */
-/*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
-$('#btnGuardLoginPatrols').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNoPatrols').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', 'Please enter the security license No ');
-    }
-    else {
-
-
-
-        /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-            type: 'POST',
-            data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'Patrols'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.accessPermission) {
-                /* $('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginConPatrol').modal('hide');
-
-                clearGuardValidationSummary('GuardLoginValidationSummaryPatrols');
-                window.location.href = '/Reports/PatrolData';
-            }
-            else {
-
-                // $('#txt_securityLicenseNo').val('');
-                /*$('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginConPatrol').modal('show');
-                if (result.successCode === 0) {
-                    displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', result.successMessage);
-                }
-            }
-        });
-
-
-        clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
-    }
-});
-/* Check if Guard can access the IR-END */
-/*p1-203 Admin User Profile-start*/
-//to check whether the Guard can enter the settings
-$('#btnGuardLoginC4iSettings').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNoC4iSettings').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', 'Please enter the security license No ');
-    }
-    else {
 
 
 
@@ -7718,262 +7440,402 @@ $('#btnGuardLoginC4iSettings').on('click', function () {
             }
         });
 
+    });
+    $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoAuditSiteLog').val('');
+        $("#modelGuardLoginAuditSite").modal("show");
+        return false;
+    });
 
-        clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
-    }
-});
-/* p1 - 203 Admin User Profile - end*/
-$('#btnGuardAuditSiteLog').on('click', function () {
-    const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLog').val();
-    if (securityLicenseNo === '') {
-        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', 'Please enter the security license No ');
-    }
-    else {
-
-
-
-        /* $('#txt_securityLicenseNoIR').val('');*/
-
-
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-            type: 'POST',
-            data: {
-                securityLicenseNo: securityLicenseNo,
-                type: 'Settings'
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.accessPermission) {
-                /* $('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginAuditSite').modal('hide');
-
-                clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
-                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
-            }
-            else {
-
-                // $('#txt_securityLicenseNo').val('');
-                /*$('#txt_securityLicenseNoIR').val('');*/
-                $('#modelGuardLoginAuditSite').modal('show');
-                if (result.successCode === 0) {
-                    displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', result.successMessage);
-                }
-            }
-        });
-
-
-        clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
-    }
-});
-/*for pushing notifications from the control room - start*/
-$('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
-    /*timer pause while editing*/
-    isPaused = true;
-
-    const button = $(event.relatedTarget);
-    const id = button.data('id');
-
-    $('#chkAcknowledgeMessage').prop('checked', true);
-    $('#chkMessageBack').prop('checked', false);
-    $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
-    $('#txtPushNotificationGuardReturnMessage').val('');
-    clearGuardValidationSummary('PushNotificationsValidationSummary');
-    $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
-    $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
-
-});
-$("#pushNoTificationsGuardModal").on("hidden.bs.modal", function () {
-    /*timer pause while editing*/
-    isPaused = false;
-});
-$('#chkAcknowledgeMessage').on('change', function () {
-    const isChecked = $(this).is(':checked');
-    $('#IsAcknowledgeMessage').val(isChecked);
-    if (isChecked == true) {
-        $('#chkMessageBack').prop('checked', false);
-        $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
-        $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
-        $('#txtPushNotificationGuardReturnMessage').val('');
-    }
-});
-$('#chkMessageBack').on('change', function () {
-    const isChecked = $(this).is(':checked');
-    $('#IsMessageBack').val(isChecked);
-    if (isChecked == true) {
-        $('#chkAcknowledgeMessage').prop('checked', false);
-        $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
-        $('#txtPushNotificationGuardReturnMessage').attr('disabled', false);
-    }
-});
-function clearGuardValidationSummary(validationControl) {
-    $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
-    $('#' + validationControl).html('');
-}
-$('#btnSendPushLotificationFromGuardMessage').on('click', function () {
-    const IsMessageBack = $('#chkMessageBack').is(':checked');
-    const IsAcknowledgeMessage = $('#chkAcknowledgeMessage').is(':checked');
-
-    var controlRoomMessage = $('#txtNotificationsControlRoomMessage').val();
-    var Notifications = $('#txtPushNotificationGuardReturnMessage').val();
-
-    if (IsMessageBack == true) {
-        if (Notifications === '') {
-            displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter the Message to send ');
-        }
-        else {
-            Notifications = controlRoomMessage + '</br>' + '    -  ' + Notifications;
-        }
-    }
-    if (IsAcknowledgeMessage == true) {
-
-        Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
-
-    }
-    // Task p6#73_TimeZone issue -- added by Binoy - Start
-    var tmdata = {
-        'EventDateTimeLocal': null,
-        'EventDateTimeLocalWithOffset': null,
-        'EventDateTimeZone': null,
-        'EventDateTimeZoneShort': null,
-        'EventDateTimeUtcOffsetMinute': null,
-    };
-
-    fillRefreshLocalTimeZoneDetails(tmdata, "", false)
-    // Task p6#73_TimeZone issue -- added by Binoy - End
-    $.ajax({
-        url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
-        type: 'POST',
-        data: {
-            guardLoginId: $('#GuardLog_GuardLoginId').val(),
-            clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-            Notifications: Notifications,
-            rcPushMessageId: $('#rcPushMessageId').val(),
-            tmdata: tmdata
-
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        if (data.success == true) {
-            $('#pushNoTificationsGuardModal').modal('hide');
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-        }
-        else {
-            displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-        }
-        //$('#selectRadioStatus').val('');
-        //$('#btnRefreshActivityStatus').trigger('click');
+    $("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+        $('#txt_securityLicenseNoAuditSiteLogs').val('');
+        $("#modelGuardLoginAditLog").modal("show");
+        return false;
     });
 
 
-});
-
-
-
-function showDuressCountdownPopup() {
-    if ($("#duress_status").text() === "Active") return;
-
-    countdownValue = 5;
-    $('#duress_countdown').text(countdownValue);
-    $('#duress_modal_overlay').show();
-    $('#duress_confirm_popup').show();
-    isPaused = true;
-    countdownId = setInterval(function () {
-        countdownValue--;
-        $('#duress_countdown').text(countdownValue);
-
-        if (countdownValue <= 0) {
-            clearInterval(countdownId);
-            isPaused = false;
-            $('#duress_modal_overlay').hide();
-            $('#duress_confirm_popup').hide();
-            GFG_Fun(); // trigger duress activation
+    $('#btnGuardLoginAuditSiteLogs').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLogs').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', 'Please enter the security license No ');
         }
-    }, 1000);
-}
-
-function cancelDuressCountdown() {
-    clearInterval(countdownId);
-    $('#duress_modal_overlay').hide();
-    $('#duress_confirm_popup').hide();
-    isPaused = false;
-}
-
-$("#duress_btn").on("click", function () {
-    showDuressCountdownPopup();
-});
-
-$("#cancel_duress").on("click", function () {
-    cancelDuressCountdown();
-});
-
-//var tId = 0;
-//$("#duress_btn").mousedown(function () {
-//    if ($("#duress_status").text() !== "Active") {
-//        /*timer pause while editing*/
-//        isPaused = true;
-//        tId = setTimeout(GFG_Fun, 2500);
-
-//    }
-//    return false;
-//});
-//$("#duress_btn").mouseup(function () {
-//    clearTimeout(tId);
-//});
+        else {
 
 
 
-
-/*for touch devices Start */
-//var touchTimer = 0;
-//$('#duress_btn').on('touchstart', function (e) {
-//    // Prevent the default behavior
-//    e.preventDefault();
-
-//    if ($("#duress_status").text() !== "Active") {
-//        console.log('click');
-//        /*timer pause while editing*/
-//        isPaused = true;
-//        touchTimer = setTimeout(GFG_Fun, 2500);
-//        console.log(isPaused);
-//        console.log(touchTimer);
-//        gridGuardLog.clear();
-//        gridGuardLog.reload();
-//    }
-//    return false;
-//});
-
-//$('#duress_btn').on('touchend', function () {
-//console.log('stoped');
-//// If there is any movement or the touch ends, clear the timer
-////clearTimeout(touchTimer);
-////isPaused = false;
-////});
-
-//$('#duress_btn').on('pointerup', function (event) {
-//    // Your logic
-//    console.log('stoped2');
-//    clearTimeout(touchTimer);
-//    isPaused = false;
-//});
-
-/*for touch devices end */
-
-/* Get Client Site duress Gps Rading Start*/
+            /* $('#txt_securityLicenseNoIR').val('');*/
 
 
-function GFG_Fun() {
-    if ($("#duress_status").text() !== "Active") {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Auditlog'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAditLog').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSiteLogs', result.successMessage);
+                    }
+                }
+            });
+
+
+
+
+
+
+        }
+    });
+
+
+
+    /* p1-203 Admin User Profile -start */
+
+    //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+    //    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
+
+
+
+
+    //        /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+    //            type: 'POST',
+    //            data: {
+    //                securityLicenseNo: securityLicenseNo,
+    //                type: 'Settings'
+    //            },
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function (result) {
+    //            if (result.accessPermission) {
+    //                /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+    //                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+    //            }
+
+    //        });
+
+
+
+    //});
+    /* Check if Guard can access the KPI */
+    $('#btnGuardLoginKPI').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNo').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'KPI'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNo').val('');
+                    $('#modelGuardLoginCon').modal('hide');
+                    window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;/*live server*/
+                    /*window.location.href = 'https://localhost:44378/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*//*local testing*/
+                    /*window.location.href = 'http://kpi.c4i-system.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId; /*test server*/
+                    clearGuardValidationSummary('GuardLoginValidationSummary');
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
+                    }
+                }
+            });
+
+        }
+    });
+
+
+
+    $('#delete_compliance_file').on('click', function () {
+        const guardComplianceId = $('#GuardCompliance_Id').val();
+        if (!guardComplianceId || parseInt(guardComplianceId) <= 0)
+            return false;
+
+        if (confirm('Are you sure want to remove the attachment')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
+                type: 'POST',
+                data: {
+                    id: guardComplianceId,
+                    type: 'c'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#GuardCompliance_FileName').val('');
+                    $('#guardCompliance_fileName').text('None');
+                    gridGuardCompliances.ajax.reload();
+                }
+                else {
+                    displayGuardValidationSummary('complianceValidationSummary', 'Delete failed.');
+                }
+            });
+        }
+    });
+    $('#delete_complianceandlicense_file').on('click', function () {
+        const guardComplianceandlicenseId = $('#GuardComplianceandlicense_GuardId').val();
+        if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+            return false;
+
+        if (confirm('Are you sure want to remove the attachment')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
+                type: 'POST',
+                data: {
+                    id: guardComplianceandlicenseId,
+                    type: 'c'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#GuardComplianceandlicense_fileName1').val('');
+                    $('#guardComplianceandlicense_fileName1').text('None');
+                    gridGuardCompliances.ajax.reload();
+                }
+                else {
+                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
+                }
+            });
+        }
+    });
+
+    /* Check if Guard can access the patrol -start */
+    /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
+    $('#btnGuardLoginPatrols').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoPatrols').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Patrols'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryPatrols');
+                    window.location.href = '/Reports/PatrolData';
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+    /* Check if Guard can access the IR-END */
+    /*p1-203 Admin User Profile-start*/
+    //to check whether the Guard can enter the settings
+    $('#btnGuardLoginC4iSettings').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoC4iSettings').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+    /* p1 - 203 Admin User Profile - end*/
+    $('#btnGuardAuditSiteLog').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLog').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAuditSite').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginAuditSite').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+    /*for pushing notifications from the control room - start*/
+    $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
+        /*timer pause while editing*/
+        isPaused = true;
+
+        const button = $(event.relatedTarget);
+        const id = button.data('id');
+
+        $('#chkAcknowledgeMessage').prop('checked', true);
+        $('#chkMessageBack').prop('checked', false);
+        $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
+        $('#txtPushNotificationGuardReturnMessage').val('');
+        clearGuardValidationSummary('PushNotificationsValidationSummary');
+        $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
+        $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
+
+    });
+    $("#pushNoTificationsGuardModal").on("hidden.bs.modal", function () {
+        /*timer pause while editing*/
+        isPaused = false;
+    });
+    $('#chkAcknowledgeMessage').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        $('#IsAcknowledgeMessage').val(isChecked);
+        if (isChecked == true) {
+            $('#chkMessageBack').prop('checked', false);
+            $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
+            $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
+            $('#txtPushNotificationGuardReturnMessage').val('');
+        }
+    });
+    $('#chkMessageBack').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        $('#IsMessageBack').val(isChecked);
+        if (isChecked == true) {
+            $('#chkAcknowledgeMessage').prop('checked', false);
+            $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
+            $('#txtPushNotificationGuardReturnMessage').attr('disabled', false);
+        }
+    });
+    function clearGuardValidationSummary(validationControl) {
+        $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
+        $('#' + validationControl).html('');
+    }
+    $('#btnSendPushLotificationFromGuardMessage').on('click', function () {
+        const IsMessageBack = $('#chkMessageBack').is(':checked');
+        const IsAcknowledgeMessage = $('#chkAcknowledgeMessage').is(':checked');
+
+        var controlRoomMessage = $('#txtNotificationsControlRoomMessage').val();
+        var Notifications = $('#txtPushNotificationGuardReturnMessage').val();
+
+        if (IsMessageBack == true) {
+            if (Notifications === '') {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter the Message to send ');
+            }
+            else {
+                Notifications = controlRoomMessage + '</br>' + '    -  ' + Notifications;
+            }
+        }
+        if (IsAcknowledgeMessage == true) {
+
+            Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
+
+        }
         // Task p6#73_TimeZone issue -- added by Binoy - Start
-        console.log('function');
         var tmdata = {
             'EventDateTimeLocal': null,
             'EventDateTimeLocalWithOffset': null,
@@ -7984,1531 +7846,1668 @@ function GFG_Fun() {
 
         fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         // Task p6#73_TimeZone issue -- added by Binoy - End
-
         $.ajax({
-            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+            url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
+            type: 'POST',
             data: {
-                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
                 guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                enabledAddress: $("#hid_duressEnabledAddress").val(),
+                clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                Notifications: Notifications,
+                rcPushMessageId: $('#rcPushMessageId').val(),
                 tmdata: tmdata
+
             },
             dataType: 'json',
-            type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#duress_btn').removeClass('normal').addClass('active');
-                $("#duress_status").addClass('font-weight-bold');
-                $("#duress_status").text("Active");
-                /*timer pause while editing*/
-                isPaused = false;
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsGuardModal').modal('hide');
+                gridGuardLog.clear();
+                gridGuardLog.reload();
             }
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-            console.log(result.message);
-        });
-
-    }
-
-}
-
-
-
-
-
-
-// Task p6#73_TimeZone issue -- added by Binoy - Start
-function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
-    // for reference https://moment.github.io/luxon/#/
-    var DateTime = luxon.DateTime;
-    var dt1 = DateTime.local();
-    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-    let diffTZ = dt1.offset
-    //let tzshrtnm = dt1.offsetNameShort;
-    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
-
-    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
-    if (isform) {
-        formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
-        formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
-        formData.append(modelname + ".EventDateTimeZone", tz);
-        formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
-        formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
-    }
-    else {
-        formData.EventDateTimeLocal = eventDateTimeLocal;
-        formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
-        formData.EventDateTimeZone = tz;
-        formData.EventDateTimeZoneShort = tzshrtnm;
-        formData.EventDateTimeUtcOffsetMinute = diffTZ;
-    }
-}
-
-// Task p6#73_TimeZone issue -- added by Binoy - End
-
-
-function initialize() {
-    var geocoder = new google.maps.Geocoder();
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-
-            gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
-            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
-            $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
-            reverseGeocode(position.coords.latitude, position.coords.longitude);
-
-        });
-    }
-
-}
-
-
-
-function getDurressLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
-            reverseGeocode(position.coords.latitude, position.coords.longitude);
-
-        });
-    }
-}
-
-
-function reverseGeocode(latitude, longitude) {
-    var latlng = new google.maps.LatLng(latitude, longitude);
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
-        if (status === google.maps.GeocoderStatus.OK) {
-            if (results[0]) {
-                var address = results[0].formatted_address;
-                $("#hid_duressEnabledAddress").val(address);
-                console.log('Reverse Geocoding Result: ', address);
-
-            } else {
-                console.error('No results found');
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
             }
-        } else {
-            console.error('Geocoder failed due to: ' + status);
-        }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+
+
     });
-}
 
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, showError);
-    } else {
-        alert("Geolocation is not supported by this browser.");
+
+
+    function showDuressCountdownPopup() {
+        if ($("#duress_status").text() === "Active") return;
+
+        countdownValue = 5;
+        $('#duress_countdown').text(countdownValue);
+        $('#duress_modal_overlay').show();
+        $('#duress_confirm_popup').show();
+        isPaused = true;
+        countdownId = setInterval(function () {
+            countdownValue--;
+            $('#duress_countdown').text(countdownValue);
+
+            if (countdownValue <= 0) {
+                clearInterval(countdownId);
+                isPaused = false;
+                $('#duress_modal_overlay').hide();
+                $('#duress_confirm_popup').hide();
+                GFG_Fun(); // trigger duress activation
+            }
+        }, 1000);
     }
-}
 
-/* Get Client Site duress Gps Rading end*/
-
-
-/*to get the warning - start*/
-$('#btn_confrim_wand_usok').on('click', function () {
-    $('#alert-wand-in-use-modal').modal('hide')
-})
-
-
-//To Generate All PO List start
-$('#generate_log_AlldocketList').on('click', function () {
-    $('#generate_kvl_docket_status').hide();
-    $('#download_kvl_docket').hide();
-    $('.print-docket-reason').prop('checked', false);
-    $('#cbxProofOfDelivery').prop('checked', false);
-    $('#cbxPOIList').prop('checked', true);
-    $('#otherReason').val('');
-    $('#otherReason').attr('disabled', true);
-    $('#stakeholderEmail').val('');
-
-
-    $('#generate_logbook_AlldocketList').show();
-    $('#generate_kvl_docket').hide();
-    $('#print-manual-docket-modal').modal('show')
-    //$('#printDocketForKvlId').val(data.detail.id);
-    //if (data.detail.personOfInterest != null) {
-    //    $('#titlePOIWarningPrint').attr('hidden', false);
-    //    $('#imagesirenprint').attr('hidden', false);
-    //}
-    //else {
-    //    $('#titlePOIWarningPrint').attr('hidden', true);
-    //    $('#imagesirenprint').attr('hidden', true);
-    //}
-});
-
-$('#generate_logbook_AlldocketList').on('click', function () {
-    $('#generate_kvl_docket_status').hide();
-
-    const checkedReason = $('.print-docket-reason:checkbox:checked');
-    if (checkedReason.length === 0) {
-        $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
-        return false;
+    function cancelDuressCountdown() {
+        clearInterval(countdownId);
+        $('#duress_modal_overlay').hide();
+        $('#duress_confirm_popup').hide();
+        isPaused = false;
     }
-    $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
-    $('#download_kvl_docket').hide();
-    $('#generate_log_AlldocketList').attr('disabled', true);
 
-    var ids = [];
-    //$.ajax({
-    //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-    //    data: { truckRego: null, poi: 'POI' },
-    //    type: 'GET',
-    //    dataType: 'json',
-    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //}).done(function (result) { 
-    //    var ids = [];
-    //    result.forEach(function (item) {
-    //        ids.push(item.detail.id);
+    $("#duress_btn").on("click", function () {
+        showDuressCountdownPopup();
+    });
 
-    //    });
-    $.ajax({
-        url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
-        data: {
-            IsGlobal: false,
-            option: $(checkedReason).val(),
-            otherReason: $('#otherReason').val(),
-            stakeholderEmails: $('#stakeholderEmail').val(),
-            clientSiteId: $('#ClientSiteID').val(),
-            blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
-            ids: ids,
-        },
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
+    $("#cancel_duress").on("click", function () {
+        cancelDuressCountdown();
+    });
 
-        if (response.statusCode === -1) {
-            $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
+    //var tId = 0;
+    //$("#duress_btn").mousedown(function () {
+    //    if ($("#duress_status").text() !== "Active") {
+    //        /*timer pause while editing*/
+    //        isPaused = true;
+    //        tId = setTimeout(GFG_Fun, 2500);
+
+    //    }
+    //    return false;
+    //});
+    //$("#duress_btn").mouseup(function () {
+    //    clearTimeout(tId);
+    //});
+
+
+
+
+    /*for touch devices Start */
+    //var touchTimer = 0;
+    //$('#duress_btn').on('touchstart', function (e) {
+    //    // Prevent the default behavior
+    //    e.preventDefault();
+
+    //    if ($("#duress_status").text() !== "Active") {
+    //        console.log('click');
+    //        /*timer pause while editing*/
+    //        isPaused = true;
+    //        touchTimer = setTimeout(GFG_Fun, 2500);
+    //        console.log(isPaused);
+    //        console.log(touchTimer);
+    //        gridGuardLog.clear();
+    //        gridGuardLog.reload();
+    //    }
+    //    return false;
+    //});
+
+    //$('#duress_btn').on('touchend', function () {
+    //console.log('stoped');
+    //// If there is any movement or the touch ends, clear the timer
+    ////clearTimeout(touchTimer);
+    ////isPaused = false;
+    ////});
+
+    //$('#duress_btn').on('pointerup', function (event) {
+    //    // Your logic
+    //    console.log('stoped2');
+    //    clearTimeout(touchTimer);
+    //    isPaused = false;
+    //});
+
+    /*for touch devices end */
+
+    /* Get Client Site duress Gps Rading Start*/
+
+
+    function GFG_Fun() {
+        if ($("#duress_status").text() !== "Active") {
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            console.log('function');
+            var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
+
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+            // Task p6#73_TimeZone issue -- added by Binoy - End
+
+            $.ajax({
+                url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+                data: {
+                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                    guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                    gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                    enabledAddress: $("#hid_duressEnabledAddress").val(),
+                    tmdata: tmdata
+                },
+                dataType: 'json',
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#duress_btn').removeClass('normal').addClass('active');
+                    $("#duress_status").addClass('font-weight-bold');
+                    $("#duress_status").text("Active");
+                    /*timer pause while editing*/
+                    isPaused = false;
+                }
+                gridGuardLog.clear();
+                gridGuardLog.reload();
+                console.log(result.message);
+            });
+
+        }
+
+    }
+
+
+
+
+
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+        // for reference https://moment.github.io/luxon/#/
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        //let tzshrtnm = dt1.offsetNameShort;
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
+
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        if (isform) {
+            formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+            formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+            formData.append(modelname + ".EventDateTimeZone", tz);
+            formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+            formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
         }
         else {
+            formData.EventDateTimeLocal = eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone = tz;
+            formData.EventDateTimeZoneShort = tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute = diffTZ;
+        }
+    }
 
-            $('#generate_log_AlldocketList').attr('disabled', false);
-            $('#download_kvl_docket').show();
-            $('#download_kvl_docket').attr('href', response.fileName);
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 
-            let statusClass = 'fa-check-circle-o text-success mr-2';
-            let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-            if (response.statusCode !== 0) {
-                statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
+
+    function initialize() {
+        var geocoder = new google.maps.Geocoder();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+
+                gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+
+    }
+
+
+
+    function getDurressLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+    }
+
+
+    function reverseGeocode(latitude, longitude) {
+        var latlng = new google.maps.LatLng(latitude, longitude);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var address = results[0].formatted_address;
+                    $("#hid_duressEnabledAddress").val(address);
+                    console.log('Reverse Geocoding Result: ', address);
+
+                } else {
+                    console.error('No results found');
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
             }
-            $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+        });
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    /* Get Client Site duress Gps Rading end*/
+
+
+    /*to get the warning - start*/
+    $('#btn_confrim_wand_usok').on('click', function () {
+        $('#alert-wand-in-use-modal').modal('hide')
+    })
+
+
+    //To Generate All PO List start
+    $('#generate_log_AlldocketList').on('click', function () {
+        $('#generate_kvl_docket_status').hide();
+        $('#download_kvl_docket').hide();
+        $('.print-docket-reason').prop('checked', false);
+        $('#cbxProofOfDelivery').prop('checked', false);
+        $('#cbxPOIList').prop('checked', true);
+        $('#otherReason').val('');
+        $('#otherReason').attr('disabled', true);
+        $('#stakeholderEmail').val('');
+
+
+        $('#generate_logbook_AlldocketList').show();
+        $('#generate_kvl_docket').hide();
+        $('#print-manual-docket-modal').modal('show')
+        //$('#printDocketForKvlId').val(data.detail.id);
+        //if (data.detail.personOfInterest != null) {
+        //    $('#titlePOIWarningPrint').attr('hidden', false);
+        //    $('#imagesirenprint').attr('hidden', false);
+        //}
+        //else {
+        //    $('#titlePOIWarningPrint').attr('hidden', true);
+        //    $('#imagesirenprint').attr('hidden', true);
+        //}
+    });
+
+    $('#generate_logbook_AlldocketList').on('click', function () {
+        $('#generate_kvl_docket_status').hide();
+
+        const checkedReason = $('.print-docket-reason:checkbox:checked');
+        if (checkedReason.length === 0) {
+            $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
+            return false;
+        }
+        $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
+        $('#download_kvl_docket').hide();
+        $('#generate_log_AlldocketList').attr('disabled', true);
+
+        var ids = [];
+        //$.ajax({
+        //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+        //    data: { truckRego: null, poi: 'POI' },
+        //    type: 'GET',
+        //    dataType: 'json',
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) { 
+        //    var ids = [];
+        //    result.forEach(function (item) {
+        //        ids.push(item.detail.id);
+
+        //    });
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
+            data: {
+                IsGlobal: false,
+                option: $(checkedReason).val(),
+                otherReason: $('#otherReason').val(),
+                stakeholderEmails: $('#stakeholderEmail').val(),
+                clientSiteId: $('#ClientSiteID').val(),
+                blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
+                ids: ids,
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+
+            if (response.statusCode === -1) {
+                $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
+            }
+            else {
+
+                $('#generate_log_AlldocketList').attr('disabled', false);
+                $('#download_kvl_docket').show();
+                $('#download_kvl_docket').attr('href', response.fileName);
+
+                let statusClass = 'fa-check-circle-o text-success mr-2';
+                let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
+                if (response.statusCode !== 0) {
+                    statusClass = 'fa-exclamation-triangle text-warning mr-2';
+                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
+                }
+                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+            }
+        });
+    });
+
+
+
+
+
+
+
+    /*});*/
+    //To Generate All PO List stop
+
+    $('#btncalendarEventModal').on('click', function () {
+        $('#calendarEventModal').modal('show');
+    });
+    let calendarEventsDetails = $('#calendarEventsDetails').grid({
+        dataSource: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { width: 130, field: 'id', title: 'Id', hidden: true },
+            { width: 450, field: 'textMessage', title: 'Events' },
+            { width: 100, field: 'formattedStartDate', title: 'Start' },
+            { width: 100, field: 'formattedExpiryDate', title: 'Expiry' },
+        ],
+
+    });
+    //let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
+    //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    //    ordering: true,
+    //    info: false,
+    //    searching: true,
+    //    autoWidth: false,
+    //    fixedHeader: false,
+    //    "scrollY": "300px", // Set the desired height for the scrollable area
+    //    "paging": false,
+    //    "footer": true,
+    //    ajax: {
+    //        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+    //        datatype: 'json',
+
+    //        dataSrc: ''
+    //    },
+    //    columns: [
+    //        { data: 'id', visible: false, title: 'id' },
+    //        {
+    //            data: 'textMessage',
+    //            width: '20%',
+    //           // title: 'Events'
+    //        },
+    //        {
+    //            data: 'formattedStartDate',
+    //            width: '20%',
+    //          //  title: 'Start'
+
+    //        },
+    //        {
+    //            data: 'formattedExpiryDate',
+    //            width: '9%',
+    //           // title: 'Expiry',
+
+    //        },
+
+
+
+
+    //    ],
+
+    //});
+
+    //calculate month difference-start
+
+    function monthDiff(d1, d2) {
+        var months;
+        months = (d2.getFullYear() - d1.getFullYear()) * 12;
+        months -= d1.getMonth();
+        months += d2.getMonth();
+        return months <= 0 ? 0 : months;
+    }
+    //calculate month difference-end
+
+    /*to view thw audit log report-start*/
+    $('#vehicle_key_log_audit_history').DataTable({
+        autoWidth: false,
+        paging: true,
+        ordering: false,
+        info: false,
+        searching: false,
+        pageLength: 10,
+        data: [],
+        columns: [
+
+            { data: 'auditTimeString', width: '32%' },
+            { data: 'guardLogin.guard.initial', width: '15%' },
+            { data: 'auditMessage' },
+        ],
+    });
+    $('#btnGenerateVklAuditLogReport').on('click', function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
+        var item2 = $('#KeyVehicleLogAuditLogRequest_PersonName').val();
+        var item3 = $('#KeyVehicleLogAuditLogRequest_KeyNo').val();
+        if (((item == null || item == '') && (item2 == null || item2 == '') && (item3 == null || item3 == ''))) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item2 != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item2 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item2 != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else {
+            $('#loader').show();
+            $.ajax({
+                // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
+                url: '/Admin/AuditSiteLog?handler=AuditHistory',
+                type: 'GET',
+                dataType: 'json',
+                data: $('#form_kvl_auditlog_request').serialize(),
+            }).done(function (response) {
+                if (item != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Truck Rego: ' + item);
+                }
+                if (item2 != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Individual Name: ' + item2);
+                }
+                if (item3 != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
+                }
+                $('#vkl-auditlog-modal').modal('show');
+                $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
+                $('#loader').hide();
+            });
         }
     });
-});
+
+    //let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
+    //    autoWidth: false,
+    //    ordering: false,
+    //    searching: false,
+    //    paging: false,
+    //    info: false,
+    //    ajax: {
+    //        url: '/Admin/GuardSettings?handler=LastTimeLogin',
+    //        data: function (d) {
+    //            d.guardId = $('#txtGuardId').val();
+
+    //        },
+    //        dataSrc: ''
+    //    },
+    //    columns: [
+
+    //        {
+    //            data: 'eventDateTime',
+    //            width: "10%",
+    //            render: function (data, type, row) {
+    //                // Convert the date string to a JavaScript Date object
+    //                var date = new Date(data);
+
+    //                // Format the date to display only the date part without the time
+    //                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    //                var additionalData = row.eventDateTimeZoneShort;
+    //                if (additionalData != null) {
+    //                    return formattedDate + ' (' + additionalData + ')';
+    //                }
+    //                else {
+    //                    return formattedDate
+    //                }
+
+    //            }
+    //        }
+
+    //    ],
 
 
+    //});
+    /*to view thw audit log report-end*/
 
+    //for toggle areas - start
+    //for time slot - start 
+    $('#chk_cs_time_slot').on('change', function () {
 
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_tn_no_load').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_tn_no_load').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    $('#chk_cs_tn_no_load').on('change', function () {
 
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_time_slot').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_time_slot').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    //for time slot - end
+    //for VWI  - start 
+    $('#chk_cs_vwi').on('change', function () {
 
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Manifest').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Manifest').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    $('#chk_cs_Manifest').on('change', function () {
 
-/*});*/
-//To Generate All PO List stop
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_vwi').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_vwi').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    //for VWI areas - start 
+    //for sender  - start 
+    $('#chk_cs_Sender').on('change', function () {
 
-$('#btncalendarEventModal').on('click', function () {
-    $('#calendarEventModal').modal('show');
-});
-let calendarEventsDetails = $('#calendarEventsDetails').grid({
-    dataSource: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    columns: [
-        { width: 130, field: 'id', title: 'Id', hidden: true },
-        { width: 450, field: 'textMessage', title: 'Events' },
-        { width: 100, field: 'formattedStartDate', title: 'Start' },
-        { width: 100, field: 'formattedExpiryDate', title: 'Expiry' },
-    ],
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Receiver').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Receiver').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    $('#chk_cs_Receiver').on('change', function () {
 
-});
-//let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
-//    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-//    ordering: true,
-//    info: false,
-//    searching: true,
-//    autoWidth: false,
-//    fixedHeader: false,
-//    "scrollY": "300px", // Set the desired height for the scrollable area
-//    "paging": false,
-//    "footer": true,
-//    ajax: {
-//        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-//        datatype: 'json',
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Sender').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Sender').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    //for sender - end
+    //for Reels  - start 
+    $('#chk_cs_Reels').on('change', function () {
 
-//        dataSrc: ''
-//    },
-//    columns: [
-//        { data: 'id', visible: false, title: 'id' },
-//        {
-//            data: 'textMessage',
-//            width: '20%',
-//           // title: 'Events'
-//        },
-//        {
-//            data: 'formattedStartDate',
-//            width: '20%',
-//          //  title: 'Start'
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_QTY').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_QTY').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    $('#chk_cs_QTY').on('change', function () {
 
-//        },
-//        {
-//            data: 'formattedExpiryDate',
-//            width: '9%',
-//           // title: 'Expiry',
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Reels').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Reels').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    //for Reels - start
+    $('#btnSaveToggleKeys').on('click', function () {
+        var toggleType;
+        var IsActive;
 
-//        },
+        if ($('#chk_cs_time_slot').is(":checked")) {
+            $('#chk_cs_Is_Time_Slot').val(true);
 
+        }
+        else {
+            $('#chk_cs_Is_Time_Slot').val(false);
 
+        }
+        if ($('#chk_cs_vwi').is(":checked")) {
+            $('#chk_cs_Is_VWI').val(true);
 
+        }
+        else {
+            $('#chk_cs_Is_VWI').val(false);
 
-//    ],
+        }
+        if ($('#chk_cs_Sender').is(":checked")) {
+            $('#chk_cs_Is_Sender').val(true);
 
-//});
+        }
+        else {
+            $('#chk_cs_Is_Sender').val(false);
 
-//calculate month difference-start
+        }
+        if ($('#chk_cs_Reels').is(":checked")) {
+            $('#chk_cs_Is_Reels').val(true);
 
-function monthDiff(d1, d2) {
-    var months;
-    months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    return months <= 0 ? 0 : months;
-}
-//calculate month difference-end
+        }
+        else {
+            $('#chk_cs_Is_Reels').val(false);
 
-/*to view thw audit log report-start*/
-$('#vehicle_key_log_audit_history').DataTable({
-    autoWidth: false,
-    paging: true,
-    ordering: false,
-    info: false,
-    searching: false,
-    pageLength: 10,
-    data: [],
-    columns: [
-
-        { data: 'auditTimeString', width: '32%' },
-        { data: 'guardLogin.guard.initial', width: '15%' },
-        { data: 'auditMessage' },
-    ],
-});
-$('#btnGenerateVklAuditLogReport').on('click', function () {
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
-    var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
-    var item2 = $('#KeyVehicleLogAuditLogRequest_PersonName').val();
-    var item3 = $('#KeyVehicleLogAuditLogRequest_KeyNo').val();
-    if (((item == null || item == '') && (item2 == null || item2 == '') && (item3 == null || item3 == ''))) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item2 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else {
-        $('#loader').show();
+        }
+        const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
-            // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
-            url: '/Admin/AuditSiteLog?handler=AuditHistory',
+            url: '/Admin/GuardSettings?handler=SaveToggleType',
+            type: 'POST',
+            data: {
+                siteId: $('#gl_client_site_id').val(),
+                timeslottoggleTypeId: 1,
+                timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
+                vwitoggleTypeId: 2,
+                vwiIsActive: $('#chk_cs_Is_VWI').val(),
+                sendertoggleTypeId: 3,
+                senderIsActive: $('#chk_cs_Is_Sender').val(),
+                reelstoggleTypeId: 4,
+                reelsIsActive: $('#chk_cs_Is_Reels').val(),
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function () {
+            alert("Saved Successfully")
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+
+    function GetClientSiteToggle() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=ClientSiteToggle',
+            type: 'GET',
+            data: {
+                siteId: $('#gl_client_site_id').val()
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (response) {
+            for (var i = 0; i < response.length; i++) {
+
+                if (response[i].toggleTypeId == 1) {
+                    $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_time_slot').prop('checked', true);
+                        $('#chk_cs_tn_no_load').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_time_slot').prop('checked', false);
+                        $('#chk_cs_tn_no_load').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 2) {
+                    $('#chk_cs_Is_VWI').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_vwi').prop('checked', true);
+                        $('#chk_cs_Manifest').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_vwi').prop('checked', false);
+                        $('#chk_cs_Manifest').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 3) {
+                    $('#chk_cs_Is_Sender').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Sender').prop('checked', true);
+                        $('#chk_cs_Receiver').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Sender').prop('checked', false);
+                        $('#chk_cs_Receiver').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 4) {
+                    $('#chk_cs_Is_Reels').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Reels').prop('checked', true);
+                        $('#chk_cs_QTY').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Reels').prop('checked', false);
+                        $('#chk_cs_QTY').prop('checked', true);
+                    }
+
+                }
+
+            }
+
+        }).fail(function () {
+            console.log("error");
+        });
+    }
+
+    $('#LicanseTypeFilter').on('change', function () {
+        const isChecked = $(this).is(':checked');
+
+        const filter = isChecked ? 1 : 2;
+        if (filter == 1) {
+            $('#ComplianceDate').text('Issue Date (DOI)');
+            $('#IsDateFilterEnabledHidden').val(true)
+            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
+                return new Date().toJSON().split('T')[0];
+            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
+        }
+        if (filter == 2) {
+            $('#IsDateFilterEnabledHidden').val(false)
+            $('#ComplianceDate').text('Expiry Date (DOE)');
+            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+                return new Date().toJSON().split('T')[0];
+            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
+        }
+
+    });
+    //for toggle areas - start
+
+
+    $('#togglePassword').on('click', function () {
+        // Get the password field
+        var passwordField = $('#Guard_Pin');
+        // Get the current type of the password field
+        var passwordFieldType = passwordField.attr('type');
+        // Toggle the type attribute
+        if (passwordFieldType === 'password') {
+            passwordField.attr('type', 'text');
+            $(this).html('<i class="fa fa-eye-slash" aria-hidden="true"></i>'); // Change icon to a closed eye
+        } else {
+            passwordField.attr('type', 'password');
+            $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
+        }
+    });
+
+
+
+    //Start fusion report in auditlog08072024
+    $('#fusionAudtitFromDate').val(start.toISOString().substr(0, 10));
+    // var systemDate = $('#fusionAudtitToDate').val();
+    //var dateObject = new Date().toISOString().substr(0, 10);
+    $('#fusionAudtitToDate').val(systemDate);
+
+    let gridsitefusionLog;
+    gridsitefusionLog = $('#fusion_site_log').grid({
+        dataSource: '/Admin/AuditSiteLog?handler=DailyGuardFusionSiteLogs',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        grouping: { groupBy: 'Date' },
+        primaryKey: 'id',
+        columns: [
+            { field: 'clientSiteId', hidden: true },
+            { field: 'notificationCreatedTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTimefusion(value, record, false); } },
+            {
+                field: 'notes', title: 'Event / Notes', width: 350,
+                renderer: function (value, record) {
+                    var activityType = record.activityType == undefined ? '' : record.activityType.trim();
+                    if (activityType == 'IR') {
+
+                        return record.notes + '<br>' + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '" target="_blank">Click here</a>';
+                    }
+                    else {
+                        return record.notes;
+                    }
+                }
+            },
+            { field: 'activityType', title: 'Source', width: 50 },
+            { field: 'siteName', title: 'Client Site', width: 150 },
+            { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
+        ],
+        paramNames: { page: 'pageNo' },
+        pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
+    });
+
+
+    //$('#fusionClientSiteId').select2({
+    //    placeholder: 'Select',
+    //    theme: 'bootstrap4'
+    //});
+
+    $('#fusionClientSiteId').on('change', function () {
+        gridsitefusionLog.clear();
+    });
+
+    //$('#fusionClientType').on('change', function () {
+    //    gridsitefusionLog.clear();
+    //    const clientTypeId = $(this).val();
+    //    const clientSiteControl = $('#fusionClientSiteId');
+    //    clientSiteControl.html('');
+    //    $.ajax({
+    //        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+    //        type: 'GET',
+    //        dataType: 'json',
+    //        success: function (data) {
+    //            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
+    //            data.map(function (site) {
+    //                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+    //            });
+
+
+    //        }
+    //    });
+
+
+    //});
+
+
+    $('#fusionClientSiteId').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+
+
+    $('#fusionClientType').on('change', function () {
+        gridsitefusionLog.clear();
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#fusionClientSiteId');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
             type: 'GET',
             dataType: 'json',
-            data: $('#form_kvl_auditlog_request').serialize(),
-        }).done(function (response) {
-            if (item != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Truck Rego: ' + item);
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
             }
-            if (item2 != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Individual Name: ' + item2);
+        });
+    });
+
+
+
+
+    $('#expand_fusion_audits').on('click', function () {
+        gridsitefusionLog.expandAll();
+    });
+
+    $('#collapse_fusion_audits').on('click', function () {
+        gridsitefusionLog.collapseAll();
+    });
+
+
+
+    function renderDateTimefusion(value, record) {
+        // p6#73 timezone bug - Modified by binoy 29-01-2024
+        if (record.eventDateTime != null && record.eventDateTime != '') {
+            const date = new Date(record.eventDateTime);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
+            return dt;
+        }
+        else if (value !== '') {
+            const date = new Date(value);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let day = date.getDate();
+
+            if (day < 10) {
+                day = '0' + day;
             }
-            if (item3 != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
+
+            return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+        }
+    }
+
+    if (gridsitefusionLog) {
+        const bg_color_pale_yellow = '#fcf8d1';
+        const bg_color_pale_red = '#ffcccc';
+        const bg_color_white = '#ffffff';
+        const irEntryTypeIsAlarm = 2;
+
+        gridsitefusionLog.on('rowDataBound', function (e, $row, id, record) {
+            let rowColor = bg_color_white;
+            if (record.irEntryType) {
+                rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
             }
-            $('#vkl-auditlog-modal').modal('show');
-            $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
-            $('#loader').hide();
+            $row.css('background-color', rowColor);
         });
     }
-});
-
-//let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
-//    autoWidth: false,
-//    ordering: false,
-//    searching: false,
-//    paging: false,
-//    info: false,
-//    ajax: {
-//        url: '/Admin/GuardSettings?handler=LastTimeLogin',
-//        data: function (d) {
-//            d.guardId = $('#txtGuardId').val();
-
-//        },
-//        dataSrc: ''
-//    },
-//    columns: [
-
-//        {
-//            data: 'eventDateTime',
-//            width: "10%",
-//            render: function (data, type, row) {
-//                // Convert the date string to a JavaScript Date object
-//                var date = new Date(data);
-
-//                // Format the date to display only the date part without the time
-//                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-//                var additionalData = row.eventDateTimeZoneShort;
-//                if (additionalData != null) {
-//                    return formattedDate + ' (' + additionalData + ')';
-//                }
-//                else {
-//                    return formattedDate
-//                }
-
-//            }
-//        }
-
-//    ],
 
 
-//});
-/*to view thw audit log report-end*/
-
-//for toggle areas - start
-//for time slot - start 
-$('#chk_cs_time_slot').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_tn_no_load').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_tn_no_load').prop('checked', true);
-    }
-    $('#chk_cs_Is_Time_Slot').val(isChecked);
-});
-$('#chk_cs_tn_no_load').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_time_slot').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_time_slot').prop('checked', true);
-    }
-    $('#chk_cs_Is_Time_Slot').val(isChecked);
-});
-//for time slot - end
-//for VWI  - start 
-$('#chk_cs_vwi').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Manifest').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Manifest').prop('checked', true);
-    }
-    $('#chk_cs_Is_VWI').val(isChecked);
-});
-$('#chk_cs_Manifest').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_vwi').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_vwi').prop('checked', true);
-    }
-    $('#chk_cs_Is_VWI').val(isChecked);
-});
-//for VWI areas - start 
-//for sender  - start 
-$('#chk_cs_Sender').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Receiver').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Receiver').prop('checked', true);
-    }
-    $('#chk_cs_Is_Sender').val(isChecked);
-});
-$('#chk_cs_Receiver').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Sender').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Sender').prop('checked', true);
-    }
-    $('#chk_cs_Is_Sender').val(isChecked);
-});
-//for sender - end
-//for Reels  - start 
-$('#chk_cs_Reels').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_QTY').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_QTY').prop('checked', true);
-    }
-    $('#chk_cs_Is_Reels').val(isChecked);
-});
-$('#chk_cs_QTY').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Reels').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Reels').prop('checked', true);
-    }
-    $('#chk_cs_Is_Reels').val(isChecked);
-});
-//for Reels - start
-$('#btnSaveToggleKeys').on('click', function () {
-    var toggleType;
-    var IsActive;
-
-    if ($('#chk_cs_time_slot').is(":checked")) {
-        $('#chk_cs_Is_Time_Slot').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Time_Slot').val(false);
-
-    }
-    if ($('#chk_cs_vwi').is(":checked")) {
-        $('#chk_cs_Is_VWI').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_VWI').val(false);
-
-    }
-    if ($('#chk_cs_Sender').is(":checked")) {
-        $('#chk_cs_Is_Sender').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Sender').val(false);
-
-    }
-    if ($('#chk_cs_Reels').is(":checked")) {
-        $('#chk_cs_Is_Reels').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Reels').val(false);
-
-    }
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveToggleType',
-        type: 'POST',
-        data: {
-            siteId: $('#gl_client_site_id').val(),
-            timeslottoggleTypeId: 1,
-            timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
-            vwitoggleTypeId: 2,
-            vwiIsActive: $('#chk_cs_Is_VWI').val(),
-            sendertoggleTypeId: 3,
-            senderIsActive: $('#chk_cs_Is_Sender').val(),
-            reelstoggleTypeId: 4,
-            reelsIsActive: $('#chk_cs_Is_Reels').val(),
-        },
-        headers: { 'RequestVerificationToken': token }
-    }).done(function () {
-        alert("Saved Successfully")
-    }).fail(function () {
-        console.log("error");
-    });
-});
-
-function GetClientSiteToggle() {
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=ClientSiteToggle',
-        type: 'GET',
-        data: {
-            siteId: $('#gl_client_site_id').val()
-        },
-        headers: { 'RequestVerificationToken': token }
-    }).done(function (response) {
-        for (var i = 0; i < response.length; i++) {
-
-            if (response[i].toggleTypeId == 1) {
-                $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_time_slot').prop('checked', true);
-                    $('#chk_cs_tn_no_load').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_time_slot').prop('checked', false);
-                    $('#chk_cs_tn_no_load').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 2) {
-                $('#chk_cs_Is_VWI').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_vwi').prop('checked', true);
-                    $('#chk_cs_Manifest').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_vwi').prop('checked', false);
-                    $('#chk_cs_Manifest').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 3) {
-                $('#chk_cs_Is_Sender').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_Sender').prop('checked', true);
-                    $('#chk_cs_Receiver').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_Sender').prop('checked', false);
-                    $('#chk_cs_Receiver').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 4) {
-                $('#chk_cs_Is_Reels').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_Reels').prop('checked', true);
-                    $('#chk_cs_QTY').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_Reels').prop('checked', false);
-                    $('#chk_cs_QTY').prop('checked', true);
-                }
-
-            }
-
+    $('#btnGeneratefusionAuditReport').on('click', function () {
+        var check = $('#fusionClientSiteId').val().join(';')
+        if ($('#fusionClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
         }
-
-    }).fail(function () {
-        console.log("error");
-    });
-}
-
-$('#LicanseTypeFilter').on('change', function () {
-    const isChecked = $(this).is(':checked');
-
-    const filter = isChecked ? 1 : 2;
-    if (filter == 1) {
-        $('#ComplianceDate').text('Issue Date (DOI)');
-        $('#IsDateFilterEnabledHidden').val(true)
-        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
-            return new Date().toJSON().split('T')[0];
-        });
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
-    }
-    if (filter == 2) {
-        $('#IsDateFilterEnabledHidden').val(false)
-        $('#ComplianceDate').text('Expiry Date (DOE)');
-        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-            return new Date().toJSON().split('T')[0];
-        });
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
-    }
-
-});
-//for toggle areas - start
-
-
-$('#togglePassword').on('click', function () {
-    // Get the password field
-    var passwordField = $('#Guard_Pin');
-    // Get the current type of the password field
-    var passwordFieldType = passwordField.attr('type');
-    // Toggle the type attribute
-    if (passwordFieldType === 'password') {
-        passwordField.attr('type', 'text');
-        $(this).html('<i class="fa fa-eye-slash" aria-hidden="true"></i>'); // Change icon to a closed eye
-    } else {
-        passwordField.attr('type', 'password');
-        $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
-    }
-});
-
-
-
-//Start fusion report in auditlog08072024
-$('#fusionAudtitFromDate').val(start.toISOString().substr(0, 10));
-// var systemDate = $('#fusionAudtitToDate').val();
-//var dateObject = new Date().toISOString().substr(0, 10);
-$('#fusionAudtitToDate').val(systemDate);
-
-let gridsitefusionLog;
-gridsitefusionLog = $('#fusion_site_log').grid({
-    dataSource: '/Admin/AuditSiteLog?handler=DailyGuardFusionSiteLogs',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    grouping: { groupBy: 'Date' },
-    primaryKey: 'id',
-    columns: [
-        { field: 'clientSiteId', hidden: true },
-        { field: 'notificationCreatedTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTimefusion(value, record, false); } },
-        {
-            field: 'notes', title: 'Event / Notes', width: 350,
-            renderer: function (value, record) {
-                var activityType = record.activityType == undefined ? '' : record.activityType.trim();
-                if (activityType == 'IR') {
-
-                    return record.notes + '<br>' + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '" target="_blank">Click here</a>';
-                }
-                else {
-                    return record.notes;
-                }
-            }
-        },
-        { field: 'activityType', title: 'Source', width: 50 },
-        { field: 'siteName', title: 'Client Site', width: 150 },
-        { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
-    ],
-    paramNames: { page: 'pageNo' },
-    pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
-});
-
-
-//$('#fusionClientSiteId').select2({
-//    placeholder: 'Select',
-//    theme: 'bootstrap4'
-//});
-
-$('#fusionClientSiteId').on('change', function () {
-    gridsitefusionLog.clear();
-});
-
-//$('#fusionClientType').on('change', function () {
-//    gridsitefusionLog.clear();
-//    const clientTypeId = $(this).val();
-//    const clientSiteControl = $('#fusionClientSiteId');
-//    clientSiteControl.html('');
-//    $.ajax({
-//        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
-//        type: 'GET',
-//        dataType: 'json',
-//        success: function (data) {
-//            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
-//            data.map(function (site) {
-//                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
-//            });
-
-
-//        }
-//    });
-
-
-//});
-
-
-$('#fusionClientSiteId').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-
-
-
-$('#fusionClientType').on('change', function () {
-    gridsitefusionLog.clear();
-    const clientTypeId = $(this).val();
-    const clientSiteControl = $('#fusionClientSiteId');
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            data.map(function (site) {
-                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
-            });
-            clientSiteControl.multiselect('rebuild');
-        }
-    });
-});
-
-
-
-
-$('#expand_fusion_audits').on('click', function () {
-    gridsitefusionLog.expandAll();
-});
-
-$('#collapse_fusion_audits').on('click', function () {
-    gridsitefusionLog.collapseAll();
-});
-
-
-
-function renderDateTimefusion(value, record) {
-    // p6#73 timezone bug - Modified by binoy 29-01-2024
-    if (record.eventDateTime != null && record.eventDateTime != '') {
-        const date = new Date(record.eventDateTime);
-        var DateTime = luxon.DateTime;
-        var dt1 = DateTime.fromJSDate(date);
-        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
-        return dt;
-    }
-    else if (value !== '') {
-        const date = new Date(value);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        let day = date.getDate();
-
-        if (day < 10) {
-            day = '0' + day;
-        }
-
-        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
-    }
-}
-
-if (gridsitefusionLog) {
-    const bg_color_pale_yellow = '#fcf8d1';
-    const bg_color_pale_red = '#ffcccc';
-    const bg_color_white = '#ffffff';
-    const irEntryTypeIsAlarm = 2;
-
-    gridsitefusionLog.on('rowDataBound', function (e, $row, id, record) {
-        let rowColor = bg_color_white;
-        if (record.irEntryType) {
-            rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
-        }
-        $row.css('background-color', rowColor);
-    });
-}
-
-
-$('#btnGeneratefusionAuditReport').on('click', function () {
-    var check = $('#fusionClientSiteId').val().join(';')
-    if ($('#fusionClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    //if ($('#fusionClientSiteId').val() === '') {
-    //    alert('Please select a client site');
-    //    return;
-    //}
-    gridsitefusionLog.clear();
-    gridsitefusionLog.reload({
-        clientSiteIds: $('#fusionClientSiteId').val().join(';'),
-        logFromDate: $('#fusionAudtitFromDate').val(),
-        logToDate: $('#fusionAudtitToDate').val(),
-        excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked"),
-        keywordDownSelect: $('#FusionKeydownselect').val()
-    });
-});
-
-
-let logBookTypeForAuditZipfusion;
-$('#btnDownloadfusionAuditZip').on('click', function () {
-
-    logBookTypeForAuditZipfusion = 1;
-    if ($('#fusionClientSiteId').val() === '') {
-        alert('Please select a client site');
-        return;
-    }
-    $('#auditfusionlog-zip-modal').modal('show');
-});
-
-
-$('#auditfusionlog-zip-modal').on('show.bs.modal', function (event) {
-    $('#btn-auditfusionlog-zip-download').attr('href', '#');
-    $('#btn-auditfusionlog-zip-download').hide();
-    $('#auditfusionlog-zip-msg').show();
-
-    if (logBookTypeForAuditZipfusion === 1)
-        downloadDailyGuardfusionLogZipFile();
-
-});
-
-
-
-function downloadDailyGuardfusionLogZipFile() {
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=DownloadDailyFusionGuardLogZip',
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            clientSiteId: $('#fusionClientSiteId').val().join(';'),
+        //if ($('#fusionClientSiteId').val() === '') {
+        //    alert('Please select a client site');
+        //    return;
+        //}
+        gridsitefusionLog.clear();
+        gridsitefusionLog.reload({
+            clientSiteIds: $('#fusionClientSiteId').val().join(';'),
             logFromDate: $('#fusionAudtitFromDate').val(),
             logToDate: $('#fusionAudtitToDate').val(),
+            excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked"),
             keywordDownSelect: $('#FusionKeydownselect').val()
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (!response.success) {
-            $('#auditfusionlog-zip-modal').modal('hide');
-            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
-        } else {
-            $('#btn-auditfusionlog-zip-download').attr('href', response.fileName);
-            $('#btn-auditfusionlog-zip-download').show();
-            $('#auditfusionlog-zip-msg').hide();
+        });
+    });
+
+
+    let logBookTypeForAuditZipfusion;
+    $('#btnDownloadfusionAuditZip').on('click', function () {
+
+        logBookTypeForAuditZipfusion = 1;
+        if ($('#fusionClientSiteId').val() === '') {
+            alert('Please select a client site');
+            return;
         }
-    });
-}
-
-//end fusion report in auditlog08072024
-
-/* ##### Download Log Audit Start ##### */
-
-var currdate = new Date();
-$('#dwnlogAuditFromDate').val(currdate.toISOString().substring(0, 10));
-$('#dwnlogAuditToDate').val(currdate.toISOString().substring(0, 10));
-
-let tbldownloadlogaudit = $('#tbl_downloadlog_audit').DataTable({
-    dom: 'lBfrtip',
-    buttons: [
-        //{
-        //    extend: 'copy',
-        //    text: '<i class="fa fa-copy"></i>',
-        //    titleAttr: 'Copy',
-        //    className: 'btn btn-md mr-2 btn-copy'
-        //},            
-        {
-            extend: 'excel',
-            text: '<i class="fa fa-file-excel-o"></i>',
-            titleAttr: 'Excel',
-            className: 'btn btn-md mr-2 btn-excel',
-            title: 'Files download/viewed audit logs'
-        },
-        {
-            extend: 'pdf',
-            text: '<i class="fa fa-file-pdf-o"></i>',
-            titleAttr: 'PDF',
-            className: 'btn btn-md mr-2 btn-pdf',
-            /*orientation: 'landscape',*/
-            pageSize: 'A4',
-            /*messageTop: 'Files download/viewed audit logs.',*/
-            /*download: 'open',*/
-            title: 'Files download/viewed audit logs'
-        },
-        //{
-        //    extend: 'print',
-        //    text: '<i class="fa fa-print"></i>',
-        //    titleAttr: 'Print',
-        //    className: 'btn btn-md mr-2 btn-print'
-        //}
-    ],
-    lengthMenu: [[75, 100, -1], [75, 100, "All"]],
-    pageLength: 100,
-    hidden: true,
-    paging: true,
-    ordering: false,
-    order: [[groupColumn, 'asc']],
-    info: true,
-    searching: true,
-    autoWidth: false,
-    scrollX: true,
-    data: [],
-    columns: [
-        { data: 'id', title: 'Event ID', visible: false },
-        { data: 'user.userName', title: 'User', width: "10%" },
-        { data: 'guard.name', title: 'Guard Name', width: "15%" },
-        { data: 'guard.securityNo', title: 'Security Number', width: "10%" },
-        { data: 'ipAddress', title: 'IP Address', width: "10%" },
-        { data: 'dwnlCatagory', title: 'Categories', width: "15%" },
-        { data: 'dwnlFileName', title: 'File Name', width: "20%" },
-        {
-            data: 'eventDateTime', title: 'Download/View Time', width: "20%", 'render': function (value) {
-                const date = new Date(value);
-                var DateTime = luxon.DateTime;
-                var dt1 = DateTime.fromJSDate(date);
-                var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs'; // + record.eventDateTimeZoneShort;
-                return dt;
-            }
-        },
-    ],
-    drawCallback: function () {
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        //api.column(groupColumn, { page: 'current' })
-        //    .data()
-        //    .each(function (group, i) {
-        //        if (last !== group) {
-        //            $(rows)
-        //                .eq(i)
-        //                .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
-
-        //            last = group;
-        //        }
-        //    });
-    },
-});
-
-$("#btnGenerateDwnlog").on('click', function () {
-    //calculate month difference-start
-    var date1 = new Date($('#dwnlogAuditFromDate').val());
-    var date2 = new Date($('#dwnlogAuditToDate').val());
-    if (date1 > date2) {
-        alert('From date cannot be before To date.')
-        return false;
-    }
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=GenerateDownloadFilesLog',
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            logFromDate: $('#dwnlogAuditFromDate').val(),
-            logToDate: $('#dwnlogAuditToDate').val()
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        $('#loader').hide();
-        tbldownloadlogaudit.clear().rows.add(response).draw();
-    }).always(function () {
-        $('#loader').hide();
+        $('#auditfusionlog-zip-modal').modal('show');
     });
 
-});
-//code added  to download Excel start for Download Log Audit-end
 
+    $('#auditfusionlog-zip-modal').on('show.bs.modal', function (event) {
+        $('#btn-auditfusionlog-zip-download').attr('href', '#');
+        $('#btn-auditfusionlog-zip-download').hide();
+        $('#auditfusionlog-zip-msg').show();
 
-/* ##### Download Log Audit End ##### */
+        if (logBookTypeForAuditZipfusion === 1)
+            downloadDailyGuardfusionLogZipFile();
 
-$("#downloadButton").click(function () {
-    var fileName = "example.pdf";  // The file you want to download
-    var userId = "user123";        // Example user ID or other details
-    var fileName = $("#fileNametoDownload").val();
-    var guardId = $("#GuardLog_GuardLogin_GuardId").val();
-    $.ajax({
-        url: '/Download/DownloadFile',   // The Razor Page handler URL
-        type: 'POST',
-        data: {
-            fileName: fileName,
-            userId: userId
-        },
-        success: function (response) {
-            // Step 3: Dynamically create an anchor tag and trigger the download
-            var link = document.createElement('a');
-            link.href = response.downloadUrl;  // Get the download URL from the server
-            link.download = fileName;          // Set the file name
-            document.body.appendChild(link);   // Append to the body
-            link.click();                      // Simulate a click event to download the file
-            document.body.removeChild(link);   // Remove the link from the document
-        },
-        error: function (xhr, status, error) {
-            console.error('Error:', error);
-        }
-    });
-});
-
-$("#downloadLink").click(function (e) {
-    e.preventDefault(); // Prevent the default download action
-
-    // Example user details to save before download
-    var userId = "user123";
-    var fileName = $(this).attr('href').split('/').pop(); // Get the file name from the href attribute
-
-    // Step 2: Make an AJAX call to save user details
-    $.ajax({
-        url: '/Download/SaveUserDownloadDetails',   // Endpoint for saving download details
-        type: 'POST',
-        data: {
-            userId: userId,
-            fileName: fileName
-        },
-        success: function (response) {
-            // Step 3: Once the details are saved, trigger the file download
-            window.location.href = $("#downloadLink").attr("href");  // Trigger the download
-        },
-        error: function (xhr, status, error) {
-            console.error('Error:', error);
-        }
-    });
-});
-
-$('.btn-delete-dgl-attachment1').on('click', function (event) {
-    // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
-    var pageNameValue = $('#pageName').val();
-    var jsname = 'lb';
-    var tmdata = {
-        'EventDateTimeLocal': null,
-        'EventDateTimeLocalWithOffset': null,
-        'EventDateTimeZone': null,
-        'EventDateTimeZoneShort': null,
-        'EventDateTimeUtcOffsetMinute': null,
-    };
-
-    /*fillRefreshLocalTimeZoneDetails(tmdata, "", false)*/
-
-    var DateTime = luxon.DateTime;
-    var dt1 = DateTime.local();
-    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-    let diffTZ = dt1.offset
-    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ');
-    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
-    tmdata.EventDateTimeLocal = eventDateTimeLocal;
-    tmdata.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
-    tmdata.EventDateTimeZone = tz;
-    tmdata.EventDateTimeZoneShort = tzshrtnm;
-    tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
-
-    var target = event.target;
-    var filename = target.id;
-    var guardId = $("#GuardLog_GuardLogin_GuardId").val();
-    $.ajax({
-        url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            filename: filename,
-            loginGuardId: guardId,
-            tmdata: tmdata,
-            pageName: pageNameValue,
-            jsname: jsname,
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result) {
-            // Step 3: Dynamically create an anchor tag and trigger the download
-            if (result.success) {
-                var link = document.createElement('a');
-                link.href = '/StaffDocs/' + filename;  // Construct the file URL
-                link.target = "_blank";                // Open the file in a new window or tab
-                document.body.appendChild(link);       // Append to the body
-                link.click();                          // Simulate a click event to open the file
-                document.body.removeChild(link);
-            }// Remove the link from the document
-        }
     });
 
-});
 
-// WandStrike -- Start
 
-const wandStrikeGroupColumn = 0;
-let wandStrikeLogReport = $('#tbl_wandstrike_site_log').DataTable({
-    lengthMenu: [[75, 100, -1], [75, 100, "All"]],
-    pageLength: 100,
-    paging: true,
-    ordering: true,
-    order: [[1, 'asc']],
-    info: false,
-    searching: true,
-    scrollX: true,
-    data: [],
-    columns: [
-        { data: 'groupText', visible: false, orderable: false },
-        {
-            data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
-            render: {
-                display: function (value) {
-                    return convertDateTimeString(value); // For display in table
-                },
-                sort: function (value) {
-                    return new Date(value).getTime(); // Use actual date object for sorting
-                }
+    function downloadDailyGuardfusionLogZipFile() {
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=DownloadDailyFusionGuardLogZip',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                clientSiteId: $('#fusionClientSiteId').val().join(';'),
+                logFromDate: $('#fusionAudtitFromDate').val(),
+                logToDate: $('#fusionAudtitToDate').val(),
+                keywordDownSelect: $('#FusionKeydownselect').val()
             },
-            width: "5%",
-            orderable: true
-        },
-        { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
-        { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },
-        { data: 'smartWandType', width: "5%", orderable: false },
-        { data: 'endUser', width: "15%", orderable: true },
-        { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "15%", orderable: false },
-        { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "40%", orderable: false },
-    ],
-    drawCallback: function () {
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        api.column(wandStrikeGroupColumn, { page: 'current' })
-            .data()
-            .each(function (group, i) {
-                if (last !== group) {
-                    $(rows)
-                        .eq(i)
-                        .before('<tr class="group bg-light text-dark"><td colspan="8">' + group + '</td></tr>');
-
-                    last = group;
-                }
-            });
-    },
-});
-
-
-let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
-    paging: false,
-    ordering: false,
-    order: [[1, 'asc']],
-    info: false,
-    searching: true,
-    scrollX: true,
-    data: [],
-    columns: [
-        { data: 'groupText', visible: false },
-        {
-            data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
-            render: {
-                display: function (value) {
-                    return convertDateTimeString(value); // For display in table
-                },
-                sort: function (value) {
-                    return new Date(value).getTime(); // Use actual date object for sorting
-                }
-            },
-            width: "5%",
-            orderable: true
-        },
-        { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
-        { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
-        { data: 'smartWandType', width: "5%" },
-        { data: 'endUser', width: "15%" },
-        { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%" },
-        { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%" },
-    ],
-    drawCallback: function () {
-        var api = this.api();
-        var rows = api.rows({ page: 'current' }).nodes();
-        var last = null;
-
-        api.column(wandStrikeGroupColumn, { page: 'current' })
-            .data()
-            .each(function (group, i) {
-                if (last !== group) {
-                    $(rows)
-                        .eq(i)
-                        .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
-
-                    last = group;
-                }
-            });
-    },
-});
-
-
-$('.wandstrikemultiselect').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true
-});
-
-//const todayDate = new Date();
-//const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
-$('#wandstrikeAudtitFromDate').val(startDate.toISOString().substr(0, 10));
-$('#wandstrikeAudtitToDate').val(systemDate);
-
-$('#wandstrikeClientType').on('change', function () {
-
-    const clientType = $(this).val().join(';');
-    const clientSiteControl = $('#wandstrikeClientSiteId');
-    wandStrikeLogReport.clear().draw();
-
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            data.map(function (site) {
-                clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
-            });
-            clientSiteControl.multiselect('rebuild');
-        }
-    });
-});
-
-$('#wandstrikeClientSiteId').on('change', function () {
-    if ($('#wandstrikeClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-
-    const clientSiteWandStrikeTagId = $('#wandstrikeTagId');
-    const clientSiteWandStrikeTagTypeId = $('#wandstrikeTagTypeId');
-    const clientSiteWandStrikeTagLabel = $('#wandstrikeTagLabel');
-    const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
-
-
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=ClientSiteWandAndTags&clientSiteIds=' + $(this).val().join(';'),
-        type: 'GET',
-        datatype: 'json',
-    }).done(function (data) {
-        clientSiteWandStrikeTagId.html('');
-        clientSiteWandStrikeTagTypeId.html('');
-        clientSiteWandStrikeTagLabel.html('');
-        clientSiteWandStrikeSmartWandId.html('');
-        data.tagIds.map(function (result) {
-            clientSiteWandStrikeTagId.append($('<option></option>').val(result.value).text(result.text));
-        });
-        data.tagTypeIds.map(function (result) {
-            clientSiteWandStrikeTagTypeId.append($('<option></option>').val(result.value).text(result.text));
-        });
-        data.tagLabels.map(function (result) {
-            clientSiteWandStrikeTagLabel.append($('<option></option>').val(result.value).text(result.text));
-        });
-        data.smartWandIds.map(function (result) {
-            clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
-        });
-        clientSiteWandStrikeTagId.multiselect('rebuild');
-        clientSiteWandStrikeTagTypeId.multiselect('rebuild');
-        clientSiteWandStrikeTagLabel.multiselect('rebuild');
-        clientSiteWandStrikeSmartWandId.multiselect('rebuild');
-    });
-});
-
-$('#btnGenerateWandstrikeAuditReport').on('click', function () {
-    if ($('#wandstrikeClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-
-    //calculate month difference-start
-    var date1 = new Date($('#wandstrikeAudtitFromDate').val());
-    var date2 = new Date($('#wandstrikeAudtitToDate').val());
-    var monthdiff = monthDiff(date1, date2);
-    if (monthdiff > 6) {
-        alert('Date Range is greater than 6 months');
-        return false;
-    }
-
-    $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
-    $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
-    $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
-
-    $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
-    $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
-    //$('#WandStrikeAuditLogRequest_TagLabel').val(encodeURIComponent($('#wandstrikeTagLabel').val()));
-    $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
-
-    $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
-
-    $('#loader').show();
-
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
-        type: 'POST',
-        dataType: 'json',
-        data: $('#form_wandstrike_auditlog_request').serialize(),
-        /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
-    })
-        .done(function (response) {
-            wandStrikeLogReport.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
-        })
-        .fail(function (xhr, status, error) {
-            console.error('AJAX error:', status, error);
-        })
-        .always(function () {
-            $('#loader').hide();
-        });
-});
-
-$('#btnDownloadWandstrikeAuditExcel').on('click', function () {
-    if ($('#wandstrikeClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-
-    //calculate month difference-start
-    var date1 = new Date($('#wandstrikeAudtitFromDate').val());
-    var date2 = new Date($('#wandstrikeAudtitToDate').val());
-    var monthdiff = monthDiff(date1, date2);
-    if (monthdiff > 6) {
-        alert('Date Range is greater than 6 months');
-        return false;
-    }
-
-    $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
-    $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
-    $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
-
-    $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
-    $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
-    $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
-
-    $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
-
-    $('#loader').show();
-
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
-        type: 'POST',
-        dataType: 'json',
-        data: $('#form_wandstrike_auditlog_request').serialize(),
-        /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
-    })
-        .done(function (response) {
-            wandStrikeLogExcel.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
-            var searchtext = wandStrikeLogReport.search();
-            wandStrikeLogExcel.search(searchtext).draw();
-
-            // Get raw data directly from DataTable
-            var exportData = wandStrikeLogExcel.rows({ search: 'applied' }).data().toArray();
-
-            // Optional: Flatten or clean up data if needed
-            var cleanedData = exportData.map(x => ({
-                "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
-                "SmartWand / Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
-                "SmartWand / Tag Type": x.smartWandType ?? '',
-                "End User": x.endUser ?? '',
-                "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
-                "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
-            }));
-
-            // Convert to worksheet
-            var worksheet = XLSX.utils.json_to_sheet(cleanedData);
-            // Create workbook
-            var workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "WandStrikeLogs");
-
-            // Generate and download Excel file
-            var name = 'Wand Strike Data Logs - ' + $('#wandstrikeAudtitFromDate').val() + ' to ' + $('#wandstrikeAudtitToDate').val() + '.xlsx';
-            XLSX.writeFile(workbook, name);
-
-        })
-        .fail(function (xhr, status, error) {
-            console.error('AJAX error:', status, error);
-        })
-        .always(function () {
-            $('#loader').hide();
-        });
-});
-
-
-$('#btnDownloadWandstrikeAuditZip').on('click', function () {
-    if ($('#wandstrikeClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    $('#wandstrikeauditlog-zip-modal').modal('show');
-});
-
-
-$('#wandstrikeauditlog-zip-modal').on('show.bs.modal', function (event) {
-    $('#btn-wandstrikeauditlog-zip-download').attr('href', '#');
-    $('#btn-wandstrikeauditlog-zip-download').hide();
-    $('#wandstrikeauditlog-zip-msg').show();
-    downloadWandStrikeLogZipFile();
-});
-
-function downloadWandStrikeLogZipFile() {
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=DownloadWandStrikeLogZip',
-        type: 'POST',
-        dataType: 'json',
-        //data: {
-        //    clientSiteId: $('#fusionClientSiteId').val().join(';'),
-        //    logFromDate: $('#fusionAudtitFromDate').val(),
-        //    logToDate: $('#fusionAudtitToDate').val(),
-        //    keywordDownSelect: $('#FusionKeydownselect').val()
-        //},
-        data: $('#form_wandstrike_auditlog_request').serialize(),
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    })
-        .done(function (response) {
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
             if (!response.success) {
-                $('#wandstrikeauditlog-zip-modal').modal('hide');
+                $('#auditfusionlog-zip-modal').modal('hide');
                 new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
             } else {
-                $('#btn-wandstrikeauditlog-zip-download').attr('href', response.fileName);
-                $('#btn-wandstrikeauditlog-zip-download').show();
-                $('#wandstrikeauditlog-zip-msg').hide();
+                $('#btn-auditfusionlog-zip-download').attr('href', response.fileName);
+                $('#btn-auditfusionlog-zip-download').show();
+                $('#auditfusionlog-zip-msg').hide();
             }
-        })
-        .fail(function (xhr, status, error) {
-            console.error('AJAX error:', status, error);
-            $('#wandstrikeauditlog-zip-modal').modal('hide');
-            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
-        })
-        .always(function () {
-            //$('#loader').hide();
-        });;
-}
-
-function convertWandStrikeDateTimeString(value) {
-    if (value === null || value === undefined) {
-        return '';
+        });
     }
-    else {
-        const date = new Date(value);
+
+    //end fusion report in auditlog08072024
+
+    /* ##### Download Log Audit Start ##### */
+
+    var currdate = new Date();
+    $('#dwnlogAuditFromDate').val(currdate.toISOString().substring(0, 10));
+    $('#dwnlogAuditToDate').val(currdate.toISOString().substring(0, 10));
+
+    let tbldownloadlogaudit = $('#tbl_downloadlog_audit').DataTable({
+        dom: 'lBfrtip',
+        buttons: [
+            //{
+            //    extend: 'copy',
+            //    text: '<i class="fa fa-copy"></i>',
+            //    titleAttr: 'Copy',
+            //    className: 'btn btn-md mr-2 btn-copy'
+            //},            
+            {
+                extend: 'excel',
+                text: '<i class="fa fa-file-excel-o"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-md mr-2 btn-excel',
+                title: 'Files download/viewed audit logs'
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fa fa-file-pdf-o"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-md mr-2 btn-pdf',
+                /*orientation: 'landscape',*/
+                pageSize: 'A4',
+                /*messageTop: 'Files download/viewed audit logs.',*/
+                /*download: 'open',*/
+                title: 'Files download/viewed audit logs'
+            },
+            //{
+            //    extend: 'print',
+            //    text: '<i class="fa fa-print"></i>',
+            //    titleAttr: 'Print',
+            //    className: 'btn btn-md mr-2 btn-print'
+            //}
+        ],
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        hidden: true,
+        paging: true,
+        ordering: false,
+        order: [[groupColumn, 'asc']],
+        info: true,
+        searching: true,
+        autoWidth: false,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'id', title: 'Event ID', visible: false },
+            { data: 'user.userName', title: 'User', width: "10%" },
+            { data: 'guard.name', title: 'Guard Name', width: "15%" },
+            { data: 'guard.securityNo', title: 'Security Number', width: "10%" },
+            { data: 'ipAddress', title: 'IP Address', width: "10%" },
+            { data: 'dwnlCatagory', title: 'Categories', width: "15%" },
+            { data: 'dwnlFileName', title: 'File Name', width: "20%" },
+            {
+                data: 'eventDateTime', title: 'Download/View Time', width: "20%", 'render': function (value) {
+                    const date = new Date(value);
+                    var DateTime = luxon.DateTime;
+                    var dt1 = DateTime.fromJSDate(date);
+                    var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs'; // + record.eventDateTimeZoneShort;
+                    return dt;
+                }
+            },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            //api.column(groupColumn, { page: 'current' })
+            //    .data()
+            //    .each(function (group, i) {
+            //        if (last !== group) {
+            //            $(rows)
+            //                .eq(i)
+            //                .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+            //            last = group;
+            //        }
+            //    });
+        },
+    });
+
+    $("#btnGenerateDwnlog").on('click', function () {
+        //calculate month difference-start
+        var date1 = new Date($('#dwnlogAuditFromDate').val());
+        var date2 = new Date($('#dwnlogAuditToDate').val());
+        if (date1 > date2) {
+            alert('From date cannot be before To date.')
+            return false;
+        }
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=GenerateDownloadFilesLog',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                logFromDate: $('#dwnlogAuditFromDate').val(),
+                logToDate: $('#dwnlogAuditToDate').val()
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader').hide();
+            tbldownloadlogaudit.clear().rows.add(response).draw();
+        }).always(function () {
+            $('#loader').hide();
+        });
+
+    });
+    //code added  to download Excel start for Download Log Audit-end
+
+
+    /* ##### Download Log Audit End ##### */
+
+    $("#downloadButton").click(function () {
+        var fileName = "example.pdf";  // The file you want to download
+        var userId = "user123";        // Example user ID or other details
+        var fileName = $("#fileNametoDownload").val();
+        var guardId = $("#GuardLog_GuardLogin_GuardId").val();
+        $.ajax({
+            url: '/Download/DownloadFile',   // The Razor Page handler URL
+            type: 'POST',
+            data: {
+                fileName: fileName,
+                userId: userId
+            },
+            success: function (response) {
+                // Step 3: Dynamically create an anchor tag and trigger the download
+                var link = document.createElement('a');
+                link.href = response.downloadUrl;  // Get the download URL from the server
+                link.download = fileName;          // Set the file name
+                document.body.appendChild(link);   // Append to the body
+                link.click();                      // Simulate a click event to download the file
+                document.body.removeChild(link);   // Remove the link from the document
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    $("#downloadLink").click(function (e) {
+        e.preventDefault(); // Prevent the default download action
+
+        // Example user details to save before download
+        var userId = "user123";
+        var fileName = $(this).attr('href').split('/').pop(); // Get the file name from the href attribute
+
+        // Step 2: Make an AJAX call to save user details
+        $.ajax({
+            url: '/Download/SaveUserDownloadDetails',   // Endpoint for saving download details
+            type: 'POST',
+            data: {
+                userId: userId,
+                fileName: fileName
+            },
+            success: function (response) {
+                // Step 3: Once the details are saved, trigger the file download
+                window.location.href = $("#downloadLink").attr("href");  // Trigger the download
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    $('.btn-delete-dgl-attachment1').on('click', function (event) {
+        // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
+        var pageNameValue = $('#pageName').val();
+        var jsname = 'lb';
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+
+        /*fillRefreshLocalTimeZoneDetails(tmdata, "", false)*/
+
         var DateTime = luxon.DateTime;
-        var dt1 = DateTime.fromJSDate(date);
-        var dt = dt1.toFormat('dd LLL yyyy HH:mm');
-        return dt;
-    }
-}
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ');
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        tmdata.EventDateTimeLocal = eventDateTimeLocal;
+        tmdata.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        tmdata.EventDateTimeZone = tz;
+        tmdata.EventDateTimeZoneShort = tzshrtnm;
+        tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
 
-// WandStrike -- End
-//p9-Issue 1-start
-$('#Rooster_ClientType').on('change', function () {
-    populateClientSitesForRooster();
-});
-function populateClientSitesForRooster(selectedSiteName) {
-
-
-
-    const option = $('#Rooster_ClientType').val();
-    if (option == '')
-        return false;
-    $.ajax({
-        url: '/Incident/Register?handler=ClientSitesNew&type=' + encodeURIComponent(option),
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-
-            $('#Rooster_ClientSiteID').val(data);
-        }
-    });
-
-
-    const clientSiteControl = $('#Rooster_ClientSite');
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            clientSiteControl.html('');
-            clientSiteControl.append('<option value="">Select</option>')
-            data.map(function (site) {
-                clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
-            });
-
-            if (selectedSiteName) {
-                $('#Rooster_ClientSite').val(selectedSiteName);
-            } else {
-                $('#Rooster_ClientSite').val('');
+        var target = event.target;
+        var filename = target.id;
+        var guardId = $("#GuardLog_GuardLogin_GuardId").val();
+        $.ajax({
+            url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                filename: filename,
+                loginGuardId: guardId,
+                tmdata: tmdata,
+                pageName: pageNameValue,
+                jsname: jsname,
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result) {
+                // Step 3: Dynamically create an anchor tag and trigger the download
+                if (result.success) {
+                    var link = document.createElement('a');
+                    link.href = '/StaffDocs/' + filename;  // Construct the file URL
+                    link.target = "_blank";                // Open the file in a new window or tab
+                    document.body.appendChild(link);       // Append to the body
+                    link.click();                          // Simulate a click event to open the file
+                    document.body.removeChild(link);
+                }// Remove the link from the document
             }
-        }
+        });
+
     });
-}
+
+    // WandStrike -- Start
+
+    const wandStrikeGroupColumn = 0;
+    let wandStrikeLogReport = $('#tbl_wandstrike_site_log').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        paging: true,
+        ordering: true,
+        order: [[1, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false, orderable: false },
+            {
+                data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
+                render: {
+                    display: function (value) {
+                        return convertDateTimeString(value); // For display in table
+                    },
+                    sort: function (value) {
+                        return new Date(value).getTime(); // Use actual date object for sorting
+                    }
+                },
+                width: "5%",
+                orderable: true
+            },
+            { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },
+            { data: 'smartWandType', width: "5%", orderable: false },
+            { data: 'endUser', width: "15%", orderable: true },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "15%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "40%", orderable: false },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(wandStrikeGroupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="8">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+
+    let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[1, 'asc']],
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            {
+                data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
+                render: {
+                    display: function (value) {
+                        return convertDateTimeString(value); // For display in table
+                    },
+                    sort: function (value) {
+                        return new Date(value).getTime(); // Use actual date object for sorting
+                    }
+                },
+                width: "5%",
+                orderable: true
+            },
+            { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%" },
+            { data: 'smartWandType', width: "5%" },
+            { data: 'endUser', width: "15%" },
+            { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "20%" },
+            { data: 'clientSiteSmartWandTagsHitLog.labelDescription', width: "45%" },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(wandStrikeGroupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+
+    $('.wandstrikemultiselect').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true
+    });
+
+    //const todayDate = new Date();
+    //const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
+    $('#wandstrikeAudtitFromDate').val(startDate.toISOString().substr(0, 10));
+    $('#wandstrikeAudtitToDate').val(systemDate);
+
+    $('#wandstrikeClientType').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#wandstrikeClientSiteId');
+        wandStrikeLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientType),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    });
+
+    $('#wandstrikeClientSiteId').on('change', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        const clientSiteWandStrikeTagId = $('#wandstrikeTagId');
+        const clientSiteWandStrikeTagTypeId = $('#wandstrikeTagTypeId');
+        const clientSiteWandStrikeTagLabel = $('#wandstrikeTagLabel');
+        const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
+
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSiteWandAndTags&clientSiteIds=' + $(this).val().join(';'),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSiteWandStrikeTagId.html('');
+            clientSiteWandStrikeTagTypeId.html('');
+            clientSiteWandStrikeTagLabel.html('');
+            clientSiteWandStrikeSmartWandId.html('');
+            data.tagIds.map(function (result) {
+                clientSiteWandStrikeTagId.append($('<option></option>').val(result.value).text(result.text));
+            });
+            data.tagTypeIds.map(function (result) {
+                clientSiteWandStrikeTagTypeId.append($('<option></option>').val(result.value).text(result.text));
+            });
+            data.tagLabels.map(function (result) {
+                clientSiteWandStrikeTagLabel.append($('<option></option>').val(result.value).text(result.text));
+            });
+            data.smartWandIds.map(function (result) {
+                clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
+            });
+            clientSiteWandStrikeTagId.multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+        });
+    });
+
+    $('#btnGenerateWandstrikeAuditReport').on('click', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        //calculate month difference-start
+        var date1 = new Date($('#wandstrikeAudtitFromDate').val());
+        var date2 = new Date($('#wandstrikeAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+
+        $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
+        $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
+        $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
+
+        $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
+        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        //$('#WandStrikeAuditLogRequest_TagLabel').val(encodeURIComponent($('#wandstrikeTagLabel').val()));
+        $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
+
+        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+
+        $('#loader').show();
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
+        })
+            .done(function (response) {
+                wandStrikeLogReport.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    $('#btnDownloadWandstrikeAuditExcel').on('click', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+
+        //calculate month difference-start
+        var date1 = new Date($('#wandstrikeAudtitFromDate').val());
+        var date2 = new Date($('#wandstrikeAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+
+        $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
+        $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
+        $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
+
+        $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
+        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
+
+        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+
+        $('#loader').show();
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=WandStrikeAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
+        })
+            .done(function (response) {
+                wandStrikeLogExcel.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
+                var searchtext = wandStrikeLogReport.search();
+                wandStrikeLogExcel.search(searchtext).draw();
+
+                // Get raw data directly from DataTable
+                var exportData = wandStrikeLogExcel.rows({ search: 'applied' }).data().toArray();
+
+                // Optional: Flatten or clean up data if needed
+                var cleanedData = exportData.map(x => ({
+                    "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
+                    "SmartWand / Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
+                    "SmartWand / Tag Type": x.smartWandType ?? '',
+                    "End User": x.endUser ?? '',
+                    "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
+                    "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+                }));
+
+                // Convert to worksheet
+                var worksheet = XLSX.utils.json_to_sheet(cleanedData);
+                // Create workbook
+                var workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "WandStrikeLogs");
+
+                // Generate and download Excel file
+                var name = 'Wand Strike Data Logs - ' + $('#wandstrikeAudtitFromDate').val() + ' to ' + $('#wandstrikeAudtitToDate').val() + '.xlsx';
+                XLSX.writeFile(workbook, name);
+
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+
+    $('#btnDownloadWandstrikeAuditZip').on('click', function () {
+        if ($('#wandstrikeClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        $('#wandstrikeauditlog-zip-modal').modal('show');
+    });
+
+
+    $('#wandstrikeauditlog-zip-modal').on('show.bs.modal', function (event) {
+        $('#btn-wandstrikeauditlog-zip-download').attr('href', '#');
+        $('#btn-wandstrikeauditlog-zip-download').hide();
+        $('#wandstrikeauditlog-zip-msg').show();
+        downloadWandStrikeLogZipFile();
+    });
+
+    function downloadWandStrikeLogZipFile() {
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=DownloadWandStrikeLogZip',
+            type: 'POST',
+            dataType: 'json',
+            //data: {
+            //    clientSiteId: $('#fusionClientSiteId').val().join(';'),
+            //    logFromDate: $('#fusionAudtitFromDate').val(),
+            //    logToDate: $('#fusionAudtitToDate').val(),
+            //    keywordDownSelect: $('#FusionKeydownselect').val()
+            //},
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        })
+            .done(function (response) {
+                if (!response.success) {
+                    $('#wandstrikeauditlog-zip-modal').modal('hide');
+                    new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+                } else {
+                    $('#btn-wandstrikeauditlog-zip-download').attr('href', response.fileName);
+                    $('#btn-wandstrikeauditlog-zip-download').show();
+                    $('#wandstrikeauditlog-zip-msg').hide();
+                }
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                $('#wandstrikeauditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            })
+            .always(function () {
+                //$('#loader').hide();
+            });;
+    }
+
+    function convertWandStrikeDateTimeString(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        else {
+            const date = new Date(value);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('dd LLL yyyy HH:mm');
+            return dt;
+        }
+    }
+
+    // WandStrike -- End
+    //p9-Issue 1-start
+    $('#Rooster_ClientType').on('change', function () {
+        populateClientSitesForRooster();
+    });
+    function populateClientSitesForRooster(selectedSiteName) {
+
+
+
+        const option = $('#Rooster_ClientType').val();
+        if (option == '')
+            return false;
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSitesNew&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+
+                $('#Rooster_ClientSiteID').val(data);
+            }
+        });
+
+
+        const clientSiteControl = $('#Rooster_ClientSite');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                clientSiteControl.html('');
+                clientSiteControl.append('<option value="">Select</option>')
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+
+                if (selectedSiteName) {
+                    $('#Rooster_ClientSite').val(selectedSiteName);
+                } else {
+                    $('#Rooster_ClientSite').val('');
+                }
+            }
+        });
+    }
     //p9-Issue 1-end
 });
 //Gurad License and Compliance Form start
