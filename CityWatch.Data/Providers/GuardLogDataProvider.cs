@@ -561,7 +561,7 @@ namespace CityWatch.Data.Providers
 
         public bool HasNewLogs(int logBookId, int lastLogId)
         {
-             return _context.GuardLog.Any(x => x.ClientSiteLogBookId == logBookId && x.Id > lastLogId);
+             return _context.GuardLogs.Any(x => x.ClientSiteLogBookId == logBookId && x.Id > lastLogId);
         }
 
 
