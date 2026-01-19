@@ -1957,17 +1957,33 @@ $(function () {
                 audioplayedlist = [];
                 if (records && records.length > 0) {
                     records.forEach(function (record) {
+                        // Check both camelCase and PascalCase for safety
+                        var shouldPlay = record.playNotificationSound === true || record.PlayNotificationSound === true;
+
                         if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
-                            && (record.playNotificationSound == true)) {
+                            && shouldPlay) {
                             audioplayedlist.push(record.id);
                         }
                     });
                 }
 
                 if (audioplayedlist.length > 0) {
+                    console.log("Attempting to play audio for records:", audioplayedlist);
                     // Play notification sound
-                    audio.play().catch(function (error) { console.log("Audio play failed: " + error); });
-                    UpdatePlayedNotification();
+                    var playPromise = audio.play();
+
+                    if (playPromise !== undefined) {
+                        playPromise.then(function () {
+                            console.log("Audio played successfully.");
+                            UpdatePlayedNotification();
+                        }).catch(function (error) {
+                            console.error("Audio play failed (Autoplay Policy?): " + error);
+                            // Optionally show a UI toast here to ask user to interact
+                        });
+                    } else {
+                        // Older browsers
+                        UpdatePlayedNotification();
+                    }
                 }
             }
         });
