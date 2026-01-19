@@ -2,21 +2,75 @@
 const duration = 60 * 3;
 var isPaused = false;
 window.onload = function () {
-     updateLanguagesDropdown();
-   
+    updateLanguagesDropdown();
+
     if (document.querySelector('#clockRefresh')) {
         startClock();
-       
+
     }
     if ($('#GuardLog_GuardLogin_GuardId').val() != null || $('#GuardLog_GuardLogin_GuardId').val() != '') {
         ExpiredDocuments();
-        
+
     }
-    
+    CheckUnreadMessages();
 };
+
+function CheckUnreadMessages() {
+    $.get('/Radio/RadioCheckNew?handler=CheckUnreadMessages', function (data) {
+        if (data && data.length > 0) {
+            data.forEach(function (msg) {
+                playNotificationSound();
+                showNotificationSlider(msg.notes, true, msg.id);
+            });
+        }
+    });
+}
+//Audio Playback
+function playNotificationSound() {
+    var audio = document.getElementById("audioPlayback");
+    if (audio) {
+        audio.src = '/NotificationSound/mixkit-bell-notification-933.wav';
+        audio.play().catch(function (error) {
+            console.log("Autoplay prevented or audio error:", error);
+        });
+    }
+}
+
+//Visual Slider
+function showNotificationSlider(message, isFromGuard, id) {
+    var container = $('#notification-slider-container');
+    if (container.length === 0) {
+        $('body').append('<div id="notification-slider-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px;"></div>');
+        container = $('#notification-slider-container');
+    }
+
+    var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 300px; display: none;">' +
+        '<div style="display: flex; justify-content: space-between; align-items: start;">' +
+        '<span><i class="fa fa-bell"></i> <strong>New Message from Guard</strong></span>' +
+        '<button type="button" class="close text-white" aria-label="Close" style="opacity: 1;">' +
+        '<span aria-hidden="true">&times;</span>' +
+        '</button>' +
+        '</div>' +
+        '<div style="margin-top: 10px; word-break: break-word;">' + message + '</div>' +
+        '</div>');
+
+    container.append(slider);
+    slider.slideDown();
+
+    slider.find('.close').on('click', function () {
+        slider.slideUp(function () {
+            $(this).remove();
+            // Ack message on close
+            if (id) {
+                $.post('/Radio/RadioCheckNew?handler=AckMessage', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() });
+            }
+        });
+    });
+}
+
 function updateLanguagesDropdown() {
     var GuardID = $('#Guard_Id1').val();
-   
+
 
     if (!GuardID) {
         console.error("GuardID is missing or invalid.");
@@ -32,8 +86,8 @@ function updateLanguagesDropdown() {
             var selectedLanguages = response.data.map(function (item) {
                 return item.languageID.toString();
             });
-            
-            
+
+
             selectedLanguages.forEach(function (value) {
 
                 $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
@@ -41,7 +95,7 @@ function updateLanguagesDropdown() {
             $("#LoteDrp").multiselect();
             $("#LoteDrp").val(selectedLanguages);
             $("#LoteDrp").multiselect("refresh");
-            
+
         },
         error: function (xhr, status, error) {
             console.error("Error occurred during AJAX request:", status, error);
@@ -1643,7 +1697,7 @@ $('#btnHRDetails').on('click', function () {
         type: 'POST',
         data: {
             guardId: $('#GuardLog_GuardLogin_GuardId').val()
-           
+
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -1659,7 +1713,7 @@ $('#btnHRDetails').on('click', function () {
         }
     }).fail(function () {
     }).always(function () {
-        
+
     });
 
 
@@ -1741,7 +1795,7 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
             console.log("First AJAX request completed.");
         });
     } else {
-        displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN','Invalid PIN. It must be between 4 and 6 characters.');
+        displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', 'Invalid PIN. It must be between 4 and 6 characters.');
     }
 });
 
@@ -1804,7 +1858,7 @@ $('#btnGuardHrUpdate').on('click', function () {
 
                     //    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
                     //});
-                  
+
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
                     gridGuardTrainingAndAssessment.ajax.reload();
@@ -1848,12 +1902,12 @@ function displayGuardValidationSummaryNew(divId, message, isSuccess) {
     // Apply success or error styling
     if (isSuccess) {
         $summaryDiv.css({
-            'color': 'green',            
+            'color': 'green',
             'font-size': '12px' // Set font size
         });
     } else {
         $summaryDiv.css({
-            'color': 'red',           
+            'color': 'red',
             'font-size': '12px' // Set font size
         });
     }
@@ -1868,8 +1922,8 @@ $('#forgotpassword').click(function (e) {
     $('#spinner').removeClass('d-none').addClass('d-inline-block'); // Show spinner
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
-    
-   
+
+
     // AJAX request example
     $.ajax({
         url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
@@ -1877,7 +1931,7 @@ $('#forgotpassword').click(function (e) {
         data: {
             guardId: $('#GuardLog_GuardLogin_GuardId').val(),
             siteName: $('#hidden_guardKey').val()
-            
+
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -2306,7 +2360,7 @@ function resetGuardLicenseandComplianceAddModal() {
     $('#guardComplianceandlicense_fileName1').text('None');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#GuardComplianceandlicense_CurrentDateTime').val('');
-    clearGuardValidationSummary('compliancelicanseValidationSummary');    
+    clearGuardValidationSummary('compliancelicanseValidationSummary');
 }
 $('#upload_complianceandlicanse_file').on('change', function () {
     const file = $(this).get(0).files; //.item(0); 
@@ -2336,8 +2390,7 @@ FileuploadFileChanged = function (allfile) {
     if (Desc == '') {
         (confirm('Please select Description and Expiry/Issue Date'))
     }
-    if (expiryDate == '')
-    {
+    if (expiryDate == '') {
         (confirm('Please select the Expiry Date or Issue Date first, and then attach the document'))
     }
     else {
@@ -2413,37 +2466,37 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
             return '-';
         }
     },
-        {
-            targets: 4,
-            data: 'status',
-            render: function (data, type, row, meta) {
-                var currentDate = new Date();
-                var ExpiryDate = new Date(row.expiryDate);
-                var timeDifference = ExpiryDate - currentDate;
-                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                var statusColor = 'green';
+    {
+        targets: 4,
+        data: 'status',
+        render: function (data, type, row, meta) {
+            var currentDate = new Date();
+            var ExpiryDate = new Date(row.expiryDate);
+            var timeDifference = ExpiryDate - currentDate;
+            var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            var statusColor = 'green';
 
 
-                if (row.dateType == true) {
-                    statusColor = 'green';
-                }
-                else if (row.expiryDate != null) {
-                    if (daysDifference <= 45) {
-                        statusColor = 'yellow';
-                    }
-
-                    if (ExpiryDate < currentDate && row.dateType != true) {
-                        statusColor = 'red';
-                    }
+            if (row.dateType == true) {
+                statusColor = 'green';
+            }
+            else if (row.expiryDate != null) {
+                if (daysDifference <= 45) {
+                    statusColor = 'yellow';
                 }
 
-
-                return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+                if (ExpiryDate < currentDate && row.dateType != true) {
+                    statusColor = 'red';
+                }
             }
 
 
-
+            return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
         }
+
+
+
+    }
     ],
     'createdRow': function (row, data, index) {
         if (data.expiryDate !== null) {
@@ -2646,18 +2699,18 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
             });
         }
     }
-        
-    
-   
-
-    
-    
 
 
 
 
 
-   
+
+
+
+
+
+
+
 });
 
 $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
@@ -2707,12 +2760,12 @@ $('#LoteDrp').multiselect({
     includeSelectAllOption: true,
 });
 $('#btnAddpersonalDetails').on('click', function () {
-    
+
     $('#addpersonalModal').modal('show');
 });
 $('#btn_save_Personal').on('click', function () {
     clearGuardValidationSummary('glValidationSummary');
-    
+
     $.ajax({
         url: '/Admin/GuardSettings?handler=PersonalDetails',
         data: $('#frm_add_personal').serialize(),
@@ -2722,7 +2775,7 @@ $('#btn_save_Personal').on('click', function () {
         if (result.status) {
             if (result.status) {
                 alert("Saved Successfully");
-               
+
             } else {
                 //Failed
                 $.notify(result.message,
@@ -2735,7 +2788,7 @@ $('#btn_save_Personal').on('click', function () {
                         delay: 0
                     }
                 );
-                
+
             }
         } else {
             displayGuardValidationSummary('glValidationSummary', result.message);

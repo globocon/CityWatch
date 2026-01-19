@@ -2749,6 +2749,43 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(data);
         }
 
+        public JsonResult OnGetFQValues()
+        {
+            var fqValues = _guardLogDataProvider.GetDailyWandFqValues();
+            return new JsonResult(fqValues);
+        }
+
+        public JsonResult OnGetCheckUnreadMessages()
+        {
+            try
+            {
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Count != 0)
+                {
+                    // p6#73 timezone bug - Added by binoy 24-01-2024 -- Start
+                    var logbookdate = DateTime.Today;
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); 
+                   
+                    if (logBookId > 0)
+                    {
+                        var unreadLogs = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound(logBookId); 
+                        // Note: GetGuardLogsNotAcknowledgedForNotificationSound checks for PlayNotificationSound == true
+                        return new JsonResult(unreadLogs);
+                    }
+                }
+                return new JsonResult(new List<GuardLog>());
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new List<GuardLog>());
+            }
+        }
+
+        public JsonResult OnPostAckMessage(int id)
+        {
+            return new JsonResult(_guardLogDataProvider.GuardLogsUpdateNotificationSoundStatus(id));
+        }
 
 
         public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata, string pageName, int loginUserId)
