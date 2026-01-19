@@ -1822,12 +1822,12 @@ $(function () {
     /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
-    // Auto-refresh grid every 20 seconds (replaces full page 3-min reload)
+    // Auto-refresh grid every 5 seconds (replaces full page 3-min reload)
     setInterval(function () {
         if (!isPaused && gridGuardLog) {
             gridGuardLog.reload();
         }
-    }, 20000);
+    }, 5000);
 
     if (gridGuardLog) {
 
