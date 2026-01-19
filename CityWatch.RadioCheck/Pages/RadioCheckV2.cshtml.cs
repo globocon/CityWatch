@@ -1850,7 +1850,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1887,7 +1888,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1955,7 +1957,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1990,7 +1993,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -2750,6 +2754,56 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
 
 
+
+        public JsonResult OnGetGuardRCLoginDetails()
+        {
+
+            var data = _guardLogDataProvider.GetGuardRCLoginDetails();
+            //var result = hrGroups.Select(group => new
+            //{
+            //    GroupId = group.Value,
+            //    Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+            //        .Select(course => new
+            //        {
+            //            course.Id,
+            //            course.Description
+            //            //,
+            //            //course.CourseStatus
+            //        }).ToList()
+            //}).Where(group => group.Courses.Any()).ToList();
+
+            return new JsonResult(data);
+        }
+
+
+
+        public JsonResult OnPostSaveGuardLog(GuardLog guardLog)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.SaveGuardLog(guardLog);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
+        public JsonResult OnGetCheckUnreadMessages(int logBookId)
+        {
+            var unreadLogs = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound(logBookId);
+            return new JsonResult(unreadLogs);
+        }
+
+        public JsonResult OnPostAckMessage(int guardLogId)
+        {
+            var success = _guardLogDataProvider.GuardLogsUpdateNotificationSoundStatus(guardLogId);
+            return new JsonResult(new { success });
+        }
 
         public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata, string pageName, int loginUserId)
         {
