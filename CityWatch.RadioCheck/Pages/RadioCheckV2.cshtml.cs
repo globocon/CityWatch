@@ -1850,7 +1850,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1889,7 +1890,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1959,7 +1961,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1996,7 +1999,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,

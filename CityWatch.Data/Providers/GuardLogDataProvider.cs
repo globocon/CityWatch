@@ -564,7 +564,7 @@ namespace CityWatch.Data.Providers
         public List<GuardLog> GetGuardLogsNotAcknowledgedForNotificationSound(int logBookId)
         {
             return _context.GuardLogs
-                .Where(x => x.ClientSiteLogBookId == logBookId && x.PlayNotificationSound == true && x.IrEntryType == IrEntryType.Normal)
+                .Where(x => x.ClientSiteLogBookId == logBookId && x.PlayNotificationSound == true && x.IrEntryType == IrEntryType.Normal && x.GuardLoginId != null)
                 .Include(x => x.GuardLogin.Guard)
                 .ToList();
         }
