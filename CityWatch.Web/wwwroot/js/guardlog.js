@@ -1955,6 +1955,7 @@ $(function () {
             }
             else {
                 audioplayedlist = [];
+                var alertMessages = [];
                 if (records && records.length > 0) {
                     records.forEach(function (record) {
                         // Check both camelCase and PascalCase for safety
@@ -1963,6 +1964,8 @@ $(function () {
                         if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
                             && shouldPlay) {
                             audioplayedlist.push(record.id);
+                            // Capture message for visual notification
+                            alertMessages.push(record.notes || "You have message from CRO");
                         }
                     });
                 }
@@ -1973,8 +1976,8 @@ $(function () {
                 // Play notification sound
                 var playPromise = audio.play();
 
-                // Show Visual Notification
-                showNotificationSlider();
+                // Show Visual Notification with messages
+                showNotificationSlider(alertMessages);
 
                 if (playPromise !== undefined) {
                     playPromise.then(function () {
@@ -1994,75 +1997,110 @@ $(function () {
     }
 
     // Visual Notification Slider Logic
-    function showNotificationSlider() {
+    function showNotificationSlider(messages) {
+        // Ensure messages is an array
+        if (!messages || messages.length === 0) messages = ["You have message from CRO"];
+
         // 1. Inject CSS if not present
         if ($('#cro-notification-style').length === 0) {
             var css = `
-                .cro-notification-slider {
+                #cro-notification-container {
                     position: fixed;
                     bottom: 20px;
-                    left: -300px; /* Start off-screen */
-                    width: 280px;
+                    right: 20px;
+                    z-index: 9999;
+                    display: flex;
+                    flex-direction: column-reverse; /* Stack upwards */
+                    gap: 10px;
+                    pointer-events: none; /* Allow clicks through empty space */
+                }
+                .cro-notification-toast {
+                    width: 320px;
                     background-color: #dc3545; /* Red */
                     color: white;
-                    padding: 15px;
+                    padding: 12px 15px;
                     border-radius: 5px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    transition: left 0.5s ease-in-out;
-                    z-index: 9999;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: flex-start;
+                    animation: croSlideInRight 0.5s ease-out;
+                    pointer-events: auto;
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 }
-                .cro-notification-slider.show {
-                    left: 20px; /* Slide in */
+                @keyframes croSlideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
                 }
-                .cro-notification-content {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                .cro-notification-icon {
+                    font-size: 1.5rem;
+                    margin-right: 12px;
+                    align-self: flex-start;
+                    margin-top: 2px;
+                }
+                .cro-notification-body {
+                    flex-grow: 1;
+                    padding-right: 10px;
+                }
+                .cro-notification-text {
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    line-height: 1.3;
+                    margin-top: 2px;
                 }
                 .cro-notification-close {
                     cursor: pointer;
-                    font-weight: bold;
-                    margin-left: 10px;
                     background: none;
                     border: none;
                     color: white;
                     font-size: 1.2rem;
                     line-height: 1;
+                    opacity: 0.8;
+                    padding: 0;
+                    margin: 0;
+                    align-self: flex-start;
                 }
                 .cro-notification-close:hover {
-                    color: #ffcccc;
+                    opacity: 1;
                 }
             `;
             $('<style id="cro-notification-style">').prop('type', 'text/css').html(css).appendTo('head');
         }
 
-        // 2. Inject HTML if not present
-        if ($('#cro-notification-slider').length === 0) {
-            var html = `
-                <div id="cro-notification-slider" class="cro-notification-slider">
-                    <div class="cro-notification-content">
-                        <span>You have message from CRO</span>
-                        <button class="cro-notification-close" onclick="closeNotificationSlider()">&times;</button>
-                    </div>
-                </div>
-            `;
-            $('body').append(html);
+        // 2. Create Container if not present
+        if ($('#cro-notification-container').length === 0) {
+            $('body').append('<div id="cro-notification-container"></div>');
         }
 
-        // 3. Show Slider
-        setTimeout(function () {
-            $('#cro-notification-slider').addClass('show');
-        }, 100);
+        // 3. Append Toasts
+        var container = $('#cro-notification-container');
 
-        // Auto-hide after 10 seconds (optional, but good UX)
-        // setTimeout(closeNotificationSlider, 10000); 
+        messages.forEach(function (msg) {
+            // Sanitize msg slightly to prevent breaking HTML, though assuming trusted source for now or plain text
+            var toastHtml = `
+                <div class="cro-notification-toast">
+                    <div class="cro-notification-icon">
+                        <i class="fa fa-bell"></i>
+                    </div>
+                    <div class="cro-notification-body">
+                        <div class="cro-notification-text">${msg}</div>
+                    </div>
+                    <button class="cro-notification-close" onclick="$(this).closest('.cro-notification-toast').remove()">&times;</button>
+                </div>
+            `;
+            container.append(toastHtml);
+
+            // Optional: Auto-remove after some time? User didn't ask, but good for anti-spam.
+            // Keeping it persistent until closed as per "alert" nature.
+        });
     }
 
-    // Make close function global so onclick works
-    window.closeNotificationSlider = function () {
-        $('#cro-notification-slider').removeClass('show');
-    };
+    // Explicitly remove global close function as we now use inline onclick with jQuery
+    // window.closeNotificationSlider is no longer needed but leaving it won't hurt, 
+    // replacing logic handles it.
 
     // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
     function UpdatePlayedNotification() {
