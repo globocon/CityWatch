@@ -1822,10 +1822,20 @@ $(function () {
     /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
-    // Auto-refresh grid every 5 seconds (replaces full page 3-min reload)
+    // Auto-refresh grid every 5 seconds (Smart Polling)
     setInterval(function () {
         if (!isPaused && gridGuardLog) {
-            gridGuardLog.reload();
+            if (window.maxGuardLogId && window.maxGuardLogId > 0) {
+                $.get('/Guard/DailyLog?handler=CheckUpdates', { lastLogId: window.maxGuardLogId }, function (hasNew) {
+                    if (hasNew === true) {
+                        console.log("New data detected. Reloading grid.");
+                        gridGuardLog.reload();
+                    }
+                });
+            } else {
+                // Initial fallback or if maxId not captured yet
+                gridGuardLog.reload();
+            }
         }
     }, 5000);
 
@@ -1967,6 +1977,11 @@ $(function () {
                     records.forEach(function (record) {
                         // Check both camelCase and PascalCase for safety
                         var shouldPlay = record.playNotificationSound === true || record.PlayNotificationSound === true;
+
+                        // Update Max ID for Smart Refresh
+                        if (record.id > (window.maxGuardLogId || 0)) {
+                            window.maxGuardLogId = record.id;
+                        }
 
                         if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
                             && shouldPlay) {

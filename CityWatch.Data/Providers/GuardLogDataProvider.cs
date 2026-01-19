@@ -297,7 +297,8 @@ namespace CityWatch.Data.Providers
 
         bool IsRClogbookStampRequired(string StampName);
 
-
+        // Optimization for polling
+        bool HasNewLogs(int logBookId, int lastLogId);
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
 
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
@@ -557,6 +558,11 @@ namespace CityWatch.Data.Providers
             return returnId;
         }
         // Project 4 , Task 48, Audio notification, By Binoy -- End
+
+        public bool HasNewLogs(int logBookId, int lastLogId)
+        {
+             return _context.GuardLog.Any(x => x.ClientSiteLogBookId == logBookId && x.Id > lastLogId);
+        }
 
 
         public List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
