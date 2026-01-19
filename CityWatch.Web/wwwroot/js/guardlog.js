@@ -1484,6 +1484,7 @@ $(function () {
     }
 
     function renderDailyLogManagement(value, record, $cell, $displayEl, id) {
+        $displayEl.empty();
         //if (record.isSystemEntry || record.guardLogin.guardId != $('#GuardLog_GuardLogin_GuardId').val())
         //    return;
         if (record.isSystemEntry)
