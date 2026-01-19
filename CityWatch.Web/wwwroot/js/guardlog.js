@@ -56,7 +56,7 @@ $(function () {
 
     function populateClientSites(selectedSiteName) {
 
-       
+
         $('#GuardLogin_SmartWandOrPosition').html('<option value="">Select</option>');
 
         const option = $('#GuardLogin_ClientType').val();
@@ -67,9 +67,9 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
-     
+
                 $('#GuardLogin_ClientSiteID').val(data);
-                }
+            }
         });
 
 
@@ -143,14 +143,14 @@ $(function () {
                         } else {
                             alert(response.message);
                             $(this).val('1').trigger('change');
-                        }                        
+                        }
                     },
                     error: function (error) {
                         // Handle error
                         alert('An error occurred while clearing access. Please try again.');
                         $(this).val('1').trigger('change');
                     }
-                });                
+                });
             }
             else {
                 // Revert the dropdown to '1' and re-trigger change event
@@ -170,24 +170,24 @@ $(function () {
 
     /*P1-203 ADMIN USER PROFILE-START*/
     $('#Guard_Access').on('change', function () {
-        var newval = $(this).val();                        
+        var newval = $(this).val();
         if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('6') && newval.includes('8')) || (newval.includes('7') && newval.includes('5')) || (newval.includes('7') && newval.includes('8')) || (newval.includes('8') && newval.includes('5'))) {
-                //yourElement in yourArray
+            //yourElement in yourArray
             alert('Please select only one option among RC + HR or RC-Fusion or RC or RC (Lite)');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
-                        var isChecked1 = $(this).is(':checked');
-                        if (isChecked1 == true) {
-                            var new1 = $(this).val();
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    var new1 = $(this).val();
 
-                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7 || parseInt(new1) == 8) {
-                                $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
-                                newval = newval.filter(function (value) {
-                                    return value !== new1;
-                                });
-                            }
-                        }
+                    if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7 || parseInt(new1) == 8) {
+                        $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
+                        newval = newval.filter(function (value) {
+                            return value !== new1;
+                        });
+                    }
+                }
 
-                    });
+            });
 
         }
 
@@ -233,7 +233,7 @@ $(function () {
         }
         $('#Guard_Access').val(newval);
 
-        
+
 
     });
 
@@ -541,9 +541,9 @@ $(function () {
                 else if (!result.guard.isActive) {
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
-               // els if (result.guard.lastLogin.loginDate)
+                // els if (result.guard.lastLogin.loginDate)
                 //else if (result.guardLockStatusBasedOnRedDoc) {
-                  //  showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
+                //  showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
                 //}
 
                 else {
@@ -584,7 +584,7 @@ $(function () {
                         $('#GuardLogin_ClientType').val(valnewhid);
                         populateClientSites();
                     }
-                    
+
                     if (hasLastLogin) {
                         const lastLogin = result.lastLogin;
 
@@ -621,7 +621,7 @@ $(function () {
 
                         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
-                       
+
                     }
 
                     if (result.guard.isAdminThirdPartyAccess == true)
@@ -635,7 +635,7 @@ $(function () {
                     }
 
                 }
-               
+
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
@@ -656,7 +656,7 @@ $(function () {
     });
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
-        
+
         //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
         var clientSiteName = $(this).val();
@@ -697,11 +697,11 @@ $(function () {
         //    else {
         //        $('#GuardLogin_IsPosition').prop('checked', false);
         //        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-               
+
 
         //        getsmartwandcount(isPosition, clientSiteName);
-                
-               
+
+
         //    }
 
         //    /*p1-292 login isseue-end*/
@@ -714,25 +714,25 @@ $(function () {
         /* new Code for select deafult postion if manning deatils exist end*/
         /*p1-292 login isseue-start*/
         function getsmartwandcount(isPosition, clientSiteName) {
-        const url = isPosition ?
-            '/Guard/Login?handler=OfficerPositions' :
-            '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
-            '&guardId=' + $('#GuardLogin_Guard_Id').val();
+            const url = isPosition ?
+                '/Guard/Login?handler=OfficerPositions' :
+                '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
+                '&guardId=' + $('#GuardLogin_Guard_Id').val();
 
-        $.ajax({
-            url: url,
-            type: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                if (data.length > 0) {
-                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.length > 0) {
+                        getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                    }
+                    else {
+                        $('#GuardLogin_IsPosition').prop('checked', true);
+                        isPosition = $('#GuardLogin_IsPosition').is(':checked');
+                        getSmartWandOrOfficerPosition(isPosition, clientSiteName);
+                    }
                 }
-                else {
-                    $('#GuardLogin_IsPosition').prop('checked', true);
-                    isPosition = $('#GuardLogin_IsPosition').is(':checked');
-                    getSmartWandOrOfficerPosition(isPosition, clientSiteName);
-                }
-            }
             })
 
         }
@@ -888,7 +888,7 @@ $(function () {
         modal.modal("show");
         $("#confirmMessageLogin").empty().append(message);
         $("#confirmOkLogin").unbind().one('click', onConfirm).one('click', fClose);
-       
+
     }
 
     $('#btnGuardLogin').on('click', function () {
@@ -974,7 +974,7 @@ $(function () {
                     if (result.smartwantinuse) $('#alert-wand-in-use-modal').modal('show');
                     else
                         if (result.smartWands.length > 0) {
-                                submitGuardLogin();
+                            submitGuardLogin();
                         }
                         else {
 
@@ -982,7 +982,7 @@ $(function () {
                         }
 
 
-                        
+
                 }).always(function () {
                     $('#loader').hide();
                 });
@@ -1032,16 +1032,16 @@ $(function () {
         var smrtwandorposition = $('#GuardLogin_SmartWandOrPosition').val();
         var guardonduty = $('#GuardLogin_OnDuty_Time').val();
         var guardoffduty = $('#GuardLogin_OffDuty_Time').val();
-        var errornewmessage=[];
+        var errornewmessage = [];
         if (clientsitename == '') {
             // displayGuardValidationSummary('glValidationSummary', 'Client Site is required');
             errornewmessage.push('Client Site is required');
-            
+
         }
         if (smrtwandorposition == '') {
             //displayGuardValidationSummary('glValidationSummary', 'Smart Wand or Position is required');
             errornewmessage.push('Smart Wand or Position is required');
-               
+
         }
         if (guardonduty == '') {
             errornewmessage.push('On Duty is required');
@@ -1049,7 +1049,7 @@ $(function () {
         if (guardoffduty == '') {
             errornewmessage.push('Off Duty is required');
         }
-        if (errornewmessage.length>0) {
+        if (errornewmessage.length > 0) {
             displayGuardValidationSummary('glValidationSummary', errornewmessage);
             $('#loader').hide();
             return false;
@@ -1064,7 +1064,7 @@ $(function () {
             $('#loader').show();
             // P4#70 checking guard license no and mesaging if guard is not logged in for 120 days + disabling the active status
             var guardId = $('#GuardLogin_Guard_SecurityNo').val();
-           
+
             $.ajax({
                 url: '/Guard/Login?handler=IsGuardLoginActive',
                 type: 'GET',
@@ -1074,14 +1074,14 @@ $(function () {
                 }
             }).done(function (result) {
                 if (result.success) {
-                    
+
 
                     var message = result.strResult;
                     //alert(result.strResult);
                     //new MessageModal({
                     //    message: result.strResult
                     //}).showWarning();
-                                        if (!result.hrdocLockforThisGurad) {
+                    if (!result.hrdocLockforThisGurad) {
                         $.ajax({
                             url: '/Guard/Login?handler=LoginGuard',
                             type: 'POST',
@@ -1116,8 +1116,8 @@ $(function () {
                         new MessageModal({
                             message: 'A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate'
                         }).showWarning();
-                        }
-                   
+                    }
+
                 }
                 else {
                     // if guard is active then submit guard login
@@ -1157,7 +1157,7 @@ $(function () {
                         }).showWarning();
                     }
                 }
-                
+
             }).fail(function () {
                 alert("An error occurred while checking guard license.");
 
@@ -1797,17 +1797,17 @@ $(function () {
 
 
     //p6-102 Add Photo -end
-    
+
     //if ($('#vklClientType').val() != null && $('#vklClientType').val() != '' && $('#vklClientType').val() != undefined) {
 
     //    $('#vklClientType').change();
     //}
-    
+
     if ($('#fusionClientType').val() != null && $('#fusionClientType').val() != '' && $('#fusionClientType').val() != undefined) {
 
         $('#fusionClientType').change();
     }
-    
+
     if ($('#vklClientTypeTimesheet').val() != null && $('#vklClientTypeTimesheet').val() != '' && $('#vklClientTypeTimesheet').val() != undefined) {
 
         $('#vklClientTypeTimesheet').change();
@@ -1944,7 +1944,7 @@ $(function () {
                 }).done(function (result) {
                     if (result != null && result.length > 0) {
                         //Can be repeated if needed using loop through id in result
-                        audio.play();
+                        audio.play().catch(function (error) { console.log("Audio play failed: " + error); });
                         audioplayedlist = [];
                         result.forEach((item) => {
                             audioplayedlist.push(item);
@@ -1953,10 +1953,22 @@ $(function () {
                     }
                 });
             }
-            else if (audioplayedlist.length > 0) {
-                // Play notification sound
-                audio.play();
-                UpdatePlayedNotification();
+            else {
+                audioplayedlist = [];
+                if (records && records.length > 0) {
+                    records.forEach(function (record) {
+                        if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
+                            && (record.playNotificationSound == true)) {
+                            audioplayedlist.push(record.id);
+                        }
+                    });
+                }
+
+                if (audioplayedlist.length > 0) {
+                    // Play notification sound
+                    audio.play().catch(function (error) { console.log("Audio play failed: " + error); });
+                    UpdatePlayedNotification();
+                }
             }
         });
         // Project 4 , Task 48, Audio notification, Added By Binoy -- End
@@ -2076,7 +2088,7 @@ $(function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (SuccessMessage) {
             if (SuccessMessage) {
-                
+
                 alert('saved Successfully');
                 $('#Handover-modal').modal('hide');
             } else {
@@ -2268,7 +2280,7 @@ $(function () {
 
 
     });
-   
+
     $('#btnGenerateDglAuditReport').on('click', function () {
 
         if ($('#dglClientSiteId').val() === '') {
@@ -2631,7 +2643,7 @@ $(function () {
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
-   
+
     // for selecting more than one POI
     $('#vklPersonOfInterest').multiselect({
         maxHeight: 400,
@@ -2745,11 +2757,11 @@ $(function () {
             window.myChart6.destroy();
         if (window.myChart7 != undefined)
             window.myChart7.destroy();
-        if(window.myChart8 != undefined)
+        if (window.myChart8 != undefined)
             window.myChart8.destroy();
         if (window.myChart9 != undefined)
             window.myChart9.destroy();
-        if(window.myChart10 != undefined)
+        if (window.myChart10 != undefined)
             window.myChart10.destroy();
         if (window.myChart11 != undefined)
             window.myChart11.destroy();
@@ -2787,7 +2799,7 @@ $(function () {
             keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
 
             $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
-            if (response.kvtruckentriesForWeekNewCount != 0) { 
+            if (response.kvtruckentriesForWeekNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForWeek(response.chartData.kvtruckentriesForWeekNew);
             }
 
@@ -4847,9 +4859,9 @@ $(function () {
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
-            { data: 'loginDate', visible: false },
-            { data: 'isTerminated', visible: false },
-           
+        { data: 'loginDate', visible: false },
+        { data: 'isTerminated', visible: false },
+
         { data: 'gender', width: "5%" },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "4%", 'render': function (value, type, data) {
@@ -4877,11 +4889,11 @@ $(function () {
 
 
 
-            { data: 'hr1Description', name: 'hr1Description', width: "2%", visible: false, searchable: true },
-            { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
-            { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
+        { data: 'hr1Description', name: 'hr1Description', width: "2%", visible: false, searchable: true },
+        { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
+        { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
-            { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
+        { data: 'languages', name: 'languages', width: "2%", visible: false, searchable: true },
 
         {
             targets: -1,
@@ -4890,9 +4902,9 @@ $(function () {
             orderable: false,
             className: "text-center",
             width: "0%"
-            },
-            { data: 'dateEnrolled', visible: false },
-            { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
+        },
+        { data: 'dateEnrolled', visible: false },
+        { data: 'guardRcSiteAccessCount', name: 'GuardRcSiteAccessCount', visible: false, searchable: false },
         ],
         initComplete: function (settings, json) {
             $('#chkbxfilterGuardActive').prop("disabled", false);
@@ -5069,7 +5081,7 @@ $(function () {
                 // Apply the search filter to the 'isactive' column
                 guardSettings.column('hr1Description:name').search(kvlStatusFilter, regex, smart).draw();
                 guardSettings.ajax.reload();
-                
+
 
             }
             else if ($('#chkbxHR2').is(':checked')) {
@@ -5095,7 +5107,7 @@ $(function () {
         }
 
     }).on("select2:clear", function (e) {
-       
+
         guardSettings.search('');
         // Clear individual column searches
         guardSettings.columns().search('');
@@ -5105,7 +5117,7 @@ $(function () {
         guardSettings.order([]).draw(false);
         guardSettings.draw(false);
         filterActiveInActiveGuards(guardSettings);
-       
+
         // Handle clear event
     });
 
@@ -5128,7 +5140,7 @@ $(function () {
             delay: 250,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             data: function (params) {
-              
+
 
                 return {
                     clientSiteIds: $('#vklClientSiteId').val().join(';'),
@@ -5141,7 +5153,7 @@ $(function () {
                 return {
                     results: $.map(data, function (item) {
                         return {
-                            text:item,
+                            text: item,
                             id: item,
                             title: item
                         };
@@ -5154,16 +5166,16 @@ $(function () {
         minimumInputLength: 0,
     }).on("select2:select", function (e) {
 
-       
+
 
     }).on("select2:clear", function (e) {
 
-        
+
 
         // Handle clear event
     });
 
-// Extend the Select2 search functionality to filter the loaded data
+    // Extend the Select2 search functionality to filter the loaded data
 
     //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
     //    var tr = $(this).closest('tr');
@@ -5237,7 +5249,7 @@ $(function () {
         if (data.isRCAccess) {
             selectedValues.push(6);
         }
-        
+
         if (data.isKPIAccess) {
             selectedValues.push(4);
         }
@@ -5290,8 +5302,8 @@ $(function () {
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
-        
-       
+
+
         if ($('#txt_IsAdminPowerUser').val() == 'True') {
             if (data.isAdminGlobal) {
                 $('#cbIsActive').prop('disabled', true);
@@ -5492,15 +5504,15 @@ $(function () {
         $('#guardLogBookInfoModal').modal('show');
         var GuardId = $(this).closest("td").find('#GuardId').val();
         $('#txtGuardId').val($(this).closest("td").find('#GuardId').val());
-        
+
         //ActiveGuardsLogBookDetails.ajax.reload();
-        
+
         $('#ActiveGuardsLogBookDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
         fetchGuardLogBookDetails(GuardId);
         $("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();//to hide the header of the  table
         $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
         clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
-       
+
 
     });
 
@@ -5553,12 +5565,12 @@ $(function () {
                         },
                         {
                             data: 'siteName', width: "16%",
-                            
+
                         },
 
-                      
 
-                        
+
+
                     ]
                 });
             },
@@ -5669,7 +5681,7 @@ $(function () {
                 });
         },
     });
-    
+
     // P1#231 HR Download Excel for settings -start
     $("#btnDownloadGuardLogExcel").click(async function () {
         const activeChecked = $('#chkbxfilterGuardActive').is(':checked');
@@ -5731,8 +5743,8 @@ $(function () {
 
             // Define headers and column widths
 
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE','Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
-               /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'LOTE', 'Is Active', 'DOE', 'Banned', 'HR1 Status', 'HR2 Status', 'HR3 Status',
+                /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
                 'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024', 'Q1 HRS 2025', 'Q2 HRS 2025', 'Q3 HRS 2025', 'Q4 HRS 2025'];
             const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
 
@@ -5902,7 +5914,7 @@ $(function () {
 
     });
 
-   
+
 
     $('#chkbxHR1').on('click', function () {
         var thisCheck = $(this);
@@ -6009,8 +6021,8 @@ $(function () {
             $('.dropdownGuardHrFilter > button').prop('disabled', true);
             $('.hrsearchandeditkeyslist').attr('hidden', true);
             $('.languagedetailslist').attr('hidden', false)
-            
-            
+
+
             $("#list_Lote_keys").multiselect();
             $("#list_Lote_keys").val('');
             $("#list_Lote_keys").multiselect("refresh");
@@ -6052,13 +6064,13 @@ $(function () {
         })
         guardSettings.column('languages:name').search(laguages, true, false).draw();
         guardSettings.ajax.reload();
-    
-         
-        })
+
+
+    })
 
 
 
-    
+
 
     // P1#231 HR Download Excel for settings -end
 
@@ -6117,15 +6129,15 @@ $(function () {
         $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
         //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
-        const pinNumber = $('#Guard_Pin').val(); 
-        if (pinNumber!='') {
+        const pinNumber = $('#Guard_Pin').val();
+        if (pinNumber != '') {
             if (pinNumber.length < 4 || pinNumber.length > 6) {
                 displayGuardValidationSummary('glValidationSummary', 'PIN Number must be between 4 and 6 characters');
 
                 return; // Stop execution if validation fails
             }
         }
-        
+
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),
@@ -6454,14 +6466,14 @@ $(function () {
         },
     });
 
-    
+
     //To get the data in description dropdown start
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
         //filter: false,
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
-       var check = '';
+        var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
@@ -6470,7 +6482,7 @@ $(function () {
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
-       
+
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -6561,8 +6573,8 @@ $(function () {
 
             });
         }
-       
-        
+
+
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
             return;
@@ -7197,16 +7209,16 @@ $(function () {
                             //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
                             //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
                             /*alert(msg);*/
-                           
+
                             $('#alert-wand-in-use-modal').modal('show');
-                          
+
                             $('#btn_confrim_wand_usok').click(function () {
                                 $('#GuardID').val(result.guId);
                                 clearGuardValidationSummary('MobileNovalidationSummary')
                                 $('#alert-wand-in-use-modal').modal('hide'); // Hide the first modal
-                               
-                                    $('#mobileno-modal').modal('show'); // Show the second modal after the first one fully hides
-                               
+
+                                $('#mobileno-modal').modal('show'); // Show the second modal after the first one fully hides
+
                             });
                         }
                         else {
@@ -7247,7 +7259,7 @@ $(function () {
         }).done(function (result) {
             $('#mobileno-modal').modal('hide');
         });
-         // Show the second modal after the first one fully hides
+        // Show the second modal after the first one fully hides
 
     });
 
@@ -7275,7 +7287,7 @@ $(function () {
 
                     /*window.location.href = '/Radio/Check';*/
                     window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                     //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');
@@ -7304,39 +7316,39 @@ $(function () {
     });
     $("#LoginConformationBtnC4iSettingsThirdParty").on('click', function () {
         const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
-     
-      
 
 
-            /* $('#txt_securityLicenseNoIR').val('');*/
 
 
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-                type: 'POST',
-                data: {
-                    securityLicenseNo: securityLicenseNo,
-                    type: 'Settings'
-                },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.accessPermission) {
-                    /* $('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+        /* $('#txt_securityLicenseNoIR').val('');*/
 
-                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
-                    window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+            type: 'POST',
+            data: {
+                securityLicenseNo: securityLicenseNo,
+                type: 'Settings'
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.accessPermission) {
+                /* $('#txt_securityLicenseNoIR').val('');*/
+                $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+            }
+            else {
+
+                // $('#txt_securityLicenseNo').val('');
+                /*$('#txt_securityLicenseNoIR').val('');*/
+                $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                if (result.successCode === 0) {
+                    displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
                 }
-                else {
-
-                    // $('#txt_securityLicenseNo').val('');
-                    /*$('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
-                    if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
-                    }
-                }
-            });
+            }
+        });
 
     });
     $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
@@ -7394,7 +7406,7 @@ $(function () {
             });
 
 
-           
+
 
 
 
@@ -7404,11 +7416,11 @@ $(function () {
 
 
     /* p1-203 Admin User Profile -start */
-    
+
     //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
     //    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
-       
-     
+
+
 
 
     //        /* $('#txt_securityLicenseNoIR').val('');*/
@@ -7425,15 +7437,15 @@ $(function () {
     //        }).done(function (result) {
     //            if (result.accessPermission) {
     //                /* $('#txt_securityLicenseNoIR').val('');*/
-                   
+
 
     //                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
     //            }
-               
+
     //        });
 
 
-            
+
     //});
     /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
@@ -8584,11 +8596,11 @@ $(function () {
                 }
             },
             { field: 'activityType', title: 'Source', width: 50 },
-            { field: 'siteName', title: 'Client Site', width: 150},
+            { field: 'siteName', title: 'Client Site', width: 150 },
             { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },
-        pager: { limit: 100, sizes: [10, 50, 100, 500,1000,'All'] }
+        pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
     });
 
 
@@ -8946,7 +8958,7 @@ $(function () {
     });
 
     $('.btn-delete-dgl-attachment1').on('click', function (event) {
-   // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
+        // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
         var pageNameValue = $('#pageName').val();
         var jsname = 'lb';
         var tmdata = {
@@ -8971,40 +8983,40 @@ $(function () {
         tmdata.EventDateTimeZone = tz;
         tmdata.EventDateTimeZoneShort = tzshrtnm;
         tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
-        
-            var target = event.target;
-            var filename = target.id;
-            var guardId = $("#GuardLog_GuardLogin_GuardId").val();
-            $.ajax({
-                url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    filename: filename,
-                    loginGuardId: guardId,
-                    tmdata: tmdata,
-                    pageName: pageNameValue,
-                    jsname: jsname,
-                },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result) {
-                    // Step 3: Dynamically create an anchor tag and trigger the download
-                    if (result.success) {
-                        var link = document.createElement('a');
-                        link.href = '/StaffDocs/' + filename;  // Construct the file URL
-                        link.target = "_blank";                // Open the file in a new window or tab
-                        document.body.appendChild(link);       // Append to the body
-                        link.click();                          // Simulate a click event to open the file
-                        document.body.removeChild(link);
-                    }// Remove the link from the document
-                }
-            });
-        
+
+        var target = event.target;
+        var filename = target.id;
+        var guardId = $("#GuardLog_GuardLogin_GuardId").val();
+        $.ajax({
+            url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                filename: filename,
+                loginGuardId: guardId,
+                tmdata: tmdata,
+                pageName: pageNameValue,
+                jsname: jsname,
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result) {
+                // Step 3: Dynamically create an anchor tag and trigger the download
+                if (result.success) {
+                    var link = document.createElement('a');
+                    link.href = '/StaffDocs/' + filename;  // Construct the file URL
+                    link.target = "_blank";                // Open the file in a new window or tab
+                    document.body.appendChild(link);       // Append to the body
+                    link.click();                          // Simulate a click event to open the file
+                    document.body.removeChild(link);
+                }// Remove the link from the document
+            }
+        });
+
     });
 
     // WandStrike -- Start
-    
+
     const wandStrikeGroupColumn = 0;
     let wandStrikeLogReport = $('#tbl_wandstrike_site_log').DataTable({
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
@@ -9032,7 +9044,7 @@ $(function () {
                 orderable: true
             },
             { data: 'clientSiteSmartWandTagsHitLog.smartWandNameId', width: "10%", orderable: false },
-            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },            
+            { data: 'clientSiteSmartWandTagsHitLog.tagUId', width: "10%", orderable: false },
             { data: 'smartWandType', width: "5%", orderable: false },
             { data: 'endUser', width: "15%", orderable: true },
             { data: 'clientSiteSmartWandTagsHitLog.loggedInClientSite.name', width: "15%", orderable: false },
@@ -9044,7 +9056,7 @@ $(function () {
             var last = null;
 
             api.column(wandStrikeGroupColumn, { page: 'current' })
-                .data()                
+                .data()
                 .each(function (group, i) {
                     if (last !== group) {
                         $(rows)
@@ -9056,7 +9068,7 @@ $(function () {
                 });
         },
     });
-       
+
 
     let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
         paging: false,
@@ -9167,7 +9179,7 @@ $(function () {
             });
             data.tagTypeIds.map(function (result) {
                 clientSiteWandStrikeTagTypeId.append($('<option></option>').val(result.value).text(result.text));
-            });            
+            });
             data.tagLabels.map(function (result) {
                 clientSiteWandStrikeTagLabel.append($('<option></option>').val(result.value).text(result.text));
             });
@@ -9181,7 +9193,7 @@ $(function () {
         });
     });
 
-    $('#btnGenerateWandstrikeAuditReport').on('click', function () { 
+    $('#btnGenerateWandstrikeAuditReport').on('click', function () {
         if ($('#wandstrikeClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
@@ -9217,7 +9229,7 @@ $(function () {
             /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
         })
             .done(function (response) {
-                wandStrikeLogReport.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();                
+                wandStrikeLogReport.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
             })
             .fail(function (xhr, status, error) {
                 console.error('AJAX error:', status, error);
@@ -9265,7 +9277,7 @@ $(function () {
                 wandStrikeLogExcel.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
                 var searchtext = wandStrikeLogReport.search();
                 wandStrikeLogExcel.search(searchtext).draw();
-                                
+
                 // Get raw data directly from DataTable
                 var exportData = wandStrikeLogExcel.rows({ search: 'applied' }).data().toArray();
 
@@ -9299,7 +9311,7 @@ $(function () {
     });
 
 
-    $('#btnDownloadWandstrikeAuditZip').on('click', function () {        
+    $('#btnDownloadWandstrikeAuditZip').on('click', function () {
         if ($('#wandstrikeClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
@@ -9311,8 +9323,8 @@ $(function () {
     $('#wandstrikeauditlog-zip-modal').on('show.bs.modal', function (event) {
         $('#btn-wandstrikeauditlog-zip-download').attr('href', '#');
         $('#btn-wandstrikeauditlog-zip-download').hide();
-        $('#wandstrikeauditlog-zip-msg').show();                
-        downloadWandStrikeLogZipFile();        
+        $('#wandstrikeauditlog-zip-msg').show();
+        downloadWandStrikeLogZipFile();
     });
 
     function downloadWandStrikeLogZipFile() {
@@ -9330,15 +9342,15 @@ $(function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         })
             .done(function (response) {
-            if (!response.success) {
-                $('#wandstrikeauditlog-zip-modal').modal('hide');
-                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
-            } else {
-                $('#btn-wandstrikeauditlog-zip-download').attr('href', response.fileName);
-                $('#btn-wandstrikeauditlog-zip-download').show();
-                $('#wandstrikeauditlog-zip-msg').hide();
-            }
-        })
+                if (!response.success) {
+                    $('#wandstrikeauditlog-zip-modal').modal('hide');
+                    new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+                } else {
+                    $('#btn-wandstrikeauditlog-zip-download').attr('href', response.fileName);
+                    $('#btn-wandstrikeauditlog-zip-download').show();
+                    $('#wandstrikeauditlog-zip-msg').hide();
+                }
+            })
             .fail(function (xhr, status, error) {
                 console.error('AJAX error:', status, error);
                 $('#wandstrikeauditlog-zip-modal').modal('hide');
@@ -9346,12 +9358,11 @@ $(function () {
             })
             .always(function () {
                 //$('#loader').hide();
-            });            ;
+            });;
     }
 
     function convertWandStrikeDateTimeString(value) {
-        if (value === null || value === undefined)
-        {
+        if (value === null || value === undefined) {
             return '';
         }
         else {
@@ -9360,7 +9371,7 @@ $(function () {
             var dt1 = DateTime.fromJSDate(date);
             var dt = dt1.toFormat('dd LLL yyyy HH:mm');
             return dt;
-        }        
+        }
     }
 
     // WandStrike -- End
@@ -9371,7 +9382,7 @@ $(function () {
     function populateClientSitesForRooster(selectedSiteName) {
 
 
-      
+
         const option = $('#Rooster_ClientType').val();
         if (option == '')
             return false;
@@ -9654,7 +9665,7 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         }
     });
 
-  
+
 
 
 
@@ -9693,7 +9704,7 @@ function downloadDailyGuardTimeSheetLogZipFile() {
         new MessageModal({ message: 'Please select at least one client site.' }).showError();
         return;
     }
-    
+
     $.ajax({
         url: '/Admin/AuditSiteLog?handler=DownloadDailyTimesheetLogZip',
         type: 'POST',
