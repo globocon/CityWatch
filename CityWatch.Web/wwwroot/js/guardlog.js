@@ -1381,6 +1381,9 @@ $(function () {
             { field: 'notes', title: 'Event / Notes', width: 450 },
             {
                 field: 'guardInitials', title: 'Guard Initials', width: 80, renderer: function (value, record) {
+                    if (record.rcPushMessageId && record.rcPushMessageId > 0) {
+                        return '';
+                    }
                     var rtn = '';
                     if (!record.guardLogin.guard.initial) {
                         // str is null, undefined, or an empty string
@@ -1427,6 +1430,9 @@ $(function () {
                 {
                     field: 'guardInitials', title: 'Guard Initials', width: 70, renderer: function (value, record) {
                         //return record.guardLogin ? record.guardLogin.guard.initial : '';
+                        if (record.rcPushMessageId && record.rcPushMessageId > 0) {
+                            return record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : '';
+                        }
                         var rtn = '';
                         rtn = `${record.guardLogin ? record.guardLogin.guard.initial : ''}&nbsp;&nbsp;${record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
                         /*var rtn = record.guardLogin.guard.initial ? record.guardLogin.guard.initial : record.rcLogbookStamp ? 'Admin' : '';*/
