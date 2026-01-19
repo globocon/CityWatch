@@ -1857,7 +1857,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZone = tmzdata.EventDateTimeZone,
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                            PlayNotificationSound = false
+                            PlayNotificationSound = true
+
 
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
@@ -1895,7 +1896,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZone = tmzdata.EventDateTimeZone,
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                            PlayNotificationSound = false
+                            PlayNotificationSound = true
+
 
                         };
                         if (guardLog.ClientSiteLogBookId != 0)
@@ -1964,7 +1966,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 EventDateTimeZone = tmzdata.EventDateTimeZone,
                                 EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                                PlayNotificationSound = false
+                                PlayNotificationSound = true
+
 
                             };
                             _guardLogDataProvider.SaveGuardLog(guardLog);
@@ -2000,7 +2003,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 EventDateTimeZone = tmzdata.EventDateTimeZone,
                                 EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                                PlayNotificationSound = false
+                                PlayNotificationSound = true
+
 
                             };
                             if (guardLog.ClientSiteLogBookId != 0)
