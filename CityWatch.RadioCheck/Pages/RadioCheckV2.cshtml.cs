@@ -2755,25 +2755,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
 
 
-        public JsonResult OnGetGuardRCLoginDetails()
-        {
 
-            var data = _guardLogDataProvider.GetGuardRCLoginDetails();
-            //var result = hrGroups.Select(group => new
-            //{
-            //    GroupId = group.Value,
-            //    Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
-            //        .Select(course => new
-            //        {
-            //            course.Id,
-            //            course.Description
-            //            //,
-            //            //course.CourseStatus
-            //        }).ToList()
-            //}).Where(group => group.Courses.Any()).ToList();
-
-            return new JsonResult(data);
-        }
 
 
 
