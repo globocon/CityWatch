@@ -1831,22 +1831,7 @@ $(function () {
     /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
-    // Auto-refresh grid every 5 seconds (Smart Polling)
-    setInterval(function () {
-        if (!isPaused && gridGuardLog) {
-            if (window.maxGuardLogId && window.maxGuardLogId > 0) {
-                $.get('/Guard/DailyLog?handler=CheckUpdates', { lastLogId: window.maxGuardLogId }, function (hasNew) {
-                    if (hasNew === true) {
-                        console.log("New data detected. Reloading grid.");
-                        gridGuardLog.reload();
-                    }
-                });
-            } else {
-                // Initial fallback or if maxId not captured yet
-                gridGuardLog.reload();
-            }
-        }
-    }, 5000);
+
 
     if (gridGuardLog) {
 
