@@ -1857,7 +1857,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZone = tmzdata.EventDateTimeZone,
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                            PlayNotificationSound = true
+                            PlayNotificationSound = false
+
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
@@ -1894,7 +1895,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZone = tmzdata.EventDateTimeZone,
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                            PlayNotificationSound = true
+                            PlayNotificationSound = false
+
                         };
                         if (guardLog.ClientSiteLogBookId != 0)
                         {
