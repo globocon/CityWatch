@@ -2008,12 +2008,14 @@ $(function () {
                             toast.style.cssText = "position:fixed;top:80px;right:20px;background:#ff9800;color:white;padding:15px;z-index:99999;cursor:pointer;border-radius:5px;box-shadow:0 4px 8px rgba(0,0,0,0.3);font-family:sans-serif;font-weight:bold;";
                             toast.innerHTML = "⚠️ Click here or anywhere to enable notification sounds";
                             toast.onclick = function () {
-                                var audio = document.getElementById("audioPlayback");
+                                // Use the captured 'audio' variable from the outer scope
                                 if (audio) {
                                     audio.play().then(() => {
-                                        audio.pause();
-                                        audio.currentTime = 0;
-                                    });
+                                        // Don't pause immediately if we want them to hear it this time
+                                        // audio.pause(); 
+                                        // audio.currentTime = 0;
+                                        console.log("Audio unlocked and playing.");
+                                    }).catch(e => console.error("Manual unlock failed: " + e));
                                 }
                                 this.remove();
                             };
@@ -2023,12 +2025,13 @@ $(function () {
                             var unlockFunc = function () {
                                 var toastEl = document.getElementById("audio-permission-toast");
                                 if (toastEl) toastEl.remove();
-                                var audio = document.getElementById("audioPlayback");
+                                // Use the captured 'audio' variable
                                 if (audio) {
                                     audio.play().then(() => {
-                                        audio.pause();
-                                        audio.currentTime = 0;
-                                    }).catch((e) => console.log("Silent unlock failed:" + e));
+                                        // audio.pause();
+                                        // audio.currentTime = 0;
+                                        console.log("Audio unlocked via global listener.");
+                                    }).catch((e) => console.log("Silent global unlock failed:" + e));
                                 }
                                 document.removeEventListener('click', unlockFunc);
                                 document.removeEventListener('keydown', unlockFunc);
