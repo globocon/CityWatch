@@ -2001,46 +2001,22 @@ $(function () {
                         UpdatePlayedNotification();
                     }).catch(function (error) {
                         console.error("Audio play failed (Autoplay Policy?): " + error);
-                        // Show a UI toast to ask user to interact
-                        if (!document.getElementById("audio-permission-toast")) {
-                            var toast = document.createElement("div");
-                            toast.id = "audio-permission-toast";
-                            toast.style.cssText = "position:fixed;top:80px;right:20px;background:#ff9800;color:white;padding:15px;z-index:99999;cursor:pointer;border-radius:5px;box-shadow:0 4px 8px rgba(0,0,0,0.3);font-family:sans-serif;font-weight:bold;";
-                            toast.innerHTML = "⚠️ Click here or anywhere to enable notification sounds";
-                            toast.onclick = function () {
-                                // Use the captured 'audio' variable from the outer scope
-                                if (audio) {
-                                    audio.play().then(() => {
-                                        // Don't pause immediately if we want them to hear it this time
-                                        // audio.pause(); 
-                                        // audio.currentTime = 0;
-                                        console.log("Audio unlocked and playing.");
-                                        UpdatePlayedNotification(); // Success! Mark messages as played.
-                                    }).catch(e => console.error("Manual unlock failed: " + e));
-                                }
-                                this.remove();
-                            };
-                            document.body.appendChild(toast);
-
-                            // Also attach one-time global listeners to auto-dismiss and unlock
-                            var unlockFunc = function () {
-                                var toastEl = document.getElementById("audio-permission-toast");
-                                if (toastEl) toastEl.remove();
-                                // Use the captured 'audio' variable
-                                if (audio) {
-                                    audio.play().then(() => {
-                                        // audio.pause();
-                                        // audio.currentTime = 0;
-                                        console.log("Audio unlocked via global listener.");
-                                        UpdatePlayedNotification(); // Success! Mark messages as played.
-                                    }).catch((e) => console.log("Silent global unlock failed:" + e));
-                                }
-                                document.removeEventListener('click', unlockFunc);
-                                document.removeEventListener('keydown', unlockFunc);
-                            };
-                            document.addEventListener('click', unlockFunc);
-                            document.addEventListener('keydown', unlockFunc);
-                        }
+                        // Silent Audio Unlock: Browser blocked autoplay. 
+                        // Attach a one-time global listener to unlock audio on the next user interaction.
+                        var unlockFunc = function () {
+                            if (audio) {
+                                audio.play().then(() => {
+                                    audio.pause();
+                                    audio.currentTime = 0;
+                                    console.log("Audio silently unlocked via interaction.");
+                                    UpdatePlayedNotification(); // Acknowledge pending messages since user is now active
+                                }).catch((e) => console.log("Silent unlock failed:" + e));
+                            }
+                            document.removeEventListener('click', unlockFunc);
+                            document.removeEventListener('keydown', unlockFunc);
+                        };
+                        document.addEventListener('click', unlockFunc);
+                        document.addEventListener('keydown', unlockFunc);
                     });
                 } else {
                     // Older browsers
