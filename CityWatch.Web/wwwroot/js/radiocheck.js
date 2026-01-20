@@ -13,6 +13,7 @@ window.onload = function () {
 
     }
     CheckUnreadMessages();
+    setInterval(CheckUnreadMessages, 30000); // Poll every 30 seconds
 };
 
 function CheckUnreadMessages() {
@@ -28,6 +29,12 @@ function CheckUnreadMessages() {
 //Audio Playback
 function playNotificationSound() {
     var audio = document.getElementById("audioPlayback");
+    if (!audio) {
+        audio = document.createElement("audio");
+        audio.id = "audioPlayback";
+        audio.style.display = "none";
+        document.body.appendChild(audio);
+    }
     if (audio) {
         audio.src = '/NotificationSound/mixkit-bell-notification-933.wav';
         audio.play().catch(function (error) {

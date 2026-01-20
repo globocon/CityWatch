@@ -28,7 +28,12 @@ window.onload = function () {
     if (document.querySelector('#txtSignalRConnectionUrl')) {
         connectToSignalRservice();
     }
-    CheckUnreadMessages();
+    // Only check for messages if we are NOT on the login page.
+    // Assuming 'clockRefresh' or specific logged-in elements are present on RC Dashboard.
+    // Or check URL.
+    if (window.location.pathname.toLowerCase().indexOf('login') === -1) {
+        CheckUnreadMessages();
+    }
 };
 
 function CheckUnreadMessages() {
