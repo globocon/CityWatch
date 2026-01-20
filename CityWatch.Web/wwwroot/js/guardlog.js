@@ -2015,6 +2015,7 @@ $(function () {
                                         // audio.pause(); 
                                         // audio.currentTime = 0;
                                         console.log("Audio unlocked and playing.");
+                                        UpdatePlayedNotification(); // Success! Mark messages as played.
                                     }).catch(e => console.error("Manual unlock failed: " + e));
                                 }
                                 this.remove();
@@ -2031,6 +2032,7 @@ $(function () {
                                         // audio.pause();
                                         // audio.currentTime = 0;
                                         console.log("Audio unlocked via global listener.");
+                                        UpdatePlayedNotification(); // Success! Mark messages as played.
                                     }).catch((e) => console.log("Silent global unlock failed:" + e));
                                 }
                                 document.removeEventListener('click', unlockFunc);
