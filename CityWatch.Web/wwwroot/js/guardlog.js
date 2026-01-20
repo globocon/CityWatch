@@ -2001,7 +2001,41 @@ $(function () {
                         UpdatePlayedNotification();
                     }).catch(function (error) {
                         console.error("Audio play failed (Autoplay Policy?): " + error);
-                        // Optionally show a UI toast here to ask user to interact
+                        // Show a UI toast to ask user to interact
+                        if (!document.getElementById("audio-permission-toast")) {
+                            var toast = document.createElement("div");
+                            toast.id = "audio-permission-toast";
+                            toast.style.cssText = "position:fixed;top:80px;right:20px;background:#ff9800;color:white;padding:15px;z-index:99999;cursor:pointer;border-radius:5px;box-shadow:0 4px 8px rgba(0,0,0,0.3);font-family:sans-serif;font-weight:bold;";
+                            toast.innerHTML = "⚠️ Click here or anywhere to enable notification sounds";
+                            toast.onclick = function () {
+                                var audio = document.getElementById("audioPlayback");
+                                if (audio) {
+                                    audio.play().then(() => {
+                                        audio.pause();
+                                        audio.currentTime = 0;
+                                    });
+                                }
+                                this.remove();
+                            };
+                            document.body.appendChild(toast);
+
+                            // Also attach one-time global listeners to auto-dismiss and unlock
+                            var unlockFunc = function () {
+                                var toastEl = document.getElementById("audio-permission-toast");
+                                if (toastEl) toastEl.remove();
+                                var audio = document.getElementById("audioPlayback");
+                                if (audio) {
+                                    audio.play().then(() => {
+                                        audio.pause();
+                                        audio.currentTime = 0;
+                                    }).catch((e) => console.log("Silent unlock failed:" + e));
+                                }
+                                document.removeEventListener('click', unlockFunc);
+                                document.removeEventListener('keydown', unlockFunc);
+                            };
+                            document.addEventListener('click', unlockFunc);
+                            document.addEventListener('keydown', unlockFunc);
+                        }
                     });
                 } else {
                     // Older browsers
