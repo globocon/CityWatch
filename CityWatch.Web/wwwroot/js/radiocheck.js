@@ -143,14 +143,7 @@ function startClock() {
                 display.textContent = minutes + " min" + " " + seconds + " sec";
 
                 if (--timer < 0) {
-                    if (window.gridGuardLog) {
-                        console.log("Refreshing Guard Log Grid...");
-                        window.gridGuardLog.reload();
-                        timer = duration;
-                    } else {
-                        console.warn("gridGuardLog not found, falling back to page reload.");
-                        location.reload();
-                    }
+                    location.reload();
                     //$.ajax({
                     //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
                     //    type: 'POST',
