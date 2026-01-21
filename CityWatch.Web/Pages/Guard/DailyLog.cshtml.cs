@@ -297,7 +297,9 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
+
             return new JsonResult(guardLogs.OrderByDescending(z => z.Id).ThenByDescending(z => z.EventDateTime).ToList());
+
         }
 
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
