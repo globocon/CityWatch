@@ -376,7 +376,9 @@ namespace CityWatch.Web.Services
                 EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
                 EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                 GpsCoordinates = gpsCoordinates,
-                WAND_TAG_ENTRY_TYPE = _scanningType
+                WAND_TAG_ENTRY_TYPE = _scanningType,
+                IsOfflineRecord = request.IsOfflineRecord,
+                OfflineRecordSyncDateTime = request.OfflineRecordSyncDateTime
             };
 
             _guardLogDataProvider.SaveGuardLog(signInEntry);

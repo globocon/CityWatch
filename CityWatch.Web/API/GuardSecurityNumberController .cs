@@ -39,6 +39,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
@@ -359,6 +360,19 @@ namespace CityWatch.Web.API
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
 
+                //Predefined Activity for client site refer GetActivities in this page if this is modified
+                // ################### Start ################
+                List<ActivityModel>? activity = new();
+                try
+                {
+                    activity = _viewDataService.GetDressAppFields(2, request.clientsiteId);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred while fetching activities: " + ex.Message);
+                }
+                // ################### End ################
+
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
 
                 try
@@ -374,7 +388,7 @@ namespace CityWatch.Web.API
                     Console.WriteLine("Error sending new guard registration email: " + ex.Message);
                 }
 
-                return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode });
+                return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode, Activity = activity });
             }
             catch (Exception ex)
             {
@@ -441,6 +455,7 @@ namespace CityWatch.Web.API
         [HttpGet("GetActivities")]
         public IActionResult GetActivities([FromQuery] int type, [FromQuery] int? siteid = 0)
         {
+            //Predefined Activity for client site refer EnterGuardLogin function in this same page
             try
             {
                 var activity = _viewDataService.GetDressAppFields(type, siteid);
@@ -551,6 +566,74 @@ namespace CityWatch.Web.API
             {
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
+
+        }
+
+        [HttpPost("SyncOfflinePostActivityLogData")]
+        public IActionResult SyncOfflinePostActivityLogData([FromBody] List<PostActivityRequestLocalCacheOffline> offlineRecords)
+        {
+            //try
+            //{
+            //    var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            //    var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
+
+            //    if (!IsSuccessR)
+            //    {
+            //        return BadRequest(new { message = msgR });
+            //    }
+
+            //    return Ok(new { message = msgR, guardLoginId = guardLoginIdR });
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            //}
+
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            if (offlineRecords != null && offlineRecords.Count > 0)
+            {
+                foreach (var offlineRecord in offlineRecords)
+                {
+                    try
+                    {
+                        PostActivityRequest request = new PostActivityRequest()
+                        {
+                            guardId = offlineRecord.guardId,
+                            clientsiteId = offlineRecord.clientsiteId,
+                            userId = offlineRecord.userId,
+                            activityString = offlineRecord.activityString,
+                            gps = offlineRecord.gps,
+                            systemEntry = offlineRecord.systemEntry,
+                            scanningType = offlineRecord.scanningType,
+                            tagUID = offlineRecord.tagUID,
+                            EventDateTimeLocal = offlineRecord.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = offlineRecord.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = offlineRecord.EventDateTimeZone,
+                            EventDateTimeZoneShort = offlineRecord.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = offlineRecord.EventDateTimeUtcOffsetMinute,
+                            IsOfflineRecord = true,
+                            OfflineRecordSyncDateTime = DateTime.Now
+                        };
+
+                        //Create Logbook entries 
+                        var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
+                        if (IsSuccessR)
+                        {
+                            offlineRecord.IsSynced = true;
+                        }
+
+                        Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
+
+                    }
+                    catch (Exception)
+                    {
+
+                        // throw;
+                    }
+                }
+            }
+
+            return Ok(offlineRecords);
 
         }
 
@@ -3318,7 +3401,7 @@ namespace CityWatch.Web.API
                     if (!fileuploaded)
                         return Ok(new { issuccess = false, message = $"Could not upload Hr document file.", data = false });
                 }
-                else if(guardComplianceAndLicenseDTO.Id <= 0)
+                else if (guardComplianceAndLicenseDTO.Id <= 0)
                 {
                     return Ok(new { issuccess = false, message = $"Hr document file is missing.", data = false });
                 }
