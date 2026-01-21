@@ -9939,7 +9939,6 @@ $('#copyButtonGuard').on('click', function () {
 if (typeof gridGuardLog !== 'undefined') {
     window.gridGuardLog = gridGuardLog;
 }
-});
 
 
 
