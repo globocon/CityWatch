@@ -210,7 +210,7 @@ namespace CityWatch.Web.Pages.Guard
                     if (rcLinkedDetails.IsLB == true)
                     {
                         int[] ids = clientSites.Select(x => x.ClientSiteId).ToArray();
-                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x => x.IsSystemEntry == false).ToList();
+                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x=> x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal && x.GuardLogin!=null);
                         foreach (var guardlog in otherguardlogs)
                         {
                             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
@@ -297,8 +297,9 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
-            guardLogs = guardLogs.OrderByDescending(z => z.EventDateTimeLocal).ThenByDescending(z=> z.Id).ToList();
-            return new JsonResult(guardLogs);
+
+            return new JsonResult(guardLogs.OrderByDescending(z => z.Id).ThenByDescending(z => z.EventDateTime).ToList());
+
         }
 
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
