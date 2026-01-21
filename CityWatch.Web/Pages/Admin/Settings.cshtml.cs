@@ -13,6 +13,8 @@ using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Word;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Dropbox.Api.Files;
 using Dropbox.Api.Users;
@@ -3767,28 +3769,28 @@ namespace CityWatch.Web.Pages.Admin
                     var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
 
                     // Header Row
-                    var headerRow = new Row();
+                    var headerRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
                     headerRow.Append(
-                        new Cell() { CellValue = new CellValue("Description"), DataType = CellValues.String },
-                        new Cell() { CellValue = new CellValue("Sell Rate to Client"), DataType = CellValues.String },
-                        new Cell() { CellValue = new CellValue("Comms 1"), DataType = CellValues.String },
-                        new Cell() { CellValue = new CellValue("Comms 2"), DataType = CellValues.String },
-                        new Cell() { CellValue = new CellValue("Guard Pay Rate"), DataType = CellValues.String },
-                        new Cell() { CellValue = new CellValue("Currency"), DataType = CellValues.String }
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Description"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Sell Rate to Client"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Comms 1"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Comms 2"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Guard Pay Rate"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Currency"), DataType = CellValues.String }
                     );
                     sheetData.Append(headerRow);
 
                     // Data Rows
                     foreach (var item in data)
                     {
-                         var row = new Row();
+                         var row = new DocumentFormat.OpenXml.Spreadsheet.Row();
                         row.Append(
-                            new Cell() { CellValue = new CellValue(item.Description ?? ""), DataType = CellValues.String },
-                            new Cell() { CellValue = new CellValue(item.SellRateToClient.ToString()), DataType = CellValues.Number },
-                            new Cell() { CellValue = new CellValue(item.Comms1.ToString()), DataType = CellValues.Number },
-                            new Cell() { CellValue = new CellValue(item.Comms2.ToString()), DataType = CellValues.Number },
-                            new Cell() { CellValue = new CellValue(item.GuardPayRate.ToString()), DataType = CellValues.Number },
-                             new Cell() { CellValue = new CellValue(item.Currency ?? ""), DataType = CellValues.String }
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Description ?? ""), DataType = CellValues.String },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.SellRateToClient.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Comms1.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Comms2.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.GuardPayRate.ToString()), DataType = CellValues.Number },
+                             new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Currency ?? ""), DataType = CellValues.String }
                         );
                         sheetData.Append(row);
                     }
