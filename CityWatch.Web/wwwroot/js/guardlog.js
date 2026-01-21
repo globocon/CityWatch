@@ -9935,6 +9935,10 @@ $('#copyButtonGuard').on('click', function () {
         .catch((error) => { alert(`Copy failed. Error: ${error}`) });
 });
 
+// Expose gridGuardLog globally for radiocheck.js refresh
+if (typeof gridGuardLog !== 'undefined') {
+    window.gridGuardLog = gridGuardLog;
+}
 });
 
 

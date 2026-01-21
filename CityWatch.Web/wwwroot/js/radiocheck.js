@@ -1,6 +1,8 @@
 ﻿let nIntervId;
 const duration = 60 * 3;
 var isPaused = false;
+var playedMessageIds = []; // Track played messages to prevent looping sound
+
 window.onload = function () {
     updateLanguagesDropdown();
 
@@ -20,7 +22,11 @@ function CheckUnreadMessages() {
     $.get('/Radio/RadioCheckNew?handler=CheckUnreadMessages', function (data) {
         if (data && data.length > 0) {
             data.forEach(function (msg) {
-                playNotificationSound();
+                // Only play sound if we haven't played it for this message ID yet
+                if (!playedMessageIds.includes(msg.id)) {
+                    playNotificationSound();
+                    playedMessageIds.push(msg.id);
+                }
                 showNotificationSlider(msg.notes, true, msg.id);
             });
         }
@@ -143,7 +149,14 @@ function startClock() {
                 display.textContent = minutes + " min" + " " + seconds + " sec";
 
                 if (--timer < 0) {
-                    location.reload();
+                    if (window.gridGuardLog) {
+                        console.log("Refreshing Guard Log Grid...");
+                        window.gridGuardLog.reload();
+                        timer = duration;
+                    } else {
+                        console.warn("gridGuardLog not found, falling back to page reload.");
+                        location.reload();
+                    }
                     //$.ajax({
                     //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
                     //    type: 'POST',
