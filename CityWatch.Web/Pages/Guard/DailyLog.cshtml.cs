@@ -210,12 +210,13 @@ namespace CityWatch.Web.Pages.Guard
                     if (rcLinkedDetails.IsLB == true)
                     {
                         int[] ids = clientSites.Select(x => x.ClientSiteId).ToArray();
-                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x=> x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal && x.GuardLogin!=null);
+                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x=> x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal );
                         foreach (var guardlog in otherguardlogs)
                         {
                             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
                             guardlog.NotesNew = string.Empty;
-                            guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.GuardLogin.ClientSiteLogBook.ClientSite.Name + ")";
+                            if(guardlog.GuardLogin != null)
+                                 guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.GuardLogin.ClientSiteLogBook.ClientSite.Name + ")";
                             foreach (var guardLogImage in guardlogImages)
                             {
                                 if (guardLogImage.IsRearfile == true)
