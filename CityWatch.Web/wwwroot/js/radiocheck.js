@@ -19,9 +19,17 @@ window.onload = function () {
 };
 
 function CheckUnreadMessages() {
+    var guardIdVal = $('#GuardLog_GuardLogin_GuardId').val();
+    var currentGuardId = guardIdVal ? parseInt(guardIdVal) : 0;
+
     $.get('/Radio/RadioCheckNew?handler=CheckUnreadMessages', function (data) {
         if (data && data.length > 0) {
             data.forEach(function (msg) {
+                // Filter Self-Notification: If the message matches the current Guard ID, ignore it.
+                if (currentGuardId > 0 && msg.guardLogin && msg.guardLogin.guardId === currentGuardId) {
+                    return; // Skip this message (it's my own reply)
+                }
+
                 // Only play sound if we haven't played it for this message ID yet
                 if (!playedMessageIds.includes(msg.id)) {
                     playNotificationSound();
