@@ -50,9 +50,9 @@ function playNotificationSound() {
             var unlockFunc = function () {
                 if (audio) {
                     audio.play().then(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        console.log("Audio silently unlocked via interaction.");
+                        // audio.pause(); // Removed to allow delayed playback of blocked notification
+                        // audio.currentTime = 0;
+                        console.log("Audio unlocked and delayed notification played.");
                     }).catch((e) => console.log("Silent unlock failed:" + e));
                 }
                 document.removeEventListener('click', unlockFunc);

@@ -2006,9 +2006,9 @@ $(function () {
                         var unlockFunc = function () {
                             if (audio) {
                                 audio.play().then(() => {
-                                    audio.pause();
-                                    audio.currentTime = 0;
-                                    console.log("Audio silently unlocked via interaction.");
+                                    // audio.pause(); // Removed to allow delayed playback
+                                    // audio.currentTime = 0;
+                                    console.log("Audio silently unlocked and notification played.");
                                     UpdatePlayedNotification(); // Acknowledge pending messages since user is now active
                                 }).catch((e) => console.log("Silent unlock failed:" + e));
                             }
