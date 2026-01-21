@@ -457,6 +457,45 @@
                                                 <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
                                             </div>
                                         </div>
+                                        @* p4-137-traffic-lights-start *@
+                                        <div class="col-md-12 d-flex justify-content-center">
+
+    <!-- Ongoing -->
+    <div class="mr-5 text-center">
+        <i class="fa fa-circle mr-2 traffic-status text-muted" id="trafficOngoing"></i>
+        <span>Ongoing</span>
+    </div>
+
+    <!-- Expiring -->
+    <div class="mr-5 text-center">
+        <i class="fa fa-circle mr-2 traffic-status text-muted" id="trafficExpiring"></i>
+        <span>Expiring</span>
+    </div>
+
+    <!-- Expired -->
+    <div class="mr-5 d-flex flex-column align-items-start">
+
+        <!-- Line 1: icon + Expired + date -->
+        <div class="d-flex align-items-center">
+            <i class="fa fa-circle mr-2 traffic-status text-danger" id="trafficExpired"></i>
+            <span class="mr-2">Expired</span>
+           
+            <span id="lblExpiredDate">31 Dec 2021</span>
+        </div>
+
+        <!-- Line 2: description -->
+        <div id="lblExpiredWarning"
+             class="text-danger mt-1"
+             style="max-width: 280px;"
+             hidden>
+            Site is inactive – please confirm with Citywatch if guarding is actually required
+        </div>
+
+    </div>
+
+</div>
+
+                                        @* p4-137-traffic-lights-end *@
 
                                     </form>
                                 </div>
