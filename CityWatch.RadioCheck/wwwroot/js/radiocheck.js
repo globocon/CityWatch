@@ -3342,7 +3342,11 @@ $('#btnSendActionList').on('click', function () {
         });
     }
 });
-
+const statusMap = {
+    0: { id: '#trafficOngoing', class: 'text-success' },
+    1: { id: '#trafficExpiring', class: 'text-warning' },
+    2: { id: '#trafficExpired', class: 'text-danger' }
+};
 $('#dglClientSiteIdActionList').on('change', function () {
     $('#btncontractedmanning').prop('disabled', true);
     $('#Site_Alarm_Keypad_code').val('');
@@ -3409,8 +3413,28 @@ $('#dglClientSiteIdActionList').on('change', function () {
             } else {
                 $('#download_siteRCSOPList').removeAttr('href');
             }
+            $('.traffic-status')
+                .removeClass('text-success text-warning text-danger')
+                .addClass('text-muted');
+            const status = statusMap[data.clientSiteStatus];
 
-        }
+            if (status) {
+                $(status.id)
+                    .removeClass('text-muted')
+                    .addClass(status.class);
+            }
+            if (data.clientSiteStatus == 2) {
+                //$('#lblExpiredWarning').html('Site is inactive - please confirm with Citywatch if guarding is actually required');
+                //$('#lblExpiredDate').attr('hidden', false);;
+                $('#lblExpiredDate').html('<i class="fa fa-calendar mr-2 text-info" aria-hidden="true"></i> ' + data.formattedExpiredDate);
+                $('#lblExpiredWarning').removeAttr('hidden');
+            }
+            else {
+                //$('#lblExpiredWarning').html('');
+                $('#lblExpiredWarning').attr('hidden', 'hidden');
+                $('#lblExpiredDate').html('');
+            }
+            }
     });
     if (clientSiteId)
         $('#btncontractedmanning').prop('disabled', false);
