@@ -63,7 +63,7 @@ $(document).ready(function () {
             }
         });
     });
-    });
+
 
     $('#filesSearch').on('keyup', function () {
         var searchString = $(this).val();
@@ -75,7 +75,7 @@ $(document).ready(function () {
     $('#btnDownloadPayRatesExcel').on('click', function (e) {
         e.preventDefault();
         var searchString = $('#filesSearch').val();
-         window.location.href = '/Admin/Settings?handler=PayRatesExport&searchString=' + searchString;
+        window.location.href = '/Admin/Settings?handler=PayRatesExport&searchString=' + searchString;
     });
 });
 
