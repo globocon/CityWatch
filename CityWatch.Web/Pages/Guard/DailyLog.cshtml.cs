@@ -216,7 +216,7 @@ namespace CityWatch.Web.Pages.Guard
                             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
                             guardlog.NotesNew = string.Empty;
                             if(guardlog.GuardLogin != null)
-                                 guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.GuardLogin.ClientSiteLogBook.ClientSite.Name + ")";
+                                 guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.ClientSiteLogBook.ClientSite.Name + ")";
                             foreach (var guardLogImage in guardlogImages)
                             {
                                 if (guardLogImage.IsRearfile == true)
