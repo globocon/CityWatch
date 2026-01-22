@@ -3214,5 +3214,46 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
 
 
+
+        public JsonResult OnGetCheckUnreadMessages(int? clientSiteId = null)
+        {
+            try
+            {
+                // Ensure _clientDataProvider and _guardLogDataProvider are available. 
+                // Based on previous file reads, they seem to be standard services in these PageModels.
+                List<ClientSite> clientSiteForLogbook = new List<ClientSite>();
+
+                if (clientSiteId.HasValue && clientSiteId.Value > 0)
+                {
+                   var clientSite = _clientDataProvider.GetClientSiteDetails(clientSiteId.Value);
+                   if(clientSite != null)
+                   {
+                        clientSiteForLogbook.Add(clientSite);
+                   }
+                }
+                else
+                {
+                   clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                }
+
+                if (clientSiteForLogbook.Count != 0)
+                {
+                    var logbookdate = DateTime.Today;
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); 
+                   
+                    if (logBookId > 0)
+                    {
+                        var unreadLogs = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound(logBookId); 
+                        return new JsonResult(unreadLogs);
+                    }
+                }
+                return new JsonResult(new List<GuardLog>());
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new List<GuardLog>());
+            }
+        }
     }
 }
