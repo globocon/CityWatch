@@ -771,7 +771,7 @@ namespace CityWatch.Web.Pages.Radio
 
                 if (clientSiteId.HasValue && clientSiteId.Value > 0)
                 {
-                   var clientSite = _clientDataProvider.GetClientSiteById(clientSiteId.Value);
+                   var clientSite = _clientDataProvider.GetClientSiteDetails(clientSiteId.Value);
                    if(clientSite != null)
                    {
                         clientSiteForLogbook.Add(clientSite);
