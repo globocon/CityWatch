@@ -122,6 +122,8 @@ namespace CityWatch.Web.API
                                 EventDateTimeZone = offlineRecord.EventDateTimeZone,
                                 EventDateTimeZoneShort = offlineRecord.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = offlineRecord.EventDateTimeUtcOffsetMinute,
+                                IsOfflineRecord = true,
+                                OfflineRecordSyncDateTime = DateTime.Now
                             };
 
                             //Create Logbook entries                        

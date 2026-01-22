@@ -133,7 +133,14 @@ namespace CityWatch.Data.Helpers
             return CurrLocalTime;
         }
 
-       
+        public static DateTime ConvertToSystemLocalTime(DateTime eventDateTimeLocal, int utcOffsetMinutes)
+        {
+            // Create DateTimeOffset using supplied local time and offset
+            var sourceDateTime = new DateTimeOffset(eventDateTimeLocal,TimeSpan.FromMinutes(utcOffsetMinutes));
+
+            // Convert to system local time
+            return sourceDateTime.ToLocalTime().DateTime;
+        }
 
     }
 
