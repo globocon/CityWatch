@@ -97,7 +97,76 @@ function ClearTimerAndReload() {
 
 
 
+// p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+var audioplayedlist = [];
+var audioNotification = new Audio('/NotificationSound/mixkit-bell-notification-933.wav');
+
+function checkForUnreadMessages() {
+    var logBookId = $('#hdnLogBookId').val();
+}
+
+$(document).ready(function () {
+    setInterval(checkUnreadMessages, 5000); // Poll every 5 seconds
+});
+
+function checkUnreadMessages() {
+    var logBookId = $('#ClientSiteLogBookId').val(); // Try to find this ID
+    if (logBookId && logBookId != 0) {
+        $.ajax({
+            type: "GET",
+            url: "/RadioCheck/RadioCheckV2?handler=CheckUnreadMessages",
+            data: { logBookId: logBookId },
+            success: function (data) {
+                if (data && data.length > 0) {
+                    data.forEach(function (log) {
+                        if (!audioplayedlist.includes(log.id)) {
+                            playNotificationSound();
+                            showNotificationSlider(log);
+                            audioplayedlist.push(log.id);
+                        }
+                    });
+                }
+            }
+        });
+    }
+}
+
+function playNotificationSound() {
+    audioNotification.play().catch(error => console.log("Audio play failed: ", error));
+}
+
+function showNotificationSlider(log) {
+    // Create and append slider HTML if not exists
+    var sliderId = 'notificationSlider_' + log.id;
+    if ($('#' + sliderId).length === 0) {
+        var sliderHtml = `
+            <div id="${sliderId}" class="notification-slider" style="position: fixed; bottom: 20px; right: 20px; background-color: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index: 9999; width: 300px;">
+                <strong>Guard Reply:</strong><br/>
+                ${log.notes}
+                <button type="button" class="close" onclick="acknowledgeMessage(${log.id}, '${sliderId}')" style="position: absolute; top: 5px; right: 10px;">&times;</button>
+            </div>
+        `;
+        $('body').append(sliderHtml);
+    }
+}
+
+window.acknowledgeMessage = function (logId, sliderId) {
+    $.ajax({
+        type: "POST",
+        url: "/RadioCheck/RadioCheckV2?handler=AckMessage",
+        data: { guardLogId: logId },
+        headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+        success: function (response) {
+            if (response.success) {
+                $('#' + sliderId).remove();
+            }
+        }
+    });
+};
+// p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+
 let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
+
     paging: false,
     ordering: false,
     info: false,
@@ -242,7 +311,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     buttons: showButtonsActive ? [
 
 
-        
+
         {
             text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
             titleAttr: 'Start Recoding',
@@ -252,7 +321,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 clickstarAudio();
                 clientSiteActiveGuards.buttons('audioStart:name').disable();
                 clientSiteActiveGuards.buttons('audioStop:name').enable();
-                
+
                 clientSiteInActiveGuards.buttons('audioStart:name').disable();
                 clientSiteInActiveGuards.buttons('audioStop:name').enable();
             }
@@ -306,7 +375,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: 'btn-hidden',
             enabled: false,
             name: 'Space',
-            
+
         },
         {
             extend: 'copy',
@@ -326,7 +395,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
-        
+
         {
             extend: 'print',
             text: '<i class="fa fa-print"></i>', // Custom button text
@@ -364,7 +433,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
         },
         {
-            
+
             text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
             titleAttr: '',
             className: 'btn btn-md mr-2 btn-guardlogin',
@@ -479,7 +548,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
     ] : [],
 
-   
+
 
 
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -650,9 +719,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
                 }
             }
-            
 
-          
+
+
         },
 
 
@@ -697,7 +766,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
-        
+
         (showButtonsActive ? {
             data: null,
             width: '5%',
@@ -730,8 +799,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-                
-                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
+
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
 
                     // Include the sort value as a hidden element and render the color circle
@@ -752,13 +821,13 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-               
+
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
-                return '<span style="display:none;">' + value + '</span>' +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
                         '"></i>';
                 }
                 else {
@@ -773,21 +842,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-              
-                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
-                return '<span style="display:none;">' + value + '</span>' +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
+                        '"></i>';
                 }
                 else {
                     return '<i class="fa fa-circle text-muted"></i>';
                 }
             }
         },
-       
+
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
@@ -987,33 +1056,33 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         },
 
-       /* {
-            text: '<i class="fa fa-play" aria-hidden="true"></i>',
-            className: 'btn btn-md mr-2 btn-custom',
-            titleAttr: 'play Audio',
-            name: 'playaudio',
-            action: function (e, dt, node, config) {
-                // Get the audio element
-                var audioElement = document.getElementById('audioPlayback');
-                if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
-                    alert('No recording found'); // Alert user if no source is found
-                } else {
-                    // Check if the audio is already playing
-                    if (audioElement.paused) {
-                        audioElement.play(); // Play the audio
-                        $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
-                    } else {
-                        audioElement.pause(); // Pause the audio
-                        $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
-                    }
-                }
-
-                // Add an event listener to handle when the audio ends
-                audioElement.onended = function () {
-                    $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
-                };
-            }
-        },*/
+        /* {
+             text: '<i class="fa fa-play" aria-hidden="true"></i>',
+             className: 'btn btn-md mr-2 btn-custom',
+             titleAttr: 'play Audio',
+             name: 'playaudio',
+             action: function (e, dt, node, config) {
+                 // Get the audio element
+                 var audioElement = document.getElementById('audioPlayback');
+                 if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
+                     alert('No recording found'); // Alert user if no source is found
+                 } else {
+                     // Check if the audio is already playing
+                     if (audioElement.paused) {
+                         audioElement.play(); // Play the audio
+                         $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
+                     } else {
+                         audioElement.pause(); // Pause the audio
+                         $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
+                     }
+                 }
+ 
+                 // Add an event listener to handle when the audio ends
+                 audioElement.onended = function () {
+                     $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
+                 };
+             }
+         },*/
 
         {
             extend: 'copy',
@@ -1032,7 +1101,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             text: '<i class="fa fa-file-pdf-o"></i>',
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
-        },       
+        },
 
         {
             extend: 'print',
@@ -1071,13 +1140,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         },
         {
-            
+
             text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
             titleAttr: '',
             className: 'btn btn-md mr-2 btn-guardlogin',
             action: function () {
                 getLoggedGuardDetails();
-               
+
 
             }
 
@@ -1101,7 +1170,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             titleAttr: 'Webmail Program',
             className: 'btn btn-md mr-2 btn-pdf',
             action: function (e, dt, node, config) {
-               
+
                 $.ajax({
                     url: '/Admin/Settings?handler=HyperLinks',
                     type: 'GET',
@@ -1112,11 +1181,11 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                         newPageUrl = "https://" + newPageUrl; // Prepend "https://" if missing
                     }
                     window.open(newPageUrl, '_blank');
-                    
+
                 });
-                
-                
-               
+
+
+
             }
         },
         {
@@ -1187,7 +1256,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         }
 
 
-    ] :[],
+    ] : [],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -1274,7 +1343,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 else {
 
                     if (data.notificationType != 1) {
-                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName ;
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName;
                     }
                     else {
                         return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -1361,7 +1430,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 }
 
             },
-        },       
+        },
 
         (showButtonsInActive ? {
             targets: -1,
@@ -1381,18 +1450,18 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
             }
         } : {
-              
+
             data: null,
             defaultContent: '',
             width: '1%',
-                visible: false,
-                createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
-                    // Define your conditions to add a class
-                    if (rowData.isEnabled == 1) {
-                        cell.classList.add('bg-danger');
-                    }
+            visible: false,
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
 
-                },
+            },
         }),
         {
             data: 'siteName',
@@ -1561,11 +1630,11 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         }
         /*p4-105 new button-start*/
         //var guardDetailsHtml = '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#specificGuardDetailsModal" data-id="' + result.id + '"></i>';
-        var guardDetailsHtml = '<a href = "/GuardDetails?gId=' + result.id +'" target="_blank"><i class="fa fa-file-text fa-lg pl-5"></i></a>';
+        var guardDetailsHtml = '<a href = "/GuardDetails?gId=' + result.id + '" target="_blank"><i class="fa fa-file-text fa-lg pl-5"></i></a>';
 
         $('#lbl_GuardDetailedDetails').html(guardDetailsHtml)
         $('#lbl_guard_lotes').html('&nbsp;&nbsp;&nbsp;' + result.languages);
-        
+
 
         /*p4-105 new button-end*/
     }).fail(function () {
@@ -2055,7 +2124,7 @@ let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuard
     "scrollY": "150px", // Set the desired height for the scrollable area
     "paging": false,
     "footer": false,
-    "header":false,
+    "header": false,
     ajax: {
         url: '/ActiveGuardSinglePage?handler=ClientSiteLastIncidentReportActivityStatus',
         datatype: 'json',
@@ -2313,7 +2382,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnWandTagdetails', function ()
     isPaused = true;
 
     let userRole = document.getElementById("hdnUserRole").value;
-  
+
 
     var GuardName = $(this).closest("tr").find("td").eq(0).text().trim();
     var GuardId = $(this).data("guard");
@@ -2631,8 +2700,8 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-   
-    if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) { 
+
+    if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) {
         $('#guardIncidentReportsHistoryModal').modal('show');
     }
     isPaused = true;
@@ -2645,8 +2714,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', functi
     $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
     $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
     clientSiteActiveGuardsIncidentReportHistory.clear().draw();
-        clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
-    
+    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+
 });
 /* for Incident Reports history of the guard end*/
 
@@ -2903,13 +2972,13 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     const button = $(event.relatedTarget);
     const id = button.data('id');
 
-   
-        $('#StaffDocumentsAlarm').grid('destroy', true, true); // Destroy existing grid
-        $('#StaffDocumentsAlarm').empty(); // Clear DOM elements
-    
 
-   
-    
+    $('#StaffDocumentsAlarm').grid('destroy', true, true); // Destroy existing grid
+    $('#StaffDocumentsAlarm').empty(); // Clear DOM elements
+
+
+
+
 
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
@@ -3004,7 +3073,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
             {
                 field: 'fileName', title: 'File Name', width: 240,
-                
+
             },
             //{ field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
             { width: 98, renderer: schButtonRendererNew },
@@ -3125,13 +3194,13 @@ $('#openInActiveGuardInNewPage').on('click', function () {
     if (showButtonsActive) {
         let newTab = window.open();
         newTab.location.href = "/InActiveGuardSinglePage";
-        
+
     }
     else {
         let newTab = window.open();
         newTab.location.href = "/ClientProfileInActiveGuardSinglePage";
     }
-   
+
 
 });
 
@@ -3149,7 +3218,7 @@ $('#openActiveGuardInNewPage').on('click', function () {
         let newTab = window.open();
         newTab.location.href = "/ClientProfileActiveGuardSinglePage";
     }
-   
+
 
 });
 /*code added for Global Messsage start*/
@@ -3247,38 +3316,38 @@ $('#btnSendActionList').on('click', function () {
     var CommentsForControlRoomOperator = $('#txtComments').val();
     var textToCopy = "";
     var nwl = "\r\n";
-    if ($('#dglClientTypeActionList').val() != '') { 
-    var cl_type = $("#dglClientTypeActionList option[value='" + $('#dglClientTypeActionList').val() + "']").text() + nwl;
-    var cl_site = $("#dglClientSiteIdActionList option[value='" + $('#dglClientSiteIdActionList').val() + "']").text() + nwl;
-    var cl_address = $('#pn_client_site_address').val() + nwl;
-    var cl_gps = ($('#pn_sitegpsmap').prop('href') == "javascript:void(0)" ? "" : $('#pn_sitegpsmap').prop('href')) + nwl + nwl;
-    var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;
-    var cl_phykey = $('#site_Physical_key').val() + nwl;
-    var cl_cmblock = $('#Site_Combination_Look').val() + nwl;
-    var cl_act1 = $('#Action1').val() + nwl;
-    var cl_act2 = $('#Action2').val() + nwl;
-    var cl_act3 = $('#Action3').val() + nwl;
-    var cl_act4 = $('#Action4').val() + nwl;
-    var cl_act5 = $('#Action5').val() + nwl;
-    var cl_txtcoment = $('#txtComments').val() + nwl;
-    var cl_txtmsgactlist = $('#txtMessageActionList').val() + nwl;
+    if ($('#dglClientTypeActionList').val() != '') {
+        var cl_type = $("#dglClientTypeActionList option[value='" + $('#dglClientTypeActionList').val() + "']").text() + nwl;
+        var cl_site = $("#dglClientSiteIdActionList option[value='" + $('#dglClientSiteIdActionList').val() + "']").text() + nwl;
+        var cl_address = $('#pn_client_site_address').val() + nwl;
+        var cl_gps = ($('#pn_sitegpsmap').prop('href') == "javascript:void(0)" ? "" : $('#pn_sitegpsmap').prop('href')) + nwl + nwl;
+        var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;
+        var cl_phykey = $('#site_Physical_key').val() + nwl;
+        var cl_cmblock = $('#Site_Combination_Look').val() + nwl;
+        var cl_act1 = $('#Action1').val() + nwl;
+        var cl_act2 = $('#Action2').val() + nwl;
+        var cl_act3 = $('#Action3').val() + nwl;
+        var cl_act4 = $('#Action4').val() + nwl;
+        var cl_act5 = $('#Action5').val() + nwl;
+        var cl_txtcoment = $('#txtComments').val() + nwl;
+        var cl_txtmsgactlist = $('#txtMessageActionList').val() + nwl;
 
-    textToCopy = `Client Type: ${cl_type}`;
-    textToCopy += `Client Site: ${cl_site}`;
-    textToCopy += `Address: ${cl_address}`;
-    textToCopy += `Google Map Link: ${cl_gps}`;
-    textToCopy += "Site Access" + nwl;
-    textToCopy += "===========" + nwl;
-    textToCopy += `Alarm Keypad Code: ${cl_keypadcode}`;
-    textToCopy += `Physical key: ${cl_phykey}`;
-    textToCopy += `Combination Lock: ${cl_cmblock}${nwl}`;
-    textToCopy += "Alarm Response" + nwl;
-    textToCopy += "==============" + nwl;
-    textToCopy += `Action 1: ${cl_act1}`;
-    textToCopy += `Action 2: ${cl_act2}`;
-    textToCopy += `Action 3: ${cl_act3}`;
-    textToCopy += `Action 4: ${cl_act4}`;
-    textToCopy += `Action 5: ${cl_act5}`;
+        textToCopy = `Client Type: ${cl_type}`;
+        textToCopy += `Client Site: ${cl_site}`;
+        textToCopy += `Address: ${cl_address}`;
+        textToCopy += `Google Map Link: ${cl_gps}`;
+        textToCopy += "Site Access" + nwl;
+        textToCopy += "===========" + nwl;
+        textToCopy += `Alarm Keypad Code: ${cl_keypadcode}`;
+        textToCopy += `Physical key: ${cl_phykey}`;
+        textToCopy += `Combination Lock: ${cl_cmblock}${nwl}`;
+        textToCopy += "Alarm Response" + nwl;
+        textToCopy += "==============" + nwl;
+        textToCopy += `Action 1: ${cl_act1}`;
+        textToCopy += `Action 2: ${cl_act2}`;
+        textToCopy += `Action 3: ${cl_act3}`;
+        textToCopy += `Action 4: ${cl_act4}`;
+        textToCopy += `Action 5: ${cl_act5}`;
     }
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
@@ -3407,7 +3476,7 @@ $('#dglClientSiteIdActionList').on('change', function () {
                 $('#download_imageRCList').removeAttr('href');
             }
             if (data.sopFileNme != null) {
-                
+
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
                 $('#download_siteRCSOPList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopFileNme);
             } else {
@@ -3829,7 +3898,7 @@ else {
 
 let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage').DataTable({
     dom: 'Bfrtip',
-    buttons: showButtonsInActiveSingle? [
+    buttons: showButtonsInActiveSingle ? [
 
         {
             text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
@@ -3840,7 +3909,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 clickstarAudio();
                 clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').disable();
                 clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').enable();
-               
+
 
             }
         },
@@ -3884,7 +3953,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
-        
+
 
         {
             extend: 'print',
@@ -3924,7 +3993,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
         },
         {
-            
+
             text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
             titleAttr: '',
             className: 'btn btn-md mr-2 btn-guardlogin',
@@ -4130,10 +4199,10 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
                         if (data.isEnabled != 1) {
                             return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName;
-                                ;
+                            ;
                         }
                         else {
-                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +                               
+                            return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                                 '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
                         }
 
@@ -4247,7 +4316,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: null,
             width: '1%',
             visible: false
-            }),
+        }),
         {
             data: 'siteName',
             visible: false,
@@ -4360,7 +4429,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 clickstarAudio();
                 clientSiteActiveGuardsSinglePage.buttons('audioStart:name').disable();
                 clientSiteActiveGuardsSinglePage.buttons('audioStop:name').enable();
-              
+
 
             }
         },
@@ -4445,7 +4514,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
         },
         {
-            
+
             text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
             titleAttr: '',
             className: 'btn btn-md mr-2 btn-guardlogin',
@@ -4469,7 +4538,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             }
         },
         {
-           
+
             text: '<img src="/images/guards.png" alt="Image" height="16" width="16">',
             titleAttr: '',
             className: 'btn btn-md mr-2 btn-guardlogin',
@@ -4573,7 +4642,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         }
 
 
-    ]  : [],
+    ] : [],
 
 
 
@@ -4640,7 +4709,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 else {
 
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName;
-                      
+
 
                 }
             }
@@ -4793,8 +4862,8 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             data: null,
             width: '5%',
             visible: false
-        
-}),
+
+        }),
 
         {
             data: 'siteName',
@@ -4893,7 +4962,7 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnWandTagdetails', f
     isPaused = true;
 
     let userRole = document.getElementById("hdnUserRole").value;
-    
+
 
     var GuardName = $(this).closest("tr").find("td").eq(0).text().trim();
     var GuardId = $(this).data("guard");
@@ -5112,7 +5181,7 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
     //if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) {
-        $('#guardIncidentReportsHistoryModal').modal('show');
+    $('#guardIncidentReportsHistoryModal').modal('show');
     //}
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
@@ -5533,7 +5602,7 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
     if (checkedStatus === '') {
         return;
     }
-    var notificationType = $('#nottifcationType').val(); 
+    var notificationType = $('#nottifcationType').val();
     // Task p6#73_TimeZone issue -- added by Binoy - Start   
     fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
     // Task p6#73_TimeZone issue -- added by Binoy - End
@@ -5861,7 +5930,7 @@ function calculateSumOfTextBoxValues4() {
 
 $('#div_site_settings').on('click', '#save_site_manning_settings_adhoc', function () {
 
-   
+
     $.ajax({
         url: '/RadioCheckV2?handler=ClientSiteManningKpiSettingsADHOC',
         type: 'POST',
@@ -5873,7 +5942,7 @@ $('#div_site_settings').on('click', '#save_site_manning_settings_adhoc', functio
             $('#kpi-settings-modal').modal('hide');
             $('#modelchoice').val('CONTRACTEDMANNING');
             $('#kpi-settings-modal').modal('show');
-           // $('#kpi-tab').tab('show');
+            // $('#kpi-tab').tab('show');
             $('#contracted-manning-tabadhoc').tab('show');
             // Store the tab ID in local storage
             localStorage.setItem('activeTab', 'contracted-manning-tabadhoc');
@@ -5964,8 +6033,8 @@ $('#div_site_settings').on('click', '#delete_workerAdhoc', function () {
                     $('#modelchoice').val('CONTRACTEDMANNING');
                     $('#contracted-manning-tabadhoc').tab('show');
                     $('#kpi-settings-modal').modal('show');
-                   
-                   
+
+
                 }
             }
             else
@@ -6108,7 +6177,7 @@ function calculateSumOfTextBoxValues4Adhoc() {
 
 }
 
-    //Adhoc end
+//Adhoc end
 
 
 
@@ -6141,13 +6210,13 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
-        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' || $('#txtguardGuardRCLiteAccess').val() == 'True') { 
+        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' || $('#txtguardGuardRCLiteAccess').val() == 'True') {
             $('#div_kpi_rc_contractedmanning #showDivButton').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #delete_worker').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #save_site_manning_settings').prop('disabled', true);
-            
+
         }
     });
 }
@@ -6540,9 +6609,9 @@ function format_guard_settings_for_control_room_child_row(d) {
             cellValue = '<i class="fa fa-check-circle text-success"></i>' +
                 '<input type="hidden" id="GuardId" value="' + d.id + '">';
         }
-        if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) { 
-        if (d.dateEnrolled) {
-            cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
+        if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) {
+            if (d.dateEnrolled) {
+                cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
             }
         }
     } else {
@@ -6575,7 +6644,7 @@ function convertDbString(value) { return (value === null || value === undefined)
 let guardDetailsSettings = $('#specificGuardDetailsTable').DataTable({
     pageLength: 10,
     autoWidth: false,
-   
+
     columns: [
         //p4-105 new button-start
         {
@@ -6714,7 +6783,7 @@ $('#specificGuardDetailsModal').on('shown.bs.modal', function (event) {
 
     //guardDetailsSettings.ajax.reload();
     $.ajax({
-        url: '/RadioCheckV2?handler=Guards&id='+ $('#txt_SpecificGuardDetailsId').val(),
+        url: '/RadioCheckV2?handler=Guards&id=' + $('#txt_SpecificGuardDetailsId').val(),
         type: 'GET',
         dataType: 'json',
         //data: function (d) { d.id = $('#txt_SpecificGuardDetailsId').val(); }
@@ -6914,14 +6983,14 @@ $('#client_site_RadioSearchTwo').on('click', '.del-schedule', function () {
             }
         });
 
-        
+
 
         // Clear search field
         $('#search_client_site2').val('');
 
-       
-            $('#logbook-modalRadioTwo').modal('hide');
-       
+
+        $('#logbook-modalRadioTwo').modal('hide');
+
     } else {
         console.log('Invalid data-sch-id format');
     }
@@ -7076,7 +7145,7 @@ $('#btnGeneratefusionAuditReport').on('click', function () {
         excludeSystemLogs: $('#excludeSystemLogFusion').prop("checked"),
         keywordDownSelect: $('#FusionKeydownselect').val()
     });
-     GetRCCharts();
+    GetRCCharts();
 });
 $('#btncount_by_numberofduressPerWeek').on('click', function () {
     $('#modelRCDuressEntriesGraphForWeek').modal('show');
@@ -7148,7 +7217,7 @@ function GetRCCharts() {
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
-        
+
         /* expanding grapph - start*/
 
 
@@ -7338,7 +7407,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0,radius: '80%',
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
@@ -7686,7 +7755,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value +'%';
+                            return args.value + '%';
 
                         },
 
@@ -8115,7 +8184,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0,radius: '80%',
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
@@ -8466,7 +8535,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value +'%';
+                            return args.value + '%';
 
                         },
 
@@ -8857,7 +8926,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value +'%';
+                            return args.value + '%';
 
                         },
 
@@ -8897,7 +8966,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0,radius: '80%',
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
@@ -9246,7 +9315,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value +'%';
+                            return args.value + '%';
 
                         },
 
@@ -9554,7 +9623,7 @@ function downloadDailyGuardfusionLogZipFile() {
         type: 'POST',
         dataType: 'json',
         data: {
-            clientSiteId: $('#fusionClientSiteId').val().join(';'), 
+            clientSiteId: $('#fusionClientSiteId').val().join(';'),
             logFromDate: $('#fusionAudtitFromDate').val(),
             logToDate: $('#fusionAudtitToDate').val(),
             keywordDownSelect: $('#FusionKeydownselect').val()
@@ -9572,7 +9641,7 @@ function downloadDailyGuardfusionLogZipFile() {
     });
 }
 
-     //end fusion report in auditlog08072024
+//end fusion report in auditlog08072024
 
 
 //Audio file save 
@@ -9814,10 +9883,10 @@ function getLoggedGuardDetails() {
     isPaused = true;
     // Generate dates
     for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
-    dates.push(d.toLocaleDateString('en-GB', {
-        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
-    }).replace('Sept', 'Sep'));
-}
+        dates.push(d.toLocaleDateString('en-GB', {
+            weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+        }).replace('Sept', 'Sep'));
+    }
 
     // Row 1: Main headers (dates)
     let topRow = '<tr><th rowspan="2">CRO</th><th rowspan="2">Licence</th>';
@@ -9836,8 +9905,8 @@ function getLoggedGuardDetails() {
     secondRow += '</tr>';
     var headerrow = '<thead>' + topRow + secondRow + '</thead>';
     GetGuardRCLoginDetails(headerrow, dates);
-   /* $('#loggedGuardsDetails').html('<thead>' + topRow + secondRow + '</thead>' + databody);*/
-    
+    /* $('#loggedGuardsDetails').html('<thead>' + topRow + secondRow + '</thead>' + databody);*/
+
 }
 function GetGuardRCLoginDetails(headerrow, dates) {
     $.ajax({
@@ -9872,11 +9941,11 @@ function GetGuardRCLoginDetails(headerrow, dates) {
                 //        datarow += `<td></td> `;
                 //    }
                 //    if (dates[1] == itemnew.formattedLastLoginDate) {
-                        
+
                 //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
                 //        datarow += `<td> ${itemnew.ipAddress}</td> `;
-                        
-                        
+
+
                 //    }
                 //    else {
                 //        datarow += `<td> </td> `;
@@ -9893,7 +9962,7 @@ function GetGuardRCLoginDetails(headerrow, dates) {
                 //        datarow += `<td></td> `;
                 //    }
                 //    if (dates[3] == itemnew.formattedLastLoginDate) {
-                       
+
                 //        datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
                 //        datarow += `<td> ${itemnew.ipAddress}</td> `;
 
@@ -9915,7 +9984,7 @@ function GetGuardRCLoginDetails(headerrow, dates) {
                 //    //});
                 //    //datarow += `<td> ${itemnew.formattedLastLoginTime}</td> `;
                 //    //datarow += `<td> ${itemnew.ipAddress}</td> `;
-                   
+
                 //});
                 //if (item.logins.length == 0) {
                 //    datarow += `<td> </td> `;
@@ -9937,7 +10006,7 @@ function GetGuardRCLoginDetails(headerrow, dates) {
 
                 //}
                 //else if (item.logins.length == 2) {
-                    
+
                 //    datarow += `<td> </td> `;
                 //    datarow += `<td> </td> `;
                 //    datarow += `<td> </td> `;
@@ -9946,7 +10015,7 @@ function GetGuardRCLoginDetails(headerrow, dates) {
                 //}
                 //else if (item.logins.length == 3) {
 
-                    
+
                 //    datarow += `<td> </td> `;
                 //    datarow += `<td> </td> `;
 
@@ -9960,7 +10029,7 @@ function GetGuardRCLoginDetails(headerrow, dates) {
 
 
                 datarow += `</tr>`;
-                
+
             });
             datarow += `</tbody>`;
             $('#loggedGuardsDetails').html(headerrow + datarow);
@@ -10037,12 +10106,12 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
         },
         {
             width: 100, field: 'expiryDate', title: 'Expiry', align: 'center',
-          /*  type: 'date', format: 'dd-mmm-yyyy',*/
+            /*  type: 'date', format: 'dd-mmm-yyyy',*/
             editor: true, parseFormat: 'dd-MM-yyyy'
-         
-            
+
+
         },
-        
+
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -10067,14 +10136,14 @@ if (gridPendingTasks) {
         }).done(function () {
             gridPendingTasks.reload();
 
-          
+
         }).fail(function () {
             console.log('error');
         })
     });
 
     gridPendingTasks.on('rowRemoving', function (e, id, record) {
-       
+
 
         if (confirm('Are you sure want to delete this message?')) {
             const token = $('input[name="__RequestVerificationToken"]').val();
@@ -10085,7 +10154,7 @@ if (gridPendingTasks) {
                 headers: { 'RequestVerificationToken': token },
             }).done(function (respose) {
                 gridPendingTasks.reload();
-                
+
             }).fail(function () {
                 console.log('error');
             })
@@ -10102,7 +10171,7 @@ $('#btnSendActionListLater').on('click', function () {
     $('#MessageType').val('ActionList');
     $('#MessageSendTimeInfoModal').modal('show');
     gridPendingTasks.clear();
-    gridPendingTasks.reload({ clientsite: $('#dglClientSiteIdActionList2').val()});
+    gridPendingTasks.reload({ clientsite: $('#dglClientSiteIdActionList2').val() });
 });
 function fillRefreshLocalTimeZoneDetailswithMessageTime(formData, modelname, isform) {
     // for reference https://moment.github.io/luxon/#/
@@ -10335,7 +10404,7 @@ $('#btnSendGlabalNotificationMessageLater').on('click', function () {
     const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
     const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
     var clientsiteIds = $('#dglClientSiteId').val().join(',');
-    
+
     var Notifications = $('#txtGlobalNotificationMessage').val();
     var Subject = $('#txtGlobalNotificationSubject').val();
     var State = $('#State1').val();
@@ -10356,16 +10425,16 @@ $('#btnSendGlabalNotificationMessageLater').on('click', function () {
         $(this).prop('disabled', false);
     }
     else {
-    $('#MessageType').val('GlobalList');
+        $('#MessageType').val('GlobalList');
         $('#MessageSendTimeInfoModal').modal('show');
-         gridPendingTasks.clear();
+        gridPendingTasks.clear();
         gridPendingTasks.reload({ IsNationality: chkNationality, IsState: checkedState, State: State, IsClientType: chkClientType, clientsite: clientsiteIds, ClientType: ClientTypeId });
         //gridPendingTasks.reload({ clientsite: $('#dglClientSiteId').val().join(',')});
         //alert($('#dglClientSiteId').val());
         //gridPendingTasks.reload({
         //    clientsiteIds: Array.isArray(clientsiteIds) ? selected : [selected]
         //});
-      
+
     }
 });
 $('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
@@ -10380,7 +10449,7 @@ $('#MessageSendTimeInfoModal').on('shown.bs.modal', function (event) {
 $('#selectRadioFrequencyStatus').on('change', function () {
     const frequency = $(this).val();
 
-  
+
     if (frequency == 'OnceOff') {
 
         $('#txtSendMessageDate').prop('disabled', false)
