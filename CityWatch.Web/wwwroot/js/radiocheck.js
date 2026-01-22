@@ -24,12 +24,15 @@ window.onload = function () {
 function CheckUnreadMessages() {
     var guardIdVal = $('#GuardLog_GuardLogin_GuardId').val();
     var currentGuardId = guardIdVal ? parseInt(guardIdVal) : 0;
+    var clientSiteId = $('#ClientSiteID').val(); // Get current Site ID
 
-    $.get('/Radio/RadioCheckNew?handler=CheckUnreadMessages', function (data) {
+    $.get('/Radio/RadioCheckNew?handler=CheckUnreadMessages&clientSiteId=' + clientSiteId, function (data) {
         if (data && data.length > 0) {
             data.forEach(function (msg) {
                 // Filter Self-Notification: If the message matches the current Guard ID, ignore it.
+                // console.log("MsgGuardId:", msg.guardLogin ? msg.guardLogin.guardId : "null", "CurrentGuardId:", currentGuardId);
                 if (currentGuardId > 0 && msg.guardLogin && msg.guardLogin.guardId === currentGuardId) {
+                    console.log("Blocking self-notification from GuardId:", currentGuardId);
                     return; // Skip this message (it's my own reply)
                 }
 
@@ -83,7 +86,7 @@ function showNotificationSlider(message, isFromGuard, id) {
         container = $('#notification-slider-container');
     }
 
-    var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 300px; display: none;">' +
+    var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 350px; display: none;">' +
         '<div style="display: flex; justify-content: space-between; align-items: start;">' +
         '<span><i class="fa fa-bell"></i> <strong>New Message from Guard</strong></span>' +
         '<button type="button" class="close text-white" aria-label="Close" style="opacity: 1;">' +

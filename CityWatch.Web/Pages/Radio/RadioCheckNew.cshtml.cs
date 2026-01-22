@@ -761,13 +761,27 @@ namespace CityWatch.Web.Pages.Radio
         {
             return new JsonResult(_configDataProvider.GetBroadcastCalendarEventsByDate());
         }
-        public JsonResult OnGetCheckUnreadMessages()
+        public JsonResult OnGetCheckUnreadMessages(int? clientSiteId = null)
         {
             try
             {
                 // Ensure _clientDataProvider and _guardLogDataProvider are available. 
                 // Based on previous file reads, they seem to be standard services in these PageModels.
-                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                List<ClientSite> clientSiteForLogbook = new List<ClientSite>();
+
+                if (clientSiteId.HasValue && clientSiteId.Value > 0)
+                {
+                   var clientSite = _clientDataProvider.GetClientSiteById(clientSiteId.Value);
+                   if(clientSite != null)
+                   {
+                        clientSiteForLogbook.Add(clientSite);
+                   }
+                }
+                else
+                {
+                   clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                }
+
                 if (clientSiteForLogbook.Count != 0)
                 {
                     var logbookdate = DateTime.Today;
