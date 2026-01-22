@@ -14,13 +14,11 @@ window.onload = function () {
         ExpiredDocuments();
 
     }
-}
-
-// Only check messages if we are on a Dashboard/Log page
-if (document.querySelector('#clockRefresh')) {
-    CheckUnreadMessages();
-    setInterval(CheckUnreadMessages, 30000); // Poll every 30 seconds
-}
+    // Only check messages if we are on a Dashboard/Log page
+    if (document.querySelector('#clockRefresh')) {
+        CheckUnreadMessages();
+        setInterval(CheckUnreadMessages, 30000); // Poll every 30 seconds
+    }
 };
 
 function CheckUnreadMessages() {
