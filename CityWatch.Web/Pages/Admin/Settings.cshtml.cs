@@ -13,6 +13,8 @@ using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Word;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Dropbox.Api.Files;
 using Dropbox.Api.Users;
@@ -3730,9 +3732,72 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
-        public JsonResult OnGetPayRatesList(int? page, int? limit)
+        public JsonResult OnGetPayRatesList(int? page, int? limit, string searchString)
         {
-            return new JsonResult(_configDataProvider.GetPayRates());
+            var data = _configDataProvider.GetPayRates();
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) || (x.Currency != null && x.Currency.ToLower().Contains(searchString))).ToList();
+            }
+            return new JsonResult(data);
+        }
+
+        public IActionResult OnGetPayRatesExport(string searchString)
+        {
+            var data = _configDataProvider.GetPayRates();
+             if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) || (x.Currency != null && x.Currency.ToLower().Contains(searchString))).ToList();
+            }
+
+            using (var mem = new MemoryStream())
+            {
+                using (var spreadsheetDocument = SpreadsheetDocument.Create(mem, SpreadsheetDocumentType.Workbook))
+                {
+                    var workbookPart = spreadsheetDocument.AddWorkbookPart();
+                    workbookPart.Workbook = new Workbook();
+
+                    var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                    worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+                    var sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild(new Sheets());
+                    var sheet = new Sheet() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Pay Rates" };
+                    sheets.Append(sheet);
+
+                    var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+
+                    // Header Row
+                    var headerRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
+                    headerRow.Append(
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Description"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Sell Rate to Client"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Comms 1"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Comms 2"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Guard Pay Rate"), DataType = CellValues.String },
+                        new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue("Currency"), DataType = CellValues.String }
+                    );
+                    sheetData.Append(headerRow);
+
+                    // Data Rows
+                    foreach (var item in data)
+                    {
+                         var row = new DocumentFormat.OpenXml.Spreadsheet.Row();
+                        row.Append(
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Description ?? ""), DataType = CellValues.String },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.SellRateToClient.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Comms1.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Comms2.ToString()), DataType = CellValues.Number },
+                            new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.GuardPayRate.ToString()), DataType = CellValues.Number },
+                             new DocumentFormat.OpenXml.Spreadsheet.Cell() { CellValue = new CellValue(item.Currency ?? ""), DataType = CellValues.String }
+                        );
+                        sheetData.Append(row);
+                    }
+                }
+
+                return File(mem.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PayRates.xlsx");
+            }
         }
 
         public JsonResult OnPostSavePayRate(PayRate payRate)

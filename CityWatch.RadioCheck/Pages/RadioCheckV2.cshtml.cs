@@ -1850,7 +1850,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1858,6 +1859,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
                             PlayNotificationSound = true
+
+
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
@@ -1887,7 +1890,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm,
+                            IrEntryType = IrEntryType.Normal,
+
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                             EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1895,6 +1899,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
                             PlayNotificationSound = true
+
+
                         };
                         if (guardLog.ClientSiteLogBookId != 0)
                         {
@@ -1955,7 +1961,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1963,6 +1970,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
                                 PlayNotificationSound = true
+
+
                             };
                             _guardLogDataProvider.SaveGuardLog(guardLog);
                         }
@@ -1990,7 +1999,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Alarm,
+                                IrEntryType = IrEntryType.Normal,
+
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
                                 EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -1998,6 +2008,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
                                 PlayNotificationSound = true
+
+
                             };
                             if (guardLog.ClientSiteLogBookId != 0)
                             {
@@ -2753,6 +2765,39 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(data);
         }
 
+
+
+        public JsonResult OnGetCheckUnreadMessages()
+        {
+            try
+            {
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Count != 0)
+                {
+                    // p6#73 timezone bug - Added by binoy 24-01-2024 -- Start
+                    var logbookdate = DateTime.Today;
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); 
+                   
+                    if (logBookId > 0)
+                    {
+                        var unreadLogs = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound(logBookId); 
+                        // Note: GetGuardLogsNotAcknowledgedForNotificationSound checks for PlayNotificationSound == true
+                        return new JsonResult(unreadLogs);
+                    }
+                }
+                return new JsonResult(new List<GuardLog>());
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new List<GuardLog>());
+            }
+        }
+
+        public JsonResult OnPostAckMessage(int id)
+        {
+            return new JsonResult(_guardLogDataProvider.GuardLogsUpdateNotificationSoundStatus(id));
+        }
 
 
         public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata, string pageName, int loginUserId)
