@@ -71,11 +71,11 @@ function playNotificationSound() {
 function showNotificationSlider(message, isFromGuard, id) {
     var container = $('#notification-slider-container');
     if (container.length === 0) {
-        $('body').append('<div id="notification-slider-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px;"></div>');
+        $('body').append('<div id="notification-slider-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px;"></div>');
         container = $('#notification-slider-container');
     }
 
-    var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 300px; display: none;">' +
+    var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 300px; display: none;">' +
         '<div style="display: flex; justify-content: space-between; align-items: start;">' +
         '<span><i class="fa fa-bell"></i> <strong>New Message from Guard</strong></span>' +
         '<button type="button" class="close text-white" aria-label="Close" style="opacity: 1;">' +
@@ -3504,7 +3504,7 @@ $('#dglClientSiteIdActionList').on('change', function () {
                 $('#lblExpiredWarning').attr('hidden', 'hidden');
                 $('#lblExpiredDate').html('');
             }
-            }
+        }
     });
     if (clientSiteId)
         $('#btncontractedmanning').prop('disabled', false);
