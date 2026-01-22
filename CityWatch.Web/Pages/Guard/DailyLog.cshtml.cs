@@ -298,7 +298,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
 
-            return new JsonResult(guardLogs.OrderByDescending(z => z.EventDateTime).ThenByDescending(z => z.Id).ToList());
+            return new JsonResult(guardLogs.OrderByDescending(z => z.EventDateTimeLocal).ThenByDescending(z => z.Id).ToList());
 
         }
 
