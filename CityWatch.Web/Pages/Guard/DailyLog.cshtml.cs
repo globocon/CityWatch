@@ -158,9 +158,8 @@ namespace CityWatch.Web.Pages.Guard
             }
 
 
-            var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
-                .OrderByDescending(z => z.Id)
-                .ThenByDescending(z => z.EventDateTime).ToList();
+            var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today).ToList();
+
             foreach (var guardlog in guardLogs)
             {
                 var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
@@ -299,7 +298,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
 
-            return new JsonResult(guardLogs.OrderByDescending(z => z.Id).ThenByDescending(z => z.EventDateTime).ToList());
+            return new JsonResult(guardLogs.OrderByDescending(z => z.EventDateTime).ThenByDescending(z => z.Id).ToList());
 
         }
 
