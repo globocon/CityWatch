@@ -63,6 +63,33 @@ $(document).ready(function () {
             }
         });
     });
+
+
+    $('#filesSearch').on('keyup', function () {
+        var searchString = $(this).val();
+        if (searchString.length > 0) {
+            $('#clearSearch').show();
+        } else {
+            $('#clearSearch').hide();
+        }
+        if (typeof gridPayRates !== 'undefined') {
+            gridPayRates.reload({ page: 1, searchString: searchString });
+        }
+    });
+
+    $('#clearSearch').on('click', function () {
+        $('#filesSearch').val('');
+        $('#clearSearch').hide();
+        if (typeof gridPayRates !== 'undefined') {
+            gridPayRates.reload({ page: 1, searchString: '' });
+        }
+    });
+
+    $('#btnDownloadPayRatesExcel').on('click', function (e) {
+        e.preventDefault();
+        var searchString = $('#filesSearch').val();
+        window.location.href = '/Admin/Settings?handler=PayRatesExport&searchString=' + searchString;
+    });
 });
 
 function initPayRatesGridIfSelected() {

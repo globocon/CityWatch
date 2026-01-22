@@ -27,14 +27,17 @@ namespace CityWatch.Web.Pages.Radio
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
         private readonly IConfigDataProvider _configDataProvider;
+        private readonly IClientDataProvider _clientDataProvider;
+
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, IConfigDataProvider configDataProvider)
+            IConfiguration configuration, IConfigDataProvider configDataProvider, IClientDataProvider clientDataProvider)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
             _configDataProvider = configDataProvider;
+            _clientDataProvider = clientDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -757,6 +760,37 @@ namespace CityWatch.Web.Pages.Radio
         public JsonResult OnGetBroadcastCalendarEventsByDate()
         {
             return new JsonResult(_configDataProvider.GetBroadcastCalendarEventsByDate());
+        }
+        public JsonResult OnGetCheckUnreadMessages()
+        {
+            try
+            {
+                // Ensure _clientDataProvider and _guardLogDataProvider are available. 
+                // Based on previous file reads, they seem to be standard services in these PageModels.
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Count != 0)
+                {
+                    var logbookdate = DateTime.Today;
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); 
+                   
+                    if (logBookId > 0)
+                    {
+                        var unreadLogs = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound(logBookId); 
+                        return new JsonResult(unreadLogs);
+                    }
+                }
+                return new JsonResult(new List<GuardLog>());
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new List<GuardLog>());
+            }
+        }
+
+        public JsonResult OnPostAckMessage(int id)
+        {
+            return new JsonResult(_guardLogDataProvider.GuardLogsUpdateNotificationSoundStatus(id));
         }
     }
 }
