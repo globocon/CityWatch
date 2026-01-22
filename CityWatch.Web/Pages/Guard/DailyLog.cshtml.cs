@@ -321,6 +321,15 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(audioToPlayId);
         }
 
+        public JsonResult OnGetCheckUpdates(int lastLogId)
+        {
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            if (logBookId == null) return new JsonResult(false);
+
+            var hasNew = _guardLogDataProvider.HasNewLogs(logBookId.Value, lastLogId);
+            return new JsonResult(hasNew);
+        }
+
         // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
         public JsonResult OnPostSaveGuardLog()

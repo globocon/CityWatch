@@ -20,6 +20,7 @@
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
     <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+    <input type="hidden" id="GuardLog_GuardLogin_GuardId" asp-for="@Model.GuardLog.GuardLogin.GuardId" />
     <input type="hidden" id="hid_duressEnabledAddress">
     <input type="hidden" id="hid_duressEnabledGpsCoordinates">
 
@@ -47,6 +48,7 @@ else
     <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
 <div id="loader"></div>
+<audio id="audioPlayback" style="display:none"></audio>
 <div class="row align-items-center">
     <div class="col-md-4">
         <div>
