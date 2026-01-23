@@ -2936,6 +2936,11 @@ $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
 
         $('#ActionListTab').addClass('active');
         $('#actionlist').addClass('show').addClass('active');
+        $('.traffic-status')
+            .removeClass('text-success text-warning text-danger')
+            .addClass('text-muted');
+        $('#lblExpiredWarning').attr('hidden', 'hidden');
+        $('#lblExpiredDate').html('');
     } else {
         const button = $(event.relatedTarget);
         if (button.hasClass('clickbuilding')) {
