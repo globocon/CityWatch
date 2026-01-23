@@ -41,9 +41,7 @@ namespace CityWatch.Data.Models
     }
 
     public class ClientSiteSmartWandTagsHitLogCacheOffline
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    {        
         public int Id { get; set; }
         public int LoggedInClientSiteId { get; set; }
         public int LoggedInUserId { get; set; }
@@ -62,5 +60,8 @@ namespace CityWatch.Data.Models
         public string EventDateTimeZone { get; set; }
         public string EventDateTimeZoneShort { get; set; }
         public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public string DeviceId { get; set; }
+        public string DeviceName { get; set; }
     }
+
 }

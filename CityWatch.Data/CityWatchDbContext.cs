@@ -386,6 +386,10 @@ namespace CityWatch.Data
         public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
         public DbSet<RosterSchedule> RosterSchedules { get; set; }
         public DbSet<PayRate> PayRates { get; set; }
+
+        public DbSet<OfflineFilesRecordsNotSynced> OfflineFilesRecordsNotSynced { get; set; }
+        public DbSet<ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced> ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced { get; set; }
+        public DbSet<PostActivityRequestLocalCacheOfflineNotSynced> PostActivityRequestLocalCacheOfflineNotSynced { get; set; }
     }
 
 

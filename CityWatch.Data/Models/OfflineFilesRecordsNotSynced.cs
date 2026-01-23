@@ -5,8 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class OfflineFilesRecords
-    {             
+    public class OfflineFilesRecordsNotSynced
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int SyncId { get; set; }
         public int Id { get; set; }
         public string RecordLabel { get; set; }
         public string FileNameActual { get; set; }
@@ -29,7 +32,8 @@ namespace CityWatch.Data.Models
         public Guid FileGroupId { get; set; }
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }
+        public DateTime SyncTime { get; set; } = DateTime.Now;
+        public string NotSyncError { get; set; }
 
     }
-    
 }

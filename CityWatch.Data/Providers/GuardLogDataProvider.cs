@@ -420,6 +420,9 @@ namespace CityWatch.Data.Providers
         public List<MobileCrowdControlReportData> GetMobileCrowdControlLogs(int clientSiteId, int logBookId, DateTime logFromDate, DateTime logToDate);
         List<GuardLog> GetGuardLogswithClientSiteIds(int[] clientSiteIds, DateTime logDate);
 
+        public bool SaveOfflineFileRecordError(OfflineFilesRecordsNotSynced _offlineFilesRecordsNotSynced);
+        public bool SaveOfflinePostActivityLogDataError(PostActivityRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7961,6 +7964,33 @@ namespace CityWatch.Data.Providers
 
 
             return result;
+        }
+
+        public bool SaveOfflineFileRecordError(OfflineFilesRecordsNotSynced _offlineFilesRecordsNotSynced)
+        {
+            try
+            {
+                _context.OfflineFilesRecordsNotSynced.Add(_offlineFilesRecordsNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+        public bool SaveOfflinePostActivityLogDataError(PostActivityRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced)
+        {
+            try
+            {
+                _context.PostActivityRequestLocalCacheOfflineNotSynced.Add(_offlineRecordNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
         }
     }
 
