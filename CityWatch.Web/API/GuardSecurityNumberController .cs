@@ -619,18 +619,21 @@ namespace CityWatch.Web.API
 
                         //Create Logbook entries 
                         var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
-                        if (IsSuccessR)
+                        if (!IsSuccessR)
                         {
-                            offlineRecord.IsSynced = true;
+                            // Save the record in DB to process later.
+                            SaveSyncOfflinePostActivityLogDataError(offlineRecord, msgR);
                         }
+
+                        offlineRecord.IsSynced = true;
 
                         Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
 
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
-                        // throw;
+                        SaveSyncOfflinePostActivityLogDataError(offlineRecord, ex.ToString());
+                        offlineRecord.IsSynced = true;
                     }
                 }
             }
@@ -2754,7 +2757,7 @@ namespace CityWatch.Web.API
                         GuardLoginId = guardLoginId,
                         EventDateTime = TimeZoneHelper.ConvertToSystemLocalTime(g.FirstOrDefault().EventDateTimeLocal.Value, g.FirstOrDefault().EventDateTimeUtcOffsetMinute.Value),
                         /*your message */
-                        Notes = "Mob app image upload (Offline)",
+                        Notes = "Mob app image upload",
                         IsSystemEntry = false,
                         EventDateTimeLocal = g.FirstOrDefault().EventDateTimeLocal.Value,
                         EventDateTimeLocalWithOffset = g.FirstOrDefault().EventDateTimeLocalWithOffset.Value,
@@ -2769,7 +2772,9 @@ namespace CityWatch.Web.API
                     int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
 
                     foreach (var o in g)
-                    {                        
+                    {
+                        o.IsSynced = true; // Marking file as sysnced
+
                         string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
                         var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
@@ -2781,9 +2786,10 @@ namespace CityWatch.Web.API
                         if (!allowedExtensions.Contains(ext))
                         {
                             Console.WriteLine($"Unsupported file type: {ext}");
+                            SaveOfflineFilesRecordsError(o, $"Unsupported file type: {ext}");
                             continue;
                         }
-                        
+
                         string folderName = type?.ToLower() switch
                         {
                             "rear" => "RearFiles",
@@ -2828,7 +2834,7 @@ namespace CityWatch.Web.API
 
                         uploadedFiles.Add(publicPath);
 
-                        o.IsSynced = true; // Marking file as sysnced
+                        
 
                         success = true;
                         message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
@@ -2840,9 +2846,14 @@ namespace CityWatch.Web.API
             catch (Exception ex)
             {
                 message = ex.Message;
+
+                foreach(var r in offlineFilesRecords)
+                {
+                    SaveOfflineFilesRecordsError(r, ex.ToString());
+                }
             }
 
-            return new JsonResult(new { success, message });
+            return Ok(offlineFilesRecords);
         }
 
 
@@ -3599,6 +3610,90 @@ namespace CityWatch.Web.API
         }
 
         #endregion "HR Records"
+
+
+        private bool SaveOfflineFilesRecordsError(OfflineFilesRecords _oR, string syncError)
+        {
+            bool IsSuccess = false;
+            OfflineFilesRecordsNotSynced _offlineFilesRecordsNotSynced = new OfflineFilesRecordsNotSynced()
+            {
+                Id = _oR.Id,
+                RecordLabel = _oR.RecordLabel,
+                FileNameActual = _oR.FileNameActual,
+                FileNameCache = _oR.FileNameCache,
+                FileNameWithPathCache = _oR.FileNameWithPathCache,
+                EventDateTimeLocal = _oR.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = _oR.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = _oR.EventDateTimeZone,
+                EventDateTimeZoneShort = _oR.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = _oR.EventDateTimeUtcOffsetMinute,
+                IsSynced = _oR.IsSynced,
+                UniqueRecordId = _oR.UniqueRecordId,
+                FileType = _oR.FileType,
+                IsNew = _oR.IsNew,
+                LogBookId = _oR.LogBookId,
+                guardId = _oR.guardId,
+                clientsiteId = _oR.clientsiteId,
+                userId = _oR.userId,
+                gps = _oR.gps,
+                FileGroupId = _oR.FileGroupId,
+                DeviceId = _oR.DeviceId,
+                DeviceName = _oR.DeviceName,
+                SyncTime = DateTime.Now,
+                NotSyncError = syncError
+            };
+
+            try
+            {
+                IsSuccess = _guardLogDataProvider.SaveOfflineFileRecordError(_offlineFilesRecordsNotSynced);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.ToString()}");
+            }
+
+            return IsSuccess;
+        }
+
+        private bool SaveSyncOfflinePostActivityLogDataError(PostActivityRequestLocalCacheOffline _oR, string syncError)
+        {
+            bool IsSuccess = false;
+            PostActivityRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced = new PostActivityRequestLocalCacheOfflineNotSynced()
+            {
+                Id = _oR.Id,
+                guardId = _oR.guardId,
+                clientsiteId = _oR.clientsiteId,
+                userId = _oR.userId,
+                activityString = _oR.activityString,
+                gps = _oR.gps,
+                systemEntry = _oR.systemEntry,
+                scanningType = _oR.scanningType,
+                tagUID = _oR.tagUID,
+                EventDateTimeLocal = _oR.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = _oR.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = _oR.EventDateTimeZone,
+                EventDateTimeZoneShort = _oR.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = _oR.EventDateTimeUtcOffsetMinute,
+                IsNewGuard = _oR.IsNewGuard,
+                IsSynced = _oR.IsSynced,
+                UniqueRecordId = _oR.UniqueRecordId,
+                DeviceId = _oR.DeviceId,
+                DeviceName = _oR.DeviceName,
+                SyncTime = DateTime.Now,
+                NotSyncError = syncError
+            };
+
+            try
+            {
+                IsSuccess = _guardLogDataProvider.SaveOfflinePostActivityLogDataError(_offlineRecordNotSynced);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.ToString()}");
+            }
+
+            return IsSuccess;
+        }
 
     }
 

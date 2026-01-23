@@ -66,7 +66,7 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetScannerTagInfoData")]
-        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId,int TagsTypeId, int? SmartWandId = null)
+        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -75,7 +75,7 @@ namespace CityWatch.Web.API
 
             try
             {
-                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false, 
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
                     Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
@@ -128,15 +128,26 @@ namespace CityWatch.Web.API
 
                             //Create Logbook entries                        
                             var (IsSuccessLR, msgLR, guardLoginIdLR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
-
-                            offlineRecord.IsSynced = true;
+                            if (!IsSuccessLR)
+                            {
+                                // Save the record in DB to process later.
+                                SaveSyncOfflineSmartWandTagHitDataError(offlineRecord, msgLR);
+                            }
+                            
                             Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
                         }
-                    }
-                    catch (Exception)
-                    {
+                        else
+                        {
+                            // Save the record in DB to process later.
+                            SaveSyncOfflineSmartWandTagHitDataError(offlineRecord, messageR);
+                        }
 
-                        // throw;
+                        offlineRecord.IsSynced = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        SaveSyncOfflineSmartWandTagHitDataError(offlineRecord, ex.ToString());
+                        offlineRecord.IsSynced = true;
                     }
                 }
             }
@@ -278,6 +289,47 @@ namespace CityWatch.Web.API
             {
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
+        }
+
+        private bool SaveSyncOfflineSmartWandTagHitDataError(ClientSiteSmartWandTagsHitLogCacheOffline _oR, string syncError)
+        {
+            bool IsSuccess = false;
+            ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced _offlineRecordsNotSynced = new ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced()
+            {
+                Id = _oR.Id,
+                LoggedInClientSiteId = _oR.LoggedInClientSiteId,
+                LoggedInUserId = _oR.LoggedInUserId,
+                LoggedInGuardId = _oR.LoggedInGuardId,
+                TagUId = _oR.TagUId,
+                TagsTypeId = _oR.TagsTypeId,
+                HitUtcDateTime = _oR.HitUtcDateTime,
+                HitLocalDateTime = _oR.HitLocalDateTime,
+                LastModifiedUtc = _oR.LastModifiedUtc,
+                SmartWandId = _oR.SmartWandId,
+                GPScoordinates = _oR.GPScoordinates,
+                IsSynced = _oR.IsSynced,
+                UniqueRecordId = _oR.UniqueRecordId,
+                EventDateTimeLocal = _oR.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = _oR.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = _oR.EventDateTimeZone,
+                EventDateTimeZoneShort = _oR.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = _oR.EventDateTimeUtcOffsetMinute,
+                DeviceId = _oR.DeviceId,
+                DeviceName = _oR.DeviceName,
+                SyncTime = DateTime.Now,
+                NotSyncError = syncError
+            };
+
+            try
+            {
+                IsSuccess = _clientSiteWandDataProvider.SaveOfflineSmartWandTagHitDataRecordError(_offlineRecordsNotSynced);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.ToString()}");
+            }
+
+            return IsSuccess;
         }
 
     }
