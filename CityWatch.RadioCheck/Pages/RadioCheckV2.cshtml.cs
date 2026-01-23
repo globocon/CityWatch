@@ -1850,7 +1850,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Normal,
+                            IrEntryType = IrEntryType.Alarm,
 
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -1890,7 +1890,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             Notes = Subject + " : " + ControlRoomMessage + " <br/> " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Normal,
+                            IrEntryType = IrEntryType.Alarm,
 
                             RcPushMessageId = pushMessageId,
                             EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -1961,7 +1961,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Normal,
+                                IrEntryType = IrEntryType.Alarm,
 
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
@@ -1999,7 +1999,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                                 Notes = Subject + " : " + Notifications,
                                 //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                                 //IsSystemEntry = true,
-                                IrEntryType = IrEntryType.Normal,
+                                IrEntryType = IrEntryType.Alarm,
 
                                 RcPushMessageId = pushMessageId,
                                 EventDateTimeLocal = tmzdata.EventDateTimeLocal,
