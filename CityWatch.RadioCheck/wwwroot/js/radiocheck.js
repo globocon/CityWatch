@@ -3431,7 +3431,11 @@ $('#dglClientSiteIdActionList').on('change', function () {
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
     var clientSiteId = $('#dglClientSiteIdActionList').val();
-
+    $('.traffic-status')
+        .removeClass('text-success text-warning text-danger')
+        .addClass('text-muted');
+    $('#lblExpiredWarning').attr('hidden', 'hidden');
+    $('#lblExpiredDate').html('');
     $.ajax({
         url: '/RadioCheckV2?handler=ActionList',
         type: 'POST',
@@ -3774,6 +3778,14 @@ $('#dglClientTypeActionList').on('change', function () {
                 let siteByid = [];
                 siteByid.push(sitebuttonSelectedClientSiteId);
                 $('#dglClientSiteIdActionList').val(siteByid).trigger('change');
+
+            }
+            else {
+                $('.traffic-status')
+                    .removeClass('text-success text-warning text-danger')
+                    .addClass('text-muted');
+                $('#lblExpiredWarning').attr('hidden', 'hidden');
+                $('#lblExpiredDate').html('');
             }
         }
     });
