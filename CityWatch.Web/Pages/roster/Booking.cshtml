@@ -18,8 +18,12 @@
                     <div class="d-flex">
                         <select id="project_name" class="form-control" style="width: 100%;"></select>
                         <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
-                            <button class="btn btn-outline-danger btn-sm" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                            @if (!Model.IsLocked)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                            }
                             <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
+                            <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
                         </div>
                     </div>
                 </div>
@@ -38,7 +42,7 @@
                             <i class="fa fa-search position-absolute site-search-icon"></i>
                             <select id="search_site" class="form-control"></select>
                         </div>
-                        <button class="btn btn-success ml-2" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
+                        <button class="btn btn-success ml-2" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
                             <i class="fa fa-plus"></i> <span class="d-none d-lg-inline">Add Site</span>
                         </button>
                     </div>
@@ -90,6 +94,7 @@
                             </button>
                         </div>
                         <div class="modal-body">
+                            <input type="hidden" id="modalShiftId" />
                             <input type="hidden" id="modalSiteId" />
                             <input type="hidden" id="modalDayIndex" />
                             <div class="form-group">
@@ -137,6 +142,45 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Roster Rollover Modal -->
+            <div class="modal fade" id="rolloverModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Roster Rollover</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Duplicate this week's roster to:</p>
+                            <div class="form-group">
+                                <div class="custom-control custom-radio mb-2">
+                                    <input type="radio" id="optNextWeek" name="rolloverOption" class="custom-control-input" value="NextWeek" checked>
+                                    <label class="custom-control-label" for="optNextWeek">Next week</label>
+                                </div>
+                                <div class="custom-control custom-radio mb-2">
+                                    <input type="radio" id="optMonth" name="rolloverOption" class="custom-control-input" value="Month">
+                                    <label class="custom-control-label" for="optMonth">Whole month</label>
+                                </div>
+                                <div class="custom-control custom-radio mb-2">
+                                    <input type="radio" id="optYear" name="rolloverOption" class="custom-control-input" value="Year">
+                                    <label class="custom-control-label" for="optYear">Whole Year</label>
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle mr-1"></i> This will replicate all shifts from the current week to the selected period.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirmRollover">Confirm Rollover</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             <style>
                 /* Modern Typography */
@@ -232,10 +276,29 @@
                     transition: all 0.2s ease;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                 }
+
+                .btn-edit-shift {
+                    position: absolute;
+                    cursor: pointer;
+                    right: 4px;
+                    bottom: 4px;
+                    color: white;
+                    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    opacity: 1;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
                 
-                .btn-delete-shift:hover {
-                    transform: scale(1.15) rotate(90deg);
-                    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4);
+                .btn-delete-shift:hover, .btn-edit-shift:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
                 }
                 
                 .shift-license {
@@ -614,6 +677,9 @@
                 console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
 
+                var today = new Date();
+                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
                 $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
 
                 $.ajax({
@@ -632,9 +698,13 @@
                         res.results.forEach(function (row) {
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
                                 '<td><div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div><small class="text-muted">' + row.clientTypeName + '</small>' +
-                                '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i></td>';
+                                (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + '</td>';
                             
                             row.days.forEach(function (daySchedules, index) {
+                                var cellDate = new Date(currentStartDate);
+                                cellDate.setDate(cellDate.getDate() + index);
+                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
+
                                 rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
                                 
                                 daySchedules.forEach(function (s) {
@@ -642,11 +712,14 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '">' +
+                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                        'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" ' +
+                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div>' + s.shiftStart + '-' + s.shiftEnd + '</div>' +
+                                        '<div>' + s.shiftStart + '  -  ' + s.shiftEnd + '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
-                                        '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' +
+                                        (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
+                                        (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                         '<div class="shift-card-popup">' +
                                         '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
@@ -656,7 +729,10 @@
                                         '</div>';
                                 });
 
-                                rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button></td>';
+                                if (!isDayLocked) {
+                                    rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
+                                }
+                                rowHtml += '</td>';
                             });
 
                             rowHtml += '</tr>';
@@ -722,18 +798,73 @@
                 
                 $('#modalSiteId').val(siteId);
                 $('#modalDayIndex').val(dayIndex);
+                $('#modalShiftId').val(''); // Clear shift ID for new shift
+                
+                // Clear other fields
                 $('#modalGuardId').val(null).trigger('change');
                 $('#modalProviderId').val(null).trigger('change');
                 $('#modalPositionId').val(null).trigger('change');
                 $('#modalPayRate').val('');
+                $('#modalShiftStart').val('08:00');
+                $('#modalShiftEnd').val('16:00');
+
                 $('#addShiftModal').modal('show');
             });
+
+            window.editShift = function(id, event) {
+                if (event) event.stopPropagation();
+                var card = $('.shift-card[data-id="' + id + '"]');
+                var dayIndex = card.closest('td').data('day');
+                var siteId = card.closest('td').data('site');
+                
+                $('#modalDayIndex').val(dayIndex);
+                $('#modalSiteId').val(siteId);
+                $('#modalShiftId').val(id);
+                
+                var guardId = card.data('guardid');
+                var provider = card.data('provider');
+                var payRateId = card.data('payrateid');
+                var start = card.data('start');
+                var end = card.data('end');
+                
+                if (guardId) {
+                    var guardName = card.find('.text-truncate').text().trim();
+                    var newOption = new Option(guardName, guardId, true, true);
+                    $('#modalGuardId').append(newOption).trigger('change');
+                } else {
+                    $('#modalGuardId').val(null).trigger('change');
+                }
+                
+                if (provider) {
+                    var provOption = new Option(provider, provider, true, true);
+                    $('#modalProviderId').append(provOption).trigger('change');
+                } else {
+                    $('#modalProviderId').val(null).trigger('change');
+                }
+                
+                $('#modalShiftStart').val(start);
+                $('#modalShiftEnd').val(end);
+                
+                if (payRateId) {
+                    $('#modalPositionId').val(payRateId).trigger('change');
+                    var rate = $('#modalPositionId option:selected').data('rate');
+                    if (rate !== null && rate !== undefined) {
+                        $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
+                    }
+                } else {
+                    $('#modalPositionId').val(null).trigger('change');
+                    $('#modalPayRate').val('');
+                }
+
+                $('#addShiftModal').modal('show');
+            };
 
             // Save Shift
             $('#btnSaveShift').on('click', function () {
                 var siteId = $('#modalSiteId').val();
                 var dayIndex = $('#modalDayIndex').val();
-                
+                var shiftId = $('#modalShiftId').val(); // Get shift ID
+
                 var guardData = $('#modalGuardId').select2('data');
                 var guardId = (guardData && guardData.length > 0) ? guardData[0].id : null;
                 
@@ -766,7 +897,7 @@
                 var endDateTime = dateStr + 'T' + endTime;
 
                 $.ajax({
-                    url: '/roster/Booking?handler=AddShift',
+                    url: '/roster/Booking?handler=AddShift', // This handler will now also handle updates
                     type: 'POST',
                     headers: getHeaders(),
                     data: {
@@ -776,7 +907,8 @@
                         end: endDateTime,
                         guardId: guardId,
                         providerName: providerName,
-                        payRateId: payRateId
+                        payRateId: payRateId,
+                        shiftId: shiftId // Pass shiftId for updates
                     },
                     success: function (res) {
                         if (res.success) {
@@ -791,6 +923,8 @@
 
             // Click shift to cycle status
             $('#roster_grid').on('click', '.shift-card', function () {
+                if ($(this).data('locked') === true || $(this).data('locked') === "true") return;
+
                 var shiftId = $(this).data('id');
                 var currentStatus = parseInt($(this).data('status'));
                 var nextStatus = (currentStatus + 1) % 3;
@@ -893,6 +1027,43 @@
                 var startDateStr = currentStartDate;
                 var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
                 window.open(url, '_blank');
+            });
+
+            // Handle Rollover
+            $('#btnShowRollover').on('click', function() {
+                if (!currentGroupId) return;
+                $('#rolloverModal').modal('show');
+            });
+
+            $('#btnConfirmRollover').on('click', function() {
+                var option = $('input[name="rolloverOption"]:checked').val();
+                
+                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+
+                $.ajax({
+                    url: '/roster/Booking?handler=RolloverRoster',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { 
+                        groupId: currentGroupId, 
+                        startDate: currentStartDate,
+                        option: option
+                    },
+                    success: function (res) {
+                        $('#btnConfirmRollover').prop('disabled', false).text('Confirm Rollover');
+                        if (res.success) {
+                            $('#rolloverModal').modal('hide');
+                            alert('Roster duplicated successfully.');
+                            loadRoster();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        $('#btnConfirmRollover').prop('disabled', false).text('Confirm Rollover');
+                        alert('An error occurred during rollover.');
+                    }
+                });
             });
 
             // Show/Hide actions based on selection

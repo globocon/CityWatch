@@ -44,9 +44,11 @@ namespace CityWatch.Web.Pages.roster
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
+        public bool IsLocked { get; set; }
 
         public void OnGet(DateTime? startDate, int? groupId)
         {
+            var today = DateTime.Today;
             var timesheet = _clientDataProvider.GetTimesheetDetails();
             DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
 
@@ -60,7 +62,6 @@ namespace CityWatch.Web.Pages.roster
 
             if (startDate == null)
             {
-                var today = DateTime.Today;
                 int diff = (7 + (today.DayOfWeek - firstDayOfWeek)) % 7;
                 StartDate = today.AddDays(-1 * diff).Date;
             }
@@ -78,6 +79,10 @@ namespace CityWatch.Web.Pages.roster
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)
                 .ToList();
+
+            // Locking logic: Dec is locked if it's Jan.
+            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+            IsLocked = StartDate < firstDayOfCurrentMonth;
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -118,10 +123,13 @@ namespace CityWatch.Web.Pages.roster
                         .Select(s => new
                         {
                             id = s.Id,
+                            guardId = s.GuardId,
                             guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
                             guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
                             guardProvider = s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : s.ProviderName,
+                            providerName = s.ProviderName,
+                            payRateId = s.PayRateId,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             status = (int)s.Status
@@ -191,8 +199,16 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId)
         {
+            // Lock Check
+            var today = DateTime.Today;
+            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+            if (start < firstDayOfCurrentMonth)
+            {
+                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+            }
+
             // Validation 1: Start Date < End Date
             if (start >= end)
             {
@@ -209,7 +225,7 @@ namespace CityWatch.Web.Pages.roster
             if (guardId.HasValue)
             {
                 var conflict = await _context.RosterSchedules
-                    .Where(x => x.GuardId == guardId && !x.IsDeleted &&
+                    .Where(x => x.GuardId == guardId && !x.IsDeleted && x.Id != (shiftId ?? 0) &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -223,20 +239,38 @@ namespace CityWatch.Web.Pages.roster
                 }
             }
 
-            var schedule = new RosterSchedule
+            if (shiftId.HasValue && shiftId.Value > 0)
             {
-                RosterGroupId = groupId,
-                ClientSiteId = siteId,
-                ShiftStart = start,
-                ShiftEnd = end,
-                GuardId = guardId,
-                ProviderName = providerName,
-                Status = RosterShiftStatus.Pushed,
-                PayRateId = payRateId
-            };
-            _context.RosterSchedules.Add(schedule);
-            await _context.SaveChangesAsync();
-            return new JsonResult(new { success = true, id = schedule.Id });
+                var existing = await _context.RosterSchedules.FindAsync(shiftId.Value);
+                if (existing == null) return new JsonResult(new { success = false, message = "Shift not found." });
+
+                existing.ClientSiteId = siteId;
+                existing.ShiftStart = start;
+                existing.ShiftEnd = end;
+                existing.GuardId = guardId;
+                existing.ProviderName = providerName;
+                existing.PayRateId = payRateId;
+                
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true, id = existing.Id });
+            }
+            else
+            {
+                var schedule = new RosterSchedule
+                {
+                    RosterGroupId = groupId,
+                    ClientSiteId = siteId,
+                    ShiftStart = start,
+                    ShiftEnd = end,
+                    GuardId = guardId,
+                    ProviderName = providerName,
+                    Status = RosterShiftStatus.Pushed,
+                    PayRateId = payRateId
+                };
+                _context.RosterSchedules.Add(schedule);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true, id = schedule.Id });
+            }
         }
 
         public JsonResult OnGetSearchPayRates(string search)
@@ -259,6 +293,13 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
+                var today = DateTime.Today;
+                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                {
+                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                }
+
                 schedule.Status = (RosterShiftStatus)status;
                 await _context.SaveChangesAsync();
             }
@@ -270,6 +311,13 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
+                var today = DateTime.Today;
+                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                {
+                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                }
+
                 schedule.IsDeleted = true;
                 await _context.SaveChangesAsync();
             }
@@ -340,6 +388,102 @@ namespace CityWatch.Web.Pages.roster
                 return File(pdfBytes, "application/pdf", fileName);
             }
             return NotFound();
+        }
+
+        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option)
+        {
+            try
+            {
+                var endDate = startDate.AddDays(7);
+                var sourceSchedules = await _context.RosterSchedules
+                    .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate)
+                    .ToListAsync();
+
+                if (!sourceSchedules.Any())
+                {
+                    return new JsonResult(new { success = false, message = "No shifts found in the current week to copy." });
+                }
+
+                var today = DateTime.Today;
+                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+
+                DateTime copyUntil;
+                if (option == "NextWeek")
+                {
+                    copyUntil = startDate.AddDays(14);
+                }
+                else if (option == "Month")
+                {
+                    // End of current month
+                    copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
+                }
+                else if (option == "Year")
+                {
+                    // End of current year
+                    copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+                }
+                else
+                {
+                    return new JsonResult(new { success = false, message = "Invalid option." });
+                }
+
+                var targetWeeks = new List<DateTime>();
+                var currentTargetStart = startDate.AddDays(7);
+                while (currentTargetStart < copyUntil)
+                {
+                    targetWeeks.Add(currentTargetStart);
+                    currentTargetStart = currentTargetStart.AddDays(7);
+                }
+
+                foreach (var targetWeekStart in targetWeeks)
+                {
+                    if (targetWeekStart < firstDayOfCurrentMonth) continue; // Safety check
+
+                    foreach (var source in sourceSchedules)
+                    {
+                        var dayOffset = (source.ShiftStart - startDate).Days;
+                        var newStart = targetWeekStart.AddDays(dayOffset).Add(source.ShiftStart.TimeOfDay);
+                        var newEnd = targetWeekStart.AddDays(dayOffset).Add(source.ShiftEnd.TimeOfDay);
+                        
+                        // Handle overnight shifts
+                        if (source.ShiftEnd.Date > source.ShiftStart.Date)
+                        {
+                            var crossoverDays = (source.ShiftEnd - source.ShiftStart).Days;
+                            newEnd = newStart.Add(source.ShiftEnd - source.ShiftStart);
+                        }
+
+                        // Check for duplicate
+                        var exists = await _context.RosterSchedules.AnyAsync(x => 
+                            x.RosterGroupId == groupId && 
+                            x.ClientSiteId == source.ClientSiteId && 
+                            x.ShiftStart == newStart && 
+                            !x.IsDeleted);
+
+                        if (!exists)
+                        {
+                            _context.RosterSchedules.Add(new RosterSchedule
+                            {
+                                RosterGroupId = groupId,
+                                ClientSiteId = source.ClientSiteId,
+                                GuardId = source.GuardId,
+                                ProviderName = source.ProviderName,
+                                ShiftStart = newStart,
+                                ShiftEnd = newEnd,
+                                Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
+                                PayRateId = source.PayRateId
+                            });
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during Roster Rollover");
+                return new JsonResult(new { success = false, message = "An error occurred during rollover." });
+            }
         }
 
         public JsonResult OnGetSearchSites(string search)
