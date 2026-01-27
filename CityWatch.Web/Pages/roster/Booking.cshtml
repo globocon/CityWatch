@@ -112,7 +112,7 @@
                             </div>
                             <div class="form-group row">
                                 <div class="col-6">
-                                    <label>Position</label>
+                                    <label>Payment Profile</label>
                                     <select id="modalPositionId" class="form-control" style="width: 100%">
                                         <option></option>
                                         @if(Model.PayRatesList != null)
@@ -570,6 +570,22 @@
                     cache: true
                 },
                 minimumInputLength: 1
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+                console.log('Guard selected:', data);
+                // Auto-select Provider if available
+                if (data.providerId && data.provider && data.provider !== 'N/A') {
+                    console.log('Auto-selecting Provider:', data.provider, data.providerId);
+                    
+                    // Create option if it doesn't exist
+                    if ($('#modalProviderId').find("option[value='" + data.providerId + "']").length) {
+                        $('#modalProviderId').val(data.providerId).trigger('change');
+                    } else {
+                        // Create a DOM Option and pre-select it
+                        var newOption = new Option(data.provider, data.providerId, true, true);
+                        $('#modalProviderId').append(newOption).trigger('change');
+                    }
+                }
             });
 
             // Provider Search initialization in Modal
@@ -595,7 +611,7 @@
             
             // Position Search initialization in Modal
             $('#modalPositionId').select2({
-                placeholder: 'Select Position',
+                placeholder: 'Select Payment Profile',
                 theme: 'bootstrap4',
                 allowClear: true,
                 dropdownParent: $('#addShiftModal')
