@@ -33,7 +33,7 @@ namespace CityWatch.Data.Services
         public int GetOrCreateNewLogBook(int clientSiteId, LogBookType logBookType, DateTime LogBookDate)
         {
             int newLogBookId;
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, LogBookDate);
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, LogBookDate.Date);
             if (clientSiteLogBook != null)
             {
                 newLogBookId = clientSiteLogBook.Id;
