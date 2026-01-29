@@ -7705,7 +7705,6 @@ namespace CityWatch.Data.Providers
                             RearFileUrls = rearFiles
                         };
                     })
-                    .OrderByDescending(x => x.Id)
                     .ToList();
 
                 return groupedResult;

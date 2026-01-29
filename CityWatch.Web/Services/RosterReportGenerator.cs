@@ -140,7 +140,7 @@ namespace CityWatch.Web.Services
                         {
                             var statusColor = GetStatusColor(shift.Status);
                             var guardName = shift.GuardId.HasValue ? shift.Guard.Name : shift.ProviderName;
-                            var timeRange = $"{shift.ShiftStart:HH:mm}-{shift.ShiftEnd:HH:mm}";
+                            var timeRange = $"{shift.ShiftStart:HH:mm}  -  {shift.ShiftEnd:HH:mm}";
 
                             var shiftBlock = new Div()
                                 .SetBackgroundColor(statusColor)
