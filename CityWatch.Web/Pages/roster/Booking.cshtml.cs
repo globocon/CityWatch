@@ -278,6 +278,8 @@ namespace CityWatch.Web.Pages.roster
 
         public JsonResult OnGetSearchGuards(string search)
         {
+            var providerList = _viewDataService.ProviderList;
+            
             var guards = _context.Guards
                 .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
                 .Select(x => new { 
@@ -286,6 +288,21 @@ namespace CityWatch.Web.Pages.roster
                     license = x.SecurityNo ?? "N/A",
                     state = x.State ?? "N/A",
                     provider = x.Provider ?? "N/A"
+                })
+                .ToList() // Execute query first
+                .Select(g => 
+                {
+                   var pId = providerList
+                       .FirstOrDefault(p => string.Equals(p.Text, g.provider, StringComparison.OrdinalIgnoreCase))?.Value;
+                   
+                   return new {
+                       id = g.id,
+                       text = g.text,
+                       license = g.license,
+                       state = g.state,
+                       provider = g.provider,
+                       providerId = pId // Add ProviderId to response
+                   };
                 })
                 .ToList();
 

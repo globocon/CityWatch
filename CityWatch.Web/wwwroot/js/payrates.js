@@ -111,7 +111,7 @@ function initializePayRatesGrid() {
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'description', title: 'Description', width: 200, align: 'left' },
+            { field: 'description', title: 'Payment Profile', width: 200, align: 'left' },
             { field: 'sellRateToClient', title: 'Sell Rate to Client', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'comms1', title: 'Comms 1', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
