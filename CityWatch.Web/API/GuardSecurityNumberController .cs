@@ -375,6 +375,35 @@ namespace CityWatch.Web.API
                 }
                 // ################### End ################
 
+                //GetPatrolCarLogs for client site
+                // ################### Start ################
+                List<PatrolCarLog> patrolCarLogs = new();
+                try
+                {
+                    patrolCarLogs = _viewDataService.GetPatrolCarLogs(logBookId, request.clientsiteId);
+                }
+                catch (Exception ex)
+                {
+
+                    Console.WriteLine("An error occurred while fetching patrolCarLogs: " + ex.Message);
+                }
+                // ################### End ################
+
+                //GetCustomFieldLogs for client site
+                // ################### Start ################
+                List<Dictionary<string,string>> customFieldLogs = new();
+                try
+                {
+                    customFieldLogs = _viewDataService.GetCustomFieldLogs(logBookId, request.clientsiteId);
+                }
+                catch (Exception ex)
+                {
+
+                    Console.WriteLine("An error occurred while fetching customFieldLogs: " + ex.Message);
+                }
+                // ################### End ################
+
+
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
 
                 try
@@ -390,7 +419,15 @@ namespace CityWatch.Web.API
                     Console.WriteLine("Error sending new guard registration email: " + ex.Message);
                 }
 
-                return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode, Activity = activity });
+                return Ok(new
+                {
+                    message = "Guard successfully logged in.",
+                    guardLoginId,
+                    TourMode = (int)clientsiteDetails.PatrolTourMode,
+                    Activity = activity,
+                    PatrolCarLog = patrolCarLogs,
+                    CustomFieldLog = customFieldLogs.ToArray()
+                });
             }
             catch (Exception ex)
             {
@@ -2834,7 +2871,7 @@ namespace CityWatch.Web.API
 
                         uploadedFiles.Add(publicPath);
 
-                        
+
 
                         success = true;
                         message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
@@ -2847,7 +2884,7 @@ namespace CityWatch.Web.API
             {
                 message = ex.Message;
 
-                foreach(var r in offlineFilesRecords)
+                foreach (var r in offlineFilesRecords)
                 {
                     SaveOfflineFilesRecordsError(r, ex.ToString());
                 }
@@ -3611,6 +3648,93 @@ namespace CityWatch.Web.API
 
         #endregion "HR Records"
 
+        [HttpPost("SyncOfflinePatrolCarLogData")]
+        public IActionResult SyncOfflinePatrolCarLogData([FromBody] List<PatrolCarLogRequestLocalCacheOffline> offlineRecords)
+        {            
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            if (offlineRecords != null && offlineRecords.Count > 0)
+            {
+                bool isSuccess = false;
+                foreach (var offlineRecord in offlineRecords.OrderBy(x => x.EventDateTimeLocal))
+                {
+                    isSuccess = false;
+                    try
+                    {
+                        var logBookType = LogBookType.DailyGuardLog;
+                        var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(offlineRecord.SiteId, logBookType, ((DateTime)offlineRecord.EventDateTimeLocal).Date);
+                        PatrolCarLog patrolCarLog = new()
+                        {
+                            Id = offlineRecord.Id,
+                            PatrolCarId = offlineRecord.PatrolCarId,
+                            ClientSiteLogBookId = offlineRecord.ClientSiteLogBookId,
+                            Mileage = offlineRecord.Mileage,
+                        };
+                        isSuccess = _viewDataService.SavePatrolCarLog(patrolCarLog);
+                        if (!isSuccess)
+                        {
+                            // Save the record in DB to process later.
+                            SaveSyncOfflinePatrolCarLogDataError(offlineRecord, "Error occured while saving patrol car log.");
+                        }
+
+                        offlineRecord.IsSynced = true;
+
+                        Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
+
+                    }
+                    catch (Exception ex)
+                    {
+                        SaveSyncOfflinePatrolCarLogDataError(offlineRecord, ex.ToString());
+                        offlineRecord.IsSynced = true;
+                    }
+                }
+            }
+
+            return Ok(offlineRecords);
+
+        }
+
+        [HttpPost("SyncOfflineCustomFieldLogData")]
+        public IActionResult SyncOfflineCustomFieldLogData([FromBody] List<CustomFieldLogRequestHeadLocalCacheOffline> offlineRecords)
+        {
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            if (offlineRecords != null && offlineRecords.Count > 0)
+            {
+                bool isSuccess = false;
+                foreach (var offlineRecord in offlineRecords.OrderBy(x => x.EventDateTimeLocal))
+                {
+                    isSuccess = false;
+                    try
+                    {
+                        var logBookType = LogBookType.DailyGuardLog;
+                        var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(offlineRecord.SiteId, logBookType, ((DateTime)offlineRecord.EventDateTimeLocal).Date);
+                        var records = offlineRecord.Details
+                            .GroupBy(d => d.DictKey)
+                            .ToDictionary(g => g.Key, g => g.First().DictValue);
+
+                        isSuccess = _viewDataService.SaveCustomFieldLog(logBookId, records);
+                        if (!isSuccess)
+                        {
+                            // Save the record in DB to process later.
+                            SaveSyncOfflineCustomFieldLogDataError(offlineRecord, "Error occured while saving Custom Field log.");
+                        }
+
+                        offlineRecord.IsSynced = true;
+
+                        Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
+
+                    }
+                    catch (Exception ex)
+                    {
+                        SaveSyncOfflineCustomFieldLogDataError(offlineRecord, ex.ToString());
+                        offlineRecord.IsSynced = true;
+                    }
+                }
+            }
+
+            return Ok(offlineRecords);
+
+        }
+
 
         private bool SaveOfflineFilesRecordsError(OfflineFilesRecords _oR, string syncError)
         {
@@ -3686,6 +3810,95 @@ namespace CityWatch.Web.API
             try
             {
                 IsSuccess = _guardLogDataProvider.SaveOfflinePostActivityLogDataError(_offlineRecordNotSynced);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.ToString()}");
+            }
+
+            return IsSuccess;
+        }
+
+        private bool SaveSyncOfflinePatrolCarLogDataError(PatrolCarLogRequestLocalCacheOffline _oR, string syncError)
+        {
+            bool IsSuccess = false;
+            PatrolCarLogRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced = new PatrolCarLogRequestLocalCacheOfflineNotSynced()
+            {                
+                CacheId = _oR.CacheId,
+                SiteId = _oR.SiteId,
+                Id = _oR.Id,
+                ClientSiteLogBookId = _oR.ClientSiteLogBookId,
+                Mileage = _oR.Mileage,
+                MileageText = _oR.MileageText,
+                PatrolCar = _oR.PatrolCar,
+                EventDateTimeLocal = _oR.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = _oR.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = _oR.EventDateTimeZone,
+                EventDateTimeZoneShort = _oR.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = _oR.EventDateTimeUtcOffsetMinute,
+                IsSynced = _oR.IsSynced,
+                UniqueRecordId = _oR.UniqueRecordId,
+                DeviceId = _oR.DeviceId,
+                DeviceName = _oR.DeviceName,
+                PatrolCarId = _oR.PatrolCarId,
+                Model = _oR.Model,
+                Rego = _oR.Rego,
+                ClientSiteId = _oR.ClientSiteId,
+                SyncTime = DateTime.Now,
+                NotSyncError = syncError
+            };
+
+            try
+            {
+                IsSuccess = _guardLogDataProvider.SaveOfflinePatrolCarLogDataError(_offlineRecordNotSynced);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.ToString()}");
+            }
+
+            return IsSuccess;
+        }
+
+        private bool SaveSyncOfflineCustomFieldLogDataError(CustomFieldLogRequestHeadLocalCacheOffline _oR, string syncError)
+        {
+            bool IsSuccess = false;
+
+
+            List<CustomFieldLogRequestDetailCacheOfflineNotSynced> customFieldLogRequestDetail = new List<CustomFieldLogRequestDetailCacheOfflineNotSynced>();
+
+            foreach(var detail in _oR.Details)
+            {
+                customFieldLogRequestDetail.Add(new CustomFieldLogRequestDetailCacheOfflineNotSynced()
+                {
+                    Id = detail.Id,
+                    HeadId = detail.HeadId,
+                    DictKey = detail.DictKey,
+                    DictValue = detail.DictValue
+                });
+            }
+
+            CustomFieldLogRequestHeadLocalCacheOfflineNotSynced _offlineRecordNotSynced = new CustomFieldLogRequestHeadLocalCacheOfflineNotSynced()
+            {
+                Id = _oR.Id,
+                SiteId = _oR.SiteId,
+                Details = customFieldLogRequestDetail,
+                EventDateTimeLocal = _oR.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = _oR.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = _oR.EventDateTimeZone,
+                EventDateTimeZoneShort = _oR.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = _oR.EventDateTimeUtcOffsetMinute,
+                IsSynced = _oR.IsSynced,
+                UniqueRecordId = _oR.UniqueRecordId,
+                DeviceId = _oR.DeviceId,
+                DeviceName = _oR.DeviceName,
+                SyncTime = DateTime.Now,
+                NotSyncError = syncError
+            };
+
+            try
+            {
+                IsSuccess = _guardLogDataProvider.SaveSyncOfflineCustomFieldLogDataError(_offlineRecordNotSynced);
             }
             catch (Exception ex)
             {

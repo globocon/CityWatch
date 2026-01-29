@@ -390,6 +390,8 @@ namespace CityWatch.Data
         public DbSet<OfflineFilesRecordsNotSynced> OfflineFilesRecordsNotSynced { get; set; }
         public DbSet<ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced> ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced { get; set; }
         public DbSet<PostActivityRequestLocalCacheOfflineNotSynced> PostActivityRequestLocalCacheOfflineNotSynced { get; set; }
+        public DbSet<PatrolCarLogRequestLocalCacheOfflineNotSynced> PatrolCarLogRequestLocalCacheOfflineNotSynced { get; set; }
+        public DbSet<CustomFieldLogRequestHeadLocalCacheOfflineNotSynced> CustomFieldLogRequestHeadLocalCacheOfflineNotSynced { get; set; }
     }
 
 

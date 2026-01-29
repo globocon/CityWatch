@@ -423,6 +423,9 @@ namespace CityWatch.Data.Providers
         public bool SaveOfflineFileRecordError(OfflineFilesRecordsNotSynced _offlineFilesRecordsNotSynced);
         public bool SaveOfflinePostActivityLogDataError(PostActivityRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced);
 
+        public bool SaveOfflinePatrolCarLogDataError(PatrolCarLogRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced);
+        public bool SaveSyncOfflineCustomFieldLogDataError(CustomFieldLogRequestHeadLocalCacheOfflineNotSynced _offlineRecordNotSynced);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -7992,6 +7995,35 @@ namespace CityWatch.Data.Providers
                 return false;
             }
         }
+
+        public bool SaveOfflinePatrolCarLogDataError(PatrolCarLogRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced)
+        {
+            try
+            {
+                _context.PatrolCarLogRequestLocalCacheOfflineNotSynced.Add(_offlineRecordNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+        public bool SaveSyncOfflineCustomFieldLogDataError(CustomFieldLogRequestHeadLocalCacheOfflineNotSynced _offlineRecordNotSynced)
+        {
+            try
+            {
+                _context.CustomFieldLogRequestHeadLocalCacheOfflineNotSynced.Add(_offlineRecordNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+
     }
 
 
