@@ -3732,7 +3732,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
-        public JsonResult OnGetPayRatesList(int? page, int? limit, string searchString)
+        public JsonResult OnGetPayRatesList(int? page, int? pageNo, int? limit, string searchString)
         {
             var data = _configDataProvider.GetPayRates();
             if (!string.IsNullOrEmpty(searchString))
@@ -3740,7 +3740,17 @@ namespace CityWatch.Web.Pages.Admin
                 searchString = searchString.ToLower();
                 data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) || (x.Currency != null && x.Currency.ToLower().Contains(searchString))).ToList();
             }
-            return new JsonResult(data);
+
+            var total = data.Count();
+
+            // Support both 'page' and 'pageNo' as some parts of the system use different naming conventions
+            int currentPage = page ?? pageNo ?? 1;
+            int pageSize = limit ?? 10;
+
+            int skip = (currentPage - 1) * pageSize;
+            data = data.Skip(skip).Take(pageSize).ToList();
+
+            return new JsonResult(new { records = data, total = total });
         }
 
         public IActionResult OnGetPayRatesExport(string searchString)
