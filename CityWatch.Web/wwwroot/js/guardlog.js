@@ -9718,20 +9718,26 @@ $('#btnTimesheetConfirm').on('click', function () {
         if (result.success) {
 
             $('#mdlAuthGuardForSopDownload').modal('hide');
-            $('#TimesheetGuard_Id1').val('-1');
-            $('#startDateRoster').val('');
-            $('#endDateRoster').val('');
-            $('#frequency').val('');
-            $('#timesheetModal').modal('show');
-            $.ajax({
-                url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    $('#TimesheetGuard_Id1').val(data);
+            //p1-339-security concern with roster- jisha-start
+            if (result.message == 'Need Pin') {
+                $('#loginRosterEditGuard').modal('show');
+                $('#txt_guardRosterKey').val('');
+                clearGuardValidationSummary('GuardRosterValidationSummary');
+                $('#hidden_rosterguardLicenses').val(guardLicNo);
+                $.ajax({
+                    url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#hidden_rosterguardId').val(data);
 
-                }
-            });
+                    }
+                });
+            }
+            else {
+                GetTimesheetModel(guardLicNo)
+            }
+            //p1-339-security concern with roster- jisha-end
         } else {
             console.log('Error: ', result.message);
             $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
@@ -9740,8 +9746,88 @@ $('#btnTimesheetConfirm').on('click', function () {
         $('#loader').hide();
     });
 });
+//p1-339-security concern with roster- jisha-start
+function GetTimesheetModel(guardLicNo) {
+    $('#TimesheetGuard_Id1').val('-1');
+    $('#startDateRoster').val('');
+    $('#endDateRoster').val('');
+    $('#frequency').val('');
+    $('#timesheetModal').modal('show');
+    $.ajax({
+        url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            $('#TimesheetGuard_Id1').val(data);
+
+        }
+    });
+}
+$('#btnGuardRosterUpdate').on('click', function () {
+    clearGuardValidationSummary('GuardRosterValidationSummary');
+    const securityLicenseNo = $('#txt_guardRosterKey').val();
+    if (securityLicenseNo === '') {
+        displayGuardValidationSummary('GuardRosterValidationSummary', 'Please enter PIN ');
+    }
+    else {
 
 
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
+            type: 'POST',
+            data: {
+                guardId: $('#hidden_rosterguardId').val(),
+                key: securityLicenseNo
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.accessPermission) {
+                $('#loginRosterEditGuard').modal('hide');
+                GetTimesheetModel($('#hidden_rosterguardLicenses').val());
+            }
+            else {
+                displayGuardValidationSummary('GuardRosterValidationSummary', result.successMessage);
+
+            }
+        });
+
+
+
+
+
+
+    }
+});
+
+$('#forgotRosterpassword').click(function (e) {
+    e.preventDefault(); // Prevent the default anchor behavior
+    $('#spinner').removeClass('d-none').addClass('d-inline-block'); // Show spinner
+    clearGuardValidationSummary('GuardRosterValidationSummary');
+
+
+    // AJAX request example
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
+        type: 'POST',
+        data: {
+            guardId: $('#hidden_rosterguardId').val(),
+            siteName: $('#txt_guardRosterKey').val()
+
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+
+        if (result.success) {
+            displayGuardValidationSummaryNew('GuardRosterValidationSummary', result.message, true);
+        }
+        else {
+            displayGuardValidationSummaryNew('GuardRosterValidationSummary', result.message, false);
+        }
+        // Hide spinner after action is complete
+        $('#spinner').addClass('d-none').removeClass('d-inline-block');
+    });
+});
+//p1-339-security concern with roster- jisha-end
 $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
     var Frequency = $('#frequency').val();
 
