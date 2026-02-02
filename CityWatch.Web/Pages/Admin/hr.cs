@@ -446,6 +446,10 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         guard.IsPCARAccess = true;
                     }
+                    else if (val == 18)
+                    {
+                        guard.IsAdminRosterAccess = true;
+                    }
 
                 }
             }

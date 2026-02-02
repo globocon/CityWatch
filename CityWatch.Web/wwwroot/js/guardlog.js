@@ -5449,7 +5449,9 @@ $(function () {
         if (data.isPCARAccess) {
             selectedValues.push(17);
         }
-
+        if (data.isAdminRosterAccess) {
+            selectedValues.push(18);
+        }
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
