@@ -1701,7 +1701,7 @@ namespace CityWatch.Web.Pages.Admin
 
         //    return File("application/pdf", fileName + ".pdf");
         //}
-        public async Task<JsonResult> OnPostDownloadTimesheet(string startdate, string endDate, string frequency, int guradid)
+        public async Task<JsonResult> OnPostDownloadTimesheet(string startdate, string endDate, string frequency, int guradid, int? siteId)
         {
 
             var fileName = string.Empty;
@@ -1710,7 +1710,14 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
 
-                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReportCustom(startdate, endDate, guradid);
+                if (guradid > 0)
+                {
+                    fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReportCustom(startdate, endDate, guradid);
+                }
+                else if (siteId > 0)
+                {
+                    fileName = await _TimesheetReportGenerator.GenerateTimesheetZipFile(new int[] { siteId.Value }, startdate, endDate);
+                }
 
 
 
@@ -1723,15 +1730,18 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             if (string.IsNullOrEmpty(fileName))
-                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+                return new JsonResult(new { fileName, message = "Failed to generate pdf/zip", statusCode = -1 });
 
 
 
 
-            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+
+            var downloadPath = fileName.EndsWith(".zip") ? $"~/Pdf/FromDropbox/{fileName}" : $"~/Pdf/Output/{fileName}";
+
+            return new JsonResult(new { fileName = @Url.Content(downloadPath), statusCode });
         }
 
-        public async Task<JsonResult> OnPostDownloadTimesheetFrequency(string frequency, int guradid)
+        public async Task<JsonResult> OnPostDownloadTimesheetFrequency(string frequency, int guradid, int? siteId)
         {
 
             var fileName = string.Empty;
@@ -1786,7 +1796,14 @@ namespace CityWatch.Web.Pages.Admin
                 }
                 string StartDate = startDate.ToString();
                 string EndDate = endDate.ToString();
-                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(StartDate, EndDate, guradid);
+                if (guradid > 0)
+                {
+                    fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(StartDate, EndDate, guradid);
+                }
+                else if (siteId > 0)
+                {
+                    fileName = await _TimesheetReportGenerator.GenerateTimesheetZipFileFrequency(new int[] { siteId.Value }, StartDate, EndDate);
+                }
 
 
             }
@@ -1796,12 +1813,15 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             if (string.IsNullOrEmpty(fileName))
-                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+                return new JsonResult(new { fileName, message = "Failed to generate pdf/zip", statusCode = -1 });
 
 
 
 
-            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+
+            var downloadPath = fileName.EndsWith(".zip") ? $"~/Pdf/FromDropbox/{fileName}" : $"~/Pdf/Output/{fileName}";
+
+            return new JsonResult(new { fileName = @Url.Content(downloadPath), statusCode });
         }
 
 

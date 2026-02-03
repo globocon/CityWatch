@@ -40,6 +40,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.IO.Compression;
 using iText.Kernel.Pdf.Action;
+using iText.Layout.Renderer;
 
 namespace CityWatch.Web.Services
 {
@@ -291,9 +292,14 @@ namespace CityWatch.Web.Services
             var State = _clientDataProvider.GetGuardLicenseState(guradid);
             var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
+            // New Data Retrieval for Booking
+            var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime);
+
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
+            var renderer = new HelperDocumentRenderer(doc);
+            doc.SetRenderer(renderer);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
 
 
@@ -305,29 +311,54 @@ namespace CityWatch.Web.Services
             doc.Add(CreateDateTable(dateTime, Supplier));
             // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
-            bool hasContentOnCurrentPage = false;
-            for (int i = 0; i < GuardLoginTables.Count; i++)
+
+            // 2-Column Layout Implementation
+            Table masterTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
+
+            // Left Column: BOOKING
+            Cell bookingCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingRight(5);
+            bookingCell.Add(new Paragraph("BOOKING").SetBold());
+            var (bookingTables, totalBookingHours, totalBookingPay) = CreateBookingDetails(startdateTime, dateTime, LoginDetails, rosterDetails, TimesheetDetails.weekName);
+            foreach(var table in bookingTables)
             {
-                var GuardLoginTable = GuardLoginTables[i];
-                if (GuardLoginTable.GetNumberOfRows() > 0)
-                {
-                    doc.Add(GuardLoginTable);
-                    hasContentOnCurrentPage = true;
-                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
-                    {
-                        doc.Add(new Paragraph("\n"));
-                        doc.Add(new Paragraph("\n")); // Add a space between tables
-                    }
-                }
-
-
+                bookingCell.Add(table);
+                bookingCell.Add(new Paragraph("\n"));
             }
+            masterTable.AddCell(bookingCell);
+
+            // Right Column: ACTUAL
+            Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
+            actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            
+            foreach(var table in GuardLoginTables)
+            {
+                actualCell.Add(table);
+                actualCell.Add(new Paragraph("\n"));
+            }
+            masterTable.AddCell(actualCell);
+
+            doc.Add(masterTable);
+
+            bool hasContentOnCurrentPage = true;
             if (hasContentOnCurrentPage)
             {
-                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                // Check available space using custom renderer
+                if (doc.GetRenderer() is HelperDocumentRenderer helperRenderer)
+                {
+                    float currentY = helperRenderer.GetCurrentY();
+                    // Estimated table height (80) + Margin (15) + Buffer (20) = 115
+                    if (currentY < 115) 
+                    {
+                        doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
+                }
             }
-            var commentTable = GetCommentTable(totalHours);
+
+            var commentTable = GetCommentTable();
+            // Position at bottom of current page
+            float pageWidth = pdfDoc.GetDefaultPageSize().GetWidth();
+            commentTable.SetFixedPosition(PDF_DOC_MARGIN, PDF_DOC_MARGIN, pageWidth - (2 * PDF_DOC_MARGIN));
             doc.Add(commentTable);
             doc.Close();
             pdfDoc.Close();
@@ -348,10 +379,15 @@ namespace CityWatch.Web.Services
             var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid);
             var State = _clientDataProvider.GetGuardLicenseState(guradid);
             var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
+            
+            // New Data Retrieval for Booking
+            var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
+            var renderer = new HelperDocumentRenderer(doc);
+            doc.SetRenderer(renderer);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
            
 
@@ -363,29 +399,58 @@ namespace CityWatch.Web.Services
             doc.Add(CreateDateTable(dateTime, Supplier));
             // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
-            bool hasContentOnCurrentPage = false;
-            for (int i = 0; i < GuardLoginTables.Count; i++)
+            
+            // 2-Column Layout Implementation
+            // Create Master Table to hold Booking (Left) and Actual (Right)
+            Table masterTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
+            
+            // Left Column: BOOKING
+            Cell bookingCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingRight(5);
+            bookingCell.Add(new Paragraph("BOOKING").SetBold());
+            var (bookingTables, totalBookingHours, totalBookingPay) = CreateBookingDetails(startdateTime, dateTime, LoginDetails, rosterDetails, TimesheetDetails.weekName);
+            foreach(var table in bookingTables)
             {
-                var GuardLoginTable = GuardLoginTables[i];
-                if (GuardLoginTable.GetNumberOfRows() > 0)
-                {
-                    doc.Add(GuardLoginTable);
-                    hasContentOnCurrentPage = true;
-                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
-                    {
-                        doc.Add(new Paragraph("\n"));
-                        doc.Add(new Paragraph("\n")); // Add a space between tables
-                    }
-                }
-               
-               
+                bookingCell.Add(table);
+                bookingCell.Add(new Paragraph("\n"));
             }
+            masterTable.AddCell(bookingCell);
+
+            // Right Column: ACTUAL
+            Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
+            actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            
+            // Combine all Actual tables into one container or add them sequentially to the cell
+            foreach(var table in GuardLoginTables)
+            {
+                actualCell.Add(table);
+                actualCell.Add(new Paragraph("\n"));
+            }
+            masterTable.AddCell(actualCell);
+
+            // Add Master Table to Document
+            doc.Add(masterTable);
+            
+            bool hasContentOnCurrentPage = true; // Assumed true as we added content
+            
             if (hasContentOnCurrentPage)
             {
-                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                // Check available space using custom renderer
+                if (doc.GetRenderer() is HelperDocumentRenderer helperRenderer)
+                {
+                    float currentY = helperRenderer.GetCurrentY();
+                    // Estimated table height for totals + Margin (15) + Buffer (20) = 115
+                    if (currentY < 115) 
+                    {
+                        doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
+                }
             }
-            var commentTable = GetCommentTable(totalHours);
+
+            var commentTable = GetCommentTable();
+            // Position at bottom of current page
+            float pageWidth = pdfDoc.GetDefaultPageSize().GetWidth();
+            commentTable.SetFixedPosition(PDF_DOC_MARGIN, PDF_DOC_MARGIN, pageWidth - (2 * PDF_DOC_MARGIN));
             doc.Add(commentTable);
             doc.Close();
             pdfDoc.Close();
@@ -408,9 +473,14 @@ namespace CityWatch.Web.Services
             var State = _clientDataProvider.GetGuardLicenseState(guradid);
             var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
+            // New Data Retrieval for Booking
+            var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime);
+
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
+            var renderer = new HelperDocumentRenderer(doc);
+            doc.SetRenderer(renderer);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
 
 
@@ -422,29 +492,54 @@ namespace CityWatch.Web.Services
             doc.Add(CreateDateTable(dateTime, Supplier));
             // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails1(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
-            bool hasContentOnCurrentPage = false;
-            for (int i = 0; i < GuardLoginTables.Count; i++)
+
+            // 2-Column Layout Implementation
+            Table masterTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
+
+            // Left Column: BOOKING
+            Cell bookingCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingRight(5);
+            bookingCell.Add(new Paragraph("BOOKING").SetBold());
+            var (bookingTables, totalBookingHours, totalBookingPay) = CreateBookingDetails(startdateTime, dateTime, LoginDetails, rosterDetails, TimesheetDetails.weekName);
+            foreach(var table in bookingTables)
             {
-                var GuardLoginTable = GuardLoginTables[i];
-                if (GuardLoginTable.GetNumberOfRows() > 0)
-                {
-                    doc.Add(GuardLoginTable);
-                    hasContentOnCurrentPage = true;
-                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
-                    {
-                        doc.Add(new Paragraph("\n"));
-                        doc.Add(new Paragraph("\n")); // Add a space between tables
-                    }
-                }
-
-
+                bookingCell.Add(table);
+                bookingCell.Add(new Paragraph("\n"));
             }
+            masterTable.AddCell(bookingCell);
+
+            // Right Column: ACTUAL
+            Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
+            actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails1(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            
+            foreach(var table in GuardLoginTables)
+            {
+                actualCell.Add(table);
+                actualCell.Add(new Paragraph("\n"));
+            }
+            masterTable.AddCell(actualCell);
+
+            doc.Add(masterTable);
+
+            bool hasContentOnCurrentPage = true;
             if (hasContentOnCurrentPage)
             {
-                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                // Check available space using custom renderer
+                if (doc.GetRenderer() is HelperDocumentRenderer helperRenderer)
+                {
+                    float currentY = helperRenderer.GetCurrentY();
+                    // Estimated table height (80) + Margin (15) + Buffer (20) = 115
+                    if (currentY < 115) 
+                    {
+                        doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
+                }
             }
-            var commentTable = GetCommentTable(totalHours);
+
+            var commentTable = GetCommentTable();
+            // Position at bottom of current page
+            float pageWidth = pdfDoc.GetDefaultPageSize().GetWidth();
+            commentTable.SetFixedPosition(PDF_DOC_MARGIN, PDF_DOC_MARGIN, pageWidth - (2 * PDF_DOC_MARGIN));
             doc.Add(commentTable);
             doc.Close();
             pdfDoc.Close();
@@ -1283,64 +1378,258 @@ namespace CityWatch.Web.Services
                 throw;
             }
         }
-        private static Table GetCommentTable(int weelTotalHrs)
+        private (List<Table> weeklyTables, double totalHours, decimal totalPay) CreateBookingDetails(
+            DateTime startDate,
+            DateTime endDate,
+            List<GuardLogin> LoginDetails,
+            List<RosterSchedule> rosterDetails,
+            string weekname)
         {
-            float[] columnPercentages = new float[5];
-            var CommentTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+            // Method to create a new table with headers for BOOKING
+            Table CreateNewBookingTable()
+            {
+                float[] columnPercentages = new float[9]; // 9 columns to match header
+                var BookingTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+                CreateBookingDetailsHeader(BookingTable);
+                return BookingTable;
+            }
 
-            CreateGuardDetailsHeader1(CommentTable, weelTotalHrs);
-            var cell1 = GetSiteValueCell("Further Comments :");
-            var cell2 = GetNoBorderCommentCell("");
-            var cell3 = GetNoBorderCommentCell("");
-            var cell4 = GetNoBorderCommentCell("");
-            var cell5 = GetNoBorderComment1Cell("");
+            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
+            double totalHours = 0;
+            decimal totalPay = 0;
 
-            float desiredHeight = 50f;
-            cell1.SetHeight(desiredHeight);
-            cell2.SetHeight(desiredHeight);
-            cell3.SetHeight(desiredHeight);
-            cell4.SetHeight(desiredHeight);
-            cell5.SetHeight(desiredHeight);
+            // Handle single-day logic
+            if (startDate.Date == endDate.Date)
+            {
+                var BookingTable = CreateNewBookingTable();
 
-            CommentTable.AddCell(cell1);
-            CommentTable.AddCell(cell2);
-            CommentTable.AddCell(cell3);
-            CommentTable.AddCell(cell4);
-            CommentTable.AddCell(cell5);
+                // Only create a table for the specific day
+                string dayName = startDate.ToString("dddd");
+                BookingTable.AddCell(GetSiteValueCell(dayName));
+                BookingTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
+                
+                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
+                if (start != null)
+                {
+                    BookingTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
 
-            return CommentTable;
+                    // EXACT COPY from CreateGuardLoginDetails
+                    TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
+                    if (endDateDifference.HasValue)
+                    {
+                        string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                        BookingTable.AddCell(GetSiteValueCell(enddate1));
+
+                        TimeSpan enddate = TimeSpan.Parse(enddate1);
+                        TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
+
+                        TimeSpan TotalHrs = (enddate - startd).Duration();
+                        
+                        string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
+                        BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                        
+                        // Calculate pay
+                        double hours = TotalHrs.TotalHours;
+                        var matchingRoster = rosterDetails
+                            .Where(r => r.ClientSiteId == start.ClientSiteId && 
+                                       r.ShiftStart.Date == start.LoginDate.Date)
+                            .FirstOrDefault();
+                        decimal rate = matchingRoster?.PayRate?.GuardPayRate ?? 0;
+                        decimal pay = (decimal)hours * rate;
+                        
+                        totalHours += hours;
+                        totalPay += pay;
+                        
+                        BookingTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
+                        BookingTable.AddCell(GetSiteValueCell(rate.ToString("F2")));
+                        BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                        BookingTable.AddCell(GetSiteValueCell(pay.ToString("F2")));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < 6; i++) BookingTable.AddCell(GetSiteValueCell(""));
+                }
+
+                return (new List<Table> { BookingTable }, totalHours, totalPay);
+            }
+
+            // Weekly logic for a range of dates (EXACT COPY from CreateGuardLoginDetails)
+            DateTime currentDate = new DateTime(startDate.Year, startDate.Month, 1);
+            int totalDays = (endDate - startDate).Days + 1;
+            
+            DayOfWeek targetStartDay = DayOfWeek.Monday;
+            int daysToAdjust = ((int)startDate.DayOfWeek - (int)targetStartDay + 7) % 7;
+            bool isMonthlyView = (endDate - startDate).Days >= 28;
+            if (!isMonthlyView)
+            {
+                currentDate = startDate.AddDays(-daysToAdjust);
+            }
+            else
+            {
+                currentDate = currentDate;
+            }
+
+            List<Table> weeklyTables = new List<Table>();
+            int TotalWeeklyHrs = 0;
+            int daysProcessed = 0;
+
+            while (daysProcessed < totalDays)
+            {
+                var BookingTable = CreateNewBookingTable();
+                int weeklyTotalHours = 0;
+
+                // Process each day in the week (up to 7 days or remaining days)
+                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
+                {
+                    string dayName = currentDate.ToString("dddd");
+                    BookingTable.AddCell(GetSiteValueCellHeader(dayName)); // Use header style for day name
+
+                    if (currentDate > endDate)
+                    {
+                        BookingTable.AddCell(GetSiteValueCell(""));
+                    }
+                    else
+                    {
+                        BookingTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
+                    }
+
+                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
+                    if (start != null)
+                    {
+                        BookingTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+
+                        // EXACT COPY from CreateGuardLoginDetails
+                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
+                        if (endDateDifference.HasValue)
+                        {
+                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                            BookingTable.AddCell(GetSiteValueCell(enddate1));
+
+                            TimeSpan enddate = TimeSpan.Parse(enddate1);
+                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
+
+                            TimeSpan TotalHrs = (enddate - startd).Duration();
+                            int totalHrsMinutes = (int)TotalHrs.TotalMinutes;
+                            weeklyTotalHours += totalHrsMinutes;
+
+                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
+                            BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                            
+                            // Calculate pay
+                            double hours = TotalHrs.TotalHours;
+                            var matchingRoster = rosterDetails
+                                .Where(r => r.ClientSiteId == start.ClientSiteId && 
+                                           r.ShiftStart.Date == start.LoginDate.Date)
+                                .FirstOrDefault();
+                            decimal rate = matchingRoster?.PayRate?.GuardPayRate ?? 0;
+                            decimal pay = (decimal)hours * rate;
+                            
+                            totalHours += hours;
+                            totalPay += pay;
+                            
+                            BookingTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
+                            BookingTable.AddCell(GetSiteValueCell(rate.ToString("F2")));
+                            BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                            BookingTable.AddCell(GetSiteValueCell(pay.ToString("F2")));
+                        }
+                        else
+                        {
+                            // No OffDuty - add empty cells for: Finish, Total Hrs, Site, $ P/Hr, Hrs, $
+                            for (int i = 0; i < 6; i++) BookingTable.AddCell(GetSiteValueCell(""));
+                        }
+                    }
+                    else
+                    {
+                        // No login - add empty cells for: Start, Finish, Total Hrs, Site, $ P/Hr, Hrs, $
+                        for (int i = 0; i < 7; i++) BookingTable.AddCell(GetSiteValueCell(""));
+                    }
+
+                    currentDate = currentDate.AddDays(1);
+                    daysProcessed++;
+                }
+
+                // Add totals row (same as ACTUAL) - 9 columns total
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Empty column
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Date
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Start
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Finish
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Hrs - keep empty (no total)
+
+                int hours1 = weeklyTotalHours / 60;
+                int minutes1 = weeklyTotalHours % 60;
+                
+                BookingTable.AddCell(GetNoBorderTotalHrsCell(SiteName)); // Site
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // $ P/Hr
+                BookingTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}")); // Hrs (pay column)
+                BookingTable.AddCell(GetSiteValueCell(totalPay.ToString("F2"))); // $
+
+                weeklyTables.Add(BookingTable);
+                TotalWeeklyHrs += weeklyTotalHours;
+            }
+
+            return (weeklyTables, totalHours, totalPay);
         }
-        private static void CreateGuardDetailsHeader1(Table table, int weelTotalHrs)
+
+        private void CreateBookingDetailsHeader(Table table)
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 100f }; // Adjust these values as needed
-                                                                         // Total width of the table in points
-
-
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
-                // const float CELL_WIDTH = 1f;
-                table.AddCell(GetNoBorderTotalHrsCell(""));
-                var TotalTitle = new Cell()
-                  .Add(new Paragraph().Add(new Text("Total")))
-                  .SetFont(PdfHelper.GetPdfFont())
-                  .SetFontSize(CELL_FONT_SIZE * 2f)
-                  .SetTextAlignment(TextAlignment.CENTER)
-                  .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                  .SetBorder(Border.NO_BORDER);
-                table.AddCell(TotalTitle);
-                table.AddCell(GetNoBorderTotalHrsCell(""));
-                table.AddCell(GetNoBorderValueCell(""));
-                int hours1 = weelTotalHrs / 60;
-                int minutes1 = weelTotalHrs % 60;
-                table.AddCell(GetSiteValueCell($"{hours1}:{minutes1}"));
+                table.AddCell(GetSiteValueCellHeader(""));
+                table.AddCell(GetSiteValueCellHeader("Date"));
+                table.AddCell(GetSiteValueCellHeader("Start"));
+                table.AddCell(GetSiteValueCellHeader("Finish"));
+                table.AddCell(GetSiteValueCellHeader("Hrs"));
+                table.AddCell(GetSiteValueCellHeader("Site"));
+                table.AddCell(GetSiteValueCellHeader("$ P/Hr"));
+                table.AddCell(GetSiteValueCellHeader("Hrs"));
+                table.AddCell(GetSiteValueCellHeader("$"));
             }
             catch (Exception ex)
             {
-                // Handle the exception here, for example, log it or show an error message.
                 Console.WriteLine($"An error occurred: {ex.Message}");
-                // You can rethrow the exception if needed.
                 throw;
+            }
+        }
+
+        private static Table GetCommentTable()
+        {
+            float[] columnPercentages = { 20, 80 };
+            var CommentTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth().SetMarginTop(10);
+            
+            // Layout: "Further Comments:" label box | Empty box for writing
+            var labelCell = new Cell()
+                .Add(new Paragraph("Further Comments :").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE))
+                .SetBorder(new SolidBorder(ColorConstants.BLACK, 1))
+                .SetPadding(5)
+                .SetVerticalAlignment(VerticalAlignment.TOP)
+                .SetHeight(50); // Match desired height
+
+            var inputCell = new Cell()
+                .Add(new Paragraph(""))
+                .SetBorder(new SolidBorder(ColorConstants.BLACK, 1))
+                .SetHeight(50);
+
+            CommentTable.AddCell(labelCell);
+            CommentTable.AddCell(inputCell);
+
+            return CommentTable;
+        }
+
+        private static void CreateGuardDetailsHeader1(Table table, double totalHours, decimal totalPay)
+        {
+             // Deprecated / Unused in new layout
+        }
+
+
+        private class HelperDocumentRenderer : DocumentRenderer
+        {
+            public HelperDocumentRenderer(Document document) : base(document) { }
+
+            public float GetCurrentY()
+            {
+                return currentArea?.GetBBox().GetTop() ?? 0;
             }
         }
     }

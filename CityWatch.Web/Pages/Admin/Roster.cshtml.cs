@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
 using CityWatch.Web.Services;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -85,7 +87,7 @@ namespace CityWatch.Web.Pages.Admin
                         var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                         if (!string.IsNullOrEmpty(guardLicNo))
                         {
-                            var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
+                            var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo.Trim());
                             if (guard != null)
                             {
                                 if (guard.IsActive)
@@ -127,6 +129,66 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
+        public JsonResult OnPostCheckAndCreateDownloadAuditLogSite(int siteId)
+        {
+            var Issuccess = false;
+            var exMessage = "";
+            try
+            {
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userid = AuthUserHelper.GetLoggedInUserId;
+                    if (userid != null)
+                    {
+                        if (siteId > 0)
+                        {
+                            Issuccess = true;
+                        }
+                        else
+                        {
+                            exMessage = "Error: Invalid site selected.";
+                        }
+                    }
+                    else
+                    {
+                        exMessage = "Error: User not authenticated.";
+                    }
+                }
+                else
+                {
+                    exMessage = "Error: User not authenticated.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                exMessage = $"Error: {ex.Message}.";
+            }
+
+            return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
+        public JsonResult OnGetClientSitesWithIds(string type)
+        {
+            try
+            {
+                var clientTypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                var clientTypeObj = clientTypes.FirstOrDefault(x => x.Name == type || x.Name.Trim() == type.Trim());
+
+                if (clientTypeObj != null)
+                {
+                    var sites = _viewDataService.GetUserClientSitesHavingAccess(clientTypeObj.Id, AuthUserHelper.LoggedInUserId, string.Empty)
+                                .Where(x => x.ClientType.Name == type || x.ClientType.Name.Trim() == type.Trim())
+                                .Select(s => new { text = s.Name, value = s.Id.ToString() })
+                                .ToList();
+                    return new JsonResult(sites);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+            return new JsonResult(new List<object>());
         }
     }
 }

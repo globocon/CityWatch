@@ -296,6 +296,7 @@ namespace CityWatch.Data.Providers
         void SavePHStates(int CalendarEventId, string[] States);
         void DeletePHStates(int CalendarEventId);
 
+        List<RosterSchedule> GetGuardRosterDetails(int guardId, DateTime startDate, DateTime endDate);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -3996,6 +3997,22 @@ namespace CityWatch.Data.Providers
                 item.IsDeleted = true;
                 _context.SaveChanges();
             }
+        }
+
+        public List<RosterSchedule> GetGuardRosterDetails(int guardId, DateTime startDate, DateTime endDate)
+        {
+            // Adjust endDate to include the full day
+            var endDateTime = endDate.Date.AddDays(1).AddTicks(-1);
+
+            return _context.RosterSchedules
+                .Where(x => x.GuardId == guardId &&
+                            !x.IsDeleted &&
+                            x.ShiftStart >= startDate.Date &&
+                            x.ShiftStart <= endDateTime)
+                .Include(x => x.ClientSite)
+                .Include(x => x.PayRate)
+                .OrderBy(x => x.ShiftStart)
+                .ToList();
         }
     }
 
