@@ -108,8 +108,8 @@ function initializePayRatesGrid() {
     gridPayRates = $('#tbl_pay_rates').grid({
         dataSource: {
             url: '/Admin/Settings?handler=PayRatesList',
-            data: function () {
-                return { searchString: $('#filesSearch').val() };
+            data: function (params) {
+                return $.extend({}, params, { searchString: $('#filesSearch').val() });
             }
         },
         uiLibrary: 'bootstrap4',
