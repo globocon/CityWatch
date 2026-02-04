@@ -224,6 +224,52 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="loginRosterEditGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">HR Document PIN</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardRooster" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter your PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardRosterKey" />
+                                </div>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div class="text-start" style="flex-grow: 1;">
+                                        <a href="#" id="forgotRosterpassword" style="text-align: left; display: inline-block;">Forgot password?</a>
+                                        <div class="spinner-border spinner-border-sm pl-2 d-none" id="spinner" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id="btnGuardRosterUpdate" title="Get Access to Roster">
+                                        <i class="fa fa-sign-in mr-2"></i>
+                                        <span class="d-none d-md-inline-flex"></span>
+                                    </button>
+                                    <input type="hidden" id="hidden_rosterguardId"  />
+                                    <input type="hidden" id="hidden_rosterguardLicenses" />
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardRosterValidationSummary" class="pl-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section PageHeader {
     <h3 class="text-center">ROSTERS</h3>
 }

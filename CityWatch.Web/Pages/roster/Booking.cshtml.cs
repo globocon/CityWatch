@@ -328,7 +328,7 @@ namespace CityWatch.Web.Pages.roster
         {
             var providerList = _viewDataService.ProviderList;
             var guards = _context.Guards
-                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search))))
                 .Select(x => new {
                     id = x.Id,
                     text = x.Name + (string.IsNullOrEmpty(x.SecurityNo) ? "" : " - " + x.SecurityNo),

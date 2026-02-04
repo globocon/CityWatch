@@ -127,5 +127,6 @@ namespace CityWatch.Web.Models
         }
 
         public int GuardRcSiteAccessCount { get; set; }
+        public bool IsAdminRosterAccess { get { return _guard.IsAdminRosterAccess; } }
     }
 }

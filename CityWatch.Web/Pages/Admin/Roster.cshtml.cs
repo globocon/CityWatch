@@ -94,6 +94,11 @@ namespace CityWatch.Web.Pages.Admin
                                 {
                                     
                                     Issuccess = true;
+                                    if(guard.IsAdminRosterAccess == false)
+                                    {
+
+                                        exMessage = "Need Pin";
+                                    }
                                 }
                                 else
                                 {
