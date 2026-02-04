@@ -73,7 +73,7 @@ $(document).ready(function () {
             $('#clearSearch').hide();
         }
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload({ page: 1, searchString: searchString });
+            gridPayRates.reload();
         }
     });
 
@@ -81,7 +81,7 @@ $(document).ready(function () {
         $('#filesSearch').val('');
         $('#clearSearch').hide();
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload({ page: 1, searchString: '' });
+            gridPayRates.reload();
         }
     });
 
@@ -106,7 +106,12 @@ function initPayRatesGridIfSelected() {
 
 function initializePayRatesGrid() {
     gridPayRates = $('#tbl_pay_rates').grid({
-        dataSource: '/Admin/Settings?handler=PayRatesList',
+        dataSource: {
+            url: '/Admin/Settings?handler=PayRatesList',
+            data: function () {
+                return { searchString: $('#filesSearch').val() };
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
