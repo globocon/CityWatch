@@ -369,10 +369,17 @@ namespace CityWatch.Web.Services
             //            && (!guardId.HasValue || x.GuardId != guardId.Value) && x.OffDuty > DateTime.Now)
             //    .Any();
             var today = DateTime.Today;
+            var lastGuardUsed = _guardDataProvider
+                .GetLastGuardUsedSmartWandBySmartWandId(smartWandId)
+                .Where(x => x.CreatedDate >= today && x.CreatedDate < today.AddDays(1))
+                .OrderByDescending(x => x.CreatedDate)
+                .FirstOrDefault();
+            if (lastGuardUsed == null)
+                return false;
 
             var lastLoginToday = _guardDataProvider
                 .GetGuardLoginsBySmartWandId(smartWandId)
-                .Where(x => x.LoginDate >= today && x.LoginDate < today.AddDays(1))
+                .Where(x => x.LoginDate >= today && x.LoginDate < today.AddDays(1) && x.Id == lastGuardUsed.GuardLoginId)
                 .OrderByDescending(x => x.LoginDate)
                 .FirstOrDefault();
 
