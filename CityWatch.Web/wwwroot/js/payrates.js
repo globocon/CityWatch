@@ -73,7 +73,7 @@ $(document).ready(function () {
             $('#clearSearch').hide();
         }
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload();
+            gridPayRates.reload({ page: 1, searchString: searchString });
         }
     });
 
@@ -81,7 +81,7 @@ $(document).ready(function () {
         $('#filesSearch').val('');
         $('#clearSearch').hide();
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload();
+            gridPayRates.reload({ page: 1, searchString: '' });
         }
     });
 
@@ -106,12 +106,7 @@ function initPayRatesGridIfSelected() {
 
 function initializePayRatesGrid() {
     gridPayRates = $('#tbl_pay_rates').grid({
-        dataSource: {
-            url: '/Admin/Settings?handler=PayRatesList',
-            data: function (params) {
-                return $.extend({}, params, { searchString: $('#filesSearch').val() });
-            }
-        },
+        dataSource: '/Admin/Settings?handler=PayRatesList',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -124,6 +119,7 @@ function initializePayRatesGrid() {
             { field: 'currency', title: 'Currency', width: 80, align: 'center' },
             { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
         ],
+        paramNames: { page: 'page', limit: 'limit' },
         pager: { limit: 10, sizes: [10, 20, 50, 100] },
         initialized: function (e) {
             $('#tbl_pay_rates thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
