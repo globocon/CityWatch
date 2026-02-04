@@ -73,7 +73,7 @@ $(document).ready(function () {
             $('#clearSearch').hide();
         }
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload({ page: 1, searchString: searchString });
+            gridPayRates.reload({ pageNo: 1, searchString: searchString });
         }
     });
 
@@ -81,7 +81,7 @@ $(document).ready(function () {
         $('#filesSearch').val('');
         $('#clearSearch').hide();
         if (typeof gridPayRates !== 'undefined') {
-            gridPayRates.reload({ page: 1, searchString: '' });
+            gridPayRates.reload({ pageNo: 1, searchString: '' });
         }
     });
 
@@ -119,7 +119,7 @@ function initializePayRatesGrid() {
             { field: 'currency', title: 'Currency', width: 80, align: 'center' },
             { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
         ],
-        paramNames: { page: 'page', limit: 'limit' },
+        paramNames: { page: 'pageNo' },
         pager: { limit: 10, sizes: [10, 20, 50, 100] },
         initialized: function (e) {
             $('#tbl_pay_rates thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
