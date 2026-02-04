@@ -300,6 +300,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsMobileAppAccess = guard.IsMobileAppAccess;
                 updateGuard.IsMobileAppPlusTags = guard.IsMobileAppPlusTags;
                 updateGuard.IsPCARAccess = guard.IsPCARAccess;
+                updateGuard.IsAdminRosterAccess = guard.IsAdminRosterAccess;
 
             }
 

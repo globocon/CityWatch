@@ -144,5 +144,6 @@ namespace CityWatch.Data.Models
         public bool IsMobileAppPlusTags { get; set; }
 
         public bool IsPCARAccess { get; set; }
+        public bool IsAdminRosterAccess { get; set; }
     }
 }
