@@ -403,6 +403,29 @@ namespace CityWatch.Web.API
                 }
                 // ################### End ################
 
+                //RCLinkedDuressClientSites for client site
+                // ################### Start ################
+                List<RCLinkedDuressClientSites> _rcLinkedClientSites = new();
+                try
+                {
+                    var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
+                    _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(request.clientsiteId);
+                    var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites.FirstOrDefault().RCLinkedId).FirstOrDefault();
+                    if(_check != null)
+                    {
+                        if (!_check.IsSW)
+                        {
+                            //allow only if smartwand is enabled in linked sites
+                            _rcLinkedClientSites = new List<RCLinkedDuressClientSites>();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred while fetching Rc Linked ClientSites: " + ex.Message);
+                }
+                // ################### End ################
+
 
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
 
@@ -426,7 +449,8 @@ namespace CityWatch.Web.API
                     TourMode = (int)clientsiteDetails.PatrolTourMode,
                     Activity = activity,
                     PatrolCarLog = patrolCarLogs,
-                    CustomFieldLog = customFieldLogs.ToArray()
+                    CustomFieldLog = customFieldLogs.ToArray(),
+                    rcLinkedClientSites = _rcLinkedClientSites, 
                 });
             }
             catch (Exception ex)

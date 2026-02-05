@@ -38,6 +38,7 @@ namespace CityWatch.Data.Models
         public Guid? UniqueRecordId { get; set; }
         public bool IsOfflineRecord { get; set; } = false;
         public DateTime? OfflineRecordSyncUtcDateTime { get; set; }
+        public bool IsScanFromLinkedSite { get; set; } = false;
     }
 
     public class ClientSiteSmartWandTagsHitLogCacheOffline
@@ -62,6 +63,7 @@ namespace CityWatch.Data.Models
         public int? EventDateTimeUtcOffsetMinute { get; set; }
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }
+        public bool IsScanFromLinkedSite { get; set; }
     }
 
 }
