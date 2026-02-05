@@ -28,8 +28,9 @@ namespace CityWatch.Data.Models
         public string EventDateTimeZoneShort { get; set; }
         public int? EventDateTimeUtcOffsetMinute { get; set; }
         public string DeviceId { get; set; }
-        public string DeviceName { get; set; }
+        public string DeviceName { get; set; }        
         public DateTime SyncTime { get; set; } = DateTime.Now;
         public string NotSyncError { get; set; }
+        public bool IsScanFromLinkedSite { get; set; } = false;
     }
 }

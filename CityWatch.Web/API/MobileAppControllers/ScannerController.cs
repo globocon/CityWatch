@@ -72,22 +72,24 @@ namespace CityWatch.Web.API
             string message = "An error occurred.";
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
+            int ScannedFromLinkedSite = siteId;
 
             try
             {
-                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
                     Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
                 TagFound = TagFoundR;
                 TagInfoLabel = TagInfoLabelR;
+                ScannedFromLinkedSite = ScanFromLinkedSiteId;
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
 
-            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel });
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite });
         }
 
         [HttpPost("SyncOfflineSmartWandTagHitData")]
@@ -101,16 +103,18 @@ namespace CityWatch.Web.API
                     try
                     {
                         //Save tag hit 
-                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
+                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
                             offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
                             offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.SmartWandId);
+
+                        int postToClientSiteId = ScanFromLinkedSiteId > 0 ? ScanFromLinkedSiteId : offlineRecord.LoggedInClientSiteId;
 
                         if (IsSuccessR)
                         {
                             PostActivityRequest request = new PostActivityRequest()
                             {
                                 guardId = offlineRecord.LoggedInGuardId,
-                                clientsiteId = offlineRecord.LoggedInClientSiteId,
+                                clientsiteId = postToClientSiteId,
                                 userId = offlineRecord.LoggedInUserId,
                                 activityString = TagInfoLabelR,
                                 gps = offlineRecord.GPScoordinates,
@@ -317,7 +321,8 @@ namespace CityWatch.Web.API
                 DeviceId = _oR.DeviceId,
                 DeviceName = _oR.DeviceName,
                 SyncTime = DateTime.Now,
-                NotSyncError = syncError
+                NotSyncError = syncError,
+                IsScanFromLinkedSite = _oR.IsScanFromLinkedSite
             };
 
             try

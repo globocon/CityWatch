@@ -298,6 +298,8 @@ namespace CityWatch.Data.Providers
 
         public List<RCLinkedDuressClientSites> getallClientSitesLinkedDuress(int siteId);
 
+        public List<RCLinkedDuressMaster> getallRCLinkedDuressMaster();
+
         bool IsRClogbookStampRequired(string StampName);
 
         // Optimization for polling
@@ -6257,6 +6259,12 @@ namespace CityWatch.Data.Providers
                 var alllinkedSites = _context.RCLinkedDuressClientSites.Where(x => x.RCLinkedId == rclinkedId).ToList();
                 linkedSitesList = alllinkedSites;
             }
+            return linkedSitesList;
+        }
+
+        public List<RCLinkedDuressMaster> getallRCLinkedDuressMaster()
+        {
+            var linkedSitesList = _context.RCLinkedDuressMaster.ToList();            
             return linkedSitesList;
         }
 

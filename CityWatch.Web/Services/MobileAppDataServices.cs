@@ -6,6 +6,7 @@ using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace CityWatch.Web.Services
         //public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
         //    int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null);
 
-        public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
+        public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, int? SmartWandId = null);
 
         public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(PostActivityRequest request, string IPAddress);
@@ -48,13 +49,14 @@ namespace CityWatch.Web.Services
             _hubContext = hubContext;
         }
 
-        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
+        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel,int ScanFromLinkedSiteId)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
            int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime,ScanningType scanningType ,int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
+            int ScanFromLinkedSiteId = siteId;
             ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
             try
             {
@@ -69,7 +71,7 @@ namespace CityWatch.Web.Services
                         if (scanningType == ScanningType.NFC) { message = "Tag already scanned !!!"; }
                         else if (scanningType == ScanningType.BLUETOOTH) { message = "iBeacon already scanned !!!"; }
 
-                        return (IsSuccess, TagFound, message, TagInfoLabel);
+                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId);
                     }
                 }
                 var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
@@ -109,7 +111,7 @@ namespace CityWatch.Web.Services
                     else if (scanningType == ScanningType.BLUETOOTH)
                     {  // if ibeacon not found dont show in log book entry
                         message = "iBeacon Not Found";
-                        return (IsSuccess, TagFound, message, TagInfoLabel);
+                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId);
                     }
                 }
                 else
@@ -130,17 +132,68 @@ namespace CityWatch.Web.Services
                             else if (scanningType == ScanningType.BLUETOOTH)
                             {  // if ibeacon
                                 message = "iBeacon Not Found";
-                                return (IsSuccess, TagFound, message, TagInfoLabel);
+                                return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId);
                             }
                         }
                         else
                         {
                             if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode == PatrolTouringMode.STND)
                             {
-                                if (scanningType == ScanningType.NFC)
-                                    message = "Tag does not belong to logged in site. Please check.";
-                                else if (scanningType == ScanningType.BLUETOOTH)
-                                    message = "iBeacon does not belong to logged in site. Please check.";
+                                bool isTagSiteLinked = false;
+                                List<RCLinkedDuressClientSites> _rcLinkedClientSites = new();
+
+                                var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
+                                _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
+                                var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites.FirstOrDefault().RCLinkedId).FirstOrDefault();
+                                if (_check != null)
+                                {
+                                    if (!_check.IsSW)
+                                    {
+                                        //allow only if smartwand is enabled in linked sites
+                                        _rcLinkedClientSites = new List<RCLinkedDuressClientSites>();
+                                    }
+                                }
+                                
+                                if (_rcLinkedClientSites != null && _rcLinkedClientSites.Count > 0)
+                                {
+                                    if (_rcLinkedClientSites.Any(x => x.ClientSiteId == TagInfoDetails.ClientSiteId))
+                                    {
+                                        isTagSiteLinked = true;
+                                        ScanFromLinkedSiteId = TagInfoDetails.ClientSiteId;
+
+                                        if (scanningType == ScanningType.NFC)
+                                        {
+                                            IsSuccess = true;
+                                            TagFound = true;
+                                            message = "Tag Found";
+                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
+                                        }
+                                        else if (scanningType == ScanningType.BLUETOOTH)
+                                        {  // if ibeacon
+                                            IsSuccess = true;
+                                            TagFound = true;
+                                            message = "iBeacon Found";
+                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [BLE]";
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        if (scanningType == ScanningType.NFC)
+                                            message = "Tag does not belong to logged in site. Please check.";
+                                        else if (scanningType == ScanningType.BLUETOOTH)
+                                            message = "iBeacon does not belong to logged in site. Please check.";
+                                    }
+                                }
+                                else
+                                {
+                                    if (scanningType == ScanningType.NFC)
+                                        message = "Tag does not belong to logged in site. Please check.";
+                                    else if (scanningType == ScanningType.BLUETOOTH)
+                                        message = "iBeacon does not belong to logged in site. Please check.";
+                                }
+
+                                _clientSiteSmartWandTagsHitLog.IsScanFromLinkedSite = isTagSiteLinked;
                             }
                             else
                             {
@@ -205,7 +258,7 @@ namespace CityWatch.Web.Services
                 message = ex.Message;
             }
 
-            return (IsSuccess, TagFound, message, TagInfoLabel);
+            return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId);
         }
 
         //public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
