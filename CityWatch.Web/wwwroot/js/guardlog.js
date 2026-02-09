@@ -9747,6 +9747,43 @@ $('#btnTimesheetConfirm').on('click', function () {
         $('#loader').hide();
     });
 });
+
+$('#btnTimesheetSiteConfirm').on('click', function () {
+    $('#AuthGuardForSopDwnldValidationSummary1').html('');
+
+    var siteId = $('#Rooster_ClientSite').val();
+
+    if (!siteId) {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Please select a client site.');
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/Roster?handler=CheckAndCreateDownloadAuditLogSite',
+        type: 'POST',
+        data: {
+            siteId: siteId
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+
+            $('#mdlAuthGuardForSopDownload').modal('hide');
+            $('#TimesheetGuard_Id1').val('0');
+            $('#TimesheetSite_Id1').val(siteId);
+            $('#startDateRoster').val('');
+            $('#endDateRoster').val('');
+            $('#frequency').val('');
+            $('#timesheetModal').modal('show');
+        } else {
+            console.log('Error: ', result.message);
+            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+});
+
 //p1-339-security concern with roster- jisha-start
 function GetTimesheetModel(guardLicNo) {
     $('#TimesheetGuard_Id1').val('-1');
@@ -9772,44 +9809,6 @@ $('#btnGuardRosterUpdate').on('click', function () {
         displayGuardValidationSummary('GuardRosterValidationSummary', 'Please enter PIN ');
     }
     else {
-
-        $('#btnTimesheetSiteConfirm').on('click', function () {
-            $('#AuthGuardForSopDwnldValidationSummary1').html('');
-
-            var siteId = $('#Rooster_ClientSite').val();
-
-            if (!siteId) {
-                $('#AuthGuardForSopDwnldValidationSummary1').html('Please select a client site.');
-                return;
-            }
-
-            $.ajax({
-                url: '/Admin/Roster?handler=CheckAndCreateDownloadAuditLogSite',
-                type: 'POST',
-                data: {
-                    siteId: siteId
-                },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.success) {
-
-                    $('#mdlAuthGuardForSopDownload').modal('hide');
-                    $('#TimesheetGuard_Id1').val('0');
-                    $('#TimesheetSite_Id1').val(siteId);
-                    $('#startDateRoster').val('');
-                    $('#endDateRoster').val('');
-                    $('#frequency').val('');
-                    $('#timesheetModal').modal('show');
-                } else {
-                    console.log('Error: ', result.message);
-                    $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
-                }
-            }).always(function () {
-                $('#loader').hide();
-            });
-        });
-
-
         $.ajax({
             url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
             type: 'POST',
