@@ -170,7 +170,13 @@ namespace CityWatch.Web.Services
             }
             string reportFileName = GetReportFileName(eventType);
             var reportPdf = IO.Path.Combine(_ReportRootDir, REPORT_DIR, reportFileName);
-            PdfDocument pdfDocument = new PdfDocument(new PdfReader(IRPdfTemplete), new PdfWriter(reportPdf));
+
+            // Image Compression Prototype - 11-02-2026 - start: Enable full PDF compression and SmartMode to reduce final file size
+            var writerProperties = new WriterProperties().SetFullCompressionMode(true).SetCompressionLevel(9);
+            PdfWriter pdfWriter = new PdfWriter(reportPdf, writerProperties);
+            pdfWriter.SetSmartMode(true);
+            PdfDocument pdfDocument = new PdfDocument(new PdfReader(IRPdfTemplete), pdfWriter);
+            // Image Compression Prototype - 11-02-2026 - end
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
 
@@ -584,7 +590,7 @@ namespace CityWatch.Web.Services
 
         private AttachmentType GetAttachmentType(string extn)
         {
-            if (".jpg,.jpeg,.png,.bmp".IndexOf(extn.ToLower()) >= 0)
+            if (".jpg,.jpeg,.png,.bmp,.gif".IndexOf(extn.ToLower()) >= 0)
                 return AttachmentType.Image;
 
             if (".pdf".IndexOf(extn.ToLower()) >= 0)
@@ -1164,7 +1170,12 @@ namespace CityWatch.Web.Services
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} -  - IR Statistics Report - {patrolRequest.FromDate.ToString("MMM")} {patrolRequest.FromDate.Year}_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_ReportRootDir, REPORT_DIR, reportFileName);
 
-            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+            // Image Compression Prototype - 11-02-2026 - start: Enable full PDF compression and SmartMode to reduce final file size
+            var writerProperties = new WriterProperties().SetFullCompressionMode(true).SetCompressionLevel(9);
+            PdfWriter pdfWriter = new PdfWriter(reportPdf, writerProperties);
+            pdfWriter.SetSmartMode(true);
+            var pdfDoc = new PdfDocument(pdfWriter);
+            // Image Compression Prototype - 11-02-2026 - end
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);

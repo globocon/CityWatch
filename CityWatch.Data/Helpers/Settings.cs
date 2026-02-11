@@ -14,6 +14,7 @@ namespace CityWatch.Data.Helpers
         public string CcAddress { get; set; }
         public string Subject { get; set; }
         public string Message { get; set; }
+        public bool CompressImages { get; set; } // Image Compression Prototype - 11-02-2026
     }
 
     public class GoogleMapSettings

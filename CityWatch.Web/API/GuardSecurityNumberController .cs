@@ -2514,14 +2514,16 @@ namespace CityWatch.Web.API
                 if (Path.GetExtension(uploadFileName).Equals(".heic", StringComparison.OrdinalIgnoreCase))
                 {
                     var jpgPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(uploadFileName) + ".jpg");
-
+ 
                     // Optional: implement HEIC-to-JPG conversion (ImageMagick or Magick.NET)
-                    await ConvertHeicToJpgAsync(fullFilePath, jpgPath);
-
+                    await ConvertHeicToJpgAsync(fullFilePath, folderPath);
+ 
                     System.IO.File.Delete(fullFilePath);
                     uploadFileName = Path.GetFileName(jpgPath);
                 }
-
+ 
+                ImageHelper.CompressImage(Path.Combine(folderPath, uploadFileName));
+ 
                 return Ok(new
                 {
                     success = true,
