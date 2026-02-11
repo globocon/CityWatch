@@ -319,14 +319,14 @@ namespace CityWatch.Data.Providers
             }
 
             // Validation: Check SmartWand allocation (must be unique)
-            bool smartwandExists = _context.PcarRoute
-                .Any(r => r.Smartwandallocation == smartwandId &&
-                          (!routeId.HasValue || r.Id != routeId.Value));
+            //bool smartwandExists = _context.PcarRoute
+            //    .Any(r => r.Smartwandallocation == smartwandId &&
+            //              (!routeId.HasValue || r.Id != routeId.Value));
 
-            if (smartwandExists)
-            {
-                return (false, "This SmartWand is already assigned to another route profile.", null);
-            }
+            //if (smartwandExists)
+            //{
+            //    return (false, "This SmartWand is already assigned to another route profile.", null);
+            //}
 
             PcarRoute route;
 
