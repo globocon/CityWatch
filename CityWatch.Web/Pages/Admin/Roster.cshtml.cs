@@ -19,6 +19,9 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
         public string ClientNameTitle { get; set; }
+        public bool IsAdminUser { get; set; }
+        public bool IsRosterAdmin { get; set; }
+        public string CurrentGuardSecurityNo { get; set; }
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService)
@@ -67,7 +70,27 @@ namespace CityWatch.Web.Pages.Admin
                     ClientNameTitle = "Citywatch Security";
                 }
             }
+
+            if (User.Identity.IsAuthenticated)
+            {
+                IsAdminUser = AuthUserHelper.IsAdminUserLoggedIn ||
+                              AuthUserHelper.IsAdminGlobal ||
+                              AuthUserHelper.IsAdminPowerUser ||
+                              AuthUserHelper.IsAdminAuditor ||
+                              AuthUserHelper.IsAdminThirdParty ||
+                              AuthUserHelper.IsAdminInvestigator;
+
+                if (!IsAdminUser)
+                {
+                    CurrentGuardSecurityNo = User.Identity.Name;
+                    var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(CurrentGuardSecurityNo);
+                    if (guard != null)
+                    {
+                        IsRosterAdmin = guard.IsAdminRosterAccess;
+                    }
+                }
             }
+        }
         public JsonResult OnGetGuardID(string LicenseNo)
         {
             var ddd = _guardDataProvider.GetGuardID(LicenseNo);
@@ -81,51 +104,56 @@ namespace CityWatch.Web.Pages.Admin
             {
                 if (User.Identity.IsAuthenticated)
                 {
-                    var userid = AuthUserHelper.GetLoggedInUserId;
-                    if (userid != null)
-                    {
-                        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-                        if (!string.IsNullOrEmpty(guardLicNo))
-                        {
-                            var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo.Trim());
-                            if (guard != null)
-                            {
-                                if (guard.IsActive)
-                                {
-                                    
-                                    Issuccess = true;
-                                    if(guard.IsAdminRosterAccess == false)
-                                    {
+                    bool isAdmin = AuthUserHelper.IsAdminUserLoggedIn ||
+                                   AuthUserHelper.IsAdminGlobal ||
+                                   AuthUserHelper.IsAdminPowerUser ||
+                                   AuthUserHelper.IsAdminAuditor ||
+                                   AuthUserHelper.IsAdminThirdParty ||
+                                   AuthUserHelper.IsAdminInvestigator;
 
-                                        exMessage = "Need Pin";
-                                    }
+                    string loggedInLicense = User.Identity.Name;
+                    var loggedInGuard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(loggedInLicense);
+                    bool isRosterAdmin = loggedInGuard?.IsAdminRosterAccess ?? false;
+
+                    if (!string.IsNullOrEmpty(guardLicNo))
+                    {
+                        var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo.Trim());
+                        if (guard != null)
+                        {
+                            if (guard.IsActive)
+                            {
+                                // Access Control Logic
+                                if (isAdmin || isRosterAdmin)
+                                {
+                                    // Admins can access any guard without PIN
+                                    Issuccess = true;
+                                }
+                                else if (guardLicNo.Trim().Equals(loggedInLicense, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Normal guards can only access their own data and NEED PIN
+                                    Issuccess = true;
+                                    exMessage = "Need Pin";
                                 }
                                 else
                                 {
-                                    exMessage = "Your security profile in inactive. Please contact your administrator!.";
+                                    exMessage = "Access denied: You can only access your own timesheet.";
                                 }
                             }
                             else
                             {
-                                exMessage = "Error: Guard details not found.";
+                                exMessage = "Your security profile in inactive. Please contact your administrator!.";
                             }
                         }
                         else
                         {
-                            exMessage = "Error: Invalid licence no.";
+                            exMessage = "Error: Guard details not found.";
                         }
                     }
                     else
                     {
-                        exMessage = "Error: User not authenticated.";
+                        exMessage = "Error: Invalid licence no.";
                     }
                 }
-                else
-                {
-                    exMessage = "Error: User not authenticated.";
-                }
-
-
             }
             catch (Exception ex)
             {
@@ -143,8 +171,18 @@ namespace CityWatch.Web.Pages.Admin
             {
                 if (User.Identity.IsAuthenticated)
                 {
-                    var userid = AuthUserHelper.GetLoggedInUserId;
-                    if (userid != null)
+                    bool isAdmin = AuthUserHelper.IsAdminUserLoggedIn ||
+                                   AuthUserHelper.IsAdminGlobal ||
+                                   AuthUserHelper.IsAdminPowerUser ||
+                                   AuthUserHelper.IsAdminAuditor ||
+                                   AuthUserHelper.IsAdminThirdParty ||
+                                   AuthUserHelper.IsAdminInvestigator;
+
+                    string loggedInLicense = User.Identity.Name;
+                    var loggedInGuard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(loggedInLicense);
+                    bool isRosterAdmin = loggedInGuard?.IsAdminRosterAccess ?? false;
+
+                    if (isAdmin || isRosterAdmin)
                     {
                         if (siteId > 0)
                         {
@@ -157,12 +195,8 @@ namespace CityWatch.Web.Pages.Admin
                     }
                     else
                     {
-                        exMessage = "Error: User not authenticated.";
+                        exMessage = "Access denied: Only administrators can download site timesheets.";
                     }
-                }
-                else
-                {
-                    exMessage = "Error: User not authenticated.";
                 }
             }
             catch (Exception ex)
@@ -170,7 +204,6 @@ namespace CityWatch.Web.Pages.Admin
                 _logger.LogError(ex.StackTrace);
                 exMessage = $"Error: {ex.Message}.";
             }
-
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
         public JsonResult OnGetClientSitesWithIds(string type)

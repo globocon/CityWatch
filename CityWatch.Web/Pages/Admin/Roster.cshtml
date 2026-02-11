@@ -65,7 +65,7 @@
         <div class="col-sm-3">
             <h3>TIMESHEETS</h3>
             <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
-                <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
+                <a href="javascript:void(0);" id="Ancompanysop2">
                     <img src="~/images/Timesheet.jpg" class="center" />
                 </a>
             </div>
@@ -312,7 +312,37 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            var isAdmin = @Model.IsAdminUser.ToString().ToLower();
+            var isRosterAdmin = @Model.IsRosterAdmin.ToString().ToLower();
+            var currentGuardLicense = '@Model.CurrentGuardSecurityNo';
+
+            $('#Ancompanysop2').on('click', function () {
+                if (isAdmin) {
+                    // Global admins skip identification
+                    GetTimesheetModel('');
+                } else {
+                    // Show identification modal for others
+                    $('#mdlAuthGuardForSopDownload').modal('show');
+
+                    if (!isRosterAdmin) {
+                        // Restrict normal guards
+                        $('#GuardDownloadSop_SecurityNo').val(currentGuardLicense).prop('readonly', true);
+                        $('#Rooster_ClientType').closest('.form-group').hide();
+                        $('#Rooster_ClientSite').closest('.form-group').hide();
+                        // Hide the "Or Select Site" header
+                        $('#mdlAuthGuardForSopDownload .modal-header').last().hide();
+                    } else {
+                        // Allow roster admins to search
+                        $('#GuardDownloadSop_SecurityNo').prop('readonly', false);
+                        $('#Rooster_ClientType').closest('.form-group').show();
+                        $('#Rooster_ClientSite').closest('.form-group').show();
+                        $('#mdlAuthGuardForSopDownload .modal-header').last().show();
+                    }
+                }
+            });
+
             $('#btnRosterAccessConfirm').click(function () {
+// ... existing code ...
                 var licenseNo = $('#RosterAccess_LicenseNo').val();
                 $('#RosterAccessValidationSummary').text('');
 
