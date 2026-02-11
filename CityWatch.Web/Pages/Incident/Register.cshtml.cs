@@ -561,6 +561,14 @@ namespace CityWatch.Web.Pages.Incident
                                 System.IO.File.Delete(fileToDelete);
                         }
                         // p1-102 add photos with heic extension-end
+
+                        // Image Compression Prototype - 11-02-2026 - start
+                        if (_EmailOptions.CompressImages)
+                        {
+                            ImageHelper.CompressImage(Path.Combine(folderPath, uploadFileName));
+                        }
+                        // Image Compression Prototype - 11-02-2026 - end
+
                         success = true;
                     }
                     catch (Exception)
