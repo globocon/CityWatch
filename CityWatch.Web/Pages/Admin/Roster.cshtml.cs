@@ -195,5 +195,51 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new List<object>());
         }
+
+        public JsonResult OnPostVerifyRosterAccess(string licenseNo)
+        {
+            var success = false;
+            var message = "";
+            try
+            {
+                if (string.IsNullOrEmpty(licenseNo))
+                {
+                    message = "Security License No. is required.";
+                }
+                else
+                {
+                    var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(licenseNo.Trim());
+                    if (guard != null)
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsAdminRosterAccess)
+                            {
+                                success = true;
+                            }
+                            else
+                            {
+                                message = "Access denied. You do not have Roster Admin permissions.";
+                            }
+                        }
+                        else
+                        {
+                            message = "Your security profile is inactive. Please contact administrator.";
+                        }
+                    }
+                    else
+                    {
+                        message = "Guard details not found.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                message = "An error occurred during verification.";
+            }
+
+            return new JsonResult(new { success, message });
+        }
     }
 }
