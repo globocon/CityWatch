@@ -120,6 +120,7 @@ namespace CityWatch.Data.Providers
         List<InActiveGuardsDetails> GetInActiveGuardDetails();
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         int GetClientSiteIdFromLogbook(int logbookId);
+        List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1404,6 +1405,12 @@ namespace CityWatch.Data.Providers
             var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().ClientSiteId;
             return lbdt;
         }
-        
+        public List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId)
+        {
+            return _context.GuardLoginSmartWandUse
+                .Where(z => z.SmartWandId == smartWandId)
+                .ToList();
+        }
+
     }
 }

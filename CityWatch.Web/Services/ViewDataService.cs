@@ -364,10 +364,40 @@ namespace CityWatch.Web.Services
 
         public bool CheckWandIsInUse(int smartWandId, int? guardId)
         {
-            return _guardDataProvider.GetGuardLoginsBySmartWandId(smartWandId)
-                .Where(x => x.LoginDate >= DateTime.Today && x.LoginDate < DateTime.Today.AddDays(1)
-                        && (!guardId.HasValue || x.GuardId != guardId.Value) && x.OffDuty > DateTime.Now)
-                .Any();
+            //return _guardDataProvider.GetGuardLoginsBySmartWandId(smartWandId)
+            //    .Where(x => x.LoginDate >= DateTime.Today && x.LoginDate < DateTime.Today.AddDays(1)
+            //            && (!guardId.HasValue || x.GuardId != guardId.Value) && x.OffDuty > DateTime.Now)
+            //    .Any();
+            var today = DateTime.Today;
+            var lastGuardUsed = _guardDataProvider
+                .GetLastGuardUsedSmartWandBySmartWandId(smartWandId)
+                .Where(x => x.CreatedDate >= today && x.CreatedDate < today.AddDays(1))
+                .OrderByDescending(x => x.CreatedDate)
+                .FirstOrDefault();
+            if (lastGuardUsed == null)
+                return false;
+
+            var lastLoginToday = _guardDataProvider
+                .GetGuardLoginsBySmartWandId(smartWandId)
+                .Where(x => x.LoginDate >= today && x.LoginDate < today.AddDays(1) && x.Id == lastGuardUsed.GuardLoginId)
+                .OrderByDescending(x => x.LoginDate)
+                .FirstOrDefault();
+
+            // NOT in use if nobody used it today
+            if (lastLoginToday == null)
+                return false;
+
+            // NOT in use if last guard is off duty
+            if (lastLoginToday.OffDuty <= DateTime.Now)
+                return false;
+
+            // NOT in use if same guard is reusing it
+            if (guardId.HasValue && lastLoginToday.GuardId == guardId.Value)
+                return false;
+
+            // Otherwise → in use by another guard
+            return true;
+
         }
 
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId)
