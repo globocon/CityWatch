@@ -761,19 +761,19 @@ namespace CityWatch.Web.Pages.Reports
             // PRE-ALARM (BY SITE)
             // =========================
             var rcChartTypesGuardsPrealarmNew =
-                BuildSiteStats(preAlarmLogs, out int rcChartTypesGuardsPrealarmCountnew);
+                BuildSiteStats(preAlarmLogs, out int rcChartTypesGuardsPrealarmCountnew,fromDate,toDate);
 
             // =========================
             // CRO ALERTS (BY SITE)
             // =========================
             var rcChartTypesCRONew =
-                BuildSiteStats(croLogs, out int rcChartTypesCROCountnew);
+                BuildSiteStats(croLogs, out int rcChartTypesCROCountnew, fromDate, toDate);
 
             // =========================
             // GUARDS FROM PRE-ALARM
             // =========================
             var rcChartTypesGuardsFromPrealarmNew =
-                BuildSiteStats(guardFromPreAlarmLogs, out int rcChartTypesGuardsFromPrealarmCountnew);
+                BuildSiteStats(guardFromPreAlarmLogs, out int rcChartTypesGuardsFromPrealarmCountnew, fromDate, toDate);
 
             var options = new JsonSerializerOptions
             {
@@ -866,9 +866,9 @@ namespace CityWatch.Web.Pages.Reports
             return list;
         }
 
-        private List<ClientSiteRadioChecksActivityStatus_HistoryReport> BuildSiteStats(List<ClientSiteRadioChecksActivityStatus_History> logs, out int total)
+        private List<ClientSiteRadioChecksActivityStatus_HistoryReport> BuildSiteStats(List<ClientSiteRadioChecksActivityStatus_History> logs, out int total,DateTime from, DateTime to)
         {
-            var list = logs
+            var list = logs.Where(z => z.EventDateTime >= from && z.EventDateTime < to.AddDays(1))
                 .GroupBy(x => x.ClientSiteId)
                 .Select(g => new ClientSiteRadioChecksActivityStatus_HistoryReport
                 {
