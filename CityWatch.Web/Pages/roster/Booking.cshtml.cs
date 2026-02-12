@@ -83,6 +83,7 @@ namespace CityWatch.Web.Pages.roster
             // Locking logic: Dec is locked if it's Jan.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = StartDate < firstDayOfCurrentMonth;
+
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -97,6 +98,7 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<JsonResult> OnGetLoadRoster(int groupId, DateTime startDate)
         {
+
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
             var groupSites = await _context.RosterGroupSites
