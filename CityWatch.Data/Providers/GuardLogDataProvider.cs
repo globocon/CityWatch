@@ -427,6 +427,9 @@ namespace CityWatch.Data.Providers
 
         public bool SaveOfflinePatrolCarLogDataError(PatrolCarLogRequestLocalCacheOfflineNotSynced _offlineRecordNotSynced);
         public bool SaveSyncOfflineCustomFieldLogDataError(CustomFieldLogRequestHeadLocalCacheOfflineNotSynced _offlineRecordNotSynced);
+        public bool SaveSyncIrOfflineFilesAttachmentsCacheNotSyncedDataError(irOfflineFilesAttachmentsCacheNotSynced _offlineRecordNotSynced);
+        public bool SaveSyncIrOfflineCacheNotSyncedDataError(irOfflineCacheNotSynced _offlineRecordNotSynced);
+
 
     }
 
@@ -8021,6 +8024,34 @@ namespace CityWatch.Data.Providers
             try
             {
                 _context.CustomFieldLogRequestHeadLocalCacheOfflineNotSynced.Add(_offlineRecordNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+        public bool SaveSyncIrOfflineCacheNotSyncedDataError(irOfflineCacheNotSynced _offlineRecordNotSynced)
+        {
+            try
+            {
+                _context.irOfflineCacheNotSynced.Add(_offlineRecordNotSynced);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+        public bool SaveSyncIrOfflineFilesAttachmentsCacheNotSyncedDataError(irOfflineFilesAttachmentsCacheNotSynced _offlineRecordNotSynced)
+        {
+            try
+            {
+                _context.irOfflineFilesAttachmentsCacheNotSynced.Add(_offlineRecordNotSynced);
                 return true;
             }
             catch (Exception ex)
