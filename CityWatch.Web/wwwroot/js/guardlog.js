@@ -9748,6 +9748,50 @@ $('#btnTimesheetConfirm').on('click', function () {
     });
 });
 
+$('#btnBookingAuthConfirm').on('click', function () {
+    $('#bookingAuthValidationSummary').html('');
+
+    var guardLicNo = $('#BookingAuth_SecurityNo').val();
+
+    if (!guardLicNo) {
+        $('#bookingAuthValidationSummary').html('Please enter a license number.');
+        return;
+    }
+
+    $('#loader').show();
+
+    $.ajax({
+        url: '/Admin/Roster?handler=VerifyBookingAccess',
+        type: 'POST',
+        data: {
+            guardLicNo: guardLicNo
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            $('#mdlAuthBookingAccess').modal('hide');
+            window.location.href = '/roster/Booking';
+        } else {
+            $('#bookingAuthValidationSummary').html(result.message);
+        }
+    }).fail(function (xhr, status, error) {
+        console.error('AJAX error:', status, error);
+        $('#bookingAuthValidationSummary').html('An error occurred during verification.');
+    }).always(function () {
+        $('#loader').hide();
+    });
+});
+
+$(document).on('show.bs.modal', '#mdlAuthBookingAccess', function () {
+    $('#BookingAuth_SecurityNo').val('');
+    $('#bookingAuthValidationSummary').html('');
+});
+
+$(document).on('hidden.bs.modal', '#mdlAuthBookingAccess', function () {
+    $('#BookingAuth_SecurityNo').val('');
+    $('#bookingAuthValidationSummary').html('');
+});
+
 $('#btnTimesheetSiteConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 
