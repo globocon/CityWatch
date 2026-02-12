@@ -232,7 +232,7 @@ namespace CityWatch.Web.Services
 
         //p3-42-Dockets-start
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest);
-    //p3-42-Dockets-end
+        //p3-42-Dockets-end
 
 
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
@@ -3357,7 +3357,7 @@ namespace CityWatch.Web.Services
 
         public void DeleteGuardHrDocument(int hrDocId)
         {
-            _guardDataProvider.DeleteGuardLicense(hrDocId); 
+            _guardDataProvider.DeleteGuardLicense(hrDocId);
         }
 
         private string RemoveBrackets(string input)
@@ -3406,7 +3406,7 @@ namespace CityWatch.Web.Services
             return uploaded;
         }
 
-        public async Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile,string LicenseNo, string uploadFileName)
+        public async Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName)
         {
             var PathToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", LicenseNo);
             var fileToUpload = Path.Combine(PathToUpload, uploadFileName);
@@ -3425,7 +3425,7 @@ namespace CityWatch.Web.Services
             catch (Exception)
             {
                 return false;
-            }            
+            }
         }
 
         public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest)
@@ -3498,7 +3498,7 @@ namespace CityWatch.Web.Services
             return docketHistories
                 .Select(z => new KeyVehicleLogDocketViewModel(z, kvlFields))
                 .ToList();
-}
+        }
 
         public async Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd)
         {
