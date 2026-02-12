@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Threading.Tasks;
+using iText.StyledXmlParser.Jsoup.Select;
 
 namespace CityWatch.Data.Providers
 {
@@ -120,6 +121,7 @@ namespace CityWatch.Data.Providers
         List<InActiveGuardsDetails> GetInActiveGuardDetails();
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         int GetClientSiteIdFromLogbook(int logbookId);
+        List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -596,6 +598,16 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+            if (guardLogin.SmartWandId != null)
+            {
+                GuardLoginSmartWandUse guardLoginSmartwanduse = new GuardLoginSmartWandUse();
+                guardLoginSmartwanduse.GuardLoginId = guardLogin.Id;
+                guardLoginSmartwanduse.SmartWandId = guardLogin.SmartWandId;
+                guardLoginSmartwanduse.IPAddress = guardLogin.IPAddress;
+                guardLoginSmartwanduse.CreatedDate = DateTime.Now ;
+                _context.GuardLoginSmartWandUse.Add(guardLoginSmartwanduse);
+                _context.SaveChanges();
+            }
             return guardLogin.Id;
         }
 
@@ -1404,6 +1416,12 @@ namespace CityWatch.Data.Providers
             var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().ClientSiteId;
             return lbdt;
         }
-        
+        public List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId)
+        {
+            return _context.GuardLoginSmartWandUse
+                .Where(z => z.SmartWandId == smartWandId)
+                .ToList();
+        }
+
     }
 }

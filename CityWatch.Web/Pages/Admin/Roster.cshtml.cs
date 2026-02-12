@@ -173,6 +173,59 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
+
+        public JsonResult OnPostVerifyBookingAccess(string guardLicNo)
+        {
+            var Issuccess = false;
+            var exMessage = "";
+            try
+            {
+                if (User.Identity.IsAuthenticated)
+                {
+                    if (!string.IsNullOrEmpty(guardLicNo))
+                    {
+                        var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo.Trim());
+                        if (guard != null)
+                        {
+                            if (guard.IsActive)
+                            {
+                                if (guard.IsAdminRosterAccess)
+                                {
+                                    Issuccess = true;
+                                }
+                                else
+                                {
+                                    exMessage = "Error: You do not have Admin Roster access.";
+                                }
+                            }
+                            else
+                            {
+                                exMessage = "Error: Your security profile is inactive.";
+                            }
+                        }
+                        else
+                        {
+                            exMessage = "Error: Guard details not found.";
+                        }
+                    }
+                    else
+                    {
+                        exMessage = "Error: Invalid license no.";
+                    }
+                }
+                else
+                {
+                    exMessage = "Error: User not authenticated.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                exMessage = $"Error: {ex.Message}.";
+            }
+
+            return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
         public JsonResult OnGetClientSitesWithIds(string type)
         {
             try

@@ -3892,6 +3892,28 @@ namespace CityWatch.Web.API
 
         }
 
+        [HttpGet("GetClientSiteTourMode")]
+        public IActionResult GetClientSiteTourMode(int clientSiteId)
+        {
+            try
+            {
+                var site = _guardLogDataProvider
+                            .GetClientSites(clientSiteId)
+                            .FirstOrDefault();
+
+                if (site == null)
+                    return NotFound("Client site not found");
+
+                return Ok(site.PatrolTourMode.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+
         private bool SaveOfflineFilesRecordsError(OfflineFilesRecords _oR, string syncError)
         {
             bool IsSuccess = false;
