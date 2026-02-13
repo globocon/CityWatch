@@ -3863,7 +3863,14 @@ namespace CityWatch.Web.API
                 if (rtn)
                 {
                     r.ServerFileNameWithPath = _filename;
-                    offlineIrRecords.Where(x => x.IrId == r.IrId)?.FirstOrDefault()?.IncidentRequest?.Attachments?.Add(_filename);
+
+                    var _rcd = offlineIrRecords.Where(x => x.IrId == r.IrId).FirstOrDefault();
+                    if(_rcd != null)
+                    {
+                        _rcd.IncidentRequest.Attachments ??= new List<string>();
+                        _rcd.IncidentRequest.Attachments.Add(_filename);
+                    }
+
                 }
                 else
                 {
