@@ -279,8 +279,8 @@ namespace CityWatch.Web.Services
         }
         public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid,string fileNamePart)
         {
-            DateTime startdateTime = DateTime.Parse(startdate);
-            DateTime dateTime = DateTime.Parse(endDate);
+            DateTime startdateTime = DateTime.Parse(startdate, System.Globalization.CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
@@ -367,8 +367,8 @@ namespace CityWatch.Web.Services
         }
         public string GeneratePdfTimesheetReport(string startdate, string endDate, int guradid)
         {
-            DateTime startdateTime = DateTime.Parse(startdate);
-            DateTime dateTime = DateTime.Parse(endDate);
+            DateTime startdateTime = DateTime.Parse(startdate, System.Globalization.CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
@@ -460,8 +460,8 @@ namespace CityWatch.Web.Services
 
         public string GeneratePdfTimesheetReportCustom(string startdate, string endDate, int guradid)
         {
-            DateTime startdateTime = DateTime.Parse(startdate);
-            DateTime dateTime = DateTime.Parse(endDate);
+            DateTime startdateTime = DateTime.Parse(startdate, System.Globalization.CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
@@ -546,9 +546,9 @@ namespace CityWatch.Web.Services
 
             return reportFileName;
         }
-        private static Table CreateNameTable(string Name,string Enrollment)
+        private Table CreateNameTable(string Name,string Enrollment)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11 , 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 15, 35, 15, 35 })).UseAllAvailableWidth().SetMarginTop(10);
 
 
             siteDataTable.AddCell(GetSiteValueCellHeader("Name"));
@@ -561,9 +561,9 @@ namespace CityWatch.Web.Services
 
             return siteDataTable;
         }
-        private static Table CreateLicenseTable(string LicensoNo,string State)
+        private Table CreateLicenseTable(string LicensoNo,string State)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11, 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 15, 35, 15, 35 })).UseAllAvailableWidth().SetMarginTop(10);
 
 
             siteDataTable.AddCell(GetSiteValueCellHeader("Licence"));
@@ -576,9 +576,9 @@ namespace CityWatch.Web.Services
 
             return siteDataTable;
         }
-        private static Table CreateDateTable(DateTime dateTime,string Supplier)
+        private Table CreateDateTable(DateTime dateTime,string Supplier)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 3, 11, 3, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 15, 35, 15, 35 })).UseAllAvailableWidth().SetMarginTop(10);
 
             string formattedDate = dateTime.ToString("dd/MM/yyyy");
             siteDataTable.AddCell(GetSiteValueCellHeader("Week Ending"));
@@ -650,7 +650,7 @@ namespace CityWatch.Web.Services
         private static Cell GetSiteValueCell(string text)
         {
             return new Cell()
-               .Add(new Paragraph().Add(new Text(text)))
+               .Add(new Paragraph().Add(new Text(text ?? "")))
                .SetFont(PdfHelper.GetPdfFont())
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.LEFT)
@@ -662,7 +662,7 @@ namespace CityWatch.Web.Services
         {
             Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
             return new Cell()
-               .Add(new Paragraph().Add(new Text(text)))
+               .Add(new Paragraph().Add(new Text(text ?? "")))
                .SetFont(PdfHelper.GetPdfFont())
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.LEFT)
@@ -717,7 +717,7 @@ namespace CityWatch.Web.Services
             // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = new float[8];
+                float[] columnPercentages = { 10, 15, 10, 5, 10, 5, 10, 35 }; // Non-zero percentages for iText7
                 var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
@@ -1352,13 +1352,8 @@ namespace CityWatch.Web.Services
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 100f, 100f, 20f,30f }; // Adjust these values as needed
-                                                                        // Total width of the table in points
-                table.SetWidth(UnitValue.CreatePointValue(380)); // Example total width in points, adjust as needed
-              
-
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
-                // const float CELL_WIDTH = 1f;
+
                 table.AddCell(GetSiteValueCellHeader(""));
                 table.AddCell(GetSiteValueCellHeader("Date"));
                 table.AddCell(GetSiteValueCellHeader("Start"));
@@ -1367,8 +1362,6 @@ namespace CityWatch.Web.Services
                 table.AddCell(GetSiteValueCellHeader("GPS"));
                 table.AddCell(GetSiteValueCellHeader("Total Hrs"));
                 table.AddCell(GetSiteValueCellHeader("Site"));
-
-
             }
             catch (Exception ex)
             {
@@ -1388,7 +1381,7 @@ namespace CityWatch.Web.Services
             // Method to create a new table with headers for BOOKING
             Table CreateNewBookingTable()
             {
-                float[] columnPercentages = new float[9]; // 9 columns to match header
+                float[] columnPercentages = { 10, 10, 10, 10, 10, 15, 15, 10, 10 }; // Non-zero percentages for iText7
                 var BookingTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateBookingDetailsHeader(BookingTable);
                 return BookingTable;
