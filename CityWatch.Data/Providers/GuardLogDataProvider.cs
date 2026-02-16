@@ -6883,9 +6883,9 @@ namespace CityWatch.Data.Providers
             var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name;
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
 
-            var guardLogin = _context.GuardLogins.FirstOrDefault(x => x.GuardId == GuardId && x.ClientSiteId == ClientSiteID && x.OffDuty == null);
+            var radioCheckLogin = _context.ClientSiteRadioChecksActivityStatus.FirstOrDefault(x => x.GuardId == GuardId && x.ClientSiteId == ClientSiteID && x.GuardLoginTime != null && x.GuardLogoutTime == null);
             // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 16-02-2026 - Start
-            int offset = guardLogin?.GuardLoginTimeUtcOffsetMinute ?? 600;
+            int offset = radioCheckLogin?.GuardLoginTimeUtcOffsetMinute ?? 600;
             var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(offset);
             // Task: TimeZone_Alarm_Discrepancy_Fix -- End
 
@@ -6902,8 +6902,8 @@ namespace CityWatch.Data.Providers
                     IsSystemEntry = true,
                     EventDateTimeLocal = siteLocalNow,
                     EventDateTimeLocalWithOffset = new DateTimeOffset(siteLocalNow, TimeSpan.FromMinutes(offset)),
-                    EventDateTimeZone = guardLogin?.GuardLoginTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
-                    EventDateTimeZoneShort = guardLogin?.GuardLoginTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeZone = radioCheckLogin?.GuardLoginTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = radioCheckLogin?.GuardLoginTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
                     EventDateTimeUtcOffsetMinute = offset,
                     PlayNotificationSound = false,
                     IrEntryType = IrEntryType.Notification
