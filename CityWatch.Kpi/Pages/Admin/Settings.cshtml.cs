@@ -1851,7 +1851,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
 
-        public JsonResult OnPostCreateProfile(int routeId, string pcarroutename, int smartwandallocation)
+        public JsonResult OnPostCreateProfile([FromForm] int routeId, [FromForm] string pcarroutename, [FromForm] int smartwandallocation)
         {
             if (string.IsNullOrWhiteSpace(pcarroutename))
                 return new JsonResult(new { success = false, message = "Route name is required." });
@@ -1912,9 +1912,9 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
 
-        public JsonResult OnPostSaveRouteDetails(PcarRouteDetailViewModel model)
+        public JsonResult OnPostSaveRouteDetails([FromBody] PcarRouteSaveViewModel model)
         {
-            if (model.PcarRouteId == 0 || model.ClientSiteIds == null || !model.ClientSiteIds.Any())
+            if (model.PcarRouteId == 0 || model.SiteSchedules == null || !model.SiteSchedules.Any())
                 return new JsonResult(new { success = false, message = "Invalid Profile or Client Sites." });
 
             _kpiSchedulesDataProvider.SavePcarrouteDetails(model);

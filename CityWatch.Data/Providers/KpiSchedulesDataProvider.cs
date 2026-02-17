@@ -45,7 +45,7 @@ namespace CityWatch.Data.Providers
         public (bool success, string message, PcarRoute route) SavePcarrouteMaster(
    int? routeId, string routeName, int smartwandId);
 
-        public bool SavePcarrouteDetails(PcarRouteDetailViewModel model);
+        public bool SavePcarrouteDetails(PcarRouteSaveViewModel model);
 
         public List<PcarRouteGridDto> GetPCARProfilesAll();
 
@@ -392,96 +392,73 @@ namespace CityWatch.Data.Providers
         }
 
 
-        public bool SavePcarrouteDetails(PcarRouteDetailViewModel model)
+        public bool SavePcarrouteDetails(PcarRouteSaveViewModel model)
         {
-            if (model.ClientSiteIds == null || !model.ClientSiteIds.Any())
+            if (model.SiteSchedules == null)
                 return false;
 
             try
             {
-                foreach (var siteId in model.ClientSiteIds)
+                // To support duplicates and custom ordering while maintaining data integrity, 
+                // we'll remove existing details for this route and re-add them.
+                // Note: If PcarRouteDailyVisits has hard FK constraints, we might need a more complex update logic.
+                var existingDetails = _context.PcarRouteDetails
+                    .Where(d => d.PcarRouteId == model.PcarRouteId)
+                    .ToList();
+
+                if (existingDetails.Any())
                 {
-                    // Check if a detail already exists for this route & site
-                    var existingDetail = _context.PcarRouteDetails
-                        .FirstOrDefault(d => d.PcarRouteId == model.PcarRouteId && d.ClientSiteId == siteId);
+                    // Debugging: Log count of details to be removed
+                    System.Diagnostics.Debug.WriteLine($"Removing {existingDetails.Count} existing details for RouteId {model.PcarRouteId}");
+                    _context.PcarRouteDetails.RemoveRange(existingDetails);
+                }
+                else 
+                {
+                     System.Diagnostics.Debug.WriteLine($"No existing details found to remove for RouteId {model.PcarRouteId}");
+                }
 
-                    if (existingDetail != null)
+                foreach (var siteSchedule in model.SiteSchedules)
+                {
+                    var detail = new PcarRouteDetails
                     {
-                        // Update existing record
-                        existingDetail.StartMon = model.StartMon;
-                        existingDetail.EndMon = model.EndMon;
-                        existingDetail.VisitMon = model.VisitMon;
+                        PcarRouteId = model.PcarRouteId,
+                        ClientSiteId = siteSchedule.ClientSiteId,
+                        OrderNo = siteSchedule.OrderNo,
+                        
+                        StartMon = siteSchedule.StartMon,
+                        EndMon = siteSchedule.EndMon,
+                        VisitMon = siteSchedule.VisitMon,
 
-                        existingDetail.StartTue = model.StartTue;
-                        existingDetail.EndTue = model.EndTue;
-                        existingDetail.VisitTue = model.VisitTue;
+                        StartTue = siteSchedule.StartTue,
+                        EndTue = siteSchedule.EndTue,
+                        VisitTue = siteSchedule.VisitTue,
 
-                        existingDetail.StartWed = model.StartWed;
-                        existingDetail.EndWed = model.EndWed;
-                        existingDetail.VisitWed = model.VisitWed;
+                        StartWed = siteSchedule.StartWed,
+                        EndWed = siteSchedule.EndWed,
+                        VisitWed = siteSchedule.VisitWed,
 
-                        existingDetail.StartThu = model.StartThu;
-                        existingDetail.EndThu = model.EndThu;
-                        existingDetail.VisitThu = model.VisitThu;
+                        StartThu = siteSchedule.StartThu,
+                        EndThu = siteSchedule.EndThu,
+                        VisitThu = siteSchedule.VisitThu,
 
-                        existingDetail.StartFri = model.StartFri;
-                        existingDetail.EndFri = model.EndFri;
-                        existingDetail.VisitFri = model.VisitFri;
+                        StartFri = siteSchedule.StartFri,
+                        EndFri = siteSchedule.EndFri,
+                        VisitFri = siteSchedule.VisitFri,
 
-                        existingDetail.StartSat = model.StartSat;
-                        existingDetail.EndSat = model.EndSat;
-                        existingDetail.VisitSat = model.VisitSat;
+                        StartSat = siteSchedule.StartSat,
+                        EndSat = siteSchedule.EndSat,
+                        VisitSat = siteSchedule.VisitSat,
 
-                        existingDetail.StartSun = model.StartSun;
-                        existingDetail.EndSun = model.EndSun;
-                        existingDetail.VisitSun = model.VisitSun;
+                        StartSun = siteSchedule.StartSun,
+                        EndSun = siteSchedule.EndSun,
+                        VisitSun = siteSchedule.VisitSun,
 
-                        existingDetail.StartPho = model.StartPho;
-                        existingDetail.EndPho = model.EndPho;
-                        existingDetail.VisitPho = model.VisitPho;
-                    }
-                    else
-                    {
-                        // Add new record
-                        var detail = new PcarRouteDetails
-                        {
-                            PcarRouteId = model.PcarRouteId,
-                            ClientSiteId = siteId,
-                            StartMon = model.StartMon,
-                            EndMon = model.EndMon,
-                            VisitMon = model.VisitMon,
+                        StartPho = siteSchedule.StartPho,
+                        EndPho = siteSchedule.EndPho,
+                        VisitPho = siteSchedule.VisitPho
+                    };
 
-                            StartTue = model.StartTue,
-                            EndTue = model.EndTue,
-                            VisitTue = model.VisitTue,
-
-                            StartWed = model.StartWed,
-                            EndWed = model.EndWed,
-                            VisitWed = model.VisitWed,
-
-                            StartThu = model.StartThu,
-                            EndThu = model.EndThu,
-                            VisitThu = model.VisitThu,
-
-                            StartFri = model.StartFri,
-                            EndFri = model.EndFri,
-                            VisitFri = model.VisitFri,
-
-                            StartSat = model.StartSat,
-                            EndSat = model.EndSat,
-                            VisitSat = model.VisitSat,
-
-                            StartSun = model.StartSun,
-                            EndSun = model.EndSun,
-                            VisitSun = model.VisitSun,
-
-                            StartPho = model.StartPho,
-                            EndPho = model.EndPho,
-                            VisitPho = model.VisitPho
-                        };
-
-                        _context.PcarRouteDetails.Add(detail);
-                    }
+                    _context.PcarRouteDetails.Add(detail);
                 }
 
                 _context.SaveChanges();
