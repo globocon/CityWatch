@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,13 @@ namespace CityWatch.RadioCheck.Services
     {
 
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IClientDataProvider _clientDataProvider;
 
-        public RadioChecksActivityStatusService(IGuardLogDataProvider guardLogDataProvider)
+        public RadioChecksActivityStatusService(IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
+            _clientDataProvider = clientDataProvider;
         }
 
         /// <summary>
