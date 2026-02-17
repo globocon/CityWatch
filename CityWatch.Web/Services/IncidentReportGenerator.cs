@@ -41,6 +41,7 @@ using Path = System.IO.Path;
 using Image = iText.Layout.Element.Image;
 using Rectangle = iText.Kernel.Geom.Rectangle;
 using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Crypto.Macs;
 
 
 namespace CityWatch.Web.Services
@@ -274,9 +275,11 @@ namespace CityWatch.Web.Services
                 }
                 if (!string.IsNullOrEmpty(imageFile) && IO.File.Exists(imageFile))
                 {
-                   var  newimageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps, imageFile).Result;
+                    //p1-341-wather in ir-created by jisha-start
+                    var  newimageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps, imageFile).Result;// to create an image indicating wweatheer in corresponding place
 
-                    var image = AttachMapImageToPdf(pdfDocument, ++index, imageFile, newimageFile);
+                    var image = AttachMapImageToPdf(pdfDocument, ++index, imageFile, newimageFile);// merge the weater image to gps image and display tp pdf
+                    //p1-341-wather in ir-created by jisha-end
                     doc.Add(image);
                     ++closePageIndex;
                 }
@@ -1449,6 +1452,8 @@ namespace CityWatch.Web.Services
             headerTable.AddCell(new Cell(1, 3).SetPadding(3).SetBorder(Border.NO_BORDER));
             return headerTable;
         }
+
+        //p1-341-wather in ir-created by jisha-start
         private async Task<string> GetGpsWithWeatherImage(string gpsCoordinates, string mapPath)
         {
             // 1. Get map image
@@ -1528,39 +1533,6 @@ namespace CityWatch.Web.Services
                 UVIndex = uvIndex
             };
         }
-
-        //private async Task<WeatherInfo> GetWeatherAsync(double lat, double lng)
-        //{
-        //    string apiKey = _configuration["Weather:ApiKey"];
-
-        //    if (string.IsNullOrEmpty(apiKey))
-        //        throw new Exception("Weather API key missing");
-
-        //    string url =
-        //        $"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lng}&appid={apiKey}&units=metric";
-
-        //    using var client = new HttpClient();
-
-        //    var response = await client.GetAsync(url);
-
-        //    if (!response.IsSuccessStatusCode)
-        //    {
-        //        var error = await response.Content.ReadAsStringAsync();
-        //        throw new Exception($"Weather API Error: {error}");
-        //    }
-
-        //    var json = await response.Content.ReadAsStringAsync();
-
-        //    dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
-
-        //    return new WeatherInfo
-        //    {
-        //        Temp = (double)data.main.temp,
-        //        Humidity = (int)data.main.humidity,
-        //        Condition = (string)data.weather[0].description,
-        //        WindSpeed = (double)data.wind.speed
-        //    };
-        //}
 
        
         private string CreateWeatherImageExact(WeatherInfo weather, string uvChartPath = null)
@@ -1659,37 +1631,7 @@ namespace CityWatch.Web.Services
         }
 
 
-        //private string CreateWeatherImage(WeatherInfo weather)
-        //{
-        //    string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
-
-        //    if (!Directory.Exists(folder))
-        //        Directory.CreateDirectory(folder);
-
-        //    string path = Path.Combine(folder, $"weather_{Guid.NewGuid()}.JPG");
-
-        //    int width = 800;
-        //    int height = 150;
-
-        //    using Bitmap bmp = new Bitmap(width, height);
-        //    using Graphics g = Graphics.FromImage(bmp);
-
-        //    g.Clear(System.Drawing.Color.White);
-
-        //    var titleFont = new Font("Arial", 16, FontStyle.Bold);
-        //    var font = new Font("Arial", 13);
-
-        //    g.DrawString("Weather Updates / Alerts", titleFont, Brushes.Black, 10, 10);
-
-        //    g.DrawString($"Temperature: {weather.Temp} °C", font, Brushes.Black, 10, 60);
-        //    g.DrawString($"Condition: {weather.Condition}", font, Brushes.Black, 250, 60);
-        //    g.DrawString($"Humidity: {weather.Humidity}%", font, Brushes.Black, 10, 100);
-        //    g.DrawString($"Wind: {weather.WindSpeed} km/h", font, Brushes.Black, 250, 100);
-
-        //    bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
-
-        //    return path;
-        //}
+        
         private string CombineImages(string mapPath, string weatherPath)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
@@ -1821,54 +1763,7 @@ namespace CityWatch.Web.Services
             }
         }
 
-        //private string GenerateUVChart(double uvMax)
-        //{
-        //    var chart = new Chart();
-        //    chart.Width = 650;
-        //    chart.Height = 300;
-
-        //    var area = new ChartArea();
-        //    area.AxisX.Minimum = 6;
-        //    area.AxisX.Maximum = 18;
-        //    area.AxisY.Minimum = 0;
-        //    area.AxisY.Maximum = 12;
-
-        //    chart.ChartAreas.Add(area);
-
-        //    AddStrip(area, 0, 3, Color.LightGreen);
-        //    AddStrip(area, 3, 6, Color.Yellow);
-        //    AddStrip(area, 6, 8, Color.Orange);
-        //    AddStrip(area, 8, 11, Color.Red);
-        //    AddStrip(area, 11, 12, Color.Violet);
-
-        //    var series = new Series
-        //    {
-        //        ChartType = SeriesChartType.Spline,
-        //        BorderWidth = 3
-        //    };
-
-        //    for (int hour = 6; hour <= 18; hour++)
-        //    {
-        //        double uvValue = Math.Sin((hour - 6) / 12.0 * Math.PI) * uvMax;
-        //        series.Points.AddXY(hour, uvValue);
-        //    }
-
-        //    chart.Series.Add(series);
-
-        //    string path = Path.Combine(Path.GetTempPath(), "uvChart.png");
-        //    chart.SaveImage(path, ChartImageFormat.Png);
-
-        //    return path;
-        //}
-
-        //private void AddStrip(ChartArea area, double from, double to, Color color)
-        //{
-        //    var strip = new StripLine();
-        //    strip.IntervalOffset = from;
-        //    strip.StripWidth = to - from;
-        //    strip.BackColor = color;
-        //    area.AxisY.StripLines.Add(strip);
-        //}
+        //p1-341-wather in ir-created by jisha-end
 
     }
     public class WeatherInfo
