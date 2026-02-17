@@ -6685,10 +6685,29 @@ namespace CityWatch.Data.Providers
                               .Contains(a.ClientSiteId))
                     .ToList();
 
+                var clientSiteIds = allActiveLogins.Select(x => x.ClientSiteId).Distinct().ToList();
+                var kpiSettings = _context.ClientSiteKpiSettings.Where(x => clientSiteIds.Contains(x.ClientSiteId)).ToList();
+
                 foreach (var login in allActiveLogins)
                 {
                     try
                     {
+                        // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 17-02-2026 - Start
+                        // Get site-specific UTC offset from KpiSetting
+                        int utcOffsetMinutes = 600; // Default to AEST (UTC+10)
+                        var siteSetting = kpiSettings.FirstOrDefault(x => x.ClientSiteId == login.ClientSiteId);
+                        if (siteSetting != null && !string.IsNullOrEmpty(siteSetting.TimezoneString))
+                        {
+                            try
+                            {
+                                var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
+                                utcOffsetMinutes = (int)tz.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
+                            }
+                            catch { }
+                        }
+                        var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(utcOffsetMinutes);
+                        // Task: TimeZone_Alarm_Discrepancy_Fix -- End
+
                         // Fetch all activities for the same GuardId and ClientSite
                         var activities = _context.ClientSiteRadioChecksActivityStatus
                             .Where(a => a.ClientSiteId == login.ClientSiteId
@@ -6710,27 +6729,27 @@ namespace CityWatch.Data.Providers
 
                             if (lastActivity != null &&
                                 lastActivity.NotificationCreatedTime.HasValue &&
-                                (DateTime.Now - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
-                                !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId))
+                                (siteLocalNow - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
+                                !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId, siteLocalNow))
                             {
                                 // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId, lastActivity.NotificationCreatedTime);
+                                CreateLogBookStampFor2hoursNoActivity(lastActivity.ClientSiteId, lastActivity.GuardId, lastActivity.NotificationCreatedTime, siteLocalNow, utcOffsetMinutes);
 
                                 // Log the notification
-                                LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId);
+                                LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId, siteLocalNow);
                             }
                         }
                         else
                         {
                             if (login.GuardLoginTime.HasValue &&
-                                (DateTime.Now - login.GuardLoginTime.Value).TotalHours > 2 &&
-                                !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId))
+                                (siteLocalNow - login.GuardLoginTime.Value).TotalHours > 2 &&
+                                !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId, siteLocalNow))
                             {
                                 // Send notification
-                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId, login.GuardLoginTime);
+                                CreateLogBookStampFor2hoursNoActivity(login.ClientSiteId, login.GuardId, login.GuardLoginTime, siteLocalNow, utcOffsetMinutes);
 
                                 // Log the notification
-                                LogNotification(login.GuardId, login.ClientSiteId);
+                                LogNotification(login.GuardId, login.ClientSiteId, siteLocalNow);
                             }
                         }
                     }
@@ -6762,9 +6781,9 @@ namespace CityWatch.Data.Providers
         }
 
         // Helper method to check if a notification has been sent recently
-        private bool HasNotificationBeenSentRecently(int guardId, int clientSiteId)
+        private bool HasNotificationBeenSentRecently(int guardId, int clientSiteId, DateTime siteLocalNow)
         {
-            var cutoffTime = DateTime.Now.AddMinutes(-120); // Change the time window as needed
+            var cutoffTime = siteLocalNow.AddMinutes(-120); // Change the time window as needed
             return _context.GuardTwoHourNoActivityNotificationLog
                 .Any(log => log.GuardId == guardId &&
                             log.ClientSiteId == clientSiteId &&
@@ -6772,13 +6791,13 @@ namespace CityWatch.Data.Providers
         }
 
         // Helper method to log a notification
-        private void LogNotification(int guardId, int clientSiteId)
+        private void LogNotification(int guardId, int clientSiteId, DateTime siteLocalNow)
         {
             _context.GuardTwoHourNoActivityNotificationLog.Add(new GuardTwoHourNoActivityNotificationLog
             {
                 GuardId = guardId,
                 ClientSiteId = clientSiteId,
-                NotificationTime = DateTime.Now
+                NotificationTime = siteLocalNow
             });
             _context.SaveChanges();
         }
@@ -6862,7 +6881,7 @@ namespace CityWatch.Data.Providers
         //    }
         //}
 
-        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity)
+        public void CreateLogBookStampFor2hoursNoActivity(int ClientSiteID, int GuardId, DateTime? LastActvity, DateTime siteLocalNow, int offsetMinutes)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
@@ -6880,15 +6899,15 @@ namespace CityWatch.Data.Providers
                 var guardLog = new GuardLog()
                 {
                     ClientSiteLogBookId = logBookId,
-                    EventDateTime = DateTime.Now,
+                    EventDateTime = siteLocalNow,
                     Notes = subject,
                     EventType = (int)GuardLogEventType.NoGuardLogin,
                     IsSystemEntry = true,
-                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeLocal = siteLocalNow,
+                    EventDateTimeLocalWithOffset = new DateTimeOffset(siteLocalNow, TimeSpan.FromMinutes(offsetMinutes)),
                     EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
                     EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    EventDateTimeUtcOffsetMinute = offsetMinutes,
                     PlayNotificationSound = false,
                     IrEntryType = IrEntryType.Notification
                 };
