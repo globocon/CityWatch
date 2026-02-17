@@ -6685,10 +6685,29 @@ namespace CityWatch.Data.Providers
                               .Contains(a.ClientSiteId))
                     .ToList();
 
+                var clientSiteIds = allActiveLogins.Select(x => x.ClientSiteId).Distinct().ToList();
+                var kpiSettings = _context.ClientSiteKpiSettings.Where(x => clientSiteIds.Contains(x.ClientSiteId)).ToList();
+
                 foreach (var login in allActiveLogins)
                 {
                     try
                     {
+                        // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 16-02-2026 - Start
+                        // Get site-specific UTC offset from KpiSetting
+                        int utcOffsetMinutes = 600; // Default to AEST (UTC+10)
+                        var siteSetting = kpiSettings.FirstOrDefault(x => x.ClientSiteId == login.ClientSiteId);
+                        if (siteSetting != null && !string.IsNullOrEmpty(siteSetting.TimezoneString))
+                        {
+                            try
+                            {
+                                var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
+                                utcOffsetMinutes = (int)tz.BaseUtcOffset.TotalMinutes;
+                            }
+                            catch { }
+                        }
+                        var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(utcOffsetMinutes);
+                        // Task: TimeZone_Alarm_Discrepancy_Fix -- End
+
                         // Fetch all activities for the same GuardId and ClientSite
                         var activities = _context.ClientSiteRadioChecksActivityStatus
                             .Where(a => a.ClientSiteId == login.ClientSiteId
@@ -6710,10 +6729,6 @@ namespace CityWatch.Data.Providers
 
                             if (lastActivity != null)
                             {
-                                // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 16-02-2026 - Start
-                                // Normalize current time to site-local time using GuardLoginTimeUtcOffsetMinute
-                                var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(lastActivity.GuardLoginTimeUtcOffsetMinute ?? 600); // Default to AEST if missing
-
                                 if (lastActivity.NotificationCreatedTime.HasValue &&
                                     (siteLocalNow - lastActivity.NotificationCreatedTime.Value).TotalHours > 2 &&
                                     !HasNotificationBeenSentRecently(lastActivity.GuardId, lastActivity.ClientSiteId, siteLocalNow))
@@ -6724,13 +6739,10 @@ namespace CityWatch.Data.Providers
                                     // Log the notification
                                     LogNotification(lastActivity.GuardId, lastActivity.ClientSiteId, siteLocalNow);
                                 }
-                                // Task: TimeZone_Alarm_Discrepancy_Fix -- End
                             }
                         }
                         else
                         {
-                            // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 16-02-2026 - Start
-                            var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(login.GuardLoginTimeUtcOffsetMinute ?? 600);
                             if (login.GuardLoginTime.HasValue &&
                                 (siteLocalNow - login.GuardLoginTime.Value).TotalHours > 2 &&
                                 !HasNotificationBeenSentRecently(login.GuardId, login.ClientSiteId, siteLocalNow))
@@ -6741,7 +6753,6 @@ namespace CityWatch.Data.Providers
                                 // Log the notification
                                 LogNotification(login.GuardId, login.ClientSiteId, siteLocalNow);
                             }
-                            // Task: TimeZone_Alarm_Discrepancy_Fix -- End
                         }
                     }
                     catch (Exception ex)
