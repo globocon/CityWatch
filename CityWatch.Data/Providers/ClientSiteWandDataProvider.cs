@@ -39,6 +39,8 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteEquipments(SiteEquipmentsDetails siteEquipmentsDetails);
         void DeleteClientSiteEquipments(int id);
         bool SaveOfflineSmartWandTagHitDataRecordError(ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced _offlineRecordsNotSynced);
+        List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags();
+
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -484,6 +486,21 @@ namespace CityWatch.Data.Providers
                 Console.WriteLine(ex.ToString());
                 return false;
             }
+        }
+
+        public List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags()
+        {
+                       var smartwandtags = _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.ClientSite)
+                .ToList();
+            foreach (var item in smartwandtags)
+            {
+                item.TagsType = item.SmartWandTagsType.value;
+            }
+            return smartwandtags;
         }
     }
 }
