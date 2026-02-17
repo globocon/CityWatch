@@ -39,28 +39,48 @@ namespace CityWatch.RadioCheck.Services
         public void Process()
         {
             var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().ToList();
+            var clientSiteIds = ClientSiteRadioChecksActivityDetails.Select(x => x.ClientSiteId).Distinct().ToArray();
+            var kpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
 
             foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
             {
+                // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 17-02-2026 - Start
+                // Normalize current time to site-local time using ClientSiteKpiSetting to prevent Sydney/Perth mismatch
+                int utcOffsetMinutes = 600; // Default to AEST (UTC+10)
+                var siteSetting = kpiSettings.FirstOrDefault(x => x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+
+                if (siteSetting != null && !string.IsNullOrEmpty(siteSetting.TimezoneString))
+                {
+                    try
+                    {
+                        var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
+                        utcOffsetMinutes = (int)tz.BaseUtcOffset.TotalMinutes;
+                    }
+                    catch { /* Fallback to default if TZ id is invalid */ }
+                }
+
+                var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(utcOffsetMinutes);
+                // Task: TimeZone_Alarm_Discrepancy_Fix -- End
+
                 /* Check Last IR Created Time Exist */
                 if (ClientSiteRadioChecksActivity.LastIRCreatedTime != null)
                 {
                     /* Check Last IR Created Time less than <2 hrs then delete from table */
-                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastIRCreatedTime).Value.TotalHours < 2;
+                    var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.LastIRCreatedTime).Value.TotalHours < 2;
                     if (!isActive)
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 }
                 /* Check Last KV Created Time Exist */
                 if (ClientSiteRadioChecksActivity.LastKVCreatedTime != null)
                 {
-                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastKVCreatedTime).Value.TotalHours < 2;
+                    var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.LastKVCreatedTime).Value.TotalHours < 2;
                     if (!isActive)
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 }
                 /* Check Last LB Created Time Exist */
                 if (ClientSiteRadioChecksActivity.LastLBCreatedTime != null)
                 {
-                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastLBCreatedTime).Value.TotalHours < 2;
+                    var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.LastLBCreatedTime).Value.TotalHours < 2;
                     if (!isActive)
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 }
@@ -68,18 +88,18 @@ namespace CityWatch.RadioCheck.Services
                 /* Smartwand API implemented this delete functionality
                 //if (ClientSiteRadioChecksActivity.LastSWCreatedTime != null)
                 //{
-                //    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastSWCreatedTime).Value.TotalHours < 2;
+                //    var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.LastSWCreatedTime).Value.TotalHours < 2;
                 //    if (!isActive)
                 //        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 //}
                 /* Check if guard off duty time expired  New Change In Api by Dileep for task p4 task17 Start */
                 if (ClientSiteRadioChecksActivity.GuardLoginTime != null)
                 {
-                    if (ClientSiteRadioChecksActivity.OffDuty != null && ClientSiteRadioChecksActivity.GuardLogoutTime==null)
+                    if (ClientSiteRadioChecksActivity.OffDuty != null && ClientSiteRadioChecksActivity.GuardLogoutTime == null)
                     {
                         /*off duty time +90 min buffer time */
                         /*  allow90 minute buffer here ok in case guard is doing over time or working back*/
-                        var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.OffDuty).Value.TotalMinutes < 90;
+                        var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.OffDuty).Value.TotalMinutes < 90;
                         if (!isActive)
                         {
                             /* if buffer time is over remove login */
@@ -91,9 +111,9 @@ namespace CityWatch.RadioCheck.Services
                                     ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
                                     GuardId = ClientSiteRadioChecksActivity.GuardId,
                                     Status = "Off Duty (RC automatic logoff)",
-                                    CheckedAt = DateTime.Now,
+                                    CheckedAt = siteLocalNow,
                                     Active = true,
-                                    RadioCheckStatusId=null,
+                                    RadioCheckStatusId = null,
                                 });
 
                             }
@@ -102,7 +122,7 @@ namespace CityWatch.RadioCheck.Services
                     if (ClientSiteRadioChecksActivity.GuardLogoutTime != null)
                     {
                         /* If log off time exist remove if log off time >2  */
-                        var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLogoutTime).Value.TotalHours < 2;
+                        var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.GuardLogoutTime).Value.TotalHours < 2;
                         if (!isActive)
                         {
                             /* if buffer time is over remove login */
@@ -112,7 +132,7 @@ namespace CityWatch.RadioCheck.Services
                     if (ClientSiteRadioChecksActivity.OffDuty == null && ClientSiteRadioChecksActivity.GuardLogoutTime == null)
                     {
                         /* If not removed in the previous setps after 12 hr it will remove */
-                        var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 12;
+                        var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 12;
                         if (!isActive)
                         {
                             _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(ClientSiteRadioChecksActivity.GuardId, ClientSiteRadioChecksActivity.ClientSiteId);
@@ -124,7 +144,7 @@ namespace CityWatch.RadioCheck.Services
                 /* remove all the logn time >8 */
                 if (ClientSiteRadioChecksActivity.GuardLoginTime != null && ClientSiteRadioChecksActivity.NotificationType == null)
                 {
-                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 8;
+                    var isActive = (siteLocalNow - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 8;
                     if (!isActive)
                     {
                         //_guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
