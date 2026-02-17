@@ -20,11 +20,13 @@ namespace CityWatch.RadioCheck.Services
     {
 
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IClientDataProvider _clientDataProvider;
 
-        public RadioChecksActivityStatusService(IGuardLogDataProvider guardLogDataProvider)
+        public RadioChecksActivityStatusService(IGuardLogDataProvider guardLogDataProvider, IClientDataProvider clientDataProvider)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
+            _clientDataProvider = clientDataProvider;
         }
 
         /// <summary>
@@ -41,11 +43,27 @@ namespace CityWatch.RadioCheck.Services
         {
             var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().ToList();
 
+            var clientSiteIds = ClientSiteRadioChecksActivityDetails.Select(x => x.ClientSiteId).Distinct().ToList();
+            var kpiSettings = _clientDataProvider.GetClientSiteKpiSettings(clientSiteIds);
+
             foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
             {
                 // Task: TimeZone_Alarm_Discrepancy_Fix -- Added by Antigravity - 16-02-2026 - Start
-                // Normalize current time to site-local time using GuardLoginTimeUtcOffsetMinute to prevent Sydney/Perth mismatch
-                var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(ClientSiteRadioChecksActivity.GuardLoginTimeUtcOffsetMinute ?? 600);
+                // Normalize current time to site-local time using ClientSiteKpiSetting to prevent Sydney/Perth mismatch
+                int utcOffsetMinutes = 600; // Default to AEST (UTC+10)
+                var siteSetting = kpiSettings.FirstOrDefault(x => x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                
+                if (siteSetting != null && !string.IsNullOrEmpty(siteSetting.TimezoneString))
+                {
+                    try
+                    {
+                        var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
+                        utcOffsetMinutes = (int)tz.BaseUtcOffset.TotalMinutes;
+                    }
+                    catch { /* Fallback to default if TZ id is invalid */ }
+                }
+
+                var siteLocalNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(utcOffsetMinutes);
 
                 /* Check Last IR Created Time Exist */
                 if (ClientSiteRadioChecksActivity.LastIRCreatedTime != null)

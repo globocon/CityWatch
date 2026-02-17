@@ -557,6 +557,10 @@ namespace CityWatch.Data.Providers
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettingsADHOC = _context.ClientSiteManningKpiSettingsADHOC.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
 
+                if (string.IsNullOrEmpty(clientSiteKpiSetting.TimezoneString))
+                {
+                    clientSiteKpiSetting.TimezoneString = "AUS Eastern Standard Time";
+                }
             }
             return clientSiteKpiSetting;
         }
@@ -730,8 +734,11 @@ namespace CityWatch.Data.Providers
 
             if (entityState != EntityState.Modified)
             {
-                setting.TimezoneString = "AUS Eastern Standard Time";
-                setting.UTC = "+10:00";
+                if (string.IsNullOrEmpty(setting.TimezoneString))
+                {
+                    setting.TimezoneString = "AUS Eastern Standard Time";
+                    setting.UTC = "+10:00";
+                }
                 _context.ClientSiteKpiSettings.Attach(setting);
                 _context.Entry(setting).State = entityState;
                 _context.SaveChanges();
@@ -1141,6 +1148,10 @@ namespace CityWatch.Data.Providers
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.KPITelematicsFieldID, setting.KPITelematicsFieldID)
                        );
+                        if (string.IsNullOrEmpty(setting.TimezoneString))
+                        {
+                            setting.TimezoneString = "AUS Eastern Standard Time";
+                        }
                         _context.ClientSiteKpiSettings
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
@@ -1283,6 +1294,11 @@ namespace CityWatch.Data.Providers
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.KPITelematicsFieldID, setting.KPITelematicsFieldID)
                        );
+                        if (string.IsNullOrEmpty(setting.TimezoneString))
+                        {
+                            setting.TimezoneString = "AUS Eastern Standard Time";
+                        }
+
                         _context.ClientSiteKpiSettings
                       .Where(u => u.Id == setting.Id)
                        .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
