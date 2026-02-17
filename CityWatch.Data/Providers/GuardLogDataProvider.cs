@@ -6701,7 +6701,7 @@ namespace CityWatch.Data.Providers
                             try
                             {
                                 var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
-                                utcOffsetMinutes = (int)tz.BaseUtcOffset.TotalMinutes;
+                                utcOffsetMinutes = (int)tz.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
                             }
                             catch { }
                         }

@@ -57,7 +57,7 @@ namespace CityWatch.RadioCheck.Services
                     try
                     {
                         var tz = TimeZoneInfo.FindSystemTimeZoneById(siteSetting.TimezoneString);
-                        utcOffsetMinutes = (int)tz.BaseUtcOffset.TotalMinutes;
+                        utcOffsetMinutes = (int)tz.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
                     }
                     catch { /* Fallback to default if TZ id is invalid */ }
                 }
