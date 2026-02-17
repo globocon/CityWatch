@@ -410,7 +410,7 @@ namespace CityWatch.Web.API
                 {
                     var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
                     _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(request.clientsiteId);
-                    var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites.FirstOrDefault().RCLinkedId).FirstOrDefault();
+                    var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites?.FirstOrDefault()?.RCLinkedId)?.FirstOrDefault();
                     if (_check != null)
                     {
                         if (!_check.IsSW)
@@ -2910,7 +2910,31 @@ namespace CityWatch.Web.API
             {
                 var result = _guardLogDataProvider.GetSiteTagStatus(clientId);
                 if (result == null || result.Count == 0)
-                    return NotFound($"No tag status found for clientId {clientId}");
+                {
+                    var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(clientId).FirstOrDefault();
+                    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                    {
+
+                        List<Data.Providers.SiteTagStatus> _tgsts = new List<Data.Providers.SiteTagStatus>()
+                        {
+                            new Data.Providers.SiteTagStatus()
+                                {
+                                    ClientSiteId = clientId,
+                                    CompletedRounds = 0,
+                                    RemainingTags = 0,
+                                    ScannedTags = 0,
+                                    TotalTags = 0,
+                                    Tour = _ClientSiteTourMode.PatrolTourMode.ToString()
+                                }
+                        };
+
+                        return Ok(_tgsts);
+                    }
+                    else
+                    {
+                        return NotFound($"No tag status found for clientId {clientId}");
+                    }
+                }
 
                 return Ok(result);
             }
@@ -3865,7 +3889,7 @@ namespace CityWatch.Web.API
                     r.ServerFileNameWithPath = _filename;
 
                     var _rcd = offlineIrRecords.Where(x => x.IrId == r.IrId).FirstOrDefault();
-                    if(_rcd != null)
+                    if (_rcd != null)
                     {
                         _rcd.IncidentRequest.Attachments ??= new List<string>();
                         _rcd.IncidentRequest.Attachments.Add(_filename);

@@ -164,7 +164,7 @@ namespace CityWatch.Web.Services
 
                                 var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
                                 _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
-                                var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites.FirstOrDefault().RCLinkedId).FirstOrDefault();
+                                var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites?.FirstOrDefault()?.RCLinkedId)?.FirstOrDefault();
                                 if (_check != null)
                                 {
                                     if (!_check.IsSW)
