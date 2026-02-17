@@ -3,7 +3,7 @@ var FileuploadFileChanged = null;
 //p2-140 key photos  -end
 
 $(document).ready(function () {
-       
+
 });
 
 $(function () {
@@ -35,13 +35,13 @@ $(function () {
                 editor: false,
                 tmpl: '<span class="action-placeholder"></span>'
             }
-        ],        
+        ],
         rowDataBound: function (e, $row, id, record) {
             const $cell = $row.find('.action-placeholder');
             const html = renderderegisterDevice(record);
             $cell.html(html);
         },
-        
+
         initialized: function (e) {
             //$(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
             const $grid = $(e.target);
@@ -62,7 +62,7 @@ $(function () {
 
     if (gritdSmartWands) {
         gritdSmartWands.on('rowDataChanged', function (e, id, record) {
-           
+
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
 
@@ -76,23 +76,23 @@ $(function () {
                 }
                 else {
                     $.ajax({
-                url: '/admin/settings?handler=SmartWandSettings',
-                data: { record: data },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': token },
-            }).done(function () {
-                gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-            }).fail(function () {
-                console.log('error');
-            }).always(function () {
-                if (isSmartWandAdding)
-                    isSmartWandAdding = false;
-            });
+                        url: '/admin/settings?handler=SmartWandSettings',
+                        data: { record: data },
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                    }).done(function () {
+                        gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                    }).fail(function () {
+                        console.log('error');
+                    }).always(function () {
+                        if (isSmartWandAdding)
+                            isSmartWandAdding = false;
+                    });
                 }
-               
+
             });
 
-            
+
         });
 
         gritdSmartWands.on('rowRemoving', function (e, id, record) {
@@ -115,13 +115,13 @@ $(function () {
         });
     }
 
-function renderderegisterDevice(value, record) {
-    let buttonHtml = '';
-    if (record.deviceId != null && record.deviceId != '') {
-        buttonHtml = `<span><strong>Device Name:</strong> ${record.deviceName}</br><strong>Device Type:</strong> ${record.deviceType}</span>`;
-        buttonHtml += '</br><button type="button" style="display:inline-block!important;" class="btn btn-outline-primary m-1 de-registerDevice d-block" data-sw-id="' + record.id + '""><i class="fa fa-unlink mr-1" aria-hidden="true"></i>De-Register</button>';
-    }
-    return buttonHtml;
+    function renderderegisterDevice(value, record) {
+        let buttonHtml = '';
+        if (record.deviceId != null && record.deviceId != '') {
+            buttonHtml = `<span><strong>Device Name:</strong> ${record.deviceName}</br><strong>Device Type:</strong> ${record.deviceType}</span>`;
+            buttonHtml += '</br><button type="button" style="display:inline-block!important;" class="btn btn-outline-primary m-1 de-registerDevice d-block" data-sw-id="' + record.id + '""><i class="fa fa-unlink mr-1" aria-hidden="true"></i>De-Register</button>';
+        }
+        return buttonHtml;
     }
 
     function renderderegisterDevice(record) {
@@ -148,14 +148,14 @@ function renderderegisterDevice(value, record) {
                     gritdSmartWands.reload();
                     alert('Success: ' + response.message);
                 } else {
-                    alert('Error: ' +response.message);
+                    alert('Error: ' + response.message);
                 }
             });
         }
 
     });
 
-    
+
     let isSmartWandAdding = false;
     $('#add_smart_wand').on('click', function () {
 
@@ -163,27 +163,27 @@ function renderderegisterDevice(value, record) {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);           
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
-    
+
     $('#IsDosDontList').on('change', function () {
         const isChecked = $(this).is(':checked');
 
         const filter = isChecked ? 1 : 2;
         if (filter == 1) {
-           
+
             $('#IsDosDontListEnabledHidden').val(true)
-            
+
         }
         if (filter == 2) {
             $('#IsDosDontListEnabledHidden').val(false)
-          
+
         }
 
     });
     $('#btnSaveGuardSiteSettings').on('click', function () {
-        var isUpdateLBDailyLog = false;  
+        var isUpdateLBDailyLog = false;
         var isUpdateKVDailyLog = false;
         var isUpdateSWDailyLog = false;
         var isUpdateDailyLogFusion = false;
@@ -526,8 +526,8 @@ function renderderegisterDevice(value, record) {
     $('#tbl_summaryImage1').on('change', 'input[name="upload_staff_file_companyNew"]', function () {
         uploadStafDocUsingType1($(this), true, 1);
     });
-    
-   
+
+
     function uploadStafDocUsingType1(uploadCtrl, edit = false, type) {
 
         const ClientSiteID = $('#ClientSiteId').val();
@@ -554,7 +554,7 @@ function renderderegisterDevice(value, record) {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
         }).done(function (data) {
             if (data.success) {
-                
+
                 gridSummaryImage.reload();
                 //showStatusNotification(data.success, data.message);
             }
@@ -741,7 +741,7 @@ function renderderegisterDevice(value, record) {
             //{ data: 'imagePathNew', width: '4%', orderable: false },
             //p2-140 key photos  -start
             {
-                 width: '4%', orderable: false, data: 'imagePathNew',
+                width: '4%', orderable: false, data: 'imagePathNew',
                 render: function (value, type, data) {
 
                     return '<a  href="' + data.imagePath + '"target="_blank" >' + value + '</a>';
@@ -755,13 +755,13 @@ function renderderegisterDevice(value, record) {
                 width: '5%',
                 data: null,
                 defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-                 '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
-                
-                
+                    '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+
+
                 className: "text-center"
             },
         ],
-       
+
     });
     //p2-140 key photos  -start
     let gridANPR = $('#cs_ANPR').DataTable({
@@ -833,7 +833,7 @@ function renderderegisterDevice(value, record) {
         $('#AnprKey_SeperateEntryAndExit').prop('checked', !!data.isSeperateEntryAndExitLane);
         $('#csANPRValidationSummary').html('');
         $('#anpr-modal').modal('show');
-        
+
     }
     $('#btn_save_anpr_key').on('click', function () {
         var formData = $('#frm_add_key1').serializeArray(); // Serialize to array for easier manipulation
@@ -851,7 +851,7 @@ function renderderegisterDevice(value, record) {
         // Convert form data array to URL-encoded string
         var formDataString = $.param(formData);
 
-       
+
         //console.log(formDataString);
         $.ajax({
             url: '/Admin/Settings?handler=ANPR',
@@ -868,13 +868,13 @@ function renderderegisterDevice(value, record) {
         });
     });
     $("#KeyImagefileUpload").fileUpload();
-    
+
     $('#upload_KeyImage_file').on('change', function () {
         const file = $(this).get(0).files; //.item(0); 
         FileuploadFileChanged(file);
     });
-    
-    
+
+
     FileuploadFileChanged = function (allfile) {
         const file = allfile.item(0); // allfile.get(0).files.item(0);
         const fileExtn = "." + file.name.split('.').pop().toLowerCase();
@@ -890,7 +890,7 @@ function renderderegisterDevice(value, record) {
         formData.append('clientSiteId', $('#ClientSiteKey_ClientSiteId').val());
         formData.append('url', window.location.origin);
         if (Desc == '') {
-            
+
             (confirm('Please enter the key no'))
         }
         else {
@@ -908,9 +908,9 @@ function renderderegisterDevice(value, record) {
                 if (response.success) {
                     $('#ClientSiteKey_ImagePath').val(response.imagePath);
                     $('#keyImage_fileName1').val(response.imagePathNew);
-                    
+
                     loadKeyImagePopup(response);
-                    
+
                 }
             }).fail(function () {
             }).always(function () {
@@ -921,31 +921,31 @@ function renderderegisterDevice(value, record) {
     }
     function loadKeyImagePopup(response) {
         $("#keyimage-attachment-list").empty();
-       
+
         var attachIndex = 0;
         const file = response.imagePath;
         const attachment_id = response.id;
-            const li = document.createElement('li');
-            li.id = attachment_id;
-            li.className = 'list-group-item';
-            li.dataset.index = attachIndex;
-            let liText = document.createTextNode(response.imagePathNew);
-            const icon = document.createElement("i");
-            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-keyImage-attachment';
-            icon.title = 'Delete';
-            icon.style = 'cursor:pointer';
-            li.appendChild(liText);
-            li.appendChild(icon);
-            const anchorTag = document.createElement("a");
-            anchorTag.href = file;
-            anchorTag.target = "_blank";
-            const icon2 = document.createElement("i");
-            icon2.className = 'fa fa-download ml-2 text-primary';
-            icon2.title = 'Download';
-            icon2.style = 'cursor:pointer';
-            anchorTag.appendChild(icon2);
-            li.appendChild(anchorTag);
-            document.getElementById('keyimage-attachment-list').append(li);
+        const li = document.createElement('li');
+        li.id = attachment_id;
+        li.className = 'list-group-item';
+        li.dataset.index = attachIndex;
+        let liText = document.createTextNode(response.imagePathNew);
+        const icon = document.createElement("i");
+        icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-keyImage-attachment';
+        icon.title = 'Delete';
+        icon.style = 'cursor:pointer';
+        li.appendChild(liText);
+        li.appendChild(icon);
+        const anchorTag = document.createElement("a");
+        anchorTag.href = file;
+        anchorTag.target = "_blank";
+        const icon2 = document.createElement("i");
+        icon2.className = 'fa fa-download ml-2 text-primary';
+        icon2.title = 'Download';
+        icon2.style = 'cursor:pointer';
+        anchorTag.appendChild(icon2);
+        li.appendChild(anchorTag);
+        document.getElementById('keyimage-attachment-list').append(li);
         //for (var attachIndex = 0; attachIndex < response.length; attachIndex++) {
         //    const file = response[attachIndex].filePath;
         //    const attachment_id = 1;
@@ -973,7 +973,7 @@ function renderderegisterDevice(value, record) {
 
         //}
     }
-   
+
     $('#keyimage-attachment-list').on('click', '.btn-delete-keyImage-attachment', function (event) {
         if (confirm('Are you sure want to remove this attachment?')) {
             var target = event.target;
@@ -986,7 +986,7 @@ function renderderegisterDevice(value, record) {
                 data: {
                     clientsiteid: $('#ClientSiteKey_ClientSiteId').val(),
                     name: fileName,
-                    id:id,
+                    id: id,
 
                 },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1021,10 +1021,10 @@ function renderderegisterDevice(value, record) {
         var data = gridClientSiteKeys.row($(this).parents('tr')).data();
         loadClientSiteKeyModal(data);
     });
-   
+
     $("#add_Downloadbtn").click(function () {
-                
-        var Key = $('#client_site_name').html();        
+
+        var Key = $('#client_site_name').html();
         $('#loader').show(); // Show loader
         var guardIds = [];
         // Use the DataTable API to get the instance of the table
@@ -1069,7 +1069,7 @@ function renderderegisterDevice(value, record) {
             XLSX.utils.book_append_sheet(wb, ws, 'Keys');
 
             // Write the file
-            const fileName = 'Keys for ' + Key +'.xlsx';
+            const fileName = 'Keys for ' + Key + '.xlsx';
             XLSX.writeFile(wb, fileName);
 
             $('#loader').hide(); // Hide loader after successful export
@@ -1080,16 +1080,16 @@ function renderderegisterDevice(value, record) {
         }
     });
     $('#add_client_site_key').on('click', function () {
-       resetClientSiteKeyModal();
+        resetClientSiteKeyModal();
         $('#client-site-key-modal-new').modal('show');
         //p2-140 key photos  -start
         $("#keyimage-attachment-list").empty();
         //p2-140 key photos  -end
         // $('#client-site-key-modal-new').appendTo("body").modal('show');
     });
-          
-    $('#btnkeyclose').on('click', function () {       
-        $('#client-site-key-modal-new').modal('hide');       
+
+    $('#btnkeyclose').on('click', function () {
+        $('#client-site-key-modal-new').modal('hide');
     });
 
     $('#client-site-key-modal-new').on('hidden.bs.modal', function () {
@@ -1106,11 +1106,11 @@ function renderderegisterDevice(value, record) {
         $('#client-site-key-modal-new').modal('show');
         //p2-140 key photos  -start
         $("#keyimage-attachment-list").empty();
-        
+
         if (data.imagePath != '' && data.imagePath != null) {
             loadKeyImagePopup(data);
         }
-       
+
         //p2-140 key photos  -end
     }
 
@@ -1154,7 +1154,7 @@ function renderderegisterDevice(value, record) {
             });
         }
     }
-    
+
     /*key settings - end*/
     /*toggle settings-start*/
     /*for manifest options-start*/
@@ -1447,7 +1447,7 @@ function renderderegisterDevice(value, record) {
         });
     });
     //Ring Fence Settings - End
-    
+
     GetClientSites();
     function GetClientSites() {
 
@@ -1457,7 +1457,7 @@ function renderderegisterDevice(value, record) {
             type: 'GET',
             data: { clientSiteId: $('#gl_client_site_id').val() },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) { 
+        }).done(function (result) {
             if (result.length != 0) {
                 const SiteEmail = result[0].siteEmail;
                 const duressEmail = result[0].duressEmail;
@@ -1465,7 +1465,7 @@ function renderderegisterDevice(value, record) {
                 const landLine = result[0].landLine;
                 const isDataCollectionEnabled = result[0].dataCollectionEnabled;
                 const IsDosDontListEnabledHidden = result[0].isDosDontList
-               
+
                 const guardLogEmailTo = result[0].guardLogEmailTo;
                 const isUpdateLBDailyLog = result[0].uploadGuardLog;
                 const isUpdateDailyFusionLog = result[0].uploadFusionLog;
@@ -1508,8 +1508,8 @@ function renderderegisterDevice(value, record) {
     //        $('#enableLBLogDump').prop('checked', false);  // Uncheck the other box
     //    }
     //}); */
-    
-    /*Dropbox settings-start*/        
+
+    /*Dropbox settings-start*/
     gridSiteDropboxSettings = $('#grid_Drpbx_Custom').grid({
         dataSource: '/admin/settings?handler=CustomDropboxSettings&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
@@ -1525,7 +1525,7 @@ function renderderegisterDevice(value, record) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-    
+
     if (gridSiteDropboxSettings) {
         gridSiteDropboxSettings.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -1544,7 +1544,7 @@ function renderderegisterDevice(value, record) {
                     isCustomDropboxSettingsAdding = false;
             });
         });
-      gridSiteDropboxSettings.on('rowRemoving', function (e, id, record) {
+        gridSiteDropboxSettings.on('rowRemoving', function (e, id, record) {
             if (confirm('Are you sure to delete this dropbox folder ?')) {
                 const token = $('input[name="__RequestVerificationToken"]').val();
                 $.ajax({
@@ -1563,7 +1563,7 @@ function renderderegisterDevice(value, record) {
             }
         });
     }
-        
+
     let isCustomDropboxSettingsAdding = false;
 
     $('#add_new_custom_dropboxsetting').on('click', function () {
@@ -1607,15 +1607,15 @@ function renderderegisterDevice(value, record) {
                 $('#_dropboxStatusDisplay').addClass('text-success').removeClass('text-danger').show().delay(5000).fadeOut('slow');
             } else {
                 $('#_dropboxStatusDisplay').addClass('text-danger').removeClass('text-success').show().delay(5000).fadeOut('slow');
-            }            
-        }).fail(function () {            
+            }
+        }).fail(function () {
             console.log('error');
         }).always(function () {
-            
+
         });
 
     });
-    
+
     /*Dropbox settings-end*/
 
 
@@ -1635,7 +1635,7 @@ function renderderegisterDevice(value, record) {
             {
                 field: 'groupName', title: 'Group Name', width: 70
             },
-           /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
+            /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
             { field: 'clientSites', title: 'Client Sites', width: 170 },
             {
                 field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
@@ -1685,10 +1685,10 @@ function renderderegisterDevice(value, record) {
         $('#Critical-modal').modal('show');
         clearCriticalModal();
     });
-   
-    
 
-  
+
+
+
 
     $('#clientTypeNameDoc').multiselect({
         maxHeight: 400,
@@ -1915,10 +1915,10 @@ function renderderegisterDevice(value, record) {
         textAreaForNotes.val(record.labelDescription); // safe way to set value
         $editorContainer.append(textAreaForNotes);
     }
-    
-    let gritdWandTags;    
+
+    let gritdWandTags;
     //'/Admin/Settings?handler=TagType'
-   
+
     let smartWandtagsListForDDL = [];
     $('#wandTagTypeDDL option').each(function () {
         var value = $(this).text();
@@ -1935,9 +1935,16 @@ function renderderegisterDevice(value, record) {
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
+            {
+                title: '#',
+                width: 50,
+                align: 'center',
+                sortable: false,
+                tmpl: '<span class="gj-sno"></span>'
+            },
             { width: '200', field: 'uId', title: 'UID', sortable: true, editor: tagsUIDEditor },
             { width: '100', field: 'tagsType', title: 'Type', align: 'center', type: 'dropdown', editor: { dataSource: smartWandtagsListForDDL, valueField: 'value', textField: 'value' } },
-           
+
             { width: '100%', field: 'labelDescription', title: 'Label', sortable: true, editor: tagsLabelEditor },
             {
                 width: '80',
@@ -1949,11 +1956,20 @@ function renderderegisterDevice(value, record) {
             }
         ],
 
+        dataBound: function (e) {
+
+            var $table = $(e.target);
+
+            $table.find('tbody tr').each(function (i) {
+                $(this).find('.gj-sno').text(i + 1);
+            });
+        },
+
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-        
+
     let isWandTagsAdding = false;
     if (gritdWandTags) {
         gritdWandTags.on('rowDataChanged', function (e, id, record) {
@@ -1974,7 +1990,7 @@ function renderderegisterDevice(value, record) {
                     gritdWandTags.edit(id);
                     alert(result.message);
                 }
-                
+
             }).fail(function () {
                 console.log('error');
             }).always(function () {
@@ -2133,12 +2149,12 @@ function renderderegisterDevice(value, record) {
         primaryKey: 'id',
         inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
-            
+
             { width: '150', field: 'equipment', title: 'Equipment', align: 'center', type: 'dropdown', editor: { dataSource: '/admin/settings?handler=Equipments', valueField: 'name', textField: 'name' } },
 
             { width: '500', field: 'brand', title: 'Brand/Description', sortable: true, editor: true },
             {
-                width: '200',field: 'serialNo',title: 'Serial No',align: 'center',editor: true 
+                width: '200', field: 'serialNo', title: 'Serial No', align: 'center', editor: true
             },
             { renderer: editPositionGridRender, align: 'center' }
 
@@ -2217,7 +2233,7 @@ function renderderegisterDevice(value, record) {
 
 //ANPR Details start
 function resetAnprModal() {
-   
+
     $('#ANPR_Id').val('');
     $('#AnprKey_Profile').val('');
     $('#AnprKey_ApiCalls').val('');
@@ -2231,9 +2247,9 @@ function resetAnprModal() {
 }
 $('#add_anpr_key').on('click', function () {
     resetAnprModal();
-    
+
     $('#anpr-modal').modal('show');
-    
+
 });
 $('#btnanprclose').on('click', function () {
     $('#anpr-modal').modal('hide');
