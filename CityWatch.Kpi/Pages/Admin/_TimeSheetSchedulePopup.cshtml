@@ -404,7 +404,7 @@
                                     <div class="card-body p-2">
 
                                         <!-- Client Type & Sites -->
-                                        <div class="row g-2">
+                                        <div class="row g-2 align-items-end">
                                             <div class="col-md-4">
                                                 <div class="form-group mb-1">
                                                     <label class="small mb-0">Client Type</label>
@@ -415,85 +415,25 @@
                                                         }
                                                     </select>
                                                 </div>
+                                            </div>
+                                            <div class="col-md-4">
                                                 <div class="form-group mb-1">
                                                     <label class="small mb-0">Client Site</label>
                                                     <select class="form-control form-control-sm" id="clientSitesTimesheetPCR" name="clientSites"></select>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-4">
-                                                <div class="form-group mb-1">
-                                                    <label class="small mb-0">
-                                                        Selected Client Sites
-                                                        <span class="badge badge-pill badge-info" id="selectedSitesCountTimesheetpcar">0</span>
-                                                    </label>
-                                                    <select class="form-control form-control-sm" id="selectedSitesTimeSheetpcar" name="selectedSites" multiple style="height:80px;"></select>
-
-                                                    <div class="mt-1 d-flex gap-1">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary p-1 mr-1" id="editSelectedSiteTimesheetpcr"><i class="fa fa-pencil mr-1"></i>Edit</button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger p-1" id="removeSelectedSitesTimesheetpcr"><i class="fa fa-trash-o mr-1"></i>Remove</button>
-                                                    </div>
-                                                </div>
+                                                <button type="button" class="btn btn-sm btn-success mb-1" id="btnAddSiteToPcarRoute">
+                                                    <i class="fa fa-plus mr-1"></i>Add Site to Route
+                                                </button>
                                             </div>
                                         </div>
 
                                         <hr class="my-1">
 
-                                        <!-- Daily Schedule Table -->
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h6 class="text-primary mb-1 small"><strong>Daily Patrol Visit Schedule</strong></h6>
-                                                <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
-                                                    <table class="table table-bordered table-sm text-center mb-1">
-                                                        <thead class="p-0 small">
-                                                            <tr>
-                                                                <th></th>
-                                                                <th>Mon</th>
-                                                                <th>Tue</th>
-                                                                <th>Wed</th>
-                                                                <th>Thu</th>
-                                                                <th>Fri</th>
-                                                                <th>Sat</th>
-                                                                <th>Sun</th>
-                                                                <th>PHO</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td><strong>Start</strong></td>
-                                                                @foreach (var d in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Pho" })
-                                                                {
-                                                                    <td>
-                                                                        <input type="time" class="form-control form-control-sm p-1"
-                                                                               id="@($"start{d}")" name="@($"Start{d}")">
-                                                                    </td>
-                                                                }
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>End</strong></td>
-                                                                @foreach (var d in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Pho" })
-                                                                {
-                                                                    <td>
-                                                                        <input type="time" class="form-control form-control-sm p-1"
-                                                                               id="@($"end{d}")" name="@($"End{d}")">
-                                                                    </td>
-                                                                }
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Visits</strong></td>
-                                                                @foreach (var d in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Pho" })
-                                                                {
-                                                                    <td>
-                                                                        <input type="number" class="form-control form-control-sm p-1"
-                                                                               id="@($"visit{d}")" name="@($"Visit{d}")" min="0">
-                                                                    </td>
-                                                                }
-                                                            </tr>
-
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
+                                        <!-- Container for dynamic site blocks -->
+                                        <div id="pcar-sites-container" class="mb-2" style="max-height: 500px; overflow-y: auto; overflow-x: hidden;">
+                                            <!-- Site blocks will be rendered here -->
                                         </div>
 
                                         <hr class="my-1">

@@ -8,9 +8,8 @@ namespace CityWatch.Data.Models
 {
     public class PcarRouteDetailViewModel
     {
-        public int PcarRouteId { get; set; } // Master Route ID
-
-        public List<int> ClientSiteIds { get; set; } // Selected client site IDs
+        public int ClientSiteId { get; set; } // Selected client site ID
+        public int OrderNo { get; set; }
 
         // Daily schedule times and visit counts
         public string StartMon { get; set; }
@@ -44,5 +43,11 @@ namespace CityWatch.Data.Models
         public string StartPho { get; set; } // Public holiday start
         public string EndPho { get; set; }   // Public holiday end
         public int VisitPho { get; set; }    // Public holiday visits
+    }
+
+    public class PcarRouteSaveViewModel
+    {
+        public int PcarRouteId { get; set; } // Master Route ID
+        public List<PcarRouteDetailViewModel> SiteSchedules { get; set; }
     }
 }

@@ -45,6 +45,8 @@ namespace CityWatch.Data.Models
         [Required]
         public int ClientSiteId { get; set; }   // MUST MATCH SQL COLUMN NAME
 
+        public int OrderNo { get; set; }
+
         public string StartMon { get; set; }
         public string EndMon { get; set; }
         public int VisitMon { get; set; }

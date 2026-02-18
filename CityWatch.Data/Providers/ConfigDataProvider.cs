@@ -2619,7 +2619,7 @@ namespace CityWatch.Data.Providers
                 id = route.Id,
                 pcarroutename = route.Pcarroutename,
                 smartwandallocation = route.Smartwandallocation,
-                routeDetails = route.RouteDetails.Select(rd => new
+                routeDetails = route.RouteDetails.OrderBy(rd => rd.OrderNo).Select(rd => new
                 {
                     clientSiteId = rd.ClientSiteId,
                     clientSiteName = rd.ClientSite.Name,

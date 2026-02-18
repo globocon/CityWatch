@@ -1,0 +1,1 @@
+ALTER TABLE PcarRouteDetails ADD OrderNo int NOT NULL DEFAULT 0;
