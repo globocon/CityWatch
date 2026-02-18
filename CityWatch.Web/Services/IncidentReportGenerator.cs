@@ -1649,7 +1649,7 @@ namespace CityWatch.Web.Services
             if (!string.IsNullOrEmpty(uvChartPath) && File.Exists(uvChartPath))
             {
                 using var uvImg = System.Drawing.Image.FromFile(uvChartPath);
-                g.DrawImage(uvImg, 600, 60, 600, 200);
+                g.DrawImage(uvImg, 700, 60, 600, 200);
                
             }
             else
@@ -1718,73 +1718,108 @@ namespace CityWatch.Web.Services
             Bitmap bmp = new Bitmap(width, height);
             Graphics g = Graphics.FromImage(bmp);
 
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.Clear(System.Drawing.Color.White);
 
-            int marginLeft = 60;
+            int marginLeft = 110;
+            int marginRight = 120;
             int marginBottom = 40;
-            int chartWidth = width - marginLeft - 20;
-            int chartHeight = height - marginBottom - 20;
+            int marginTop = 20;
+
+            int chartWidth = width - marginLeft - marginRight;
+            int chartHeight = height - marginBottom - marginTop;
 
             int originX = marginLeft;
-            int originY = chartHeight;
+            int originY = marginTop + chartHeight;
 
-            // 🔥 Background zones
-            DrawZone(g, originX, originY, chartWidth, chartHeight / 5, System.Drawing.Color.LightGreen);
-            DrawZone(g, originX, originY - chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Yellow);
-            DrawZone(g, originX, originY - 2 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Orange);
-            DrawZone(g, originX, originY - 3 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Red);
-            DrawZone(g, originX, originY - 4 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Violet);
+            Font font = new Font("Arial", 9);
+            Font zoneFont = new Font("Arial", 9, FontStyle.Bold);
+
+            // Zone height
+            int zoneHeight = chartHeight / 5;
+
+            // 🔥 Draw UV Zones
+            DrawZone(g, originX, originY, chartWidth, zoneHeight, System.Drawing.Color.LightGreen, "Low", zoneFont);
+            DrawZone(g, originX, originY - zoneHeight, chartWidth, zoneHeight, System.Drawing.Color.Yellow, "Moderate", zoneFont);
+            DrawZone(g, originX, originY - 2 * zoneHeight, chartWidth, zoneHeight, System.Drawing.Color.Orange, "High", zoneFont);
+            DrawZone(g, originX, originY - 3 * zoneHeight, chartWidth, zoneHeight, System.Drawing.Color.Red, "Very High", zoneFont);
+            DrawZone(g, originX, originY - 4 * zoneHeight, chartWidth, zoneHeight, System.Drawing.Color.Violet, "Extreme", zoneFont);
 
             Pen axisPen = new Pen(System.Drawing.Color.Black, 2);
 
-            // ✅ Draw X and Y axis
+            // ✅ Axis lines
             g.DrawLine(axisPen, originX, originY, originX + chartWidth, originY); // X
-            g.DrawLine(axisPen, originX, originY, originX, 20); // Y
+            g.DrawLine(axisPen, originX, originY, originX, marginTop);            // Y
 
-            Font font = new Font("Arial", 9);
-
-            // ✅ Y axis labels (UV values)
+            // ✅ Y Axis Numbers (0–12)
             for (int i = 0; i <= 12; i += 3)
             {
                 float y = originY - (i / 12f * chartHeight);
-                g.DrawString(i.ToString(), font, Brushes.Black, 20, y - 8);
+
                 g.DrawLine(Pens.Gray, originX - 5, y, originX, y);
+                g.DrawString(i.ToString(), font, Brushes.Black, originX - 30, y - 7);
             }
 
-            // ✅ X axis labels (time)
+            // ✅ X Axis Labels (time)
             for (int i = 0; i <= 12; i += 3)
             {
                 int hour = 6 + i;
                 float x = originX + (i / 12f * chartWidth);
 
-                string label = hour + ":00";
-                g.DrawString(label, font, Brushes.Black, x - 15, originY + 5);
+                g.DrawString(hour + ":00", font, Brushes.Black, x - 15, originY + 5);
             }
 
-            // 🔥 UV curve
+            // ✅ Rotated Y Axis Title (LOWER POSITION)
+            // ✅ Y Axis Title (CENTERED PERFECTLY)
+            string yTitle = "Ultraviolet Radiation Level";
+            Font yFont = new Font("Arial", 10, FontStyle.Bold);
+
+            // Measure text size
+            SizeF textSize = g.MeasureString(yTitle, yFont);
+
+            // Move to vertical center of chart
+            float centerY = originY - chartHeight / 2;
+
+            // Position slightly left of Y axis numbers
+            float xPos = originX - 50;
+
+            // Apply transform for rotation
+            g.TranslateTransform(xPos, centerY + textSize.Width / 2);
+            g.RotateTransform(-90);
+
+            // Draw text
+            g.DrawString(yTitle, yFont, Brushes.Black, 0, 0);
+
+            // Reset transform
+            g.ResetTransform();
+
+
+            // 🔥 UV Curve
             Pen curvePen = new Pen(System.Drawing.Color.Black, 3);
 
-            PointF[] points = new PointF[13];
+            PointF[] points = new PointF[50];
 
-            for (int i = 0; i <= 12; i++)
+            for (int i = 0; i < points.Length; i++)
             {
-                double hourRatio = i / 12.0;
-                double uv = Math.Sin(hourRatio * Math.PI) * uvMax;
+                double ratio = i / (double)(points.Length - 1);
+                double uv = Math.Sin(ratio * Math.PI) * uvMax;
 
-                float x = originX + (float)(chartWidth * hourRatio);
+                float x = originX + (float)(chartWidth * ratio);
                 float y = originY - (float)(uv / 12.0 * chartHeight);
 
                 points[i] = new PointF(x, y);
             }
 
             g.DrawLines(curvePen, points);
+
+            // Save file
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
-            //    string path = Path.Combine(folder, $"weather_{Guid.NewGuid()}.JPG");
             string path = Path.Combine(folder, Guid.NewGuid() + "_uvChart.png");
+
             bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
 
             g.Dispose();
@@ -1794,13 +1829,42 @@ namespace CityWatch.Web.Services
         }
 
 
-        private void DrawZone(Graphics g, int x, int y, int width, int height, System.Drawing.Color color)
+
+
+        private void DrawZone(Graphics g, int x, int y, int width, int height,
+                      System.Drawing.Color color, string label, Font font)
         {
+            //using (SolidBrush brush = new SolidBrush(color))
+            //{
+            //    g.FillRectangle(brush, x, y - height, width, height);
+            //}
             using (SolidBrush brush = new SolidBrush(System.Drawing.Color.FromArgb(60, color)))
             {
-                g.FillRectangle(brush, x, y, width, height);
+                g.FillRectangle(brush, x, y - height, width, height);
             }
+            // Measure text
+            SizeF textSize = g.MeasureString(label, font);
+
+            // Position text on RIGHT side inside zone
+            float textX = x + width - textSize.Width - 10; // 10px padding from right
+            float textY = (y - height) + (height / 2) - (textSize.Height / 2);
+
+            // Better contrast for dark colors
+            //Brush textBrush = (color == System.Drawing.Color.Red || color == System.Drawing.Color.Violet)
+            //                  ? Brushes.White
+            //                  : Brushes.Black;
+            Brush textBrush = Brushes.Black;
+
+            g.DrawString(label, font, textBrush, textX, textY);
         }
+
+        private void DrawZoneLabel(Graphics g, string text, Font font, Brush brush,
+                           int originX, int yPosition, int chartWidth)
+        {
+            float x = originX + chartWidth + 10; // right side of chart
+            g.DrawString(text, font, brush, x, yPosition - 8);
+        }
+
         private string GetWeatherCondition(int code)
         {
             return code switch
