@@ -34,6 +34,15 @@ using CityWatch.Data.Enums;
 using CityWatch.Data.Services;
 using Jering.Javascript.NodeJS;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Drawing;
+using Path = System.IO.Path;
+using Image = iText.Layout.Element.Image;
+using Rectangle = iText.Kernel.Geom.Rectangle;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Crypto.Macs;
+
 
 namespace CityWatch.Web.Services
 {
@@ -251,6 +260,9 @@ namespace CityWatch.Web.Services
                 var imageFile = string.Empty;
                 if (attachLiveGps)
                     imageFile = GetLiveGpsImageFilePath(_IncidentReport.DateLocation.ClientSiteLiveGps);
+                //if (attachLiveGps)
+                //    imageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps).Result;
+
                 else if (attachGpsMap)
                 {
                     //p1-274 gps stuck if gps image is not available then create  -start
@@ -263,7 +275,11 @@ namespace CityWatch.Web.Services
                 }
                 if (!string.IsNullOrEmpty(imageFile) && IO.File.Exists(imageFile))
                 {
-                    var image = AttachImageToPdf(pdfDocument, ++index, imageFile);
+                    //p1-341-wather in ir-created by jisha-start
+                    var  newimageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps, imageFile).Result;// to create an image indicating wweatheer in corresponding place
+
+                    var image = AttachMapImageToPdf(pdfDocument, ++index, imageFile, newimageFile);// merge the weater image to gps image and display tp pdf
+                    //p1-341-wather in ir-created by jisha-end
                     doc.Add(image);
                     ++closePageIndex;
                 }
@@ -506,6 +522,84 @@ namespace CityWatch.Web.Services
 
             var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
             image.SetFixedPosition(index, 0, bottom);
+            return image;
+        }
+        private Image AttachMapImageToPdf(PdfDocument pdfDocument,int index,string imagePath,string weatherImagePath = null)
+        {
+            var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+            pdfDocument.AddNewPage(index, pageSize);
+
+            string finalImagePath = imagePath;
+
+            // ---------- COMBINE MAP + WEATHER ----------
+            if (!string.IsNullOrEmpty(weatherImagePath) && File.Exists(weatherImagePath))
+            {
+                string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".jpg");
+
+                using var mapOriginal = System.Drawing.Image.FromFile(imagePath);
+                using var weather = System.Drawing.Image.FromFile(weatherImagePath);
+
+                // Rotate map if landscape
+                if (mapOriginal.Width > mapOriginal.Height)
+                {
+                    mapOriginal.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                }
+
+                int targetWidth = 1200;
+
+                int mapHeight = (int)((double)mapOriginal.Height / mapOriginal.Width * targetWidth);
+                int weatherHeight = (int)((double)weather.Height / weather.Width * targetWidth);
+
+                using var resizedMap = new Bitmap(mapOriginal, new Size(targetWidth, mapHeight));
+                using var resizedWeather = new Bitmap(weather, new Size(targetWidth, weatherHeight));
+
+                int finalHeight = mapHeight + weatherHeight;
+
+                using var finalBitmap = new Bitmap(targetWidth, finalHeight);
+                using var g = Graphics.FromImage(finalBitmap);
+
+                g.Clear(System.Drawing.Color.White);
+                g.DrawImage(resizedMap, 0, 0);
+                g.DrawImage(resizedWeather, 0, mapHeight);
+
+                finalBitmap.Save(tempFile, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                finalImagePath = tempFile;
+            }
+
+            // ---------- LOAD INTO PDF ----------
+            var imageData = ImageDataFactory.Create(finalImagePath);
+            var image = new Image(imageData);
+
+            bool rotateImage = image.GetImageWidth() > image.GetImageHeight();
+            bool scaleImage = image.GetImageWidth() > MAX_IMAGE_WIDTH ||
+                              image.GetImageHeight() > MAX_IMAGE_HEIGHT;
+
+            if (rotateImage)
+            {
+                image.SetRotationAngle(ROTATION_ANGLE_DEG * (Math.PI / 180));
+
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetHeight() * SCALE_FACTOR,
+                                     PageSize.A4.GetWidth() * SCALE_FACTOR);
+            }
+            else
+            {
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetWidth() * SCALE_FACTOR,
+                                     PageSize.A4.GetHeight() * SCALE_FACTOR);
+            }
+
+            var bottom = rotateImage
+                ? pageSize.GetTop()
+                : pageSize.GetTop() - image.GetImageScaledHeight();
+
+            image.SetFixedPosition(index, 0, bottom);
+            if(File.Exists(weatherImagePath))
+            {
+                File.Delete(weatherImagePath);
+            }
+
             return image;
         }
 
@@ -1358,5 +1452,329 @@ namespace CityWatch.Web.Services
             headerTable.AddCell(new Cell(1, 3).SetPadding(3).SetBorder(Border.NO_BORDER));
             return headerTable;
         }
+
+        //p1-341-wather in ir-created by jisha-start
+        private async Task<string> GetGpsWithWeatherImage(string gpsCoordinates, string mapPath)
+        {
+            // 1. Get map image
+            //var mapPath = GetLiveGpsImageFilePath(gpsCoordinates);
+
+            if (string.IsNullOrEmpty(mapPath) || !File.Exists(mapPath))
+                return mapPath;
+
+            // 2. Parse coordinates
+            var parts = gpsCoordinates.Split(',');
+            double lat = Convert.ToDouble(parts[0]);
+            double lng = Convert.ToDouble(parts[1]);
+
+            // 3. Get weather
+            var weather = await GetWeatherAsync(lat, lng);
+
+            // 4. Create weather panel image
+            //        string uvChartPath = Path.Combine(_webHostEnvironment.WebRootPath,
+            //"weather", "uvchart.png");
+            // 3. Generate UV chart dynamically
+            string uvChartPath = GenerateUVChart(weather.UVIndex);
+
+            var weatherImage = CreateWeatherImageExact(weather, uvChartPath);
+
+            // 5. Combine
+            //var finalImage = CombineImages(mapPath, weatherImage);
+
+            //return finalImage;
+            return weatherImage;
+        }
+        private async Task<WeatherInfo> GetWeatherAsync(double lat, double lng)
+        {
+            string apiKey = _configuration["Weather:ApiKey"];
+
+            string url =
+                $"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={apiKey}&units=metric";
+
+            using var client = new HttpClient();
+            var json = await client.GetStringAsync(url);
+
+            dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+            
+
+            double rainMm = 0;
+            double rainChance = 0;
+
+            
+           
+            var todayData = ((IEnumerable<dynamic>)data.list).Take(8);
+
+           
+
+            foreach (var item in todayData)
+            {
+                double pop = item.pop != null ? (double)item.pop : 0;
+
+                if (pop > rainChance)
+                    rainChance = pop;
+                if (item.rain != null && item.rain["3h"] != null)
+                {
+                    rainMm += (double)item.rain["3h"];
+                }
+            }
+
+            rainChance *= 100;
+            //var uvIndex = await GetUVIndexAsync(lat, lng);
+            var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+
+            double uvIndex = obj["current"]?["uvi"]?.Value<double>() ?? 0;
+
+            return new WeatherInfo
+            {
+                MinTemp = data.list[0].main.temp_min,
+                MaxTemp = data.list[0].main.temp_max,
+                RainMm = rainMm,
+                RainChance = Convert.ToInt32(rainChance),
+                UVIndex = uvIndex
+            };
+        }
+
+       
+        private string CreateWeatherImageExact(WeatherInfo weather, string uvChartPath = null)
+        {
+            string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            //    string path = Path.Combine(folder, $"weather_{Guid.NewGuid()}.JPG");
+            string filePath = Path.Combine(folder, $"weather_{Guid.NewGuid()}.jpg");
+
+            int width = 1200;
+            int height = 300;
+
+            using var bmp = new Bitmap(width, height);
+            using var g = Graphics.FromImage(bmp);
+
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(System.Drawing.Color.White);
+
+            // ===== HEADER =====
+            using var headerBrush = new SolidBrush(System.Drawing.Color.FromArgb(0, 102, 153));
+            g.FillRectangle(headerBrush, 0, 0, width, 45);
+
+            using var headerFont = new Font("Arial", 18, FontStyle.Bold);
+            g.DrawString("Weather Updates / Alerts", headerFont, Brushes.White, 20, 8);
+
+            // ===== DATE =====
+            using var dateFont = new Font("Arial", 14, FontStyle.Regular);
+            g.DrawString(DateTime.Now.ToString("dddd d MMMM"), dateFont, Brushes.Black, 20, 60);
+
+            // ===== WEATHER ICON =====
+            string iconPath = Path.Combine(_webHostEnvironment.WebRootPath, "weather", "partly_cloudy.png");
+            if (File.Exists(iconPath))
+            {
+                using var icon = System.Drawing.Image.FromFile(iconPath);
+                g.DrawImage(icon, 20, 100, 60, 60);
+            }
+
+            // ===== TEMP TEXT =====
+            using var tempFont = new Font("Arial", 20, FontStyle.Bold);
+
+            g.DrawString("Min", tempFont, Brushes.Black, 100, 110);
+            g.DrawString($"{weather.MinTemp}°C", tempFont, Brushes.DodgerBlue, 150, 110);
+
+            g.DrawString("Max", tempFont, Brushes.Black, 280, 110);
+            g.DrawString($"{weather.MaxTemp}°C", tempFont, Brushes.Red, 340, 110);
+
+            // ===== DIVIDER =====
+            using var pen = new Pen(System.Drawing.Color.LightGray, 1);
+            g.DrawLine(pen, 20, 180, 520, 180);
+
+            // ===== RAIN INFO =====
+            using var infoFont = new Font("Arial", 14, FontStyle.Regular);
+
+            g.DrawString("Possible rainfall:", infoFont, Brushes.Black, 20, 200);
+            g.DrawString($"{weather.RainMm} mm", infoFont, Brushes.DarkGreen, 200, 200);
+
+            g.DrawString("Chance of any rain:", infoFont, Brushes.Black, 20, 230);
+            g.DrawString($"{weather.RainChance}%", infoFont, Brushes.DarkGreen, 220, 230);
+
+            // Rain bars
+            for (int i = 0; i < 10; i++)
+            {
+                Brush barBrush = i < (weather.RainChance / 10)
+                    ? Brushes.Green
+                    : Brushes.LightGreen;
+
+                g.FillRectangle(barBrush, 360 + (i * 18), 235, 14, 14);
+            }
+
+            // ===== UV CHART (RIGHT SIDE) =====
+            if (!string.IsNullOrEmpty(uvChartPath) && File.Exists(uvChartPath))
+            {
+                using var uvImg = System.Drawing.Image.FromFile(uvChartPath);
+                g.DrawImage(uvImg, 550, 60, 600, 200);
+               
+            }
+            else
+            {
+                // Placeholder box
+                g.FillRectangle(Brushes.WhiteSmoke, 550, 60, 600, 200);
+                g.DrawRectangle(Pens.Gray, 550, 60, 600, 200);
+
+                using var placeholderFont = new Font("Arial", 14);
+                g.DrawString("UV Chart", placeholderFont, Brushes.Gray, 800, 150);
+            }
+
+            bmp.Save(filePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (File.Exists(uvChartPath))
+            {
+                File.Delete(uvChartPath);
+            }
+            return filePath;
+        }
+
+
+        
+        private string CombineImages(string mapPath, string weatherPath)
+        {
+            string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
+
+            string output = Path.Combine(folder, $"combined_{Guid.NewGuid()}.JPG");
+
+            using var mapImg = System.Drawing.Image.FromFile(mapPath);
+            using var weatherImg = System.Drawing.Image.FromFile(weatherPath);
+
+            int width = Math.Max(mapImg.Width, weatherImg.Width);
+            int height = mapImg.Height + weatherImg.Height;
+
+            using Bitmap finalImg = new Bitmap(width, height);
+            using Graphics g = Graphics.FromImage(finalImg);
+
+            g.Clear(System.Drawing.Color.White);
+
+            g.DrawImage(mapImg, 0, 0);
+            g.DrawImage(weatherImg, 0, mapImg.Height);
+
+            finalImg.Save(output, System.Drawing.Imaging.ImageFormat.Png);
+
+            return output;
+        }
+
+        private async Task<double> GetUVIndexAsync(double lat, double lon)
+        {
+            string apiKey = _configuration["Weather:ApiKey"]; ;
+
+            string url =
+                $"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&appid={apiKey}&units=metric";
+
+            using var client = new HttpClient();
+            var json = await client.GetStringAsync(url);
+
+            dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+
+            return data.current.uvi != null ? (double)data.current.uvi : 0;
+        }
+        private string GenerateUVChart(double uvMax)
+        {
+            int width = 650;
+            int height = 300;
+
+            Bitmap bmp = new Bitmap(width, height);
+            Graphics g = Graphics.FromImage(bmp);
+
+            g.Clear(System.Drawing.Color.White);
+
+            int marginLeft = 60;
+            int marginBottom = 40;
+            int chartWidth = width - marginLeft - 20;
+            int chartHeight = height - marginBottom - 20;
+
+            int originX = marginLeft;
+            int originY = chartHeight;
+
+            // 🔥 Background zones
+            DrawZone(g, originX, originY, chartWidth, chartHeight / 5, System.Drawing.Color.LightGreen);
+            DrawZone(g, originX, originY - chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Yellow);
+            DrawZone(g, originX, originY - 2 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Orange);
+            DrawZone(g, originX, originY - 3 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Red);
+            DrawZone(g, originX, originY - 4 * chartHeight / 5, chartWidth, chartHeight / 5, System.Drawing.Color.Violet);
+
+            Pen axisPen = new Pen(System.Drawing.Color.Black, 2);
+
+            // ✅ Draw X and Y axis
+            g.DrawLine(axisPen, originX, originY, originX + chartWidth, originY); // X
+            g.DrawLine(axisPen, originX, originY, originX, 20); // Y
+
+            Font font = new Font("Arial", 9);
+
+            // ✅ Y axis labels (UV values)
+            for (int i = 0; i <= 12; i += 3)
+            {
+                float y = originY - (i / 12f * chartHeight);
+                g.DrawString(i.ToString(), font, Brushes.Black, 20, y - 8);
+                g.DrawLine(Pens.Gray, originX - 5, y, originX, y);
+            }
+
+            // ✅ X axis labels (time)
+            for (int i = 0; i <= 12; i += 3)
+            {
+                int hour = 6 + i;
+                float x = originX + (i / 12f * chartWidth);
+
+                string label = hour + ":00";
+                g.DrawString(label, font, Brushes.Black, x - 15, originY + 5);
+            }
+
+            // 🔥 UV curve
+            Pen curvePen = new Pen(System.Drawing.Color.Black, 3);
+
+            PointF[] points = new PointF[13];
+
+            for (int i = 0; i <= 12; i++)
+            {
+                double hourRatio = i / 12.0;
+                double uv = Math.Sin(hourRatio * Math.PI) * uvMax;
+
+                float x = originX + (float)(chartWidth * hourRatio);
+                float y = originY - (float)(uv / 12.0 * chartHeight);
+
+                points[i] = new PointF(x, y);
+            }
+
+            g.DrawLines(curvePen, points);
+            string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            //    string path = Path.Combine(folder, $"weather_{Guid.NewGuid()}.JPG");
+            string path = Path.Combine(folder, Guid.NewGuid() + "_uvChart.png");
+            bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+
+            g.Dispose();
+            bmp.Dispose();
+
+            return path;
+        }
+
+
+        private void DrawZone(Graphics g, int x, int y, int width, int height, System.Drawing.Color color)
+        {
+            using (SolidBrush brush = new SolidBrush(System.Drawing.Color.FromArgb(60, color)))
+            {
+                g.FillRectangle(brush, x, y, width, height);
+            }
+        }
+
+        //p1-341-wather in ir-created by jisha-end
+
     }
+    public class WeatherInfo
+    {
+        public double MinTemp { get; set; }
+        public double MaxTemp { get; set; }
+        public double RainMm { get; set; }
+        public int RainChance { get; set; }
+        public string Condition { get; set; }
+        public double UVIndex { get; set; }
+    }
+
+
 }
