@@ -1484,57 +1484,97 @@ namespace CityWatch.Web.Services
             //return finalImage;
             return weatherImage;
         }
-        private async Task<WeatherInfo> GetWeatherAsync(double lat, double lng)
+        private async Task<WeatherInfo> GetWeatherAsync(double lat, double lon)
         {
-            string apiKey = _configuration["Weather:ApiKey"];
-
             string url =
-                $"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={apiKey}&units=metric";
+                $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}" +
+                $"&current=temperature_2m,uv_index,weathercode" +
+                $"&hourly=precipitation_probability,precipitation" +
+                $"&daily=temperature_2m_max,temperature_2m_min" +
+                $"&timezone=auto";
 
             using var client = new HttpClient();
             var json = await client.GetStringAsync(url);
 
-            dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
-            
-
-            double rainMm = 0;
-            double rainChance = 0;
-
-            
-           
-            var todayData = ((IEnumerable<dynamic>)data.list).Take(8);
-
-           
-
-            foreach (var item in todayData)
-            {
-                double pop = item.pop != null ? (double)item.pop : 0;
-
-                if (pop > rainChance)
-                    rainChance = pop;
-                if (item.rain != null && item.rain["3h"] != null)
-                {
-                    rainMm += (double)item.rain["3h"];
-                }
-            }
-
-            rainChance *= 100;
-            //var uvIndex = await GetUVIndexAsync(lat, lng);
             var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-            double uvIndex = obj["current"]?["uvi"]?.Value<double>() ?? 0;
+            // Temperature
+            double minTemp = obj["daily"]?["temperature_2m_min"]?[0]?.Value<double>() ?? 0;
+            double maxTemp = obj["daily"]?["temperature_2m_max"]?[0]?.Value<double>() ?? 0;
 
+            // UV Index
+            double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
+
+            // Rain Chance + Rain MM (next 24 hours)
+            var rainProbArray = obj["hourly"]?["precipitation_probability"]?.ToObject<List<double>>() ?? new();
+            var rainArray = obj["hourly"]?["precipitation"]?.ToObject<List<double>>() ?? new();
+
+            double rainChance = rainProbArray.Count > 0 ? rainProbArray.Max() : 0;
+            double rainMm = rainArray.Sum();
+            int weatherCode = obj["current"]?["weathercode"]?.Value<int>() ?? 0;
+            string condition = GetWeatherCondition( weatherCode);
             return new WeatherInfo
             {
-                MinTemp = data.list[0].main.temp_min,
-                MaxTemp = data.list[0].main.temp_max,
+                MinTemp = minTemp,
+                MaxTemp = maxTemp,
                 RainMm = rainMm,
                 RainChance = Convert.ToInt32(rainChance),
-                UVIndex = uvIndex
+                UVIndex = uvIndex,
+                Condition = condition
             };
         }
 
-       
+        //private async Task<WeatherInfo> GetWeatherAsync(double lat, double lng)
+        //{
+        //    string apiKey = _configuration["Weather:ApiKey"];
+
+        //    string url =
+        //        $"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={apiKey}&units=metric";
+
+        //    using var client = new HttpClient();
+        //    var json = await client.GetStringAsync(url);
+
+        //    dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+
+
+        //    double rainMm = 0;
+        //    double rainChance = 0;
+
+
+
+        //    var todayData = ((IEnumerable<dynamic>)data.list).Take(8);
+
+
+
+        //    foreach (var item in todayData)
+        //    {
+        //        double pop = item.pop != null ? (double)item.pop : 0;
+
+        //        if (pop > rainChance)
+        //            rainChance = pop;
+        //        if (item.rain != null && item.rain["3h"] != null)
+        //        {
+        //            rainMm += (double)item.rain["3h"];
+        //        }
+        //    }
+
+        //    rainChance *= 100;
+        //    //var uvIndex = await GetUVIndexAsync(lat, lng);
+        //    var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+
+        //    //  double uvIndex = obj["current"]?["uvi"]?.Value<double>() ?? 0;
+        //    double uvIndex = await GetUVIndexAsync(lat, lng);
+        //    return new WeatherInfo
+        //    {
+        //        MinTemp = data.list[0].main.temp_min,
+        //        MaxTemp = data.list[0].main.temp_max,
+        //        RainMm = rainMm,
+        //        RainChance = Convert.ToInt32(rainChance),
+        //        UVIndex = uvIndex
+        //    };
+        //}
+
+
         private string CreateWeatherImageExact(WeatherInfo weather, string uvChartPath = null)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
@@ -1566,7 +1606,7 @@ namespace CityWatch.Web.Services
             g.DrawString(DateTime.Now.ToString("dddd d MMMM"), dateFont, Brushes.Black, 20, 60);
 
             // ===== WEATHER ICON =====
-            string iconPath = Path.Combine(_webHostEnvironment.WebRootPath, "weather", "partly_cloudy.png");
+            string iconPath = iconPath = Path.Combine(_webHostEnvironment.WebRootPath,"images", "weather", weather.Condition +".png");
             if (File.Exists(iconPath))
             {
                 using var icon = System.Drawing.Image.FromFile(iconPath);
@@ -1609,14 +1649,14 @@ namespace CityWatch.Web.Services
             if (!string.IsNullOrEmpty(uvChartPath) && File.Exists(uvChartPath))
             {
                 using var uvImg = System.Drawing.Image.FromFile(uvChartPath);
-                g.DrawImage(uvImg, 550, 60, 600, 200);
+                g.DrawImage(uvImg, 600, 60, 600, 200);
                
             }
             else
             {
                 // Placeholder box
                 g.FillRectangle(Brushes.WhiteSmoke, 550, 60, 600, 200);
-                g.DrawRectangle(Pens.Gray, 550, 60, 600, 200);
+                g.DrawRectangle(Pens.Gray, 600, 60, 600, 200);
 
                 using var placeholderFont = new Font("Arial", 14);
                 g.DrawString("UV Chart", placeholderFont, Brushes.Gray, 800, 150);
@@ -1659,18 +1699,17 @@ namespace CityWatch.Web.Services
 
         private async Task<double> GetUVIndexAsync(double lat, double lon)
         {
-            string apiKey = _configuration["Weather:ApiKey"]; ;
-
             string url =
-                $"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&appid={apiKey}&units=metric";
+                $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=uv_index";
 
             using var client = new HttpClient();
             var json = await client.GetStringAsync(url);
 
-            dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+            var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-            return data.current.uvi != null ? (double)data.current.uvi : 0;
+            return obj["current"]?["uv_index"]?.Value<double>() ?? 0;
         }
+
         private string GenerateUVChart(double uvMax)
         {
             int width = 650;
@@ -1761,6 +1800,22 @@ namespace CityWatch.Web.Services
             {
                 g.FillRectangle(brush, x, y, width, height);
             }
+        }
+        private string GetWeatherCondition(int code)
+        {
+            return code switch
+            {
+                0 => "Clear Sky",
+                1 or 2 => "Partly Cloudy",
+                3 => "Cloudy",
+                45 or 48 => "Fog",
+                51 or 53 or 55 => "Drizzle",
+                61 or 63 or 65 => "Rain",
+                71 or 73 or 75 => "Snow",
+                80 or 81 or 82 => "Rain Showers",
+                95 => "Thunderstorm",
+                _ => "Unknown"
+            };
         }
 
         //p1-341-wather in ir-created by jisha-end
