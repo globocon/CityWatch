@@ -302,6 +302,7 @@ namespace CityWatch.Data.Providers
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
         {
+            
             return _context.FeedbackType.OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-end

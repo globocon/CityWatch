@@ -26,7 +26,7 @@ namespace CityWatch.Web.Services
 
         public int GetGuardLoginId(int logBookId, int guardId, int clientsiteId, int userId, string IPAddress);
     }
-    public class MobileAppDataServices: IMobileAppDataServices
+    public class MobileAppDataServices : IMobileAppDataServices
     {
         private readonly IViewDataService _viewDataService;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
@@ -36,7 +36,7 @@ namespace CityWatch.Web.Services
         public readonly IClientDataProvider _clientDataProvider;
         private readonly IHubContext<MobileAppSignalRHub> _hubContext;
 
-        public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider, 
+        public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext)
         {
@@ -49,14 +49,16 @@ namespace CityWatch.Web.Services
             _hubContext = hubContext;
         }
 
-        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel,int ScanFromLinkedSiteId)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
-           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime,ScanningType scanningType ,int? SmartWandId = null)
+        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
+           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
             int ScanFromLinkedSiteId = siteId;
+            string _tagEndDesc = "[NFC]";
+            
             ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
             try
             {
@@ -75,6 +77,24 @@ namespace CityWatch.Web.Services
                     }
                 }
                 var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
+
+                if (scanningType == ScanningType.NFC)
+                {
+                    _tagEndDesc = "[NFC]";
+                    if(_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                    {
+                        _tagEndDesc = $"[{_ClientSiteTourMode.PatrolTourMode.ToString()} NFC]";
+                    }
+                }
+                else
+                {
+                    _tagEndDesc = "[BLE]";
+                    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
+                    {
+                        _tagEndDesc = $"[{_ClientSiteTourMode.PatrolTourMode.ToString()} BLE]";
+                    }
+                }
+
                 ScannerTagDetails TagInfoDetails = new ScannerTagDetails();
                 if (scanningType == ScanningType.NFC) { TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc"); }
                 else if (scanningType == ScanningType.BLUETOOTH) { TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "bluetooth"); }
@@ -105,7 +125,7 @@ namespace CityWatch.Web.Services
                     {  // if tag not found show uid in log book entry
                         IsSuccess = true;
                         message = "Tag Not Found";
-                        TagInfoLabel = $"{TagUid} [NFC]";
+                        TagInfoLabel = $"{TagUid} {_tagEndDesc}";
                         _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
                     }
                     else if (scanningType == ScanningType.BLUETOOTH)
@@ -126,7 +146,7 @@ namespace CityWatch.Web.Services
                             {
                                 IsSuccess = true;
                                 message = "Tag Not Found";
-                                TagInfoLabel = $"{TagUid} [NFC]";
+                                TagInfoLabel = $"{TagUid} {_tagEndDesc}";
                                 _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
                             }
                             else if (scanningType == ScanningType.BLUETOOTH)
@@ -144,7 +164,7 @@ namespace CityWatch.Web.Services
 
                                 var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
                                 _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
-                                var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites.FirstOrDefault().RCLinkedId).FirstOrDefault();
+                                var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites?.FirstOrDefault()?.RCLinkedId)?.FirstOrDefault();
                                 if (_check != null)
                                 {
                                     if (!_check.IsSW)
@@ -153,7 +173,7 @@ namespace CityWatch.Web.Services
                                         _rcLinkedClientSites = new List<RCLinkedDuressClientSites>();
                                     }
                                 }
-                                
+
                                 if (_rcLinkedClientSites != null && _rcLinkedClientSites.Count > 0)
                                 {
                                     if (_rcLinkedClientSites.Any(x => x.ClientSiteId == TagInfoDetails.ClientSiteId))
@@ -166,14 +186,14 @@ namespace CityWatch.Web.Services
                                             IsSuccess = true;
                                             TagFound = true;
                                             message = "Tag Found";
-                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
+                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                         }
                                         else if (scanningType == ScanningType.BLUETOOTH)
                                         {  // if ibeacon
                                             IsSuccess = true;
                                             TagFound = true;
                                             message = "iBeacon Found";
-                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [BLE]";
+                                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                         }
 
                                     }
@@ -202,14 +222,14 @@ namespace CityWatch.Web.Services
                                     IsSuccess = true;
                                     TagFound = true;
                                     message = "Tag Found";
-                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
+                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                 }
                                 else if (scanningType == ScanningType.BLUETOOTH)
                                 {  // if ibeacon
                                     IsSuccess = true;
                                     TagFound = true;
                                     message = "iBeacon Found";
-                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} [BLE]";
+                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                 }
                             }
                         }
@@ -221,14 +241,14 @@ namespace CityWatch.Web.Services
                             IsSuccess = true;
                             TagFound = true;
                             message = "Tag Found";
-                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
+                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                         }
                         else if (scanningType == ScanningType.BLUETOOTH)
                         {  // if ibeacon
                             IsSuccess = true;
                             TagFound = true;
                             message = "iBeacon Found";
-                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} [BLE]";
+                            TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                         }
                     }
                 }
@@ -484,7 +504,7 @@ namespace CityWatch.Web.Services
         //        msg = "Invalid guard ID or client site ID.";
         //        return(IsSuccess, msg, guardLoginId);
         //    }
-                
+
 
         //    var logBookType = LogBookType.DailyGuardLog;
         //    var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType, LogDateTime.Date);
@@ -494,7 +514,7 @@ namespace CityWatch.Web.Services
         //        msg = "Failed to retrieve logbook ID.";
         //        return (IsSuccess, msg, guardLoginId);
         //    }
-                
+
 
         //    // Get Guard Login ID
         //    guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
@@ -504,7 +524,7 @@ namespace CityWatch.Web.Services
         //        msg = "Guard login failed.";
         //        return (IsSuccess, msg, guardLoginId);
         //    }
-            
+
         //    // Default GPS coordinates (should be replaced with actual values if available)
         //    var gpsCoordinates = gps;
 

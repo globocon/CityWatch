@@ -274,8 +274,8 @@ public interface ITimesheetGenerator
         }
         public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid, string fileNamePart)
         {
-            DateTime startdateTime = DateTime.Parse(startdate);
-            DateTime dateTime = DateTime.Parse(endDate);
+            DateTime startdateTime = DateTime.Parse(startdate, System.Globalization.CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
@@ -608,7 +608,7 @@ public interface ITimesheetGenerator
             // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = new float[6];
+                float[] columnPercentages = { 15, 20, 15, 15, 10, 25 }; // Non-zero percentages for iText7
                 var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
@@ -801,21 +801,13 @@ public interface ITimesheetGenerator
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 20f, 30f }; // Adjust these values as needed
-                                                                             // Total width of the table in points
-                table.SetWidth(UnitValue.CreatePointValue(380)); // Example total width in points, adjust as needed
-
-
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
-                // const float CELL_WIDTH = 1f;
                 table.AddCell(GetSiteValueCellHeader(""));
                 table.AddCell(GetSiteValueCellHeader("Date"));
                 table.AddCell(GetSiteValueCellHeader("start"));
                 table.AddCell(GetSiteValueCellHeader("Finish"));
                 table.AddCell(GetSiteValueCellHeader("Total Hrs"));
                 table.AddCell(GetSiteValueCellHeader("Site"));
-
-
             }
             catch (Exception ex)
             {
@@ -827,7 +819,7 @@ public interface ITimesheetGenerator
         }
         private static Table GetCommentTable(int weelTotalHrs)
         {
-            float[] columnPercentages = new float[5];
+            float[] columnPercentages = { 20, 20, 20, 20, 20 }; // Non-zero percentages for iText7
             var CommentTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
 
             CreateGuardDetailsHeader1(CommentTable, weelTotalHrs);

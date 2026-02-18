@@ -1794,8 +1794,8 @@ namespace CityWatch.Web.Pages.Admin
                     startDate = today;
                     endDate = today;
                 }
-                string StartDate = startDate.ToString();
-                string EndDate = endDate.ToString();
+                string StartDate = startDate.ToString("yyyy-MM-dd");
+                string EndDate = endDate.ToString("yyyy-MM-dd");
                 if (guradid > 0)
                 {
                     fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(StartDate, EndDate, guradid);

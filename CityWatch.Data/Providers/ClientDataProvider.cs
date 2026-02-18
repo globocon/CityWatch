@@ -576,7 +576,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
-            if (guardLogin != null && guardLogin.Guard != null)
+            if (guardLogin != null && guardLogin.Guard != null && guardLogin.Guard.Name != null)
 
             {
                 return guardLogin.Guard.Name;
@@ -610,7 +610,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
-            if (guardLogin != null && guardLogin.Guard != null)
+            if (guardLogin != null && guardLogin.Guard != null && guardLogin.Guard.SecurityNo != null)
             {
                 return guardLogin.Guard.SecurityNo;
             }
@@ -626,9 +626,9 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
-            if (guardLogin != null && guardLogin.Guard != null)
+            if (guardLogin != null && guardLogin.Guard != null && guardLogin.Guard.DateEnrolled.HasValue)
             {
-                DateTime date = (DateTime)guardLogin.Guard.DateEnrolled;
+                DateTime date = guardLogin.Guard.DateEnrolled.Value;
                 return date.ToString("dd-MMM-yyyy").ToUpper();
             }
             else
@@ -643,7 +643,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
-            if (guardLogin != null && guardLogin.Guard != null)
+            if (guardLogin != null && guardLogin.Guard != null && guardLogin.Guard.State != null)
             {
 
                 return guardLogin.Guard.State;
@@ -660,7 +660,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
-            if (guardLogin != null && guardLogin.Guard != null)
+            if (guardLogin != null && guardLogin.Guard != null && guardLogin.Guard.Provider != null)
             {
 
                 return guardLogin.Guard.Provider;
@@ -678,7 +678,10 @@ namespace CityWatch.Data.Providers
             if (guardLogin != null)
             {
                 var SiteName1 = _context.ClientSites.Where(x => x.Id == guardLogin.ClientSiteId).FirstOrDefault();
-                SiteName = SiteName1.Name;
+                if (SiteName1 != null)
+                {
+                    SiteName = SiteName1.Name;
+                }
             }
             return SiteName;
         }
@@ -3306,15 +3309,17 @@ namespace CityWatch.Data.Providers
             DateTime startDateParsed;
             DateTime endDateParsed;
 
-            // Use DateTime.TryParse to handle invalid date formats
-            if (!DateTime.TryParse(startdate, out startDateParsed))
+            // Use CultureInfo.InvariantCulture to handle dates passed as yyyy-MM-dd accurately
+            if (!DateTime.TryParse(startdate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out startDateParsed))
             {
-                throw new ArgumentException("Invalid start date format");
+                if (!DateTime.TryParse(startdate, out startDateParsed)) // Fallback to auto-detect if invariant fails
+                    throw new ArgumentException("Invalid start date format");
             }
 
-            if (!DateTime.TryParse(endDate, out endDateParsed))
+            if (!DateTime.TryParse(endDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out endDateParsed))
             {
-                throw new ArgumentException("Invalid end date format");
+                if (!DateTime.TryParse(endDate, out endDateParsed))
+                    throw new ArgumentException("Invalid end date format");
             }
             var clientSiteDetails = _context.GuardLogins
        .Include(x => x.ClientSite)
@@ -3322,8 +3327,9 @@ namespace CityWatch.Data.Providers
                    (startDateParsed == endDateParsed
                         ? x.LoginDate.Date == startDateParsed.Date // If dates are equal, check exact date
                         : x.LoginDate.Date >= startDateParsed.Date && x.LoginDate.Date <= endDateParsed.Date))
+       .OrderByDescending(x => x.LoginDate)
        .AsEnumerable() // Switch to client-side evaluation
-       .DistinctBy(x => x.GuardId) // Now this works on the client side
+       .DistinctBy(x => new { x.GuardId, x.ClientSiteId }) // Ensure guards working multi-site are included for each site
        .ToList();
 
             return clientSiteDetails;
@@ -3380,8 +3386,9 @@ namespace CityWatch.Data.Providers
                             (startdate == endDate
                                  ? x.LoginDate.Date == startdate.Date // If dates are equal, check exact date
                                  : x.LoginDate.Date >= startdate.Date && x.LoginDate.Date <= endDate.Date))
+                .OrderByDescending(x => x.LoginDate)
                 .AsEnumerable() // Switch to client-side evaluation
-                .DistinctBy(x => x.GuardId) // Ensures distinct guards on the client side
+                .DistinctBy(x => new { x.GuardId, x.ClientSiteId }) // Ensures distinct guards per site on the client side
                 .ToList();
 
             return clientSiteDetails;

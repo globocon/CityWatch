@@ -137,7 +137,7 @@ namespace CityWatch.Web.API
                                 // Save the record in DB to process later.
                                 SaveSyncOfflineSmartWandTagHitDataError(offlineRecord, msgLR);
                             }
-                            
+
                             Thread.Sleep(500); //wait a while since signalR pushes the refresh signal for logbook refresh
                         }
                         else
@@ -259,23 +259,51 @@ namespace CityWatch.Web.API
             {
                 //GetClientSiteSmartWandsTags
                 int[] clientSiteIds;
-                var ls = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
+                List<ClientSiteSmartWandTags> smartWandTagList = new();
 
-                if (ls != null && ls.Count > 0)
+                var clientsiteDetails = _clientSitesDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
+                var PatrolTourMode = clientsiteDetails != null ? clientsiteDetails.PatrolTourMode : PatrolTouringMode.STND;
+                if (PatrolTourMode != PatrolTouringMode.STND)
                 {
-                    clientSiteIds = ls.Select(x => x.ClientSiteId).ToArray();
+                    // If tour mode is INSP or PCAR then get the tags of all sites.
+                    smartWandTagList = _clientSiteWandDataProvider.GetAllClientSitesSmartwandTags();
                 }
                 else
                 {
-                    clientSiteIds = new[] { siteId };
+                    var ls = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
+
+                    if (ls != null && ls.Count > 0)
+                    {
+                        // If there are linked sites then get the tags of linked sites also.
+                        clientSiteIds = ls.Select(x => x.ClientSiteId).ToArray();
+                    }
+                    else
+                    {
+                        // If there are no linked sites then get the tags of current site.
+                        clientSiteIds = new[] { siteId };
+                    }
+
+                    smartWandTagList = _viewDataService.GetClientSiteTagIds(clientSiteIds);
                 }
 
-                var smartWandTagList = _viewDataService.GetClientSiteTagIds(clientSiteIds);
+                //List<ClientSiteSmartWandTagsLocal> nwswtL = new List<ClientSiteSmartWandTagsLocal>();
+                //foreach (var item in smartWandTagList)
+                //{
+                //    nwswtL.Add(new ClientSiteSmartWandTagsLocal()
+                //    {
+                //        Id = item.Id,
+                //        ClientSiteId = item.ClientSiteId,
+                //        UId = item.UId,
+                //        TagsTypeId = item.TagsTypeId,
+                //        LabelDescription = item.LabelDescription,
+                //        FqBypass = item.FqBypass,
+                //        TagsType = item.TagsType
+                //    });
+                //}
 
-                List<ClientSiteSmartWandTagsLocal> nwswtL = new List<ClientSiteSmartWandTagsLocal>();
-                foreach (var item in smartWandTagList)
-                {
-                    nwswtL.Add(new ClientSiteSmartWandTagsLocal()
+
+                List<ClientSiteSmartWandTagsLocal> nwswtL = smartWandTagList
+                    .Select(item => new ClientSiteSmartWandTagsLocal
                     {
                         Id = item.Id,
                         ClientSiteId = item.ClientSiteId,
@@ -284,8 +312,9 @@ namespace CityWatch.Web.API
                         LabelDescription = item.LabelDescription,
                         FqBypass = item.FqBypass,
                         TagsType = item.TagsType
-                    });
-                }
+                    })
+                    .ToList();
+
 
                 return Ok(nwswtL);
             }
