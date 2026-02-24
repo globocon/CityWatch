@@ -3723,6 +3723,7 @@ namespace CityWatch.Web.API
                     Reminder1 = guardComplianceAndLicenseDTO.Reminder1,
                     Reminder2 = guardComplianceAndLicenseDTO.Reminder2,
                     DateType = guardComplianceAndLicenseDTO.DateType,
+                    LicenseNo = guardComplianceAndLicenseDTO.LicenseNo
 
                 };
 
