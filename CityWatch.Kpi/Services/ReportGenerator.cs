@@ -974,353 +974,199 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
+            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard).Distinct().ToArray();
+            var hrGrpStr = RemoveBrackets(hrGroupName).Trim();
+            var activeRefNos = new HashSet<string>();
+            var allGuardComps = new Dictionary<int, List<GuardComplianceAndLicense>>();
 
-            var guards = monthlyDataGuard
-                .Select(guardLogin => guardLogin.Guard)
-                .Distinct()
-                .ToArray();
-            List<int> complianceDataCounts = new List<int>();
-            foreach (var guard in guards)
+            if (Enum.TryParse<HrGroup>(hrGrpStr, out var hrGrpVal))
             {
-                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
-                var GropuNamee = RemoveBrackets(hrGroupName);
-                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                foreach (var guard in guards)
                 {
-
-                    monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
+                    var comps = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGrpVal);
+                    allGuardComps[guard.Id] = comps;
                 }
-                //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
-                complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
             }
-            var HTList = new List<HrSettings>();
-            if (IsDownselect == true)
-            {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
-            }
-            else
-            {
-                HTList = _viewDataService.GetHRSettings(Id);
-            }
-            int referenceNoCount = 0;
 
+            var HTList = IsDownselect ? _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID) : _viewDataService.GetHRSettings(Id);
+            var displayedRefNos = new List<HrSettings>();
             foreach (var item in HTList)
             {
                 var SiteConditions = item.hrSettingsClientSites;
                 var StateConditions = item.hrSettingsClientStates;
-                bool shouldAddCells = false;
-
-                if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                bool isEligible = (SiteConditions.Count == 0 && StateConditions.Count == 0) || SiteConditions.Any(x => x.ClientSiteId == clientSiteId);
+                
+                if (isEligible)
                 {
-                    var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                    var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                    if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                    displayedRefNos.Add(item);
+                    var refNo = item.ReferenceNo ?? "";
+                    var normRef = new string(refNo.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+                    foreach (var comps in allGuardComps.Values)
                     {
-                        shouldAddCells = true;
-                    }
-
-                    else if (SelctedSiteExist.Count != 0)
-                    {
-                        if (SelctedStateExist.Count != 0)
+                        if (comps.Any(c => !string.IsNullOrEmpty(c.Description) && new string(c.Description.Where(char.IsLetterOrDigit).ToArray()).ToUpper().Contains(normRef)))
                         {
-                            shouldAddCells = true;
+                            activeRefNos.Add(refNo);
+                            break;
                         }
-                        else
-                        {
-                            shouldAddCells = true;
-                        }
-
                     }
                 }
-                else
-                {
-                    shouldAddCells = true;
-                }
-
-                if (shouldAddCells)
-                {
-                    referenceNoCount++;
-                }
             }
-            int[] countsArray = complianceDataCounts.ToArray();
-            int largestNumber = referenceNoCount;
 
+            int numBaseCols = (Id == 1) ? 3 : 2;
+            int numHRCols = displayedRefNos.Count;
+            var rc = UnitValue.CreatePercentArray(numBaseCols + numHRCols);
 
-            int numColumns = monthlyDataGuardCompliance.Count;
-            float[] columnPercentages = new float[largestNumber + 2];
-
-            // #### P1#213S_Colum width -- 11-07-2024 - Binoy Start
-            var rc = UnitValue.CreatePercentArray(largestNumber + 2);
-            int restcolwidth = 0;
-            if (largestNumber > 0)
-            {
-                var totcols = largestNumber + 2;
-                var tottblwidth = 523; // Total width of Table as per iText7 documentation
-                restcolwidth = ((tottblwidth - 130) / (totcols - 2));
-            }
-            if (Id == 1)
-            {
-                columnPercentages = new float[largestNumber + 3];
-                rc = UnitValue.CreatePercentArray(largestNumber + 3);
-                if (largestNumber > 0)
-                {
-                    var totcols = largestNumber + 3;
-                    var tottblwidth = 523; // Total width of Table as per iText7 documentation
-                    restcolwidth = ((tottblwidth - 130) / (totcols - 2));
-                }
-            }
+            float totalWidth = 812f;
+            float fixedBase = 130f + (Id == 1 ? 60f : 0f); // Name(80), License(50), DOH(60)
+            float emptyWidth = 20f;
+            int activeCount = displayedRefNos.Count(r => activeRefNos.Contains(r.ReferenceNo ?? ""));
+            float available = totalWidth - fixedBase - ((numHRCols - activeCount) * emptyWidth);
+            float activeWidth = activeCount > 0 ? available / activeCount : available / Math.Max(1, numHRCols);
 
             int j = 0;
-            foreach (var r in rc)
+            var hrColWidths = new Dictionary<string, float>();
+            rc[j++] = new UnitValue(UnitValue.POINT, 80);
+            rc[j++] = new UnitValue(UnitValue.POINT, 50);
+            if (Id == 1) rc[j++] = new UnitValue(UnitValue.POINT, 60);
+
+            foreach (var item in displayedRefNos)
             {
-                if (j == 0)
-                {
-                    r.SetValue(80);
-                    r.SetUnitType(UnitValue.POINT);
-                }
-                else if (j == 1)
-                {
-                    r.SetValue(50);
-                    r.SetUnitType(UnitValue.POINT);
-                }
-                else
-                {
-                    r.SetValue(restcolwidth);
-                    r.SetUnitType(UnitValue.POINT);
-                }
-                j++;
+                var refNo = item.ReferenceNo ?? "";
+                float w = activeRefNos.Contains(refNo) ? activeWidth : emptyWidth;
+                hrColWidths[refNo] = w;
+                rc[j++] = new UnitValue(UnitValue.POINT, w);
             }
 
             var kpiGuardTable = new Table(rc).UseAllAvailableWidth();
-            // #### P1#213S_Colum width -- 11-07-2024 - Binoy End
-
-            //var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
-
             CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
-
-            var GropuNamee1 = RemoveBrackets(hrGroupName);
-            int maxComplianceCount = 0;
-            if (Enum.TryParse<HrGroup>(GropuNamee1, out var hrGroup1))
-            {
-
-                maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(g.Id, hrGroup1).Count).Max();
-            }
-            maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicense(g.Id).Count).Max();
-
 
             foreach (var guard in guards)
             {
-                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
-                var GropuNamee = RemoveBrackets(hrGroupName);
-                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
-                {
-
-                    //var SiteConditions = item.hrSettingsClientSites;
-                    //var StateConditions = item.hrSettingsClientStates;
-
-                    monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
-                }
-                //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
+                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = allGuardComps.ContainsKey(guard.Id) ? allGuardComps[guard.Id] : new List<GuardComplianceAndLicense>();
                 kpiGuardTable.AddCell(CreateDataCell(guard.Name.Length > 16 ? guard.Name[..16] : guard.Name));
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
                 if (Id == 1)
                 {
-                    string DOH = guard.DateEnrolled.HasValue
-                            ? guard.DateEnrolled.Value.ToString("dd/MM/yyyy")
-                            : string.Empty;
+                    string DOH = guard.DateEnrolled.HasValue ? guard.DateEnrolled.Value.ToString("dd/MM/yyyy") : string.Empty;
                     kpiGuardTable.AddCell(CreateDataCell(DOH));
                 }
 
-
-                var HTList1 = _viewDataService.GetHRSettings(Id);
-
-                var FilterHR = new List<FilteredHrSettings>();
-                foreach (var item in HTList)
+                foreach (var item in displayedRefNos)
                 {
-
-
-                    var SiteConditions = item.hrSettingsClientSites;
-                    var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
-                    {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
-                        {
-                            var filteredItem = new FilteredHrSettings
-                            {
-                                Id = item.Id,
-                                Description = item.Description,
-                                ReferenceNo = item.ReferenceNo,
-                                hrSettingsClientSites = SelctedSiteExist,
-                                hrSettingsClientStates = SelctedStateExist
-                            };
-
-                            // Add the filtered item to the filterHR list
-                            FilterHR.Add(filteredItem);
-                        }
-
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                var filteredItem = new FilteredHrSettings
-                                {
-                                    Id = item.Id,
-                                    Description = item.Description,
-                                    ReferenceNo = item.ReferenceNo,
-                                    hrSettingsClientSites = SelctedSiteExist,
-                                    hrSettingsClientStates = SelctedStateExist
-                                };
-
-                                // Add the filtered item to the filterHR list
-                                FilterHR.Add(filteredItem);
-                            }
-                            else
-                            {
-                                var filteredItem = new FilteredHrSettings
-                                {
-                                    Id = item.Id,
-                                    Description = item.Description,
-                                    ReferenceNo = item.ReferenceNo,
-                                    hrSettingsClientSites = SelctedSiteExist,
-                                    hrSettingsClientStates = SelctedStateExist
-                                };
-
-                                // Add the filtered item to the filterHR list
-                                FilterHR.Add(filteredItem);
-                            }
-
-                        }
-
-                    }
-                    else
-                    {
-
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        var filteredItem = new FilteredHrSettings
-                        {
-
-                            Id = item.Id,
-                            Description = item.Description,
-                            ReferenceNo = item.ReferenceNo,
-                            hrSettingsClientSites = SelctedSiteExist,
-                            hrSettingsClientStates = SelctedStateExist
-                        };
-
-                        // Add the filtered item to the filterHR list
-                        FilterHR.Add(filteredItem);
-                    }
-
-
-                }
-
-
-                for (int i = 0; i < largestNumber; i++)
-                {
-                    var HRDesc = (FilterHR[i].ReferenceNo + FilterHR[i].Description).Trim().Replace(" ", "");
-                    var test = monthlyDataGuardComplianceData.Select(x => x.Description.Trim().Replace(" ", "")).FirstOrDefault();
-                    var normalizedHRDesc = HRDesc.Trim().Replace(" ", "").Replace("/", "");
+                    var referenceNo = item.ReferenceNo ?? "";
+                    var normalizedRefNo = new string(referenceNo.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+                    
                     var matchingDescription = monthlyDataGuardComplianceData
-                        .Where(data => data.Description.Trim().Replace(" ", "").Replace("/", "") == normalizedHRDesc)
+                        .Where(data => 
+                        {
+                            if (string.IsNullOrEmpty(data.Description)) return false;
+                            var normalizedDocDesc = new string(data.Description.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+                            return normalizedDocDesc.Contains(normalizedRefNo);
+                        })
                         .FirstOrDefault();
-                    if (true)
-                    {
 
-                    }
-                    var cellColor = "";
-                    DateTime? alertDate = null;
-
-                    var SelectedDesc = FilterHR
-            .Where(x => matchingDescription != null && matchingDescription.Description != null && x.Description.Trim() == matchingDescription.Description.Trim())
-             .FirstOrDefault();
-                    var SiteConditions = SelectedDesc?.hrSettingsClientSites;
-                    var StateConditions = SelectedDesc?.hrSettingsClientStates;
-                    if (matchingDescription != null && matchingDescription.ExpiryDate != null && matchingDescription.ExpiryDate.ToString() != "")
-                    {
-                        alertDate = Convert.ToDateTime(matchingDescription.ExpiryDate).AddDays(-45);
-                    }
-
-                    if (alertDate <= DateTime.Today && matchingDescription.ExpiryDate > DateTime.Today)
-                    {
-                        cellColor = CELL_BG_YELLOW;
-                    }
-                    else if (matchingDescription?.ExpiryDate < DateTime.Today)
-                    {
-                        cellColor = CELL_BG_RED;
-                    }
-                    else if (matchingDescription?.ExpiryDate == null)
-                    {
-                        cellColor = "white";
-                    }
-                    else
-                    {
-                        cellColor = "#96e3ac";
-                    }
-
+                    var cellColor = "white";
                     DateTime? expiryDate = matchingDescription?.ExpiryDate?.Date;
-                    string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
-                    if (matchingDescription != null)
+                    float colWidth = hrColWidths.ContainsKey(referenceNo) ? hrColWidths[referenceNo] : 45f;
+                    string dateFormat = colWidth > 45 ? "dd/MM/yyyy" : "dd/MM\nyyyy";
+                    string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString(dateFormat) : "";
+
+                    if (matchingDescription != null && expiryDate.HasValue)
                     {
+                        DateTime alertDate = expiryDate.Value.AddDays(-45);
+                        if (alertDate <= DateTime.Today && expiryDate > DateTime.Today)
+                        {
+                            cellColor = CELL_BG_YELLOW;
+                        }
+                        else if (expiryDate < DateTime.Today)
+                        {
+                            cellColor = CELL_BG_RED;
+                        }
+                        else
+                        {
+                            cellColor = "#96e3ac";
+                        }
+
                         if (matchingDescription.DateType == true)
                         {
                             cellColor = "#96e3ac";
-                            expiryDateString = expiryDateString + $"(I)";
+                            expiryDateString += "(I)";
                         }
                     }
-                    if ((SiteConditions != null && SiteConditions.Count != 0) || (StateConditions != null && StateConditions.Count != 0))
-                    {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
-                        {
-                            kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
-                        }
 
-
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
-
-                            }
-                            else
-                            {
-                                kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
-                            }
-
-                        }
-
-                        else
-                        {
-                            cellColor = "white";
-                            expiryDateString = "";
-                            kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
-                        }
-                    }
-                    else
-                    {
-                        kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
-                    }
-
-
+                    kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                 }
-
-
             }
-
-
 
             return kpiGuardTable;
         }
-        public class FilteredHrSettings
+
+        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
-            public int Id { get; set; }
-            public string Description { get; set; }
-            public string ReferenceNo { get; set; }
-            public List<HrSettingsClientSites> hrSettingsClientSites { get; set; }
-            public List<HrSettingsClientStates> hrSettingsClientStates { get; set; }
+            try
+            {
+                var HTList = IsDownselect ? _viewDataService.GetHRSettingsCriticalDoc(id, CriticalDocumentID) : _viewDataService.GetHRSettings(id);
+
+                // Row 1: Group label + Reference numbers
+                if (id == 1)
+                {
+                    table.AddCell(new Cell(1, 3).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(hrGroupname)));
+                }
+                else
+                {
+                    table.AddCell(new Cell(1, 2).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(hrGroupname)));
+                }
+
+                foreach (var item in HTList)
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    bool isEligible = (SiteConditions.Count == 0 && StateConditions.Count == 0) || SiteConditions.Any(x => x.ClientSiteId == clientSiteId);
+
+                    if (isEligible)
+                    {
+                        var referenceNo = item.ReferenceNo ?? "";
+                        table.AddCell(new Cell(1, 1).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(referenceNo)));
+                    }
+                }
+
+                // Row 2: Name, License, DOH labels + Empty cells for columns
+                table.AddCell(CreateHeaderCell("Name\n"));
+                table.AddCell(CreateHeaderCell("License"));
+                if (id == 1) table.AddCell(CreateHeaderCell("DOH"));
+
+                foreach (var item in HTList)
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    bool isEligible = (SiteConditions.Count == 0 && StateConditions.Count == 0) || SiteConditions.Any(x => x.ClientSiteId == clientSiteId);
+
+                    if (isEligible)
+                    {
+                        table.AddCell(CreateHeaderCell(""));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred in CreateGuardDetailsNewHeader: {ex.Message}");
+                throw;
+            }
+        }
+
+        private void CreateGuardDetailsNewHeaderHR(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id)
+        {
+            try
+            {
+                Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
+                table.AddCell(new Cell(1, 1).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(CELL_BG_GREY_HEADER).Add(new Paragraph().Add(new Text($"Reference No"))));
+                table.AddCell(new Cell(1, 1).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(CELL_BG_GREY_HEADER).Add(new Paragraph().Add(new Text($"Description"))));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
         }
         private string RemoveBrackets(string input)
         {
@@ -1798,182 +1644,53 @@ namespace CityWatch.Kpi.Services
         }
         private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
-            float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-            //if (hrGroupname == "HR3 (Special)")
-            //{
-            //    table.SetWidth(UnitValue.CreatePointValue(500));
-            //}
-            //else
-            //{
-            //    table.SetWidth(UnitValue.CreatePointValue(400));
-            //}
-
             try
             {
-                List<int> complianceDataCounts = new List<int>();
-                var guards = monthlyDataGuard
-                    .Select(guardLogin => guardLogin.Guard)
-                    .Distinct()
-                    .ToArray();
+                var HTList = IsDownselect ? _viewDataService.GetHRSettingsCriticalDoc(id, CriticalDocumentID) : _viewDataService.GetHRSettings(id);
 
-                foreach (var guard in guards)
-                {
-                    List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
-                    var GropuNamee1 = RemoveBrackets(hrGroupname);
-                    if (Enum.TryParse<HrGroup>(GropuNamee1, out var hrGroup1))
-                    {
-
-                        monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup1);
-                    }
-                    //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
-                    complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
-                }
-
-                int[] countsArray = complianceDataCounts.ToArray();
-                var HTList = new List<HrSettings>();
-                if (IsDownselect == true)
-                {
-                    HTList = _viewDataService.GetHRSettingsCriticalDoc(id, CriticalDocumentID);
-                }
-                else
-                {
-                    HTList = _viewDataService.GetHRSettings(id);
-                }
-
-
+                // Row 1: Group label + Reference numbers
                 if (id == 1)
                 {
-                    table.AddCell(new Cell(1, 3)
-                   .SetFontSize(CELL_FONT_SIZE)
-                   .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                   .Add(new Paragraph().Add(new Text(hrGroupname))));
+                    table.AddCell(new Cell(1, 3).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(hrGroupname)));
                 }
                 else
                 {
-                    table.AddCell(new Cell(1, 2)
-                                      .SetFontSize(CELL_FONT_SIZE)
-                                      .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                                      .Add(new Paragraph().Add(new Text(hrGroupname))));
+                    table.AddCell(new Cell(1, 2).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(hrGroupname)));
                 }
-
-                char[] suffixes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
                 foreach (var item in HTList)
                 {
-
-
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
+                    bool isEligible = (SiteConditions.Count == 0 && StateConditions.Count == 0) || SiteConditions.Any(x => x.ClientSiteId == clientSiteId);
 
-                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    if (isEligible)
                     {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedSiteExist.Count != 0 && SelctedStateExist.Count != 0)
-                        {
-                            var referenceNo = item.ReferenceNo;
-
-                            table.AddCell(new Cell(1, 1)
-                                .SetFontSize(CELL_FONT_SIZE)
-                                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                                .Add(new Paragraph().Add(new Text(referenceNo))));
-                        }
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                var referenceNo = item.ReferenceNo;
-
-                                table.AddCell(new Cell(1, 1)
-                                    .SetFontSize(CELL_FONT_SIZE)
-                                    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                                    .Add(new Paragraph().Add(new Text(referenceNo))));
-                            }
-                            else
-                            {
-                                var referenceNo = item.ReferenceNo;
-
-                                table.AddCell(new Cell(1, 1)
-                                    .SetFontSize(CELL_FONT_SIZE)
-                                    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                                    .Add(new Paragraph().Add(new Text(referenceNo))));
-                            }
-
-                        }
+                        var referenceNo = item.ReferenceNo ?? "";
+                        table.AddCell(new Cell(1, 1).SetFontSize(CELL_FONT_SIZE).SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER)).Add(new Paragraph(referenceNo)));
                     }
-                    else
-                    {
-                        var referenceNo = item.ReferenceNo;
-
-                        table.AddCell(new Cell(1, 1)
-                            .SetFontSize(CELL_FONT_SIZE)
-                            .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                            .Add(new Paragraph().Add(new Text(referenceNo))));
-                    }
-
-
                 }
 
-                table.AddCell(CreateHeaderCell($"Name\n"));
+                // Row 2: Name, License, DOH labels + Empty cells for columns
+                table.AddCell(CreateHeaderCell("Name\n"));
                 table.AddCell(CreateHeaderCell("License"));
-                if (id == 1)
-                {
-                    table.AddCell(CreateHeaderCell("DOH"));
-                }
-
-
-                var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
-                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData1 = null; // Declare and initialize HRGroupList
-                var GropuNamee = RemoveBrackets(hrGroupname);
-                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
-                {
-
-                    monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(firstGuardId, hrGroup);
-                }
-                //var monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(firstGuardId);
+                if (id == 1) table.AddCell(CreateHeaderCell("DOH"));
 
                 foreach (var item in HTList)
                 {
-
-
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
-                    {
-                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
-                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
-                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
-                        {
-                            table.AddCell(CreateHeaderCell(""));
-                        }
+                    bool isEligible = (SiteConditions.Count == 0 && StateConditions.Count == 0) || SiteConditions.Any(x => x.ClientSiteId == clientSiteId);
 
-                        else if (SelctedSiteExist.Count != 0)
-                        {
-                            if (SelctedStateExist.Count != 0)
-                            {
-                                table.AddCell(CreateHeaderCell(""));
-                            }
-                            else
-                            {
-                                table.AddCell(CreateHeaderCell(""));
-                            }
-
-                        }
-
-                    }
-                    else
+                    if (isEligible)
                     {
                         table.AddCell(CreateHeaderCell(""));
                     }
-
-
                 }
             }
             catch (Exception ex)
             {
-                // Handle the exception here, for example, log it or show an error message.
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                // You can rethrow the exception if needed.
+                Console.WriteLine($"An error occurred in CreateGuardDetailsNewHeader: {ex.Message}");
                 throw;
             }
         }
