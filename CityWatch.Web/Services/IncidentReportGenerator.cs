@@ -1,47 +1,49 @@
 ﻿using CityWatch.Common.Helpers;
+using CityWatch.Data;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Extensions;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+//using DocumentFormat.OpenXml.Drawing.Charts;
 using iText.Forms;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Annot;
+using iText.Kernel.Pdf.Filespec;
 using iText.Layout;
+using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using iText.Kernel.Pdf.Annot;
+using iText.Pdfa;
+using Jering.Javascript.NodeJS;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
-using System.Text;
-using IO = System.IO;
-using iText.Pdfa;
-using iText.Layout.Borders;
-
-using System.Collections.Generic;
-using CityWatch.Data;
-using iText.Kernel.Pdf.Filespec;
-using System.Net.Mail;
-using System.IO;
-using CityWatch.Data.Enums;
-using CityWatch.Data.Services;
-using Jering.Javascript.NodeJS;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Drawing;
-using Path = System.IO.Path;
-using Image = iText.Layout.Element.Image;
-using Rectangle = iText.Kernel.Geom.Rectangle;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto.Macs;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Mail;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using Image = iText.Layout.Element.Image;
+using IO = System.IO;
+using Path = System.IO.Path;
+using Rectangle = iText.Kernel.Geom.Rectangle;
 
 
 namespace CityWatch.Web.Services
@@ -150,11 +152,11 @@ namespace CityWatch.Web.Services
             _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
         }
 
-        public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite,string Templete)
+        public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite, string Templete)
         {
             //dynamic template based on the domain 
             var IRPdfTemplete = IO.Path.Combine(_ReportRootDir, TEMPLATE_DIR, Templete);
-            if(IRPdfTemplete==string.Empty)
+            if (IRPdfTemplete == string.Empty)
             {
                 IRPdfTemplete = _TemplatePdf;
 
@@ -231,7 +233,7 @@ namespace CityWatch.Web.Services
 
                     if (field.Name == "CC-List")
                     {
-                        var colorcode = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == _IncidentReport.SiteColourCodeId && x.DeleteStatus==0);
+                        var colorcode = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == _IncidentReport.SiteColourCodeId && x.DeleteStatus == 0);
                         if (colorcode != null)
                         {
                             var bgcolor = colorcode.BackgroundColour;
@@ -276,7 +278,8 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(imageFile) && IO.File.Exists(imageFile))
                 {
                     //p1-341-wather in ir-created by jisha-start
-                    var  newimageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps, imageFile).Result;// to create an image indicating wweatheer in corresponding place
+                    var uvdate = _IncidentReport.DateLocation.IncidentDate.HasValue ? _IncidentReport.DateLocation.IncidentDate.Value.Date : _IncidentReport.DateLocation.ReportDate.Date;
+                    var newimageFile = GetGpsWithWeatherImage(_IncidentReport.DateLocation.ClientSiteLiveGps, imageFile, uvdate).Result;// to create an image indicating wweatheer in corresponding place
 
                     var image = AttachMapImageToPdf(pdfDocument, ++index, imageFile, newimageFile);// merge the weater image to gps image and display tp pdf
                     //p1-341-wather in ir-created by jisha-end
@@ -309,7 +312,7 @@ namespace CityWatch.Web.Services
                     }
                 }
 
-                
+
 
                 // Reset index to before close page index
                 index = closePageIndex - 1;
@@ -321,7 +324,7 @@ namespace CityWatch.Web.Services
                         var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
                         if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
                         {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
                             paraName.SetFixedPosition(index, 5, 0, 400);
                             doc.Add(image).Add(paraName);
                             ++closePageIndex;
@@ -524,7 +527,7 @@ namespace CityWatch.Web.Services
             image.SetFixedPosition(index, 0, bottom);
             return image;
         }
-        private Image AttachMapImageToPdf(PdfDocument pdfDocument,int index,string imagePath,string weatherImagePath = null)
+        private Image AttachMapImageToPdf(PdfDocument pdfDocument, int index, string imagePath, string weatherImagePath = null)
         {
             var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
             pdfDocument.AddNewPage(index, pageSize);
@@ -595,7 +598,7 @@ namespace CityWatch.Web.Services
                 : pageSize.GetTop() - image.GetImageScaledHeight();
 
             image.SetFixedPosition(index, 0, bottom);
-            if(File.Exists(weatherImagePath))
+            if (File.Exists(weatherImagePath))
             {
                 File.Delete(weatherImagePath);
             }
@@ -1454,7 +1457,7 @@ namespace CityWatch.Web.Services
         }
 
         //p1-341-wather in ir-created by jisha-start
-        private async Task<string> GetGpsWithWeatherImage(string gpsCoordinates, string mapPath)
+        private async Task<string> GetGpsWithWeatherImage(string gpsCoordinates, string mapPath, DateTime uvdate)
         {
             // 1. Get map image
             //var mapPath = GetLiveGpsImageFilePath(gpsCoordinates);
@@ -1468,13 +1471,14 @@ namespace CityWatch.Web.Services
             double lng = Convert.ToDouble(parts[1]);
 
             // 3. Get weather
-            var weather = await GetWeatherAsync(lat, lng);
+            var weather = await GetWeatherAsync(lat, lng, uvdate);
 
             // 4. Create weather panel image
             //        string uvChartPath = Path.Combine(_webHostEnvironment.WebRootPath,
             //"weather", "uvchart.png");
             // 3. Generate UV chart dynamically
-            string uvChartPath = GenerateUVChart(weather.UVIndex);
+            //string uvChartPath = GenerateUVChart(weather.UVIndex, weather.HourlyUV);
+            string uvChartPath = GenerateUVChart(weather.HourlyUV);
 
             var weatherImage = CreateWeatherImageExact(weather, uvChartPath);
 
@@ -1484,14 +1488,14 @@ namespace CityWatch.Web.Services
             //return finalImage;
             return weatherImage;
         }
-        private async Task<WeatherInfo> GetWeatherAsync(double lat, double lon)
+        private async Task<WeatherInfo> GetWeatherAsync(double lat, double lon, DateTime uvdate)
         {
             string url =
                 $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}" +
                 $"&current=temperature_2m,uv_index,weathercode" +
-                $"&hourly=precipitation_probability,precipitation" +
+                $"&hourly=precipitation_probability,precipitation,uv_index" +
                 $"&daily=temperature_2m_max,temperature_2m_min" +
-                $"&timezone=auto";
+                $"&timezone=Australia%2FSydney&past_days=3";
 
             using var client = new HttpClient();
             var json = await client.GetStringAsync(url);
@@ -1505,6 +1509,37 @@ namespace CityWatch.Web.Services
             // UV Index
             double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
 
+            // UV Data for the day
+            HourlyUvModel hourlyModel = null;
+            HourlyUvModel filteredHourlyModel = null;
+
+            if (obj["hourly"] != null)
+            {
+                hourlyModel = obj["hourly"].ToObject<HourlyUvModel>();
+
+                var timeList = new List<DateTime>();
+                var uvList = new List<double>();
+
+                for (int i = 0; i < hourlyModel.Time.Length; i++)
+                {
+                    if (hourlyModel.Time[i].Date == uvdate.Date)
+                    {
+                        timeList.Add(hourlyModel.Time[i]);
+                        uvList.Add(hourlyModel.UvIndex[i]);
+                    }
+                }
+
+                filteredHourlyModel = new HourlyUvModel
+                {
+                    Time = timeList.ToArray(),
+                    UvIndex = uvList.ToArray()
+                };
+
+                uvIndex = uvList?.Max() ?? 0;
+            }
+
+
+
             // Rain Chance + Rain MM (next 24 hours)
             var rainProbArray = obj["hourly"]?["precipitation_probability"]?.ToObject<List<double>>() ?? new();
             var rainArray = obj["hourly"]?["precipitation"]?.ToObject<List<double>>() ?? new();
@@ -1512,7 +1547,7 @@ namespace CityWatch.Web.Services
             double rainChance = rainProbArray.Count > 0 ? rainProbArray.Max() : 0;
             double rainMm = rainArray.Sum();
             int weatherCode = obj["current"]?["weathercode"]?.Value<int>() ?? 0;
-            string condition = GetWeatherCondition( weatherCode);
+            string condition = GetWeatherCondition(weatherCode);
             return new WeatherInfo
             {
                 MinTemp = minTemp,
@@ -1520,59 +1555,10 @@ namespace CityWatch.Web.Services
                 RainMm = rainMm,
                 RainChance = Convert.ToInt32(rainChance),
                 UVIndex = uvIndex,
-                Condition = condition
+                Condition = condition,
+                HourlyUV = filteredHourlyModel
             };
         }
-
-        //private async Task<WeatherInfo> GetWeatherAsync(double lat, double lng)
-        //{
-        //    string apiKey = _configuration["Weather:ApiKey"];
-
-        //    string url =
-        //        $"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lng}&appid={apiKey}&units=metric";
-
-        //    using var client = new HttpClient();
-        //    var json = await client.GetStringAsync(url);
-
-        //    dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
-
-
-        //    double rainMm = 0;
-        //    double rainChance = 0;
-
-
-
-        //    var todayData = ((IEnumerable<dynamic>)data.list).Take(8);
-
-
-
-        //    foreach (var item in todayData)
-        //    {
-        //        double pop = item.pop != null ? (double)item.pop : 0;
-
-        //        if (pop > rainChance)
-        //            rainChance = pop;
-        //        if (item.rain != null && item.rain["3h"] != null)
-        //        {
-        //            rainMm += (double)item.rain["3h"];
-        //        }
-        //    }
-
-        //    rainChance *= 100;
-        //    //var uvIndex = await GetUVIndexAsync(lat, lng);
-        //    var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
-
-        //    //  double uvIndex = obj["current"]?["uvi"]?.Value<double>() ?? 0;
-        //    double uvIndex = await GetUVIndexAsync(lat, lng);
-        //    return new WeatherInfo
-        //    {
-        //        MinTemp = data.list[0].main.temp_min,
-        //        MaxTemp = data.list[0].main.temp_max,
-        //        RainMm = rainMm,
-        //        RainChance = Convert.ToInt32(rainChance),
-        //        UVIndex = uvIndex
-        //    };
-        //}
 
 
         private string CreateWeatherImageExact(WeatherInfo weather, string uvChartPath = null)
@@ -1606,7 +1592,7 @@ namespace CityWatch.Web.Services
             g.DrawString(DateTime.Now.ToString("dddd d MMMM"), dateFont, Brushes.Black, 20, 60);
 
             // ===== WEATHER ICON =====
-            string iconPath = iconPath = Path.Combine(_webHostEnvironment.WebRootPath,"images", "weather", weather.Condition +".png");
+            string iconPath = iconPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "weather", weather.Condition + ".png");
             if (File.Exists(iconPath))
             {
                 using var icon = System.Drawing.Image.FromFile(iconPath);
@@ -1649,8 +1635,8 @@ namespace CityWatch.Web.Services
             if (!string.IsNullOrEmpty(uvChartPath) && File.Exists(uvChartPath))
             {
                 using var uvImg = System.Drawing.Image.FromFile(uvChartPath);
-                g.DrawImage(uvImg, 700, 60, 600, 200);
-               
+                g.DrawImage(uvImg, 600, 60, 650, 200);
+
             }
             else
             {
@@ -1671,7 +1657,7 @@ namespace CityWatch.Web.Services
         }
 
 
-        
+
         private string CombineImages(string mapPath, string weatherPath)
         {
             string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
@@ -1710,7 +1696,70 @@ namespace CityWatch.Web.Services
             return obj["current"]?["uv_index"]?.Value<double>() ?? 0;
         }
 
-        private string GenerateUVChart(double uvMax)
+
+
+        private string GenerateUVChart(HourlyUvModel hourlyUvModel)
+        {
+            try
+            {
+                int chartwidth = 650;
+                int chartheight = 200;
+
+                // Save file
+                string folder = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage", "Temp");
+
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                string graphFileName = Path.Combine(folder, Guid.NewGuid() + "_uvChart.png");
+                var options = new { fileName = graphFileName, width = chartwidth, height = chartheight };
+                var selectedHours = new HashSet<string> { "05:00", "06:00", "09:00", "12:00", "15:00", "18:00", "19:00" };
+                var timeList = new List<string>();
+                var uvList = new List<double>();
+
+                for (int i = 0; i < hourlyUvModel.Time.Length; i++)
+                {
+                    string hourMinute = hourlyUvModel.Time[i]
+                        .ToString("HH:mm", CultureInfo.InvariantCulture);
+
+                    if (selectedHours.Contains(hourMinute))
+                    {
+                        timeList.Add(hourMinute);
+                        uvList.Add(hourlyUvModel.UvIndex[i]);
+                    }
+                }
+
+                var timeData = timeList.ToArray();
+                var uvData = uvList.ToArray();
+
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-uvchart.js", "drawUvChart", args: new object[] { options, timeData, uvData });
+                var success = task.Result == "OK";
+
+                if (!success)
+                {
+                    graphFileName = "";
+                    Console.WriteLine($"Error generating UV chart: {task.Result}");
+                    //throw new ApplicationException("Create uv graph failed");
+                }
+
+
+                if (success && !IO.File.Exists(graphFileName))
+                    graphFileName = "";
+                //throw new ApplicationException($"UV Graph image not found. File Name: {graphFileName}");
+                //var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(90);
+                //IO.File.Delete(graphFileName);
+
+                return graphFileName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating UV chart: {ex.Message}");
+                return "";
+            }
+
+        }
+
+        private string GenerateUVChart(double uvMax, HourlyUvModel hourlyUvModel)
         {
             int width = 650;
             int height = 300;
@@ -1769,10 +1818,19 @@ namespace CityWatch.Web.Services
                 g.DrawString(hour + ":00", font, Brushes.Black, x - 15, originY + 5);
             }
 
+            //// ✅ X Axis Labels (time)
+            //for (int i = 0; i <= hourlyUvModel.Time.Length; i += 3)
+            //{
+            //    // int hour = 6 + i;
+            //    float x = originX + (i / 12f * chartWidth);
+
+            //    g.DrawString(hourlyUvModel.Time[i].ToString("HH:mm"), font, Brushes.Black, x - 15, originY + 5);
+            //}
+
             // ✅ Rotated Y Axis Title (LOWER POSITION)
             // ✅ Y Axis Title (CENTERED PERFECTLY)
-            string yTitle = "Ultraviolet Radiation Level";
-            Font yFont = new Font("Arial", 10, FontStyle.Bold);
+            string yTitle = $"Ultraviolet Radiation Level {hourlyUvModel.Time.FirstOrDefault().ToString("dd-MM-yyyy")}";
+            Font yFont = new Font("Arial", 9, FontStyle.Bold);
 
             // Measure text size
             SizeF textSize = g.MeasureString(yTitle, yFont);
@@ -1809,6 +1867,7 @@ namespace CityWatch.Web.Services
 
                 points[i] = new PointF(x, y);
             }
+
 
             g.DrawLines(curvePen, points);
 
@@ -1893,6 +1952,15 @@ namespace CityWatch.Web.Services
         public int RainChance { get; set; }
         public string Condition { get; set; }
         public double UVIndex { get; set; }
+        public HourlyUvModel HourlyUV { get; set; }
+    }
+
+    public class HourlyUvModel
+    {
+        [JsonProperty("time")]
+        public DateTime[] Time { get; set; }
+        [JsonProperty("uv_index")]
+        public double[] UvIndex { get; set; }
     }
 
 
