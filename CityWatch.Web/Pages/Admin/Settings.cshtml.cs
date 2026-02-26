@@ -2842,34 +2842,22 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnPostUpdateCoursesStatus(int Id, int TrainingCourseStatusId)
         {
-
-
             var success = false;
             var message = string.Empty;
             try
             {
-
-
-
-
+                // Defensive check: Ensure the guard training record exists before proceeding
                 var result = _guardDataProvider.GetGuardTrainingAndAssessmentwithId(Id).FirstOrDefault();
-                var hrsettingsId = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
-                //bool selected = false;
-                var trainingSettings = _configDataProvider.GetTQSettings(hrsettingsId.HRSettingsId).FirstOrDefault();
-                var trainingSettingsQuestions = _configDataProvider.GetTrainingQuestionsWithHRSettings(hrsettingsId.HRSettingsId);
-                //if (trainingSettings.Count == 0 || trainingSettingsQuestions.Count==0)
-                //{
-                //    selected = false;
-                //    message = "Training details for this course have not been saved. Please contact your administrator.";
-                //}
-                //else
-                //{
-                //    selected = true;
-                //}
-                //if (selected == true)
-                //{
-                if (result.Attempts < Convert.ToInt32(trainingSettings.Attempts.Name))
+                if (result == null)
                 {
+                    return new JsonResult(new { success = false, message = "Guard training record not found." });
+                }
+
+                // Defensive check: Ensure the training course details are available
+                var trainingCourse = _configDataProvider.GetTrainingCoursesWithCourseId(result.TrainingCourseId).FirstOrDefault();
+                if (trainingCourse == null)
+                {
+                    // Fallback: If training course details are missing, proceed with a basic status update to avoid blocking user flow
                     _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
                     {
                         Id = Id,
@@ -2878,16 +2866,47 @@ namespace CityWatch.Web.Pages.Admin
                         TrainingCourseStatusId = TrainingCourseStatusId,
                         Description = result.Description,
                         HRGroupId = result.HRGroupId,
-                        Attempts = result.Attempts + 1
-                        //,
-                        //IsCompleted = false
+                        Attempts = result.Attempts
+                    });
+                    return new JsonResult(new { success = true, message = "" });
+                }
 
+                // Retrieve training settings (e.g., attempt limits) based on HR settings ID
+                var trainingSettings = _configDataProvider.GetTQSettings(trainingCourse.HRSettingsId).FirstOrDefault();
+                
+                // If specific attempt limits are defined, enforce them
+                if (trainingSettings != null && trainingSettings.Attempts != null)
+                {
+                    if (result.Attempts < Convert.ToInt32(trainingSettings.Attempts.Name))
+                    {
+                        _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                        {
+                            Id = Id,
+                            GuardId = result.GuardId,
+                            TrainingCourseId = result.TrainingCourseId,
+                            TrainingCourseStatusId = TrainingCourseStatusId,
+                            Description = result.Description,
+                            HRGroupId = result.HRGroupId,
+                            Attempts = result.Attempts + 1
+                        });
+                    }
+                }
+                else
+                {
+                    // If no specific training settings or attempt limits are defined, just update the status
+                    _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                    {
+                        Id = Id,
+                        GuardId = result.GuardId,
+                        TrainingCourseId = result.TrainingCourseId,
+                        TrainingCourseStatusId = TrainingCourseStatusId,
+                        Description = result.Description,
+                        HRGroupId = result.HRGroupId,
+                        Attempts = result.Attempts
                     });
                 }
 
-
                 success = true;
-                //}
             }
             catch (Exception ex)
             {
