@@ -1459,105 +1459,171 @@ namespace CityWatch.Web.Services
         //p1-341-wather in ir-created by jisha-start
         private async Task<string> GetGpsWithWeatherImage(string gpsCoordinates, string mapPath, DateTime uvdate)
         {
-            // 1. Get map image
-            //var mapPath = GetLiveGpsImageFilePath(gpsCoordinates);
+            try
+            {
+                // 1. Get map image
+                //var mapPath = GetLiveGpsImageFilePath(gpsCoordinates);
 
-            if (string.IsNullOrEmpty(mapPath) || !File.Exists(mapPath))
-                return mapPath;
+                if (string.IsNullOrEmpty(mapPath) || !File.Exists(mapPath))
+                    return mapPath;
 
-            // 2. Parse coordinates
-            var parts = gpsCoordinates.Split(',');
-            double lat = Convert.ToDouble(parts[0]);
-            double lng = Convert.ToDouble(parts[1]);
+                // 2. Parse coordinates
+                var parts = gpsCoordinates.Split(',');
+                double lat = Convert.ToDouble(parts[0]);
+                double lng = Convert.ToDouble(parts[1]);
 
-            // 3. Get weather
-            var weather = await GetWeatherAsync(lat, lng, uvdate);
+                // 3. Get weather
+                var weather = await GetWeatherAsync(lat, lng, uvdate);
 
-            // 4. Create weather panel image
-            //        string uvChartPath = Path.Combine(_webHostEnvironment.WebRootPath,
-            //"weather", "uvchart.png");
-            // 3. Generate UV chart dynamically
-            //string uvChartPath = GenerateUVChart(weather.UVIndex, weather.HourlyUV);
-            string uvChartPath = GenerateUVChart(weather.HourlyUV);
+                // 4. Create weather panel image
+                //        string uvChartPath = Path.Combine(_webHostEnvironment.WebRootPath,
+                //"weather", "uvchart.png");
+                // 3. Generate UV chart dynamically
+                //string uvChartPath = GenerateUVChart(weather.UVIndex, weather.HourlyUV);
+                string uvChartPath = GenerateUVChart(weather.HourlyUV);
 
-            var weatherImage = CreateWeatherImageExact(weather, uvChartPath);
+                var weatherImage = CreateWeatherImageExact(weather, uvChartPath);
 
-            // 5. Combine
-            //var finalImage = CombineImages(mapPath, weatherImage);
+                // 5. Combine
+                //var finalImage = CombineImages(mapPath, weatherImage);
 
-            //return finalImage;
-            return weatherImage;
+                //return finalImage;
+                return weatherImage;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in GetGpsWithWeatherImage: " + ex.Message);
+                return "";
+            }
+            
         }
         private async Task<WeatherInfo> GetWeatherAsync(double lat, double lon, DateTime uvdate)
         {
-            string url =
+            try
+            {
+                string url =
                 $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}" +
                 $"&current=temperature_2m,uv_index,weathercode" +
                 $"&hourly=precipitation_probability,precipitation,uv_index" +
-                $"&daily=temperature_2m_max,temperature_2m_min" +
+                $"&daily=uv_index_max,temperature_2m_max,temperature_2m_min" +
                 $"&timezone=Australia%2FSydney&past_days=3";
 
-            using var client = new HttpClient();
-            var json = await client.GetStringAsync(url);
+                using var client = new HttpClient();
+                var json = await client.GetStringAsync(url);
 
-            var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-            // Temperature
-            double minTemp = obj["daily"]?["temperature_2m_min"]?[0]?.Value<double>() ?? 0;
-            double maxTemp = obj["daily"]?["temperature_2m_max"]?[0]?.Value<double>() ?? 0;
+                //// Temperature
+                //double minTemp = obj["daily"]?["temperature_2m_min"]?[0]?.Value<double>() ?? 0;
+                //double maxTemp = obj["daily"]?["temperature_2m_max"]?[0]?.Value<double>() ?? 0;
 
-            // UV Index
-            double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
+                //// UV Index
+                //double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
 
-            // UV Data for the day
-            HourlyUvModel hourlyModel = null;
-            HourlyUvModel filteredHourlyModel = null;
+                // Temperature
+                double minTemp = 0;
+                double maxTemp = 0;
+                // UV Index
+                double uvIndex = 0;
 
-            if (obj["hourly"] != null)
-            {
-                hourlyModel = obj["hourly"].ToObject<HourlyUvModel>();
 
-                var timeList = new List<DateTime>();
-                var uvList = new List<double>();
-
-                for (int i = 0; i < hourlyModel.Time.Length; i++)
+                if (obj["daily"] != null)
                 {
-                    if (hourlyModel.Time[i].Date == uvdate.Date)
+                    WeatherModel weatherModel = obj["daily"].ToObject<WeatherModel>();
+                    var tmpmaxList = new List<double>();
+                    var tmpminList = new List<double>();
+                    var uvmaxList = new List<double>();
+                    if (weatherModel != null)
                     {
-                        timeList.Add(hourlyModel.Time[i]);
-                        uvList.Add(hourlyModel.UvIndex[i]);
+                        for (int i = 0; i < weatherModel.date.Length; i++)
+                        {
+                            if (weatherModel.date[i].Date == uvdate.Date)
+                            {
+                                maxTemp = weatherModel.maxTmp[i];
+                                minTemp = weatherModel.minTmp[i];
+                                uvIndex = weatherModel.maxUvIndex[i];
+                                break;
+                            }
+                        }
                     }
                 }
 
-                filteredHourlyModel = new HourlyUvModel
+
+                // UV Data for the day
+                HourlyUvModel hourlyModel = null;
+                HourlyUvModel filteredHourlyModel = null;
+                var rainProbArray = new List<double>();
+                var rainArray = new List<double>();
+
+                if (obj["hourly"] != null)
                 {
-                    Time = timeList.ToArray(),
-                    UvIndex = uvList.ToArray()
+                    hourlyModel = obj["hourly"].ToObject<HourlyUvModel>();
+
+                    var timeList = new List<DateTime>();
+                    var uvList = new List<double>();
+
+
+                    for (int i = 0; i < hourlyModel.Time.Length; i++)
+                    {
+                        if (hourlyModel.Time[i].Date == uvdate.Date)
+                        {
+                            timeList.Add(hourlyModel.Time[i]);
+                            uvList.Add(hourlyModel.UvIndex[i]);
+                            rainProbArray.Add(hourlyModel.PrecipitationProbability[i]);
+                            rainArray.Add(hourlyModel.Precipitation[i]);
+                        }
+                    }
+
+                    filteredHourlyModel = new HourlyUvModel
+                    {
+                        Time = timeList.ToArray(),
+                        UvIndex = uvList.ToArray()
+                    };
+
+                    // uvIndex = uvList?.Max() ?? 0;
+                }
+
+
+
+                // Rain Chance + Rain MM (next 24 hours)
+                //var rainProbArray = obj["hourly"]?["precipitation_probability"]?.ToObject<List<double>>() ?? new();
+                //var rainArray = obj["hourly"]?["precipitation"]?.ToObject<List<double>>() ?? new();
+
+                double rainChance = rainProbArray.Count > 0 ? rainProbArray.Max() : 0;
+                double rainMm = rainArray.Sum();
+                int weatherCode = obj["current"]?["weathercode"]?.Value<int>() ?? 0;
+                string condition = GetWeatherCondition(weatherCode);
+                return new WeatherInfo
+                {
+                    MinTemp = minTemp,
+                    MaxTemp = maxTemp,
+                    RainMm = rainMm,
+                    RainChance = Convert.ToInt32(rainChance),
+                    UVIndex = uvIndex,
+                    Condition = condition,
+                    HourlyUV = filteredHourlyModel
                 };
-
-                uvIndex = uvList?.Max() ?? 0;
             }
-
-
-
-            // Rain Chance + Rain MM (next 24 hours)
-            var rainProbArray = obj["hourly"]?["precipitation_probability"]?.ToObject<List<double>>() ?? new();
-            var rainArray = obj["hourly"]?["precipitation"]?.ToObject<List<double>>() ?? new();
-
-            double rainChance = rainProbArray.Count > 0 ? rainProbArray.Max() : 0;
-            double rainMm = rainArray.Sum();
-            int weatherCode = obj["current"]?["weathercode"]?.Value<int>() ?? 0;
-            string condition = GetWeatherCondition(weatherCode);
-            return new WeatherInfo
+            catch (Exception ex)
             {
-                MinTemp = minTemp,
-                MaxTemp = maxTemp,
-                RainMm = rainMm,
-                RainChance = Convert.ToInt32(rainChance),
-                UVIndex = uvIndex,
-                Condition = condition,
-                HourlyUV = filteredHourlyModel
-            };
+                Console.WriteLine("Error fetching weather data: " + ex.Message);
+                return new WeatherInfo
+                {
+                    MinTemp = 0,
+                    MaxTemp = 0,
+                    RainMm = 0,
+                    RainChance = 0,
+                    UVIndex = 0,
+                    Condition = "",
+                    HourlyUV = new HourlyUvModel
+                    {
+                        Time = new DateTime[0],
+                        UvIndex = new double[0]
+                    }
+                };
+                //throw;
+            }
+            
         }
 
 
@@ -1961,7 +2027,24 @@ namespace CityWatch.Web.Services
         public DateTime[] Time { get; set; }
         [JsonProperty("uv_index")]
         public double[] UvIndex { get; set; }
+        [JsonProperty("precipitation_probability")]
+        public double[] PrecipitationProbability { get; set; }
+        [JsonProperty("precipitation")]
+        public double[] Precipitation { get; set; }
     }
 
+
+    public class WeatherModel
+    {
+        [JsonProperty("time")]
+        public DateTime[] date { get; set; }
+        [JsonProperty("uv_index_max")]
+        public double[] maxUvIndex { get; set; }
+        [JsonProperty("temperature_2m_max")]
+        public double[] maxTmp { get; set; }
+        [JsonProperty("temperature_2m_min")]
+        public double[] minTmp { get; set; }
+
+    }
 
 }
