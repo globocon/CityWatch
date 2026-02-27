@@ -6447,9 +6447,9 @@ $(function () {
 
     function renderPatrolCarLogManagement(value, record, $cell, $displayEl, id) {
 
-        var $editBtn = $('<button class="btn btn-outline-primary btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-pencil"></i></button>'),
-            $updateBtn = $('<button class="btn btn-outline-success btn-dgl-edit mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle"></i></button>').hide(),
-            $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-times-circle"></i></button>').hide();
+        var $editBtn = $('<button class="btn  btn-sm btn-outline-primary btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-pencil"></i></button>'),
+            $updateBtn = $('<button class="btn btn-sm btn-outline-success btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-check-circle"></i></button>').hide(),
+            $cancelBtn = $('<button class="btn btn-sm btn-outline-danger btn-dgl-edit" data-id="' + record.id + '"><i class="fa fa-times-circle"></i></button>').hide();
 
         $editBtn.on('click', function (e) {
             gridSitePatrolCarLogs.edit($(this).data('id'));
@@ -6495,9 +6495,9 @@ $(function () {
             { field: 'id', title: 'Id', hidden: true },
             { field: 'patrolCarId', title: 'PatrolCarId', hidden: true, renderer: function (value, record) { return record.PatrolCarId; } },
             { field: 'clientSiteLogBookId', title: 'ClientSiteLogBookId', hidden: true, renderer: function (value, record) { return record.clientSiteLogBookId; } },
-            { field: 'patrolCar', title: 'Patrol Cars', align: 'center', cssClass: "text-left", editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 75 },
-            { field: 'mileage', title: 'Kms', align: 'center', cssClass: "text-right", editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15 },
-            { renderer: renderPatrolCarLogManagement, align: 'center', width: 10 }
+            { field: 'patrolCar', title: 'Patrol Cars', align: 'center', cssClass: "text-left", editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 80 },
+            { field: 'mileage', title: 'Kms', align: 'center', cssClass: "text-right", editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15, headerCssClass: 'pr-1 pl-1', cssClass: 'pr-0 pl-0' },
+            { renderer: renderPatrolCarLogManagement, align: 'center', width: 5, headerCssClass: 'pr-1 pl-1', cssClass: 'pr-0 pl-0' }
         ],
         initialized: function (e) {
             var html = '<i class="fa fa-cogs" aria-hidden="true"></i>'
