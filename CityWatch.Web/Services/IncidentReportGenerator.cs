@@ -681,18 +681,22 @@ namespace CityWatch.Web.Services
 
         private AttachmentType GetAttachmentType(string extn)
         {
-            if (".jpg,.jpeg,.png,.bmp".IndexOf(extn.ToLower()) >= 0)
+            extn = extn.ToLowerInvariant();
+
+            string[] imageExts = { ".jpg", ".jpeg", ".png", ".bmp" };
+            if (imageExts.Contains(extn))
                 return AttachmentType.Image;
 
-            if (".pdf".IndexOf(extn.ToLower()) >= 0)
+            if (extn == ".pdf")
                 return AttachmentType.Pdf;
 
             // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
-            if (".mp4,.avi,.mp3".IndexOf(extn.ToLower()) >= 0)
+            string[] multimediaExts = { ".mp4", ".avi", ".mp3" };
+            if (multimediaExts.Contains(extn))
                 return AttachmentType.Multimedia;
 
             // Added by binoy 0n 03-06-2024 under task P1 #215
-            if (".xlsx".IndexOf(extn.ToLower()) >= 0)
+            if (extn == ".xlsx")
                 return AttachmentType.Excel;
 
             return AttachmentType.Unknown;
