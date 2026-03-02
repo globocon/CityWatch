@@ -538,10 +538,10 @@ namespace CityWatch.Web.Pages.Incident
                             Directory.CreateDirectory(folderPath);
                         using (var stream = System.IO.File.Create(Path.Combine(folderPath, uploadFileName)))
                         {
-                            file.CopyTo(stream);
+                            await file.CopyToAsync(stream);
                         }
                         // p1-102 add photos with heic extension-start
-                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+                        if (Path.GetExtension(file.FileName).Equals(".heic", StringComparison.OrdinalIgnoreCase))
                         {
                             var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
 
@@ -563,9 +563,9 @@ namespace CityWatch.Web.Pages.Incident
                         // p1-102 add photos with heic extension-end
                         success = true;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        _logger.LogError(ex, "Error during file upload: {FileName}", file.FileName);
                     }
                 }
             }

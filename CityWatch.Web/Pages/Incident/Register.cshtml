@@ -1007,6 +1007,7 @@
 
                 li.appendChild(liText);
                 li.appendChild(icon);
+                li.dataset.filename = fileNameWithoutExtension; // Keep original spacing
                 document.getElementById('files-to-upload').appendChild(li);
 
                 // upload file to server
@@ -1141,7 +1142,7 @@
             for (let i = 0; i < attachmentList.length; i++) {
                 const input = document.createElement('input');
                 input.setAttribute('name', 'Report.Attachments');
-                input.setAttribute('value', attachmentList[i].innerText.trim());
+                input.setAttribute('value', attachmentList[i].dataset.filename);
                 input.setAttribute('type', 'hidden');
                 mainForm.appendChild(input);
             }
