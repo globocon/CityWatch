@@ -384,6 +384,7 @@ else
                     <th rowspan="2" style="background-color:#EAF0ED"><center>Company Name</center></th>
                     <th colspan="2" style="background-color:#EAF0ED"><center>Vehicle Description</center></th>
                     <th rowspan="2" style="background-color:#EAF0ED"><center>Key / Card Scan</center></th>
+                    <th rowspan="2" style="background-color:#EAF0ED"><center>PAX</center></th>
                     <th rowspan="2" hidden></th>
                     <th rowspan="2" hidden></th>
                     @*  for searching site location-start*@
@@ -437,10 +438,39 @@ else
             <div class="modal-footer justify-content-between p-1">
                 <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
                 <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
+                <button class="btn btn-success save_new_vehicle_and_key_log_pax" hidden>Save Entry</button>
+                <button class="btn btn-success save_new_vehicle_and_key_log_pax" hidden>Save Entry</button>
             </div>
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="vkl-pax-modal" style="margin-bottom:0;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-height: 95%;">
+        <div class="modal-content" style="margin-bottom:0;">
+            <div class="modal-header col-md-12">
+
+
+                <h6 class="modal-title col-md-5">Add a new log book entry</h6>
+
+                <h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0 mt-0 pt-0">
+                <partial name="_KeyVehicleLogPopup" for="@Model.KeyVehicleLog" />
+            </div>
+            <div class="modal-footer justify-content-between p-1">
+                <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
+                <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
+                <button class="btn btn-success save_new_vehicle_and_key_log_pax" hidden>Save Entry</button>
+                <button class="btn btn-success save_new_vehicle_and_key_log_pax" hidden>Save Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <partial name="_PrintManualDocketPopup" />
 

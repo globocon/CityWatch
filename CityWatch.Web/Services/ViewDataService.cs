@@ -236,6 +236,7 @@ namespace CityWatch.Web.Services
 
 
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
+        List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter);
     }
 
 
@@ -3535,6 +3536,15 @@ namespace CityWatch.Web.Services
             var currentCount = await _clientDataProvider.GetCrowdControlCount(JoinGaurd);
             return currentCount;
 
+        }
+        public List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            var kvlPax = _guardLogDataProvider.GetKeyVehicleLogPaxs();
+            return _guardLogDataProvider.GetKeyVehicleLogs(logBookId)
+                .Select(z => new KeyVehicleLogViewModel(z, kvlFields, kvlPax))
+                .Where(r => kvlStatusFilter == KvlStatusFilter.All || r.Status == kvlStatusFilter)
+               .ToList();
         }
 
 

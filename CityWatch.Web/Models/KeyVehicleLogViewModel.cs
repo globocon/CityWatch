@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Web.Services;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace CityWatch.Web.Models
@@ -10,13 +11,19 @@ namespace CityWatch.Web.Models
         private readonly KeyVehicleLog _keyVehicleLog;
         private readonly List<KeyVehcileLogField> _keyVehicleLogFields;
         private readonly List<KeyVehicleLog> _keyVehicleLoglist;
-       
+        private readonly List<KeyVehicleLogPax> _keyVehicleLogPaxlist;
+
         public KeyVehicleLogViewModel(List<KeyVehicleLog> keyVehicleLog, List<KeyVehcileLogField> keyVehcileLogFields)
         {
             _keyVehicleLoglist = keyVehicleLog;
             _keyVehicleLogFields = keyVehcileLogFields;
         }
-
+        public KeyVehicleLogViewModel(KeyVehicleLog keyVehicleLog, List<KeyVehcileLogField> keyVehcileLogFields, List<KeyVehicleLogPax> keyVehicleLogPax)
+        {
+            _keyVehicleLog = keyVehicleLog;
+            _keyVehicleLogFields = keyVehcileLogFields;
+            _keyVehicleLogPaxlist = keyVehicleLogPax;
+        }
         public KeyVehicleLogViewModel(KeyVehicleLog keyVehicleLog, List<KeyVehcileLogField> keyVehcileLogFields)
         {
             _keyVehicleLog = keyVehicleLog;
@@ -25,7 +32,13 @@ namespace CityWatch.Web.Models
 
         public string GroupText { get { return _keyVehicleLog.EntryTime?.Date.ToString("dd MMM yyyy"); } }
 
-        
+        public List<KeyVehicleLogPax> PaxDetails
+        {
+            get
+            {
+                return _keyVehicleLogPaxlist.Where(x=> x.KeyVehicleLogId == _keyVehicleLog.Id).ToList();
+            }
+        }
         public KeyVehicleLog Detail
         {
             get
@@ -157,5 +170,14 @@ namespace CityWatch.Web.Models
                 return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer4PlateId)?.Name;
             }
         }
+        public int PAX
+        {
+            get
+            {
+                return _keyVehicleLogPaxlist?
+                    .Count(z => z.KeyVehicleLogId == _keyVehicleLog?.Id) ?? 0;
+            }
+        }
+
     }
 }

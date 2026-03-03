@@ -429,6 +429,8 @@ namespace CityWatch.Data.Providers
         public bool SaveSyncOfflineCustomFieldLogDataError(CustomFieldLogRequestHeadLocalCacheOfflineNotSynced _offlineRecordNotSynced);
         public bool SaveSyncIrOfflineFilesAttachmentsCacheNotSyncedDataError(irOfflineFilesAttachmentsCacheNotSynced _offlineRecordNotSynced);
         public bool SaveSyncIrOfflineCacheNotSyncedDataError(irOfflineCacheNotSynced _offlineRecordNotSynced);
+        public void SaveKeyVehicleLogPax(KeyVehicleLogPax keyVehicleLogPax);
+        List<KeyVehicleLogPax> GetKeyVehicleLogPaxs();
 
 
     }
@@ -8080,7 +8082,53 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        public void SaveKeyVehicleLogPax(KeyVehicleLogPax keyVehicleLogPax)
+        {
+            try
+            {
 
+                if (keyVehicleLogPax.Id == 0)
+                {
+
+                    _context.KeyVehicleLogsPax.Add(keyVehicleLogPax);
+                    _context.SaveChanges();
+
+                
+
+                }
+                else
+                {
+                    var keyVehicleLogPaxToUpdate = _context.KeyVehicleLogsPax.SingleOrDefault(x => x.Id == keyVehicleLogPax.Id);
+
+                    keyVehicleLogPaxToUpdate.KeyVehicleLogId = keyVehicleLogPax.KeyVehicleLogId;
+                    
+                    
+                    keyVehicleLogPaxToUpdate.PersonType = keyVehicleLogPax.PersonType;
+
+                    keyVehicleLogPaxToUpdate.PersonName = keyVehicleLogPax.PersonName;
+                    keyVehicleLogPaxToUpdate.MobileNumber = keyVehicleLogPax.MobileNumber;
+                    
+
+
+
+                    _context.SaveChanges();
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+
+            }
+
+        }
+        public List<KeyVehicleLogPax> GetKeyVehicleLogPaxs()
+        {
+            return _context.KeyVehicleLogsPax
+                .OrderBy(x => x.KeyVehicleLogId)
+                .ThenBy(x => x.PersonName)
+                .ToList();
+        }
     }
 
 
