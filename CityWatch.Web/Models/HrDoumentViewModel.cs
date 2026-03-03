@@ -31,6 +31,8 @@ namespace CityWatch.Web.Models
         public bool hrlock { get; set; }
         public bool hrbanedit { get; set; }
         public string CourseColour { get; set; }
+        public HrDateType DateType { get; set; }
+        public string DateTypeName { get; set; }
 
 
 
@@ -52,9 +54,24 @@ namespace CityWatch.Web.Models
                 ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty,
                 hrlock= hrSettings.HRLock,
                 hrbanedit=hrSettings.HRBanEdit,
-                CourseColour = hrSettings.CourseColour
-
+                CourseColour = hrSettings.CourseColour,
+                DateType = hrSettings.DateType,
+                DateTypeName = GetDateTypeName(hrSettings.DateType)
             };
+        }
+
+        private static string GetDateTypeName(HrDateType dateType)
+        {
+            switch (dateType)
+            {
+                case HrDateType.DOI:
+                    return "DOI";
+                case HrDateType.DOE:
+                    return "DOE";
+                case HrDateType.Both:
+                default:
+                    return "DOI / DOE";
+            }
         }
 
         private static string GetFormattedClientSites(IEnumerable<HrSettingsClientSites> hrSettingsClientSites)

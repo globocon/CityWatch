@@ -6095,6 +6095,7 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
                     hrSettingsToUpdate.Description = hrSettings.Description;
+                    hrSettingsToUpdate.DateType = hrSettings.DateType;
                 }
 
                 // Remove old sites & states

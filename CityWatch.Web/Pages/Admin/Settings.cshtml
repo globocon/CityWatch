@@ -1339,6 +1339,7 @@
                                             <th rowspan="2">HR Group</th>
                                             <th colspan="2">Reference No</th>
                                             <th rowspan="2">Description</th>
+                                            <th rowspan="2">Date Type</th>
                                             <th rowspan="2">State</th>
                                             <th rowspan="2">Site</th>
                                             <th rowspan="2"></th>
@@ -1369,6 +1370,7 @@
                                             <th rowspan="2">HR Group</th>
                                             <th colspan="2">Reference No</th>
                                             <th rowspan="2">Description</th>
+                                            <th rowspan="2">Date Type</th>
                                             <th rowspan="2">State</th>
                                             <th rowspan="2">Site</th>
                                             <th rowspan="2">OK?</th>
@@ -4698,14 +4700,16 @@
 
 
                         </div>
-                    </div>
-                    <div class="form-row">
                         <div class="col-md-12">
                             <label>Descriptions</label>
                             <textarea class="form-control" id="txtHrSettingsDescription" asp-for="@Model.HrSettings.Description"></textarea>
                         </div>
-
-
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col-md-12">
+                            <label>Date Type</label>
+                            <select class="form-control" id="list_DateType" asp-for="@Model.HrSettings.DateType" asp-items="Html.GetEnumSelectList<CityWatch.Data.Models.HrDateType>()"></select>
+                        </div>
                     </div>
                     <hr />
                     <div class="form-row">
