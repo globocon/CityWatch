@@ -3537,6 +3537,7 @@ namespace CityWatch.Web.Services
             return currentCount;
 
         }
+        //p7-137--pax-start
         public List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
@@ -3547,7 +3548,7 @@ namespace CityWatch.Web.Services
                .ToList();
         }
 
-
+        //p7-137--pax-end
     }
 
     public class DropdownItemWithAddress

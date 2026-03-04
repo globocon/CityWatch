@@ -80,7 +80,7 @@ $(function () {
             summaryDiv.querySelector('ul').appendChild(li);
         });
     }
-
+    //p7-137--pax-start
     //function format_kvl_child_row(d) {
     //    return (
     //        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
@@ -244,7 +244,7 @@ $(function () {
             '</table>'
         );
     }
-    
+    //p7-137--pax-start
     function vehicleRegoToUpperCase(e) {
         if (e.which != 35 && e.which == 32 || e.which == 45 && e.which < 48 ||
             (e.which > 57 && e.which < 65) ||
@@ -527,7 +527,7 @@ $(function () {
             // Perform actions when checkbox is unchecked
         }
     });
-
+    //p7-137--pax-start
     $('#vehicle_key_daily_log tbody').on('click', '.add-pax', function () {
 
         //populateKvlModalPAX($(this).data('id'))
@@ -545,6 +545,7 @@ $(function () {
       
 
     });
+    //p7-137--pax-start
     $('#search_kvl_log').on('keyup', function () {
         keyVehicleLog.search($(this).val()).draw();
         $("#KeyVehicleLog_ClientSiteLocationId").find('option:selected').prop("selected", false);
@@ -575,6 +576,7 @@ $(function () {
             tr.removeClass('shown');
         } else {
             row.child(format_kvl_child_row(row.data()), 'bg-light').show();
+            //p7-137--pax-start
             //var d = row.data();
             //if (d.paxDetails && d.paxDetails.length > 0) {
 
@@ -595,6 +597,7 @@ $(function () {
             //        info: false
             //    });
             //}
+            //p7-137--pax-start
             tr.addClass('shown');
         }
     });
@@ -616,6 +619,7 @@ $(function () {
             GetVehicleImage();
         }
         GetPersonImage();
+        //p7-137--pax-start
         if (params[0].isPax == true) {
             $('#form_new_vehicle_and_key_log')
                 .find('input, select, textarea, button')
@@ -632,8 +636,9 @@ $(function () {
             $('.save_new_vehicle_and_key_log').attr('hidden', true);
             $('.save_new_vehicle_and_key_log_pax').attr('hidden', false);
         }
-       
+        //p7-137--pax-end
     });
+    //p7-137--pax-start
     $('#vkl-pax-modal').on('shown.bs.modal', function (event) {
         const params = $(event.relatedTarget);
         bindKvlPopupEvents(!params[0].isNewEntry);
@@ -645,7 +650,7 @@ $(function () {
             .find('input, select, textarea, button')
             .prop('disabled', true);
     });
-
+    //p7-137--pax-end
     $('#add_new_vehicle_and_key_log,#add_new_vehicle_and_key_log_one').on('click', function () {
         loadVklPopup(0, true);
     });

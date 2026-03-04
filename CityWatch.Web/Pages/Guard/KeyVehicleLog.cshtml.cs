@@ -156,9 +156,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
+            //p7-137--pax-start
             var results = _viewDataService.GetKeyVehicleLogsWithPax(logbookId, kvlStatusFilter)
                 .OrderByDescending(z => z.Detail.EntryTime)
                 .ThenByDescending(z => z.Detail.Id);
+            //p7-137--pax-end
             return new JsonResult(results);
         }
 
@@ -2180,6 +2182,7 @@ namespace CityWatch.Web.Pages.Guard
             var test = _viewDataService.GetANPR(clientSiteId);
             return new JsonResult(_viewDataService.GetANPR(clientSiteId));
         }
+        //p7-137--pax-start
         public JsonResult OnPostSaveKeyVehicleLogPAX(int paxId, string personType,int keyVehicleLogId,string personName,string mobileNo)
         {
             var results = new List<ValidationResult>();
@@ -2230,5 +2233,6 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { success, message });
         }
+        //p7-137--pax-end
     }
 }
