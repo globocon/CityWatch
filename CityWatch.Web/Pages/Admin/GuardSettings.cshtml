@@ -418,12 +418,18 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="col-md-12">
+                    <div class="col-md-8">
                         <label>Descriptions</label>
                         <textarea class="form-control" id="txtHrSettingsDescription" asp-for="@Model.HrSettings.Description"></textarea>
                     </div>
-
-
+                    <div class="col-md-4">
+                        <label>Date Type</label>
+                        <select class="form-control" id="list_DateType">
+                            <option value="0">Both (DOI/DOE)</option>
+                            <option value="1">Issue Date (DOI)</option>
+                            <option value="2">Expiry Date (DOE)</option>
+                        </select>
+                    </div>
                 </div>
                     <div asp-validation-summary="All" id="hrsettings-field-validation"></div>
                 </form>

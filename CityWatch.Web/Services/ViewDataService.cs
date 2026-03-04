@@ -3317,6 +3317,7 @@ namespace CityWatch.Web.Services
                         UsedDescription = UsedDesc?.Description,
                         ReferenceNo = item.ReferenceNo,
                         ID = item.Id,
+                        DateType = (int)item.DateType
                     };
                     combinedDataList.Add(combinedData);
                 }
@@ -3583,5 +3584,6 @@ namespace CityWatch.Web.Services
         public string UsedDescription { get; set; }
         public string ReferenceNo { get; set; }
         public int ID { get; set; }
+        public int DateType { get; set; }
     }
 }

@@ -6629,6 +6629,7 @@ $(function () {
 
 
     //To get the data in description dropdown start
+    var hrDescriptionConfigs = {};
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
         //filter: false,
@@ -6643,6 +6644,13 @@ $(function () {
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+
+        // Dynamic Date Visibility Logic
+        var selectedId = $(li).val() || $(li).attr('value');
+        var config = hrDescriptionConfigs[selectedId];
+        if (config !== undefined) {
+            updateDateVisibility(config);
+        }
 
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
@@ -6669,8 +6677,12 @@ $(function () {
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {
+            hrDescriptionConfigs = {}; // Clear old configs
             DescVal.forEach(function (DescVals) {
                 var mark = ''; // Initialize the mark variable
+
+                // Store config by ID
+                hrDescriptionConfigs[DescVals.id] = DescVals.dateType;
 
                 if (DescVals.description != null) {
                     if (DescVals.usedDescription == null) {
@@ -6785,6 +6797,38 @@ $(function () {
 
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
+
+    function updateDateVisibility(dateType) {
+        // Handle immediate UI update
+        applyVisibility(dateType);
+
+        // Handle delayed update to override any plugin resets
+        setTimeout(function () {
+            applyVisibility(dateType);
+        }, 100);
+
+        function applyVisibility(dt) {
+            if (dt == 1) { // DOI Only
+                $('#LicanseTypeFilter').prop('checked', true).trigger('change');
+                $('#ComplianceDate').text('Issue Date (DOI)');
+                $('#IsDateFilterEnabledHidden').val(true);
+                $('#doiToggleContainer').css('visibility', 'hidden');
+                $('#doiNoteContainer').css('visibility', 'hidden');
+            } else if (dt == 2) { // DOE Only
+                $('#LicanseTypeFilter').prop('checked', false).trigger('change');
+                $('#ComplianceDate').text('Expiry Date (DOE)');
+                $('#IsDateFilterEnabledHidden').val(false);
+                $('#doiToggleContainer').css('visibility', 'hidden');
+                $('#doiNoteContainer').css('visibility', 'hidden');
+            } else { // Both (0) or Default
+                $('#LicanseTypeFilter').prop('checked', false).trigger('change');
+                $('#ComplianceDate').text('Expiry Date (DOE)');
+                $('#IsDateFilterEnabledHidden').val(false);
+                $('#doiToggleContainer').css('visibility', 'visible');
+                $('#doiNoteContainer').css('visibility', 'visible');
+            }
+        }
+    }
 
     $('#btnAddGuardLicense,#btnAddGuardLicense2').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
