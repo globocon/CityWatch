@@ -623,8 +623,11 @@ $(function () {
             // Enable only these two
             $('#PersonName,#MobileNumber')
                 .prop('disabled', false);
-            $('#PersonName,#MobileNumber')
+            $('#PersonName')
                 .val('');
+            $('#MobileNumber')
+                .val('+61(0)');
+            
             $('#PersonType').val(219);
             $('.save_new_vehicle_and_key_log').attr('hidden', true);
             $('.save_new_vehicle_and_key_log_pax').attr('hidden', false);
