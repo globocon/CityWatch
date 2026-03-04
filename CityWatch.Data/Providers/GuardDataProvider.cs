@@ -742,16 +742,17 @@ namespace CityWatch.Data.Providers
 
 
             var hrSettingsDict = _context.HrSettings
-   .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()) && h.IsDeleted==false)
-    .ToDictionary(h => h.Description, h => h.HRBanEdit);
+   .Where(h => filteredDescriptions.Contains(h.Description.Trim().ToLower()) && h.IsDeleted == false)
+    .ToDictionary(h => h.Description.Trim().ToLower(), h => new { h.HRBanEdit, h.DateType });
 
             foreach (var item in result)
             {
-                string normalizedDescription = item.Description.Substring(3).Trim();
+                string normalizedDescription = item.Description.Substring(3).Trim().ToLower();
 
-                if (hrSettingsDict.TryGetValue(normalizedDescription, out var hrBanEditValue))
+                if (hrSettingsDict.TryGetValue(normalizedDescription, out var config))
                 {
-                    item.HRBanEdit = hrBanEditValue;
+                    item.HRBanEdit = config.HRBanEdit;
+                    item.MasterDateType = (int)config.DateType;
                 }
             }
             return result;

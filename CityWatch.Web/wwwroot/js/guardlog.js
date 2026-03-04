@@ -6727,7 +6727,10 @@ $(function () {
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
 
-        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+        if (hrDescriptionConfigs && hrDescriptionConfigs[selectedItem] !== undefined) {
+            updateDateVisibility(hrDescriptionConfigs[selectedItem]);
+        }
+
         if (LoginVal == 'GuardLogin') {
             $.ajax({
                 url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
@@ -6798,14 +6801,15 @@ $(function () {
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
 
-    function updateDateVisibility(dateType) {
-        // Handle immediate UI update
-        applyVisibility(dateType);
 
-        // Handle delayed update to override any plugin resets
+    function updateDateVisibility(dt) {
+        // Immediate update
+        applyVisibility(dt);
+
+        // Delayed update to ensure it sticks (overriding any UI plugin resets)
         setTimeout(function () {
-            applyVisibility(dateType);
-        }, 100);
+            applyVisibility(dt);
+        }, 150);
 
         function applyVisibility(dt) {
             if (dt == 1) { // DOI Only
@@ -6821,9 +6825,8 @@ $(function () {
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
             } else { // Both (0) or Default
-                $('#LicanseTypeFilter').prop('checked', false).trigger('change');
-                $('#ComplianceDate').text('Expiry Date (DOE)');
-                $('#IsDateFilterEnabledHidden').val(false);
+                // We don't automatically check/uncheck the toggle for "Both", 
+                // just make it visible so the user can choose.
                 $('#doiToggleContainer').css('visibility', 'visible');
                 $('#doiNoteContainer').css('visibility', 'visible');
             }
@@ -6914,19 +6917,19 @@ $(function () {
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
 
         // Logic for Edit Mode Visibility
-        if (data.dateType == true || data.dateType == 1) { // 1 for DOI
+        if (data.masterDateType == 1) { // Forced DOI
             updateDateVisibility(1);
             $('#LicanseTypeFilter').prop('checked', true);
             $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true);
-        } else if (data.dateType == 2) { // 2 for DOE
+        } else if (data.masterDateType == 2) { // Forced DOE
             updateDateVisibility(2);
             $('#LicanseTypeFilter').prop('checked', false);
             $('#ComplianceDate').text('Expiry Date (DOE)');
             $('#IsDateFilterEnabledHidden').val(false);
-        } else { // 0 for Both
+        } else { // Both (0) or Unknown
             updateDateVisibility(0);
-            if (data.dateType == true) { // Legacy or specific toggle state
+            if (data.dateType == true) {
                 $('#LicanseTypeFilter').prop('checked', true);
                 $('#ComplianceDate').text('Issue Date (DOI)');
                 $('#IsDateFilterEnabledHidden').val(true);
