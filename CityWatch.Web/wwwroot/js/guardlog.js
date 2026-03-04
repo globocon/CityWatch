@@ -6912,11 +6912,31 @@ $(function () {
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
-        if (data.dateType == true) {
+
+        // Logic for Edit Mode Visibility
+        if (data.dateType == true || data.dateType == 1) { // 1 for DOI
+            updateDateVisibility(1);
             $('#LicanseTypeFilter').prop('checked', true);
             $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true);
+        } else if (data.dateType == 2) { // 2 for DOE
+            updateDateVisibility(2);
+            $('#LicanseTypeFilter').prop('checked', false);
+            $('#ComplianceDate').text('Expiry Date (DOE)');
+            $('#IsDateFilterEnabledHidden').val(false);
+        } else { // 0 for Both
+            updateDateVisibility(0);
+            if (data.dateType == true) { // Legacy or specific toggle state
+                $('#LicanseTypeFilter').prop('checked', true);
+                $('#ComplianceDate').text('Issue Date (DOI)');
+                $('#IsDateFilterEnabledHidden').val(true);
+            } else {
+                $('#LicanseTypeFilter').prop('checked', false);
+                $('#ComplianceDate').text('Expiry Date (DOE)');
+                $('#IsDateFilterEnabledHidden').val(false);
+            }
         }
+
         $('#addGuardCompliancesLicenseModal').modal('show');
 
     });
