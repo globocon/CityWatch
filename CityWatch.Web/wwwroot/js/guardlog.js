@@ -6727,8 +6727,9 @@ $(function () {
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
 
+
         if (hrDescriptionConfigs && hrDescriptionConfigs[selectedItem] !== undefined) {
-            updateDateVisibility(hrDescriptionConfigs[selectedItem]);
+            updateDateVisibility(hrDescriptionConfigs[selectedItem], true);
         }
 
         if (LoginVal == 'GuardLogin') {
@@ -6802,26 +6803,23 @@ $(function () {
     //Gurad License and Compliance Form stop
 
 
-    function updateDateVisibility(dt) {
+
+    function updateDateVisibility(dt, keepValue) {
         // Immediate update
-        applyVisibility(dt);
+        applyVisibility(dt, keepValue);
 
         // Delayed update to ensure it sticks (overriding any UI plugin resets)
         setTimeout(function () {
-            applyVisibility(dt);
+            applyVisibility(dt, keepValue);
         }, 150);
 
-        function applyVisibility(dt) {
+        function applyVisibility(dt, keepValue) {
             if (dt == 1) { // DOI Only
-                $('#LicanseTypeFilter').prop('checked', true).trigger('change');
-                $('#ComplianceDate').text('Issue Date (DOI)');
-                $('#IsDateFilterEnabledHidden').val(true);
+                $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
             } else if (dt == 2) { // DOE Only
-                $('#LicanseTypeFilter').prop('checked', false).trigger('change');
-                $('#ComplianceDate').text('Expiry Date (DOE)');
-                $('#IsDateFilterEnabledHidden').val(false);
+                $('#LicanseTypeFilter').prop('checked', false).trigger('change', [keepValue]);
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
             } else { // Both (0) or Default
@@ -6829,6 +6827,8 @@ $(function () {
                 // just make it visible so the user can choose.
                 $('#doiToggleContainer').css('visibility', 'visible');
                 $('#doiNoteContainer').css('visibility', 'visible');
+                // Ensure the current toggle state is reflected in labels/constraints without clearing value
+                $('#LicanseTypeFilter').trigger('change', [keepValue]);
             }
         }
     }
@@ -6916,28 +6916,17 @@ $(function () {
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
 
+
+
         // Logic for Edit Mode Visibility
-        if (data.masterDateType == 1) { // Forced DOI
-            updateDateVisibility(1);
-            $('#LicanseTypeFilter').prop('checked', true);
-            $('#ComplianceDate').text('Issue Date (DOI)');
-            $('#IsDateFilterEnabledHidden').val(true);
-        } else if (data.masterDateType == 2) { // Forced DOE
-            updateDateVisibility(2);
-            $('#LicanseTypeFilter').prop('checked', false);
-            $('#ComplianceDate').text('Expiry Date (DOE)');
-            $('#IsDateFilterEnabledHidden').val(false);
-        } else { // Both (0) or Unknown
-            updateDateVisibility(0);
-            if (data.dateType == true) {
-                $('#LicanseTypeFilter').prop('checked', true);
-                $('#ComplianceDate').text('Issue Date (DOI)');
-                $('#IsDateFilterEnabledHidden').val(true);
-            } else {
-                $('#LicanseTypeFilter').prop('checked', false);
-                $('#ComplianceDate').text('Expiry Date (DOE)');
-                $('#IsDateFilterEnabledHidden').val(false);
-            }
+        if (data.masterDateType == 0) {
+            // Set toggle state to match record
+            $('#LicanseTypeFilter').prop('checked', data.dateType == true);
+            // Apply "Both" visibility (shows toggle)
+            updateDateVisibility(0, true);
+        } else {
+            // Apply Master constraint (DOI or DOE)
+            updateDateVisibility(data.masterDateType, true);
         }
 
         $('#addGuardCompliancesLicenseModal').modal('show');
@@ -8750,14 +8739,15 @@ $(function () {
         });
     }
 
-    $('#LicanseTypeFilter').on('change', function () {
+
+    $('#LicanseTypeFilter').on('change', function (e, keepValue) {
         const isChecked = $(this).is(':checked');
 
         const filter = isChecked ? 1 : 2;
         if (filter == 1) {
             $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true)
-            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
                 return new Date().toJSON().split('T')[0];
             });
@@ -8766,7 +8756,7 @@ $(function () {
         if (filter == 2) {
             $('#IsDateFilterEnabledHidden').val(false)
             $('#ComplianceDate').text('Expiry Date (DOE)');
-            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
                 return new Date().toJSON().split('T')[0];
             });
