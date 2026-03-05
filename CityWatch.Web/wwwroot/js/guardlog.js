@@ -6629,6 +6629,7 @@ $(function () {
 
 
     //To get the data in description dropdown start
+    var hrDescriptionConfigs = {};
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
         //filter: false,
@@ -6643,6 +6644,13 @@ $(function () {
         display.text($.trim(display.text()));
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
+
+        // Dynamic Date Visibility Logic
+        var selectedId = $(li).val() || $(li).attr('value');
+        var config = hrDescriptionConfigs[selectedId];
+        if (config !== undefined) {
+            updateDateVisibility(config);
+        }
 
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
@@ -6669,8 +6677,12 @@ $(function () {
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {
+            hrDescriptionConfigs = {}; // Clear old configs
             DescVal.forEach(function (DescVals) {
                 var mark = ''; // Initialize the mark variable
+
+                // Store config by ID
+                hrDescriptionConfigs[DescVals.id] = DescVals.dateType;
 
                 if (DescVals.description != null) {
                     if (DescVals.usedDescription == null) {
@@ -6715,7 +6727,11 @@ $(function () {
         sel.replaceWith(display);
         $(this).prop('selectedIndex', display.index());
 
-        let LoginVal = $('#hdnIsAdminLoggedIn1').val();
+
+        if (hrDescriptionConfigs && hrDescriptionConfigs[selectedItem] !== undefined) {
+            updateDateVisibility(hrDescriptionConfigs[selectedItem], true);
+        }
+
         if (LoginVal == 'GuardLogin') {
             $.ajax({
                 url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
@@ -6785,6 +6801,37 @@ $(function () {
 
     //To get the data in description dropdown stop
     //Gurad License and Compliance Form stop
+
+
+
+    function updateDateVisibility(dt, keepValue) {
+        // Immediate update
+        applyVisibility(dt, keepValue);
+
+        // Delayed update to ensure it sticks (overriding any UI plugin resets)
+        setTimeout(function () {
+            applyVisibility(dt, keepValue);
+        }, 150);
+
+        function applyVisibility(dt, keepValue) {
+            if (dt == 1) { // DOI Only
+                $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
+                $('#doiToggleContainer').css('visibility', 'hidden');
+                $('#doiNoteContainer').css('visibility', 'hidden');
+            } else if (dt == 2) { // DOE Only
+                $('#LicanseTypeFilter').prop('checked', false).trigger('change', [keepValue]);
+                $('#doiToggleContainer').css('visibility', 'hidden');
+                $('#doiNoteContainer').css('visibility', 'hidden');
+            } else { // Both (0) or Default
+                // We don't automatically check/uncheck the toggle for "Both", 
+                // just make it visible so the user can choose.
+                $('#doiToggleContainer').css('visibility', 'visible');
+                $('#doiNoteContainer').css('visibility', 'visible');
+                // Ensure the current toggle state is reflected in labels/constraints without clearing value
+                $('#LicanseTypeFilter').trigger('change', [keepValue]);
+            }
+        }
+    }
 
     $('#btnAddGuardLicense,#btnAddGuardLicense2').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
@@ -6863,16 +6910,25 @@ $(function () {
         }
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
-        $('#HRGroup').val(data.hrGroup);
+        $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
-        if (data.dateType == true) {
-            $('#LicanseTypeFilter').prop('checked', true);
-            $('#ComplianceDate').text('Issue Date (DOI)');
-            $('#IsDateFilterEnabledHidden').val(true);
+
+
+
+        // Logic for Edit Mode Visibility
+        if (data.masterDateType == 0) {
+            // Set toggle state to match record
+            $('#LicanseTypeFilter').prop('checked', data.dateType == true);
+            // Apply "Both" visibility (shows toggle)
+            updateDateVisibility(0, true);
+        } else {
+            // Apply Master constraint (DOI or DOE)
+            updateDateVisibility(data.masterDateType, true);
         }
+
         $('#addGuardCompliancesLicenseModal').modal('show');
 
     });
@@ -8683,14 +8739,15 @@ $(function () {
         });
     }
 
-    $('#LicanseTypeFilter').on('change', function () {
+
+    $('#LicanseTypeFilter').on('change', function (e, keepValue) {
         const isChecked = $(this).is(':checked');
 
         const filter = isChecked ? 1 : 2;
         if (filter == 1) {
             $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true)
-            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
                 return new Date().toJSON().split('T')[0];
             });
@@ -8699,7 +8756,7 @@ $(function () {
         if (filter == 2) {
             $('#IsDateFilterEnabledHidden').val(false)
             $('#ComplianceDate').text('Expiry Date (DOE)');
-            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
                 return new Date().toJSON().split('T')[0];
             });

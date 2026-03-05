@@ -61,7 +61,8 @@ namespace CityWatch.Data.Models
         public bool HRBanEdit { get; set; }
         [NotMapped]
         public string IsLogin { get; set; }
-     
+        [NotMapped]
+        public int MasterDateType { get; set; }
         [NotMapped]
         public string StatusColor
         {

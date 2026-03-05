@@ -30,6 +30,15 @@ namespace CityWatch.Data.Models
         [Display(Name = "Critical Documents")]
         CriticalDocuments = 1,
     }
+    public enum HrDateType
+    {
+        [Display(Name = "DOI / DOE")]
+        Both = 0,
+        [Display(Name = "DOI")]
+        DOI = 1,
+        [Display(Name = "DOE")]
+        DOE = 2
+    }
     public class HRGroups
     {
         [Key]
@@ -84,6 +93,7 @@ namespace CityWatch.Data.Models
         public string CourseStatus { get; set; }
         [NotMapped]
         public string CourseColour { get; set; }
+        public HrDateType DateType { get; set; }
         public bool IsDeleted { get; set; }
     }
 }

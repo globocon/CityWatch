@@ -4542,7 +4542,7 @@
             gridEquipments.hide();
         }
         else if (selKvlFieldTypeId == 2) {
-          
+
             $('#add_Equipments').show();
             gridEquipments.show();
             gridEquipments.clear();
@@ -4550,7 +4550,7 @@
             $('#add_KPI_Telematics_fields').hide();
             gridKPITelematicsFields.hide();
         }
-        
+
     });
 
     //$('#add_KPI_Telematics_fields').on('click', function () {
@@ -4723,7 +4723,7 @@
     if (gridEquipments) {
         gridEquipments.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
-           
+
             let isValid = true;
             let errorMessage = "";
 
@@ -4737,13 +4737,13 @@
             }).done(function (result) {
                 if (result.success) {
 
-                    
+
 
                     gridEquipments.reload({ typeId: $('#KPITelematicsfields_types').val() });
                 }
                 else {
                     alert(result.message);
-                    
+
                     gridEquipments.edit(id);
 
 
@@ -4777,7 +4777,7 @@
         });
 
     }
-   /* p2 - 171--equipment - end*/
+    /* p2 - 171--equipment - end*/
     if (gridTAFields) {
         gridTAFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -4889,7 +4889,7 @@
         //p2-Issue-171--equipment-start
         gridEquipments.hide();
         $('#add_Equipments').hide();
-        
+
         //p2-Issue-171--equipment-end
 
     }
@@ -5942,6 +5942,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         { field: 'groupName', width: '10%' }, // Show the HR Group column
         { field: 'referenceNo', width: '10%' },
         { field: 'description', width: '30%' },
+        { field: 'dateTypeName', title: 'Date Type', width: '10%' },
         { field: 'states' },
         { field: 'clientSitesSummary' },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
@@ -5962,7 +5963,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
 
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 9).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -6000,6 +6001,7 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
         { field: 'groupName', width: '10%' }, // Show the HR Group column
         { field: 'referenceNo', width: '10%' },
         { field: 'description', width: '30%' },
+        { field: 'dateTypeName', title: 'Date Type', width: '10%' },
         { field: 'states' },
         { field: 'clientSitesSummary' },
         { width: '5%', renderer: courseStatusColorRenderer },
@@ -6021,7 +6023,7 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
 
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 9).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -6219,6 +6221,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
         dataType: 'json',
     }).done(function (data) {
         clearCriticalModalHrDoc();
+        $('#list_DateType').val(data.dateType);
         var selectedValues = [];
         $.each(data.hrSettingsClientStates, function (index, item2) {
             selectedValues.push(item2.state);
@@ -6363,6 +6366,7 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
         dataType: 'json',
     }).done(function (data) {
         clearCriticalModalHrDoc();
+        $('#list_DateType').val(data.dateType);
         var selectedValues = [];
         $.each(data.hrSettingsClientStates, function (index, item2) {
             selectedValues.push(item2.state);
@@ -7492,7 +7496,8 @@ $('#btn_save_hr_settings').on('click', function () {
                 'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
                 'description': $('#txtHrSettingsDescription').val(),
                 'Selectedsites': allValues,
-                'SelectedStates': SelectedStates
+                'SelectedStates': SelectedStates,
+                'dateType': $('#list_DateType').val()
             },
             //processData: false,
             //contentType: false,
@@ -7759,16 +7764,16 @@ $("#btnDownloadClientSiteExcel").click(async function () {
                     const smartWand = smartWands[i] || {}; // Use an empty object if no smart wand exists
                     rowData.push(smartWand.phoneNumber || '', smartWand.simProvider || '', smartWand.imei || '');
                 }
-               
+
                 Object.entries(equipmentTypeMaxCount).forEach(([equipmentType, maxCount]) => {
 
                     // find equipment matching this type
                     const equipment = equipments.find(eq => eq.equipmentType === equipmentType);
-                    
+
                     for (let i = 0; i < maxCount; i++) {
                         const item = equipment?.items?.[i];
                         rowData.push(item?.brand || '', item?.serialNumber || '');
-                        
+
                     }
                 });
                 return rowData;
@@ -8183,23 +8188,23 @@ $("#btnSaveUpgrade").on("click", function () {
     formData.append("AppVersionMajor", $("#AppVersionMajor").val());
     formData.append("AppVersionMinor", $("#AppVersionMinor").val());
     formData.append("AppVersionPatch", $("#AppVersionPatch").val());
-    formData.append("AppVersionNotes", $("#AppVersionNotes").val());    
+    formData.append("AppVersionNotes", $("#AppVersionNotes").val());
     var file = $("#AppVersionFileUpload").prop('files')[0];
     if (file) {
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || 'apk'.indexOf(fileExtn) < 0) {
             alert('Please select a valid file type');
             return false;
-        }        
+        }
         formData.append("AppVersionFileUpload", file);
     }
     else {
         alert("Please select a file to upload.");
         return;
-    }    
+    }
     // Show progress bar
     $("#uploadProgressContainer").removeClass("d-none");
-    $("#uploadProgressBar").css("width", "0%").text("0%");    
+    $("#uploadProgressBar").css("width", "0%").text("0%");
     $.ajax({
         url: '/Admin/MobileAppUpgrade?handler=NewAppVersionUpload',
         type: 'POST',
