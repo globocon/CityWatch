@@ -2382,6 +2382,59 @@ function ExpiredDocuments() {
 $("#addGuardModalnew").on("hidden.bs.modal", function () {
     isPaused = false;
 });
+
+var hrDescriptionConfigs = {};
+
+function updateDateVisibility(dt, keepValue) {
+    // Immediate update
+    applyVisibility(dt, keepValue);
+
+    // Delayed update to ensure it sticks (overriding any UI plugin resets)
+    setTimeout(function () {
+        applyVisibility(dt, keepValue);
+    }, 150);
+
+    function applyVisibility(dt, keepValue) {
+        if (dt == 1) { // DOI Only
+            $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
+            $('#doiToggleContainer').css('visibility', 'hidden');
+            $('#doiNoteContainer').css('visibility', 'hidden');
+        } else if (dt == 2) { // DOE Only
+            $('#LicanseTypeFilter').prop('checked', false).trigger('change', [keepValue]);
+            $('#doiToggleContainer').css('visibility', 'hidden');
+            $('#doiNoteContainer').css('visibility', 'hidden');
+        } else { // Both (0) or Default
+            // We don't automatically check/uncheck the toggle for "Both", 
+            // just make it visible so the user can choose.
+            $('#doiToggleContainer').css('visibility', 'visible');
+            $('#doiNoteContainer').css('visibility', 'visible');
+            // Ensure the current toggle state is reflected in labels/constraints without clearing value
+            $('#LicanseTypeFilter').trigger('change', [keepValue]);
+        }
+    }
+}
+
+$('#LicanseTypeFilter').on('change', function (event, keepValue) {
+    const isDOI = $(this).prop('checked');
+    const $label = $('#ComplianceDate');
+    const $dateInput = $('#GuardComplianceAndLicense_ExpiryDate1');
+
+    if (isDOI) {
+        $label.text('Issue Date (DOI)');
+        $dateInput.prop('min', ''); // No minimum for Issue Date
+        $dateInput.prop('max', new Date().toJSON().split('T')[0]); // Cannot be in the future
+    } else {
+        $label.text('Expiry Date (DOE)');
+        $dateInput.prop('min', new Date().toJSON().split('T')[0]); // Cannot be in the past
+        $dateInput.prop('max', ''); // No maximum for Expiry Date
+    }
+
+    // Only clear the value if not explicitly told to keep it
+    if (keepValue !== true) {
+        $dateInput.val('');
+    }
+});
+
 //To get the Compliance and License data start
 $('#btnAddGuardLicenseKey,#btnAddGuardLicenseKey2').on('click', function () {
     resetGuardLicenseandComplianceAddModal();
@@ -2396,8 +2449,9 @@ $('#btnAddGuardLicenseKey,#btnAddGuardLicenseKey2').on('click', function () {
 function resetGuardLicenseandComplianceAddModal() {
     $('#GuardComplianceandlicense_Id').val('');
     $('#Description').val('');
-    $('#LicanseTypeFilter').prop('checked', false);
-    $('#ComplianceDate').text('Expiry Date (DOE)');
+    $('#LicanseTypeFilter').prop('checked', false).trigger('change');
+    $('#doiToggleContainer').css('visibility', 'visible');
+    $('#doiNoteContainer').css('visibility', 'visible');
     $('#IsDateFilterEnabledHidden').val(false)
     $("#GuardComplianceAndLicense_ExpiryDate1").val('');
     $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
@@ -2586,39 +2640,76 @@ $('#Description').editableSelect({
 }).on('select.editable-select', function (e, li) {
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#guardComplianceandlicense_fileName1').text('None');
+
+    const selectedItem = li.val();
+    if (hrDescriptionConfigs && hrDescriptionConfigs[selectedItem] !== undefined) {
+        updateDateVisibility(hrDescriptionConfigs[selectedItem], true);
+    }
 });
 $('#HRGroup').on('change', function () {
-
-    const ulClients = $('#Description').siblings('ul.es-list');
-    ulClients.html('');
-
-    var Descriptionval = $('#HRGroup').val();
+    $('#Description').val('');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#guardComplianceandlicense_fileName1').text('None');
-    if (Descriptionval == 1) {
-        //$('#Description').val('CV,LICENSES,C4i Training');
-        var Desc1Val = 'CV,LICENSES,C4i Training';
-        var values = Desc1Val.split(',');
-        values.forEach(function (value) {
-            ulClients.append('<li class="es-visible" value="' + value + '">' + value + '</li>');
-        });
-    }
-    else if (Descriptionval == 2) {
-        var Desc2Val = 'Client soecialist SPOs';
-        ulClients.append('<li class="es-visible" value="' + Desc2Val + '">' + Desc2Val + '</li>');
-    }
-    else if (Descriptionval == 3) {
-        var Desc3Val = 'LIR,WARDEN,COXSWAIN';
-        var Desc3values = Desc3Val.split(',');
-        Desc3values.forEach(function (Desc3value) {
-            ulClients.append('<li class="es-visible" value="' + Desc3value + '">' + Desc3value + '</li>');
-        });
-    }
-    else {
-        $('#Description').val('');
-    }
+    var Descriptionval = $('#HRGroup').val();
+    var GuardID = $('#GuardComplianceandlicense_GuardId').val();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    const ulClients = $('#Description').siblings('ul.es-list');
+    ulClients.html('');
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=HRDescription',
+        type: 'GET',
+        data: {
+            HRid: Descriptionval,
+            GuardID: GuardID
+        },
+        headers: { 'RequestVerificationToken': token }
+    }).done(function (DescVal) {
+        hrDescriptionConfigs = {}; // Clear old configs
+        DescVal.forEach(function (DescVals) {
+            var mark = ''; // Initialize the mark variable
 
-    /*  ulClients.append('<li class="es-visible" value="' + site.value + '">' + site.text + '</li>');*/
+            // Store config by ID
+            hrDescriptionConfigs[DescVals.id] = DescVals.dateType;
+
+            if (DescVals.description != null) {
+                if (DescVals.usedDescription == null) {
+                    //mark = '❌';
+                    mark = '<i class="fa fa-close" style="font-size:24px;color:red"></i>'
+                    //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
+                    ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
+                        '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
+                        mark +
+                        '</li>');
+                }
+                else {
+                    mark = '<i class="fa fa-check" style="font-size:24px;color:green"></i>'
+                    //mark = '<span style="color: green !important;">✔️</span>';
+                    // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
+                    ulClients.append('<li class="es-visible" value="' + DescVals.id + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                        '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + ' </span>' +
+                        '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + ' </span>' +
+                        mark +
+                        '</li>');
+                }
+            }
+
+        });
+
+        // If we are in edit mode, ensure the description is selected in the editableSelect list
+        var currentDesc = $('#Description').val();
+        if (currentDesc) {
+            var itemToSelect = ulClients.find('li').filter(function () {
+                return $(this).find('.desc').text().trim() === currentDesc;
+            })[0];
+            if (itemToSelect) {
+                // We don't use .selectableSelect('select') here as it might trigger recursive calls
+                $(itemToSelect).addClass('selected');
+            }
+        }
+    })
+
+
 });
 
 $('#btn_save_guard_compliancelicenseKey').on('click', function () {
@@ -2775,11 +2866,23 @@ $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_edit
     }
     $('#GuardComplianceandlicense_Id').val(data.id);
     $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
-    $('#HRGroup').val(data.hrGroup);
+    $('#HRGroup').val(data.hrGroup).trigger('change');
     $('#Description').val(data.description);
     $('#GuardComplianceandlicense_GuardId').val(data.guardId);
     $('#GuardComplianceandlicense_FileName1').val(data.fileName);
     $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+
+    // Logic for Edit Mode Visibility
+    if (data.masterDateType == 0) {
+        // Set toggle state to match record
+        $('#LicanseTypeFilter').prop('checked', data.dateType == true);
+        // Apply "Both" visibility (shows toggle)
+        updateDateVisibility(0, true);
+    } else {
+        // Apply Master constraint (DOI or DOE)
+        updateDateVisibility(data.masterDateType, true);
+    }
+
     $('#addGuardCompliancesLicenseModal').modal('show');
 });
 $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {

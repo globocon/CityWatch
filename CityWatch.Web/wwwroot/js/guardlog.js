@@ -6910,7 +6910,7 @@ $(function () {
         }
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
-        $('#HRGroup').val(data.hrGroup);
+        $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
