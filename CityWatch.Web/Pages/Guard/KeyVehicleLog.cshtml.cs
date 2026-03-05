@@ -1,4 +1,4 @@
-using CityWatch.Common.Models;
+﻿using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -47,6 +47,7 @@ using System.Web;
 using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using DocumentFormat.OpenXml.Spreadsheet;
+using CityWatch.Data.Enums;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -155,9 +156,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
-            var results = _viewDataService.GetKeyVehicleLogs(logbookId, kvlStatusFilter)
+            //p7-137--pax-start
+            var results = _viewDataService.GetKeyVehicleLogsWithPax(logbookId, kvlStatusFilter)
                 .OrderByDescending(z => z.Detail.EntryTime)
                 .ThenByDescending(z => z.Detail.Id);
+            //p7-137--pax-end
             return new JsonResult(results);
         }
 
@@ -2179,5 +2182,57 @@ namespace CityWatch.Web.Pages.Guard
             var test = _viewDataService.GetANPR(clientSiteId);
             return new JsonResult(_viewDataService.GetANPR(clientSiteId));
         }
+        //p7-137--pax-start
+        public JsonResult OnPostSaveKeyVehicleLogPAX(int paxId, string personType,int keyVehicleLogId,string personName,string mobileNo)
+        {
+            var results = new List<ValidationResult>();
+           
+            var success = true;
+            var message = "success";
+            try
+            {
+               
+
+
+                //logBookId entry for radio checklist-start
+                if (keyVehicleLogId != 0)
+                {
+                    var keyVehicleLogPax = new KeyVehicleLogPax()
+                    {   Id = paxId,
+                        KeyVehicleLogId = keyVehicleLogId,
+                        PersonName = personName,
+                        PersonType = Convert.ToInt16(personType),
+                        MobileNumber= mobileNo
+                    };
+                 
+
+                    bool isValid = Validator.TryValidateObject(
+                        keyVehicleLogPax,                          // ✅ validate this object
+                        new ValidationContext(keyVehicleLogPax),   // ✅ correct context
+                        results,
+                        true
+                    );
+
+                    if (!isValid)
+                    {
+                        return new JsonResult(new
+                        {
+                            success = false,
+                            errors = results.Select(x => x.ErrorMessage)
+                        });
+                    }
+
+                    _guardLogDataProvider.SaveKeyVehicleLogPax(keyVehicleLogPax);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //p7-137--pax-end
     }
 }

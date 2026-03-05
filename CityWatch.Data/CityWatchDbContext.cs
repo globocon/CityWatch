@@ -395,6 +395,7 @@ namespace CityWatch.Data
         public DbSet<GuardLoginSmartWandUse> GuardLoginSmartWandUse { get; set; }
         public DbSet<irOfflineFilesAttachmentsCacheNotSynced> irOfflineFilesAttachmentsCacheNotSynced { get; set; }
         public DbSet<irOfflineCacheNotSynced> irOfflineCacheNotSynced { get; set; }
+        public DbSet<KeyVehicleLogPax> KeyVehicleLogsPax { get; set; }
     }
 
 
