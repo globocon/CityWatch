@@ -974,7 +974,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
         {
-            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard).Distinct().ToArray();
+            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard).Distinct().OrderBy(x=> x.Name).ToArray();
             var hrGrpStr = RemoveBrackets(hrGroupName).Trim();
             var activeRefNos = new HashSet<string>();
             var allGuardComps = new Dictionary<int, List<GuardComplianceAndLicense>>();
