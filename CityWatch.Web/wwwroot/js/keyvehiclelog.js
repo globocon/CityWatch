@@ -2199,7 +2199,7 @@ $(function () {
 
 
             let isVWI = $('#IsVWI').val().toLowerCase() === 'true';
-            $('#lblIsVWI').text(isVWI ? 'VWI' : 'Manifest');
+            $('#lblIsVXI').text(isVWI ? 'VWI' : 'Manifest');
             $('#cbIsVWI').prop('checked', isVWI);
             /*for manifest options-end*/
             //GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
@@ -5032,7 +5032,7 @@ $(function () {
 
 
             let isVWI = $('#IsVWI').val().toLowerCase() === 'true';
-            $('#lblIsVWI').text(isVWI ? 'VWI' : 'Manifest');
+            $('#lblIsVXI').text(isVWI ? 'VWI' : 'Manifest');
             $('#cbIsVWI').prop('checked', isVWI);
             /*for manifest options-end*/
             //GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
