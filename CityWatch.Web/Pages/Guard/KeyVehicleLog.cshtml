@@ -324,8 +324,28 @@ else
 
     <div class="col-md-3 text-right">
         <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
-        <label class="col-form-label mt-2">Total Events: <span id="total_events"></span></label>
-        <button type="button" class="btn btn-primary mt-1" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+     @*    <label class="col-form-label mt-2">Total Events: <span id="total_events"></span></label>
+        <label class="col-form-label mt-2">Total PAX: <span id="total_pax"></span></label>
+        <button type="button" class="btn btn-primary mt-1" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button> *@
+        <div class="d-flex justify-content-end align-items-center">
+
+            <div class="mr-3 text-right">
+                <div>
+                    <span>Total Events:</span>
+                    <span id="total_events">0</span>
+                </div>
+
+                <div>
+                    <span>Total PAX:</span>
+                    <span id="total_pax">0</span>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="add_new_vehicle_and_key_log">
+                <i class="fa fa-plus mr-1"></i> Add Entry
+            </button>
+
+        </div>
     </div>
 </div><br/>
 <div class="row" id="ANPRDv" style="display:none">
