@@ -495,7 +495,9 @@ namespace CityWatch.Web.Services
                 return string.Empty;
 
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
+            var kvlPax = _guardLogDataProvider.GetKeyVehicleLogPaxs();
+            var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields,kvlPax);
+            //var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
 
 
@@ -1219,14 +1221,21 @@ namespace CityWatch.Web.Services
             companyDetails.AddCell(GetHeaderCell("Location"));
             companyDetails.AddCell(GetHeaderCell("Purpose Of Entry"));
 
-            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.CompanyName));
+            companyDetails.AddCell(GetDataCellNew(keyVehicleLogViewModel.Detail.CompanyName, keyVehicleLogViewModel.PAX+ 1));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.PersonName));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MobileNumber));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonTypeText));
-            companyDetails.AddCell(GetSitePocNameDetails(keyVehicleLogViewModel));
+            //companyDetails.AddCell(GetSitePocNameDetails(keyVehicleLogViewModel));
+            companyDetails.AddCell(new Cell(keyVehicleLogViewModel.PAX + 1, 1).Add(GetSitePocNameDetails(keyVehicleLogViewModel)));
 
-            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSiteLocation?.Name));
-            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PurposeOfEntry));
+            companyDetails.AddCell(GetDataCellNew(keyVehicleLogViewModel.Detail.ClientSiteLocation?.Name, keyVehicleLogViewModel.PAX + 1));
+            companyDetails.AddCell(GetDataCellNew(keyVehicleLogViewModel.PurposeOfEntry, keyVehicleLogViewModel.PAX + 1));
+            foreach (var item in keyVehicleLogViewModel.PaxDetails)
+            {
+                companyDetails.AddCell(GetDataCell(item.PersonName));
+                companyDetails.AddCell(GetDataCell(item.MobileNumber));
+                companyDetails.AddCell(GetDataCell("PAX"));
+            }
 
             return companyDetails;
         }
@@ -1674,6 +1683,14 @@ namespace CityWatch.Web.Services
         private static Cell GetDataCell(string text, TextAlignment textAlignment = TextAlignment.CENTER, float minHeight = 15, float cellFontSize = CELL_FONT_SIZE)
         {
             return new Cell(1, 1)
+                .Add(new Paragraph().SetFontSize(cellFontSize)
+                .Add(new Text(text ?? string.Empty)))
+                .SetTextAlignment(textAlignment)
+                .SetMinHeight(minHeight);
+        }
+        private static Cell GetDataCellNew(string text, int rowSpan = 1, int colSpan = 1, TextAlignment textAlignment = TextAlignment.CENTER, float minHeight = 15, float cellFontSize = CELL_FONT_SIZE)
+        {
+            return new Cell(rowSpan, colSpan)
                 .Add(new Paragraph().SetFontSize(cellFontSize)
                 .Add(new Text(text ?? string.Empty)))
                 .SetTextAlignment(textAlignment)
