@@ -708,29 +708,29 @@ namespace CityWatch.Data.Providers
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
             var result = _context.GuardComplianceLicense
                  .Where(x => x.GuardId == guardId)
-                 .Include(z => z.Guard).ToList();
+                .Include(z => z.Guard).ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;
 
 
-            result = _context.GuardComplianceLicense
-            .Where(x => x.GuardId == guardId)
-            .Include(z => z.Guard)
-            .Select(x => new GuardComplianceAndLicense
-            {
-                Id = x.Id,
-                ExpiryDate = x.ExpiryDate,
-                FileName = x.FileName,
-                GuardId = x.GuardId,
-                Description = x.Description,
-                HrGroup = x.HrGroup,
-                CurrentDateTime = x.CurrentDateTime,
-                LicenseNo = x.Guard.SecurityNo,
-                DateType = x.DateType,
-                HRBanEdit=x.HRBanEdit,
-                IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
-
-            }).OrderBy(x => x.FileName)
+            result = (from x in _context.GuardComplianceLicense.Where(x => x.GuardId == guardId)
+                      join s in _context.HrSettings on x.Description.ToLower().Trim() equals s.Description.ToLower().Trim() into joined
+                      from sub in joined.DefaultIfEmpty()
+                      select new GuardComplianceAndLicense
+                      {
+                          Id = x.Id,
+                          ExpiryDate = x.ExpiryDate,
+                          FileName = x.FileName,
+                          GuardId = x.GuardId,
+                          Description = x.Description,
+                          HrGroup = x.HrGroup,
+                          CurrentDateTime = x.CurrentDateTime,
+                          LicenseNo = x.Guard.SecurityNo,
+                          DateType = x.DateType,
+                          HRBanEdit = x.HRBanEdit,
+                          MasterDateType = sub != null ? (int)sub.DateType : 0,
+                          IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
+                      }).OrderBy(x => x.FileName)
             .ToList();
 
 
