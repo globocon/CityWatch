@@ -213,6 +213,14 @@ namespace CityWatch.Web.Pages.Guard
             var message = "success";
             try
             {
+                if (string.IsNullOrEmpty(KeyVehicleLog.CompanyName))
+                {
+                    KeyVehicleLog.CompanyName = "Unknown";
+                }
+                if (string.IsNullOrEmpty(KeyVehicleLog.PersonName))
+                {
+                    KeyVehicleLog.PersonName = "Unknown";
+                }
                 if (KeyVehicleLog.Product == null && KeyVehicleLog.ProductOther != null)
                 {
                     if (string.IsNullOrEmpty(KeyVehicleLog.Product))
@@ -1492,7 +1500,7 @@ namespace CityWatch.Web.Pages.Guard
                     CompanyName = vehicleKeyLogProfile.CompanyName,
                     PersonType = vehicleKeyLogProfile.PersonType,
                     PersonName = personName,
-
+                    KeyVehicleLogProfile=vehicleKeyLogProfile.KeyVehicleLogProfile,
                     IsBDM = true
                 });
             }
@@ -1810,30 +1818,72 @@ namespace CityWatch.Web.Pages.Guard
             }
         }
 
+        //private int GetKvlProfileId(KeyVehicleLog keyVehicleLog)
+        //{
+        //    int profileId;
+        //    var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
+        //    var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
+        //    if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+        //    {
+        //        kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+        //        profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
+        //    }
+        //    else
+        //    {
+        //        var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
+        //        if (personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+        //        {
+        //            kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
+        //            kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+        //        }
+
+        //        profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
+        //        profileId = kvlVisitorProfile.Id;
+        //    }
+
+        //    return profileId;
+        //}
         private int GetKvlProfileId(KeyVehicleLog keyVehicleLog)
         {
-            int profileId;
             var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
-            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
-            if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+
+            var personalDetails = _guardLogDataProvider
+                .GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
+
+            // If plate already exists → lock company
+            if (personalDetails.Any())
             {
+                var existingCompany = personalDetails.Where(x=>  !string.IsNullOrEmpty(x.CompanyName)).First().CompanyName;
+
+                // Force company to existing one
+                kvlPersonalDetail.CompanyName = existingCompany;
+                //kvlPersonalDetail.KeyVehicleLogProfile.KeyVehicleLog.CompanyName = existingCompany;
+            }
+
+            // Check if driver already exists for plate
+            var existingDriver = personalDetails.FirstOrDefault(x =>
+                x.PersonName.Trim().ToLower() ==
+                kvlPersonalDetail.PersonName.Trim().ToLower());
+
+            if (existingDriver != null)
+            {
+                // Merge with existing driver
+                kvlPersonalDetail.Id = existingDriver.Id;
                 kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
-                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
+
+                var kvlVisitorProfile = _guardLogDataProvider
+                    .GetKeyVehicleLogVisitorProfile(existingDriver.KeyVehicleLogProfile.VehicleRego);
+
+                return kvlVisitorProfile.Id;
             }
             else
             {
-                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
-                if (personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
-                {
-                    kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
-                    kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
-                }
+                // Add new driver but company remains locked
+                kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
 
-                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
-                profileId = kvlVisitorProfile.Id;
+                return _guardLogDataProvider
+                    .SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
             }
-
-            return profileId;
         }
 
         private int GetKvlProfileIdWithOutVehicleRego(KeyVehicleLog keyVehicleLog)
