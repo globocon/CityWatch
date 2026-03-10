@@ -3600,6 +3600,7 @@ namespace CityWatch.Web.API
                     IsDateFilterEnabledHidden = x.IsDateFilterEnabledHidden,
                     HRBanEdit = x.HRBanEdit,
                     IsLogin = x.IsLogin,
+                    MasterDateType = x.MasterDateType,
                     StatusColor = x.StatusColor
                 }).ToList();
 
@@ -4562,6 +4563,7 @@ namespace CityWatch.Web.API
         public bool IsDateFilterEnabledHidden { get; set; }
         public bool HRBanEdit { get; set; }
         public string IsLogin { get; set; }
+        public int MasterDateType { get; set; }
         public string StatusColor { get; set; }
 
     }
