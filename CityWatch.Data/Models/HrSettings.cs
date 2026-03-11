@@ -95,7 +95,5 @@ namespace CityWatch.Data.Models
         public string CourseColour { get; set; }
         public HrDateType DateType { get; set; }
         public bool IsDeleted { get; set; }
-        public bool IsAllSiteEnabled { get; set; }
-        public bool IsAllStateEnabled { get; set; }
     }
 }
