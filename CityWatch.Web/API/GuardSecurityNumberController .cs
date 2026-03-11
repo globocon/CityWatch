@@ -357,7 +357,8 @@ namespace CityWatch.Web.API
                     EventDateTimeZone = request.EventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
                     EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
                     EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gpsCoordinates
+                    GpsCoordinates = gpsCoordinates,
+                    EventMobileUtcDateTime = request.EventMobileUtcDateTime
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
@@ -773,7 +774,9 @@ namespace CityWatch.Web.API
                             EventDateTimeZoneShort = offlineRecord.EventDateTimeZoneShort,
                             EventDateTimeUtcOffsetMinute = offlineRecord.EventDateTimeUtcOffsetMinute,
                             IsOfflineRecord = true,
-                            OfflineRecordSyncDateTime = DateTime.Now
+                            OfflineRecordSyncDateTime = DateTime.Now,
+                            TagScanHitLogRefId = offlineRecord.TagScanHitLogRefId,
+                            EventMobileUtcDateTime = offlineRecord.EventMobileUtcDateTime
                         };
 
                         //Create Logbook entries 

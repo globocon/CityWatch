@@ -23,6 +23,8 @@ namespace CityWatch.Web.Models
         public bool IsNewGuard { get; set; } = false;
         public bool IsOfflineRecord { get; set; } = false;
         public DateTime? OfflineRecordSyncDateTime { get; set; }
+        public int TagScanHitLogRefId { get; set; } = 0;
+        public DateTime EventMobileUtcDateTime { get; set; }
     }
 
     public class PostActivityRequestLocalCacheOffline
@@ -46,6 +48,8 @@ namespace CityWatch.Web.Models
         public Guid UniqueRecordId { get; set; }
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }
+        public int TagScanHitLogRefId { get; set; } = 0;
+        public DateTime EventMobileUtcDateTime { get; set; }
 
     }
 

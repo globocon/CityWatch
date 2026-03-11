@@ -73,23 +73,26 @@ namespace CityWatch.Web.API
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
             int ScannedFromLinkedSite = siteId;
+            int rowIdInServer = 0;
 
             try
             {
-                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
                     Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
                 TagFound = TagFoundR;
                 TagInfoLabel = TagInfoLabelR;
                 ScannedFromLinkedSite = ScanFromLinkedSiteId;
+                rowIdInServer = RowIdInServerR;
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
 
-            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite });
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer });
         }
 
         [HttpPost("SyncOfflineSmartWandTagHitData")]
@@ -103,7 +106,7 @@ namespace CityWatch.Web.API
                     try
                     {
                         //Save tag hit 
-                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
+                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
                             offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
                             offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.SmartWandId);
 
@@ -127,7 +130,9 @@ namespace CityWatch.Web.API
                                 EventDateTimeZoneShort = offlineRecord.EventDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = offlineRecord.EventDateTimeUtcOffsetMinute,
                                 IsOfflineRecord = true,
-                                OfflineRecordSyncDateTime = DateTime.Now
+                                OfflineRecordSyncDateTime = DateTime.Now,
+                                TagScanHitLogRefId = RowIdInServerR,
+                                EventMobileUtcDateTime = offlineRecord.HitUtcDateTime
                             };
 
                             //Create Logbook entries                        

@@ -72,6 +72,8 @@ namespace CityWatch.Data.Models
         public ScanningType WAND_TAG_ENTRY_TYPE { get; set; }
         public bool IsOfflineRecord { get; set; } = false;
         public DateTime? OfflineRecordSyncDateTime { get; set; }
+        public int? TagScanHitLogRefId { get; set; }
+        public DateTime? EventMobileUtcDateTime { get; set; }
 
     }
 }

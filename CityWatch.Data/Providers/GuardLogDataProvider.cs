@@ -755,8 +755,9 @@ namespace CityWatch.Data.Providers
                     EventType = guardLog.EventType,
                     WAND_TAG_ENTRY_TYPE = guardLog.WAND_TAG_ENTRY_TYPE,
                     IsOfflineRecord = guardLog.IsOfflineRecord,
-                    OfflineRecordSyncDateTime = guardLog.OfflineRecordSyncDateTime
-
+                    OfflineRecordSyncDateTime = guardLog.OfflineRecordSyncDateTime,
+                    TagScanHitLogRefId = guardLog.TagScanHitLogRefId,
+                    EventMobileUtcDateTime = guardLog.EventMobileUtcDateTime
                 });
             }
             else
