@@ -6412,6 +6412,10 @@ namespace CityWatch.Data.Providers
                             item.IrEntryType = tmplog?.IrEntryType ?? null;
                             item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
                         }
+                        if (item.EventDateTimeLocal != null)
+                        {
+                            item.EventDateTime = item.EventDateTimeLocal.Value;
+                        }
                         break;
 
                     case "IR":

@@ -8895,25 +8895,47 @@ $(function () {
 
 
 
+    //function renderDateTimefusion(value, record) {
+    //    // p6#73 timezone bug - Modified by binoy 29-01-2024
+    //    if (record.eventDateTime != null && record.eventDateTime != '') {
+    //        const date = new Date(record.eventDateTime);
+    //        var DateTime = luxon.DateTime;
+    //        var dt1 = DateTime.fromJSDate(date);
+    //        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
+    //        return dt;
+    //    }
+    //    else if (value !== '') {
+    //        const date = new Date(value);
+    //        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    //        let day = date.getDate();
+
+    //        if (day < 10) {
+    //            day = '0' + day;
+    //        }
+
+    //        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    //    }
+    //}
+
     function renderDateTimefusion(value, record) {
-        // p6#73 timezone bug - Modified by binoy 29-01-2024
         if (record.eventDateTime != null && record.eventDateTime != '') {
-            const date = new Date(record.eventDateTime);
+
             var DateTime = luxon.DateTime;
-            var dt1 = DateTime.fromJSDate(date);
+
+            // keep original timezone
+            var dt1 = DateTime.fromISO(record.eventDateTime, { setZone: true });
+
             var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
+
             return dt;
         }
         else if (value !== '') {
-            const date = new Date(value);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            let day = date.getDate();
 
-            if (day < 10) {
-                day = '0' + day;
-            }
+            var DateTime = luxon.DateTime;
 
-            return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+            var dt1 = DateTime.fromISO(value, { setZone: true });
+
+            return dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs';
         }
     }
 
