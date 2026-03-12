@@ -58,7 +58,7 @@ namespace CityWatch.Kpi.Services
         public List<SelectListItem> GetClientSitesUsingLoginUserIdNew(int userId, string type = "");
         public List<SelectListItem> ClientTypesUsingLoginMainUserIdWithClientTypeId(int userId, int ClientTypeId);
         public string ClientSitesUsingId(int ClientSiteId);
-        public List<SelectListItem> KPITelematicsList();
+        public List<SelectListItem> KPITelematicsList(int typeId);
         public KPITelematicsField GetMobileNo(int Id);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> getSmartWandForTourmodel();
@@ -629,14 +629,14 @@ namespace CityWatch.Kpi.Services
             var distinctType = _clientDataProvider.GetClientSiteDetailsWithId(ClientSiteId).FirstOrDefault().Name;
             return distinctType;
         }
-        public List<SelectListItem> KPITelematicsList()
+        public List<SelectListItem> KPITelematicsList(int typeId)
         {
 
             var items = new List<SelectListItem>()
                 {
                     new SelectListItem("Select", "", true)
                 };
-            var NamesList = _configDataProvider.GetTelematicsList();
+            var NamesList = _configDataProvider.GetTelematicsList().Where(x=>x.TypeId== typeId);
             
             foreach (var item in NamesList)
             {
