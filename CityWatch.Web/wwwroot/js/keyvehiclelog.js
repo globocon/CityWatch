@@ -432,6 +432,20 @@ $(function () {
                 //let data = api.row().data();
                 var cnt = api.rows({ search: 'applied' }).count();
                 $('#total_events').html(cnt);
+                //p7-137 -pax-step 5-start
+                var totalpaxcount = api
+                    .column(13, { search: 'applied' })
+                    .data()
+                    .reduce(function (a, b) {
+
+                        a = parseFloat(a) || 0;
+                        b = parseFloat(b) || 0;
+
+                        return a + b;
+                    }, 0);//to find totalpaxes
+
+                $('#total_pax').html(totalpaxcount);
+                //p7-137 -pax-step 5-end
                // alert(data);
                // console.log(data);
                 displayedrecordsid = [];
