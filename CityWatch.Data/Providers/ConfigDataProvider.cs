@@ -302,7 +302,7 @@ namespace CityWatch.Data.Providers
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
         {
-            
+
             return _context.FeedbackType.OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-end
@@ -1364,9 +1364,10 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .Include(z => z.hrSettingsClientStates)
+                .Include(z => z.hrSettingsClientTypes)
                 .Include(z => z.hrSettingsClientSites)
                 .ThenInclude(y => y.ClientSite)
-              .ThenInclude(y => y.ClientType)
+                .ThenInclude(y => y.ClientType)
                 .OrderBy(z => z.HRGroups.Name).ThenBy(z => z.ReferenceNoNumbers.Name).
                 ThenBy(z => z.ReferenceNoAlphabets.Name).SingleOrDefault(z => z.Id == CriticalID);
 
@@ -1923,7 +1924,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
-                    documentToUpdate.Attempts = trainingAssessment.Attempts; 
+                    documentToUpdate.Attempts = trainingAssessment.Attempts;
                     //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
 
                 }

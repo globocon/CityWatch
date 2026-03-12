@@ -6376,6 +6376,10 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
 
         $("#HrState").multiselect();
         $("#HrState").val(selectedValues);
+        if (data.hrSettings.isAllStateEnabled === true) {
+            $("#HrState").multiselect('select', '-1', true);
+            $("#chkbxclstateselectall").prop("checked", true);
+        }
         $("#HrState").multiselect("refresh");
         $("#clientTypeNameDocHrDoc").multiselect("refresh");        
         $.each(data.hrSettingsClientSites, function (index, item) {
@@ -7455,7 +7459,9 @@ $('#clientSitesDocHrDoc').multiselect({
     buttonWidth: '100%',
     nonSelectedText: 'Select',
     buttonTextAlignment: 'left',
-    includeSelectAllOption: true
+    includeSelectAllOption: true,
+    selectAllText: 'Select All <span class="text-danger">Mandatory</span>',
+    selectAllValue: '-1'
 });
 $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
@@ -7561,7 +7567,11 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
         data.map(function (site) {
             $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
         });
-        
+
+        clientSiteControl.multiselect({
+            selectAllText: 'Select All <span class="text-danger">Mandatory</span>',
+            selectAllValue: '-1'
+        });
         clientSiteControl.multiselect('rebuild');
 
     });
@@ -7618,7 +7628,9 @@ $('#HrState').multiselect({
     buttonWidth: '100%',
     nonSelectedText: 'Select',
     buttonTextAlignment: 'left',
-    includeSelectAllOption: true
+    includeSelectAllOption: true,
+    selectAllText: 'Select All <span class="text-danger">Mandatory</span>',
+    selectAllValue: '-1'
 });
 
 
