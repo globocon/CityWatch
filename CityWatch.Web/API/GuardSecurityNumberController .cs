@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -1800,6 +1800,33 @@ namespace CityWatch.Web.API
                 toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
                 messageHtml = _emailOptions.Message;
             }
+
+            // Remove unwanted legacy sentences
+            messageHtml = messageHtml.Replace("<br><br>Sites with access to the cloud file server will also have a copy stored in the relevant folder.", "");
+            messageHtml = messageHtml.Replace("<br><br>Any concerns, please contact your relevant Citywatch Security Account Manager, or email <a href='mailto:control@citywatchsecurity.com.au'>control@citywatchsecurity.com.au</a>", "");
+
+            string incidentTime = (Report.DateLocation.IncidentDate ?? Report.DateLocation.ReportDate).ToString("HH:mm");
+            string summaryNotes = Report.Feedback;
+            if (!string.IsNullOrEmpty(summaryNotes))
+            {
+                var lines = summaryNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                summaryNotes = string.Join("<br/>", lines.Take(3));
+            }
+
+            string summaryHtml = $@"
+<br/><br/>
+<p>*** SUMMARY ***</p>
+<br/>
+<table style='border-collapse: collapse; width: 100%;'>
+    <tr><td style='width: 150px; vertical-align: top;'>Client Site:</td><td style='vertical-align: top;'>{Report.DateLocation.ClientSite}</td></tr>
+    <tr><td style='vertical-align: top;'>Time of Incident:</td><td style='vertical-align: top;'>{incidentTime} hrs</td></tr>
+    <tr><td style='vertical-align: top;'>Notes:</td><td style='vertical-align: top;'>{summaryNotes}</td></tr>
+</table>
+<br/>
+<p>**** END OF NOTES ***</p>
+<br/>";
+
+            messageHtml += summaryHtml;
 
 
             var toAddress = toAddressData.Split('|');
