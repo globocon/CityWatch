@@ -1360,7 +1360,9 @@ namespace CityWatch.Web.Services
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego).Where(p => !string.IsNullOrWhiteSpace(p.CompanyName)
+             && !string.IsNullOrWhiteSpace(p.PersonName)).GroupBy(p => new { p.CompanyName, p.PersonName })
+    .Select(g => g.First());
 
             var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
             var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);

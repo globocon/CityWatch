@@ -396,12 +396,21 @@
             <div class="form-row custom-control-log">
                 <div class="form-group col-md-4 custom-control-log">
                     <label>Company Name</label>
-                    <input class="form-control" type="text" asp-for="@Model.CompanyName" autocomplete="off" />
+                    @{
+                        // var personName = @Model.PersonName ?? "Unknown";
+                        var companyName = (Model.CompanyName == null || Model.CompanyName == "Unknown")
+                        ? ""
+                        : Model.CompanyName;
+                    }
+                    <input class="form-control" type="text" value="@companyName" asp-for="@Model.CompanyName" autocomplete="off" />
                 </div>
                 <div class="form-group col-md-4 custom-control-log">
                     <label>Individuals Name</label>
                     @{
-                        var personName = @Model.PersonName ?? "Unknown";
+                        // var personName = @Model.PersonName ?? "Unknown";
+                        var personName = (Model.PersonName == null || Model.PersonName == "Unknown")
+                        ? ""
+                        : Model.PersonName;
                     }
                     <input class="form-control" type="text" value="@personName" asp-for="@Model.PersonName" />
                 </div>
