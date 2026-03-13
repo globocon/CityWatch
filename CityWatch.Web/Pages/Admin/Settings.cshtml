@@ -4717,7 +4717,7 @@
 
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="clientTypeName">Client Type</label>
+                                <label for="clientTypeName" class="mr-3">Client Type</label>                                
                                 <select class="form-control" id="clientTypeNameDocHrDoc" multiple="multiple" name="ClientTypeId">
                                     @* <option value="">Select</option> *@
                                     @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
@@ -4728,7 +4728,7 @@
 
                             </div>
                             <div class="form-group">
-                                <label for="clientSites">Client Site</label>
+                                <label for="clientSites" class="form-label">Client Site</label>                                 
                                 <select class="form-control" id="clientSitesDocHrDoc" multiple="multiple" name="ClientSiteId">
                                     @*  <option>Select</option> *@
                                 </select>
@@ -4743,9 +4743,8 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">State</label>
-
+                            <div class="form-group"> 
+                                <label class="form-label">State</label>                                
                                 <select class="form-control" multiple="multiple" id="HrState" name="HrState">
                                     @foreach (var state in Model.ConfigDataProiver.GetStates())
                                     {

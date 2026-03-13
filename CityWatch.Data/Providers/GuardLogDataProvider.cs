@@ -598,7 +598,7 @@ namespace CityWatch.Data.Providers
 
         public bool HasNewLogs(int logBookId, int lastLogId)
         {
-             return _context.GuardLogs.Any(x => x.ClientSiteLogBookId == logBookId && x.Id > lastLogId);
+            return _context.GuardLogs.Any(x => x.ClientSiteLogBookId == logBookId && x.Id > lastLogId);
         }
 
 
@@ -5254,6 +5254,12 @@ namespace CityWatch.Data.Providers
         }
         public List<State> GetStates()
         {
+            /*
+            Note: 
+            1. If an new state is added then this needs to be manually added in table HrSettingsClientStates for all hrid which  has IsAllStateEnabled
+               in the table HrSettings             
+            2. Check if these needs to be added in ConfigDataProvider.GetStates() method
+            */
             return new List<State>()
             {
                 new State() { Name = "ACT" },
@@ -6099,6 +6105,8 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
                     hrSettingsToUpdate.Description = hrSettings.Description;
                     hrSettingsToUpdate.DateType = hrSettings.DateType;
+                    hrSettingsToUpdate.IsAllClientTypeEnabled = hrSettings.IsAllClientTypeEnabled;
+                    hrSettingsToUpdate.IsAllStateEnabled = hrSettings.IsAllStateEnabled;
                 }
 
                 // Remove old sites & states
@@ -6111,17 +6119,38 @@ namespace CityWatch.Data.Providers
 
                 _context.SaveChanges();
 
+
                 // Add new sites
-                foreach (var siteId in selctedSites)
+                if (hrSettings.IsAllClientTypeEnabled)
                 {
-                    _context.HrSettingsClientSites.Add(new HrSettingsClientSites
+                    var sites = _context.ClientSites.Include(c => c.ClientType).Where(x => x.IsActive && x.ClientType.IsActive).Select(x => x.Id).ToList();
+                    foreach (var siteId in sites)
                     {
-                        ClientSiteId = siteId,
-                        HrSettingsId = hrSettings.Id
-                    });
+                        _context.HrSettingsClientSites.Add(new HrSettingsClientSites
+                        {
+                            ClientSiteId = siteId,
+                            HrSettingsId = hrSettings.Id
+                        });
+                    }
+                }
+                else
+                {
+                    foreach (var siteId in selctedSites)
+                    {
+                        _context.HrSettingsClientSites.Add(new HrSettingsClientSites
+                        {
+                            ClientSiteId = siteId,
+                            HrSettingsId = hrSettings.Id
+                        });
+                    }
                 }
 
+
                 // Add new states
+                if (hrSettings.IsAllStateEnabled)
+                {
+                    selectedStates = GetStates().Select(x => x.Name).ToArray();
+                }
                 foreach (var state in selectedStates ?? Array.Empty<string>())
                 {
                     _context.HrSettingsClientStates.Add(new HrSettingsClientStates
@@ -6130,9 +6159,9 @@ namespace CityWatch.Data.Providers
                         State = state
                     });
                 }
-
-                _context.SaveChanges();
             }
+            _context.SaveChanges();
+
         }
 
         public void DeleteHRSettings(int id)
@@ -6271,7 +6300,7 @@ namespace CityWatch.Data.Providers
 
         public List<RCLinkedDuressMaster> getallRCLinkedDuressMaster()
         {
-            var linkedSitesList = _context.RCLinkedDuressMaster.ToList();            
+            var linkedSitesList = _context.RCLinkedDuressMaster.ToList();
             return linkedSitesList;
         }
 
@@ -7977,29 +8006,29 @@ namespace CityWatch.Data.Providers
         public List<GuardLog> GetGuardLogswithClientSiteIds(int[] clientSiteIds, DateTime logDate)
         {
             var result = new List<GuardLog>();
-            
-                
-                if (clientSiteIds != null)
-                {
-                    //var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
-                    var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => clientSiteIds.Contains(x.ClientSiteId) && x.Date == logDate.Date).Select(x => x.Id).ToList();
-                    if (clientSiteLogBook.Count != 0)
-                    {
-                        
-                        result = _context.GuardLogs
-                          .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId))
-                          .Include(z => z.ClientSiteLogBook)
-                          .Include(z => z.GuardLogin.Guard)
-                          .OrderBy(z => z.Id)
-                          .ThenBy(z => z.EventDateTime)
-                          .ToList();
 
-                    }
-                }
-                else
+
+            if (clientSiteIds != null)
+            {
+                //var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
+                var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => clientSiteIds.Contains(x.ClientSiteId) && x.Date == logDate.Date).Select(x => x.Id).ToList();
+                if (clientSiteLogBook.Count != 0)
                 {
-                    return result;
+
+                    result = _context.GuardLogs
+                      .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId))
+                      .Include(z => z.ClientSiteLogBook)
+                      .Include(z => z.GuardLogin.Guard)
+                      .OrderBy(z => z.Id)
+                      .ThenBy(z => z.EventDateTime)
+                      .ToList();
+
                 }
+            }
+            else
+            {
+                return result;
+            }
 
 
 
@@ -8099,7 +8128,7 @@ namespace CityWatch.Data.Providers
                     _context.KeyVehicleLogsPax.Add(keyVehicleLogPax);
                     _context.SaveChanges();
 
-                
+
 
                 }
                 else
@@ -8107,13 +8136,13 @@ namespace CityWatch.Data.Providers
                     var keyVehicleLogPaxToUpdate = _context.KeyVehicleLogsPax.SingleOrDefault(x => x.Id == keyVehicleLogPax.Id);
 
                     keyVehicleLogPaxToUpdate.KeyVehicleLogId = keyVehicleLogPax.KeyVehicleLogId;
-                    
-                    
+
+
                     keyVehicleLogPaxToUpdate.PersonType = keyVehicleLogPax.PersonType;
 
                     keyVehicleLogPaxToUpdate.PersonName = keyVehicleLogPax.PersonName;
                     keyVehicleLogPaxToUpdate.MobileNumber = keyVehicleLogPax.MobileNumber;
-                    
+
 
 
 

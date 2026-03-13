@@ -302,7 +302,7 @@ namespace CityWatch.Data.Providers
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
         {
-            
+
             return _context.FeedbackType.OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-end
@@ -443,6 +443,12 @@ namespace CityWatch.Data.Providers
 
         public List<State> GetStates()
         {
+            /*
+            Note: 
+            1. If an new state is added then this needs to be manually added in table HrSettingsClientStates for all hrid which  has IsAllStateEnabled
+               in the table HrSettings             
+            2. Check if these needs to be added in GuardLogDataProvider.GetStates() method
+            */
             return new List<State>()
             {
                 new State() { Name = "ACT" },
@@ -1366,12 +1372,13 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.hrSettingsClientStates)
                 .Include(z => z.hrSettingsClientSites)
                 .ThenInclude(y => y.ClientSite)
-              .ThenInclude(y => y.ClientType)
+                .ThenInclude(y => y.ClientType)
                 .OrderBy(z => z.HRGroups.Name).ThenBy(z => z.ReferenceNoNumbers.Name).
                 ThenBy(z => z.ReferenceNoAlphabets.Name).SingleOrDefault(z => z.Id == CriticalID);
 
 
         }
+                
         public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId)
         {
             var distinctClientSiteIds = _context.GuardLogins
@@ -1923,7 +1930,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.Description = trainingAssessment.Description;
                     documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
                     documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
-                    documentToUpdate.Attempts = trainingAssessment.Attempts; 
+                    documentToUpdate.Attempts = trainingAssessment.Attempts;
                     //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
 
                 }

@@ -6203,6 +6203,9 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
 
 });
 
+let isAllStateEnabled = false;
+let isAllClientTypeEnabled = false;
+
 
 $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
 
@@ -6214,6 +6217,9 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
     $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
     $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
     $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+
+    isAllStateEnabled = false;
+    isAllClientTypeEnabled = false;
 
     $.ajax({
         url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
@@ -6229,16 +6235,27 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
 
         $("#HrState").multiselect();
         $("#HrState").val(selectedValues);
+        if (data.isAllStateEnabled === true) {
+            isAllStateEnabled = true;
+            $('#HrState').multiselect('selectAll', false);
+            $('#HrState').multiselect('updateButtonText');
+        }
         $("#HrState").multiselect("refresh");
+        if (data.isAllClientTypeEnabled === true) {
+            isAllClientTypeEnabled = true;
+            $('#clientTypeNameDocHrDoc').multiselect('selectAll', false);
+            $('#clientTypeNameDocHrDoc').multiselect('updateButtonText');
+        }
+        $('#clientTypeNameDocHrDoc').trigger('change');
         $("#clientTypeNameDocHrDoc").multiselect("refresh");
 
-        
+
         $.each(data.hrSettingsClientSites, function (index, item) {
             $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             updateSelectedSitesCountHrDoc();
 
         });
-        
+
         $("#clientSitesDocHrDoc").multiselect("refresh");
         ShowStatusColorForCourse();
     }).always(function () {
@@ -6362,6 +6379,9 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
     $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
     $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
 
+    isAllStateEnabled = false;
+    isAllClientTypeEnabled = false;
+
     $.ajax({
         url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
         type: 'GET',
@@ -6376,8 +6396,20 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
 
         $("#HrState").multiselect();
         $("#HrState").val(selectedValues);
+        if (data.isAllStateEnabled === true) {
+            isAllStateEnabled = true;
+            $('#HrState').multiselect('selectAll', false);
+            $('#HrState').multiselect('updateButtonText');
+        }
         $("#HrState").multiselect("refresh");
-        $("#clientTypeNameDocHrDoc").multiselect("refresh");        
+        if (data.isAllClientTypeEnabled === true) {
+            isAllClientTypeEnabled = true;
+            $('#clientTypeNameDocHrDoc').multiselect('selectAll', false);
+            $('#clientTypeNameDocHrDoc').multiselect('updateButtonText');
+        }
+        $('#clientTypeNameDocHrDoc').trigger('change');
+        $("#clientTypeNameDocHrDoc").multiselect("refresh");
+
         $.each(data.hrSettingsClientSites, function (index, item) {
             $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             updateSelectedSitesCountHrDoc();
@@ -6391,11 +6423,6 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnEditHrGroup', fu
     }).always(function () {
         $('#loader').hide();
     });
-
-
-
-
-
 
 });
 function ShowStatusColorForCourse() {
@@ -6944,6 +6971,10 @@ $('#add_hr_settings').on('click', function () {
         alert('Please select a field type to update');
         return;
     }
+
+    isAllStateEnabled = false;
+    isAllClientTypeEnabled = false;
+
     if (selFieldTypeId == 1 || selFieldTypeId == 8) {
         $('#list_hrGroups').val('');
         $('#list_ReferenceNoNumber').val('');
@@ -7449,6 +7480,18 @@ $('#clientTypeNameDocHrDoc').multiselect({
     nonSelectedText: 'Select',
     buttonTextAlignment: 'left',
     includeSelectAllOption: true,
+    selectAllText: 'Select All Mandatory',
+    selectAllValue: '-1',
+    allSelectedText: 'All Client Type Mandatory',
+    onInitialized: function () {
+        $('.multiselect-container .multiselect-all label').html('Select All <span class="text-danger">Mandatory</span>');
+    },
+    onSelectAll: function (options) {
+        isAllClientTypeEnabled = true;
+    },
+    onDeselectAll: function (options) {
+        isAllClientTypeEnabled = false;
+    }
 });
 $('#clientSitesDocHrDoc').multiselect({
     maxHeight: 400,
@@ -7470,7 +7513,7 @@ $('#btn_save_hr_settings').on('click', function () {
     allSitesValues.each(function () {
         allValues.push($(this).val());
     });
-    var description = $('#txtHrSettingsDescription').val().trim();
+    var description = $('#txtHrSettingsDescription').val().trim();    
 
     if ($('#list_hrGroups').val() == '') {
         alert('Please Select HrGroups')
@@ -7498,7 +7541,9 @@ $('#btn_save_hr_settings').on('click', function () {
                 'description': $('#txtHrSettingsDescription').val(),
                 'Selectedsites': allValues,
                 'SelectedStates': SelectedStates,
-                'dateType': $('#list_DateType').val()
+                'dateType': $('#list_DateType').val(),
+                'isAllClientTypeMandatory': isAllClientTypeEnabled,
+                'isAllStateMandatory': isAllStateEnabled
             },
             //processData: false,
             //contentType: false,
@@ -7540,6 +7585,13 @@ function displayValidationSummaryHrSettings(errors) {
 }
 //p1-213 document step L Start 
 $('#clientTypeNameDocHrDoc').on('change', function () {
+    // If user manually unselects any item after selecting all
+    var total = $('#clientTypeNameDocHrDoc option').length;
+    var selected = $('#clientTypeNameDocHrDoc option:selected').length;
+    isAllClientTypeEnabled = (total === selected);
+
+    //alert('isAllClientTypeEnabled (onchange function): ' + isAllClientTypeEnabled);
+
     let clientTypeIds = $(this).val().join(';');
     const option = clientTypeIds;
     $('#clientSitesDocHrDoc').html('');
@@ -7561,13 +7613,18 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
         data.map(function (site) {
             $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
         });
-        
-        clientSiteControl.multiselect('rebuild');
-
+        if (isAllClientTypeEnabled === true) {            
+            $('#clientSitesDocHrDoc').multiselect('selectAll', false);
+            $('#clientSitesDocHrDoc').multiselect('updateButtonText');
+            $('#clientSitesDocHrDoc').trigger('change');
+            //alert('calling clientSitesDocHrDoc');
+        }
+        $('#clientSitesDocHrDoc').multiselect('rebuild');
     });
 });
 
 $('#clientSitesDocHrDoc').on('change', function () {
+    //alert('clientSitesDocHrDoc triggered');
     const selectedValues = $(this).val().join(';').split(';');
     selectedValues.forEach(function (value) {
         if (value !== '') {
@@ -7618,7 +7675,25 @@ $('#HrState').multiselect({
     buttonWidth: '100%',
     nonSelectedText: 'Select',
     buttonTextAlignment: 'left',
-    includeSelectAllOption: true
+    includeSelectAllOption: true,
+    selectAllText: 'Select All Mandatory',
+    selectAllValue: '-1',
+    allSelectedText:'All State Mandatory',
+    onInitialized: function () {
+        $('.multiselect-container .multiselect-all label').html('Select All <span class="text-danger">Mandatory</span>');
+    },
+    onSelectAll: function (options) {
+        isAllStateEnabled = true;
+    },
+    onDeselectAll: function (options) {
+        isAllStateEnabled = false;
+    },
+    onChange: function () {
+        // If user manually unselects any item after selecting all
+        var total = $('#HrState option').length;
+        var selected = $('#HrState option:selected').length;
+        isAllStateEnabled = (total === selected);
+    }
 });
 
 
