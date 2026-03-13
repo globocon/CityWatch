@@ -1810,7 +1810,7 @@ namespace CityWatch.Web.API
             if (!string.IsNullOrEmpty(summaryNotes))
             {
                 var lines = summaryNotes.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                summaryNotes = string.Join("<br/>", lines.Take(3));
+                summaryNotes = string.Join("<br/>", lines);
             }
 
             string summaryHtml = $@"
