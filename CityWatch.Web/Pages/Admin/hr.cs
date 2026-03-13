@@ -1930,7 +1930,8 @@ namespace CityWatch.Web.Pages.Admin
         //    return new JsonResult(new { status, message = new[] { message }, id });
         //}
 
-        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, string[] SelectedStates, HrDateType dateType)
+        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, 
+            string[] SelectedStates, HrDateType dateType,bool isAllClientTypeMandatory,bool isAllStateMandatory)
         {
             var status = true;
             var messages = new List<string>();
@@ -1945,8 +1946,15 @@ namespace CityWatch.Web.Pages.Admin
                     ReferenceNoNumberId = refNoNumberId,
                     ReferenceNoAlphabetId = refNoAlphabetId,
                     Description = description,
-                    DateType = dateType
+                    DateType = dateType,
+                    IsAllClientTypeEnabled = isAllClientTypeMandatory,
+                    IsAllStateEnabled = isAllStateMandatory
                 };
+
+                if (isAllStateMandatory)
+                {
+                    SelectedStates = _guardLogDataProvider.GetStates().Select(x => x.Name).ToArray();
+                }
 
                 _guardLogDataProvider.SaveHRSettings(hrSettingsnew, Selectedsites, SelectedStates);
 

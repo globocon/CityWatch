@@ -437,6 +437,8 @@ namespace CityWatch.Data.Providers
 
         public void SaveClientSite(ClientSite clientSite)
         {
+            bool isNewSite = false;
+            ClientSite newClientSite = new ClientSite(); // to get new clientsite id after saving the new site and to add in HrSettingsClientSites if there are any HrSettings with IsAllClientTypeEnabled flag enabled.
             if (clientSite == null)
                 throw new ArgumentNullException();
 
@@ -451,28 +453,28 @@ namespace CityWatch.Data.Providers
             /*update the status and kpi settings value end */
             if (clientSite.Id == -1)
             {
-                _context.ClientSites.Add(new ClientSite()
-                {
-                    Name = clientSite.Name,
-                    TypeId = clientSite.TypeId,
-                    Emails = clientSite.Emails,
-                    Address = clientSite.Address,
-                    State = clientSite.State,
-                    Billing = clientSite.Billing,
-                    Gps = clientSite.Gps,
-                    Status = clientSite.Status,
-                    StatusDate = clientSite.StatusDate,
-                    SiteEmail = clientSite.SiteEmail,
-                    DuressEmail = clientSite.DuressEmail,
-                    DuressSms = clientSite.DuressSms,
-                    LandLine = "+61 (3)",
-                    DataCollectionEnabled = true,
-                    IsActive = true,
-                    IsDosDontList = clientSite.IsDosDontList,
-                    UploadFusionLog = clientSite.UploadFusionLog,
-                });
+                newClientSite.Name = clientSite.Name;
+                newClientSite.TypeId = clientSite.TypeId;
+                newClientSite.Emails = clientSite.Emails;
+                newClientSite.Address = clientSite.Address;
+                newClientSite.State = clientSite.State;
+                newClientSite.Billing = clientSite.Billing;
+                newClientSite.Gps = clientSite.Gps;
+                newClientSite.Status = clientSite.Status;
+                newClientSite.StatusDate = clientSite.StatusDate;
+                newClientSite.SiteEmail = clientSite.SiteEmail;
+                newClientSite.DuressEmail = clientSite.DuressEmail;
+                newClientSite.DuressSms = clientSite.DuressSms;
+                newClientSite.LandLine = "+61 (3)";
+                newClientSite.DataCollectionEnabled = true;
+                newClientSite.IsActive = true;
+                newClientSite.IsDosDontList = clientSite.IsDosDontList;
+                newClientSite.UploadFusionLog = clientSite.UploadFusionLog;
+
+                _context.ClientSites.Add(newClientSite);
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
+                isNewSite = true;
             }
             else
             {
@@ -497,11 +499,28 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
 
-            if (gpsHasChanged && !string.IsNullOrEmpty(clientSite.Gps))
-                CreateGpsImage(clientSite);
+            // Adding new site to HrSettingsClientSites when a new site is created and if there are any HrSettings with IsAllClientTypeEnabled flag enabled.
+            if (isNewSite)
+            {
+                var hrSettingsSites = _context.HrSettings.Where(x => x.IsAllClientTypeEnabled).ToList();
+                foreach (var hrid in hrSettingsSites)
+                {
+                    _context.HrSettingsClientSites.Add(new HrSettingsClientSites
+                    {
+                        HrSettingsId = hrid.Id,
+                        ClientSiteId = newClientSite.Id
+                    });
+                }
+                _context.SaveChanges();
 
-
-
+                if (gpsHasChanged && !string.IsNullOrEmpty(newClientSite.Gps))
+                    CreateGpsImage(newClientSite);
+            }
+            else
+            {
+                if (gpsHasChanged && !string.IsNullOrEmpty(clientSite.Gps))
+                    CreateGpsImage(clientSite);
+            }
 
         }
 
@@ -518,6 +537,8 @@ namespace CityWatch.Data.Providers
             //_context.ClientSites.Remove(clientSiteToDelete);
             clientSiteToDelete.IsActive = false;
             _context.SaveChanges();
+
+
         }
 
         public List<ClientSiteKpiSetting> GetClientSiteKpiSettings()

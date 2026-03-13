@@ -443,6 +443,12 @@ namespace CityWatch.Data.Providers
 
         public List<State> GetStates()
         {
+            /*
+            Note: 
+            1. If an new state is added then this needs to be manually added in table HrSettingsClientStates for all hrid which  has IsAllStateEnabled
+               in the table HrSettings             
+            2. Check if these needs to be added in GuardLogDataProvider.GetStates() method
+            */
             return new List<State>()
             {
                 new State() { Name = "ACT" },
@@ -1364,7 +1370,6 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .Include(z => z.hrSettingsClientStates)
-                .Include(z => z.hrSettingsClientTypes)
                 .Include(z => z.hrSettingsClientSites)
                 .ThenInclude(y => y.ClientSite)
                 .ThenInclude(y => y.ClientType)
@@ -1373,6 +1378,7 @@ namespace CityWatch.Data.Providers
 
 
         }
+                
         public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId)
         {
             var distinctClientSiteIds = _context.GuardLogins

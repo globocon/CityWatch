@@ -1381,13 +1381,12 @@ namespace CityWatch.Web.Pages.Admin
 
                     typeId3[i] = Convert.ToInt32(item);
                     i++;
-
-
                 }
-
-                return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => typeId == null || typeId3.Contains(x.TypeId)).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+                var rtn = _guardLogDataProvider.GetAllClientSites().Where(x => (typeId == null || typeId3.Contains(x.TypeId)) && x.IsActive).OrderBy(z => z.Name).ThenBy(z => z.TypeId);                
+                return new JsonResult(rtn);
             }
-            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+            var rtn2 = _guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0 && x.IsActive).OrderBy(z => z.Name).ThenBy(z => z.TypeId);
+            return new JsonResult(rtn2);
         }
         //p1 - 202 site allocation-start
         public JsonResult OnGetAreaReportFields(int typeId)
