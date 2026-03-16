@@ -4563,7 +4563,7 @@ $('#btnGuardLoginTrainingAndAssessment').on('click', function () {
 });
 function LoggingIntoTrainingAndAssessment( guId)
 {
-        $('#txt_guardKey').val('');
+    $('#txt_guardKeyForTraining').val('');
     $('#txt_guardKeyNewPIN').val('');
     $('#GuardLog_GuardLogin_GuardId').val(guId);
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
@@ -4592,9 +4592,15 @@ function LoggingIntoTrainingAndAssessment( guId)
 
     });
 }
+$('#txt_guardKeyForTraining').on('keypress', function (e) {
+    if (e.which === 13) { // Enter key
+        e.preventDefault();
+        $('#btnGuardHrUpdateForTraining').click();
+    }
+});
 $('#btnGuardHrUpdateForTraining').on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
-    const securityLicenseNo = $('#txt_guardKey').val();
+    const securityLicenseNo = $('#txt_guardKeyForTraining').val();
     if (securityLicenseNo === '') {
         displayGuardValidationSummary('GuardLoginValidationSummaryHR', 'Please enter PIN ');
     }
@@ -4612,7 +4618,7 @@ $('#btnGuardHrUpdateForTraining').on('click', function () {
         }).done(function (result) {
 
             if (result.accessPermission) {
-
+               
                 $('#modelGuardLoginForHrUpdate').modal('hide');
                 $('#Guard_Id1').val($('#GuardLog_GuardLogin_GuardId').val());
                 updateLanguagesDropdown();

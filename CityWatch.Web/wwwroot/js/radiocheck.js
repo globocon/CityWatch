@@ -1847,7 +1847,12 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
         displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', 'Invalid PIN. It must be between 4 and 6 characters.');
     }
 });
-
+$('#txt_guardKey').on('keypress', function (e) {
+    if (e.which === 13) { // Enter key
+        e.preventDefault();
+        $('#btnGuardHrUpdate').click();
+    }
+});
 
 
 $('#btnGuardHrUpdate').on('click', function () {
