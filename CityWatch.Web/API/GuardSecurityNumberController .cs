@@ -235,6 +235,211 @@ namespace CityWatch.Web.API
 
             return hrGroupStatusesNew;
         }
+
+        [HttpGet("CheckIfPINSetForTheGuard")]
+        public IActionResult CheckIfPINSetForTheGuard(int guardId)
+        {
+            var AccessPermission = false;
+            string SuccessMessage = string.Empty;
+            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+            var firstGuard = guard.FirstOrDefault();
+            if (firstGuard != null && firstGuard.Pin != null)
+            {
+                SuccessMessage = "Pin alerady Set ";
+            }
+            else
+            {
+                AccessPermission = true;
+                SuccessMessage = "No PIN Set for you";
+            }
+
+            return Ok(new { data = AccessPermission, message = SuccessMessage });
+        }
+
+        public class SaveNewPINRequest
+        {
+            public int guardId { get; set; }
+            public string newPin { get; set; }
+        }
+
+        [HttpPost("SaveNewPINSetForTheGuard")]
+        public IActionResult SaveNewPINSetForTheGuard([FromBody] SaveNewPINRequest request)
+        {
+            var AccessPermission = false;
+            string SuccessMessage = string.Empty;
+            if (!string.IsNullOrEmpty(request.newPin))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(request.guardId);
+                var firstGuard = guard.FirstOrDefault();
+                if (firstGuard != null && firstGuard.Pin != null)
+                {
+                    SuccessMessage = "Pin alerady Set ";
+                }
+                else
+                {
+                    _guardDataProvider.SetGuardNewPIN(request.guardId, request.newPin);
+                    AccessPermission = true;
+                    SuccessMessage = "New PIN Set for you";
+                }
+            }
+            else
+            {
+                SuccessMessage = "Enter your New PIN";
+            }
+
+            return Ok(new { data = AccessPermission, message = SuccessMessage });
+        }
+
+        public class ResetPinRequest
+        {
+            public int guardId { get; set; }
+            public string siteName { get; set; }
+        }
+
+        [HttpPost("ResetGaurdHrPin")]
+        public IActionResult ResetGaurdHrPin([FromBody] ResetPinRequest request)
+        {
+            var message = string.Empty;
+            var success = false;
+            var guard = _guardDataProvider.GetGuards().FirstOrDefault(z => z.Id == request.guardId);
+
+            if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
+            {
+                var emailBody = GetPasswordResetEmail(guard.Name, guard.Pin, request.siteName);
+                SendEmailNew(emailBody, guard.Email);
+
+                message = $"PIN sent to the email ID: {guard.Email}";
+                success = true;
+            }
+            else
+            {
+                message = "Invalid guard details or missing email/PIN.";
+                success = false;
+            }
+
+            return Ok(new { data = success, message = message });
+        }
+
+        private void SendEmailNew(string mailBodyHtml, string ToAddress)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+
+            var message = new MimeMessage();
+            if (fromAddress.Length > 1) {
+                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            } else {
+                 message.From.Add(new MailboxAddress(fromAddress[0], fromAddress[0]));
+            }
+
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in toAddressNew)
+                {
+                    if (!string.IsNullOrWhiteSpace(address) && MailboxAddress.TryParse(address.Trim(), out var mailbox))
+                        message.To.Add(mailbox);
+                }
+            }
+            if (ToAddress != null && ToAddress != "")
+            {
+                var toAddressNew = ToAddress.Split(',');
+                foreach (var address in toAddressNew)
+                {
+                    if (!string.IsNullOrWhiteSpace(address) && MailboxAddress.TryParse(address.Trim(), out var mailbox))
+                    {
+                        if (!message.To.Contains(mailbox))
+                        {
+                            message.To.Add(mailbox);
+                        }
+                    }
+                }
+            }
+
+            message.Subject = "HR Document PIN Reset";
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = mailBodyHtml
+            };
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
+
+        public string GetPasswordResetEmail(string userName, string temporaryPassword, string siteName)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("<!DOCTYPE html>");
+            sb.AppendLine("<html>");
+            sb.AppendLine("<head>");
+            sb.AppendLine("<style>");
+            sb.AppendLine("body {");
+            sb.AppendLine("    font-family: Arial, sans-serif;");
+            sb.AppendLine("    line-height: 1.6;");
+            sb.AppendLine("    color: #333;");
+            sb.AppendLine("    background-color: #f9f9f9;");
+            sb.AppendLine("    margin: 0;");
+            sb.AppendLine("    padding: 0;");
+            sb.AppendLine("}");
+            sb.AppendLine(".email-container {");
+            sb.AppendLine("    width: 100%;");
+            sb.AppendLine("    max-width: 600px;");
+            sb.AppendLine("    margin: 20px auto;");
+            sb.AppendLine("    background-color: #ffffff;");
+            sb.AppendLine("    border: 1px solid #ddd;");
+            sb.AppendLine("    padding: 20px;");
+            sb.AppendLine("    border-radius: 8px;");
+            sb.AppendLine("    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);");
+            sb.AppendLine("}");
+            sb.AppendLine(".email-header {");
+            sb.AppendLine("    text-align: center;");
+            sb.AppendLine("    font-size: 18px;");
+            sb.AppendLine("    font-weight: bold;");
+            sb.AppendLine("    margin-bottom: 20px;");
+            sb.AppendLine("}");
+            sb.AppendLine(".temporary-password {");
+            sb.AppendLine("    font-weight: bold;");
+            sb.AppendLine("    background-color: #f2f2f2;");
+            sb.AppendLine("    padding: 5px 10px;");
+            sb.AppendLine("    border-radius: 5px;");
+            sb.AppendLine("    display: inline-block;");
+            sb.AppendLine("    margin-left: 5px;"); // Slight spacing after the label
+            sb.AppendLine("}");
+            sb.AppendLine(".footer {");
+            sb.AppendLine("    margin-top: 20px;");
+            sb.AppendLine("    font-size: 12px;");
+            sb.AppendLine("    color: #666;");
+            sb.AppendLine("    text-align: center;");
+            sb.AppendLine("}");
+            sb.AppendLine("</style>");
+            sb.AppendLine("</head>");
+            sb.AppendLine("<body>");
+            sb.AppendLine("<div class=\"email-container\">");
+            sb.AppendLine("    <div class=\"email-header\">");
+            sb.AppendLine("        HR PIN Reset Request");
+            sb.AppendLine("    </div>");
+            sb.AppendLine($"    <p>Hi {userName},</p>");
+            sb.AppendLine($"    <p>Here is your HR PIN: <span class=\"temporary-password\">{temporaryPassword}</span></p>");
+            sb.AppendLine($"    <p>Logged in Site: <span class=\"temporary-password\">{siteName}</span></p>");
+            sb.AppendLine("    <div class=\"footer\">");
+            sb.AppendLine("        <p>If you have any questions, please contact our support team.</p>");
+            sb.AppendLine($"        <p>&copy; {DateTime.Today.Year} C4i System. All rights reserved.</p>");
+            sb.AppendLine("    </div>");
+            sb.AppendLine("</div>");
+            sb.AppendLine("</body>");
+            sb.AppendLine("</html>");
+            return sb.ToString();
+        }
         private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> selectedList)
         {
             var today = DateTime.Now;
