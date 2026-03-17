@@ -1319,9 +1319,110 @@
                                         </select>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                         <div class="row">
+                            <div class="col-md-12">
+                                <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                    </li>
+                                   
+                                </ul>
+                                <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                    <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                         </div>
+                                    </div>
+                                    <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                         </div>
+                                    </div>
+                                    <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                         </div>
+                                    </div>
+                               </div>
+
+                             </div>
+
                             <div class="col-md-12">
                                 <div class="text-right">
                                     <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
@@ -1332,7 +1433,7 @@
                                 </div>
                             </div>
                             <div class="col-md-12">
-                                <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                            @*     <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                     <thead>
                                         <tr>
                                             <th rowspan="2" style="display:none"></th>
@@ -1346,7 +1447,7 @@
                                             <th rowspan="2"></th>
                                         </tr>
                                     </thead>
-                                </table>
+                                </table> *@
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                 <div id="ClassroomLocationDiv" style="display:none">
@@ -1690,6 +1791,106 @@
                                 </div>
                             </div>
                             <div class="row">
+
+                                <div class="col-md-12">
+                                    <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                        </li>
+
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                        </li>
+
+                                    </ul>
+                                    <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                        <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="text-right">
+                                                        <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="text-right">
+                                                        <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="text-right">
+                                                        <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
                                 <div class="col-md-12">
                                     <div class="text-right">
                                         <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
@@ -1699,7 +1900,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-12">
-                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                    @* <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                         <thead>
                                             <tr>
                                                 <th rowspan="2" style="display:none"></th>
@@ -1712,7 +1913,7 @@
                                                 <th rowspan="2"></th>
                                             </tr>
                                         </thead>
-                                    </table>
+                                    </table> *@
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                     <div id="ClassroomLocationDiv" style="display:none">
@@ -2308,6 +2509,105 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
+                                        <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                            </li>
+
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                            </li>
+
+                                        </ul>
+                                        <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                            <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th rowspan="2" style="display:none"></th>
+
+                                                                        <th colspan="2">Reference No</th>
+                                                                        <th rowspan="2">Description</th>
+                                                                        <th rowspan="2">Date Type</th>
+                                                                        <th rowspan="2">State</th>
+                                                                        <th rowspan="2">Site</th>
+                                                                        <th rowspan="2"></th>
+                                                                        <th rowspan="2"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12">
                                         <div class="text-right">
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
@@ -2316,7 +2616,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                       @*  <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                             <thead>
                                                 <tr>
                                                     <th rowspan="2" style="display:none"></th>
@@ -2329,7 +2629,7 @@
                                                     <th rowspan="2"></th>
                                                 </tr>
                                             </thead>
-                                        </table>
+                                        </table> *@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                         <div id="ClassroomLocationDiv" style="display:none">
@@ -2644,6 +2944,105 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
+                                <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                    </li>
+                                   
+                                </ul>
+                                <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                    <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                         </div>
+                                    </div>
+                                    <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                         </div>
+                                    </div>
+                                    <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="text-right">
+                                                    <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowspan="2" style="display:none"></th>
+                                                               
+                                                                <th colspan="2">Reference No</th>
+                                                                <th rowspan="2">Description</th>
+                                                                <th rowspan="2">Date Type</th>
+                                                                <th rowspan="2">State</th>
+                                                                <th rowspan="2">Site</th>
+                                                                <th rowspan="2"></th>
+                                                                <th rowspan="2"></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                         </div>
+                                    </div>
+                               </div>
+
+                             </div>
+                                    <div class="col-md-12">
                                         <div class="text-right">
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
@@ -2652,7 +3051,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                        @* <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                             <thead>
                                                 <tr>
                                                     <th rowspan="2" style="display:none"></th>
@@ -2665,7 +3064,7 @@
                                                     <th rowspan="2"></th>
                                                 </tr>
                                             </thead>
-                                        </table>
+                                        </table> *@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                         <div id="ClassroomLocationDiv" style="display:none">
@@ -2980,6 +3379,105 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
+                                        <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                            </li>
+
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                            </li>
+
+                                        </ul>
+                                        <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                            <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th rowspan="2" style="display:none"></th>
+
+                                                                        <th colspan="2">Reference No</th>
+                                                                        <th rowspan="2">Description</th>
+                                                                        <th rowspan="2">Date Type</th>
+                                                                        <th rowspan="2">State</th>
+                                                                        <th rowspan="2">Site</th>
+                                                                        <th rowspan="2"></th>
+                                                                        <th rowspan="2"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12">
                                         <div class="text-right">
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
@@ -2988,7 +3486,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                        @* <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                             <thead>
                                                 <tr>
                                                     <th rowspan="2" style="display:none"></th>
@@ -3001,7 +3499,7 @@
                                                     <th rowspan="2"></th>
                                                 </tr>
                                             </thead>
-                                        </table>
+                                        </table> *@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                         <div id="ClassroomLocationDiv" style="display:none">
@@ -4073,6 +4571,105 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
+                                        <ul class="nav nav-tabs" id="guardHrGroupSettingsTab" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="guardHr1_tab" data-toggle="tab" href="#hrGroupHR1" role="tab" aria-controls="hrGroupHR1" aria-selected="true">HR1 (C4i)</a>
+                                            </li>
+
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr2_tab" data-toggle="tab" href="#hrGroupHR2" role="tab" aria-controls="hrGroupHR2" aria-selected="false">HR2 (Client)</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="guardHr3_tab" data-toggle="tab" href="#hrGroupHR3" role="tab" aria-controls="hrGroupHR3" aria-selected="false">HR3 (Special)</a>
+                                            </li>
+
+                                        </ul>
+                                        <div class="tab-content" id="guardHrGroupSettingsTabContent">
+                                            <div class="tab-pane fade show active py-3" id="hrGroupHR1" role="tabpanel" aria-labelledby="guardHr1_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr1_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <table class="table table-bordered table-sm" width="100%" id="tbl_hr1_settings">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th rowspan="2" style="display:none"></th>
+
+                                                                        <th colspan="2">Reference No</th>
+                                                                        <th rowspan="2">Description</th>
+                                                                        <th rowspan="2">Date Type</th>
+                                                                        <th rowspan="2">State</th>
+                                                                        <th rowspan="2">Site</th>
+                                                                        <th rowspan="2"></th>
+                                                                        <th rowspan="2"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR2" role="tabpanel" aria-labelledby="guardHr2_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr2_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr2_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade  py-3" id="hrGroupHR3" role="tabpanel" aria-labelledby="guardHr3_tab">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="text-right">
+                                                            <button class="btn btn-success mb-3" id="add_hr3_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr3_settings">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th rowspan="2" style="display:none"></th>
+
+                                                                    <th colspan="2">Reference No</th>
+                                                                    <th rowspan="2">Description</th>
+                                                                    <th rowspan="2">Date Type</th>
+                                                                    <th rowspan="2">State</th>
+                                                                    <th rowspan="2">Site</th>
+                                                                    <th rowspan="2"></th>
+                                                                    <th rowspan="2"></th>
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12">
                                         <div class="text-right">
                                             <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                                             <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
@@ -4081,7 +4678,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                      @*   <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
                                             <thead>
                                                 <tr>
                                                     <th rowspan="2" style="display:none"></th>
@@ -4094,7 +4691,7 @@
                                                     <th rowspan="2"></th>
                                                 </tr>
                                             </thead>
-                                        </table>
+                                        </table> *@
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                         <table class="table table-bordered table-sm" width="100%" id="tbl_language"></table>
                                         <div id="ClassroomLocationDiv" style="display:none">

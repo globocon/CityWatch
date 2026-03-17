@@ -2005,9 +2005,10 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetHRSettings()
+        public JsonResult OnGetHRSettings(int hrGroupId)
         {
             var jresult = _configDataProvider.GetHRSettings()
+            .Where(x=>x.HRGroupId==hrGroupId)
             .Select(z => HrDoumentViewModel.FromDataModel(z))
             .OrderBy(x => x.GroupName)
             .ThenBy(x => x.referenceNo)
