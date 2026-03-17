@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Enums;
@@ -1512,11 +1512,14 @@ namespace CityWatch.Web.Services
 
             var previousDayLogs = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId);
 
+            // p7#136 -Update to midnight logic start
             var logsToCopy = previousDayLogs.Where(z => !z.ExitTime.HasValue &&
-                ((kvlFieldsToLookup.TryGetValue("Law Enforcement", out int idLawEnforce) && z.PersonType == idLawEnforce) ||
+                (z.EntryTime.HasValue ||
+                (kvlFieldsToLookup.TryGetValue("Law Enforcement", out int idLawEnforce) && z.PersonType == idLawEnforce) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Services", out int idEms) && z.PersonType == idEms) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Situation", out int idEmSituation) && z.EntryReason == idEmSituation) ||
                     !string.IsNullOrEmpty(z.KeyNo)));
+            // p7#136 -Update to midnight logic end
 
 
 
