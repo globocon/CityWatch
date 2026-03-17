@@ -6002,10 +6002,10 @@ gridHr1Settings = $('#tbl_hr1_settings').grid({
         { field: 'id', hidden: true },
         
         { field: 'referenceNo', width: '10%' },
-        { field: 'description', width: '30%' },
+        { field: 'description', width: '25%' },
         { field: 'dateTypeName', title: 'Date Type', width: '10%' },
-        { field: 'states' },
-        { field: 'clientSitesSummary' },
+        { field: 'states', width: '10%' },
+        { field: 'clientSitesSummary', width: '20%' },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
         { width: '5%', renderer: hrgroupEditBanButtonRenderer },
 
@@ -6059,10 +6059,10 @@ gridHr2Settings = $('#tbl_hr2_settings').grid({
     columns: [
         { field: 'id', hidden: true },
         { field: 'referenceNo', width: '10%' },
-        { field: 'description', width: '30%' },
+        { field: 'description', width: '25%' },
         { field: 'dateTypeName', title: 'Date Type', width: '10%' },
-        { field: 'states' },
-        { field: 'clientSitesSummary' },
+        { field: 'states', width: '10%' },
+        { field: 'clientSitesSummary', width: '20%' },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
         { width: '5%', renderer: hrgroupEditBanButtonRenderer },
 
@@ -6116,10 +6116,10 @@ gridHr3Settings = $('#tbl_hr3_settings').grid({
     columns: [
         { field: 'id', hidden: true },
         { field: 'referenceNo', width: '10%' },
-        { field: 'description', width: '30%' },
+        { field: 'description', width: '25%' },
         { field: 'dateTypeName', title: 'Date Type', width: '10%' },
-        { field: 'states' },
-        { field: 'clientSitesSummary' },
+        { field: 'states', width: '10%' },
+        { field: 'clientSitesSummary', width: '20%' },
         { width: '5%', renderer: hrgroupLockButtonRenderer },
         { width: '5%', renderer: hrgroupEditBanButtonRenderer },
 
