@@ -5870,7 +5870,10 @@ $('#cr_reportlogo_upload').on('change', function () {
 });
 /*for adding a reportlogo-end*/
 /*p1-191 hr files task 3-start*/
-let gridHrSettings;
+/*let gridHrSettings;*/
+let gridHr1Settings;
+let gridHr2Settings;
+let gridHr3Settings;
 //if ($('#tbl_hr_settings').length === 1) {
 //    gridHrSettings = new DataTable('#tbl_hr_settings', {
 //        paging: false,
@@ -5926,8 +5929,66 @@ let gridHrSettings;
 //    });
 //}
 
-gridHrSettings = $('#tbl_hr_settings').grid({
-    dataSource: '/Admin/GuardSettings?handler=HRSettings',
+//gridHrSettings = $('#tbl_hr_settings').grid({
+//    dataSource: '/Admin/GuardSettings?handler=HRSettings',
+//    uiLibrary: 'bootstrap4',
+//    iconsLibrary: 'fontawesome',
+//    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+//    showHiddenColumnsAsDetails: false,
+//    primaryKey: 'id',
+//    icons: {
+//        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+//        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+//    },
+//    columns: [
+//        { field: 'id', hidden: true },
+//        { field: 'groupName', width: '10%' }, // Show the HR Group column
+//        { field: 'referenceNo', width: '10%' },
+//        { field: 'description', width: '30%' },
+//        { field: 'dateTypeName', title: 'Date Type', width: '10%' },
+//        { field: 'states' },
+//        { field: 'clientSitesSummary' },
+//        { width: '5%', renderer: hrgroupLockButtonRenderer },
+//        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
+
+//        { width: '10%', renderer: hrgroupButtonRenderer },
+//    ],
+//    dataBound: function (e, records, totalRecords) {
+//        var tbody = $(e.target).find('tbody');
+//        var rows = tbody.find('tr');
+
+//        var lastGroupValue = null;
+
+//        rows.each(function (index, row) {
+//            var expandbutton
+
+//            var currentGroupValue = $(row).find('td:eq(2)').text();
+//            if (currentGroupValue !== lastGroupValue) {
+//                lastGroupValue = currentGroupValue;
+
+//                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
+//                headerRow.css('background-color', '#CCCCCC');
+//                $(row).before(headerRow);
+//            }
+//        });
+//    },
+//    initialized: function (e) {
+//        // Optionally, you can modify the appearance or behavior after the grid is initialized
+//        $('#tbl_hr_settings thead tr th:last')
+//            .prev()
+//            .prev()// Select the column before the last
+//            .addClass('text-center')
+//            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+//        $('#tbl_hr_settings thead tr th:last')
+//            .prev()
+
+//            .addClass('text-center')
+//            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
+//        $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+//    }
+//});
+gridHr1Settings = $('#tbl_hr1_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings&&hrGroupId= 1',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
@@ -5939,7 +6000,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     },
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', width: '10%' }, // Show the HR Group column
+        
         { field: 'referenceNo', width: '10%' },
         { field: 'description', width: '30%' },
         { field: 'dateTypeName', title: 'Date Type', width: '10%' },
@@ -5950,38 +6011,152 @@ gridHrSettings = $('#tbl_hr_settings').grid({
 
         { width: '10%', renderer: hrgroupButtonRenderer },
     ],
-    dataBound: function (e, records, totalRecords) {
-        var tbody = $(e.target).find('tbody');
-        var rows = tbody.find('tr');
+    //dataBound: function (e, records, totalRecords) {
+    //    var tbody = $(e.target).find('tbody');
+    //    var rows = tbody.find('tr');
 
-        var lastGroupValue = null;
+    //    var lastGroupValue = null;
 
-        rows.each(function (index, row) {
-            var expandbutton
+    //    rows.each(function (index, row) {
+    //        var expandbutton
 
-            var currentGroupValue = $(row).find('td:eq(2)').text();
-            if (currentGroupValue !== lastGroupValue) {
-                lastGroupValue = currentGroupValue;
+    //        var currentGroupValue = $(row).find('td:eq(2)').text();
+    //        if (currentGroupValue !== lastGroupValue) {
+    //            lastGroupValue = currentGroupValue;
 
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
-                headerRow.css('background-color', '#CCCCCC');
-                $(row).before(headerRow);
-            }
-        });
-    },
+    //            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
+    //            headerRow.css('background-color', '#CCCCCC');
+    //            $(row).before(headerRow);
+    //        }
+    //    });
+    //},
     initialized: function (e) {
         // Optionally, you can modify the appearance or behavior after the grid is initialized
-        $('#tbl_hr_settings thead tr th:last')
+        $('#tbl_hr1_settings thead tr th:last')
             .prev()
             .prev()// Select the column before the last
             .addClass('text-center')
             .html('<i class="fa fa-lock" aria-hidden="true"></i>');
-        $('#tbl_hr_settings thead tr th:last')
+        $('#tbl_hr1_settings thead tr th:last')
             .prev()
 
             .addClass('text-center')
             .html('<i class="fa fa-ban" aria-hidden="true"></i>');
-        $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $('#tbl_hr1_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+gridHr2Settings = $('#tbl_hr2_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings&&hrGroupId= 2',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+    showHiddenColumnsAsDetails: false,
+    primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'referenceNo', width: '10%' },
+        { field: 'description', width: '30%' },
+        { field: 'dateTypeName', title: 'Date Type', width: '10%' },
+        { field: 'states' },
+        { field: 'clientSitesSummary' },
+        { width: '5%', renderer: hrgroupLockButtonRenderer },
+        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
+
+        { width: '10%', renderer: hrgroupButtonRenderer },
+    ],
+    //dataBound: function (e, records, totalRecords) {
+    //    var tbody = $(e.target).find('tbody');
+    //    var rows = tbody.find('tr');
+
+    //    var lastGroupValue = null;
+
+    //    rows.each(function (index, row) {
+    //        var expandbutton
+
+    //        var currentGroupValue = $(row).find('td:eq(2)').text();
+    //        if (currentGroupValue !== lastGroupValue) {
+    //            lastGroupValue = currentGroupValue;
+
+    //            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
+    //            headerRow.css('background-color', '#CCCCCC');
+    //            $(row).before(headerRow);
+    //        }
+    //    });
+    //},
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr2_settings thead tr th:last')
+            .prev()
+            .prev()// Select the column before the last
+            .addClass('text-center')
+            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+        $('#tbl_hr2_settings thead tr th:last')
+            .prev()
+
+            .addClass('text-center')
+            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
+        $('#tbl_hr2_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+gridHr3Settings = $('#tbl_hr3_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings&&hrGroupId= 3',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+    showHiddenColumnsAsDetails: false,
+    primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'referenceNo', width: '10%' },
+        { field: 'description', width: '30%' },
+        { field: 'dateTypeName', title: 'Date Type', width: '10%' },
+        { field: 'states' },
+        { field: 'clientSitesSummary' },
+        { width: '5%', renderer: hrgroupLockButtonRenderer },
+        { width: '5%', renderer: hrgroupEditBanButtonRenderer },
+
+        { width: '10%', renderer: hrgroupButtonRenderer },
+    ],
+    //dataBound: function (e, records, totalRecords) {
+    //    var tbody = $(e.target).find('tbody');
+    //    var rows = tbody.find('tr');
+
+    //    var lastGroupValue = null;
+
+    //    rows.each(function (index, row) {
+    //        var expandbutton
+
+    //        var currentGroupValue = $(row).find('td:eq(2)').text();
+    //        if (currentGroupValue !== lastGroupValue) {
+    //            lastGroupValue = currentGroupValue;
+
+    //            var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 10).text(currentGroupValue));
+    //            headerRow.css('background-color', '#CCCCCC');
+    //            $(row).before(headerRow);
+    //        }
+    //    });
+    //},
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr3_settings thead tr th:last')
+            .prev()
+            .prev()// Select the column before the last
+            .addClass('text-center')
+            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
+        $('#tbl_hr3_settings thead tr th:last')
+            .prev()
+
+            .addClass('text-center')
+            .html('<i class="fa fa-ban" aria-hidden="true"></i>');
+        $('#tbl_hr3_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
 let gridHrSettingswithCourseLibrary;
@@ -6120,7 +6295,7 @@ let isLoteAdding = false
 //    }
 //});
 let ucaTreeLock;
-$('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
+$('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#btnLock', function () {
     $('#lockHRRcord').prop('checked', false);
     const userId = $(this).attr('data-doc-id');
     const lockStatus = $(this).attr('data-lock-status');
@@ -6172,7 +6347,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
     $('#user-client-access-modal-lock').modal('show');
 });
 
-$('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
+$('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#btnBan', function () {
     const userId = $(this).attr('data-doc-id');
     let enableStatus = 0;
     let Status = $(this).attr('data-ban-status');
@@ -6193,7 +6368,9 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function () {
-        gridHrSettings.reload();
+        gridHr1Settings.reload();
+        gridHr2Settings.reload();
+        gridHr3Settings.reload();
         gridHrSettingswithCourseLibrary.reload();
         //showStatusNotification(true, 'Saved successfully');
     }).fail(function () {
@@ -6204,7 +6381,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnBan', function () {
 });
 
 
-$('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
+$('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#btnEditHrGroup', function () {
 
 
     $('#loader').show();
@@ -6251,7 +6428,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
 
 
 });
-$('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
+$('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#btnDeleteHrGroup', function () {
     // var data = keyVehicleLog.row($(this).parents('tr')).data();
     if (confirm('Are you sure want to delete this  entry?')) {
         $.ajax({
@@ -6264,7 +6441,9 @@ $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
                 $('#loader').show();
             }
         }).done(function () {
-            gridHrSettings.reload();
+            gridHr1Settings.reload();
+            gridHr2Settings.reload();
+            gridHr3Settings.reload();
             gridHrSettingswithCourseLibrary.reload();
         }).always(function () {
             $('#loader').hide();
@@ -6655,14 +6834,15 @@ $('#hr_settings_fields_types').on('change', function () {
     $('#PayRatesDiv').hide();
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
     if ($('#hr_settings_fields_types').val() == 1) {
-        gridHrSettings.show();
-        gridHrSettings.clear();
-        gridHrSettings.reload();
+        //gridHrSettings.show();
+        //gridHrSettings.clear();
+        //gridHrSettings.reload();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();
+
         $('#add_criticalDocuments').hide();
-        $('#add_hr_settings').show();
+        $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
         $('#add_lote').hide();
@@ -6672,10 +6852,22 @@ $('#hr_settings_fields_types').on('change', function () {
 
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+
+        $('#guardHrGroupSettingsTab').show();
+        $('#guardHrGroupSettingsTabContent').show();
+        gridHr1Settings.show()
+        gridHr1Settings.clear();
+        gridHr1Settings.reload();
+        gridHr2Settings.show()
+        gridHr2Settings.clear();
+        gridHr2Settings.reload();
+        gridHr3Settings.show()
+        gridHr3Settings.clear();
+        gridHr3Settings.reload();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.show();
         gridLicenseTypes.clear();
         gridLicenseTypes.reload();
@@ -6690,11 +6882,17 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
         $('#add_hr_settings').hide();
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.show();
         gridCriticalDocument.reload();
@@ -6707,11 +6905,16 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').hide();
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();
@@ -6722,6 +6925,11 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -6737,7 +6945,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#TimesheetDiv').show();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').hide();
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridCriticalDocument.reload();
@@ -6749,6 +6957,11 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettingswithCourseLibrary.hide();
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
             type: 'GET',
@@ -6763,7 +6976,7 @@ $('#hr_settings_fields_types').on('change', function () {
     }
     else if ($('#hr_settings_fields_types').val() == 6) {
 
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.show();
@@ -6776,10 +6989,15 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
 
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();
@@ -6792,10 +7010,15 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').show();
         $('#ClassroomLocationDiv').show();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
 
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();
@@ -6810,11 +7033,16 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettingswithCourseLibrary.show();
         gridHrSettingswithCourseLibrary.clear();
         gridHrSettingswithCourseLibrary.reload();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
 
     }
     else if ($('#hr_settings_fields_types').val() == 9) {
         $('#PayRatesDiv').show();
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();
@@ -6827,13 +7055,23 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_location').hide();
         $('#ClassroomLocationDiv').hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
     else {
         gridLicenseTypes.hide();
-        gridHrSettings.hide();
+        //gridHrSettings.hide();
         gridLanguage.hide();
         gridClassroomLocation.hide();
         gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -6938,15 +7176,32 @@ $('#clientSitesDoc').multiselect({
     buttonTextAlignment: 'left',
     includeSelectAllOption: true,
 });
-$('#add_hr_settings').on('click', function () {
+$('#add_hr_settings,#add_hr1_settings,#add_hr2_settings,#add_hr3_settings').on('click', function () {
+    var clickedButtonId = this.id;
     var selFieldTypeId = $('#hr_settings_fields_types').val();
     if (!selFieldTypeId) {
         alert('Please select a field type to update');
         return;
     }
     if (selFieldTypeId == 1 || selFieldTypeId == 8) {
-        $('#list_hrGroups').val('');
-        $('#list_ReferenceNoNumber').val('');
+        if (clickedButtonId === "add_hr1_settings") {
+            $('#list_hrGroups').val(1);
+            $('#list_ReferenceNoNumber').val(1);
+        }
+        else if (clickedButtonId === "add_hr2_settings") {
+            $('#list_hrGroups').val(2);
+            $('#list_ReferenceNoNumber').val(2);
+        }
+        else if (clickedButtonId === "add_hr3_settings") {
+            $('#list_hrGroups').val(3);
+            $('#list_ReferenceNoNumber').val(3);
+        }
+        else   {
+            $('#list_hrGroups').val('');
+            $('#list_ReferenceNoNumber').val('');
+        }
+        
+       
         $('#list_ReferenceNoAlphabet').val('');
         $('#txtHrSettingsDescription').val('');
         $('#HrSettings_Id').val('');
@@ -7218,11 +7473,16 @@ $('#tbl_CriticalDocument').on('click', '.del-Cri', function () {
 });
 
 if ($('#hr_settings_fields_types').val() == '') {
-    gridHrSettings.hide();
+    //gridHrSettings.hide();
     gridLicenseTypes.hide();
     gridCriticalDocument.hide();
     gridLanguage.hide();
     gridHrSettingswithCourseLibrary.hide();
+    $('#guardHrGroupSettingsTab').hide();
+    $('#guardHrGroupSettingsTabContent').hide();
+    gridHr1Settings.hide()
+    gridHr2Settings.hide()
+    gridHr3Settings.hide()
 
 }
 
@@ -7511,8 +7771,12 @@ $('#btn_save_hr_settings').on('click', function () {
 
 
                 $('#hrSettingsModal').modal('hide');
-                gridHrSettings.clear();
-                gridHrSettings.reload();
+                gridHr1Settings.clear();
+                gridHr1Settings.reload();
+                gridHr2Settings.clear();
+                gridHr2Settings.reload();
+                gridHr3Settings.clear();
+                gridHr3Settings.reload();
                 gridHrSettingswithCourseLibrary.clear();
                 gridHrSettingswithCourseLibrary.reload();
             } else {
