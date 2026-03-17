@@ -1,11 +1,21 @@
-﻿@page
+@page
 @model CityWatch.Web.Pages.Incident.NotifyModel
 @{
     ViewData["Title"] = Model.ClientNameTitle + " | IR Status";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Notify;
 }
 
+@* p1#Issue352: 17-03-2026 
+   Change logic to show success if report is generated, else show error.
+   Why this change?
+   1. The "Perfect" Scenario: No errors (ErrorMessage is empty) -> Shows Success screen.
+   2. The "Minor Error" Scenario (e.g., email sending failed): ErrorMessage is NOT empty, but ReportGenerated is True -> Shows Success screen and download button.
+   3. The "Fatal Error" Scenario: ErrorMessage is NOT empty, and ReportGenerated is False -> Drops to the 'else' block and shows "Something went wrong".
+*@
+@* 
 @if (string.IsNullOrEmpty(@Model.ErrorMessage))
+*@
+@if (string.IsNullOrEmpty(@Model.ErrorMessage) || Model.ReportGenerated)
 {
     <div class="container text-center">
         <p>
@@ -32,7 +42,8 @@ else
         <p>There were some errors while processing this request. So, the operation is not complete.</p>
         <h5 class="mt-4">Error details:</h5>
         <pre>@Model.ErrorMessage</pre>
-
+        @* p1#Issue352: Commented out the duplicate download button logic Since "Success" page will now catch ALL generated reports. *@
+        @* 
         @if (Model.ReportGenerated)
         {
             <div class="mt-3">
@@ -46,6 +57,7 @@ else
             </div>
             /* New button for Re-use end*/
         }
+        *@
     </div>
 }
 
