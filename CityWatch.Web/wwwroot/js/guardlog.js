@@ -9925,6 +9925,12 @@ function GetTimesheetModel(guardLicNo) {
         }
     });
 }
+$('#txt_guardRosterKey').on('keypress', function (e) {
+    if (e.which === 13) { // Enter key
+        e.preventDefault();
+        $('#btnGuardRosterUpdate').click();
+    }
+});
 $('#btnGuardRosterUpdate').on('click', function () {
     clearGuardValidationSummary('GuardRosterValidationSummary');
     const securityLicenseNo = $('#txt_guardRosterKey').val();
