@@ -6671,7 +6671,9 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnDeleteHrGroup', 
                 $('#loader').show();
             }
         }).done(function () {
-            gridHrSettings.reload();
+            gridHr1Settings.reload();
+            gridHr2Settings.reload();
+            gridHr3Settings.reload();
             gridHrSettingswithCourseLibrary.reload();
         }).always(function () {
             $('#loader').hide();
@@ -6704,7 +6706,9 @@ $('#btnSaveUserAccesslock').on('click', function () {
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
-            gridHrSettings.reload();
+            gridHr1Settings.reload();
+            gridHr2Settings.reload();
+            gridHr3Settings.reload();
             gridHrSettingswithCourseLibrary.reload();
             //showStatusNotification(true, 'Saved successfully');
         }).fail(function () {
