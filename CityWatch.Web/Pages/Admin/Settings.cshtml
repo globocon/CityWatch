@@ -219,15 +219,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-2 text-right" @hideTabStyle>
-                        <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
-                    </div>
+                    @if (!isPowerUser)
+                    {
+                        <div class="col-md-2 text-right" >
+                            <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
+                        </div>
 
-                    <div class="col-md-2 text-right">
-                        <a href="#" class="btn btn-primary mb-3" id="btnDownloadClientSiteExcel">Download zip</a>
+                        <div class="col-md-2 text-right">
+                            <a href="#" class="btn btn-primary mb-3" id="btnDownloadClientSiteExcel">Download zip</a>
 
-                    </div>
-
+                        </div>
+                    }
 
                 </div>
                 <div class="row">
@@ -866,7 +868,7 @@
                                     else
                                     {
                                         <div class="col-md-2 text-left mr-5">
-                                                <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel" disabled>Download <i class="fa fa-file-excel-o"></i></a>
+                                            <a href="#" class="btn btn-primary mb-3 disabled" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
                                                 <div id="loader"></div>
                                             </div>
                                     }
