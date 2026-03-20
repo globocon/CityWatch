@@ -7488,9 +7488,11 @@ $('#clientTypeNameDocHrDoc').multiselect({
     },
     onSelectAll: function (options) {
         isAllClientTypeEnabled = true;
+        enableDisableHrSitesAndButton();
     },
     onDeselectAll: function (options) {
         isAllClientTypeEnabled = false;
+        enableDisableHrSitesAndButton();
     }
 });
 $('#clientSitesDocHrDoc').multiselect({
@@ -7589,7 +7591,7 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
     var total = $('#clientTypeNameDocHrDoc option').length;
     var selected = $('#clientTypeNameDocHrDoc option:selected').length;
     isAllClientTypeEnabled = (total === selected);
-
+    enableDisableHrSitesAndButton();
     //alert('isAllClientTypeEnabled (onchange function): ' + isAllClientTypeEnabled);
 
     let clientTypeIds = $(this).val().join(';');
@@ -7636,7 +7638,7 @@ $('#clientSitesDocHrDoc').on('change', function () {
         }
     });
     updateSelectedSitesCountHrDoc();
-
+    enableDisableHrSitesAndButton();
 });
 function updateSelectedSitesCountHrDoc() {
     $('#selectedSitesCountDocHrDoc').text($('#selectedSitesDocHrDoc option').length);
@@ -7647,6 +7649,28 @@ $('#removeSelectedSitesHrDoc').on('click', function () {
     updateSelectedSitesCountHrDoc();
 });
 
+function enableDisableHrSitesAndButton() {
+    const isDisabled = isAllClientTypeEnabled === true;
+
+    // Disable/Enable multiselect properly
+    $('#clientSitesDocHrDoc').prop('disabled', isDisabled);
+    $('#selectedSitesDocHrDoc').prop('disabled', isDisabled);
+    // Normal button
+    $('#removeSelectedSitesHrDoc').prop('disabled', isDisabled);
+
+    if (isDisabled) {
+        $('#clientSitesDocHrDoc').multiselect('disable');
+        $('#selectedSitesDocHrDoc').empty();
+        $('#selectedSitesDocHrDoc').append('<option value="-1">All Selected</option>');
+        $('#selectedSitesCountDocHrDoc').text("All");
+
+    } else {
+        $('#clientSitesDocHrDoc').multiselect('enable');
+        $('#selectedSitesDocHrDoc option[value="-1"]').remove();
+        updateSelectedSitesCountHrDoc();
+    }
+    
+}
 
 function clearCriticalModalHrDoc() {
 
