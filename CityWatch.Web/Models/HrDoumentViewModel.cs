@@ -38,12 +38,21 @@ namespace CityWatch.Web.Models
 
         public static HrDoumentViewModel FromDataModel(HrSettings hrSettings)
         {
+            var _clientsites = hrSettings.hrSettingsClientSites != null ? string.Join("<br>", hrSettings.hrSettingsClientSites.Select(z => z.ClientSite.Name).Distinct()) : string.Empty;
+            var _clientStates = hrSettings.hrSettingsClientStates != null ? string.Join(", ", hrSettings.hrSettingsClientStates.Select(z => z.State.Trim()).Distinct()) : string.Empty;
+            if (hrSettings.IsAllClientTypeEnabled) {
+                _clientsites = "<strong>Select All <span class=\"text-danger\">Mandatory</span></strong>";
+            }
+            if (hrSettings.IsAllStateEnabled)
+            {
+                _clientStates = "<strong>Select All <span class=\"text-danger\">Mandatory</span></strong>";
+            }
             return new HrDoumentViewModel()
             {
                 Id = hrSettings.Id,                
                 ClientTypes = hrSettings.hrSettingsClientSites!=null? string.Join(", ", hrSettings.hrSettingsClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct()):string.Empty,
-                ClientSites = hrSettings.hrSettingsClientSites != null ? string.Join("<br>", hrSettings.hrSettingsClientSites.Select(z => z.ClientSite.Name).Distinct()) : string.Empty,
-                States = hrSettings.hrSettingsClientStates != null ? string.Join(", ", hrSettings.hrSettingsClientStates.Select(z => z.State.Trim()).Distinct()) : string.Empty,
+                ClientSites = _clientsites,
+                States = _clientStates,
                 GroupName = hrSettings.GroupName,
                 referenceNo = hrSettings.ReferenceNo,
                 description= hrSettings.Description,
@@ -51,7 +60,7 @@ namespace CityWatch.Web.Models
                 referenceNoNumberId = hrSettings.ReferenceNoNumberId,
                 referenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId,
                 hrGroupId = hrSettings.HRGroupId,
-                ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty,
+                ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites, hrSettings.IsAllClientTypeEnabled) : string.Empty,
                 hrlock= hrSettings.HRLock,
                 hrbanedit=hrSettings.HRBanEdit,
                 CourseColour = hrSettings.CourseColour,
@@ -74,9 +83,14 @@ namespace CityWatch.Web.Models
             }
         }
 
-        private static string GetFormattedClientSites(IEnumerable<HrSettingsClientSites> hrSettingsClientSites)
+        private static string GetFormattedClientSites(IEnumerable<HrSettingsClientSites> hrSettingsClientSites,bool isAllClientTypeEnabled = false)
         {
             var clientSites = hrSettingsClientSites.Select(x => x.ClientSite.Name).OrderBy(x => x);
+
+            if (isAllClientTypeEnabled)
+            {
+                return "<strong>Select All <span class=\"text-danger\">Mandatory</span></strong>";
+            }
             if (clientSites.Count() == 0)
                 return "";
             if (clientSites.Count() <= 2)
