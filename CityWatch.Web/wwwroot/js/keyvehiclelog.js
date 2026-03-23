@@ -1206,7 +1206,39 @@ $(function () {
             /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
+            var allNotesTbody = $('#kvl-all-notes-grid tbody');
+            allNotesTbody.empty();
+            if (result.keyVehicleLogProfile.notes) {
+                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
+                lines.forEach(function(line) {
+                    if (line.trim() !== '') {
+                        var datePart = '';
+                        var notePart = line;
+                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                        if (match) {
+                            datePart = match[1];
+                            notePart = match[2];
+                        }
+                        var tr = $('<tr></tr>');
+                        tr.append($('<td></td>').text(datePart));
+                        var tdNote = $('<td></td>');
+                        if (notePart.length > 60) {
+                            var shortText = notePart.substring(0, 60) + '...';
+                            var span = $('<span></span>')
+                                .attr('title', notePart)
+                                .attr('data-toggle', 'tooltip')
+                                .text(shortText)
+                                .css('cursor', 'pointer');
+                            tdNote.append(span);
+                        } else {
+                            tdNote.text(notePart);
+                        }
+                        tr.append(tdNote);
+                        allNotesTbody.append(tr);
+                    }
+                });
+                $('[data-toggle="tooltip"]').tooltip();
+            }
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -1435,7 +1467,39 @@ $(function () {
                 /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
                 /*}*/
-                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
+                var allNotesTbody = $('#kvl-all-notes-grid tbody');
+            allNotesTbody.empty();
+            if (result.keyVehicleLogProfile.notes) {
+                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
+                lines.forEach(function(line) {
+                    if (line.trim() !== '') {
+                        var datePart = '';
+                        var notePart = line;
+                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                        if (match) {
+                            datePart = match[1];
+                            notePart = match[2];
+                        }
+                        var tr = $('<tr></tr>');
+                        tr.append($('<td></td>').text(datePart));
+                        var tdNote = $('<td></td>');
+                        if (notePart.length > 60) {
+                            var shortText = notePart.substring(0, 60) + '...';
+                            var span = $('<span></span>')
+                                .attr('title', notePart)
+                                .attr('data-toggle', 'tooltip')
+                                .text(shortText)
+                                .css('cursor', 'pointer');
+                            tdNote.append(span);
+                        } else {
+                            tdNote.text(notePart);
+                        }
+                        tr.append(tdNote);
+                        allNotesTbody.append(tr);
+                    }
+                });
+                $('[data-toggle="tooltip"]').tooltip();
+            }
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -1656,7 +1720,39 @@ $(function () {
             /*if (!$('#Product').val()) {*/
             $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
+            var allNotesTbody = $('#kvl-all-notes-grid tbody');
+            allNotesTbody.empty();
+            if (result.keyVehicleLogProfile.notes) {
+                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
+                lines.forEach(function(line) {
+                    if (line.trim() !== '') {
+                        var datePart = '';
+                        var notePart = line;
+                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                        if (match) {
+                            datePart = match[1];
+                            notePart = match[2];
+                        }
+                        var tr = $('<tr></tr>');
+                        tr.append($('<td></td>').text(datePart));
+                        var tdNote = $('<td></td>');
+                        if (notePart.length > 60) {
+                            var shortText = notePart.substring(0, 60) + '...';
+                            var span = $('<span></span>')
+                                .attr('title', notePart)
+                                .attr('data-toggle', 'tooltip')
+                                .text(shortText)
+                                .css('cursor', 'pointer');
+                            tdNote.append(span);
+                        } else {
+                            tdNote.text(notePart);
+                        }
+                        tr.append(tdNote);
+                        allNotesTbody.append(tr);
+                    }
+                });
+                $('[data-toggle="tooltip"]').tooltip();
+            }
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -4507,7 +4603,39 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
+                var allNotesTbody = $('#kvl-all-notes-grid tbody');
+                allNotesTbody.empty();
+                if (result.keyVehicleLogProfile.notes) {
+                    var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
+                    lines.forEach(function(line) {
+                        if (line.trim() !== '') {
+                            var datePart = '';
+                            var notePart = line;
+                            var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                            if (match) {
+                                datePart = match[1];
+                                notePart = match[2];
+                            }
+                            var tr = $('<tr></tr>');
+                            tr.append($('<td></td>').text(datePart));
+                            var tdNote = $('<td></td>');
+                            if (notePart.length > 60) {
+                                var shortText = notePart.substring(0, 60) + '...';
+                                var span = $('<span></span>')
+                                    .attr('title', notePart)
+                                    .attr('data-toggle', 'tooltip')
+                                    .text(shortText)
+                                    .css('cursor', 'pointer');
+                                tdNote.append(span);
+                            } else {
+                                tdNote.text(notePart);
+                            }
+                            tr.append(tdNote);
+                            allNotesTbody.append(tr);
+                        }
+                    });
+                    $('[data-toggle="tooltip"]').tooltip();
+                }
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -7338,7 +7466,39 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
+                var allNotesTbody = $('#kvl-all-notes-grid tbody');
+            allNotesTbody.empty();
+            if (result.keyVehicleLogProfile.notes) {
+                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
+                lines.forEach(function(line) {
+                    if (line.trim() !== '') {
+                        var datePart = '';
+                        var notePart = line;
+                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                        if (match) {
+                            datePart = match[1];
+                            notePart = match[2];
+                        }
+                        var tr = $('<tr></tr>');
+                        tr.append($('<td></td>').text(datePart));
+                        var tdNote = $('<td></td>');
+                        if (notePart.length > 60) {
+                            var shortText = notePart.substring(0, 60) + '...';
+                            var span = $('<span></span>')
+                                .attr('title', notePart)
+                                .attr('data-toggle', 'tooltip')
+                                .text(shortText)
+                                .css('cursor', 'pointer');
+                            tdNote.append(span);
+                        } else {
+                            tdNote.text(notePart);
+                        }
+                        tr.append(tdNote);
+                        allNotesTbody.append(tr);
+                    }
+                });
+                $('[data-toggle="tooltip"]').tooltip();
+            }
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
