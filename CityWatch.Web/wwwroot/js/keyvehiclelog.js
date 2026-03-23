@@ -81,6 +81,102 @@ $(function () {
         });
     }
     //p7-137--pax-start
+    //    function populateAllNotesGrid(notes) {
+        var allNotesTbody = #kvl-all-notes-grid tbody;
+        allNotesTbody.empty();
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            #kvl-all-notes-grid.DataTable().destroy();
+        }
+
+        if (notes) {
+            var lines = notes.split(/\r?\n/);
+            lines.forEach(function(line) {
+                if (line.trim() !== '') {
+                    var datePart = '';
+                    var notePart = line;
+                    var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                    if (match) {
+                        datePart = match[1];
+                        notePart = match[2];
+                    }
+                    var tr = <tr></tr>;
+                    tr.append(<td></td>.text(datePart));
+                    var tdNote = <td></td>;
+                    if (notePart.length > 50) {
+                        var shortText = notePart.substring(0, 50) + '...';
+                        var span = <span></span>
+                            .attr('title', notePart)
+                            .attr('data-toggle', 'tooltip')
+                            .text(shortText)
+                            .css('cursor', 'pointer');
+                        tdNote.append(span);
+                    } else {
+                        tdNote.text(notePart);
+                    }
+                    tr.append(tdNote);
+                    allNotesTbody.append(tr);
+                }
+            });
+            [data-toggle="tooltip"].tooltip();
+        }
+        
+        #kvl-all-notes-grid.DataTable({
+            pageLength: 4,
+            lengthChange: false,
+            searching: false,
+            info: false,
+            ordering: false
+        });
+    }
+    //p7-137--pax-start
+    //    function populateAllNotesGrid(notes) {
+        var allNotesTbody = #kvl-all-notes-grid tbody;
+        allNotesTbody.empty();
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            #kvl-all-notes-grid.DataTable().destroy();
+        }
+
+        if (notes) {
+            var lines = notes.split(/\r?\n/);
+            lines.forEach(function(line) {
+                if (line.trim() !== '') {
+                    var datePart = '';
+                    var notePart = line;
+                    var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                    if (match) {
+                        datePart = match[1];
+                        notePart = match[2];
+                    }
+                    var tr = <tr></tr>;
+                    tr.append(<td></td>.text(datePart));
+                    var tdNote = <td></td>;
+                    if (notePart.length > 50) {
+                        var shortText = notePart.substring(0, 50) + '...';
+                        var span = <span></span>
+                            .attr('title', notePart)
+                            .attr('data-toggle', 'tooltip')
+                            .text(shortText)
+                            .css('cursor', 'pointer');
+                        tdNote.append(span);
+                    } else {
+                        tdNote.text(notePart);
+                    }
+                    tr.append(tdNote);
+                    allNotesTbody.append(tr);
+                }
+            });
+            [data-toggle="tooltip"].tooltip();
+        }
+        
+        #kvl-all-notes-grid.DataTable({
+            pageLength: 4,
+            lengthChange: false,
+            searching: false,
+            info: false,
+            ordering: false
+        });
+    }
+    //p7-137--pax-start
     //function format_kvl_child_row(d) {
     //    return (
     //        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
@@ -125,7 +221,103 @@ $(function () {
     //        '</table>'
     //    );
     //}
-    function format_kvl_child_row(d) {
+        function populateAllNotesGrid(notes) {
+        var allNotesTbody = #kvl-all-notes-grid tbody;
+        allNotesTbody.empty();
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            #kvl-all-notes-grid.DataTable().destroy();
+        }
+
+        if (notes) {
+            var lines = notes.split(/\r?\n/);
+            lines.forEach(function(line) {
+                if (line.trim() !== '') {
+                    var datePart = '';
+                    var notePart = line;
+                    var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                    if (match) {
+                        datePart = match[1];
+                        notePart = match[2];
+                    }
+                    var tr = <tr></tr>;
+                    tr.append(<td></td>.text(datePart));
+                    var tdNote = <td></td>;
+                    if (notePart.length > 50) {
+                        var shortText = notePart.substring(0, 50) + '...';
+                        var span = <span></span>
+                            .attr('title', notePart)
+                            .attr('data-toggle', 'tooltip')
+                            .text(shortText)
+                            .css('cursor', 'pointer');
+                        tdNote.append(span);
+                    } else {
+                        tdNote.text(notePart);
+                    }
+                    tr.append(tdNote);
+                    allNotesTbody.append(tr);
+                }
+            });
+            [data-toggle="tooltip"].tooltip();
+        }
+        
+        #kvl-all-notes-grid.DataTable({
+            pageLength: 4,
+            lengthChange: false,
+            searching: false,
+            info: false,
+            ordering: false
+        });
+    }
+    //p7-137--pax-start
+    //    function populateAllNotesGrid(notes) {
+        var allNotesTbody = #kvl-all-notes-grid tbody;
+        allNotesTbody.empty();
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            #kvl-all-notes-grid.DataTable().destroy();
+        }
+
+        if (notes) {
+            var lines = notes.split(/\r?\n/);
+            lines.forEach(function(line) {
+                if (line.trim() !== '') {
+                    var datePart = '';
+                    var notePart = line;
+                    var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                    if (match) {
+                        datePart = match[1];
+                        notePart = match[2];
+                    }
+                    var tr = <tr></tr>;
+                    tr.append(<td></td>.text(datePart));
+                    var tdNote = <td></td>;
+                    if (notePart.length > 50) {
+                        var shortText = notePart.substring(0, 50) + '...';
+                        var span = <span></span>
+                            .attr('title', notePart)
+                            .attr('data-toggle', 'tooltip')
+                            .text(shortText)
+                            .css('cursor', 'pointer');
+                        tdNote.append(span);
+                    } else {
+                        tdNote.text(notePart);
+                    }
+                    tr.append(tdNote);
+                    allNotesTbody.append(tr);
+                }
+            });
+            [data-toggle="tooltip"].tooltip();
+        }
+        
+        #kvl-all-notes-grid.DataTable({
+            pageLength: 4,
+            lengthChange: false,
+            searching: false,
+            info: false,
+            ordering: false
+        });
+    }
+    //p7-137--pax-start
+    //function format_kvl_child_row(d) {
         var paxTableHtml = '';
         var paxTableId = 'paxTable_' + d.detail.id;
 
@@ -712,7 +904,57 @@ $(function () {
                 }
             }).done(function () {
                 keyVehicleLog.ajax.reload();
-            }).always(function () {
+                if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
                 $('#loader').hide();
             });
         }
@@ -836,6 +1078,56 @@ $(function () {
             } else {
                 displayValidationSummary(result.errors);           
             }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
         }).always(function () {
             $('#loader').hide();
         });
@@ -907,6 +1199,56 @@ $(function () {
                 $('#vkl-modal').modal('hide');
             } else {
                 displayValidationSummary(result.errors);
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             }
         }).always(function () {
             $('#loader').hide();
@@ -1206,39 +1548,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            var allNotesTbody = $('#kvl-all-notes-grid tbody');
-            allNotesTbody.empty();
-            if (result.keyVehicleLogProfile.notes) {
-                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
-                lines.forEach(function(line) {
-                    if (line.trim() !== '') {
-                        var datePart = '';
-                        var notePart = line;
-                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
-                        if (match) {
-                            datePart = match[1];
-                            notePart = match[2];
-                        }
-                        var tr = $('<tr></tr>');
-                        tr.append($('<td></td>').text(datePart));
-                        var tdNote = $('<td></td>');
-                        if (notePart.length > 60) {
-                            var shortText = notePart.substring(0, 60) + '...';
-                            var span = $('<span></span>')
-                                .attr('title', notePart)
-                                .attr('data-toggle', 'tooltip')
-                                .text(shortText)
-                                .css('cursor', 'pointer');
-                            tdNote.append(span);
-                        } else {
-                            tdNote.text(notePart);
-                        }
-                        tr.append(tdNote);
-                        allNotesTbody.append(tr);
-                    }
-                });
-                $('[data-toggle="tooltip"]').tooltip();
-            }
+            populateAllNotesGrid(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -1467,39 +1777,7 @@ $(function () {
                 /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
                 /*}*/
-                var allNotesTbody = $('#kvl-all-notes-grid tbody');
-            allNotesTbody.empty();
-            if (result.keyVehicleLogProfile.notes) {
-                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
-                lines.forEach(function(line) {
-                    if (line.trim() !== '') {
-                        var datePart = '';
-                        var notePart = line;
-                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
-                        if (match) {
-                            datePart = match[1];
-                            notePart = match[2];
-                        }
-                        var tr = $('<tr></tr>');
-                        tr.append($('<td></td>').text(datePart));
-                        var tdNote = $('<td></td>');
-                        if (notePart.length > 60) {
-                            var shortText = notePart.substring(0, 60) + '...';
-                            var span = $('<span></span>')
-                                .attr('title', notePart)
-                                .attr('data-toggle', 'tooltip')
-                                .text(shortText)
-                                .css('cursor', 'pointer');
-                            tdNote.append(span);
-                        } else {
-                            tdNote.text(notePart);
-                        }
-                        tr.append(tdNote);
-                        allNotesTbody.append(tr);
-                    }
-                });
-                $('[data-toggle="tooltip"]').tooltip();
-            }
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -1720,39 +1998,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
             $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            var allNotesTbody = $('#kvl-all-notes-grid tbody');
-            allNotesTbody.empty();
-            if (result.keyVehicleLogProfile.notes) {
-                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
-                lines.forEach(function(line) {
-                    if (line.trim() !== '') {
-                        var datePart = '';
-                        var notePart = line;
-                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
-                        if (match) {
-                            datePart = match[1];
-                            notePart = match[2];
-                        }
-                        var tr = $('<tr></tr>');
-                        tr.append($('<td></td>').text(datePart));
-                        var tdNote = $('<td></td>');
-                        if (notePart.length > 60) {
-                            var shortText = notePart.substring(0, 60) + '...';
-                            var span = $('<span></span>')
-                                .attr('title', notePart)
-                                .attr('data-toggle', 'tooltip')
-                                .text(shortText)
-                                .css('cursor', 'pointer');
-                            tdNote.append(span);
-                        } else {
-                            tdNote.text(notePart);
-                        }
-                        tr.append(tdNote);
-                        allNotesTbody.append(tr);
-                    }
-                });
-                $('[data-toggle="tooltip"]').tooltip();
-            }
+            populateAllNotesGrid(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -2094,6 +2340,56 @@ $(function () {
 
             }
 
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
         }).always(function () {
             $('#loader').hide();
         });
@@ -2222,6 +2518,56 @@ $(function () {
             }
             
 
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
         }).always(function () {
             $('#loader').hide();
         });
@@ -4603,39 +4949,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                var allNotesTbody = $('#kvl-all-notes-grid tbody');
-                allNotesTbody.empty();
-                if (result.keyVehicleLogProfile.notes) {
-                    var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
-                    lines.forEach(function(line) {
-                        if (line.trim() !== '') {
-                            var datePart = '';
-                            var notePart = line;
-                            var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
-                            if (match) {
-                                datePart = match[1];
-                                notePart = match[2];
-                            }
-                            var tr = $('<tr></tr>');
-                            tr.append($('<td></td>').text(datePart));
-                            var tdNote = $('<td></td>');
-                            if (notePart.length > 60) {
-                                var shortText = notePart.substring(0, 60) + '...';
-                                var span = $('<span></span>')
-                                    .attr('title', notePart)
-                                    .attr('data-toggle', 'tooltip')
-                                    .text(shortText)
-                                    .css('cursor', 'pointer');
-                                tdNote.append(span);
-                            } else {
-                                tdNote.text(notePart);
-                            }
-                            tr.append(tdNote);
-                            allNotesTbody.append(tr);
-                        }
-                    });
-                    $('[data-toggle="tooltip"]').tooltip();
-                }
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -7466,39 +7780,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                var allNotesTbody = $('#kvl-all-notes-grid tbody');
-            allNotesTbody.empty();
-            if (result.keyVehicleLogProfile.notes) {
-                var lines = result.keyVehicleLogProfile.notes.split(/\r?\n/);
-                lines.forEach(function(line) {
-                    if (line.trim() !== '') {
-                        var datePart = '';
-                        var notePart = line;
-                        var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
-                        if (match) {
-                            datePart = match[1];
-                            notePart = match[2];
-                        }
-                        var tr = $('<tr></tr>');
-                        tr.append($('<td></td>').text(datePart));
-                        var tdNote = $('<td></td>');
-                        if (notePart.length > 60) {
-                            var shortText = notePart.substring(0, 60) + '...';
-                            var span = $('<span></span>')
-                                .attr('title', notePart)
-                                .attr('data-toggle', 'tooltip')
-                                .text(shortText)
-                                .css('cursor', 'pointer');
-                            tdNote.append(span);
-                        } else {
-                            tdNote.text(notePart);
-                        }
-                        tr.append(tdNote);
-                        allNotesTbody.append(tr);
-                    }
-                });
-                $('[data-toggle="tooltip"]').tooltip();
-            }
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -8308,7 +8590,57 @@ $(function () {
     //            else alert(result.message);
     //        }).fail(function () {
     //            console.log('error');
-    //        }).always(function () {
+    //            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
     //            if (isKvlFieldAdding)
     //                isKvlFieldAdding = false;
     //        });
@@ -8326,7 +8658,57 @@ $(function () {
     //                else alert(result.message);
     //            }).fail(function () {
     //                console.log('error');
-    //            }).always(function () {
+    //                if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
     //                if (isKvlFieldAdding)
     //                    isKvlFieldAdding = false;
     //            });
@@ -8999,6 +9381,56 @@ $(function () {
                 $('#logbook-kvl-expiry-modal').modal('hide');
                 window.location.reload();
             }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
         }).always(function () {
             $('#loader').hide();
         });
@@ -9283,7 +9715,57 @@ $(function () {
                 }
             }).fail(function () {
                 alert('error');
-            }).always(function () {
+                if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
                 $('#loader').hide();
             });
         }
@@ -9565,7 +10047,57 @@ $(function () {
     //            else alert(result.message);
     //        }).fail(function () {
     //            console.log('error');
-    //        }).always(function () {
+    //            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
     //            if (isDosandDontsFieldAdding)
     //                isDosandDontsFieldAdding = false;
     //        });
@@ -9583,7 +10115,57 @@ $(function () {
     //                else alert(result.message);
     //            }).fail(function () {
     //                console.log('error');
-    //            }).always(function () {
+    //                if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            if (!isNewEntry) {
+                var rego = #VehicleRego.val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }).always(function () {
     //                if (isKvlFieldAdding)
     //                    isKvlFieldAdding = false;
     //            });
