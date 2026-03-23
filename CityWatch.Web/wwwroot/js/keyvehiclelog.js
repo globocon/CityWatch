@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
         $(this).css('z-index', zIndex);
@@ -1206,9 +1206,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            /*if (!$('#Notes').val()) {*/
-                $('#Notes').val(result.keyVehicleLogProfile.notes);
-           /* }*/
+            $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -1437,9 +1435,7 @@ $(function () {
                 /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
                 /*}*/
-                /*if (!$('#Notes').val()) {*/
-                $('#Notes').val(result.keyVehicleLogProfile.notes);
-                /* }*/
+                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -1660,9 +1656,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
             $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            /*if (!$('#Notes').val()) {*/
-            $('#Notes').val(result.keyVehicleLogProfile.notes);
-            /* }*/
+            $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -4513,9 +4507,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                if (!$('#Notes').val()) {
-                    $('#Notes').val(result.keyVehicleLogProfile.notes);
-                }
+                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -7346,9 +7338,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                if (!$('#Notes').val()) {
-                    $('#Notes').val(result.keyVehicleLogProfile.notes);
-                }
+                $('#KVLAllNotes').val(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
