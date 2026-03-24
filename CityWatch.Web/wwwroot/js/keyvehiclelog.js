@@ -100,16 +100,31 @@ $(function () {
                         notePart = match[2];
                     }
                     var tr = $('<tr></tr>');
-                    tr.append($('<td></td>').text(datePart));
+                    tr.append($('<td style="white-space: nowrap;"></td>').text(datePart));
                     var tdNote = $('<td></td>');
-                    if (notePart.length > 50) {
-                        var shortText = notePart.substring(0, 50) + '...';
-                        var span = $('<span></span>')
-                            .attr('title', notePart)
-                            .attr('data-toggle', 'tooltip')
-                            .text(shortText)
-                            .css('cursor', 'pointer');
-                        tdNote.append(span);
+                    if (notePart.length > 70) {
+                        var shortText = notePart.substring(0, 70);
+                        var remainingText = notePart.substring(70);
+                        
+                        var txtSpan = $('<span></span>').text(shortText);
+                        var moreSpan = $('<span></span>').text(remainingText).hide();
+                        var dotsSpan = $('<span></span>').text('... ');
+                        var toggleBtn = $('<a href="javascript:void(0)" class="ml-1 text-primary">more</a>');
+                        
+                        toggleBtn.on('click', function(e) {
+                            e.preventDefault();
+                            if ($(this).text() === 'more') {
+                                $(this).text('less');
+                                moreSpan.show();
+                                dotsSpan.hide();
+                            } else {
+                                $(this).text('more');
+                                moreSpan.hide();
+                                dotsSpan.show();
+                            }
+                        });
+                        
+                        tdNote.append(txtSpan).append(dotsSpan).append(moreSpan).append(toggleBtn);
                     } else {
                         tdNote.text(notePart);
                     }
