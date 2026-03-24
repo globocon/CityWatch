@@ -775,4 +775,7 @@ p.center-or-justify:only-child {
     text-align: justify;
     text-align-last: center; /* Align last line center if only one line */
 }
+.text-orange {
+    color: #ff8c00;
+}
 

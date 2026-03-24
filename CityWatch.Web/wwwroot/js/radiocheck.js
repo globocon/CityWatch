@@ -2404,15 +2404,18 @@ function updateDateVisibility(dt, keepValue) {
             $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
             $('#doiToggleContainer').css('visibility', 'hidden');
             $('#doiNoteContainer').css('visibility', 'hidden');
+            $('#doePendingToggleContainer').css('visibility', 'hidden');
         } else if (dt == 2) { // DOE Only
             $('#LicanseTypeFilter').prop('checked', false).trigger('change', [keepValue]);
             $('#doiToggleContainer').css('visibility', 'hidden');
             $('#doiNoteContainer').css('visibility', 'hidden');
+            $('#doePendingToggleContainer').css('visibility', 'visible');
         } else { // Both (0) or Default
             // We don't automatically check/uncheck the toggle for "Both", 
             // just make it visible so the user can choose.
             $('#doiToggleContainer').css('visibility', 'visible');
             $('#doiNoteContainer').css('visibility', 'visible');
+            $('#doePendingToggleContainer').css('visibility', 'hidden');
             // Ensure the current toggle state is reflected in labels/constraints without clearing value
             $('#LicanseTypeFilter').trigger('change', [keepValue]);
         }
@@ -2428,10 +2431,13 @@ $('#LicanseTypeFilter').on('change', function (event, keepValue) {
         $label.text('Issue Date (DOI)');
         $dateInput.prop('min', ''); // No minimum for Issue Date
         $dateInput.prop('max', new Date().toJSON().split('T')[0]); // Cannot be in the future
+        $('#doePendingToggleContainer').css('visibility', 'hidden');
+
     } else {
         $label.text('Expiry Date (DOE)');
         $dateInput.prop('min', new Date().toJSON().split('T')[0]); // Cannot be in the past
         $dateInput.prop('max', ''); // No maximum for Expiry Date
+        $('#doePendingToggleContainer').css('visibility', 'visible');
     }
 
     // Only clear the value if not explicitly told to keep it

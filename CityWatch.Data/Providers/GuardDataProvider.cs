@@ -729,6 +729,7 @@ namespace CityWatch.Data.Providers
                           DateType = x.DateType,
                           HRBanEdit = x.HRBanEdit,
                           MasterDateType = sub != null ? (int)sub.DateType : 0,
+                          IsPending = x.IsPending,
                           IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
                       }).OrderBy(x => x.FileName)
             .ToList();
@@ -840,6 +841,7 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
                     guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
+                    guardComplianceToUpdate.IsPending = guardComplianceandlicense.IsPending;
                 }
             }
             _context.SaveChanges();

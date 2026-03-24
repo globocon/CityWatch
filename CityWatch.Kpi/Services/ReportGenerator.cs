@@ -1085,7 +1085,21 @@ namespace CityWatch.Kpi.Services
                         }
                         else if (expiryDate < DateTime.Today)
                         {
-                            cellColor = CELL_BG_RED;
+                            var daysAfterExpiry = (DateTime.Today.Date - expiryDate.Value.Date).TotalDays;
+                            if (matchingDescription.IsPending && daysAfterExpiry <= 60)
+                            {
+                                cellColor = "#ffe5b4";
+                                int digits = daysAfterExpiry.ToString().Length;
+                                if(digits == 1 )
+                                    expiryDateString = "Pending - 0" + daysAfterExpiry.ToString();
+                                else
+                                    expiryDateString = "Pending - " + daysAfterExpiry.ToString();
+                            }
+                            else
+                            {
+                                cellColor = CELL_BG_RED;
+                            }
+                            
                         }
                         else
                         {

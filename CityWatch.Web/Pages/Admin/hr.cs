@@ -984,7 +984,7 @@ namespace CityWatch.Web.Pages.Admin
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
             ModelState.Remove("guardComplianceandlicense.DataType");
             ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
-
+            guardComplianceandlicense.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
