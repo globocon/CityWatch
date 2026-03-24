@@ -33,7 +33,7 @@
 
     }
 
-    // based on the domin show pdf templete 
+    // based on the domin show pdf templete
     string defaultValue = _userDataProvider.GetThirdPartyDomainOrTemplateDetails()
                                                   .FirstOrDefault(x => x.SubDomainId == 0)
                                                   ?.FileName ?? string.Empty;
@@ -407,10 +407,17 @@
                             <div class="form-row">
                                 <div class="col-md-8 pt-2">
                                     <div class="d-flex flex-row justify-content-between">
-                                        <label asp-for="@Model.Report.DateLocation.ClientAddress" class="font-weight-normal"></label>
+                                        <div class="ml-4">
+                                            <input type="checkbox" asp-for="@Model.Report.DateLocation.IsClientSiteLocationAddress" class="form-check-input" />
+                                            <label asp-for="@Model.Report.DateLocation.ClientAddress" class="font-weight-normal"></label>
+                                        </div>
                                         <div class="text-right">
                                             <input type="checkbox" asp-for="@Model.Report.DateLocation.ShowIncidentLocationAddress" class="form-check-input" />
-                                            <label class="font-weight-normal">Incident Location (Override)</label>
+                                            <label class="font-weight-normal">Incident Location</label>
+                                        </div>
+                                        <div class="text-right">
+                                            <input type="checkbox" asp-for="@Model.Report.DateLocation.IsUnknownGpsLocationAddress" class="form-check-input" />
+                                            <label class="font-weight-normal">Unknown(Use GPS)</label>
                                         </div>
                                     </div>
                                     <input asp-for="@Model.Report.DateLocation.ClientAddress" class="form-control" />
@@ -425,6 +432,7 @@
                                     <div class="d-block">
                                         <a href="#" id="clientGpsLink" class="btn btn-outline-secondary disabled" target="_blank"><i class="fa fa-map"></i></a>
                                         <input type="hidden" id="clientSiteGps" />
+                                        <input type="hidden" id="currentSelectedGpsLocation" />
                                     </div>
                                 </div>
                             </div>
@@ -648,30 +656,30 @@
         </a>
     </div>
 </div>
- @if (!string.IsNullOrEmpty(clientName))
-    {
-        // Exclude reserved keywords
-        var reservedKeywords = new HashSet<string>  { "www", "cws-ir", "test", "localhost" };
+@if (!string.IsNullOrEmpty(clientName))
+{
+    // Exclude reserved keywords
+    var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test", "localhost" };
     @* var reservedKeywords = new HashSet<string> { "www", "cws-ir", "test" }; *@
-        @if (reservedKeywords.Contains(clientName.Trim().ToLower()))
-        {
-            <div class="row mt-3">
-                <div class="col">
-                    <div style="color:red;">
-                        <p class="mb-md-1">
-                            Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />
-                        </p>
-                        <p class="mb-md-1">
-                            A completed IR as a PDF (Offline) <u><b>OR</b></u> updates to the original IR can also be manually emailed to: <span style="color:#0366d6;"><b>cws-ir@citywatchsecurity.com.au</b></span> <br />
-                        </p>
-                        <p class="mb-md-1">
-                            Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number
-                        </p>
-                    </div>
+    @if (reservedKeywords.Contains(clientName.Trim().ToLower()))
+    {
+        <div class="row mt-3">
+            <div class="col">
+                <div style="color:red;">
+                    <p class="mb-md-1">
+                        Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />
+                    </p>
+                    <p class="mb-md-1">
+                        A completed IR as a PDF (Offline) <u><b>OR</b></u> updates to the original IR can also be manually emailed to: <span style="color:#0366d6;"><b>cws-ir@citywatchsecurity.com.au</b></span> <br />
+                    </p>
+                    <p class="mb-md-1">
+                        Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number
+                    </p>
                 </div>
             </div>
-        }
+        </div>
     }
+}
 @section PageHeader {
     <h3 class="text-center">INCIDENT REPORT & FEEDBACK FORM</h3>
 }
@@ -788,6 +796,8 @@
     document.getElementById("btnSumbit").addEventListener('click', onbtnSumbitClick);
     document.getElementById("clientGpsLink").addEventListener('click', onGpsLinkClick);
     document.getElementById("Report_DateLocation_ShowIncidentLocationAddress").addEventListener('change', onShowLiveAddressChange);
+    document.getElementById("Report_DateLocation_IsClientSiteLocationAddress").addEventListener('change', onShowIsClientSiteLocationAddressChange);
+    document.getElementById("Report_DateLocation_IsUnknownGpsLocationAddress").addEventListener('change', onShowIsUnknownGpsLocationAddressChange);
     document.getElementById("Report_EventType_Other").addEventListener('change', onEventTypeOtherChange);
     document.getElementById("Report_EventType_SiteColour").addEventListener('change', onEventTypeSiteColourChange);
     document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
@@ -795,6 +805,8 @@
     document.getElementById("Report_VehicleRego").addEventListener('change', onPlateLoadedChange);
     /* load the current live location&* if client site selected its changes to currespoding*/
     getLiveGpsCoordinates();
+    /* Set Client site address by default */
+    document.getElementById("Report_DateLocation_IsClientSiteLocationAddress").checked = true;
 
     function onWindowLoad(event) {
         setAllControlsForIrFromPreviousIR();
@@ -806,14 +818,14 @@
         autoCompleteLocation.addListener('place_changed', function () {
             const place = this.getPlace();
             if (place.geometry) {
-              
+
                 var lat = place.geometry.location.lat();
                 var lon = place.geometry.location.lng();
                 const liveGps = lat + ',' + lon;
                 document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = liveGps;
                 const ahrefElem = getGpsAsHyperLink(liveGps);
                 document.getElementById("liveGpsWrapper").innerHTML=ahrefElem;
-               
+
                 toggleClientGpsLink(true, liveGps);
             }
         });
@@ -987,7 +999,7 @@
 
                  const fileExtension = file.name.split('.').pop();
                  var fileNameWithoutExtension;
-                 if (fileExtension == 'heic' || fileExtension == '.HEIC') { 
+                 if (fileExtension == 'heic' || fileExtension == '.HEIC') {
                       fileNameWithoutExtension = file.name.split('.').slice(0, -1).join('.') + '.jpg';
                  }
                  else
@@ -995,7 +1007,7 @@
                      fileNameWithoutExtension = file.name;
                  }
                  // Extract the file name without extension
-                
+
 
 
                  liText = document.createTextNode(fileNameWithoutExtension);
@@ -1116,6 +1128,11 @@
         const feedbackTextarea = document.getElementById('Report_Feedback');
         if (!feedbackTextarea.value.trim()) {
             new MessageModal({ message: "You cannot submit an IR without any Text or Information on the notes section." }).showWarning();
+            return false;
+        }
+
+        if(!checkAtleastOneAddressIsChecked()) {
+            new MessageModal({ message: "You cannot submit an IR without any one address selected." }).showWarning();
             return false;
         }
 
@@ -1331,27 +1348,111 @@
             document.getElementById('clientGpsLink').href = 'https://www.google.com/maps?q=' + gps;
             document.getElementById("clientGpsLink").classList.remove("disabled");
             document.getElementById('clientGpsLink').classList.replace('btn-outline-secondary', 'btn-outline-success');
-            document.getElementById('clientSiteGps').value = gps;
+            //document.getElementById('clientSiteGps').value = gps;
+            document.getElementById('currentSelectedGpsLocation').value = gps;
+            const ahrefElem = getGpsAsHyperLink(gps);
+            document.getElementById("liveGpsWrapper").innerHTML = ahrefElem;
         } else {
             document.getElementById('clientGpsLink').href = '#';
             document.getElementById("clientGpsLink").classList.add("disabled");
             document.getElementById('clientGpsLink').classList.replace('btn-outline-success', 'btn-outline-secondary');
-            document.getElementById('clientSiteGps').value = '';
+            //document.getElementById('clientSiteGps').value = '';
+            document.getElementById('currentSelectedGpsLocation').value = '';
         }
     }
 
     function onShowLiveAddressChange(event) {
+        if(!checkAtleastOneAddressIsChecked())
+         {
+            alert('Any one address is required.');
+            return true;
+        }
+
         document.getElementById("Report_DateLocation_ClientAddress").value = '';
         toggleClientGpsLink(false);
 
         if (!this.checked) {
+            // const address = document.getElementById('clientSiteAddress').value;
+            // const gps = document.getElementById('clientSiteGps').value;
+
+            // document.getElementById('Report_DateLocation_ClientAddress').value = address;
+            // if (gps === '') toggleClientGpsLink(false);
+            // else toggleClientGpsLink(true, gps);
+        }
+        else{
+            document.getElementById('Report_DateLocation_ClientAddress').disabled = false;
+            document.getElementById('Report_DateLocation_IsClientSiteLocationAddress').checked = false;
+            document.getElementById('Report_DateLocation_IsUnknownGpsLocationAddress').checked = false;
+        }
+    }
+
+    function onShowIsClientSiteLocationAddressChange(event) {
+        if(!checkAtleastOneAddressIsChecked())
+         {
+            alert('Any one address is required.');
+            return true;
+        }
+
+        document.getElementById("Report_DateLocation_ClientAddress").value = '';
+        toggleClientGpsLink(false);
+
+        if (!this.checked) {
+
+        }
+        else{
             const address = document.getElementById('clientSiteAddress').value;
             const gps = document.getElementById('clientSiteGps').value;
 
             document.getElementById('Report_DateLocation_ClientAddress').value = address;
             if (gps === '') toggleClientGpsLink(false);
             else toggleClientGpsLink(true, gps);
+
+            document.getElementById('Report_DateLocation_ShowIncidentLocationAddress').checked = false;
+            document.getElementById('Report_DateLocation_IsUnknownGpsLocationAddress').checked = false;
+            document.getElementById('Report_DateLocation_ClientAddress').disabled = false;
         }
+    }
+
+     function onShowIsUnknownGpsLocationAddressChange(event) {
+        if(!checkAtleastOneAddressIsChecked())
+         {
+            alert('Any one address is required.');
+            return true;
+        }
+
+        document.getElementById("Report_DateLocation_ClientAddress").value = '';
+        toggleClientGpsLink(false);
+
+
+
+        if (!this.checked) {
+            // const address = document.getElementById('clientSiteAddress').value;
+            // const gps = document.getElementById('clientSiteGps').value;
+
+            // document.getElementById('Report_DateLocation_ClientAddress').value = address;
+            // if (gps === '') toggleClientGpsLink(false);
+            // else toggleClientGpsLink(true, gps);
+        }
+        else{
+            document.getElementById("Report_DateLocation_ClientAddress").value = '';
+            getLiveGpsCoordinates();
+            const gps = document.getElementById("Report_DateLocation_ClientSiteLiveGps").value;
+            toggleClientGpsLink(true, gps);
+            document.getElementById('Report_DateLocation_IsClientSiteLocationAddress').checked = false;
+            document.getElementById('Report_DateLocation_ShowIncidentLocationAddress').checked = false;
+            document.getElementById('Report_DateLocation_ClientAddress').disabled = true;
+        }
+    }
+
+    function checkAtleastOneAddressIsChecked(){
+        const csAddr = document.getElementById('Report_DateLocation_IsClientSiteLocationAddress').checked;
+        const ilAddr = document.getElementById('Report_DateLocation_ShowIncidentLocationAddress').checked;
+        const ukAddr = document.getElementById('Report_DateLocation_IsUnknownGpsLocationAddress').checked;
+        if(!csAddr && !ilAddr && !ukAddr){
+            return false;
+        }
+
+        return true;
     }
 
     function onPlateLoadedChange(event) {
@@ -1671,6 +1772,10 @@
                     }
 
                     $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
+                    $('#Report_DateLocation_IsClientSiteLocationAddress').prop('checked', true);
+                    $('#Report_DateLocation_IsUnknownGpsLocationAddress').prop('checked', false);
+
+
                     $('#clientSiteAddress').val(data.clientSite.address);
                     $('#clientSiteGps').val(data.clientSite.gps);
                     if (data.bodyCameraYes) {

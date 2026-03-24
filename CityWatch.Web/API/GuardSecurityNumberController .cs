@@ -3477,11 +3477,18 @@ namespace CityWatch.Web.API
 
 
             //live map settings 
-            if (Report?.DateLocation?.ShowIncidentLocationAddress == true &&
-  !string.IsNullOrWhiteSpace(Report.DateLocation.ClientAddress))
+            if (Report?.DateLocation?.ShowIncidentLocationAddress == true && !string.IsNullOrWhiteSpace(Report.DateLocation.ClientAddress))
             {
                 var result = GetCoordinatesFromAddress(Report.DateLocation.ClientAddress);
                 Report.DateLocation.ClientSiteLiveGps = result.Latitude + "," + result.Longitude;
+            }
+            else if(Report?.DateLocation ?.IsUnknownGpsLocationAddress == true && string.IsNullOrEmpty(Report?.DateLocation?.ClientSiteLiveGps ?? string.Empty))
+            {
+                Report.DateLocation.ClientSiteLiveGps = gps;
+            }
+            else if (Report?.DateLocation?.IsClientSiteLocationAddress == true && string.IsNullOrEmpty(Report?.DateLocation?.ClientSiteLiveGps ?? string.Empty) && string.IsNullOrEmpty(clientSite.Gps))
+            {
+                Report.DateLocation.ClientSiteLiveGps = gps;
             }
             else if (string.IsNullOrEmpty(clientSite.Gps))
             {
