@@ -88,10 +88,13 @@ $(function () {
             $('#kvl-all-notes-grid').DataTable().destroy();
         }
 
+        var notesCount = 0;
+
         if (notes) {
             var lines = notes.split(/\r?\n/);
             lines.forEach(function (line) {
                 if (line.trim() !== '') {
+                    notesCount++;
                     var datePart = '';
                     var notePart = line;
                     var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
@@ -139,6 +142,8 @@ $(function () {
             
             $('[data-toggle="tooltip"]').tooltip();
         }
+        
+        $('#kvl_notes_count').text(notesCount);
         
         $('#kvl-all-notes-grid').DataTable({
             pageLength: 4,
