@@ -106,23 +106,10 @@ $(function () {
                         var shortText = notePart.substring(0, 70);
                         var remainingText = notePart.substring(70);
                         
-                        var txtSpan = $('<span></span>').text(shortText);
-                        var moreSpan = $('<span></span>').text(remainingText).hide();
-                        var dotsSpan = $('<span></span>').text('... ');
-                        var toggleBtn = $('<a href="javascript:void(0)" class="ml-1 text-primary">more</a>');
-                        
-                        toggleBtn.on('click', function(e) {
-                            e.preventDefault();
-                            if ($(this).text() === 'more') {
-                                $(this).text('less');
-                                moreSpan.show();
-                                dotsSpan.hide();
-                            } else {
-                                $(this).text('more');
-                                moreSpan.hide();
-                                dotsSpan.show();
-                            }
-                        });
+                        var txtSpan = $('<span class="note-short-text"></span>').text(shortText);
+                        var moreSpan = $('<span class="note-more-text"></span>').text(remainingText).hide();
+                        var dotsSpan = $('<span class="note-dots"></span>').text('... ');
+                        var toggleBtn = $('<a href="javascript:void(0)" class="ml-1 text-primary note-toggle-btn">more</a>');
                         
                         tdNote.append(txtSpan).append(dotsSpan).append(moreSpan).append(toggleBtn);
                     } else {
@@ -132,6 +119,24 @@ $(function () {
                     allNotesTbody.append(tr);
                 }
             });
+            
+            $('#kvl-all-notes-grid tbody').off('click', '.note-toggle-btn').on('click', '.note-toggle-btn', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var $moreSpan = $btn.siblings('.note-more-text');
+                var $dotsSpan = $btn.siblings('.note-dots');
+                
+                if ($btn.text() === 'more') {
+                    $btn.text('less');
+                    $moreSpan.show();
+                    $dotsSpan.hide();
+                } else {
+                    $btn.text('more');
+                    $moreSpan.hide();
+                    $dotsSpan.show();
+                }
+            });
+            
             $('[data-toggle="tooltip"]').tooltip();
         }
         
@@ -140,7 +145,12 @@ $(function () {
             lengthChange: false,
             searching: false,
             info: false,
-            ordering: false
+            ordering: false,
+            autoWidth: false,
+            columns: [
+                { width: '30%' },
+                { width: '70%' }
+            ]
         });
     }
     
