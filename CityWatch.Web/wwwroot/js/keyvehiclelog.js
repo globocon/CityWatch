@@ -102,9 +102,9 @@ $(function () {
                     var tr = $('<tr></tr>');
                     tr.append($('<td style="white-space: nowrap;"></td>').text(datePart));
                     var tdNote = $('<td></td>');
-                    if (notePart.length > 70) {
-                        var shortText = notePart.substring(0, 70);
-                        var remainingText = notePart.substring(70);
+                    if (notePart.length > 150) {
+                        var shortText = notePart.substring(0, 150);
+                        var remainingText = notePart.substring(150);
                         
                         var txtSpan = $('<span class="note-short-text"></span>').text(shortText);
                         var moreSpan = $('<span class="note-more-text"></span>').text(remainingText).hide();
@@ -148,8 +148,8 @@ $(function () {
             ordering: false,
             autoWidth: false,
             columns: [
-                { width: '30%' },
-                { width: '70%' }
+                { width: '20%' },
+                { width: '80%' }
             ]
         });
     }
