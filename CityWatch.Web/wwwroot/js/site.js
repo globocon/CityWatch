@@ -37,24 +37,30 @@
                 data: { name: li.text() }
             }).done(function (data) {
                 if (data.success) {
-                    $('#Report_DateLocation_ClientAddress').val(data.clientSite.address);
+                    if ($('#Report_DateLocation_IsClientSiteLocationAddress').is(':checked')) {                        
+                        $('#Report_DateLocation_ClientAddress').val(data.clientSite.address);
+                        if (data.clientSite.gps) toggleClientGpsLink(true, data.clientSite.gps);
+                        else toggleClientGpsLink(false);
+
+                        const ahrefElem = getGpsAsHyperLink(data.clientSite.gps);
+                        $('#liveGpsWrapper').html(ahrefElem);
+                        $('#Report_DateLocation_ClientSiteLiveGps').val(data.clientSite.gps);
+                        toggleClientGpsLink(true, data.clientSite.gps);
+                    }
+                    
                     $('#Report_DateLocation_State').val(data.clientSite.state);
                     $('#Report_Officer_Billing').val(data.clientSite.billing);
-                    if (data.clientSite.gps) toggleClientGpsLink(true, data.clientSite.gps);
-                    else toggleClientGpsLink(false);
+                    
                     setSelectedClientStatus(data.clientSite);
-                    $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
+                    //$('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
                     $('#clientSiteAddress').val(data.clientSite.address);
                     $('#clientSiteGps').val(data.clientSite.gps);
                     const clientAreaControl = $('#Report_DateLocation_ClientArea');
                     //p1 - 202 site allocation - start
                     clientAreaControl.html('');
-                    toggleClientGpsLink(false);
+                    //toggleClientGpsLink(false);
                     /*p1-226 gps ir map issue -start*/
-                    const ahrefElem = getGpsAsHyperLink(data.clientSite.gps);
-                    $('#liveGpsWrapper').html(ahrefElem);
-                    $('#Report_DateLocation_ClientSiteLiveGps').val(data.clientSite.gps);
-                    toggleClientGpsLink(true, data.clientSite.gps);
+                   
 
                     //p1 - 226 gps ir map issue - end
                     //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');

@@ -249,7 +249,7 @@ namespace CityWatch.Web.Services
 
             acroForm.FlattenFields();
 
-            var attachLiveGps = (_IncidentReport.WandScannedYes3b || _IncidentReport.DateLocation.ShowIncidentLocationAddress) && !string.IsNullOrEmpty(_IncidentReport.DateLocation.ClientSiteLiveGps);
+            var attachLiveGps = (_IncidentReport.WandScannedYes3b || _IncidentReport.DateLocation.ShowIncidentLocationAddress || _IncidentReport.DateLocation.IsUnknownGpsLocationAddress) && !string.IsNullOrEmpty(_IncidentReport.DateLocation.ClientSiteLiveGps);
 
             var attachGpsMap = _clientSite != null && !string.IsNullOrEmpty(_clientSite.Gps);
 

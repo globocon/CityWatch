@@ -276,6 +276,8 @@ namespace CityWatch.Web.Models
         }
 
         public bool ShowIncidentLocationAddress { get; set; }
+        public bool IsClientSiteLocationAddress { get; set; }
+        public bool IsUnknownGpsLocationAddress { get; set; }
     }
 
     public class ReportCreatedLocalTimeZone
