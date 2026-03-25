@@ -2588,21 +2588,26 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
             var ExpiryDate = new Date(row.expiryDate);
             var timeDifference = ExpiryDate - currentDate;
             var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-            var statusColor = 'green';
+            var pendingDifference = currentDate - ExpiryDate;
+            var pendinddaysDifference = Math.ceil(pendingDifference / (1000 * 60 * 60 * 24));
+            /*var statusColor = 'green';*/
+            var statusColor = row.statusColor;
 
+            //if (row.dateType == true) {
+            //    statusColor = 'green';
+            //}
+            //else if (row.expiryDate != null) {
+            //    if (daysDifference <= 45) {
+            //        statusColor = 'yellow';
+            //    }
 
-            if (row.dateType == true) {
-                statusColor = 'green';
-            }
-            else if (row.expiryDate != null) {
-                if (daysDifference <= 45) {
-                    statusColor = 'yellow';
-                }
-
-                if (ExpiryDate < currentDate && row.dateType != true) {
-                    statusColor = 'red';
-                }
-            }
+            //    if (ExpiryDate < currentDate && row.dateType != true) {
+            //        if (pendinddaysDifference <= 60 && row.isPending == true) {
+            //            statusColor = 'red';
+            //        }
+            //        statusColor = 'red';
+            //    }
+            //}
 
 
             return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';

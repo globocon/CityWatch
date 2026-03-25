@@ -100,7 +100,7 @@ namespace CityWatch.Data.Models
                     var daysAfterExpiry = (currentDate - expiryDate).TotalDays;
 
                     // Expired
-                    if (expiryDate <= currentDate)
+                    if (expiryDate < currentDate)
                     {
                         if (IsPending && daysAfterExpiry <= 60)
                         {
