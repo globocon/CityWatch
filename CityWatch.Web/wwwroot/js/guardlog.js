@@ -6858,6 +6858,8 @@ $(function () {
         }).removeAttr("disabled");
         const messageHtml2 = '';
         $('#schRunStatusNew').html(messageHtml2);
+        $('#doePendingToggleContainer').css('visibility', 'visible');
+        $('#doiNoteContainer').css('visibility', 'hidden');
         $('#addGuardCompliancesLicenseModal').modal('show');
     });
     /*code added for Licence Type Dropdown Textbox start*/
