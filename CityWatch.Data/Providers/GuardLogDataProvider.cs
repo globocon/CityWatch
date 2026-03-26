@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Services;
@@ -1593,9 +1593,12 @@ namespace CityWatch.Data.Providers
         public void SaveKeyVehicleLogProfileNotes(string truckRego, string notes)
         {
             var profileDetailsInDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.VehicleRego == truckRego);
-            if (profileDetailsInDb != null && !string.Equals(profileDetailsInDb.Notes, notes))
+            if (profileDetailsInDb != null && !string.IsNullOrWhiteSpace(notes))
             {
-                profileDetailsInDb.Notes = notes;
+                var newNoteWithDate = $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")} - {notes.Trim()}";
+                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes) 
+                    ? newNoteWithDate 
+                    : $"{newNoteWithDate}\r\n{profileDetailsInDb.Notes}";
                 _context.SaveChanges();
             }
         }
@@ -1608,9 +1611,12 @@ namespace CityWatch.Data.Providers
             && z.Trailer1PlateId == Trailer1PlateId && z.Trailer2PlateId == Trailer2PlateId && z.Trailer3PlateId == Trailer3PlateId
             && z.Trailer4PlateId == Trailer4PlateId
             );
-            if (profileDetailsInDb != null && !string.Equals(profileDetailsInDb.Notes, notes))
+            if (profileDetailsInDb != null && !string.IsNullOrWhiteSpace(notes))
             {
-                profileDetailsInDb.Notes = notes;
+                var newNoteWithDate = $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")} - {notes.Trim()}";
+                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes) 
+                    ? newNoteWithDate 
+                    : $"{newNoteWithDate}\r\n{profileDetailsInDb.Notes}";
                 _context.SaveChanges();
             }
         }

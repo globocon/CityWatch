@@ -1,4 +1,4 @@
-﻿@using CityWatch.Data.Models;
+@using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
 @model CityWatch.Data.Models.KeyVehicleLog
@@ -534,27 +534,30 @@
                 </div>
 
             </div>
-                <ul class="nav nav-tabs" role="tablist">
+            <ul class="nav nav-tabs flex-nowrap" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; font-size: 0.9rem;" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="kvl-notes-tab" data-toggle="tab" data-target="#kvl-notes" role="tab" aria-controls="kvl-notes" aria-selected="true">
-                        <i class="fa fa-pencil-square-o mr-2"></i>Notes
+                    <a class="nav-link active px-2 py-2" id="kvl-notes-tab" data-toggle="tab" data-target="#kvl-notes" role="tab" aria-controls="kvl-notes" aria-selected="true">
+                        <i class="fa fa-pencil-square-o mr-1"></i>New Notes
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="kvl-attachments-tab" data-toggle="tab" data-target="#kvl-attachments" role="tab" aria-controls="kvl-attachments" aria-selected="false">
-                        <i class="fa fa-upload mr-2"></i>Attachments<span class="badge badge-primary ml-2" id="kvl_attachments_count">@kvlAttachmentsCount</span>
+                    <a class="nav-link px-2 py-2" id="kvl-all-notes-tab" data-toggle="tab" data-target="#kvl-all-notes" role="tab" aria-controls="kvl-all-notes" aria-selected="false">
+                        <i class="fa fa-list mr-1"></i>All Notes<span class="badge badge-primary ml-1" id="kvl_notes_count">0</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="kvl-auditlog-tab" data-toggle="tab" data-target="#kvl-auditlog" role="tab" aria-controls="kvl-auditlog" aria-selected="false">
-                        <i class="fa fa-history mr-2"></i>
-                        Audit Log
+                    <a class="nav-link px-2 py-2" id="kvl-attachments-tab" data-toggle="tab" data-target="#kvl-attachments" role="tab" aria-controls="kvl-attachments" aria-selected="false">
+                        <i class="fa fa-upload mr-1"></i>Attachments<span class="badge badge-primary ml-1" id="kvl_attachments_count">@kvlAttachmentsCount</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="kvl-photo-tab" data-toggle="tab" data-target="#kvl-photo" role="tab" aria-controls="kvl-photo" aria-selected="false">
-                        <i class="fa fa-photo mr-2"></i>
-                        ID Photo
+                    <a class="nav-link px-2 py-2" id="kvl-auditlog-tab" data-toggle="tab" data-target="#kvl-auditlog" role="tab" aria-controls="kvl-auditlog" aria-selected="false">
+                        <i class="fa fa-history mr-1"></i>Audit Log
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-2 py-2" id="kvl-photo-tab" data-toggle="tab" data-target="#kvl-photo" role="tab" aria-controls="kvl-photo" aria-selected="false">
+                        <i class="fa fa-photo mr-1"></i>ID Photo
                     </a>
                 </li>
             </ul>
@@ -563,17 +566,36 @@
                     <div class="form-row">
                         <div class="form-group col-md-12 custom-control-log">
                             <div class="form-row">
-                                <label class="col-md-1">Notes</label>
+                                <label class="col-md-2" style="max-width: 12%;">New Notes</label>
 
-                                <span style="font-size:0.8rem;font:italic" class="col-md-11">
+                                <span style="font-size:0.8rem;font:italic" class="col-md-9">
                                     Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
                                 </span>
                             </div>
 
                             <textarea class="form-control" rows="4" maxlength="512" asp-for="@Model.Notes"></textarea>
                             <span style="font-size:0.8rem" class="d-block">
-                                You can add new notes above. But never delete the previous or existing entries (Add entries: Z-A)
+                                The above field is for New Notes only. It will be printed in the docket.
                             </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-1" id="kvl-all-notes" role="tabpanel" aria-labelledby="kvl-all-notes-tab">
+                    <div class="form-row">
+                        <div class="form-group col-md-12 custom-control-log">
+                            <label>Historical Notes</label>
+                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered table-striped" id="kvl-all-notes-grid" style="font-size: 0.9rem;">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th style="width: 20%; white-space: nowrap;">Date & Time</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
         $(this).css('z-index', zIndex);
@@ -81,6 +81,84 @@ $(function () {
         });
     }
     //p7-137--pax-start
+    function populateAllNotesGrid(notes) {
+        var allNotesTbody = $('#kvl-all-notes-grid tbody');
+        allNotesTbody.empty();
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            $('#kvl-all-notes-grid').DataTable().destroy();
+        }
+
+        var notesCount = 0;
+
+        if (notes) {
+            var lines = notes.split(/\r?\n/);
+            lines.forEach(function (line) {
+                if (line.trim() !== '') {
+                    notesCount++;
+                    var datePart = '';
+                    var notePart = line;
+                    var match = line.match(/^(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\s*-\s*(.*)/);
+                    if (match) {
+                        datePart = match[1];
+                        notePart = match[2];
+                    }
+                    var tr = $('<tr></tr>');
+                    tr.append($('<td style="white-space: nowrap;"></td>').text(datePart));
+                    var tdNote = $('<td></td>');
+                    if (notePart.length > 150) {
+                        var shortText = notePart.substring(0, 150);
+                        var remainingText = notePart.substring(150);
+                        
+                        var txtSpan = $('<span class="note-short-text"></span>').text(shortText);
+                        var moreSpan = $('<span class="note-more-text"></span>').text(remainingText).hide();
+                        var dotsSpan = $('<span class="note-dots"></span>').text('... ');
+                        var toggleBtn = $('<a href="javascript:void(0)" class="ml-1 text-primary note-toggle-btn">more</a>');
+                        
+                        tdNote.append(txtSpan).append(dotsSpan).append(moreSpan).append(toggleBtn);
+                    } else {
+                        tdNote.text(notePart);
+                    }
+                    tr.append(tdNote);
+                    allNotesTbody.append(tr);
+                }
+            });
+            
+            $('#kvl-all-notes-grid tbody').off('click', '.note-toggle-btn').on('click', '.note-toggle-btn', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var $moreSpan = $btn.siblings('.note-more-text');
+                var $dotsSpan = $btn.siblings('.note-dots');
+                
+                if ($btn.text() === 'more') {
+                    $btn.text('less');
+                    $moreSpan.show();
+                    $dotsSpan.hide();
+                } else {
+                    $btn.text('more');
+                    $moreSpan.hide();
+                    $dotsSpan.show();
+                }
+            });
+            
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+        
+        $('#kvl_notes_count').text(notesCount);
+        
+        $('#kvl-all-notes-grid').DataTable({
+            pageLength: 4,
+            lengthChange: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            autoWidth: false,
+            columns: [
+                { width: '20%' },
+                { width: '80%' }
+            ]
+        });
+    }
+    
     //function format_kvl_child_row(d) {
     //    return (
     //        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
@@ -1206,9 +1284,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            /*if (!$('#Notes').val()) {*/
-                $('#Notes').val(result.keyVehicleLogProfile.notes);
-           /* }*/
+            populateAllNotesGrid(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -1437,9 +1513,7 @@ $(function () {
                 /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
                 /*}*/
-                /*if (!$('#Notes').val()) {*/
-                $('#Notes').val(result.keyVehicleLogProfile.notes);
-                /* }*/
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -1660,9 +1734,7 @@ $(function () {
             /*if (!$('#Product').val()) {*/
             $('#Product').val(result.keyVehicleLogProfile.product);
             /*}*/
-            /*if (!$('#Notes').val()) {*/
-            $('#Notes').val(result.keyVehicleLogProfile.notes);
-            /* }*/
+            populateAllNotesGrid(result.keyVehicleLogProfile.notes);
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -2002,6 +2074,34 @@ $(function () {
 
 
 
+            }
+
+            if (!isNewEntry) {
+                var rego = $('#VehicleRego').val();
+                if (rego) {
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + encodeURIComponent(rego),
+                        type: 'GET',
+                        dataType: 'json'
+                    }).done(function (searchResult) {
+                        if (searchResult && searchResult.length > 0) {
+                            var firstItem = searchResult["0"];
+                            if (firstItem.detail && firstItem.detail.id) {
+                                $.ajax({
+                                    url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + firstItem.detail.id,
+                                    type: 'GET',
+                                    dataType: 'json'
+                                }).done(function (profResult) {
+                                    if (profResult && profResult.keyVehicleLogProfile) {
+                                        if (typeof populateAllNotesGrid === 'function') {
+                                            populateAllNotesGrid(profResult.keyVehicleLogProfile.notes);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             }
 
         }).always(function () {
@@ -4513,9 +4613,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                if (!$('#Notes').val()) {
-                    $('#Notes').val(result.keyVehicleLogProfile.notes);
-                }
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
@@ -7346,9 +7444,7 @@ $(function () {
                 if (!$('#Product').val()) {
                     $('#Product').val(result.keyVehicleLogProfile.product);
                 }
-                if (!$('#Notes').val()) {
-                    $('#Notes').val(result.keyVehicleLogProfile.notes);
-                }
+                populateAllNotesGrid(result.keyVehicleLogProfile.notes);
                 //=========================================
                 $("#list_product").val(result.keyVehicleLogProfile.product);
                 $("#list_product").trigger('change');
