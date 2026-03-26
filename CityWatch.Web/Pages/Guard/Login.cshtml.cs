@@ -472,6 +472,7 @@ namespace CityWatch.Web.Pages.Guard
                         if (HR1List.Any())
                         {
                             HR1 = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                 HR1List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
@@ -481,6 +482,7 @@ namespace CityWatch.Web.Pages.Guard
                         if (HR2List.Any())
                         {
                             HR2 = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                HR2List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
@@ -490,6 +492,7 @@ namespace CityWatch.Web.Pages.Guard
                         if (HR3List.Any())
                         {
                             HR3 = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                HR3List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
@@ -580,16 +583,23 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
                 // Get the first non-null expiry date (if any)
-                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+                var firstItem = selectedList.OrderBy(x => x.IsPending).FirstOrDefault(x => x.ExpiryDate != null);
 
                 if (firstItem != null)
                 {
                     var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
-
+                    var daysAfterExpiry = (today.Date - expiryDate.Date).TotalDays;
                     // Compare expiry date with today's date
                     if (expiryDate < today)
                     {
-                        return "Red";
+                        if (firstItem.IsPending && daysAfterExpiry <= 60)
+                        {
+                            return "Orange";
+                        }
+                        else
+                        {
+                            return "Red";
+                        }
                     }
                     else if ((expiryDate - today).Days < 45)
                     {

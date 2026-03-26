@@ -4982,6 +4982,9 @@ $(function () {
         else if (data.hR1Status == 'red') {
             return '<i class="fa fa-circle text-danger mr-2"></i>';
         }
+        else if (data.hR1Status == 'orange') {
+            return '<i class="fa fa-circle"style="color:orange;"></i>';
+        }
         else if (data.hR1Status == 'yellow') {
             return '<i class="fa fa-circle text-warning mr-2"></i>';
         }
@@ -5088,6 +5091,9 @@ $(function () {
         else if (data.hR1Status == 'Red') {
             return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
         }
+        else if (data.hR1Status == 'Orange') {
+            return '<i class="fa fa-circle" style="color:orange;"></i><span style="color:#f8f9fa;font-size:1px;">orange</span>';
+        }
         else if (data.hR1Status == 'Yellow') {
             return '<i class="fa fa-circle text-warning"></i></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
         }
@@ -5106,6 +5112,9 @@ $(function () {
         else if (data.hR2Status == 'Red') {
             return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
         }
+        else if (data.hR2Status == 'orange') {
+            return '<i class="fa fa-circle" style="color:orange;"></i><span style="color:#f8f9fa;font-size:1px;">orange</span>';
+        }
         else if (data.hR2Status == 'Yellow') {
             return '<i class="fa fa-circle text-warning"></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
         }
@@ -5123,6 +5132,9 @@ $(function () {
         }
         else if (data.hR3Status == 'Red') {
             return '<i class="fa fa-circle text-danger"></i><span style="color: #f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR3Status == 'Orange') {
+            return '<i class="fa fa-circle" style="color:orange;"></i><span style="color:#f8f9fa;font-size:1px;">orange</span>';
         }
         else if (data.hR3Status == 'Yellow') {
             return '<i class="fa fa-circle text-warning"></i><span style="color: #f8f9fa;font-size:1px;">yellow</span>';
@@ -6564,6 +6576,8 @@ $(function () {
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
+         $('#IsPendingOn').val(false);
+        $('#chb_IsPending').prop('checked', false); 
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
@@ -6814,19 +6828,22 @@ $(function () {
         }, 150);
 
         function applyVisibility(dt, keepValue) {
-            if (dt == 1) { // DOI Only
+             if (dt == 1) { // DOI Only
                 $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
+                $('#doePendingToggleContainer').css('visibility', 'hidden');
             } else if (dt == 2) { // DOE Only
                 $('#LicanseTypeFilter').prop('checked', false).trigger('change', [keepValue]);
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
+                $('#doePendingToggleContainer').css('visibility', 'visible');
             } else { // Both (0) or Default
                 // We don't automatically check/uncheck the toggle for "Both", 
                 // just make it visible so the user can choose.
                 $('#doiToggleContainer').css('visibility', 'visible');
-                $('#doiNoteContainer').css('visibility', 'visible');
+                $('#doiNoteContainer').css('visibility', 'hidden');
+                $('#doePendingToggleContainer').css('visibility', 'visible');
                 // Ensure the current toggle state is reflected in labels/constraints without clearing value
                 $('#LicanseTypeFilter').trigger('change', [keepValue]);
             }
@@ -6908,6 +6925,8 @@ $(function () {
         if (data.expiryDate) {
             $('#GuardComplianceAndLicense_ExpiryDate1').val(data.expiryDate.split('T')[0]);
         }
+        $('#IsPendingOn').val(data.isPending);
+        $('#chb_IsPending').prop('checked', data.isPending); 
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
         $('#HRGroup').val(data.hrGroup).trigger('change');
@@ -7143,6 +7162,15 @@ $(function () {
             })
         }
     });
+    //p1-349-pending toggle on hr-start
+    $('#chb_IsPending').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+       
+        $('#IsPendingOn').val(isChecked);
+
+    });
+    //p1-349-pending toggle on hr- end
     $('#btn_save_guard_compliancelicense').on('click', function () {
 
         clearGuardValidationSummary('compliancelicanseValidationSummary');
@@ -7322,7 +7350,8 @@ $(function () {
         }
         var Desc = $('#Description').val();
         var expiryDate = $('#GuardComplianceAndLicense_ExpiryDate1').val();
-        Desc = Desc.substring(3);
+        /* Desc = Desc.substring(3);*/
+        Desc = Desc.replace(/^\d+[a-z]\d*\s*/i, "");
         var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
         const formData = new FormData();
         formData.append("file", file);
@@ -8757,6 +8786,7 @@ $(function () {
             $('#IsDateFilterEnabledHidden').val(false)
             $('#ComplianceDate').text('Expiry Date (DOE)');
             if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+           
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
                 return new Date().toJSON().split('T')[0];
             });
@@ -9726,24 +9756,24 @@ let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTabl
             var ExpiryDate = new Date(row.expiryDate);
             var timeDifference = ExpiryDate - currentDate;
             var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-            var statusColor = 'green';
+            //var statusColor = 'green';
 
 
-            if (row.dateType == true) {
-                statusColor = 'green';
-            }
-            else if (row.expiryDate != null) {
-                if (daysDifference <= 45) {
-                    statusColor = 'yellow';
-                }
+            //if (row.dateType == true) {
+            //    statusColor = 'green';
+            //}
+            //else if (row.expiryDate != null) {
+            //    if (daysDifference <= 45) {
+            //        statusColor = 'yellow';
+            //    }
 
-                if (ExpiryDate < currentDate && row.dateType != true) {
-                    statusColor = 'red';
-                }
-            }
+            //    if (ExpiryDate < currentDate && row.dateType != true) {
+            //        statusColor = 'red';
+            //    }
+            //}
 
 
-            return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+            return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + row.statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
         }
     }
 

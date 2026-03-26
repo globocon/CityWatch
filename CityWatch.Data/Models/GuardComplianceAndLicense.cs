@@ -83,12 +83,35 @@ namespace CityWatch.Data.Models
 
                     var daysDifference = (expiryDate - currentDate).TotalDays;
 
-                    // Expired → red (highest priority)
-                    if (expiryDate < currentDate && !DateType)
+                    //// Expired → red (highest priority)
+                    //if (expiryDate < currentDate && !DateType && !IsPending)
+                    //{
+                    //    statusColor = "red";
+                    //}
+                    //else if(IsPending == true)
+                    //{
+                    //    statusColor = "orange";
+                    //}
+                    //// Expiring within 45 days → yellow
+                    //else if (daysDifference <= 45)
+                    //{
+                    //    statusColor = "yellow";
+                    //}
+                    var daysAfterExpiry = (currentDate - expiryDate).TotalDays;
+
+                    // Expired
+                    if (expiryDate < currentDate)
                     {
-                        statusColor = "red";
+                        if (IsPending && daysAfterExpiry <= 60)
+                        {
+                            statusColor = "orange";
+                        }
+                        else
+                        {
+                            statusColor = "red";
+                        }
                     }
-                    // Expiring within 45 days → yellow
+                    // Expiring within 45 days
                     else if (daysDifference <= 45)
                     {
                         statusColor = "yellow";
@@ -98,6 +121,7 @@ namespace CityWatch.Data.Models
                 return statusColor;
             }
         }
+        public bool IsPending { get; set; }
 
     }
 }

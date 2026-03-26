@@ -22,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Options;
 using Microsoft.Office.Interop;
+using Microsoft.Office.Interop.Access;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
 using System;
@@ -936,6 +937,7 @@ namespace CityWatch.Web.Services
                 if (HR1List.Any())
                 {
                     guard.HR1Status = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR1List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                       HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                       "Green";
                 }
@@ -945,6 +947,7 @@ namespace CityWatch.Web.Services
                 if (HR2List.Any())
                 {
                     guard.HR2Status = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR2List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                       HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                       "Green";
                 }
@@ -954,6 +957,7 @@ namespace CityWatch.Web.Services
                 if (HR3List.Any())
                 {
                     guard.HR3Status = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR3List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                       HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                       "Green";
                 }
@@ -1087,16 +1091,27 @@ namespace CityWatch.Web.Services
                 }
 
                 // Get the first non-null expiry date (if any)
-                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+                //var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+                var firstItem = selectedList
+                    .Where(x => x.ExpiryDate != null)
+                    .OrderBy(x => x.IsPending)   // false comes first, true comes next
+                    .FirstOrDefault();
 
                 if (firstItem != null)
                 {
                     var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
-
+                    var daysAfterExpiry = (today.Date - expiryDate.Date).TotalDays;
                     // Compare expiry date with today's date
                     if (expiryDate < today)
                     {
-                        return "Red";
+                        if (firstItem.IsPending && daysAfterExpiry <= 60)
+                        {
+                            return "Orange";
+                        }
+                        else
+                        {
+                            return "Red";
+                        }
                     }
                     else if ((expiryDate - today).Days < 45)
                     {

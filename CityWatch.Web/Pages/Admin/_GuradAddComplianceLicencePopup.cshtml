@@ -4,14 +4,18 @@
 @using CityWatch.Web.Helpers;
 @inject IViewDataService viewDataServiceNew
 
-
+@{
+    var hidePendingToggle = "hidden";
+}
 @if (AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
 {
     <input type="hidden" id="hdnIsAdminLoggedIn1" value="AdminGlobal" />
+    hidePendingToggle = "";
 }
 else
 {
     <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
+    hidePendingToggle = "hidden";
 }
 <div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -62,6 +66,20 @@ else
                                 <div class="pr-3 w-100"><input type="date" class="form-control w-100" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")"></div>
                                 
                             </div>
+                            <div class="form-group col-md-7 mb-1 pl-0 @hidePendingToggle" id="doePendingToggleContainer">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+                                    <div class="custom-control custom-switch custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" id="chb_IsPending">
+                                        <label class="custom-control-label ml-4 mb-2" for="chb_IsPending"></label>
+                                        <input type="hidden" id="IsPendingOn" name="GuardComplianceAndLicense.IsPending" />
+                                        <p class="left-text text-danger">Pending:</p>&nbsp;&nbsp;
+
+                                        <p class="right-text">
+                                                When selected, item will appear as ORANGE and turn RED in 60 days unless updated with new licence.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-group col-md-7 mb-1 pl-0" id="doiNoteContainer">
                                 <div class="container p-0" style="display:flex;font-size:11px;color:black">
 
@@ -74,8 +92,8 @@ else
                                 </div>
                             </div>
                         </div>
-                    </div>
-
+                     </div>
+                    
                     <hr class="mb-1 mt-2" />
                     <div class="form-row">
                         <div class="form-group col-md-12 mt-1">
