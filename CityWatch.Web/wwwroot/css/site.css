@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 a.navbar-brand {
     white-space: normal;
@@ -186,13 +186,54 @@ i.client-status-circle {
 }
 
 /* -- media -- */
+@media (min-width: 768px) {
+    .container.slogan {
+        width: 85%;
+    }
+}
+
 @media (min-width: 1024px) {
     .container.slogan {
-        width: 50%;
+        width: 75%;
     }
 
     #Report_SiteColourCodeId {
         width: 30% !important;
+    }
+}
+
+@media (min-width: 1400px) {
+    .container.slogan {
+        width: 60%;
+    }
+}
+
+@media screen and (max-height: 700px) and (orientation: landscape) {
+    .slogan p, .slogan .my-2 {
+        font-size: 0.95rem;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .slogan.pb-3, .slogan.pb-md-3 {
+        padding-bottom: 0.5rem !important;
+    }
+    a.navbar-brand img {
+        height: 45px;
+    }
+}
+
+.login-disclaimer {
+    width: 75%;
+}
+
+@media screen and (max-height: 700px) and (orientation: landscape), screen and (max-width: 800px) {
+    .login-disclaimer {
+        width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    .login-disclaimer br {
+        display: none;
     }
 }
 

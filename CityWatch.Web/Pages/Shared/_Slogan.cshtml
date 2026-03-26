@@ -1,10 +1,10 @@
-﻿@using CityWatch.Data.Providers;
+@using CityWatch.Data.Providers;
 @inject IUserDataProvider viewDataService;
 @{
    
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
 }
-<section class="container slogan pb-5">
+<section class="container slogan pb-2 pb-md-3">
     <div class="row border border-dark">
         <div class="col-md-12 text-center">
             @*<p class="my-2">Sign-On is prior to shift start (15 min window) as soon as you are onsite</p>
