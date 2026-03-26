@@ -82,11 +82,11 @@ $(function () {
     }
     //p7-137--pax-start
     function populateAllNotesGrid(notes) {
+        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
+            $('#kvl-all-notes-grid').DataTable().clear().destroy();
+        }
         var allNotesTbody = $('#kvl-all-notes-grid tbody');
         allNotesTbody.empty();
-        if ($.fn.DataTable.isDataTable('#kvl-all-notes-grid')) {
-            $('#kvl-all-notes-grid').DataTable().destroy();
-        }
 
         var notesCount = 0;
 
