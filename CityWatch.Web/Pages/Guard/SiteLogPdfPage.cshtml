@@ -1,0 +1,72 @@
+﻿
+@page
+@model SiteLogPdfPageModel
+@{
+    Layout = null;
+    var pdfUrl = $"/Guard/SiteLogPdf?id={Model.Id}&t={Model.t}";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SiteLogPdf</title>
+    @* <link rel="icon" type="@Model.ClientFaviconType" href="@Model.ClientFavicon" /> *@
+    <link rel="icon" type="@Model.ClientFaviconType" href="@Url.Content(Model.ClientFavicon)" />
+
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border: 0.25em solid #ccc;
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+        to { transform: rotate(360deg); }
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        iframe.loaded {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner -->
+    <div id="spinner">
+        <div class="spinner-border"></div>
+    </div>
+
+    <!-- PDF iframe -->
+    <iframe id="pdfFrame" src="@pdfUrl" onload="hideSpinner()"></iframe>
+
+    <script>
+        function hideSpinner() {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('pdfFrame').classList.add('loaded');
+        }
+    </script>
+</body>
+</html>
