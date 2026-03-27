@@ -161,12 +161,14 @@ namespace CityWatch.Web.API
 
                         // Group document statuses by GroupName for faster lookups
                         var statusLookup = hrGroupStatusesNew.ToLookup(x => x.GroupName.Trim());
+                       
 
                         // Set HR1Status
                         var HR1List = statusLookup["HR 1 (C4i)"];
                         if (HR1List.Any())
                         {
                             HR1 = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                 HR1List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
@@ -176,6 +178,7 @@ namespace CityWatch.Web.API
                         if (HR2List.Any())
                         {
                             HR2 = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                HR2List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
@@ -185,6 +188,7 @@ namespace CityWatch.Web.API
                         if (HR3List.Any())
                         {
                             HR3 = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                HR3List.Any(x => x.ColourCodeStatus == "Orange") ? "Orange" :
                                               HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                               "Green";
                         }
