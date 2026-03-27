@@ -251,42 +251,7 @@ namespace CityWatch.Web.Services
             var zipFolderPath = GetZipFolderPath();
             var fileNamePart = string.Empty;
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds).Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
-            //Old Code Start
-            //if (!clientSiteKpiSettings.Any())
-            //{
-            //    //return string.Empty;
-            //    /* No DropboxImagesDir set for these sites 06102023*/
-            //    var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
-            //    fileNamePart = clientSiteDetails[0].Name;
-            //    foreach (var clientSiteDetail in clientSiteDetails)
-            //    {
-            //        var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteDetail.Id, logBookType, logFromDate, logToDate);
-            //        //if (!clientSiteLogBooks.Any())
-            //        //    continue;
-            //        //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
-            //        CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
-            //    }
-            //}
-            //else
-            //{
-            //    /* DropboxImagesDir set for these sites*/
-            //    fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
-            //    foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
-            //    {
-            //        var clientSiteLogBooks = _clientDataProvider.GetClientSiteFunsionLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
-            //        //if (!clientSiteLogBooks.Any())
-            //        //    continue;
-            //        //if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
-            //        //{
-            //        //    await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
-            //        //}
-
-            //        //var logbooksToCreate = GetLogBooksFailedToDownloadFusion(clientSiteLogBooks, zipFolderPath);
-            //        CreateLogBookReportsFusion(clientSiteLogBooks, zipFolderPath);
-            //    }
-
-            //}
-            //Old Code end
+            
             var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
             fileNamePart = clientSiteDetails[0].Name;
             var clientSiteLogBooks = _guardLogDataProvider.GetGuardFusionLogs(clientSiteIds, logFromDate, logToDate, false).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect))
@@ -300,24 +265,24 @@ namespace CityWatch.Web.Services
         private void CreateLogBookReportsFusion(List<ClientSiteRadioChecksActivityStatus_History> logBooksToCreate, string zipFolderPath)
         {
 
-            var checkGMT = logBooksToCreate
-                 .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
-                 .Select(x => x.EventDateTimeZoneShort)
-                 .FirstOrDefault();
+            //var checkGMT = logBooksToCreate
+            //     .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+            //     .Select(x => x.EventDateTimeZoneShort)
+            //     .FirstOrDefault();
 
-            if (checkGMT != null)
-            {
-                logBooksToCreate.ForEach(x =>
-                {
-                    if (x.EventDateTimeZoneShort == null)
-                    {
-                        x.EventDateTimeZoneShort = checkGMT;
-                        x.EventDateTime = x.LastSWCreatedTime ?? x.EventDateTime;
-                        x.EventDateTimeLocal = x.LastSWCreatedTime ?? x.EventDateTime;
-                    }
-                });
+            //if (checkGMT != null)
+            //{
+            //    logBooksToCreate.ForEach(x =>
+            //    {
+            //        if (x.EventDateTimeZoneShort == null)
+            //        {
+            //            x.EventDateTimeZoneShort = checkGMT;
+            //            x.EventDateTime = x.LastSWCreatedTime ?? x.EventDateTime;
+            //            x.EventDateTimeLocal = x.LastSWCreatedTime ?? x.EventDateTime;
+            //        }
+            //    });
 
-            }
+            //}
 
             //notificationCreatedTime
 
@@ -340,12 +305,7 @@ namespace CityWatch.Web.Services
 
         private string GetFusionLogFileName(List<ClientSiteRadioChecksActivityStatus_History> logBook)
         {
-            
-
-            
            return _guardLogReportGenerator.GeneratePdfReportForFusion(logBook);
-
-           
         }
 
     }
