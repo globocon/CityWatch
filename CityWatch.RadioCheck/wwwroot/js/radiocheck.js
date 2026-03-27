@@ -802,14 +802,20 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             render: function (value, type, data) {
 
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+                    
+                        if (value == 'Orange') {
 
+                            return '<i class="fa fa-circle"style="color:orange;"></i>';
+                        }
+                        else {
 
-                    // Include the sort value as a hidden element and render the color circle
-                    return '<span style="display:none;">' + value + '</span>' +
-                        '<i class="fa fa-circle text-' +
-                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                            value == 'Yellow' ? 'warning' : 'muted') +
-                        '"></i>';
+                            // Include the sort value as a hidden element and render the color circle
+                            return '<span style="display:none;">' + value + '</span>' +
+                                '<i class="fa fa-circle text-' +
+                                (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                                    value == 'Yellow' ? 'warning' : 'muted') +
+                                '"></i>';
+                        }
                 }
                 else {
                     return '<i class="fa fa-circle text-muted"></i>';
@@ -825,11 +831,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
-                    return '<span style="display:none;">' + value + '</span>' +
-                        '<i class="fa fa-circle text-' +
-                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                            value == 'Yellow' ? 'warning' : 'muted') +
-                        '"></i>';
+                    if (value == 'Orange') {
+
+                        return '<i class="fa fa-circle"style="color:orange;"></i>';
+                    }
+                    else {
+
+                        // Include the sort value as a hidden element and render the color circle
+                        return '<span style="display:none;">' + value + '</span>' +
+                            '<i class="fa fa-circle text-' +
+                            (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                                value == 'Yellow' ? 'warning' : 'muted') +
+                            '"></i>';
+                    }
                 }
                 else {
                     return '<i class="fa fa-circle text-muted"></i>';
@@ -844,13 +858,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
 
-                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+                if (value == 'Orange') {
 
+                    return '<i class="fa fa-circle"style="color:orange;"></i>';
+                }
+                else {
+
+                    // Include the sort value as a hidden element and render the color circle
                     return '<span style="display:none;">' + value + '</span>' +
                         '<i class="fa fa-circle text-' +
                         (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                             value == 'Yellow' ? 'warning' : 'muted') +
                         '"></i>';
+                }
                 }
                 else {
                     return '<i class="fa fa-circle text-muted"></i>';
