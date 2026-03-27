@@ -1434,7 +1434,7 @@
             // else toggleClientGpsLink(true, gps);
         }
         else{
-            document.getElementById("Report_DateLocation_ClientAddress").value = '';
+            document.getElementById("Report_DateLocation_ClientAddress").value = 'Unknown, GPS used instead';
             getLiveGpsCoordinates();
             const gps = document.getElementById("Report_DateLocation_ClientSiteLiveGps").value;
             toggleClientGpsLink(true, gps);

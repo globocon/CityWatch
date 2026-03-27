@@ -154,6 +154,11 @@ namespace CityWatch.Web.Services
 
         public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite, string Templete)
         {
+            if (incidentReport.DateLocation.IsUnknownGpsLocationAddress)
+            {
+                incidentReport.DateLocation.ClientAddress = "Unknown, GPS used instead";
+            }
+
             //dynamic template based on the domain 
             var IRPdfTemplete = IO.Path.Combine(_ReportRootDir, TEMPLATE_DIR, Templete);
             if (IRPdfTemplete == string.Empty)
