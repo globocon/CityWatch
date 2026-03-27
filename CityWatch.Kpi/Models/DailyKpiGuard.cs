@@ -7,6 +7,7 @@ using CityWatch.Kpi.Services;
 using CityWatch.Data.Providers;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Text.RegularExpressions;
+using iText.Layout.Element;
 
 namespace CityWatch.Kpi.Models
 {
@@ -353,6 +354,11 @@ namespace CityWatch.Kpi.Models
                     {
                         HR = "E";
                     }
+                    else if (HR1List.Where(x => x.ColourCodeStatus == "Orange").ToList().Count > 0)
+                    {
+                        HR = "P";
+
+                    }
                     else if (HR1List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
                     {
                         HR = "N";
@@ -429,9 +435,23 @@ namespace CityWatch.Kpi.Models
                             var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
                             var timeDifference = ExpiryDate - today;
 
+                            //if (ExpiryDate < today)
+                            //{
+                            //    ColourCode = "Red";
+                            //}
+                            
+                            // Compare expiry date with today's date
                             if (ExpiryDate < today)
                             {
-                                ColourCode = "Red";
+                                var daysAfterExpiry = (today.Date - Convert.ToDateTime(ExpiryDate).Date).TotalDays;
+                                if (SelectedList.FirstOrDefault().IsPending && daysAfterExpiry <= 60)
+                                {
+                                    ColourCode = "Orange";
+                                }
+                                else
+                                {
+                                    ColourCode = "Red";
+                                }
                             }
                             else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
                             {

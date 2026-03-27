@@ -45,12 +45,14 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_GREEN = "#96e3ac";
         private const string CELL_BG_RED = "#ffcccc";
         private const string CELL_BG_YELLOW = "#fcf8d1";
+        private const string CELL_BG_ORANGE = "#ffe5b4";
         private const string CELL_BG_BLUE_HEADER = "#bdd7ee";
         private const string CELL_BG_YELLOW_IR_COUNT = "#feff9a";
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
         private const string CELL_FONT_GREEN = "#008000";
         private const string CELL_FONT_RED = "#FF0000";
         private const string CELL_FONT_YELLOW = "#FFFF00";
+        private const string CELL_FONT_ORANGE = "#FFA500";
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
 
@@ -1088,7 +1090,7 @@ namespace CityWatch.Kpi.Services
                             var daysAfterExpiry = (DateTime.Today.Date - expiryDate.Value.Date).TotalDays;
                             if (matchingDescription.IsPending && daysAfterExpiry <= 60)
                             {
-                                cellColor = "#ffe5b4";
+                                cellColor = CELL_BG_ORANGE;
                                 int digits = daysAfterExpiry.ToString().Length;
                                 if(digits == 1 )
                                     expiryDateString = "Pending - 0" + daysAfterExpiry.ToString();
@@ -1629,6 +1631,9 @@ namespace CityWatch.Kpi.Services
                 return CELL_FONT_RED;
             if (hrValue == "N")
                 return CELL_FONT_YELLOW;
+            if (hrValue == "P")
+                return CELL_FONT_ORANGE;
+            
 
             return string.Empty;
         }
