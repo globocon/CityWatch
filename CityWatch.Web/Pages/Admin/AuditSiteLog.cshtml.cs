@@ -475,20 +475,20 @@ namespace CityWatch.Web.Pages.Admin
             //var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs).Where(x => string.IsNullOrEmpty(keywordDownSelect) || (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
             //(!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect))); ;
 
-            var dailyGuardLogs = _auditLogViewDataService
-    .GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs)
-    .Where(x =>
-        // filter by keyword if provided
-        (string.IsNullOrEmpty(keywordDownSelect) ||
-            (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
-            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
-        &&
-        // Exclude only when ActivityType is "LB" and Notes contain [NFC] or [BLE]
-        !(x.ActivityType == "LB" &&
-          (!string.IsNullOrEmpty(x.Notes) &&
-           (x.Notes.Contains("[NFC]") || x.Notes.Contains("[BLE]"))))
-    )
-    .ToList();
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(arClientSiteIds, logFromDate, logToDate, excludeSystemLogs)
+                                    .Where(x =>
+                                        // filter by keyword if provided
+                                        (string.IsNullOrEmpty(keywordDownSelect) ||
+                                            (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)) ||
+                                            (!string.IsNullOrEmpty(x.GuardName) && x.GuardName.Contains(keywordDownSelect)))
+                                        &&
+                                        // Exclude only when ActivityType is "LB" and Notes contain [NFC] or [BLE]
+                                        !(x.ActivityType == "LB" &&
+                                          (!string.IsNullOrEmpty(x.Notes) &&
+                                           (x.Notes.Contains("[NFC]") || x.Notes.Contains("[BLE]"))))
+                                    ).ToList();
+
+
             foreach (var guardlog in dailyGuardLogs)
             {
                 if (guardlog.LBId != null)
@@ -540,10 +540,10 @@ namespace CityWatch.Web.Pages.Admin
                 else
                 {
                     var arClientSiteIds = clientSiteId
-               .Split(";")
-               .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
-               .Select(z => int.Parse(z))
-               .ToArray();
+                       .Split(";")
+                       .Where(z => !string.IsNullOrWhiteSpace(z)) // Ensure no empty segments are processed
+                       .Select(z => int.Parse(z))
+                       .ToArray();
                     zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(arClientSiteIds, logFromDate, logToDate, LogBookType.DailyGuardLog, keywordDownSelect).Result;
                 }
             }
@@ -711,9 +711,9 @@ namespace CityWatch.Web.Pages.Admin
 
         public IActionResult OnPostWandStrikeAuditSiteLogs(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
         {
-           // if(!string.IsNullOrEmpty(wandStrikeAuditLogRequest.TagLabel)) { wandStrikeAuditLogRequest.TagLabel = Uri.UnescapeDataString(wandStrikeAuditLogRequest.TagLabel); }            
+            // if(!string.IsNullOrEmpty(wandStrikeAuditLogRequest.TagLabel)) { wandStrikeAuditLogRequest.TagLabel = Uri.UnescapeDataString(wandStrikeAuditLogRequest.TagLabel); }            
 
-            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x=> x.DateTimeSort).ToList();
+            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
             return new JsonResult(new { wandStrikeAuditLogViewModel });
         }
 

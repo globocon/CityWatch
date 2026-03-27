@@ -1145,7 +1145,10 @@ namespace CityWatch.Web.Services
                     //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
 
 
-                    reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
+                    reportDataTable.AddCell(new Cell().SetKeepTogether(true)
+                        .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                        .SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE))
+                        .Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
                     //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
                     //var notes = entry.IrEntryType.HasValue ?
                     //                    entry.Notes :
@@ -1470,20 +1473,22 @@ namespace CityWatch.Web.Services
             try
             {
 
-                if (entry.EventDateTimeLocal != null)
-                {
-                    DateTime localTime = (DateTime)entry.EventDateTimeLocal;
-                    var dt = localTime.ToString("HH:mm") + " Hrs " + entry.EventDateTimeZoneShort;
-                    return dt;
-                }
-                else
-                {
-                    CultureInfo cultureInfo = new CultureInfo("en-AU");
-                    DateTime eventDateTime = (DateTime)entry.EventDateTime;
-                    string formattedDateTime = eventDateTime.ToString("HH:mm", cultureInfo);
+                //if (entry.EventDateTimeLocal != null)
+                //{
+                //    DateTime localTime = (DateTime)entry.EventDateTimeLocal;
+                //    var dt = localTime.ToString("HH:mm") + " Hrs " + entry.EventDateTimeZoneShort;
+                //    return dt;
+                //}
+                //else
+                //{
+                //    CultureInfo cultureInfo = new CultureInfo("en-AU");
+                //    DateTime eventDateTime = (DateTime)entry.EventDateTime;
+                //    string formattedDateTime = eventDateTime.ToString("HH:mm", cultureInfo);
 
-                    return formattedDateTime + " Hrs";
-                }
+                //    return formattedDateTime + " Hrs";
+                //}
+
+                return entry.EventDateTime.ToString("HH:mm") + " Hrs " + entry.EventDateTimeZoneShort;
 
             }
             catch (Exception ex)

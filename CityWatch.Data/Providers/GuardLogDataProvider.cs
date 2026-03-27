@@ -1596,8 +1596,8 @@ namespace CityWatch.Data.Providers
             if (profileDetailsInDb != null && !string.IsNullOrWhiteSpace(notes))
             {
                 var newNoteWithDate = $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")} - {notes.Trim()}";
-                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes) 
-                    ? newNoteWithDate 
+                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes)
+                    ? newNoteWithDate
                     : $"{newNoteWithDate}\r\n{profileDetailsInDb.Notes}";
                 _context.SaveChanges();
             }
@@ -1614,8 +1614,8 @@ namespace CityWatch.Data.Providers
             if (profileDetailsInDb != null && !string.IsNullOrWhiteSpace(notes))
             {
                 var newNoteWithDate = $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm")} - {notes.Trim()}";
-                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes) 
-                    ? newNoteWithDate 
+                profileDetailsInDb.Notes = string.IsNullOrWhiteSpace(profileDetailsInDb.Notes)
+                    ? newNoteWithDate
                     : $"{newNoteWithDate}\r\n{profileDetailsInDb.Notes}";
                 _context.SaveChanges();
             }
@@ -6385,6 +6385,21 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
+            //// Fetch GuardLogs
+            //var GuardLogs = _context.GuardLogs
+            //    .AsNoTracking()
+            //    .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) &&
+            //                // z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog &&
+            //                z.ClientSiteLogBook.Date >= logFromDate &&
+            //                z.ClientSiteLogBook.Date <= logToDate &&
+            //                (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //    .Include(z => z.GuardLogin)
+            //    .Include(z => z.GuardLogin.Guard)
+            //    .Include(z => z.GuardLogin.ClientSiteLogBook)
+            //    .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
+            //    .ToList();
+
+
             // Fetch GuardLogs
             var GuardLogs = _context.GuardLogs
                 .AsNoTracking()
@@ -6393,11 +6408,21 @@ namespace CityWatch.Data.Providers
                             z.ClientSiteLogBook.Date >= logFromDate &&
                             z.ClientSiteLogBook.Date <= logToDate &&
                             (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
-                .Include(z => z.GuardLogin)
-                .Include(z => z.GuardLogin.Guard)
-                .Include(z => z.GuardLogin.ClientSiteLogBook)
-                .Include(z => z.GuardLogin.ClientSiteLogBook.ClientSite)
                 .ToList();
+
+
+            var guardLogin = _context.GuardLogins
+                .Where(z => z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate)
+                 .Include(z => z.Guard)
+                .Include(z => z.ClientSiteLogBook)
+                .Include(z => z.ClientSiteLogBook.ClientSite)
+                .ToList();
+
+            foreach (var g in GuardLogs)
+            {
+                g.GuardLogin = guardLogin.FirstOrDefault(x => x.Id == g.GuardLoginId);
+            }
+
 
             // Fetch SW logs
             //        var activityTypes = new[] { "SW", "KV" }; // Add the activity types you want to include
