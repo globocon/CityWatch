@@ -3148,6 +3148,90 @@ namespace CityWatch.Web.API
         }
 
 
+        [HttpPost("SavePushNotificationTestMessageV2")]
+        public IActionResult SavePushNotificationTestMessageV2([FromForm] int guardId, [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string notifications, [FromForm] int rcPushMessageId)
+        {
+            var status = true;
+            var message = "Success";
+
+            try
+            {
+                if (guardId <= 0 || clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
+                var logBookType = LogBookType.DailyGuardLog;
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
+
+                // Get Guard Login ID
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
+
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
+                // Save Guard Log Entry
+                var signOffEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = notifications,
+                    IrEntryType = IrEntryType.Normal,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute()
+                };
+                _guardLogDataProvider.SaveGuardLog(signOffEntry);
+
+                // Update acknowledgement
+                _guardLogDataProvider.UpdateIsAcknowledged(rcPushMessageId);
+
+                // Send notification to Citywatch logbook
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Any())
+                {
+                    var logbookType = LogBookType.DailyGuardLog;
+                    var logbookDate = DateTime.Today;
+
+                    var logBookIdNew = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(
+                        clientSiteForLogbook.First().Id, logbookType, out logbookDate);
+
+                    var selectedGuardId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault()?.GuardId ?? 0;
+                    var guardDetails = _guardLogDataProvider.GetGuards(selectedGuardId);
+                    var guardInitials = guardDetails != null ? $"{guardDetails.Name} [{guardDetails.Initial}]" : "Unknown Guard";
+
+                    var clientSiteName = _guardLogDataProvider.GetClientSites(clientsiteId).FirstOrDefault()?.Name ?? "Unknown Site";
+
+                    var notifcationToCitywatch = new GuardLog
+                    {
+                        ClientSiteLogBookId = logBookIdNew,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = $"{notifications} - {guardInitials} - {clientSiteName}",
+                        IrEntryType = IrEntryType.Normal,
+                        EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                        EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                        EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                        EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                        EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute()
+                    };
+
+                    _guardLogDataProvider.SaveGuardLog(notifcationToCitywatch);
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = $"Error: {ex.Message}";
+            }
+
+            return Ok(new { status, message });
+        }
+
+
 
         [HttpGet("GetTagStatus")]
         public ActionResult<IEnumerable<SiteTagStatus>> GetTagStatus(int clientId)
