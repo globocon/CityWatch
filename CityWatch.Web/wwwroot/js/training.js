@@ -3735,8 +3735,8 @@ $('#btnSubmitTest').on('click', function (e) {
 
 $('#btnRetryTest').on('click', function (e) {
     e.preventDefault();
-    deleteGuardAttendedQuestions(1);
-    deleteGuardAttendedFeedbackQuestions(1);
+    //deleteGuardAttendedQuestions(1);
+    //deleteGuardAttendedFeedbackQuestions(1);
     location.reload();
     
 });
@@ -4488,7 +4488,9 @@ $('#btnWarningRetryTest').on('click', function (e) {
     e.preventDefault();
     deleteGuardAttendedQuestions(1);
     deleteGuardAttendedFeedbackQuestions(1);
-
+   
+    $('#cardWarningPage').hide()
+    //$('#cardFrontPage').attr('hidden', false);
     location.reload();
 
 });
