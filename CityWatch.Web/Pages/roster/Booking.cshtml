@@ -15,8 +15,10 @@
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label>Project Name</label>
-                    <div class="d-flex">
-                        <select id="project_name" class="form-control" style="width: 100%;"></select>
+                    <div class="d-flex align-items-center">
+                        <div style="flex: 1; min-width: 0;">
+                            <select id="project_name" class="form-control" style="width: 100%;"></select>
+                        </div>
                         <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
                             @if (!Model.IsLocked)
                             {
