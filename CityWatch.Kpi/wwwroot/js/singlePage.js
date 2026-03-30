@@ -1963,6 +1963,8 @@ $(function () {
             $table.find('tbody tr').each(function (i) {
                 $(this).find('.gj-sno').text(i + 1);
             });
+            var rowCount = $table.find('tbody tr').length;
+            $('#WandPointsPerPatrol').val(rowCount - 1);
         },
 
         initialized: function (e) {
