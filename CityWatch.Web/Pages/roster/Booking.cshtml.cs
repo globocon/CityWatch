@@ -123,6 +123,7 @@ namespace CityWatch.Web.Pages.roster
                     var targetDate = startDate.AddDays(dayOffset);
                     return schedules
                         .Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
+                        .OrderBy(s => s.ShiftStart)
                         .Select(s => new
                         {
                             id = s.Id,
