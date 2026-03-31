@@ -1054,7 +1054,7 @@ namespace CityWatch.Kpi.Pages.Admin
         //Menu chage -start
         public JsonResult OnGetSmartWandSettings(int clientSiteId)
         {
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z=>z.SmartWandId).ToList());
         }
 
         public JsonResult OnPostDeleteSmartWandSettings(int id)
