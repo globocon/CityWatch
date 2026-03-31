@@ -90,6 +90,7 @@ namespace CityWatch.Web.Pages.roster
         {
             var projects = _context.RosterGroups
                 .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .OrderBy(x => x.Name)
                 .Select(x => new { id = x.Id, text = x.Name })
                 .ToList();
 
@@ -372,6 +373,23 @@ namespace CityWatch.Web.Pages.roster
                 _context.RosterSchedules.RemoveRange(schedules);
 
                 _context.RosterGroups.Remove(group);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Project not found." });
+        }
+
+        public async Task<IActionResult> OnPostEditGroup(int groupId, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Project name is required." });
+            }
+
+            var group = await _context.RosterGroups.FindAsync(groupId);
+            if (group != null)
+            {
+                group.Name = name;
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true });
             }

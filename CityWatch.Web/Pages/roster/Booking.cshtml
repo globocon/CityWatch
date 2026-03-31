@@ -22,7 +22,8 @@
                         <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
                             @if (!Model.IsLocked)
                             {
-                                <button class="btn btn-outline-danger btn-sm" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                                <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
+                                <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
                             }
                             <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
                             <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
@@ -140,6 +141,30 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="btnSaveShift">Save Shift</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div class="modal fade" id="editGroupModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Project</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" id="txtEditGroupName" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveEditGroup">Save</button>
                 </div>
             </div>
         </div>
@@ -1003,6 +1028,54 @@
 
             $('#search_site').on('select2:select', function (e) {
                 $(this).next().find('.select2-selection__rendered').attr('title', e.params.data.text);
+            });
+
+            // Handle Project Edit
+            $('#btnEditGroup').on('click', function(e) {
+                e.preventDefault();
+                if (!currentGroupId) return;
+                
+                var projectData = $('#project_name').select2('data');
+                var groupName = projectData.length > 0 ? projectData[0].text : '';
+                $('#txtEditGroupName').val(groupName);
+                $('#editGroupModal').modal('show');
+            });
+
+            $('#btnSaveEditGroup').on('click', function() {
+                var newName = $('#txtEditGroupName').val().trim();
+                if (!newName) {
+                    alert('Project name is required.');
+                    return;
+                }
+                if (!currentGroupId) return;
+                
+                var btn = $(this);
+                btn.prop('disabled', true).text('Saving...');
+                
+                $.ajax({
+                    url: '/roster/Booking?handler=EditGroup',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { groupId: currentGroupId, name: newName },
+                    success: function (res) {
+                        btn.prop('disabled', false).text('Save');
+                        if (res.success) {
+                            $('#editGroupModal').modal('hide');
+                            
+                            // Update Select2 text
+                            var option = $('#project_name option:selected');
+                            option.text(newName);
+                            $('#project_name').trigger('change');
+                            
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).text('Save');
+                        alert('An error occurred.');
+                    }
+                });
             });
 
             // Handle Project Deletion
