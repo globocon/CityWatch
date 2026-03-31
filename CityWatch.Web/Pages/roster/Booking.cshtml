@@ -1035,8 +1035,8 @@
                 e.preventDefault();
                 if (!currentGroupId) return;
                 
-                var projectData = $('#project_name').select2('data');
-                var groupName = projectData.length > 0 ? projectData[0].text : '';
+                // Fetch directly from the underlying selected option to ensure fresh data
+                var groupName = $('#project_name option:selected').text();
                 $('#txtEditGroupName').val(groupName);
                 $('#editGroupModal').modal('show');
             });
@@ -1062,9 +1062,15 @@
                         if (res.success) {
                             $('#editGroupModal').modal('hide');
                             
-                            // Update Select2 text
+                            // Update both the option element and the Select2 cached data object
                             var option = $('#project_name option:selected');
                             option.text(newName);
+                            
+                            var select2Data = $('#project_name').select2('data');
+                            if (select2Data && select2Data.length > 0) {
+                                select2Data[0].text = newName;
+                            }
+                            
                             $('#project_name').trigger('change');
                             
                         } else {
