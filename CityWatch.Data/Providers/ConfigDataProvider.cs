@@ -2081,7 +2081,7 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardAttendedQuestions(int guardId, int trainingCourseId)
         {
 
-            var report = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).ToList(); ;
+            var report = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCorrect==false ).ToList(); ;
             if (report.Count > 0)
             {
                 foreach (var item in report)
@@ -2146,7 +2146,7 @@ namespace CityWatch.Data.Providers
         }
         public List<GuardTrainingAttendedQuestionsAndAnswers> GetGuardAttendedQuestionsAndanswers(int guardId, int trainingCourseId)
         {
-            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId).Include(x => x.TrainingTestQuestions).Include(x => x.TrainingTestQuestionsAnswers).OrderBy(x => x.Id).ToList();
+            var correctQuestions = _context.GuardTrainingAttendedQuestionsAndAnswers.Where(x => x.GuardId == guardId && x.TrainingCourseId == trainingCourseId && x.IsCorrect == false).Include(x => x.TrainingTestQuestions).Include(x => x.TrainingTestQuestionsAnswers).OrderBy(x => x.Id).ToList();
             return correctQuestions;
         }
         public TrainingTestFeedbackQuestions GetGuardFeedbackQuestions(int hrSettingsId, int guardId)
