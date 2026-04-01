@@ -183,11 +183,64 @@ $(function () {
 
     });
     $('#btnSaveGuardSiteSettings').on('click', function () {
+        //var isUpdateLBDailyLog = false;
+        //var isUpdateKVDailyLog = false;
+        //var isUpdateSWDailyLog = false;
+        //var isUpdateDailyLogFusion = false;
+        var test = $('#IsDosDontListEnabledHidden').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        //if ($('#enableLBLogDump').is(":checked")) {
+        //    isUpdateLBDailyLog = true;
+        //}
+        //if ($('#enableKVLogDump').is(":checked")) {
+        //    isUpdateKVDailyLog = true;
+        //}
+        //if ($('#enableSWLogDump').is(":checked")) {
+        //    isUpdateSWDailyLog = true;
+        //}
+        //if ($('#enableFusionDump').is(":checked")) {
+        //    isUpdateDailyLogFusion = true;
+        //}
+        $.ajax({
+            url: '/admin/settings?handler=SaveSiteEmail',
+            type: 'POST',
+            data: {
+                siteId: $('#gl_client_site_id').val(),
+                siteEmail: $('#gs_site_email').val(),
+                //enableLBLogDump: isUpdateLBDailyLog,
+                //enableKVLogDump: isUpdateKVDailyLog,
+                //enableSWLogDump: isUpdateSWDailyLog,
+                //uploadFusionLog: isUpdateDailyLogFusion,
+                landLine: $('#gs_land_line').val(),
+                //guardEmailTo: $('#gs_email_recipients').val(),
+                duressEmail: $('#gs_duress_email').val(),
+                duressSms: $('#gs_duress_sms').val(),
+                IsDosDontList: $('#IsDosDontListEnabledHidden').val(),
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function () {
+            alert("Saved successfully");
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+    $('#btnSaveGuardSiteScheduleSettings').on('click', function () {
         var isUpdateLBDailyLog = false;
         var isUpdateKVDailyLog = false;
         var isUpdateSWDailyLog = false;
         var isUpdateDailyLogFusion = false;
-        var test = $('#IsDosDontListEnabledHidden').val();
+
+        var isUpdateLBWeeklyLog = false;
+        var isUpdateKVWeeklyLog = false;
+        var isUpdateSWWeeklyLog = false;
+        var isUpdateWeeklyLogFusion = false;
+
+        var isUpdateLBMonthlyLog = false;
+        var isUpdateKVMonthlyLog = false;
+        var isUpdateSWMonthlyLog = false;
+        var isUpdateMonthlyLogFusion = false;
+
+
         const token = $('input[name="__RequestVerificationToken"]').val();
         if ($('#enableLBLogDump').is(":checked")) {
             isUpdateLBDailyLog = true;
@@ -201,21 +254,57 @@ $(function () {
         if ($('#enableFusionDump').is(":checked")) {
             isUpdateDailyLogFusion = true;
         }
+
+
+        if ($('#enableLBWeeklyLogDump').is(":checked")) {
+            isUpdateLBWeeklyLog = true;
+        }
+        if ($('#enableKVWeeklyLogDump').is(":checked")) {
+            isUpdateKVWeeklyLog = true;
+        }
+        if ($('#enableSWWeeklyLogDump').is(":checked")) {
+            isUpdateSWWeeklyLog = true;
+        }
+        if ($('#enableFusionWeeklyDump').is(":checked")) {
+            isUpdateWeeklyLogFusion = true;
+        }
+
+        if ($('#enableLBMonthlyLogDump').is(":checked")) {
+            isUpdateLBMonthlyLog = true;
+        }
+        if ($('#enableKVMonthlyLogDump').is(":checked")) {
+            isUpdateKVMonthlyLog = true;
+        }
+        if ($('#enableSWMonthlyLogDump').is(":checked")) {
+            isUpdateSWMonthlyLog = true;
+        }
+        if ($('#enableFusionMonthlyDump').is(":checked")) {
+            isUpdateMonthlyLogFusion = true;
+        }
         $.ajax({
-            url: '/admin/settings?handler=SaveSiteEmail',
+            url: '/admin/settings?handler=SaveSiteEmailBasedOnLogs',
             type: 'POST',
             data: {
                 siteId: $('#gl_client_site_id').val(),
-                siteEmail: $('#gs_site_email').val(),
                 enableLBLogDump: isUpdateLBDailyLog,
                 enableKVLogDump: isUpdateKVDailyLog,
                 enableSWLogDump: isUpdateSWDailyLog,
                 uploadFusionLog: isUpdateDailyLogFusion,
-                landLine: $('#gs_land_line').val(),
                 guardEmailTo: $('#gs_email_recipients').val(),
                 duressEmail: $('#gs_duress_email').val(),
-                duressSms: $('#gs_duress_sms').val(),
-                IsDosDontList: $('#IsDosDontListEnabledHidden').val(),
+
+                enableLBWeeklyLogDump: isUpdateLBWeeklyLog,
+                enableKVWeeklyLogDump: isUpdateKVWeeklyLog,
+                enableSWWeeklyLogDump: isUpdateSWWeeklyLog,
+                uploadFusionWeeklyLog: isUpdateWeeklyLogFusion,
+                guardEmailWeeklyLogTo: $('#gs_email_weely_recipients').val(),
+
+                enableLBMonthlyLogDump: isUpdateLBMonthlyLog,
+                enableKVMonthlyLogDump: isUpdateKVMonthlyLog,
+                enableSWMonthlyLogDump: isUpdateSWMonthlyLog,
+                uploadFusionMonthlyLog: isUpdateMonthlyLogFusion,
+                guardEmailMonthlyLogTo: $('#gs_email_monthly_recipients').val(),
+                
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
@@ -224,7 +313,6 @@ $(function () {
             console.log("error");
         });
     });
-
     //gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
 
     function getUrlVars() {
@@ -1492,6 +1580,47 @@ $(function () {
                     $('#enableSWLogDump').prop('checked', true);
                 if (isUpdateDailyFusionLog)
                     $('#enableFusionDump').prop('checked', true);
+
+                $('#enableLBWeeklyLogDump').prop('checked', false);
+                $('#enableKVWeeklyLogDump').prop('checked', false);
+                $('#enableSWWeeklyLogDump').prop('checked', false);
+                $('#enableFusionWeeklyDump').prop('checked', false);
+                const guardLogEmailWeeklyLogTo = result[0].guardLogEmailWeeklyLogTo;
+                const isUpdateLBWeeklyLog = result[0].uploadGuardWeeklyLog;
+                const isUploadFusionWeeklyLog = result[0].uploadFusionWeeklyLog;
+                const isUploadKVWeeklyLog = result[0].uploadKVWeeklyLog;
+                const isUploadSWWeeklyLog = result[0].uploadSWWeeklyLog;
+                if (isUpdateLBWeeklyLog)
+                    $('#enableLBWeeklyLogDump').prop('checked', true);
+                if (isUploadKVWeeklyLog)
+                    $('#enableKVWeeklyLogDump').prop('checked', true);
+                if (isUploadSWWeeklyLog)
+                    $('#enableSWWeeklyLogDump').prop('checked', true);
+                if (isUploadFusionWeeklyLog)
+                    $('#enableFusionWeeklyDump').prop('checked', true);
+                $('#gs_email_weely_recipients').val(guardLogEmailWeeklyLogTo);
+
+
+
+
+                $('#enableLBMonthlyLogDump').prop('checked', false);
+                $('#enableKVMonthlyLogDump').prop('checked', false);
+                $('#enableSWMonthlyLogDump').prop('checked', false);
+                $('#enableFusionMonthlyDump').prop('checked', false);
+                const guardLogEmailMonthlyLogTo = result[0].guardLogEmailMonthlyLogTo;
+                const isUpdateLBMonthlyLog = result[0].uploadGuardMonthlyLog;
+                const isUploadFusionMonthlyLog = result[0].uploadFusionMonthlyLog;
+                const isUploadKVMonthlyLog = result[0].uploadKVMonthlyLog;
+                const isUploadSWMonthlyLog = result[0].uploadSWMonthlyLog;
+                if (isUpdateLBMonthlyLog)
+                    $('#enableLBMonthlyLogDump').prop('checked', true);
+                if (isUploadKVMonthlyLog)
+                    $('#enableKVMonthlyLogDump').prop('checked', true);
+                if (isUploadSWMonthlyLog)
+                    $('#enableSWMonthlyLogDump').prop('checked', true);
+                if (isUploadFusionMonthlyLog)
+                    $('#enableFusionMonthlyDump').prop('checked', true);
+                $('#gs_email_monthly_recipients').val(guardLogEmailMonthlyLogTo);
 
             }
         }).fail(function () { });

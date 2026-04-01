@@ -57,5 +57,17 @@ namespace CityWatch.Data.Models
         public PatrolTouringMode PatrolTourMode { get; set; }
 
         public bool MobAppShowClientTypeandSite { get; set; }
+
+        public bool UploadGuardWeeklyLog { get; set; }
+        public bool UploadFusionWeeklyLog { get; set; }
+        public bool UploadKVWeeklyLog { get; set; }
+        public bool UploadSWWeeklyLog { get; set; }
+        public string GuardLogEmailWeeklyLogTo { get; set; }
+
+        public bool UploadGuardMonthlyLog { get; set; }
+        public bool UploadFusionMonthlyLog { get; set; }
+        public bool UploadKVMonthlyLog { get; set; }
+        public bool UploadSWMonthlyLog { get; set; }
+        public string GuardLogEmailMonthlyLogTo { get; set; }
     }
 }
