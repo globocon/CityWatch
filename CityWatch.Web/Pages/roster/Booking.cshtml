@@ -20,11 +20,8 @@
                             <select id="project_name" class="form-control" style="width: 100%;"></select>
                         </div>
                         <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
-                            @if (!Model.IsLocked)
-                            {
-                                <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
-                                <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
-                            }
+                            <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
                             <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
                             <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
                         </div>
