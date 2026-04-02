@@ -213,17 +213,29 @@ $(function () {
 
             d.paxDetails.forEach(function (pax) {
                 paxTableHtml +=
-                    '<li style="background:#fff; ' +
-                    'border:1px solid #ddd; ' +
-                    'border-radius:6px; ' +
-                    'padding:8px 12px; ' +
-                    'margin:6px auto; ' +
-                    'width:60%; ' +
-                    'text-align:center; ' +
-                        'box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+                    '<li style="width:60%; margin:8px auto; position:relative; list-style:none;">' +
+
+                    '<div style="' +
+                    'background:#f8f9fa;' +
+                    'border:1px solid #ddd;' +
+                    'border-radius:6px;' +
+                    'padding:10px 40px 10px 10px;' +
+                    'text-align:center;' +
+                    'box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+
                     '<strong>' + convertDbString(pax.personName) + '</strong>' +
-                    ' &nbsp;  &nbsp; ' +
-                '<strong>' + convertDbString(pax.mobileNumber) + '</strong>' +
+                    '&nbsp;&nbsp;&nbsp;' +
+                    '<strong>' + convertDbString(pax.mobileNumber) + '</strong>' +
+
+                    '</div>' +
+
+                    '<button type="button" ' +
+                    'class="btn btn-sm btn-outline-danger delete-pax" ' +
+                    'data-id="' + pax.id + '" ' +
+                    'style="position:absolute; right:-35px; top:50%; transform:translateY(-50%);">' +
+                    '<i class="fa fa-trash"></i>' +
+                    '</button>' +
+
                     '</li>';
             });
 
@@ -638,6 +650,34 @@ $(function () {
 
     });
     //p7-137--pax-start
+    $('#vehicle_key_daily_log tbody').on('click', '.delete-pax', function () {
+
+        //populateKvlModalPAX($(this).data('id'))
+        var id = $(this).data('id');
+        if (confirm('Are you sure want to delete this pax?')) {
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=DeleteKeyVehicleLogPax',
+                type: 'POST',
+                /* data: jsformData,*/
+                data: {
+                    Id: id
+
+                },
+
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+
+            }).done(function (result) {
+                if (result.status) {
+                    keyVehicleLog.ajax.reload();
+
+                }
+            }).always(function () {
+                $('#loader').hide();
+            });
+        }
+
+
+    });
     $('#search_kvl_log').on('keyup', function () {
         keyVehicleLog.search($(this).val()).draw();
         $("#KeyVehicleLog_ClientSiteLocationId").find('option:selected').prop("selected", false);

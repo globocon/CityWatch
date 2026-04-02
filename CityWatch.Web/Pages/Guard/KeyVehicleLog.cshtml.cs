@@ -2284,5 +2284,25 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message });
         }
         //p7-137--pax-end
+        public JsonResult OnPostDeleteKeyVehicleLogPax(int Id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+
+
+                
+                //delete pax
+                _guardLogDataProvider.DeleteKeyVehicleLogPax(Id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
     }
 }
