@@ -1087,8 +1087,17 @@
             });
 
             // Handle Project Deletion
-            $('#btnDeleteGroup').on('click', function() {
-                if (!currentGroupId) return;
+            $('#btnDeleteGroup').on('click', function(e) {
+                e.preventDefault();
+                var groupId = currentGroupId;
+                if (!groupId) {
+                    var projectData = $('#project_name').select2('data');
+                    if (projectData && projectData.length > 0) {
+                        var pid = projectData[0].id;
+                        if (!isNaN(pid) && parseInt(pid) > 0) groupId = pid;
+                    }
+                }
+                if (!groupId) return;
                 var groupName = $('#project_name').select2('data')[0].text;
 
                 if (!confirm('CRITICAL WARNING:\n\nAre you sure you want to delete the project "' + groupName + '"?\n\nThis will PERMANENTLY DELETE ALL SITES AND SHIFTS associated with this project.\n\nType "DELETE" to confirm.')) {
@@ -1105,10 +1114,9 @@
                     url: '/roster/Booking?handler=DeleteGroup',
                     type: 'POST',
                     headers: getHeaders(),
-                    data: { groupId: currentGroupId },
+                    data: { groupId: groupId },
                     success: function (res) {
                         if (res.success) {
-                            alert('Project deleted successfully.');
                             alert('Project deleted successfully.');
                             // Redirect to clear query parameters
                             window.location.href = '/roster/Booking';
@@ -1120,16 +1128,35 @@
             });
 
             // Handle PDF Download
-            $('#btnDownloadPdf').on('click', function() {
-                if (!currentGroupId) return;
+            $('#btnDownloadPdf').on('click', function(e) {
+                e.preventDefault();
+                var groupId = currentGroupId;
+                if (!groupId) {
+                    var projectData = $('#project_name').select2('data');
+                    if (projectData && projectData.length > 0) {
+                        var pid = projectData[0].id;
+                        if (!isNaN(pid) && parseInt(pid) > 0) groupId = pid;
+                    }
+                }
+                if (!groupId) return;
                 var startDateStr = currentStartDate;
-                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
+                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + groupId + '&startDate=' + startDateStr;
                 window.open(url, '_blank');
             });
 
             // Handle Rollover
-            $('#btnShowRollover').on('click', function() {
-                if (!currentGroupId) return;
+            $('#btnShowRollover').on('click', function(e) {
+                e.preventDefault();
+                var groupId = currentGroupId;
+                if (!groupId) {
+                    var projectData = $('#project_name').select2('data');
+                    if (projectData && projectData.length > 0) {
+                        var pid = projectData[0].id;
+                        if (!isNaN(pid) && parseInt(pid) > 0) groupId = pid;
+                    }
+                }
+                if (!groupId) return;
+                currentGroupId = groupId; // Update global state for confirm rollover
                 $('#rolloverModal').modal('show');
             });
 
