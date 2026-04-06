@@ -2455,6 +2455,7 @@ $('#btnAddGuardLicenseKey,#btnAddGuardLicenseKey2').on('click', function () {
         "pointer-events": "",
         "opacity": ""
     }).removeAttr("disabled");
+    $('#complianceValidationDiv').hide();
     $('#addGuardCompliancesLicenseModal').modal('show');
 });
 function resetGuardLicenseandComplianceAddModal() {
@@ -2474,6 +2475,7 @@ function resetGuardLicenseandComplianceAddModal() {
     $('#guardComplianceandlicense_fileName1').text('None');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#GuardComplianceandlicense_CurrentDateTime').val('');
+    $('#complianceValidationDiv').show();
     clearGuardValidationSummary('compliancelicanseValidationSummary');
 }
 $('#upload_complianceandlicanse_file').on('change', function () {
@@ -2742,6 +2744,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     let LoginVal = $('#hdnIsAdminLoggedIn1').val();
     let selectedItem = $('.es-visible').val();
     var HRBan = false;
+    $('#complianceValidationDiv').show();
     if (LoginVal == 'GuardLogin') {
         $.ajax({
             url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
