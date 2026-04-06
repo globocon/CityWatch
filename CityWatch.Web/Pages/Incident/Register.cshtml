@@ -584,7 +584,17 @@
                                             <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-for="@Model.Report.FeedbackType">
                                                 @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
                                                 {
-                                                    <option value="@item.Id">@item.Name</option>
+                                                    @* <option value="@item.Id">@item.Name</option> *@
+                                                    @* p1-354-Irbug-start *@
+                                                    @if(item.Id == 1)
+                                                    {
+                                                        <option value="@item.Id" selected>@item.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.Id">@item.Name</option>
+                                                    }
+                                                     @* p1-354-Irbug-end *@
                                                 }
                                             </select>
                                         </div>
