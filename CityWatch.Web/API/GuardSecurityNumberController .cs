@@ -678,18 +678,25 @@ namespace CityWatch.Web.API
                 
                 // [Optimization] Final response constructed from cached RAM data
                 var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
+                
+                // [Stability] Restore all properties required by the mobile app for offline sync
                 var response = new
                 {
                     status = 200,
-                    clientSites = cachedData.clientSites ?? new List<ClientSiteDto>(),
-                    clientTypes = cachedData.clientTypes ?? new List<DropdownItem>(),
-                    feedbackTemplates = cachedData.feedback ?? new List<Data.Providers.FeedbackTemplateViewModel>(),
-                    notifiedByFields = cachedData.notifiedBy ?? new List<string>(),
-                    siteAreas = cachedData.area ?? new List<SelectListItem>(),
-                    audioFiles = cachedData.audio ?? new List<Mp3File>(),
                     message = "Guard successfully logged in.",
                     guardLoginId = guardLoginId,
-                    tourMode = (int)(clientsiteDetails?.PatrolTourMode ?? 0)
+                    tourMode = (int)(clientsiteDetails?.PatrolTourMode ?? 0),
+                    activity = _viewDataService.GetDressAppFields(0, request.clientsiteId) ?? new List<ActivityModel>(),
+                    patrolCarLog = _viewDataService.GetPatrolCarLogs(logBookId, request.clientsiteId) ?? new List<PatrolCarLog>(),
+                    customFieldLog = _viewDataService.GetCustomFieldLogs(logBookId, request.clientsiteId) ?? new List<Dictionary<string, string>>(),
+                    rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(request.clientsiteId) ?? new List<RCLinkedDuressClientSites>(),
+                    irClientTypes = cachedData.clientTypes ?? new List<DropdownItem>(),
+                    irClientSites = cachedData.clientSites ?? new List<ClientSiteDto>(),
+                    irFeedbackTemplates = cachedData.feedback ?? new List<Data.Providers.FeedbackTemplateViewModel>(),
+                    irNotifiedByList = cachedData.notifiedBy ?? new List<string>(),
+                    irAreas = cachedData.area ?? new List<SelectListItem>(),
+                    audioList = GetAudioForMobileApp(1) ?? new List<Mp3File>(),
+                    multimediaList = GetAudioForMobileApp(2) ?? new List<Mp3File>()
                 };
                 return Ok(response);
             }
@@ -4575,7 +4582,7 @@ namespace CityWatch.Web.API
             // Apply filter only when sitename is provided
             if (!string.IsNullOrWhiteSpace(sitename))
             {
-                query = query.Where(x => x.Name == sitename);
+                query = query.Where(x => x.Name.Contains(sitename));
             }
 
             var clientSiteDtos = query
