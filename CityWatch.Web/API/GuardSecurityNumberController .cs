@@ -144,6 +144,11 @@ namespace CityWatch.Web.API
                 return Unauthorized("Access denied !!!. Please contact admin.");
             }
 
+            var CalendarEvents = _configDataProvider.GetBroadcastCalendarEventsByDate();
+            var LiveEventsNotExpired = _configDataProvider.GetBroadcastLiveEventsNotExpired();
+            var LiveEventsNotExpiredUrls = _configDataProvider.GetUrlsInsideBroadcastLiveEventsNotExpired();
+            var LiveEventsweblink = _configDataProvider.GetBroadcastLiveEventsWeblink();
+            
 
             //HRList Status start 
             var HR1 = "Grey";
@@ -201,8 +206,7 @@ namespace CityWatch.Web.API
                     }
                 }
 
-
-
+                
             }
 
             return Ok(new
@@ -214,7 +218,11 @@ namespace CityWatch.Web.API
                 HR1Status = HR1,
                 HR2Status = HR2,
                 HR3Status = HR3,
-                GuardLockStatusBasedOnRedDoc = guardLockStatusBasedOnRedDoc
+                GuardLockStatusBasedOnRedDoc = guardLockStatusBasedOnRedDoc,
+                CalendarEvents = CalendarEvents,
+                LiveEventsNotExpired = LiveEventsNotExpired,
+                LiveEventsNotExpiredUrls = LiveEventsNotExpiredUrls,
+                LiveEventsweblink = LiveEventsweblink
             });
         }
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
