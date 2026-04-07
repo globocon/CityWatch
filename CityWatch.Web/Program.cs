@@ -7,6 +7,7 @@ using CityWatch.Data.Services;
 using CityWatch.Web.API;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using CityWatch.Web.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -21,12 +22,20 @@ using System;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddFile("Logs/CityWatch-{Date}.log");
 var Configuration = builder.Configuration;
 
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
+// [Optimization] Use AddDbContext and EnableRetryOnFailure to handle high-concurrency DB connections and transient failures
+builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()).LogTo(Console.WriteLine, LogLevel.Warning));
+
+// [Stability] Add MemoryCache to shield the database from repetitive metadata requests (Shift Changes)
+builder.Services.AddMemoryCache();
+
+// [Stability] Register HttpClientFactory to prevent TCP Socket Exhaustion during high API traffic
+builder.Services.AddHttpClient();
 builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
 builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
@@ -141,6 +150,8 @@ else
     app.UseHsts();    
 }
 
+// [Stability] Global middleware to catch and log any unhandled exceptions to the file log
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 app.UseCors("AllowSpecificOrigin");
 AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 app.UseHttpsRedirection();

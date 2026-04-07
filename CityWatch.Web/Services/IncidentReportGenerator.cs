@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -80,7 +80,11 @@ namespace CityWatch.Web.Services
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
         private readonly IConfiguration _configuration;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+        // [Stability] Injected IHttpClientFactory to resolve TCP socket exhaustion during PDF generation
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<IncidentReportGenerator> _logger;
+        private readonly IViewDataService _viewDataService;
 
         private string _UploadRootDir;
         private readonly string _ReportRootDir;
@@ -127,8 +131,10 @@ namespace CityWatch.Web.Services
             IConfiguration configuration,
             ILogger<IncidentReportGenerator> logger,
             IPatrolDataReportService irChartDataService,
+            IHttpClientFactory httpClientFactory,
             CityWatchDbContext context)
         {
+            _httpClientFactory = httpClientFactory;
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
             _webHostEnvironment = webHostEnvironment;
@@ -1516,18 +1522,11 @@ namespace CityWatch.Web.Services
                 $"&hourly=precipitation_probability,precipitation,uv_index" +
                 $"&daily=uv_index_max,temperature_2m_max,temperature_2m_min" +
                 $"&timezone=Australia%2FSydney&past_days=3";
-
-                using var client = new HttpClient();
+                // [Stability] Using IHttpClientFactory created client instead of 'new HttpClient()'
+                var client = _httpClientFactory.CreateClient();
                 var json = await client.GetStringAsync(url);
-
                 var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-                //// Temperature
-                //double minTemp = obj["daily"]?["temperature_2m_min"]?[0]?.Value<double>() ?? 0;
-                //double maxTemp = obj["daily"]?["temperature_2m_max"]?[0]?.Value<double>() ?? 0;
-
-                //// UV Index
-                //double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
 
                 // Temperature
                 double minTemp = 0;
@@ -1763,7 +1762,7 @@ namespace CityWatch.Web.Services
             string url =
                 $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=uv_index";
 
-            using var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
             var json = await client.GetStringAsync(url);
 
             var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
