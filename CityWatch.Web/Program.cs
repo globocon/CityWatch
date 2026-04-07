@@ -28,8 +28,8 @@ var Configuration = builder.Configuration;
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// [Optimization] Use DbContextPool and EnableRetryOnFailure to handle high-concurrency DB connections and transient failures
-builder.Services.AddDbContextPool<CityWatchDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()).LogTo(Console.WriteLine, LogLevel.Warning));
+// [Optimization] Use AddDbContext and EnableRetryOnFailure to handle high-concurrency DB connections and transient failures
+builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()).LogTo(Console.WriteLine, LogLevel.Warning));
 
 // [Stability] Add MemoryCache to shield the database from repetitive metadata requests (Shift Changes)
 builder.Services.AddMemoryCache();
