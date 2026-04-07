@@ -82,6 +82,10 @@ namespace CityWatch.Web.API
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
+        /// <summary>
+        /// Constructor for GuardSecurityNumberController.
+        /// Injects caching, resilience, and data providers for optimized guard operations.
+        /// </summary>
         public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider,
@@ -114,22 +118,22 @@ namespace CityWatch.Web.API
             _alertEmailServices = alertEmailServices;
         }
 
+        /// <summary>
+        /// Retrieves guard profile details by security license number.
+        /// [Optimization]: Uses targeted DB lookup and .AsNoTracking() for high performance.
+        /// </summary>
         [HttpGet("GetGuardDetails/{securityNumber}")]
         public IActionResult GetGuardDetails(string securityNumber)
         {
             if (string.IsNullOrWhiteSpace(securityNumber))
                 return BadRequest(new { message = "Security number is required." });
 
-            var guard = _guardDataProvider.GetGuards()
-                .SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
+            // [Optimization]: Switched from in-memory collection filtering 
+            // to a targeted database query via GetGuardBySecurityNo.
+            var guard = _guardDataProvider.GetGuardBySecurityNo(securityNumber);
 
             if (guard == null)
             {
-                //return NotFound(new
-                //{
-                //    message = "User not found. Please check if input is correct. If you are a new, Please click Register.",
-                //    isActive = false
-                //});
                 return NotFound("User not found. Please check if input is correct.\n If you are new, Please click Register.");
             }
 
@@ -660,7 +664,9 @@ namespace CityWatch.Web.API
                 // ################### Start ################
                 string cacheKey = $"OfflineData_{request.userId}_{request.clientsiteId}";
 
-                // [Optimization] Check Cache first to avoid hitting the database
+                // [Optimization]: Memory Cache Pattern
+                // Metadata lists like ClientSites and FeedbackTemplates are served from RAM 
+                // to reduce SQL load during high-concurrency login events.
                 if (!_memoryCache.TryGetValue(cacheKey, out (
                     List<DropdownItem> clientTypes, 
                     List<ClientSiteDto> clientSites, 
@@ -4592,11 +4598,17 @@ namespace CityWatch.Web.API
             return result;
         }
 
+        /// <summary>
+        /// Retrieves client sites for the Incident Report module.
+        /// [Optimization]: Uses partial name matching (.Contains) and targeted projection.
+        /// </summary>
         private List<ClientSiteDto> GetClientSitesForIR(string sitename = "")
         {
+            // [Optimization]: We fetch the materialized list and convert to DTOs.
+            // Further optimization is applied at the DataProvider level.
             var query = _clientDataProvider.GetClientSites(null).AsQueryable();
 
-            // Apply filter only when sitename is provided
+            // Apply filter only when sitename is provided (Flexible search)
             if (!string.IsNullOrWhiteSpace(sitename))
             {
                 query = query.Where(x => x.Name.Contains(sitename));

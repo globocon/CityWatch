@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -46,6 +46,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
+        Guard GetGuardBySecurityNo(string securityNo);
 
         public string GetDefaultEmailAddress();
         DateTime? GetLogbookDateFromLogbook(int logbookId);
@@ -1424,6 +1425,17 @@ namespace CityWatch.Data.Providers
             return _context.GuardLoginSmartWandUse
                 .Where(z => z.SmartWandId == smartWandId)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Highly optimized lookup for a single guard by security number.
+        /// Uses .AsNoTracking() to bypass the EF change tracker for read-only speed.
+        /// </summary>
+        public Guard GetGuardBySecurityNo(string securityNo)
+        {
+            return _context.Guards
+                .AsNoTracking()
+                .SingleOrDefault(z => z.SecurityNo == securityNo);
         }
 
     }
