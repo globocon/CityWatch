@@ -219,14 +219,14 @@ namespace CityWatch.Web.API
 
             return Ok(new
             {
-                GuardId = guard.Id,
-                Name = guard.Name,
-                SecurityNo = guard.SecurityNo,
+                guardId = guard.Id,
+                name = guard.Name,
+                securityNo = guard.SecurityNo,
                 isActive = true,
-                HR1Status = HR1,
-                HR2Status = HR2,
-                HR3Status = HR3,
-                GuardLockStatusBasedOnRedDoc = guardLockStatusBasedOnRedDoc
+                hR1Status = HR1,
+                hR2Status = HR2,
+                hR3Status = HR3,
+                guardLockStatusBasedOnRedDoc = guardLockStatusBasedOnRedDoc
             });
         }
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
@@ -677,16 +677,19 @@ namespace CityWatch.Web.API
                 }
                 
                 // [Optimization] Final response constructed from cached RAM data
+                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
                 var response = new
                 {
-                    Status = 200,
-                    ClientSites = cachedData.clientSites,
-                    ClientTypes = cachedData.clientTypes,
-                    FeedbackTemplates = cachedData.feedback,
-                    NotifiedByFields = cachedData.notifiedBy,
-                    SiteAreas = cachedData.area,
-                    AudioFiles = cachedData.audio,
-                    Message = "Success"
+                    status = 200,
+                    clientSites = cachedData.clientSites ?? new List<ClientSiteDto>(),
+                    clientTypes = cachedData.clientTypes ?? new List<DropdownItem>(),
+                    feedbackTemplates = cachedData.feedback ?? new List<Data.Providers.FeedbackTemplateViewModel>(),
+                    notifiedByFields = cachedData.notifiedBy ?? new List<string>(),
+                    siteAreas = cachedData.area ?? new List<SelectListItem>(),
+                    audioFiles = cachedData.audio ?? new List<Mp3File>(),
+                    message = "Guard successfully logged in.",
+                    guardLoginId = guardLoginId,
+                    tourMode = (int)(clientsiteDetails?.PatrolTourMode ?? 0)
                 };
                 return Ok(response);
             }
@@ -938,7 +941,7 @@ namespace CityWatch.Web.API
                 }
             }
 
-            return Ok(offlineRecords);
+            return Ok(new { isSuccess = true, message = "Successfully synced.", data = offlineRecords });
 
         }
 
@@ -4086,7 +4089,7 @@ namespace CityWatch.Web.API
                 }
             }
 
-            return Ok(offlineRecords);
+            return Ok(new { isSuccess = true, message = "Successfully synced.", data = offlineRecords });
 
         }
 
@@ -4128,7 +4131,7 @@ namespace CityWatch.Web.API
                 }
             }
 
-            return Ok(offlineRecords);
+            return Ok(new { isSuccess = true, message = "Successfully synced.", data = offlineRecords });
 
         }
 
@@ -4189,7 +4192,7 @@ namespace CityWatch.Web.API
                 ir.IsSynced = true;
             }
 
-            return Ok(new { irOfflineCache = offlineIrRecords, irOfflineAttachments = offlineIrAttachmentRecords });
+            return Ok(new { isSuccess = true, message = "Successfully synced.", irOfflineCache = offlineIrRecords, irOfflineAttachments = offlineIrAttachmentRecords });
 
         }
 
@@ -4205,7 +4208,7 @@ namespace CityWatch.Web.API
                 if (site == null)
                     return NotFound("Client site not found");
 
-                return Ok(site.PatrolTourMode.ToString());
+                return Ok((int)(site?.PatrolTourMode ?? 0));
             }
             catch (Exception ex)
             {
