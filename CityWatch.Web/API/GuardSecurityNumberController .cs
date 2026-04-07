@@ -129,14 +129,6 @@ namespace CityWatch.Web.API
                 return BadRequest(new { message = "Security number is required." });
 
             // [Optimization] Targeted Lookup by SecurityNo to avoid full-table scans
-            var data = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityNumber);
-            if (data != null)
-            {
-                // [Stability] Use IHttpClientFactory for external API requests
-                var client = _httpClientFactory.CreateClient();
-                return Ok(data);
-            }
-
             var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityNumber);
 
             if (guard == null)
