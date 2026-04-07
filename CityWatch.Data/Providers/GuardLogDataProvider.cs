@@ -7754,6 +7754,7 @@ namespace CityWatch.Data.Providers
                 var rawData = await _context.Set<GuardLogRawProjection>()
                     .FromSqlRaw("EXEC sp_GetSiteLog @ClientSiteId={0}, @LastLogId={1}",
                                 clientsiteId, lastLogId)
+                    .AsNoTracking()
                     .ToListAsync();
 
                 var groupedResult = rawData

@@ -39,6 +39,8 @@ using static CityWatch.Data.Providers.AppConfigurationProvider;
 using static CityWatch.Web.Pages.Admin.GuardSettingsModel;
 using static CityWatch.Web.Services.ViewDataService;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 
 namespace CityWatch.Web.Services
@@ -184,7 +186,7 @@ namespace CityWatch.Web.Services
         List<ClientType> GetUserClientTypesHavingAccessThird(int? userId);
         public UserClientSiteAccess GetUserClientSiteAccessNew(int userId);
         public List<DropdownItem> GetUserClientTypesWithId(int? userId);
-        public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
+        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
 
         public List<ActivityModel> GetDressAppFields(int type, int? siteid = 0);
 
@@ -257,6 +259,10 @@ namespace CityWatch.Web.Services
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly IIrDataProvider _irDataProvider;
+        // [Optimization] MemoryCache for storing static metadata (ClientTypes, HRGroups)
+        private readonly IMemoryCache _memoryCache;
+        // [Stability] Logger for tracking cache misses and DB errors
+        private readonly ILogger<ViewDataService> _logger;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -268,9 +274,13 @@ namespace CityWatch.Web.Services
             ILogbookDataService logbookDataService,
             IAppConfigurationProvider appConfigurationProvider,
              IWebHostEnvironment webHostEnvironment,
-             IDropboxService dropboxUploadService,
-             IOptions<Settings> settings, IIrDataProvider irDataProvider)
+              IDropboxService dropboxUploadService,
+              IOptions<Settings> settings, IIrDataProvider irDataProvider,
+              IMemoryCache memoryCache,
+              ILogger<ViewDataService> logger)
         {
+            _memoryCache = memoryCache;
+            _logger = logger;
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
             _userDataProvider = userDataProvider;
@@ -2834,8 +2844,18 @@ namespace CityWatch.Web.Services
         }
         public List<SubDomain> GetUserSubDomainsHavingAccess(int? userId)
         {
-            var subdomain = _clientDataProvider.GetSubDomains();
-            var clientTypes = _clientDataProvider.GetClientTypes();
+            // [Performance Fix] Store SubDomain and ClientType list in cache for 10 minutes
+            var subdomain = _memoryCache.GetOrCreate("GlobalSubDomains", entry => {
+                _logger.LogInformation("Cache miss: GlobalSubDomains. Fetching from database.");
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return _clientDataProvider.GetSubDomains();
+            });
+
+            var clientTypes = _memoryCache.GetOrCreate("GlobalActiveClientTypes", entry => {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return _clientDataProvider.GetClientTypes();
+            });
+
             if (userId == null)
             {
                 var clientTypeIdsnew = clientTypes.Select(x => x.Id).Distinct().ToList();
@@ -2852,9 +2872,18 @@ namespace CityWatch.Web.Services
         public List<object> GetGuardRcClientSiteAccess(int guardId)
         {
             var results = new List<object>();
+            // [Optimization] Logic moved to targeted ID lookup
             var guardAccess = _guardDataProvider.GetGuardRcClientSiteAccess(guardId);
-            var clientSitesGuardAccess = guardAccess.Select(x => x.ClientSiteId);
-            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x => x.ClientType.Name);
+            var clientSitesGuardAccess = guardAccess.Select(x => x.ClientSiteId).ToHashSet(); // ToHashSet for O(1) lookups
+
+            // [Optimization] Cache the global site list used for permission trees to avoid full-table scans every time
+            var allClientSites = _memoryCache.GetOrCreate("GlobalActiveClientSites", entry => {
+                _logger.LogInformation("Cache miss: GlobalActiveClientSites. Fetching from database.");
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return _clientDataProvider.GetClientSites(null);
+            });
+
+            var allClientSitesGrouped = allClientSites.GroupBy(x => x.ClientType?.Name ?? "General");
 
             foreach (var item in allClientSitesGrouped)
             {
@@ -2996,11 +3025,15 @@ namespace CityWatch.Web.Services
         public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id)
         {
             var sites = new List<DropdownItemWithAddress>
-    {
-        new DropdownItemWithAddress { Id = 0, Name = "Select", Address = string.Empty } // Default option
-    };
+            {
+                new DropdownItemWithAddress { Id = 0, Name = "Select", Address = string.Empty }
+            };
 
-            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+            // [Optimization] Targeted ID Lookup + Cache to avoid loading the entire ClientType table
+            var clientType = _memoryCache.GetOrCreate($"ClientType_{id}", entry => {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
+                return _clientDataProvider.GetClientTypeById(id);
+            });
 
             if (clientType != null)
             {
@@ -3010,12 +3043,11 @@ namespace CityWatch.Web.Services
                 {
                     Id = item.Id,
                     Name = item.Name,
-                    Address = item.Address // assumes mapping object has Address property
+                    Address = item.Address
                 }));
             }
 
             return sites;
-
         }
 
 
@@ -3309,8 +3341,9 @@ namespace CityWatch.Web.Services
 
         public List<Guard> GetLicenseAndCompliancForGuards(int guardId)
         {
-            var result = _guardDataProvider.GetGuards().Where(x => x.Id == guardId).ToList();
-            return result;
+            // [Performance Fix] targeted lookup by ID instead of loading entire Guards table
+            var guard = _guardDataProvider.GetGuardById(guardId);
+            return guard != null ? new List<Guard> { guard } : new List<Guard>();
         }
 
         public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId)
@@ -3321,7 +3354,12 @@ namespace CityWatch.Web.Services
 
         public List<CombinedData> GetHRDescription(int HRid, int GuardID)
         {
-            var DescVal = _guardDataProvider.GetHRDesc(HRid);
+            // [Performance Fix] Cache the global HRDescription results by HRid
+            var DescVal = _memoryCache.GetOrCreate($"HRDescriptions_{HRid}", entry => {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return _guardDataProvider.GetHRDesc(HRid) ?? new List<HrSettings>();
+            });
+
             var combinedDataList = new List<CombinedData>();
             foreach (var item in DescVal)
             {
@@ -3425,7 +3463,8 @@ namespace CityWatch.Web.Services
 
         private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
         {
-            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            // [Performance Fix] Use GetGuardById for specific record instead of loading all guards
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuardById(guardComplianceandlicense.GuardId);
             var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
             if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
                 (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))

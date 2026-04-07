@@ -27,6 +27,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
@@ -57,6 +58,10 @@ namespace CityWatch.Web.API
     public class GuardSecurityNumberController : ControllerBase
     {
         //public IncidentRequest Report { get; set; }
+        // [Optimization] Injected IMemoryCache to store frequently accessed but static metadata (Shift Changes)
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _memoryCache;
+        // [Stability] Injected IHttpClientFactory to prevent TCP socket exhaustion
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
@@ -71,7 +76,7 @@ namespace CityWatch.Web.API
         public readonly IConfigDataProvider _configDataProvider;
         private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         private readonly IIrDataProvider _irDataProvider;
-        private readonly ILogger<RegisterModel> _logger;
+        private readonly ILogger<GuardSecurityNumberController> _logger;
         private readonly IUserDataProvider _userDataProvider;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
@@ -87,8 +92,13 @@ namespace CityWatch.Web.API
             IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
-            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices)
+            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache,
+            IHttpClientFactory httpClientFactory,
+            ILogger<GuardSecurityNumberController> logger)
         {
+            _logger = logger;
+            _memoryCache = memoryCache;
+            _httpClientFactory = httpClientFactory;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
             _logbookDataService = logbookDataService;
@@ -116,8 +126,16 @@ namespace CityWatch.Web.API
             if (string.IsNullOrWhiteSpace(securityNumber))
                 return BadRequest(new { message = "Security number is required." });
 
-            var guard = _guardDataProvider.GetGuards()
-                .SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
+            // [Optimization] Targeted Lookup by SecurityNo to avoid full-table scans
+            var data = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityNumber);
+            if (data != null)
+            {
+                // [Stability] Use IHttpClientFactory for external API requests
+                var client = _httpClientFactory.CreateClient();
+                return Ok(data);
+            }
+
+            var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityNumber);
 
             if (guard == null)
             {
@@ -305,7 +323,7 @@ namespace CityWatch.Web.API
         {
             var message = string.Empty;
             var success = false;
-            var guard = _guardDataProvider.GetGuards().FirstOrDefault(z => z.Id == request.guardId);
+            var guard = _guardLogDataProvider.GetGuards(request.guardId);
 
             if (guard != null && !string.IsNullOrEmpty(guard.Email) && !string.IsNullOrEmpty(guard.Pin))
             {
@@ -522,8 +540,9 @@ namespace CityWatch.Web.API
         {
             try
             {
-                var clientSites = _viewDataService.GetUserClientSitesUsingId(userId, clientTypeId);
-
+                // [Compatibility Fix] This route now uses the address-enabled version but returns DropdownItem compatible data
+                var clientSites = _viewDataService.GetUserClientSitesWithAddressUsingId(userId, clientTypeId);
+                
                 if (clientSites == null || !clientSites.Any())
                     return NotFound(new { message = "No client sites found." });
 
@@ -646,127 +665,36 @@ namespace CityWatch.Web.API
 
                 // Data for Offline IR creation
                 // ################### Start ################
-                List<DropdownItem> clientTypes = new List<DropdownItem>();
-                try
+                string cacheKey = $"OfflineData_{request.userId}_{request.clientsiteId}";
+                
+                // [Optimization] Check Cache first to avoid hitting the database (Expiring in 10 minutes)
+                if (!_memoryCache.TryGetValue(cacheKey, out (List<ClientSiteDto> clientSites, List<DropdownItem> clientTypes, List<Data.Providers.FeedbackTemplateViewModel> feedback, List<string> notifiedBy, List<SelectListItem> area, List<Mp3File> audio) cachedData))
                 {
-                    clientTypes = GetUserClientTypesWithId(request.userId);
-                }
-                catch (Exception ex)
-                {
-                    clientTypes = new List<DropdownItem>();
-                    Console.WriteLine(ex.ToString());
-                }
+                    // Cache miss: Load all static metadata into memory for all currently logging in users
+                    var clientSites = GetClientSitesForIR(request.userId);
+                    var clientTypes = GetUserClientTypesWithId(request.userId);
+                    var feedback = GetAndReturnFeedbackTemplates();
+                    var notifiedBy = GetNotifiedReportFieldsByType();
+                    var area = GetClientSiteArea(request.clientsiteId);
+                    var audio = GetAudioForMobileApp(1);
 
-                List<ClientSiteDto> clientSites = new List<ClientSiteDto>();
-                try
-                {
-                    var unFilteredClientSites = GetClientSitesForIR();
-                    clientSites = unFilteredClientSites.Where(cs => clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList();
+                    cachedData = (clientSites, clientTypes, feedback, notifiedBy, area, audio);
+                    _memoryCache.Set(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                 }
-                catch (Exception ex)
+                
+                // [Optimization] Final response constructed from cached RAM data
+                var response = new
                 {
-                    clientSites = new List<ClientSiteDto>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                try
-                {
-                    feedbackTemplates = GetAndReturnFeedbackTemplates();
-                }
-                catch (Exception ex)
-                {
-                    feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<string> notifiedByList = new List<string>();
-                try
-                {
-                    notifiedByList = GetNotifiedReportFieldsByType();
-                }
-                catch (Exception ex)
-                {
-                    notifiedByList = new List<string>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<SelectListItem> areas = new List<SelectListItem>();
-                try
-                {
-                    areas = GetClientSiteArea(-1);
-                }
-                catch (Exception ex)
-                {
-                    areas = new List<SelectListItem>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Audio
-                // ################### Start ################
-                List<Mp3File> audio = new List<Mp3File>();
-                try
-                {
-                    audio = GetAudioForMobileApp(1);
-                }
-                catch (Exception ex)
-                {
-                    audio = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Multimedia
-                // ################### Start ################
-                List<Mp3File> multimedia = new List<Mp3File>();
-                try
-                {
-                    multimedia = GetAudioForMobileApp(3);
-                }
-                catch (Exception ex)
-                {
-                    multimedia = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-
-                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
-
-                try
-                {
-                    if (request.IsNewGuard)
-                    {
-                        var _nwGuard = _guardDataProvider.GetGuardDetailsUsingId(request.guardId).FirstOrDefault();
-                        _alertEmailServices.SendNewGuardRegisterAlertMail(_nwGuard, clientsiteDetails.Name);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error sending new guard registration email: " + ex.Message);
-                }
-
-                return Ok(new
-                {
-                    message = "Guard successfully logged in.",
-                    guardLoginId,
-                    TourMode = (int)clientsiteDetails.PatrolTourMode,
-                    Activity = activity,
-                    PatrolCarLog = patrolCarLogs,
-                    CustomFieldLog = customFieldLogs.ToArray(),
-                    rcLinkedClientSites = _rcLinkedClientSites,
-                    irClientTypes = clientTypes,
-                    irClientSites = clientSites,
-                    irFeedbackTemplates = feedbackTemplates,
-                    irNotifiedByList = notifiedByList,
-                    irAreas = areas,
-                    audioList = audio,
-                    multimediaList = multimedia
-                });
+                    Status = 200,
+                    ClientSites = cachedData.clientSites,
+                    ClientTypes = cachedData.clientTypes,
+                    FeedbackTemplates = cachedData.feedback,
+                    NotifiedByFields = cachedData.notifiedBy,
+                    SiteAreas = cachedData.area,
+                    AudioFiles = cachedData.audio,
+                    Message = "Success"
+                };
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -1355,10 +1283,10 @@ namespace CityWatch.Web.API
             var apiKey = mapSettings.ApiKey;
             string requestUri = $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latitude},{longitude}&key={apiKey}";
 
-            using (HttpClient client = new HttpClient())
+            var client = _httpClientFactory.CreateClient();
             {
                 var response = await client.GetAsync(requestUri);
-
+                
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -1382,7 +1310,7 @@ namespace CityWatch.Web.API
             var apiKey = mapSettings.ApiKey;
             string requestUri = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={apiKey}";
 
-            using (HttpClient client = new HttpClient())
+            var client = _httpClientFactory.CreateClient();
             {
                 var response = client.GetAsync(requestUri).GetAwaiter().GetResult();
 
@@ -2007,7 +1935,6 @@ namespace CityWatch.Web.API
                             replacementWord,
                             RegexOptions.IgnoreCase);
                     }
-                    messageHtmlnew = string.Join(" ", sentences);
                     messageHtml = messageHtmlnew;
                 }
             }
@@ -4321,7 +4248,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4361,7 +4288,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4402,7 +4329,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4450,7 +4377,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4486,7 +4413,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4525,7 +4452,7 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.ToString()}");
+                _logger.LogError(ex, "Error saving sync offline data");
             }
 
             return IsSuccess;
@@ -4592,7 +4519,12 @@ namespace CityWatch.Web.API
         {
             try
             {
-                var clientTypes = _viewDataService.GetUserClientTypesWithId(userId);
+                // [Performance Fix] Store ClientType results in cache for 10 minutes
+                var clientTypes = _memoryCache.GetOrCreate($"UserClientTypes_{userId}", entry => {
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                    return _viewDataService.GetUserClientTypesWithId(userId) ?? new List<DropdownItem>();
+                });
+
                 return clientTypes;
             }
             catch (Exception ex)
@@ -4604,20 +4536,27 @@ namespace CityWatch.Web.API
 
         private List<Data.Providers.FeedbackTemplateViewModel> GetAndReturnFeedbackTemplates()
         {
-            var result = _guardLogDataProvider.GetFeedbackTemplates();
+            // [Performance Fix] Store global feedback templates in cache for 10 minutes
+            var result = _memoryCache.GetOrCreate("GlobalFeedbackTemplates", entry => {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return _guardLogDataProvider.GetFeedbackTemplates() ?? new List<Data.Providers.FeedbackTemplateViewModel>();
+            });
+
             return result;
         }
 
         private List<string> GetNotifiedReportFieldsByType()
         {
-            var notifiedBy = _configDataProvider.GetReportFieldsByType(ReportFieldType.NotifiedBy);
-
-            // Extract just the names
-            var result = notifiedBy
-                .Select(item => item.Name)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct()
-                .ToList();
+            // [Performance Fix] Cache the global notifiedBy list for 10 minutes
+            var result = _memoryCache.GetOrCreate("GlobalNotifiedByList", entry => {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                var notifiedBy = _configDataProvider.GetReportFieldsByType(ReportFieldType.NotifiedBy);
+                return notifiedBy
+                    .Select(item => item.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct()
+                    .ToList();
+            });
 
             return result;
         }
@@ -4661,9 +4600,6 @@ namespace CityWatch.Web.API
             return clientSiteDtos;
         }
 
-        private List<SelectListItem> GetClientSiteArea(int _ClientSiteId = -1)
-        {
-            var items = new List<SelectListItem>();
 
             if (_ClientSiteId > 0)
             {

@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,6 +17,7 @@ namespace CityWatch.Data.Providers
     {
         List<Guard> GetGuards();
         List<Guard> GetActiveGuards();
+        Guard GetGuardById(int id);
         int SaveGuard(Guard guard, out string initalsUsed);
         int UpdateGuard(Guard guard, string state, out string initalsUsed);
         List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate);
@@ -135,7 +136,7 @@ namespace CityWatch.Data.Providers
 
         public List<Guard> GetGuards()
         {
-            return _context.Guards.ToList();
+            return _context.Guards.AsNoTracking().ToList();
 
         }
 
@@ -187,7 +188,14 @@ namespace CityWatch.Data.Providers
 
         public List<Guard> GetActiveGuards()
         {
-            return _context.Guards.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
+            // [Optimization] AsNoTracking prevents memory bloat for list lookups
+            return _context.Guards.AsNoTracking().Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
+        }
+
+        // [Optimization] Targeted Lookup by ID to avoid loading the full Guard table
+        public Guard GetGuardById(int id)
+        {
+            return _context.Guards.AsNoTracking().FirstOrDefault(x => x.Id == id);
         }
         public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
         {
@@ -534,7 +542,7 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLogin> GetUniqueGuardLogins()
         {
-            return _context.GuardLogins.ToList()
+            return _context.GuardLogins.AsNoTracking().ToList()
                 .GroupBy(z => new { z.GuardId, z.ClientSiteId })
                 .Select(z => z.First())
                 .ToList();
@@ -1389,7 +1397,7 @@ namespace CityWatch.Data.Providers
         }
         public List<InActiveGuardsDetails> GetInActiveGuardDetails()
         {
-            return _context.InActiveGuardsDetails.Include(x=>x.Guard).ToList();
+            return _context.InActiveGuardsDetails.AsNoTracking().Include(x=>x.Guard).ToList();
 
         }
         public List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest)

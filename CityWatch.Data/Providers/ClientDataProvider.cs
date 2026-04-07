@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
@@ -49,6 +49,7 @@ namespace CityWatch.Data.Providers
     {
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientType> GetClientTypes();
+        ClientType GetClientTypeById(int id);
         List<IncidentReportPSPF> GetPSPF();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
@@ -202,6 +203,7 @@ namespace CityWatch.Data.Providers
 
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
         List<HRGroups> GetHRGroups();
+        HRGroups GetHRGroupById(int id);
         List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
 
         List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId);
@@ -331,7 +333,14 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientType> GetClientTypes()
         {
-            return _context.ClientTypes.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
+            // [Optimization] AsNoTracking prevents EF from tracking these objects, saving RAM
+            return _context.ClientTypes.AsNoTracking().Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
+        }
+        
+        // [Optimization] Targeted Lookup by ID to avoid loading the full table into memory
+        public ClientType GetClientTypeById(int id)
+        {
+            return _context.ClientTypes.AsNoTracking().FirstOrDefault(x => x.Id == id);
         }
 
         //code added to PSPF Dropdown start
@@ -380,6 +389,7 @@ namespace CityWatch.Data.Providers
 
 
             return _context.ClientSites
+                .AsNoTracking()
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
@@ -2669,7 +2679,7 @@ namespace CityWatch.Data.Providers
 
         public List<GlobalDuressEmail> GetDuressEmails()
         {
-            return _context.GlobalDuressEmail.ToList();
+            return _context.GlobalDuressEmail.AsNoTracking().ToList();
         }
         //To save the Duress Email stop
         //To save the Global Duress SMS start
@@ -3230,7 +3240,14 @@ namespace CityWatch.Data.Providers
         }
         public List<HRGroups> GetHRGroups()
         {
-            return _context.HRGroups.ToList();
+            // [Optimization] AsNoTracking for read-only metadata
+            return _context.HRGroups.AsNoTracking().ToList();
+        }
+
+        // [Optimization] Scalable lookup by ID
+        public HRGroups GetHRGroupById(int id)
+        {
+            return _context.HRGroups.AsNoTracking().FirstOrDefault(x => x.Id == id);
         }
         public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
         {
@@ -3942,7 +3959,7 @@ namespace CityWatch.Data.Providers
         }
         public List<SubDomain> GetSubDomains()
         {
-            return _context.SubDomain.OrderBy(x => x.Domain).ToList();
+            return _context.SubDomain.AsNoTracking().OrderBy(x => x.Domain).ToList();
         }
         public List<ClientSite> GetClientSiteDetailsWithName(string[] clientSites)
         {

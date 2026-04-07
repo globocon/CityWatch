@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CityWatch.Web.Services
 {
@@ -35,11 +37,14 @@ namespace CityWatch.Web.Services
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientDataProvider _clientDataProvider;
         private readonly IHubContext<MobileAppSignalRHub> _hubContext;
+        private readonly ILogger<MobileAppDataServices> _logger;
 
         public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext)
+            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext,
+            ILogger<MobileAppDataServices> logger)
         {
+            _logger = logger;
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -270,10 +275,20 @@ namespace CityWatch.Web.Services
                         }
                     }
                 }
-                catch (Exception exp)
+                catch (DbUpdateException ex)
                 {
-
+                    // [Stability] Handle SQL concurrency/deadlock errors (e.g. shift change spikes)
+                    _logger.LogError(ex, "Database concurrency error during GuardLogin creation");
+                    return (false, "Something went wrong, please try again");
                 }
+                catch (Exception ex)
+                {
+                    // [Stability] Unexpected crash prevention with detailed logging
+                    _logger.LogError(ex, "Unexpected error during GuardLogin creation");
+                    return (false, "Something went wrong, please try again");
+                }
+
+                return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
             }
             catch (Exception ex)
             {
@@ -281,8 +296,6 @@ namespace CityWatch.Web.Services
             }
 
             return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
-        }
-
         //public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
         //   int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null)
         //{
@@ -620,7 +633,21 @@ namespace CityWatch.Web.Services
             };
 
             // Save and return new login ID
-            return _guardDataProvider.SaveGuardLogin(newGuardLogin);
+            try 
+            {
+                return _guardDataProvider.SaveGuardLogin(newGuardLogin);
+            }
+            catch (DbUpdateException)
+            {
+                // In parallel execution, another thread might have inserted the required GuardLogin. 
+                // By fetching it again, we bypass the constraint violation completely.
+                var parallelGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).FirstOrDefault(x => x.GuardId == guardId && x.OnDuty.Date == DateTime.Now.Date);
+                if (parallelGuardLogin != null)
+                {
+                    return parallelGuardLogin.Id;
+                }
+                throw;
+            }
         }
 
     }

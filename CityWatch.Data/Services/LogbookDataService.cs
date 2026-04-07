@@ -1,7 +1,8 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace CityWatch.Data.Services
 {
@@ -47,7 +48,25 @@ namespace CityWatch.Data.Services
                     Date = LogBookDate,
                     DbxUploaded = false
                 };
-                newLogBookId = _clientDataProvider.SaveClientSiteLogBook(newClientSiteLogBook);
+                try
+                {
+                    newLogBookId = _clientDataProvider.SaveClientSiteLogBook(newClientSiteLogBook);
+                }
+                // [Stability] Handle parallel insertion deadlocks during shift change login spikes
+                catch (DbUpdateException)
+                {
+                    // In parallel logins, another thread might have inserted the logbook simultaneously. 
+                    // This creates a uniqueness conflict. We swallow the violation and fetch the newly inserted one.
+                    var concurrentLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, LogBookDate.Date);
+                    if (concurrentLogBook != null)
+                    {
+                        newLogBookId = concurrentLogBook.Id;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
 
                 var clientSite = _clientDataProvider.GetClientSiteDetails(clientSiteId);
                 //Check and create SmartWandLog if enabled for client site
@@ -65,7 +84,14 @@ namespace CityWatch.Data.Services
                                 Date = LogBookDate,
                                 DbxUploaded = false
                             };
-                            var newSWLogBookId = _clientDataProvider.SaveClientSiteLogBook(newSWClientSiteLogBook);
+                            try
+                            {
+                                var newSWLogBookId = _clientDataProvider.SaveClientSiteLogBook(newSWClientSiteLogBook);
+                            }
+                            catch (DbUpdateException)
+                            {
+                                // Handle concurrent parallel insertions on the SW logbook naturally
+                            }
                         }
                     }
                 }
@@ -84,7 +110,14 @@ namespace CityWatch.Data.Services
                                 Date = LogBookDate,
                                 DbxUploaded = false
                             };
-                            var newFusionLogBookId = _clientDataProvider.SaveClientSiteLogBook(newFusionClientSiteLogBook);
+                            try 
+                            {
+                                var newFusionLogBookId = _clientDataProvider.SaveClientSiteLogBook(newFusionClientSiteLogBook);
+                            }
+                            catch (DbUpdateException)
+                            {
+                                // Handle concurrent parallel insertions on the Fusion logbook naturally
+                            }
                         }
                     }
                 }
