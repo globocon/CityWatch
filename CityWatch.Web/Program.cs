@@ -26,7 +26,9 @@ var Configuration = builder.Configuration;
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
+builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()).LogTo(Console.WriteLine, LogLevel.Warning));
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
 builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
 builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();

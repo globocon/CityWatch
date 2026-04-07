@@ -27,6 +27,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
@@ -57,6 +58,7 @@ namespace CityWatch.Web.API
     public class GuardSecurityNumberController : ControllerBase
     {
         //public IncidentRequest Report { get; set; }
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _memoryCache;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
@@ -87,8 +89,10 @@ namespace CityWatch.Web.API
             IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
-            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices)
+            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
+            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache)
         {
+            _memoryCache = memoryCache;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
             _logbookDataService = logbookDataService;
@@ -654,92 +658,50 @@ namespace CityWatch.Web.API
 
                 // Data for Offline IR creation
                 // ################### Start ################
-                List<DropdownItem> clientTypes = new List<DropdownItem>();
-                try
+                string cacheKey = $"OfflineData_{request.userId}_{request.clientsiteId}";
+
+                // [Optimization] Check Cache first to avoid hitting the database
+                if (!_memoryCache.TryGetValue(cacheKey, out (
+                    List<DropdownItem> clientTypes, 
+                    List<ClientSiteDto> clientSites, 
+                    List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates, 
+                    List<string> notifiedByList, 
+                    List<SelectListItem> areas, 
+                    List<Mp3File> audio, 
+                    List<Mp3File> multimedia) cachedData))
                 {
-                    clientTypes = GetUserClientTypesWithId(request.userId);
-                }
-                catch (Exception ex)
-                {
-                    clientTypes = new List<DropdownItem>();
-                    Console.WriteLine(ex.ToString());
+                    List<DropdownItem> cache_clientTypes = new List<DropdownItem>();
+                    try { cache_clientTypes = GetUserClientTypesWithId(request.userId); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<ClientSiteDto> cache_clientSites = new List<ClientSiteDto>();
+                    try { var unFilteredClientSites = GetClientSitesForIR(); cache_clientSites = unFilteredClientSites.Where(cs => cache_clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Data.Providers.FeedbackTemplateViewModel> cache_feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
+                    try { cache_feedbackTemplates = GetAndReturnFeedbackTemplates(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<string> cache_notifiedByList = new List<string>();
+                    try { cache_notifiedByList = GetNotifiedReportFieldsByType(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<SelectListItem> cache_areas = new List<SelectListItem>();
+                    try { cache_areas = GetClientSiteArea(-1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_audio = new List<Mp3File>();
+                    try { cache_audio = GetAudioForMobileApp(1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_multimedia = new List<Mp3File>();
+                    try { cache_multimedia = GetAudioForMobileApp(3); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    cachedData = (cache_clientTypes, cache_clientSites, cache_feedbackTemplates, cache_notifiedByList, cache_areas, cache_audio, cache_multimedia);
+                    _memoryCache.Set(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                 }
 
-                List<ClientSiteDto> clientSites = new List<ClientSiteDto>();
-                try
-                {
-                    var unFilteredClientSites = GetClientSitesForIR();
-                    clientSites = unFilteredClientSites.Where(cs => clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList();
-                }
-                catch (Exception ex)
-                {
-                    clientSites = new List<ClientSiteDto>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                try
-                {
-                    feedbackTemplates = GetAndReturnFeedbackTemplates();
-                }
-                catch (Exception ex)
-                {
-                    feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<string> notifiedByList = new List<string>();
-                try
-                {
-                    notifiedByList = GetNotifiedReportFieldsByType();
-                }
-                catch (Exception ex)
-                {
-                    notifiedByList = new List<string>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<SelectListItem> areas = new List<SelectListItem>();
-                try
-                {
-                    areas = GetClientSiteArea(-1);
-                }
-                catch (Exception ex)
-                {
-                    areas = new List<SelectListItem>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Audio
-                // ################### Start ################
-                List<Mp3File> audio = new List<Mp3File>();
-                try
-                {
-                    audio = GetAudioForMobileApp(1);
-                }
-                catch (Exception ex)
-                {
-                    audio = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Multimedia
-                // ################### Start ################
-                List<Mp3File> multimedia = new List<Mp3File>();
-                try
-                {
-                    multimedia = GetAudioForMobileApp(3);
-                }
-                catch (Exception ex)
-                {
-                    multimedia = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
+                List<DropdownItem> clientTypes = cachedData.clientTypes;
+                List<ClientSiteDto> clientSites = cachedData.clientSites;
+                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = cachedData.feedbackTemplates;
+                List<string> notifiedByList = cachedData.notifiedByList;
+                List<SelectListItem> areas = cachedData.areas;
+                List<Mp3File> audio = cachedData.audio;
+                List<Mp3File> multimedia = cachedData.multimedia;
                 // ################### End ##################
 
 
@@ -4637,7 +4599,7 @@ namespace CityWatch.Web.API
             // Apply filter only when sitename is provided
             if (!string.IsNullOrWhiteSpace(sitename))
             {
-                query = query.Where(x => x.Name == sitename);
+                query = query.Where(x => x.Name.Contains(sitename));
             }
 
             var clientSiteDtos = query
