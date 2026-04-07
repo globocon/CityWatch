@@ -1522,10 +1522,11 @@ namespace CityWatch.Web.Services
                 $"&hourly=precipitation_probability,precipitation,uv_index" +
                 $"&daily=uv_index_max,temperature_2m_max,temperature_2m_min" +
                 $"&timezone=Australia%2FSydney&past_days=3";
-                //double maxTemp = obj["daily"]?["temperature_2m_max"]?[0]?.Value<double>() ?? 0;
+                // [Stability] Using IHttpClientFactory created client instead of 'new HttpClient()'
+                var client = _httpClientFactory.CreateClient();
+                var json = await client.GetStringAsync(url);
+                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-                //// UV Index
-                //double uvIndex = obj["current"]?["uv_index"]?.Value<double>() ?? 0;
 
                 // Temperature
                 double minTemp = 0;

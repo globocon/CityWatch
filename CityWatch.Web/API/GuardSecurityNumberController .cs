@@ -90,11 +90,13 @@ namespace CityWatch.Web.API
             IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider,
             IWebHostEnvironment webHostEnvironment, ISmsSenderProvider smsSenderProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
-            ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
+            IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
             Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache,
             IHttpClientFactory httpClientFactory,
-            ILogger<GuardSecurityNumberController> logger)
+            ILogger<GuardSecurityNumberController> logger,
+            IMobileAppDataServices mobileAppDataServices,
+            IAlertEmailServices alertEmailServices)
         {
             _logger = logger;
             _memoryCache = memoryCache;
@@ -671,7 +673,7 @@ namespace CityWatch.Web.API
                 if (!_memoryCache.TryGetValue(cacheKey, out (List<ClientSiteDto> clientSites, List<DropdownItem> clientTypes, List<Data.Providers.FeedbackTemplateViewModel> feedback, List<string> notifiedBy, List<SelectListItem> area, List<Mp3File> audio) cachedData))
                 {
                     // Cache miss: Load all static metadata into memory for all currently logging in users
-                    var clientSites = GetClientSitesForIR(request.userId);
+                    var clientSites = GetClientSitesForIR("");
                     var clientTypes = GetUserClientTypesWithId(request.userId);
                     var feedback = GetAndReturnFeedbackTemplates();
                     var notifiedBy = GetNotifiedReportFieldsByType();
@@ -3632,9 +3634,19 @@ namespace CityWatch.Web.API
                     string jsonString = JsonSerializer.Serialize(report);
                     _logger.LogInformation(jsonString);
                 }
+                catch (DbUpdateException ex)
+                {
+                    // [Stability] Handle SQL concurrency/deadlock errors (e.g. shift change spikes)
+                    _logger.LogError(ex, "Database concurrency error during IR serialization");
+                    processResult.Add(9003, new IrProcessFailure($"Database update failed. {ex.Message}", ex.StackTrace));
+                    return (processResult, domain, fileName);
+                }
                 catch (Exception ex)
                 {
-                    _logger.LogError("IR object serialization failed. " + ex.StackTrace);
+                    // [Stability] Unexpected crash prevention with detailed logging
+                    _logger.LogError(ex, "Unexpected error during IR serialization");
+                    processResult.Add(9004, new IrProcessFailure($"Serialization failure. {ex.Message}", ex.StackTrace));
+                    return (processResult, domain, fileName);
                 }
             }
             else
@@ -4600,6 +4612,9 @@ namespace CityWatch.Web.API
             return clientSiteDtos;
         }
 
+        private List<SelectListItem> GetClientSiteArea(int _ClientSiteId = -1)
+        {
+            var items = new List<SelectListItem>();
 
             if (_ClientSiteId > 0)
             {

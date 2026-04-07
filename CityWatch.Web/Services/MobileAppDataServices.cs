@@ -279,13 +279,13 @@ namespace CityWatch.Web.Services
                 {
                     // [Stability] Handle SQL concurrency/deadlock errors (e.g. shift change spikes)
                     _logger.LogError(ex, "Database concurrency error during GuardLogin creation");
-                    return (false, "Something went wrong, please try again");
+                    return (IsSuccess, TagFound, "Something went wrong, please try again", TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
                 }
                 catch (Exception ex)
                 {
                     // [Stability] Unexpected crash prevention with detailed logging
                     _logger.LogError(ex, "Unexpected error during GuardLogin creation");
-                    return (false, "Something went wrong, please try again");
+                    return (IsSuccess, TagFound, "Something went wrong, please try again", TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
                 }
 
                 return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
@@ -296,6 +296,7 @@ namespace CityWatch.Web.Services
             }
 
             return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
+        }
         //public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
         //   int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null)
         //{

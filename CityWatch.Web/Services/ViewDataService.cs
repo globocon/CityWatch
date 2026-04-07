@@ -207,7 +207,6 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds);
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
 
-        public List<DropdownItemWithAddress> GetUserClientSitesWithAddressUsingId(int? userId, int id);
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
         public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
         public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck);
