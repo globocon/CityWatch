@@ -472,6 +472,22 @@
             .select2-container--bootstrap4 .select2-selection:focus {
                 box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             }
+
+        /* Drag and Drop Styling */
+        .shift-card[draggable="true"] {
+            cursor: move;
+            cursor: grab;
+        }
+
+        .shift-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .day-cell.drag-over {
+            background-color: rgba(102, 126, 234, 0.1) !important;
+            border: 2px dashed #667eea !important;
+        }
     </style>
 </div>
     </div>
@@ -750,13 +766,12 @@
                                 var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
                                 rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
-
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                    rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
@@ -1176,6 +1191,90 @@
             if (currentGroupId) {
                  $('#project_actions').show();
             }
+
+            // Drag and Drop Event Listeners
+            $(document).on('dragstart', '.shift-card', function (e) {
+                var card = $(this);
+                if (card.data('locked') === true || card.data('locked') === "true") {
+                    e.preventDefault();
+                    return;
+                }
+                
+                card.addClass('dragging');
+                
+                var shiftData = {
+                    guardId: card.data('guardid'),
+                    providerName: card.data('provider'),
+                    payRateId: card.data('payrateid'),
+                    startTime: card.data('start'),
+                    endTime: card.data('end')
+                };
+                
+                e.originalEvent.dataTransfer.setData('application/json', JSON.stringify(shiftData));
+                e.originalEvent.dataTransfer.effectAllowed = 'copy';
+            });
+
+            $(document).on('dragend', '.shift-card', function (e) {
+                $(this).removeClass('dragging');
+                $('.day-cell').removeClass('drag-over');
+            });
+
+            $(document).on('dragover', '.day-cell', function (e) {
+                if ($(this).data('site')) { // Only cells with a site
+                    e.preventDefault();
+                    e.originalEvent.dataTransfer.dropEffect = 'copy';
+                    $(this).addClass('drag-over');
+                }
+            });
+
+            $(document).on('dragleave', '.day-cell', function (e) {
+                $(this).removeClass('drag-over');
+            });
+
+            $(document).on('drop', '.day-cell', function (e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                
+                var siteId = $(this).data('site');
+                var dayIndex = $(this).data('day');
+                
+                if (!siteId || dayIndex === undefined) return;
+                
+                var dataStr = e.originalEvent.dataTransfer.getData('application/json');
+                if (!dataStr) return;
+                
+                var shiftData = JSON.parse(dataStr);
+                
+                // Calculate actual DateTimes for the target day
+                var shiftDate = new Date(currentStartDate);
+                shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                var dateStr = shiftDate.toISOString().split('T')[0];
+                var startDateTime = dateStr + 'T' + shiftData.startTime;
+                var endDateTime = dateStr + 'T' + shiftData.endTime;
+
+                $.ajax({
+                    url: '/roster/Booking?handler=AddShift',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: {
+                        groupId: currentGroupId,
+                        siteId: siteId,
+                        start: startDateTime,
+                        end: endDateTime,
+                        guardId: shiftData.guardId,
+                        providerName: shiftData.providerName,
+                        payRateId: shiftData.payRateId,
+                        shiftId: null // Always creating new
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            loadRoster();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            });
 
         });
     </script>
