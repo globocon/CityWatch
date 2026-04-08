@@ -512,6 +512,7 @@ namespace CityWatch.Web.Pages.roster
                     {
                         shift.IsDeleted = true;
                     }
+                    await _context.SaveChangesAsync();
                 }
 
                 while (currentTargetStart < copyUntil)
