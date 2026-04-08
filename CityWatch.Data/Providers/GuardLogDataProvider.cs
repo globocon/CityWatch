@@ -432,7 +432,7 @@ namespace CityWatch.Data.Providers
         public void SaveKeyVehicleLogPax(KeyVehicleLogPax keyVehicleLogPax);
         List<KeyVehicleLogPax> GetKeyVehicleLogPaxs();
 
-
+        public void DeleteKeyVehicleLogPax(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -8196,6 +8196,15 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
         //p7-137--pax-end
+        public void DeleteKeyVehicleLogPax(int id)
+        {
+            var keyVehicleLogPaxToDelete = _context.KeyVehicleLogsPax.SingleOrDefault(i => i.Id == id);
+            if (keyVehicleLogPaxToDelete != null)
+            {
+                _context.Remove(keyVehicleLogPaxToDelete);
+                _context.SaveChanges();
+            }
+        }
     }
 
 
