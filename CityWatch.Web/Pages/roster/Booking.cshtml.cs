@@ -428,7 +428,37 @@ namespace CityWatch.Web.Pages.roster
             return NotFound();
         }
 
-        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option)
+        public async Task<IActionResult> OnPostCheckFutureData(int groupId, DateTime startDate, string option)
+        {
+            DateTime copyUntil;
+            if (option == "NextWeek")
+            {
+                copyUntil = startDate.AddDays(14);
+            }
+            else if (option == "Month")
+            {
+                copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
+            }
+            else if (option == "Year")
+            {
+                copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+            }
+            else
+            {
+                return new JsonResult(new { success = false, message = "Invalid option." });
+            }
+
+            var targetStart = startDate.AddDays(7);
+            var hasData = await _context.RosterSchedules.AnyAsync(x =>
+                x.RosterGroupId == groupId && 
+                !x.IsDeleted && 
+                x.ShiftStart >= targetStart && 
+                x.ShiftStart < copyUntil);
+
+            return new JsonResult(new { success = true, hasData = hasData });
+        }
+
+        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
         {
             try
             {
@@ -467,6 +497,24 @@ namespace CityWatch.Web.Pages.roster
 
                 var targetWeeks = new List<DateTime>();
                 var currentTargetStart = startDate.AddDays(7);
+                var targetStart = currentTargetStart;
+
+                if (eraseFuture)
+                {
+                    var shiftsToDelete = await _context.RosterSchedules
+                        .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
+                        .ToListAsync();
+                    
+                    // Do not delete shifts that are in previous/locked months
+                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => x.ShiftStart >= firstDayOfCurrentMonth).ToList();
+                    
+                    foreach (var shift in shiftsAllowedToDelete)
+                    {
+                        shift.IsDeleted = true;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 while (currentTargetStart < copyUntil)
                 {
                     targetWeeks.Add(currentTargetStart);
@@ -495,6 +543,8 @@ namespace CityWatch.Web.Pages.roster
                             x.RosterGroupId == groupId &&
                             x.ClientSiteId == source.ClientSiteId &&
                             x.ShiftStart == newStart &&
+                            x.GuardId == source.GuardId &&
+                            x.ProviderName == source.ProviderName &&
                             !x.IsDeleted);
 
                         if (!exists)

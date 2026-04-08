@@ -180,7 +180,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" id="rolloverStep1">
                     <p>Duplicate this week's roster to:</p>
                     <div class="form-group">
                         <div class="custom-control custom-radio mb-2">
@@ -200,9 +200,23 @@
                         <i class="fa fa-info-circle mr-1"></i> This will replicate all shifts from the current week to the selected period.
                     </div>
                 </div>
+                <div class="modal-body" id="rolloverStep2" style="display:none;">
+                    <p>The projected roster for this site already has data. Would you like to:</p>
+                    <div class="form-group">
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" id="optErase" name="rolloverConflictOption" class="custom-control-input" value="Erase">
+                            <label class="custom-control-label" for="optErase"><strong>Erase</strong> all existing future entries, and mirror current week across instead?</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" id="optMerge" name="rolloverConflictOption" class="custom-control-input" value="Merge" checked>
+                            <label class="custom-control-label" for="optMerge"><strong>Merge</strong> new entries into existing data sets, which risks duplicate entries?</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="btnConfirmRollover">Confirm Rollover</button>
+                    <button type="button" class="btn btn-primary" id="btnExecuteRollover" style="display:none;">Execute Rollover</button>
                 </div>
             </div>
         </div>
@@ -1127,19 +1141,24 @@
                 window.open(url, '_blank');
             });
 
-            // Handle Rollover
             $('#btnShowRollover').on('click', function() {
                 if (!currentGroupId) return;
+                $('#rolloverStep1').show();
+                $('#rolloverStep2').hide();
+                $('#btnConfirmRollover').show();
+                $('#btnExecuteRollover').hide();
+                $('#btnConfirmRollover').prop('disabled', false).text('Confirm Rollover');
                 $('#rolloverModal').modal('show');
             });
 
             $('#btnConfirmRollover').on('click', function() {
                 var option = $('input[name="rolloverOption"]:checked').val();
+                var btn = $(this);
 
-                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+                btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Checking...');
 
                 $.ajax({
-                    url: '/roster/Booking?handler=RolloverRoster',
+                    url: '/roster/Booking?handler=CheckFutureData',
                     type: 'POST',
                     headers: getHeaders(),
                     data: {
@@ -1148,7 +1167,50 @@
                         option: option
                     },
                     success: function (res) {
-                        $('#btnConfirmRollover').prop('disabled', false).text('Confirm Rollover');
+                        if (res.success) {
+                            if (res.hasData) {
+                                $('#rolloverStep1').hide();
+                                $('#rolloverStep2').show();
+                                btn.hide();
+                                $('#btnExecuteRollover').show().prop('disabled', false).text('Execute Rollover');
+                            } else {
+                                // No future data, proceed with rollover normally (Erase = false)
+                                executeRollover(option, false);
+                            }
+                        } else {
+                            btn.prop('disabled', false).text('Confirm Rollover');
+                            alert(res.message || 'An error occurred.');
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).text('Confirm Rollover');
+                        alert('An error occurred checking future data.');
+                    }
+                });
+            });
+
+            $('#btnExecuteRollover').on('click', function() {
+                var option = $('input[name="rolloverOption"]:checked').val();
+                var conflictOption = $('input[name="rolloverConflictOption"]:checked').val();
+                executeRollover(option, conflictOption === 'Erase');
+            });
+
+            function executeRollover(option, eraseFuture) {
+                var executeBtn = $('#btnExecuteRollover').is(':visible') ? $('#btnExecuteRollover') : $('#btnConfirmRollover');
+                executeBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+
+                $.ajax({
+                    url: '/roster/Booking?handler=RolloverRoster',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: {
+                        groupId: currentGroupId,
+                        startDate: currentStartDate,
+                        option: option,
+                        eraseFuture: eraseFuture
+                    },
+                    success: function (res) {
+                        executeBtn.prop('disabled', false).text('Confirm Rollover');
                         if (res.success) {
                             $('#rolloverModal').modal('hide');
                             alert('Roster duplicated successfully.');
@@ -1158,11 +1220,11 @@
                         }
                     },
                     error: function() {
-                        $('#btnConfirmRollover').prop('disabled', false).text('Confirm Rollover');
+                        executeBtn.prop('disabled', false).text('Confirm Rollover');
                         alert('An error occurred during rollover.');
                     }
                 });
-            });
+            }
 
             // Show/Hide actions based on selection
             $('#project_name').on('select2:select', function(e) {
