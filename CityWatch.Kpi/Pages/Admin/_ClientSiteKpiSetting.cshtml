@@ -240,6 +240,9 @@
                     <a class="nav-link active" id="kpi-LB-settings-menu-tab" data-toggle="tab" href="#KpiLBSettingsTab" role="tab" aria-controls="KpiLBSettingsTab" aria-selected="true">Settings</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="kpi-LB-schedule-menu-tab" data-toggle="tab" href="#KpiLBScheduleTab" role="tab" aria-controls="KpiLBScheduleTab" aria-selected="true">Schedule</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" id="kpi-LB-smartWands-menu-tab" data-toggle="tab" href="#KpiLBsmartWandsTab" role="tab" aria-controls="KpiLBsmartWandsTab" aria-selected="true">Smart Wand</a>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -276,34 +279,7 @@
                                         <input type="text" class="form-control" id="gs_land_line">
                                     </div>
                                 </div>
-                                <div class="form-group row align-items-center">
-                                    <label class="col-md-3 col-form-label">Enable Daily Log Dump</label>
-                                    <div class="col-md-9 d-flex align-items-center">
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableLBLogDump" class="form-check-input">
-                                            <label for="enableLBLogDump" class="form-check-label">LB</label>
-                                        </div>
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableKVLogDump" class="form-check-input">
-                                            <label for="enableKVLogDump" class="form-check-label">KV</label>
-                                        </div>
-                                        <div class="form-check mr-5">
-                                            <input type="checkbox" id="enableSWLogDump" class="form-check-input">
-                                            <label for="enableSWLogDump" class="form-check-label">SW</label>
-                                        </div>
-                                        <div class="form-check ms-3 ml-2">
-                                            <input type="checkbox" id="enableFusionDump" class="form-check-input">
-                                            <label for="enableFusionDump" class="form-check-label">(Fusion)</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="gs_email_recipients" class="col-md-3 col-form-label">Email Recipients</label>
-                                    <div class="col-md-6">
-                                        <input type="email" class="form-control" id="gs_email_recipients">
-                                        <label><em>Preceding day log will be sent &#64; 2 am on the next day</em></label>
-                                    </div>
-                                </div>
+                                
                                 <div class="form-group row">
                                     <label for="gs_duress_email" class="col-md-3 col-form-label">Do's & Don'ts List</label>
                                     <div class="col-md-6">
@@ -336,7 +312,111 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="tab-pane" id="KpiLBScheduleTab" role="tabpanel" aria-labelledby="KpiLBScheduleTab">
+                    <input type="hidden" id="gl_client_site_id" />
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <form>
+                                
+                               
+                                <div class="form-group row align-items-center">
+                                    <label class="col-md-3 col-form-label">Enable Daily Log Dump</label>
+                                    <div class="col-md-9 d-flex align-items-center">
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableLBLogDump" class="form-check-input">
+                                            <label for="enableLBLogDump" class="form-check-label">LB</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableKVLogDump" class="form-check-input">
+                                            <label for="enableKVLogDump" class="form-check-label">KV</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableSWLogDump" class="form-check-input">
+                                            <label for="enableSWLogDump" class="form-check-label">SW</label>
+                                        </div>
+                                        <div class="form-check ms-3 ml-2">
+                                            <input type="checkbox" id="enableFusionDump" class="form-check-input">
+                                            <label for="enableFusionDump" class="form-check-label">(Fusion)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_email_recipients" class="col-md-3 col-form-label">Email Recipients</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_email_recipients">
+                                        <label><em>Preceding day log will be sent &#64; 2 am on the next day</em></label>
+                                    </div>
+                                </div>
+                                @* #p2-178-schedule-start *@
+                                @* week-start *@
+                                <div class="form-group row align-items-center">
+                                    <label class="col-md-3 col-form-label">Enable Weekly Log Dump</label>
+                                    <div class="col-md-9 d-flex align-items-center">
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableLBWeeklyLogDump" class="form-check-input">
+                                            <label for="enableLBWeeklyLogDump" class="form-check-label">LB</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableKVWeeklyLogDump" class="form-check-input">
+                                            <label for="enableKVWeeklyLogDump" class="form-check-label">KV</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableSWWeeklyLogDump" class="form-check-input">
+                                            <label for="enableSWWeeklyLogDump" class="form-check-label">SW</label>
+                                        </div>
+                                        <div class="form-check ms-3 ml-2">
+                                            <input type="checkbox" id="enableFusionWeeklyDump" class="form-check-input">
+                                            <label for="enableFusionWeeklyDump" class="form-check-label">(Fusion)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_email_weely_recipients" class="col-md-3 col-form-label">Email Recipients</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_email_weely_recipients">
+                                        <label><em>Preceding day log will be sent &#64; 2 am on Monday, to cover preceeding Monday to Sunday period</em></label>
+                                    </div>
+                                </div>
+                                @* week-end *@
+                                @* month-start *@
+                                <div class="form-group row align-items-center">
+                                    <label class="col-md-3 col-form-label">Enable Monthly Log Dump</label>
+                                    <div class="col-md-9 d-flex align-items-center">
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableLBMonthlyLogDump" class="form-check-input">
+                                            <label for="enableLBMonthlyLogDump" class="form-check-label">LB</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableKVMonthlyLogDump" class="form-check-input">
+                                            <label for="enableKVMonthlyLogDump" class="form-check-label">KV</label>
+                                        </div>
+                                        <div class="form-check mr-5">
+                                            <input type="checkbox" id="enableSWMonthlyLogDump" class="form-check-input">
+                                            <label for="enableSWMonthlyLogDump" class="form-check-label">SW</label>
+                                        </div>
+                                        <div class="form-check ms-3 ml-2">
+                                            <input type="checkbox" id="enableFusionMonthlyDump" class="form-check-input">
+                                            <label for="enableFusionMonthlyDump" class="form-check-label">(Fusion)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_email_monthly_recipients" class="col-md-3 col-form-label">Email Recipients</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_email_monthly_recipients">
+                                        <label><em>Preceding day log will be sent &#64; 6 am on Monday, 1st Day of the Month, to cover previous month</em></label>
+                                    </div>
+                                </div>
+                                @* month-end *@
+                                @* #p2-178-schedule-end *@
+                               
+                                <div class="form-row mt-3">
+                                    <button type="button" id="btnSaveGuardSiteScheduleSettings" class="btn btn-success">Save Settings</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <div class="tab-pane" id="KpiLBsmartWandsTab" role="tabpanel" aria-labelledby="KpiLBsmartWandsTab">
                     <div class="row m-0">
                         <div class="col-md-12 text-right pt-3">
