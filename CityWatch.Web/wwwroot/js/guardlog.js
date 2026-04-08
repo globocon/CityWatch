@@ -6578,6 +6578,7 @@ $(function () {
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
          $('#IsPendingOn').val(false);
         $('#chb_IsPending').prop('checked', false); 
+        $('#complianceValidationDiv').hide();
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
@@ -7174,7 +7175,7 @@ $(function () {
     });
     //p1-349-pending toggle on hr- end
     $('#btn_save_guard_compliancelicense').on('click', function () {
-
+        $('#complianceValidationDiv').hide();
         clearGuardValidationSummary('compliancelicanseValidationSummary');
         let selectedItem = $('.es-visible').val();
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
@@ -7235,11 +7236,13 @@ $(function () {
                         gridGuardLicensesAndLicence.ajax.reload();
 
                         if (!result.dbxUploaded) {
+                            $('#complianceValidationDiv').show();
                             displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
                         }
                     } else {
                         const messageHtml1 = '';
                         $('#schRunStatusNew').html(messageHtml1);
+                        $('#complianceValidationDiv').show();
                         displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
                     }
                 }).always(function () {
@@ -7265,11 +7268,13 @@ $(function () {
                     gridGuardLicensesAndLicence.ajax.reload();
 
                     if (!result.dbxUploaded) {
+                        $('#complianceValidationDiv').show();
                         displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
                     }
                 } else {
                     const messageHtml1 = '';
                     $('#schRunStatusNew').html(messageHtml1);
+                    $('#complianceValidationDiv').show();
                     displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
                 }
             }).always(function () {
@@ -7779,6 +7784,7 @@ $(function () {
                     gridGuardCompliances.ajax.reload();
                 }
                 else {
+                    $('#complianceValidationDiv').show();
                     displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
                 }
             });

@@ -1074,19 +1074,19 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLBLogDump, bool enableKVLogDump, bool enableSWLogDump, string landLine, 
-            string guardEmailTo, string duressEmail, string duressSms, bool IsDosDontList, bool uploadFusionLog)
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail,  string landLine, 
+             string duressEmail, string duressSms, bool IsDosDontList)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
             {
                 clientSite.SiteEmail = siteEmail;
-                clientSite.UploadGuardLog = enableLBLogDump;
-                clientSite.UploadKVLog = enableKVLogDump;
-                clientSite.UploadSWLog = enableSWLogDump;
-                clientSite.UploadFusionLog = uploadFusionLog;
+                //clientSite.UploadGuardLog = enableLBLogDump;
+                //clientSite.UploadKVLog = enableKVLogDump;
+                //clientSite.UploadSWLog = enableSWLogDump;
+                //clientSite.UploadFusionLog = uploadFusionLog;
                 clientSite.LandLine = landLine;
-                clientSite.GuardLogEmailTo = guardEmailTo;
+                //clientSite.GuardLogEmailTo = guardEmailTo;
                 clientSite.DuressEmail = duressEmail;
                 clientSite.DuressSms = duressSms;
                 clientSite.IsDosDontList = IsDosDontList;
@@ -2680,6 +2680,36 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             return new JsonResult(new { success, message });
+        }
+        public void OnPostSaveSiteEmailBasedOnLogs(int siteId, 
+            bool enableLBLogDump, bool enableKVLogDump, bool enableSWLogDump, bool uploadFusionLog,string guardEmailTo,
+            bool enableLBWeeklyLogDump,bool enableKVWeeklyLogDump,bool enableSWWeeklyLogDump,bool uploadFusionWeeklyLog,string guardEmailWeeklyLogTo,
+            bool enableLBMonthlyLogDump,bool enableKVMonthlyLogDump,bool enableSWMonthlyLogDump,bool uploadFusionMonthlyLog, string guardEmailMonthlyLogTo)
+        {
+            var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
+            if (clientSite != null)
+            {
+                
+                clientSite.UploadGuardLog = enableLBLogDump;
+                clientSite.UploadKVLog = enableKVLogDump;
+                clientSite.UploadSWLog = enableSWLogDump;
+                clientSite.UploadFusionLog = uploadFusionLog;
+                clientSite.GuardLogEmailTo = guardEmailTo;
+
+                clientSite.UploadGuardWeeklyLog = enableLBWeeklyLogDump;
+                clientSite.UploadKVWeeklyLog = enableKVWeeklyLogDump;
+                clientSite.UploadSWWeeklyLog = enableSWWeeklyLogDump;
+                clientSite.UploadFusionWeeklyLog = uploadFusionWeeklyLog;
+                clientSite.GuardLogEmailWeeklyLogTo = guardEmailWeeklyLogTo;
+
+                clientSite.UploadGuardMonthlyLog = enableLBMonthlyLogDump;
+                clientSite.UploadKVMonthlyLog = enableKVMonthlyLogDump;
+                clientSite.UploadSWMonthlyLog = enableSWMonthlyLogDump;
+                clientSite.UploadFusionMonthlyLog = uploadFusionMonthlyLog;
+                clientSite.GuardLogEmailMonthlyLogTo = guardEmailMonthlyLogTo;
+            }
+
+            _clientDataProvider.SaveClientSite(clientSite);
         }
     }
 
