@@ -543,6 +543,8 @@ namespace CityWatch.Web.Pages.roster
                             x.RosterGroupId == groupId &&
                             x.ClientSiteId == source.ClientSiteId &&
                             x.ShiftStart == newStart &&
+                            x.GuardId == source.GuardId &&
+                            x.ProviderName == source.ProviderName &&
                             !x.IsDeleted);
 
                         if (!exists)
