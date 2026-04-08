@@ -371,6 +371,11 @@
             left: 105%;
             top: 0;
             transition: opacity 0.2s ease;
+            pointer-events: none; /* Tooltip shouldn't block mouse events */
+        }
+
+        .shift-card.dragging .shift-card-popup {
+            display: none !important;
         }
 
             .shift-card-popup::before {
