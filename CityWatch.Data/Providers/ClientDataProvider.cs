@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
@@ -375,11 +375,17 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+        /// <summary>
+        /// Highly optimized fetch for client sites. 
+        /// [Optimization]: Uses .AsNoTracking() to ensure Entity Framework 
+        /// does not track objects in memory, reducing CPU and RAM load.
+        /// </summary>
         public List<ClientSite> GetClientSites(int? typeId)
         {
 
 
             return _context.ClientSites
+                .AsNoTracking()
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
