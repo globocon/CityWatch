@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
@@ -369,16 +369,25 @@ namespace CityWatch.Data.Providers
 
         public void SaveReportTemplate(DateTime dateTimeUpdated)
         {
-            var templateToUpdate = _context.ReportTemplates.Single();
-            templateToUpdate.LastUpdated = dateTimeUpdated;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent "Sequence contains more than one element"
+            // if multiple template records exist.
+            var templateToUpdate = _context.ReportTemplates.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.LastUpdated = dateTimeUpdated;
+                _context.SaveChanges();
+            }
         }
         //To save the DefaultEmail
         public void SaveDefaultEmail(string DefaultEmail)
         {
-            var templateToUpdate = _context.ReportTemplates.Single();
-            templateToUpdate.DefaultEmail = DefaultEmail;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent crashing if multiple records exist.
+            var templateToUpdate = _context.ReportTemplates.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.DefaultEmail = DefaultEmail;
+                _context.SaveChanges();
+            }
         }
 
 
@@ -905,10 +914,15 @@ namespace CityWatch.Data.Providers
 
         public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
         {
-            var templateToUpdate = _context.CompanyDetails.Single();
-            templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
-            templateToUpdate.PrimaryLogoPath = primaryLogoPath;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent "Sequence contains more than one element"
+            // if multiple company details records exist.
+            var templateToUpdate = _context.CompanyDetails.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
+                templateToUpdate.PrimaryLogoPath = primaryLogoPath;
+                _context.SaveChanges();
+            }
         }
         public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId)
         {
