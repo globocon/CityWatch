@@ -455,7 +455,14 @@ namespace CityWatch.Web.Pages.roster
                 x.ShiftStart >= targetStart && 
                 x.ShiftStart < copyUntil);
 
-            return new JsonResult(new { success = true, hasData = hasData });
+            var sourceEndDate = startDate.AddDays(7);
+            var hasSourceData = await _context.RosterSchedules.AnyAsync(x =>
+                x.RosterGroupId == groupId && 
+                !x.IsDeleted && 
+                x.ShiftStart >= startDate && 
+                x.ShiftStart < sourceEndDate);
+
+            return new JsonResult(new { success = true, hasData = hasData, hasSourceData = hasSourceData });
         }
 
         public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
@@ -466,11 +473,6 @@ namespace CityWatch.Web.Pages.roster
                 var sourceSchedules = await _context.RosterSchedules
                     .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate)
                     .ToListAsync();
-
-                if (!sourceSchedules.Any())
-                {
-                    return new JsonResult(new { success = false, message = "No shifts found in the current week to copy." });
-                }
 
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
