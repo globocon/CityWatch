@@ -108,6 +108,19 @@
                         <label>Provider (Subcontractor)</label>
                         <select id="modalProviderId" class="form-control" style="width: 100%"></select>
                     </div>
+                    <div class="form-group">
+                        <label>Position (or Callsign)</label>
+                        <select id="modalCallsignId" class="form-control" style="width: 100%">
+                            <option value="">Select Callsign (Optional)</option>
+                            @if (Model.CallsignList != null)
+                            {
+                                foreach (var callsign in Model.CallsignList)
+                                {
+                                    <option value="@callsign.Id">@callsign.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
                     <div class="form-group row">
                         <div class="col-6">
                             <label>Start Time</label>
@@ -755,7 +768,16 @@
                 theme: 'bootstrap4',
                 allowClear: true,
                 dropdownParent: $('#addShiftModal')
-            }).on('select2:select', function (e) {
+            });
+
+            $('#modalCallsignId').select2({
+                placeholder: 'Select Callsign (Optional)',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal')
+            });
+
+            $('#modalPositionId').on('select2:select', function (e) {
                 var element = $(e.params.data.element);
                 var rate = element.data('rate');
                 // Auto-populate pay rate
@@ -805,11 +827,12 @@
                                     if (s.status === 2) statusClass = 'status-declined';
 
                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                        'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" ' +
+                                        'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
                                         '<div>' + s.shiftStart + '  -  ' + s.shiftEnd + '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                        (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                         (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                         '<div class="shift-card-popup">' +
@@ -896,6 +919,7 @@
                 $('#modalGuardId').val(null).trigger('change');
                 $('#modalProviderId').val(null).trigger('change');
                 $('#modalPositionId').val(null).trigger('change');
+                $('#modalCallsignId').val(null).trigger('change');
                 $('#modalPayRate').val('');
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
@@ -934,6 +958,9 @@
                     $('#modalProviderId').val(null).trigger('change');
                 }
 
+                // Callsign
+                $('#modalCallsignId').val(card.data('callsignid') || "").trigger('change');
+
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
 
@@ -965,6 +992,8 @@
 
                 var positionData = $('#modalPositionId').select2('data');
                 var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
+
+                var callsignId = $('#modalCallsignId').val();
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -1000,7 +1029,8 @@
                         guardId: guardId,
                         providerName: providerName,
                         payRateId: payRateId,
-                        shiftId: shiftId // Pass shiftId for updates
+                        shiftId: shiftId, // Pass shiftId for updates
+                        callsignId: callsignId
                     },
                     success: function (res) {
                         if (res.success) {
@@ -1304,6 +1334,7 @@
                     guardId: card.data('guardid'),
                     providerName: card.data('provider'),
                     payRateId: card.data('payrateid'),
+                    callsignId: card.data('callsignid'),
                     startTime: card.data('start'),
                     endTime: card.data('end')
                 };
@@ -1362,6 +1393,7 @@
                         guardId: shiftData.guardId,
                         providerName: shiftData.providerName,
                         payRateId: shiftData.payRateId,
+                        callsignId: shiftData.callsignId,
                         shiftId: null // Always creating new
                     },
                     success: function (res) {
