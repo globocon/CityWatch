@@ -51,10 +51,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly IViewDataService _viewDataService;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly ILogbookDataService _logbookDataService;
-
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ISmartWandReportGenarator _smartWandReportGenarator;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService)
+            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService,
+            IWebHostEnvironment webHostEnvironment, ISmartWandReportGenarator smartWandReportGenarator)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -66,6 +68,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _viewDataService = viewDataService;
             _configDataProvider = configDataProvider;
             _logbookDataService = logbookDataService;
+            _webHostEnvironment = webHostEnvironment;
+            _smartWandReportGenarator= smartWandReportGenarator;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -3210,6 +3214,33 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+        public IActionResult OnGetGeneratePdfForSmartWandsFQ(int ClientSiteId, int GuardId)
+        {
+           
+
+            var pdfFileName = GenerateFilteredPdfForSmartWandsFQReport(ClientSiteId, GuardId);
+            if (!string.IsNullOrEmpty(pdfFileName))
+            {
+                var pdfFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", pdfFileName);
+                if (System.IO.File.Exists(pdfFilePath))
+                {
+
+                    var stream = new FileStream(pdfFilePath, FileMode.Open);
+                    //Response.AppendHeader("Content-Disposition", "inline; filename= " + pdfFileName);
+                    Response.ContentType = "application/pdf";
+                    Response.Headers["Content-Disposition"] = $"inline; filename={pdfFileName}";
+                    return new FileStreamResult(stream, "application/pdf")
+                    {
+                        FileDownloadName = pdfFileName
+                    };
+                }
+            }
+            return NotFound(); // Handle error more appropriately
+        }
+        private string GenerateFilteredPdfForSmartWandsFQReport(int ClientSiteId, int GuardId)
+        {
+            return _smartWandReportGenarator.GenerateSartWandPdfReportWithClientSiteAndGuardIds(ClientSiteId, GuardId);
         }
 
 

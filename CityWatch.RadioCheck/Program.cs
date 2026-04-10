@@ -60,7 +60,7 @@ builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>(); 
 builder.Services.AddScoped<IPushNotificationServicecs, PushNotificationServicecs>();
 builder.Services.AddScoped<IJotFormService, JotFormService>();
-
+builder.Services.AddScoped<ISmartWandReportGenarator, SmartWandReportGenarator>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
