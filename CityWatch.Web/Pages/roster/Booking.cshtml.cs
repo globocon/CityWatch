@@ -44,6 +44,7 @@ namespace CityWatch.Web.Pages.roster
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
+        public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
 
         public void OnGet(DateTime? startDate, int? groupId)
@@ -80,6 +81,11 @@ namespace CityWatch.Web.Pages.roster
                 .Where(x => !x.IsDeleted)
                 .ToList();
 
+            CallsignList = _context.IncidentReportFields
+                .Where(x => x.TypeId == ReportFieldType.CallSign)
+                .OrderBy(x => x.Name)
+                .ToList();
+
             // Locking logic: Dec is locked if it's Jan.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = StartDate < firstDayOfCurrentMonth;
@@ -111,6 +117,7 @@ namespace CityWatch.Web.Pages.roster
             var schedules = await _context.RosterSchedules
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
+                .Include(x => x.Callsign)
                 .ToListAsync();
 
             var rosterData = groupSites.Select(gs => new
@@ -131,11 +138,13 @@ namespace CityWatch.Web.Pages.roster
                             guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
                             guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                            guardProvider = s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : s.ProviderName,
+                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             providerName = s.ProviderName,
                             payRateId = s.PayRateId,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                            callsignId = s.CallsignId,
+                            callsignName = s.Callsign?.Name ?? "",
                             status = (int)s.Status
                         })
                         .ToList();
@@ -203,7 +212,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -254,6 +263,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.GuardId = guardId;
                 existing.ProviderName = providerName;
                 existing.PayRateId = payRateId;
+                existing.CallsignId = callsignId;
 
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true, id = existing.Id });
@@ -269,7 +279,8 @@ namespace CityWatch.Web.Pages.roster
                     GuardId = guardId,
                     ProviderName = providerName,
                     Status = RosterShiftStatus.Pushed,
-                    PayRateId = payRateId
+                    PayRateId = payRateId,
+                    CallsignId = callsignId
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -547,6 +558,7 @@ namespace CityWatch.Web.Pages.roster
                             x.ShiftStart == newStart &&
                             x.GuardId == source.GuardId &&
                             x.ProviderName == source.ProviderName &&
+                            x.CallsignId == source.CallsignId &&
                             !x.IsDeleted);
 
                         if (!exists)
@@ -560,7 +572,8 @@ namespace CityWatch.Web.Pages.roster
                                 ShiftStart = newStart,
                                 ShiftEnd = newEnd,
                                 Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
-                                PayRateId = source.PayRateId
+                                PayRateId = source.PayRateId,
+                                CallsignId = source.CallsignId
                             });
                         }
                     }

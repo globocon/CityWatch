@@ -39,6 +39,11 @@ namespace CityWatch.Data.Models
         [ForeignKey("PayRateId")]
         public virtual PayRate PayRate { get; set; }
 
+        public int? CallsignId { get; set; }
+
+        [ForeignKey("CallsignId")]
+        public virtual IncidentReportField Callsign { get; set; }
+
         public bool IsDeleted { get; set; }
     }
 }
