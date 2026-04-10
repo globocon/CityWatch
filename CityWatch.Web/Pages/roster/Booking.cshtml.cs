@@ -138,7 +138,7 @@ namespace CityWatch.Web.Pages.roster
                             guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
                             guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                            guardProvider = s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : s.ProviderName,
+                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             providerName = s.ProviderName,
                             payRateId = s.PayRateId,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
