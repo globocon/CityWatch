@@ -1185,6 +1185,8 @@
                 $('#rolloverModal').modal('show');
             });
 
+            var rolloverHasSourceData = true;
+
             $('#btnConfirmRollover').on('click', function() {
                 var option = $('input[name="rolloverOption"]:checked').val();
                 var btn = $(this);
@@ -1202,12 +1204,19 @@
                     },
                     success: function (res) {
                         if (res.success) {
+                            rolloverHasSourceData = res.hasSourceData;
+
                             if (res.hasData) {
                                 $('#rolloverStep1').hide();
                                 $('#rolloverStep2').show();
                                 btn.hide();
                                 $('#btnExecuteRollover').show().prop('disabled', false).text('Execute Rollover');
                             } else {
+                                if (!res.hasSourceData) {
+                                    btn.prop('disabled', false).text('Confirm Rollover');
+                                    alert('Both the current week and the target period are empty. No shifts to copy or clear.');
+                                    return;
+                                }
                                 // No future data, proceed with rollover normally (Erase = false)
                                 executeRollover(option, false);
                             }
@@ -1230,6 +1239,14 @@
             });
 
             function executeRollover(option, eraseFuture) {
+                if (!rolloverHasSourceData && eraseFuture) {
+                    if (!confirm('The current week is empty. Clicking "OK" will CLEAR all existing future shifts for the selected period. Do you want to proceed?')) {
+                        var executeBtn = $('#btnExecuteRollover').is(':visible') ? $('#btnExecuteRollover') : $('#btnConfirmRollover');
+                        executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                        return;
+                    }
+                }
+
                 var executeBtn = $('#btnExecuteRollover').is(':visible') ? $('#btnExecuteRollover') : $('#btnConfirmRollover');
                 executeBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
 
@@ -1244,17 +1261,17 @@
                         eraseFuture: eraseFuture
                     },
                     success: function (res) {
-                        executeBtn.prop('disabled', false).text('Confirm Rollover');
+                        executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteRollover') ? 'Execute Rollover' : 'Confirm Rollover');
                         if (res.success) {
                             $('#rolloverModal').modal('hide');
-                            alert('Roster duplicated successfully.');
+                            alert('Roster operation completed successfully.');
                             loadRoster();
                         } else {
                             alert(res.message);
                         }
                     },
                     error: function() {
-                        executeBtn.prop('disabled', false).text('Confirm Rollover');
+                        executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteRollover') ? 'Execute Rollover' : 'Confirm Rollover');
                         alert('An error occurred during rollover.');
                     }
                 });
