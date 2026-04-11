@@ -11,15 +11,10 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12" style="position: relative;">
-            <!-- "Booking" Title near Logout (Top Right) -->
-            <div class="page-title-box">
-                <h1 class="font-weight-bold text-secondary mb-0" style="font-size: 2.2rem; opacity: 0.5;">Booking</h1>
-            </div>
-
+        <div class="col-md-12">
             <!-- Row 1: Project Name (Wide but constrained) -->
             <div class="row mb-3 mt-2">
-                <div class="col-md-7">
+                <div class="col-md-3">
                     <label class="font-weight-bold text-muted mb-1" style="font-size: 0.85rem;">Project Name</label>
                     <select id="project_name" class="form-control border-primary shadow-sm" style="width: 100%; font-weight: bold;"></select>
                 </div>
@@ -605,13 +600,6 @@
         }
 
         /* Layout Fixes */
-        .page-title-box {
-            position: absolute;
-            right: 0;
-            top: -55px;
-            z-index: 10;
-        }
-
         #roster_footer {
             background: #fff !important;
             color: #444 !important;
@@ -632,7 +620,7 @@
             font-weight: 600;
         }
 
-        .total-value-footer {
+        .total-value {
             font-size: 15px;
             font-weight: 800;
             color: #2c3e50;
@@ -668,6 +656,10 @@
         }
     </style>
 </div>
+
+@section PageHeader {
+    <h2 class="font-weight-bold mb-0 mr-3">Booking</h2>
+}
 
 @section Scripts {
     <script>
