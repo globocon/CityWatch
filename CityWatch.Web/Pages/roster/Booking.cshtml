@@ -25,6 +25,26 @@
                 <!-- Action Buttons -->
                 <div class="col-auto mr-4">
                     <div id="project_actions" style="display:none; white-space: nowrap;">
+                        <!-- Design Toggles -->
+                        <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
+                            <span class="text-danger font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="designToggle1">
+                                <label class="custom-control-label" for="designToggle1"></label>
+                            </div>
+                        </div>
+                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #333; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                            </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="designToggle2">
+                                <label class="custom-control-label" for="designToggle2"></label>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
                         <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
                         <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
                         <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
