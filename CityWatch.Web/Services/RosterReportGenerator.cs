@@ -39,6 +39,7 @@ namespace CityWatch.Web.Services
         private readonly string _imageRootDir;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
+        private readonly string _subDomainImageRootDir;
 
         private const float MARGIN = 15f; // Match TimesheetReportGenerator
         private const float FONT_SIZE_HEADER = 12f;
@@ -51,6 +52,7 @@ namespace CityWatch.Web.Services
             _clientDataProvider = clientDataProvider;
             _settings = options.Value;
             _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _subDomainImageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
         }
 
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1)
@@ -89,11 +91,32 @@ namespace CityWatch.Web.Services
 
                     var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
 
-                    var logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                    // Resolve Logo (Check for 3rd Party Branding)
+                    string logoPath = string.Empty;
+                    var primarySiteForLogo = groupSites.FirstOrDefault();
+                    if (primarySiteForLogo != null && primarySiteForLogo.ClientSite.ClientType != null)
+                    {
+                        var subDomains = _clientDataProvider.GetSubDomains();
+                        var subDomain = subDomains.FirstOrDefault(x => x.TypeId == primarySiteForLogo.ClientSite.ClientType.Id && x.Enabled && !string.IsNullOrEmpty(x.Logo));
+                        if (subDomain != null)
+                        {
+                            var subDomainLogoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                            if (File.Exists(subDomainLogoPath))
+                            {
+                                logoPath = subDomainLogoPath;
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(logoPath))
+                    {
+                        logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                    }
+
                     if (File.Exists(logoPath))
                     {
-                        var cwLogo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
-                        headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                        var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                        headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
                     }
                     else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
 
