@@ -15,6 +15,8 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using CityWatch.Data.Providers;
 
 using CityWatch.Data.Helpers;
 using iText.IO.Image;
@@ -35,15 +37,19 @@ namespace CityWatch.Web.Services
         private readonly CityWatchDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly string _imageRootDir;
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly Settings _settings;
 
         private const float MARGIN = 15f; // Match TimesheetReportGenerator
         private const float FONT_SIZE_HEADER = 12f;
         private const float FONT_SIZE_CELL = 7.5f; // Match TimesheetReportGenerator
 
-        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment)
+        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment, IClientDataProvider clientDataProvider, IOptions<Settings> options)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _clientDataProvider = clientDataProvider;
+            _settings = options.Value;
             _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
         }
 
@@ -100,7 +106,26 @@ namespace CityWatch.Web.Services
                         .SetBorder(Border.NO_BORDER);
 
                     headerTable.AddCell(titleCell);
-                    headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                    
+                    var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                    var primarySite = groupSites.FirstOrDefault();
+                    if (primarySite != null)
+                    {
+                        var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
+                        if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                        {
+                            try
+                            {
+                                var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                var siteImage = new Image(ImageDataFactory.Create(siteImageUrl))
+                                    .SetHeight(50)
+                                    .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                cellSiteImage.Add(siteImage);
+                            }
+                            catch (Exception) { /* Fallback if image fails to load */ }
+                        }
+                    }
+                    headerTable.AddCell(cellSiteImage);
 
                     document.Add(headerTable);
                     document.Add(new Paragraph("\n"));
@@ -214,7 +239,7 @@ namespace CityWatch.Web.Services
             Paragraph footerText = new Paragraph()
                 .Add(new Text("Current as of: ").SetFontSize(11))
                 .Add(new Text($"{timestamp:dd/MM/yyyy}").SetBold().SetFontSize(11))
-                .Add(new Text(" @@ ").SetFontSize(11))
+                .Add(new Text(" @ ").SetFontSize(11))
                 .Add(new Text($"{timestamp:HH:mm}").SetBold().SetFontSize(11))
                 .Add(new Text(" hrs").SetFontSize(11))
                 .SetTextAlignment(TextAlignment.RIGHT)
