@@ -10,8 +10,19 @@
 </form>
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
+    <ul class="nav nav-tabs custom-roster-tabs mb-2" id="rosterTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="projects-tab" data-toggle="tab" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" id="groups-tab" href="javascript:void(0)" role="tab">Groups</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="rosterTabContent">
+        <div class="tab-pane fade show active" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+            <div class="row">
+                <div class="col-md-12">
             <!-- Row 1: Project Name (Wide but constrained) -->
             <div class="row mb-3 mt-2">
                 <div class="col-md-4">
@@ -134,6 +145,15 @@
                         </tfoot>
                     </table>
                 </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+            <div class="text-center p-5 text-muted">
+                 <i class="fa fa-users fa-3x mb-3"></i>
+                 <p>Groups feature coming soon.</p>
             </div>
         </div>
     </div>
