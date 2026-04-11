@@ -38,6 +38,7 @@ namespace CityWatch.Web.Services
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly string _imageRootDir;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly string _subDomainImageRootDir;
 
@@ -45,11 +46,12 @@ namespace CityWatch.Web.Services
         private const float FONT_SIZE_HEADER = 12f;
         private const float FONT_SIZE_CELL = 7.5f; // Match TimesheetReportGenerator
 
-        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment, IClientDataProvider clientDataProvider, IOptions<Settings> options)
+        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment, IClientDataProvider clientDataProvider, IConfigDataProvider configDataProvider, IOptions<Settings> options)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _clientDataProvider = clientDataProvider;
+            _configDataProvider = configDataProvider;
             _settings = options.Value;
             _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _subDomainImageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
@@ -93,17 +95,19 @@ namespace CityWatch.Web.Services
 
                     // Resolve Logo (Check for 3rd Party Branding)
                     string logoPath = string.Empty;
-                    var primarySiteForLogo = groupSites.FirstOrDefault();
-                    if (primarySiteForLogo != null && primarySiteForLogo.ClientSite.ClientType != null)
+                    foreach (var site in groupSites)
                     {
-                        var subDomains = _clientDataProvider.GetSubDomains();
-                        var subDomain = subDomains.FirstOrDefault(x => x.TypeId == primarySiteForLogo.ClientSite.ClientType.Id && x.Enabled && !string.IsNullOrEmpty(x.Logo));
-                        if (subDomain != null)
+                        if (site.ClientSite != null && site.ClientSite.ClientType != null)
                         {
-                            var subDomainLogoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
-                            if (File.Exists(subDomainLogoPath))
+                            var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.ClientType.Id);
+                            if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
                             {
-                                logoPath = subDomainLogoPath;
+                                var subDomainLogoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                if (File.Exists(subDomainLogoPath))
+                                {
+                                    logoPath = subDomainLogoPath;
+                                    break;
+                                }
                             }
                         }
                     }
