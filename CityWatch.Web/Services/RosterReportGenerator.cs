@@ -161,6 +161,30 @@ namespace CityWatch.Web.Services
 
                     document.Add(table);
 
+                    // Add Footer Table
+                    var footerTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetMarginTop(15);
+
+                    // Left: Logo
+                    var footerLogoPath = System.IO.Path.Combine(_imageRootDir, "c4ilogo.jpg");
+                    if (File.Exists(footerLogoPath))
+                    {
+                        var footerLogo = new Image(ImageDataFactory.Create(footerLogoPath)).SetHeight(30);
+                        footerTable.AddCell(new Cell().Add(footerLogo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                    }
+                    else
+                    {
+                        footerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                    }
+
+                    // Right: Timestamp
+                    var now = DateTime.Now;
+                    var footerText = new Paragraph("Current as of: ").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9)
+                        .Add(new Text($"{now:dd MMM yyyy} @ {now:HH:mm} hrs").SetBold());
+
+                    footerTable.AddCell(new Cell().Add(footerText).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetBorder(Border.NO_BORDER));
+
+                    document.Add(footerTable);
+
                     if (w < weeks - 1)
                     {
                         document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
