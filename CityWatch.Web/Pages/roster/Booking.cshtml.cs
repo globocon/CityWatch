@@ -223,6 +223,12 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
 
+            // Validation: Time range check (00:01 - 23:59)
+            if (start.TimeOfDay == TimeSpan.Zero || end.TimeOfDay == TimeSpan.Zero)
+            {
+                return new JsonResult(new { success = false, message = "Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59." });
+            }
+
             // Validation 1: Start Date < End Date
             if (start >= end)
             {
@@ -428,9 +434,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate)
+        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate);
+            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks);
             if (pdfBytes != null)
             {
                 var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();

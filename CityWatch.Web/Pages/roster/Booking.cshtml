@@ -308,6 +308,31 @@
     </div>
 
 
+    <!-- Download PDF Modal -->
+    <div class="modal fade" id="downloadPdfModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title"><i class="fa fa-file-pdf-o mr-2"></i>Download PDF</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="mb-4 text-muted">Select the number of weeks you would like to include in the PDF report:</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-success btn-block mb-2 btn-download-weeks" data-weeks="1" style="border-radius: 8px; font-weight: 500;">1 Week</button>
+                        <button type="button" class="btn btn-outline-success btn-block mb-2 btn-download-weeks" data-weeks="2" style="border-radius: 8px; font-weight: 500;">2 Weeks</button>
+                        <button type="button" class="btn btn-outline-success btn-block mb-2 btn-download-weeks" data-weeks="4" style="border-radius: 8px; font-weight: 500;">4 Weeks</button>
+                        <button type="button" class="btn btn-outline-success btn-block mb-2 btn-download-weeks" data-weeks="8" style="border-radius: 8px; font-weight: 500;">8 Weeks</button>
+                        <button type="button" class="btn btn-outline-success btn-block btn-download-weeks" data-weeks="12" style="border-radius: 8px; font-weight: 500;">12 Weeks</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <style>
         /* Modern Typography */
         body {
@@ -1178,6 +1203,12 @@
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
 
+                // Client-side Validation: Time range check (00:01 - 23:59)
+                if (startTime === '00:00' || endTime === '00:00') {
+                    alert('Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59.');
+                    return;
+                }
+
                 // Client-side Validation 1: At least one selected
                 if (!guardId && !providerName) {
                     alert('Please select either a Guard OR a Provider.');
@@ -1380,9 +1411,15 @@
             // Handle PDF Download
             $('#btnDownloadPdf').on('click', function() {
                 if (!currentGroupId) return;
+                $('#downloadPdfModal').modal('show');
+            });
+
+            $(document).on('click', '.btn-download-weeks', function() {
+                var weeks = $(this).data('weeks');
                 var startDateStr = currentStartDate;
-                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
+                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks;
                 window.open(url, '_blank');
+                $('#downloadPdfModal').modal('hide');
             });
 
             $('#btnShowRollover').on('click', function() {
