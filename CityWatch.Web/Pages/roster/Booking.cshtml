@@ -320,11 +320,11 @@
             position: relative;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 8px 28px 8px 10px;
+            padding: 6px 26px 6px 8px;
             margin-bottom: 5px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 10.5px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 3px solid rgba(255,255,255,0.3);
@@ -605,10 +605,10 @@
         .hour-badge {
             background-color: rgba(0, 0, 0, 0.15);
             color: white;
-            padding: 1px 5px;
+            padding: 1px 4px;
             border-radius: 4px;
             font-weight: 600;
-            margin-left: 5px;
+            margin-left: 0;
             font-size: 9px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             display: inline-block;
@@ -923,9 +923,9 @@
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; white-space: nowrap; overflow: hidden;">' +
-                                            '<span class="hour-badge" style="margin: 0 5px 0 0; padding: 0 4px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
