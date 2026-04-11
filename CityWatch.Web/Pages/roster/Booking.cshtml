@@ -922,8 +922,11 @@
                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                        '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div style="font-size: 10px;"><span class="hour-badge ml-0 mr-1">(' + s.durationHours + ' hrs)</span>' + s.shiftStart + ' - ' + s.shiftEnd + '</div>' +
+                                        '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; white-space: nowrap; overflow: hidden;">' +
+                                            '<span class="hour-badge" style="margin: 0 5px 0 0; padding: 0 4px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                            '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                        '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
