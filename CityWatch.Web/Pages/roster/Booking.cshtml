@@ -80,6 +80,27 @@
                         <tbody>
                             <!-- Rows will be added dynamically -->
                         </tbody>
+                        <tfoot id="roster_footer" style="display: none;">
+                            <tr>
+                                <td class="p-0">
+                                    <div class="grand-total-container">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value" id="grand_total_hours">0</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    <td>
+                                        <div class="total-item">
+                                            <span class="total-label">Daily Total</span>
+                                            <span class="total-value day-total" data-day="@i">0</span>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -534,6 +555,71 @@
             background-color: rgba(102, 126, 234, 0.1) !important;
             border: 2px dashed #667eea !important;
         }
+
+        /* Hours Total Row Styling */
+        #roster_grid tfoot tr {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+        }
+
+        #roster_grid tfoot td {
+            padding: 10px 8px;
+            border: none;
+            text-align: center;
+            vertical-align: middle;
+            border-top: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .total-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .total-label {
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 9px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .total-value {
+            font-size: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .grand-total-container {
+            border-right: 1px solid rgba(255,255,255,0.2);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Duration Badge */
+        .hour-badge {
+            background-color: rgba(0, 0, 0, 0.15);
+            color: white;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 5px;
+            font-size: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            vertical-align: middle;
+            transition: all 0.2s ease;
+        }
+
+        .shift-card:hover .hour-badge {
+            background-color: rgba(0, 0, 0, 0.25);
+            transform: scale(1.05);
+        }
     </style>
 </div>
     </div>
@@ -807,8 +893,12 @@
 
                         if (res.results.length === 0) {
                             tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                            $('#roster_footer').hide();
                             return;
                         }
+
+                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                        var grandTotal = 0;
 
                         res.results.forEach(function (row) {
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
@@ -826,11 +916,14 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
+                                    dailyTotals[index] += s.durationHours;
+                                    grandTotal += s.durationHours;
+
                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div>' + s.shiftStart + '  -  ' + s.shiftEnd + '</div>' +
+                                        '<div>' + s.shiftStart + '  -  ' + s.shiftEnd + '<span class="hour-badge">(' + s.durationHours + ' hrs)</span></div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
@@ -841,6 +934,7 @@
                                         '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
                                         '</div>' +
                                         '</div>';
                                 });
@@ -853,6 +947,14 @@
 
                             rowHtml += '</tr>';
                             tbody.append(rowHtml);
+                        });
+
+                        // Update Footer Totals
+                        $('#roster_footer').show();
+                        $('#grand_total_hours').text(grandTotal.toFixed(2).replace(/\.00$/, ''));
+                        $('.day-total').each(function () {
+                            var day = $(this).data('day');
+                            $(this).text(dailyTotals[day].toFixed(2).replace(/\.00$/, ''));
                         });
                     }
                 });
