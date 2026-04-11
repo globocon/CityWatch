@@ -3,47 +3,89 @@
 @{
     ViewData["Title"] = "Booking";
 }
-<h1>@ViewData["Title"]</h1>
+
 
 <form id="antiForgeryForm">
     @Html.AntiForgeryToken()
 </form>
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label>Project Name</label>
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1; min-width: 0;">
-                            <select id="project_name" class="form-control" style="width: 100%;"></select>
+    <ul class="nav nav-tabs custom-roster-tabs mb-2" id="rosterTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="projects-tab" data-toggle="tab" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" id="groups-tab" href="javascript:void(0)" role="tab">Groups</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="rosterTabContent">
+        <div class="tab-pane fade show active" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+            <div class="row">
+                <div class="col-md-12">
+            <!-- Row 1: Project Name (Wide but constrained) -->
+            <div class="row mb-3 mt-2">
+                <div class="col-md-4">
+                    <label class="font-weight-bold text-muted mb-1" style="font-size: 0.85rem;">Project Name</label>
+                    <select id="project_name" class="form-control border-primary shadow-sm" style="width: 100%; font-weight: bold;"></select>
+                </div>
+                <div class="col-md-8 text-right align-self-end">
+                    <a href="/Admin/Roster" title="Go to Roster Admin">
+                        <img src="~/images/calender.png" style="height: 48px; cursor: pointer;" alt="Roster Admin" />
+                    </a>
+                </div>
+            </div>
+
+            <!-- Row 2: All Tools (Buttons, Date Nav, Add Site) on One Line -->
+            <div class="row mb-4 align-items-center no-gutters">
+                <!-- Action Buttons -->
+                <div class="col-auto mr-4">
+                    <div id="project_actions" style="display:none; white-space: nowrap;">
+                        <!-- Design Toggles -->
+                        <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
+                            <span class="text-danger font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="designToggle1">
+                                <label class="custom-control-label" for="designToggle1"></label>
+                            </div>
                         </div>
-                        <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
-                            <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
-                            <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
-                            <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
-                            <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
+                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #333; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                            </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="designToggle2">
+                                <label class="custom-control-label" for="designToggle2"></label>
+                            </div>
                         </div>
+                        
+                        <!-- Action Buttons -->
+                        <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                        <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
+                        <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
                     </div>
                 </div>
-                <div class="col-md-4 text-center">
-                    <label>&nbsp;</label>
-                    <div class="d-flex justify-content-center align-items-center">
-                        <a href="#" id="btnPrevWeek" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
-                        <span class="font-weight-bold" style="min-width: 120px;">@Model.WeekRange</span>
-                        <a href="#" id="btnNextWeek" class="btn btn-outline-secondary btn-sm ml-2"><i class="fa fa-chevron-right"></i></a>
+
+                <!-- Date Navigation -->
+                <div class="col-auto flex-grow-1 text-center">
+                    <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                        <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                        <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
+                        <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <label>Add to Roster</label>
+
+                <!-- Add Site Selection -->
+                <div class="col-auto ml-4">
                     <div class="d-flex align-items-center">
-                        <div class="position-relative site-select-wrapper">
-                            <i class="fa fa-search position-absolute site-search-icon"></i>
-                            <select id="search_site" class="form-control"></select>
+                        <div class="position-relative" style="width: 280px;">
+                            <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
+                            <select id="search_site" class="form-control form-control-sm pl-4"></select>
                         </div>
-                        <button class="btn btn-success ml-2" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
-                            <i class="fa fa-plus"></i> <span class="d-none d-lg-inline">Add Site</span>
+                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
+                            <i class="fa fa-plus"></i> Add Site
                         </button>
                     </div>
                 </div>
@@ -80,8 +122,38 @@
                         <tbody>
                             <!-- Rows will be added dynamically -->
                         </tbody>
+                        <tfoot id="roster_footer" style="display: none;">
+                            <tr>
+                                <td class="p-0 border-right">
+                                    <div class="grand-total-container">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value" id="grand_total_hours">0</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    <td class="p-0">
+                                        <div class="total-item">
+                                            <span class="total-label">Daily Total</span>
+                                            <span class="total-value day-total" data-day="@i">0</span>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+            <div class="text-center p-5 text-muted">
+                 <i class="fa fa-users fa-3x mb-3"></i>
+                 <p>Groups feature coming soon.</p>
             </div>
         </div>
     </div>
@@ -324,11 +396,11 @@
             position: relative;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 8px 28px 8px 10px;
+            padding: 6px 26px 6px 8px;
             margin-bottom: 5px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 10.5px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 3px solid rgba(255,255,255,0.3);
@@ -523,8 +595,8 @@
 
         /* Select2 Enhancements */
         .select2-container {
-            width: 100% !important;
-            max-width: 100% !important;
+            width: 81% !important;
+            max-width: 81% !important;
         }
 
         .select2-selection__rendered {
@@ -559,10 +631,98 @@
             background-color: rgba(102, 126, 234, 0.1) !important;
             border: 2px dashed #667eea !important;
         }
+
+        /* Totals visibility was improved in the Layout Fixes block below */
+
+        /* Layout Fixes */
+        #roster_footer {
+            background: #fff !important;
+            color: #444 !important;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .total-item {
+            padding: 10px 5px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #888;
+            display: block;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .total-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: #2c3e50;
+        }
+
+        .grand-total-container {
+            border-right: 2px solid #eee;
+            background: #fcfcfc;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Duration Badge */
+        .hour-badge {
+            background-color: rgba(0, 0, 0, 0.15);
+            color: white;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 0;
+            font-size: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            vertical-align: middle;
+            transition: all 0.2s ease;
+        }
+        .shift-card:hover .hour-badge {
+            background-color: rgba(0, 0, 0, 0.25);
+            transform: scale(1.05);
+        }
+
+        /* Custom Tabs Styling */
+        .custom-roster-tabs {
+            border-bottom: 2px solid #667eea;
+        }
+
+        .custom-roster-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .custom-roster-tabs .nav-link.active {
+            color: #667eea !important;
+            font-weight: bold;
+            border-color: #667eea #667eea #fff !important;
+            background-color: #fff !important;
+            border-width: 2px 2px 0 2px;
+        }
+
+        .custom-roster-tabs .nav-link.disabled {
+            color: #6c757d;
+            opacity: 0.5;
+            cursor: default;
+        }
+
     </style>
 </div>
-    </div>
-</div>
+
+@section PageHeader {
+    <h2 class="font-weight-bold mb-0 mr-3">Booking</h2>
+}
 
 @section Scripts {
     <script>
@@ -832,8 +992,12 @@
 
                         if (res.results.length === 0) {
                             tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                            $('#roster_footer').hide();
                             return;
                         }
+
+                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                        var grandTotal = 0;
 
                         res.results.forEach(function (row) {
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
@@ -851,11 +1015,17 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
+                                    dailyTotals[index] += s.durationHours;
+                                    grandTotal += s.durationHours;
+
                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                        '<div class="text-truncate"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div>' + s.shiftStart + '  -  ' + s.shiftEnd + '</div>' +
+                                        '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; white-space: nowrap;">' +
+                                            '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                        '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
@@ -866,6 +1036,7 @@
                                         '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
                                         '</div>' +
                                         '</div>';
                                 });
@@ -878,6 +1049,14 @@
 
                             rowHtml += '</tr>';
                             tbody.append(rowHtml);
+                        });
+
+                        // Update Footer Totals
+                        $('#roster_footer').show();
+                        $('#grand_total_hours').text(grandTotal.toFixed(2).replace(/\.00$/, ''));
+                        $('.day-total').each(function () {
+                            var day = $(this).data('day');
+                            $(this).text(dailyTotals[day].toFixed(2).replace(/\.00$/, ''));
                         });
                     }
                 });

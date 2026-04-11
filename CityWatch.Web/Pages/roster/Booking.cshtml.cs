@@ -145,7 +145,8 @@ namespace CityWatch.Web.Pages.roster
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             callsignId = s.CallsignId,
                             callsignName = s.Callsign?.Name ?? "",
-                            status = (int)s.Status
+                            status = (int)s.Status,
+                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2)
                         })
                         .ToList();
                 }).ToList()
