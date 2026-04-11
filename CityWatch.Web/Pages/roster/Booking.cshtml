@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Booking";
 }
-<h1>@ViewData["Title"]</h1>
+
 
 <form id="antiForgeryForm">
     @Html.AntiForgeryToken()
@@ -12,23 +12,28 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <div class="row mb-3">
+            <!-- Row 1: Project Name & Layout Title -->
+            <div class="row mb-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="font-weight-bold text-muted mb-1">Project Name</label>
+                    <select id="project_name" class="form-control form-control-lg border-primary" style="width: 100%; font-weight: bold;"></select>
+                </div>
+                <div class="col-md-3 text-right">
+                    <h1 class="font-weight-bold display-4 text-secondary mb-0" style="opacity: 0.4;">Booking</h1>
+                </div>
+            </div>
+
+            <!-- Row 2: Buttons, Date Nav, Add Site -->
+            <div class="row mb-4 align-items-center">
                 <div class="col-md-3">
-                    <label>Project Name</label>
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1; min-width: 0;">
-                            <select id="project_name" class="form-control" style="width: 100%;"></select>
-                        </div>
-                        <div id="project_actions" class="ml-2" style="display:none; white-space: nowrap;">
-                            <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
-                            <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
-                            <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
-                            <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
-                        </div>
+                    <div id="project_actions" style="display:none; white-space: nowrap;">
+                        <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
+                        <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                        <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
+                        <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
                     </div>
                 </div>
                 <div class="col-md-4 text-center">
-                    <label>&nbsp;</label>
                     <div class="d-flex justify-content-center align-items-center">
                         <a href="#" id="btnPrevWeek" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
                         <span class="font-weight-bold" style="min-width: 120px;">@Model.WeekRange</span>
@@ -36,9 +41,8 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <label>Add to Roster</label>
                     <div class="d-flex align-items-center">
-                        <div class="position-relative site-select-wrapper">
+                        <div class="position-relative site-select-wrapper flex-grow-1">
                             <i class="fa fa-search position-absolute site-search-icon"></i>
                             <select id="search_site" class="form-control"></select>
                         </div>
