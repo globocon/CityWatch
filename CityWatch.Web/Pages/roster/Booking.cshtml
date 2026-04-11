@@ -1024,6 +1024,12 @@
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
 
+                // Client-side Validation: Time range check (00:01 - 23:59)
+                if (startTime === '00:00' || endTime === '00:00') {
+                    alert('Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59.');
+                    return;
+                }
+
                 // Client-side Validation 1: At least one selected
                 if (!guardId && !providerName) {
                     alert('Please select either a Guard OR a Provider.');

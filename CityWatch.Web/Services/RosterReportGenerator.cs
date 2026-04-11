@@ -18,6 +18,8 @@ using Microsoft.EntityFrameworkCore;
 
 using CityWatch.Data.Helpers;
 using iText.IO.Image;
+using iText.IO.Font.Constants;
+using iText.Kernel.Font;
 
 namespace CityWatch.Web.Services
 {
@@ -178,8 +180,10 @@ namespace CityWatch.Web.Services
 
                     // Right: Timestamp
                     var now = DateTime.Now;
-                    var footerText = new Paragraph("Current as of: ").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9)
-                        .Add(new Text($"{now:dd MMM yyyy} @ {now:HH:mm} hrs").SetBold());
+                    var footerText = new Paragraph()
+                        .SetFontSize(11)
+                        .Add(new Text("Current as of: ").SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA)))
+                        .Add(new Text($"{now:dd MMM yyyy} @ {now:HH:mm} hrs").SetFont(PdfHelper.GetPdfFont()));
 
                     footerTable.AddCell(new Cell().Add(footerText).SetTextAlignment(TextAlignment.RIGHT).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetBorder(Border.NO_BORDER));
 
