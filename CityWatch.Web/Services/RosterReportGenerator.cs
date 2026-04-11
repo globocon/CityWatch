@@ -155,23 +155,21 @@ namespace CityWatch.Web.Services
                     }
                 }
 
-                // Total Row (Reverted to White background, Black text as requested)
-                var totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(4);
+                // Total Row (Matching guard name font and size as requested)
+                var totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(2);
                 totalLabelCell.Add(new Paragraph($"Total HRS: {Math.Round(weeklyTotal, 2)}h")
                     .SetFont(PdfHelper.GetPdfFont())
-                    .SetFontSize(FONT_SIZE_CELL)
-                    .SetFontColor(ColorConstants.BLACK)
-                    .SetBold());
+                    .SetFontSize(7f)
+                    .SetFontColor(ColorConstants.BLACK));
                 table.AddCell(totalLabelCell);
 
                 for (int i = 0; i < 7; i++)
                 {
-                    var dayTotalCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(4).SetTextAlignment(TextAlignment.CENTER);
+                    var dayTotalCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(2).SetTextAlignment(TextAlignment.CENTER);
                     dayTotalCell.Add(new Paragraph($"{Math.Round(dailyTotals[i], 2)}h")
                         .SetFont(PdfHelper.GetPdfFont())
-                        .SetFontSize(FONT_SIZE_CELL)
-                        .SetFontColor(ColorConstants.BLACK)
-                        .SetBold());
+                        .SetFontSize(7f)
+                        .SetFontColor(ColorConstants.BLACK));
                     table.AddCell(dayTotalCell);
                 }
 
