@@ -256,6 +256,33 @@
         </div>
     </div>
 
+    <!-- Download PDF Modal -->
+    <div class="modal fade" id="downloadPdfModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title font-weight-bold">Download Roster PDF</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="mb-4 text-muted">Select the number of weeks you would like to include in the roster download:</p>
+                    <div class="d-flex flex-wrap justify-content-center" style="gap: 15px;">
+                        <button class="btn btn-outline-primary btn-download-weeks" data-weeks="1" style="min-width: 80px;">1 Week</button>
+                        <button class="btn btn-outline-primary btn-download-weeks" data-weeks="2" style="min-width: 80px;">2 Weeks</button>
+                        <button class="btn btn-outline-primary btn-download-weeks" data-weeks="4" style="min-width: 80px;">4 Weeks</button>
+                        <button class="btn btn-outline-primary btn-download-weeks" data-weeks="8" style="min-width: 80px;">8 Weeks</button>
+                        <button class="btn btn-outline-primary btn-download-weeks" data-weeks="12" style="min-width: 80px;">12 Weeks</button>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <style>
         /* Modern Typography */
@@ -1307,8 +1334,15 @@
             $('#btnDownloadPdf').on('click', function() {
                 if (!currentGroupId) return;
                 var startDateStr = currentStartDate;
-                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr;
+                $('#downloadPdfModal').modal('show');
+            });
+
+            $('.btn-download-weeks').on('click', function() {
+                var weeks = $(this).data('weeks');
+                var startDateStr = currentStartDate;
+                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks;
                 window.open(url, '_blank');
+                $('#downloadPdfModal').modal('hide');
             });
 
             $('#btnShowRollover').on('click', function() {
