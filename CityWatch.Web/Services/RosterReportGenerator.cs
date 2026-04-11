@@ -97,17 +97,13 @@ namespace CityWatch.Web.Services
                     string logoPath = string.Empty;
                     foreach (var site in groupSites)
                     {
-                        if (site.ClientSite != null && site.ClientSite.ClientType != null)
+                        if (site.ClientSite != null)
                         {
-                            var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.ClientType.Id);
+                            var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
                             if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
                             {
-                                var subDomainLogoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
-                                if (File.Exists(subDomainLogoPath))
-                                {
-                                    logoPath = subDomainLogoPath;
-                                    break;
-                                }
+                                logoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                break;
                             }
                         }
                     }
@@ -117,10 +113,17 @@ namespace CityWatch.Web.Services
                         logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
                     }
 
-                    if (File.Exists(logoPath))
+                    if (!string.IsNullOrEmpty(logoPath))
                     {
-                        var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
-                        headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                        try
+                        {
+                            var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                            headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                        }
+                        catch
+                        {
+                            headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                        }
                     }
                     else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
 
