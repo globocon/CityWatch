@@ -11,21 +11,24 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12">
-            <!-- Row 1: Project Name & Layout Title -->
-            <div class="row mb-2 align-items-end">
-                <div class="col-md-9">
-                    <label class="font-weight-bold text-muted mb-1">Project Name</label>
-                    <select id="project_name" class="form-control form-control-lg border-primary" style="width: 100%; font-weight: bold;"></select>
-                </div>
-                <div class="col-md-3 text-right">
-                    <h1 class="font-weight-bold display-4 text-secondary mb-0" style="opacity: 0.4;">Booking</h1>
+        <div class="col-md-12" style="position: relative;">
+            <!-- "Booking" Title near Logout (Top Right) -->
+            <div class="page-title-box">
+                <h1 class="font-weight-bold text-secondary mb-0" style="font-size: 2.2rem; opacity: 0.5;">Booking</h1>
+            </div>
+
+            <!-- Row 1: Project Name (Wide but constrained) -->
+            <div class="row mb-3 mt-2">
+                <div class="col-md-7">
+                    <label class="font-weight-bold text-muted mb-1" style="font-size: 0.85rem;">Project Name</label>
+                    <select id="project_name" class="form-control border-primary shadow-sm" style="width: 100%; font-weight: bold;"></select>
                 </div>
             </div>
 
-            <!-- Row 2: Buttons, Date Nav, Add Site -->
-            <div class="row mb-4 align-items-center">
-                <div class="col-md-3">
+            <!-- Row 2: All Tools (Buttons, Date Nav, Add Site) on One Line -->
+            <div class="row mb-4 align-items-center no-gutters">
+                <!-- Action Buttons -->
+                <div class="col-auto mr-4">
                     <div id="project_actions" style="display:none; white-space: nowrap;">
                         <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
                         <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
@@ -33,21 +36,25 @@
                         <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
                     </div>
                 </div>
-                <div class="col-md-4 text-center">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <a href="#" id="btnPrevWeek" class="btn btn-outline-secondary btn-sm mr-2"><i class="fa fa-chevron-left"></i></a>
-                        <span class="font-weight-bold" style="min-width: 120px;">@Model.WeekRange</span>
-                        <a href="#" id="btnNextWeek" class="btn btn-outline-secondary btn-sm ml-2"><i class="fa fa-chevron-right"></i></a>
+
+                <!-- Date Navigation -->
+                <div class="col-auto flex-grow-1 text-center">
+                    <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                        <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                        <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
+                        <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                     </div>
                 </div>
-                <div class="col-md-5">
+
+                <!-- Add Site Selection -->
+                <div class="col-auto ml-4">
                     <div class="d-flex align-items-center">
-                        <div class="position-relative site-select-wrapper flex-grow-1">
-                            <i class="fa fa-search position-absolute site-search-icon"></i>
-                            <select id="search_site" class="form-control"></select>
+                        <div class="position-relative" style="width: 280px;">
+                            <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
+                            <select id="search_site" class="form-control form-control-sm pl-4"></select>
                         </div>
-                        <button class="btn btn-success ml-2" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
-                            <i class="fa fa-plus"></i> <span class="d-none d-lg-inline">Add Site</span>
+                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
+                            <i class="fa fa-plus"></i> Add Site
                         </button>
                     </div>
                 </div>
@@ -86,7 +93,7 @@
                         </tbody>
                         <tfoot id="roster_footer" style="display: none;">
                             <tr>
-                                <td class="p-0">
+                                <td class="p-0 border-right">
                                     <div class="grand-total-container">
                                         <div class="total-item">
                                             <span class="total-label">Weekly Total</span>
@@ -96,7 +103,7 @@
                                 </td>
                                 @for (int i = 0; i < 7; i++)
                                 {
-                                    <td>
+                                    <td class="p-0">
                                         <div class="total-item">
                                             <span class="total-label">Daily Total</span>
                                             <span class="total-value day-total" data-day="@i">0</span>
@@ -594,11 +601,46 @@
 
         .total-value {
             font-size: 16px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+
+        /* Layout Fixes */
+        .page-title-box {
+            position: absolute;
+            right: 0;
+            top: -55px;
+            z-index: 10;
+        }
+
+        #roster_footer {
+            background: #fff !important;
+            color: #444 !important;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .total-item {
+            padding: 10px 5px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #888;
+            display: block;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .total-value-footer {
+            font-size: 15px;
+            font-weight: 800;
+            color: #2c3e50;
         }
 
         .grand-total-container {
-            border-right: 1px solid rgba(255,255,255,0.2);
+            border-right: 2px solid #eee;
+            background: #fcfcfc;
             height: 100%;
             display: flex;
             align-items: center;
@@ -625,8 +667,6 @@
             transform: scale(1.05);
         }
     </style>
-</div>
-    </div>
 </div>
 
 @section Scripts {
