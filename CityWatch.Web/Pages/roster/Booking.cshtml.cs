@@ -12,6 +12,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Enums;
 using CityWatch.Web.Services;
+using CityWatch.Data.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
