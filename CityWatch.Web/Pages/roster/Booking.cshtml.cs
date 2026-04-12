@@ -146,7 +146,7 @@ namespace CityWatch.Web.Pages.roster
                             callsignId = s.CallsignId,
                             callsignName = s.Callsign?.Name ?? "",
                             status = (int)s.Status,
-                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2)
+                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd)
                         })
                         .ToList();
                 }).ToList()

@@ -135,7 +135,7 @@ namespace CityWatch.Web.Services
                             {
                                 var statusColor = GetStatusColor(shift.Status);
                                 var guardName = shift.GuardId.HasValue ? shift.Guard.Name : shift.ProviderName;
-                                var duration = (shift.ShiftEnd - shift.ShiftStart).TotalHours;
+                                var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                 var timeRangeStr = $"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm}";
 
                                 dailyTotals[i] += duration;
