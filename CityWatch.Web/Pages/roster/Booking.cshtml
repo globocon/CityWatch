@@ -2086,16 +2086,9 @@
 
             $('#btnDownloadBinderPdf').on('click', function() {
                 if (!currentBinderId) return;
-                var extraParams = '&includeFinancials=' + $('#designToggle1').is(':checked') + '&includeSuppliers=' + $('#designToggle2').is(':checked');
-                var url = '/roster/Booking?handler=DownloadPdf&binderId=' + currentBinderId + '&startDate=' + currentBinderStartDate + '&weeks=1' + extraParams;
+                var extraParams = '&includeFinancials=' + isFinancialMode + '&includeSuppliers=' + isSupplierMode;
+                var url = '/roster/Booking?handler=DownloadPdf&binderId=' + currentBinderId + '&startDate=' + currentStartDate + '&weeks=1' + extraParams;
                 window.open(url, '_blank');
-            });
-
-            $('#btnPrevWeekBinder').on('click', function(e) {
-                e.preventDefault();
-                var d = new Date(currentBinderStartDate);
-                d.setDate(d.getDate() - 7);
-                window.location.href = '/roster/Booking?startDate=' + d.toISOString().split('T')[0];
             });
 
             if (currentBinderId) {
