@@ -203,28 +203,33 @@ namespace CityWatch.Web.Services
                                     .SetPadding(2)
                                     .SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
 
-                                shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()));
-                                if (shift.Callsign != null)
-                                {
-                                    shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFont(PdfHelper.GetPdfFont()));
-                                }
+                                shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetBold());
                                 
+                                // Row 2: Time Range
+                                shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
+                                
+                                // Row 3: Supplier (+ Callsign)
                                 if (includeSuppliers)
                                 {
                                     var supplierName = shift.GuardId.HasValue ? (shift.Guard.Provider ?? "N/A") : (shift.ProviderName ?? "N/A");
-                                    shiftBlock.Add(new Paragraph(supplierName)
+                                    var callsignSuffix = shift.Callsign != null ? $" ({shift.Callsign.Name})" : "";
+                                    shiftBlock.Add(new Paragraph(supplierName + callsignSuffix)
                                         .SetFontSize(6.5f)
-                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Match the red color
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Bold Red
                                         .SetBold());
                                 }
+                                else if (shift.Callsign != null)
+                                {
+                                    shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFont(PdfHelper.GetPdfFont()));
+                                }
 
-                                shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
+                                // Row 4: Money
                                 if (includeFinancials)
                                 {
                                     var pay = duration * (double)(shift.PayRate?.GuardPayRate ?? 0);
                                     shiftBlock.Add(new Paragraph($"$ {pay:F2}")
                                         .SetFontSize(6.5f)
-                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Strong Red for high visibility
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Bold Red
                                         .SetBold());
                                 }
 
