@@ -1045,14 +1045,14 @@
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (isSupplierMode ? 
-                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + '</div>' : 
+                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                             ''
                                         ) +
                                         (isFinancialMode ? 
                                             '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
                                             ''
                                         ) +
-                                        (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
+                                        (!isSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                         (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                         '<div class="shift-card-popup">' +
