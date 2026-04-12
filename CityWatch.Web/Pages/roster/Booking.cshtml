@@ -849,8 +849,10 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
-            var isFinancialMode = false;
-            var isSupplierMode = false;
+            var projectFinancialMode = false;
+            var projectSupplierMode = false;
+            var groupFinancialMode = false;
+            var groupSupplierMode = false;
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
@@ -868,17 +870,6 @@
                     $('#roster-grid-container').hide();
                 }
             }
-
-            // Financial toggle handler
-            $('#designToggle1').on('change', function() {
-                isFinancialMode = $(this).is(':checked');
-                loadRoster();
-            });
-
-            $('#designToggle2').on('change', function() {
-                isSupplierMode = $(this).is(':checked');
-                loadRoster();
-            });
 
             // Initial toggle based on whether we have a group ID
             toggleRosterView(!!currentGroupId);
@@ -905,16 +896,26 @@
             }
 
             // Sync Toggles
-            $('#designToggle1, #binderToggle1').on('change', function() {
-                isFinancialMode = $(this).is(':checked');
-                $('#designToggle1, #binderToggle1').prop('checked', isFinancialMode);
-                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+            // Project Financial/Supplier mode toggles
+            $('#designToggle1').on('change', function() {
+                projectFinancialMode = $(this).is(':checked');
+                loadRoster();
             });
 
-            $('#designToggle2, #binderToggle2').on('change', function() {
-                isSupplierMode = $(this).is(':checked');
-                $('#designToggle2, #binderToggle2').prop('checked', isSupplierMode);
-                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+            $('#designToggle2').on('change', function() {
+                projectSupplierMode = $(this).is(':checked');
+                loadRoster();
+            });
+
+            // Group Financial/Supplier mode toggles
+            $('#binderToggle1').on('change', function() {
+                groupFinancialMode = $(this).is(':checked');
+                loadBinderRoster();
+            });
+
+            $('#binderToggle2').on('change', function() {
+                groupSupplierMode = $(this).is(':checked');
+                loadBinderRoster();
             });
 
             // Week navigation handlers
@@ -1177,7 +1178,7 @@
                                     if (s.status === 2) statusClass = 'status-declined';
 
                                     var shiftValue = s.durationHours;
-                                    if (isFinancialMode) {
+                                    if (projectFinancialMode) {
                                         shiftValue = s.durationHours * s.payRate;
                                     }
                                     dailyTotals[index] += shiftValue;
@@ -1192,15 +1193,15 @@
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
-                                        (isSupplierMode ? 
+                                        (projectSupplierMode ? 
                                             '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                             ''
                                         ) +
-                                        (isFinancialMode ? 
+                                        (projectFinancialMode ? 
                                             '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
                                             ''
                                         ) +
-                                        (!isSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
+                                        (!projectSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                         (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                         '<div class="shift-card-popup">' +
@@ -1227,7 +1228,7 @@
                         // Update Footer Totals
                         $('#roster_footer').show();
                         
-                        if (isFinancialMode) {
+                        if (projectFinancialMode) {
                             $('#grand_total_hours').text('$' + grandTotal.toFixed(2));
                             $('.total-label:contains("Weekly Total")').text("Weekly Pay");
                         } else {
@@ -1238,7 +1239,7 @@
                         $('.day-total').each(function () {
                             var day = $(this).data('day');
                             var val = dailyTotals[day];
-                            if (isFinancialMode) {
+                            if (projectFinancialMode) {
                                 $(this).text('$' + val.toFixed(2));
                             } else {
                                 $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
@@ -1602,7 +1603,9 @@
 
             $(document).on('click', '.btn-download-weeks', function() {
                 var weeks = $(this).data('weeks');
-                var extraParams = '&includeFinancials=' + isFinancialMode + '&includeSuppliers=' + isSupplierMode;
+                var finMode = (activeTab === 'groups') ? groupFinancialMode : projectFinancialMode;
+                var supMode = (activeTab === 'groups') ? groupSupplierMode : projectSupplierMode;
+                var extraParams = '&includeFinancials=' + finMode + '&includeSuppliers=' + supMode;
                 
                 var url = '/roster/Booking?handler=DownloadPdf&startDate=' + currentStartDate + '&weeks=' + weeks + extraParams;
                 
@@ -1974,7 +1977,7 @@
                                         if (s.status === 2) statusClass = 'status-declined';
 
                                         var shiftValue = s.durationHours;
-                                        if (isFinancialMode) {
+                                        if (groupFinancialMode) {
                                             shiftValue = s.durationHours * s.payRate;
                                         }
                                         dailyTotals[index] += shiftValue;
@@ -1989,15 +1992,15 @@
                                                 '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                             '</div>' +
                                             '<div class="shift-license">' + s.guardLicense + '</div>' +
-                                            (isSupplierMode ? 
+                                            (groupSupplierMode ? 
                                                 '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                                 ''
                                             ) +
-                                            (isFinancialMode ? 
+                                            (groupFinancialMode ? 
                                                 '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
                                                 ''
                                             ) +
-                                            (!isSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
+                                            (!groupSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                             (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                             (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                             '<div class="shift-card-popup">' +
@@ -2019,7 +2022,7 @@
 
                         // Update Binder Footer Totals
                         $('#binder_footer').show();
-                        if (isFinancialMode) {
+                        if (groupFinancialMode) {
                             $('#binder_grand_total').text('$' + grandTotal.toFixed(2));
                             $('#binder_footer .total-label:contains("Weekly Total")').text("Weekly Pay");
                         } else {
@@ -2030,7 +2033,7 @@
                         $('.binder-day-total').each(function () {
                             var day = $(this).data('day');
                             var val = dailyTotals[day];
-                            if (isFinancialMode) {
+                            if (groupFinancialMode) {
                                 $(this).text('$' + val.toFixed(2));
                             } else {
                                 $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
