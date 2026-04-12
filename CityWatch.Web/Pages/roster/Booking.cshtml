@@ -749,7 +749,7 @@
             }
 
             // Financial toggle handler
-            $('#designToggle').on('change', function() {
+            $('#designToggle1').on('change', function() {
                 isFinancialMode = $(this).is(':checked');
                 loadRoster();
             });
@@ -1444,7 +1444,7 @@
             $(document).on('click', '.btn-download-weeks', function() {
                 var weeks = $(this).data('weeks');
                 var startDateStr = currentStartDate;
-                var extraParams = '&includeFinancials=' + $('#designToggle').is(':checked');
+                var extraParams = '&includeFinancials=' + $('#designToggle1').is(':checked');
                 var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks + extraParams;
                 window.open(url, '_blank');
                 $('#downloadPdfModal').modal('hide');
