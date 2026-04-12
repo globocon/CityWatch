@@ -25,7 +25,7 @@ namespace CityWatch.Web.Services
 {
     public interface IRosterReportGenerator
     {
-        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false);
+        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false);
     }
 
 
@@ -47,7 +47,7 @@ namespace CityWatch.Web.Services
             _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
         }
 
-        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false)
+        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
             if (group == null) return null;
@@ -153,6 +153,16 @@ namespace CityWatch.Web.Services
                                 {
                                     shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFont(PdfHelper.GetPdfFont()));
                                 }
+                                
+                                if (includeSuppliers)
+                                {
+                                    var supplierName = shift.GuardId.HasValue ? (shift.Guard.Provider ?? "N/A") : (shift.ProviderName ?? "N/A");
+                                    shiftBlock.Add(new Paragraph(supplierName)
+                                        .SetFontSize(6.5f)
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Match the red color
+                                        .SetBold());
+                                }
+
                                 shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
                                 if (includeFinancials)
                                 {

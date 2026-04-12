@@ -437,9 +437,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false)
+        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks, includeFinancials);
+            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers);
             if (pdfBytes != null)
             {
                 var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();

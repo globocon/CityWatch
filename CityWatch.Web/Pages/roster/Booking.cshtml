@@ -730,6 +730,7 @@
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
             var isFinancialMode = false;
+            var isSupplierMode = false;
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
@@ -751,6 +752,11 @@
             // Financial toggle handler
             $('#designToggle1').on('change', function() {
                 isFinancialMode = $(this).is(':checked');
+                loadRoster();
+            });
+
+            $('#designToggle2').on('change', function() {
+                isSupplierMode = $(this).is(':checked');
                 loadRoster();
             });
 
@@ -1038,6 +1044,10 @@
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                        (isSupplierMode ? 
+                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + '</div>' : 
+                                            ''
+                                        ) +
                                         (isFinancialMode ? 
                                             '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
                                             ''
@@ -1445,7 +1455,7 @@
             $(document).on('click', '.btn-download-weeks', function() {
                 var weeks = $(this).data('weeks');
                 var startDateStr = currentStartDate;
-                var extraParams = '&includeFinancials=' + $('#designToggle1').is(':checked');
+                var extraParams = '&includeFinancials=' + $('#designToggle1').is(':checked') + '&includeSuppliers=' + $('#designToggle2').is(':checked');
                 var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks + extraParams;
                 window.open(url, '_blank');
                 $('#downloadPdfModal').modal('hide');
