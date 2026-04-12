@@ -1035,12 +1035,13 @@
                                         '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                            (isFinancialMode ? 
-                                                '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0; color: #fff9c4; font-weight: 800; border-color: rgba(255,249,196,0.4);">$ ' + shiftValue.toFixed(2) + '</span>' :
-                                                '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>'
-                                            ) +
+                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                        (isFinancialMode ? 
+                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
+                                            ''
+                                        ) +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                         (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +

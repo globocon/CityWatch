@@ -153,17 +153,14 @@ namespace CityWatch.Web.Services
                                 {
                                     shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFont(PdfHelper.GetPdfFont()));
                                 }
+                                shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
                                 if (includeFinancials)
                                 {
                                     var pay = duration * (double)(shift.PayRate?.GuardPayRate ?? 0);
-                                    shiftBlock.Add(new Paragraph($"{timeRangeStr} (${pay:F2})")
-                                        .SetFontSize(5.5f)
-                                        .SetFontColor(new DeviceRgb(255, 193, 7)) // Attractive Gold color
+                                    shiftBlock.Add(new Paragraph($"$ {pay:F2}")
+                                        .SetFontSize(6.5f)
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Strong Red for high visibility
                                         .SetBold());
-                                }
-                                else
-                                {
-                                    shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
                                 }
 
                                 dayCell.Add(shiftBlock);
