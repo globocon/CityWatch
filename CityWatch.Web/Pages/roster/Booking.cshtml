@@ -729,6 +729,7 @@
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var isFinancialMode = false;
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
@@ -746,6 +747,12 @@
                     $('#roster-grid-container').hide();
                 }
             }
+
+            // Financial toggle handler
+            $('#designToggle').on('change', function() {
+                isFinancialMode = $(this).is(':checked');
+                loadRoster();
+            });
 
             // Initial toggle based on whether we have a group ID
             toggleRosterView(!!currentGroupId);
@@ -1015,8 +1022,12 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
 
-                                    dailyTotals[index] += s.durationHours;
-                                    grandTotal += s.durationHours;
+                                    var shiftValue = s.durationHours;
+                                    if (isFinancialMode) {
+                                        shiftValue = s.durationHours * s.payRate;
+                                    }
+                                    dailyTotals[index] += shiftValue;
+                                    grandTotal += shiftValue;
 
                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
@@ -1024,7 +1035,10 @@
                                         '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                            (isFinancialMode ? 
+                                                '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0; color: #fff9c4; font-weight: 800; border-color: rgba(255,249,196,0.4);">$ ' + shiftValue.toFixed(2) + '</span>' :
+                                                '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>'
+                                            ) +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
@@ -1053,10 +1067,23 @@
 
                         // Update Footer Totals
                         $('#roster_footer').show();
-                        $('#grand_total_hours').text(grandTotal.toFixed(2).replace(/\.00$/, ''));
+                        
+                        if (isFinancialMode) {
+                            $('#grand_total_hours').text('$' + grandTotal.toFixed(2));
+                            $('.total-label:contains("Weekly Total")').text("Weekly Pay");
+                        } else {
+                            $('#grand_total_hours').text(grandTotal.toFixed(2).replace(/\.00$/, '') + 'h');
+                            $('.total-label:contains("Weekly Pay")').text("Weekly Total");
+                        }
+
                         $('.day-total').each(function () {
                             var day = $(this).data('day');
-                            $(this).text(dailyTotals[day].toFixed(2).replace(/\.00$/, ''));
+                            var val = dailyTotals[day];
+                            if (isFinancialMode) {
+                                $(this).text('$' + val.toFixed(2));
+                            } else {
+                                $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
+                            }
                         });
                     }
                 });
@@ -1417,7 +1444,8 @@
             $(document).on('click', '.btn-download-weeks', function() {
                 var weeks = $(this).data('weeks');
                 var startDateStr = currentStartDate;
-                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks;
+                var extraParams = '&includeFinancials=' + $('#designToggle').is(':checked');
+                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks + extraParams;
                 window.open(url, '_blank');
                 $('#downloadPdfModal').modal('hide');
             });
