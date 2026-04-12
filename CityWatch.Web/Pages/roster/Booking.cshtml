@@ -1022,8 +1022,8 @@
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; white-space: nowrap;">' +
-                                            '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
+                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
