@@ -1813,8 +1813,6 @@
             // ==========================================
             // BINDER (GROUPS) SECTION
             // ==========================================
-            var currentBinderId = null;
-            var currentBinderStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
 
             function toggleBinderView(showGrid) {
                 if (showGrid) {
@@ -1915,7 +1913,7 @@
             });
 
             function loadBinderRoster() {
-                console.log('Loading binder roster for Binder ID:', currentBinderId);
+                console.log('Loading binder roster for Binder ID:', currentBinderId, 'Date:', currentStartDate);
                 if (!currentBinderId) return;
                 var tbody = $('#binder_grid tbody');
                 tbody.empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading Combined Roster...</td></tr>');
@@ -1926,7 +1924,7 @@
                 $.ajax({
                     url: '/roster/Booking?handler=LoadBinderRoster',
                     type: 'GET',
-                    data: { binderId: currentBinderId, startDate: currentBinderStartDate },
+                    data: { binderId: currentBinderId, startDate: currentStartDate },
                     success: function (res) {
                         tbody.empty();
                         if (res.results.length === 0) {
@@ -1956,7 +1954,7 @@
                                     '<td><div class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</div><small class="text-muted">' + site.clientTypeName + '</small></td>';
 
                                 site.days.forEach(function (daySchedules, index) {
-                                    var cellDate = new Date(currentBinderStartDate);
+                                    var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
                                     var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
