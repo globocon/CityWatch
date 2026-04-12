@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -280,6 +280,16 @@ namespace CityWatch.Data
                 .HasOne(rs => rs.Guard)
                 .WithMany()
                 .HasForeignKey(rs => rs.GuardId);
+
+            modelBuilder.Entity<RosterBinderProject>()
+                .HasOne(rbp => rbp.RosterBinder)
+                .WithMany(rb => rb.RosterBinderProjects)
+                .HasForeignKey(rbp => rbp.RosterBinderId);
+
+            modelBuilder.Entity<RosterBinderProject>()
+                .HasOne(rbp => rbp.RosterGroup)
+                .WithMany()
+                .HasForeignKey(rbp => rbp.RosterGroupId);
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -386,6 +396,8 @@ namespace CityWatch.Data
         public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
         public DbSet<RosterSchedule> RosterSchedules { get; set; }
         public DbSet<PayRate> PayRates { get; set; }
+        public DbSet<RosterBinder> RosterBinders { get; set; }
+        public DbSet<RosterBinderProject> RosterBinderProjects { get; set; }
 
         public DbSet<OfflineFilesRecordsNotSynced> OfflineFilesRecordsNotSynced { get; set; }
         public DbSet<ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced> ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced { get; set; }

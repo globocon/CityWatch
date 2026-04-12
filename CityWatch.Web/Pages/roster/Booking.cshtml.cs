@@ -44,6 +44,7 @@ namespace CityWatch.Web.Pages.roster
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
+        public int? SelectedBinderId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
@@ -77,6 +78,7 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
             SelectedGroupId = groupId;
+            // BinderId is not used in OnGet currently, but could be added if needed
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)
@@ -437,53 +439,206 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
+        public async Task<IActionResult> OnGetDownloadPdf(int? groupId, int? binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers);
+            byte[] pdfBytes = null;
+            string fileName = "";
+
+            if (binderId.HasValue && binderId.Value > 0)
+            {
+                pdfBytes = await _rosterReportGenerator.GenerateBinderRosterPdfAsync(binderId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                var binderName = await _context.RosterBinders.Where(x => x.Id == binderId.Value).Select(x => x.Name).FirstOrDefaultAsync();
+                fileName = $"Roster_Group_{binderName}_{startDate:yyyyMMdd}.pdf";
+            }
+            else if (groupId.HasValue && groupId.Value > 0)
+            {
+                pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                var groupName = await _context.RosterGroups.Where(x => x.Id == groupId.Value).Select(x => x.Name).FirstOrDefaultAsync();
+                fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
+            }
+
             if (pdfBytes != null)
             {
-                var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();
-                var fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
                 return File(pdfBytes, "application/pdf", fileName);
             }
             return NotFound();
         }
 
-        public async Task<IActionResult> OnPostCheckFutureData(int groupId, DateTime startDate, string option)
+        public JsonResult OnGetSearchBinders(string search)
         {
-            DateTime copyUntil;
-            if (option == "NextWeek")
+            var binders = _context.RosterBinders
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .OrderBy(x => x.Name)
+                .Select(x => new { id = x.Id, text = x.Name })
+                .ToList();
+
+            return new JsonResult(new { results = binders });
+        }
+
+        public async Task<JsonResult> OnGetLoadBinderRoster(int binderId, DateTime startDate)
+        {
+            var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
+
+            var binderProjects = await _context.RosterBinderProjects
+                .Where(x => x.RosterBinderId == binderId)
+                .Include(x => x.RosterGroup)
+                .ToListAsync();
+
+            var projectIds = binderProjects.Select(bp => bp.RosterGroupId).ToList();
+
+            var schedules = await _context.RosterSchedules
+                .Where(x => projectIds.Contains(x.RosterGroupId) && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
+                .Include(x => x.Guard)
+                .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
+                .ToListAsync();
+
+            var rosterData = new List<object>();
+
+            foreach (var bp in binderProjects.OrderBy(x => x.RosterGroup.Name))
             {
-                copyUntil = startDate.AddDays(14);
-            }
-            else if (option == "Month")
-            {
-                copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
-            }
-            else if (option == "Year")
-            {
-                copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
-            }
-            else
-            {
-                return new JsonResult(new { success = false, message = "Invalid option." });
+                var groupSites = await _context.RosterGroupSites
+                    .Where(x => x.RosterGroupId == bp.RosterGroupId)
+                    .Include(x => x.ClientSite)
+                    .ThenInclude(x => x.ClientType)
+                    .ToListAsync();
+
+                var projectSites = groupSites.Select(gs => new
+                {
+                    siteId = gs.ClientSiteId,
+                    siteName = gs.ClientSite.Name,
+                    clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                    projectId = bp.RosterGroupId,
+                    projectName = bp.RosterGroup.Name,
+                    days = Enumerable.Range(0, 7).Select(dayOffset =>
+                    {
+                        var targetDate = startDate.AddDays(dayOffset);
+                        return schedules
+                            .Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
+                            .OrderBy(s => s.ShiftStart)
+                            .Select(s => new
+                            {
+                                id = s.Id,
+                                guardId = s.GuardId,
+                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
+                                guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
+                                guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                providerName = s.ProviderName,
+                                payRateId = s.PayRateId,
+                                shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                callsignId = s.CallsignId,
+                                callsignName = s.Callsign?.Name ?? "",
+                                status = (int)s.Status,
+                                durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            })
+                            .ToList();
+                    }).ToList()
+                }).ToList();
+
+                rosterData.Add(new { projectName = bp.RosterGroup.Name, projectId = bp.RosterGroupId, sites = projectSites });
             }
 
-            var targetStart = startDate.AddDays(7);
-            var hasData = await _context.RosterSchedules.AnyAsync(x =>
-                x.RosterGroupId == groupId && 
-                !x.IsDeleted && 
-                x.ShiftStart >= targetStart && 
-                x.ShiftStart < copyUntil);
+            return new JsonResult(new { results = rosterData });
+        }
 
-            var sourceEndDate = startDate.AddDays(7);
-            var hasSourceData = await _context.RosterSchedules.AnyAsync(x =>
-                x.RosterGroupId == groupId && 
-                !x.IsDeleted && 
-                x.ShiftStart >= startDate && 
-                x.ShiftStart < sourceEndDate);
+        public async Task<IActionResult> OnPostCreateBinder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Group name is required." });
+            }
 
-            return new JsonResult(new { success = true, hasData = hasData, hasSourceData = hasSourceData });
+            var exists = await _context.RosterBinders.AnyAsync(x => x.Name == name.Trim() && !x.IsDeleted);
+            if (exists)
+            {
+                return new JsonResult(new { success = false, message = "A group with this name already exists." });
+            }
+
+            var binder = new RosterBinder
+            {
+                Name = name.Trim(),
+                IsDeleted = false
+            };
+
+            _context.RosterBinders.Add(binder);
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, id = binder.Id });
+        }
+
+        public async Task<IActionResult> OnPostEditBinder(int binderId, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Group name is required." });
+            }
+
+            var exists = await _context.RosterBinders.AnyAsync(x => x.Name == name.Trim() && x.Id != binderId && !x.IsDeleted);
+            if (exists)
+            {
+                return new JsonResult(new { success = false, message = "A group with this name already exists." });
+            }
+
+            var binder = await _context.RosterBinders.FindAsync(binderId);
+            if (binder != null)
+            {
+                binder.Name = name.Trim();
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Group not found." });
+        }
+
+        public async Task<IActionResult> OnPostDeleteBinder(int binderId)
+        {
+            var binder = await _context.RosterBinders.FindAsync(binderId);
+            if (binder != null)
+            {
+                var projects = await _context.RosterBinderProjects.Where(x => x.RosterBinderId == binderId).ToListAsync();
+                _context.RosterBinderProjects.RemoveRange(projects);
+
+                _context.RosterBinders.Remove(binder);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Group not found." });
+        }
+
+        public async Task<IActionResult> OnPostAddProjectToBinder(int binderId, int projectId)
+        {
+            var projectExists = await _context.RosterGroups.AnyAsync(x => x.Id == projectId && !x.IsDeleted);
+            if (!projectExists)
+            {
+                return new JsonResult(new { success = false, message = "Project not found or already deleted." });
+            }
+
+            var exists = await _context.RosterBinderProjects.AnyAsync(x => x.RosterBinderId == binderId && x.RosterGroupId == projectId);
+            if (!exists)
+            {
+                _context.RosterBinderProjects.Add(new RosterBinderProject
+                {
+                    RosterBinderId = binderId,
+                    RosterGroupId = projectId
+                });
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "This project is already added to this group." });
+        }
+
+        public async Task<IActionResult> OnPostDeleteProjectFromBinder(int binderId, int projectId)
+        {
+            var item = await _context.RosterBinderProjects.FirstOrDefaultAsync(x => x.RosterBinderId == binderId && x.RosterGroupId == projectId);
+            if (item != null)
+            {
+                _context.RosterBinderProjects.Remove(item);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Project not found in group." });
         }
 
         public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
