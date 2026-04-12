@@ -229,8 +229,9 @@
                 </div>
 
                 <div id="binder-grid-container" style="display: none;">
-                    <table class="table table-bordered roster-grid-table" id="binder_grid">
-                        <thead class="thead-light">
+                    <div class="table-responsive roster-scroll-container">
+                        <table class="table table-bordered table-sm roster-grid-table mb-0" id="binder_grid">
+                            <thead>
                             <tr>
                                 <th style="width: 15%;">Client Site</th>
                                 @for (int i = 0; i < 7; i++)
@@ -268,6 +269,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                </div>
                 </div>
             </div>
         </div>
@@ -456,7 +458,7 @@
         }
 
         /* Enhanced Table Styling */
-        #roster_grid {
+        #roster_grid, #binder_grid {
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-radius: 8px;
             table-layout: fixed;
@@ -464,7 +466,7 @@
             /* overflow: hidden; Removed to allow tooltips to show */
         }
 
-            #roster_grid thead th {
+            #roster_grid thead th, #binder_grid thead th {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
                 font-weight: 600;
@@ -475,35 +477,35 @@
                 border: none;
             }
 
-            #roster_grid tbody tr {
+            #roster_grid tbody tr, #binder_grid tbody tr {
                 transition: background-color 0.2s ease;
             }
 
-                #roster_grid tbody tr:nth-child(even) {
+                #roster_grid tbody tr:nth-child(even), #binder_grid tbody tr:nth-child(even) {
                     background-color: #f8f9fa;
                 }
 
-                #roster_grid tbody tr:hover {
+                #roster_grid tbody tr:hover, #binder_grid tbody tr:hover {
                     background-color: #e9ecef;
                 }
 
-            #roster_grid tbody td {
+            #roster_grid tbody td, #binder_grid tbody td {
                 padding: 10px 8px;
                 vertical-align: top;
                 border-color: #dee2e6;
             }
 
             /* Column Specific Colors */
-            #roster_grid tbody td:first-child { 
+            #roster_grid tbody td:first-child, #binder_grid tbody td:first-child { 
                 background-color: #e8e8e8 !important; /* Light Grey */
             }
-            #roster_grid tbody td:nth-child(n+2):nth-child(-n+6) { 
+            #roster_grid tbody td:nth-child(n+2):nth-child(-n+6), #binder_grid tbody td:nth-child(n+2):nth-child(-n+6) { 
                 background-color: #ffffff !important; /* White */
             }
-            #roster_grid tbody td:nth-child(7) { 
+            #roster_grid tbody td:nth-child(7), #binder_grid tbody td:nth-child(7) { 
                 background-color: #d7f0d7 !important; /* Soft Green for Saturday */
             }
-            #roster_grid tbody td:nth-child(8) { 
+            #roster_grid tbody td:nth-child(8), #binder_grid tbody td:nth-child(8) { 
                 background-color: #fce4ec !important; /* Soft Pink for Sunday */
             }
 
@@ -2119,12 +2121,6 @@
                 });
             }
 
-            $('#btnNextWeekBinder').on('click', function(e) {
-                e.preventDefault();
-                var d = new Date(currentBinderStartDate);
-                d.setDate(d.getDate() + 7);
-                window.location.href = '/roster/Booking?startDate=' + d.toISOString().split('T')[0];
-            });
 
         });
     </script>
