@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
@@ -88,6 +88,27 @@ namespace CityWatch.Data.Helpers
         public static DateTime GetLogbookEndTimeFromDate(DateTime ldtm)
         {            
             return new DateTime(ldtm.Year, ldtm.Month, ldtm.Day, 23, 59, 00);
+        }
+
+        public static double CalculateDisplayDuration(DateTime start, DateTime end)
+        {
+            // Normalize Start: Treat 00:01 as 00:00
+            if (start.TimeOfDay == TimeSpan.FromMinutes(1))
+            {
+                start = start.Date;
+            }
+
+            // Normalize End: Treat 23:59 as 24:00 (00:00 of next day)
+            if (end.Hour == 23 && end.Minute == 59)
+            {
+                end = end.Date.AddDays(1);
+            }
+
+            double totalHours = (end - start).TotalHours;
+
+            // Round UP to the next 0.25 increment
+            // We multiply by 4, take the Ceiling (rounds up to next whole number), then divide by 4.
+            return Math.Ceiling(totalHours * 4) / 4;
         }
     }
 

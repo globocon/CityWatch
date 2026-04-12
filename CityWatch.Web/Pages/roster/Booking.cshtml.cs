@@ -12,6 +12,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Enums;
 using CityWatch.Web.Services;
+using CityWatch.Data.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -118,6 +119,7 @@ namespace CityWatch.Web.Pages.roster
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
                 .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .ToListAsync();
 
             var rosterData = groupSites.Select(gs => new
@@ -146,7 +148,8 @@ namespace CityWatch.Web.Pages.roster
                             callsignId = s.CallsignId,
                             callsignName = s.Callsign?.Name ?? "",
                             status = (int)s.Status,
-                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2)
+                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
                         })
                         .ToList();
                 }).ToList()
@@ -434,9 +437,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1)
+        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks);
+            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers);
             if (pdfBytes != null)
             {
                 var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();

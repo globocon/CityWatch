@@ -27,7 +27,7 @@ namespace CityWatch.Web.Services
 {
     public interface IRosterReportGenerator
     {
-        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1);
+        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false);
     }
 
 
@@ -57,7 +57,7 @@ namespace CityWatch.Web.Services
             _subDomainImageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
         }
 
-        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1)
+        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
             if (group == null) return null;
@@ -74,6 +74,7 @@ namespace CityWatch.Web.Services
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                 .Include(x => x.Guard)
                 .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .ToListAsync();
 
             using (var stream = new MemoryStream())
@@ -190,11 +191,11 @@ namespace CityWatch.Web.Services
                             {
                                 var statusColor = GetStatusColor(shift.Status);
                                 var guardName = shift.GuardId.HasValue ? shift.Guard.Name : shift.ProviderName;
-                                var duration = (shift.ShiftEnd - shift.ShiftStart).TotalHours;
+                                var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                 var timeRangeStr = $"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm}";
 
-                                dailyTotals[i] += duration;
-                                weeklyTotal += duration;
+                                dailyTotals[i] += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
+                                weeklyTotal += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
 
                                 var shiftBlock = new Div()
                                     .SetBackgroundColor(statusColor)
@@ -207,7 +208,25 @@ namespace CityWatch.Web.Services
                                 {
                                     shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFont(PdfHelper.GetPdfFont()));
                                 }
+                                
+                                if (includeSuppliers)
+                                {
+                                    var supplierName = shift.GuardId.HasValue ? (shift.Guard.Provider ?? "N/A") : (shift.ProviderName ?? "N/A");
+                                    shiftBlock.Add(new Paragraph(supplierName)
+                                        .SetFontSize(6.5f)
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Match the red color
+                                        .SetBold());
+                                }
+
                                 shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
+                                if (includeFinancials)
+                                {
+                                    var pay = duration * (double)(shift.PayRate?.GuardPayRate ?? 0);
+                                    shiftBlock.Add(new Paragraph($"$ {pay:F2}")
+                                        .SetFontSize(6.5f)
+                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Strong Red for high visibility
+                                        .SetBold());
+                                }
 
                                 dayCell.Add(shiftBlock);
                             }
@@ -217,7 +236,8 @@ namespace CityWatch.Web.Services
 
                     // Total Row
                     var totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(2);
-                    totalLabelCell.Add(new Paragraph($"Total HRS: {Math.Round(weeklyTotal, 2)}h")
+                    string weeklyTotalStr = includeFinancials ? $"Total Pay: ${weeklyTotal:F2}" : $"Total HRS: {Math.Round(weeklyTotal, 2)}h";
+                    totalLabelCell.Add(new Paragraph(weeklyTotalStr)
                         .SetFont(PdfHelper.GetPdfFont())
                         .SetFontSize(7f)
                         .SetFontColor(ColorConstants.BLACK));
@@ -226,7 +246,8 @@ namespace CityWatch.Web.Services
                     for (int i = 0; i < 7; i++)
                     {
                         var dayTotalCell = new Cell().SetBackgroundColor(ColorConstants.WHITE).SetPadding(2).SetTextAlignment(TextAlignment.CENTER);
-                        dayTotalCell.Add(new Paragraph($"{Math.Round(dailyTotals[i], 2)}h")
+                        string dayTotalStr = includeFinancials ? $"${dailyTotals[i]:F2}" : $"{Math.Round(dailyTotals[i], 2)}h";
+                        dayTotalCell.Add(new Paragraph(dayTotalStr)
                             .SetFont(PdfHelper.GetPdfFont())
                             .SetFontSize(7f)
                             .SetFontColor(ColorConstants.BLACK));
