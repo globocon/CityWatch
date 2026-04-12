@@ -48,8 +48,9 @@ namespace CityWatch.Web.Pages.roster
         public List<PayRate> PayRatesList { get; set; }
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
+        public string ActiveTab { get; set; }
 
-        public void OnGet(DateTime? startDate, int? groupId)
+        public void OnGet(DateTime? startDate, int? groupId, int? binderId, string tab)
         {
             var today = DateTime.Today;
             var timesheet = _clientDataProvider.GetTimesheetDetails();
@@ -78,7 +79,8 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
             SelectedGroupId = groupId;
-            // BinderId is not used in OnGet currently, but could be added if needed
+            SelectedBinderId = binderId;
+            ActiveTab = tab ?? "projects";
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)

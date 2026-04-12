@@ -166,6 +166,25 @@
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
+                             <!-- Design Toggles -->
+                             <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
+                                 <span class="text-danger font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                 <div class="custom-control custom-switch">
+                                     <input type="checkbox" class="custom-control-input" id="binderToggle1">
+                                     <label class="custom-control-label" for="binderToggle1"></label>
+                                 </div>
+                             </div>
+                             <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                                 <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                     <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                     <span style="position: absolute; right: -4px; top: -6px; background: #333; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                                 </div>
+                                 <div class="custom-control custom-switch">
+                                     <input type="checkbox" class="custom-control-input" id="binderToggle2">
+                                     <label class="custom-control-label" for="binderToggle2"></label>
+                                 </div>
+                             </div>
+
                              <button class="btn btn-outline-warning btn-sm" id="btnEditBinder" title="Edit Group Name"><i class="fa fa-pencil"></i></button>
                              <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteBinder" title="Delete Group"><i class="fa fa-trash"></i></button>
                              <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadBinderPdf" title="Download Binder PDF"><i class="fa fa-file-pdf-o"></i></button>
@@ -227,6 +246,27 @@
                         <tbody>
                             <!-- Rows will be added dynamically -->
                         </tbody>
+                        <tfoot id="binder_footer" style="display: none;">
+                            <tr>
+                                <td class="p-0 border-right">
+                                    <div class="grand-total-container">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value" id="binder_grand_total">0</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    <td class="p-0">
+                                        <div class="total-item">
+                                            <span class="total-label">Daily Total</span>
+                                            <span class="total-value binder-day-total" data-day="@i">0</span>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -804,6 +844,8 @@
     <script>
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
+            var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
+            var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
             var isFinancialMode = false;
             var isSupplierMode = false;
@@ -839,22 +881,54 @@
             // Initial toggle based on whether we have a group ID
             toggleRosterView(!!currentGroupId);
 
+            // Tab activation
+            if (activeTab === 'groups') {
+                $('#groups-tab').tab('show');
+            } else {
+                $('#projects-tab').tab('show');
+            }
+
+            $('.nav-link').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr("href").replace('#', '');
+                activeTab = target;
+                updateUrl();
+            });
+
+            function updateUrl() {
+                var newUrl = '/roster/Booking?startDate=' + currentStartDate;
+                if (currentGroupId) newUrl += '&groupId=' + currentGroupId;
+                if (currentBinderId) newUrl += '&binderId=' + currentBinderId;
+                if (activeTab) newUrl += '&tab=' + activeTab;
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            }
+
+            // Sync Toggles
+            $('#designToggle1, #binderToggle1').on('change', function() {
+                isFinancialMode = $(this).is(':checked');
+                $('#designToggle1, #binderToggle1').prop('checked', isFinancialMode);
+                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+            });
+
+            $('#designToggle2, #binderToggle2').on('change', function() {
+                isSupplierMode = $(this).is(':checked');
+                $('#designToggle2, #binderToggle2').prop('checked', isSupplierMode);
+                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+            });
+
             // Week navigation handlers
-            $('#btnPrevWeek').on('click', function(e) {
+            $('#btnPrevWeek, #btnPrevWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + previousWeekDate;
-                if (currentGroupId) {
-                    url += '&groupId=' + currentGroupId;
-                }
+                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab;
+                if (currentGroupId) url += '&groupId=' + currentGroupId;
+                if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
             });
 
-            $('#btnNextWeek').on('click', function(e) {
+            $('#btnNextWeek, #btnNextWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + nextWeekDate;
-                if (currentGroupId) {
-                    url += '&groupId=' + currentGroupId;
-                }
+                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab;
+                if (currentGroupId) url += '&groupId=' + currentGroupId;
+                if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
             });
 
@@ -944,11 +1018,7 @@
                 } else {
                     currentGroupId = data.id;
                     console.log('Existing project selected, ID:', currentGroupId);
-
-                    // Update URL without reloading
-                    var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?groupId=' + currentGroupId;
-                    window.history.pushState({ path: newUrl }, '', newUrl);
-
+                    updateUrl();
                     toggleRosterView(true);
                     loadRoster();
                 }
@@ -1360,7 +1430,7 @@
                     success: function (res) {
                         if (res.success) {
                             $('#addShiftModal').modal('hide');
-                            loadRoster();
+                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
                         } else {
                             alert(res.message);
                         }
@@ -1383,7 +1453,7 @@
                     data: { id: shiftId, status: nextStatus },
                     success: function (res) {
                         if (res.success) {
-                            loadRoster();
+                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
                         }
                     }
                 });
@@ -1399,7 +1469,7 @@
                         data: { id: id },
                         success: function (res) {
                             if (res.success) {
-                                loadRoster();
+                                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
                             }
                         }
                     });
@@ -1787,6 +1857,7 @@
                                 currentBinderId = res.id;
                                 var newOption = new Option(data.text, res.id, true, true);
                                 $('#binder_name').append(newOption).val(res.id).trigger('change');
+                                updateUrl();
                                 toggleBinderView(true);
                                 loadBinderRoster();
                             } else {
@@ -1797,6 +1868,7 @@
                     });
                 } else {
                     currentBinderId = data.id;
+                    updateUrl();
                     toggleBinderView(true);
                     loadBinderRoster();
                 }
@@ -1841,9 +1913,13 @@
             });
 
             function loadBinderRoster() {
+                console.log('Loading binder roster for Binder ID:', currentBinderId);
                 if (!currentBinderId) return;
                 var tbody = $('#binder_grid tbody');
                 tbody.empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading Combined Roster...</td></tr>');
+
+                var today = new Date();
+                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
                 $.ajax({
                     url: '/roster/Booking?handler=LoadBinderRoster',
@@ -1853,8 +1929,12 @@
                         tbody.empty();
                         if (res.results.length === 0) {
                             tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
+                            $('#binder_footer').hide();
                             return;
                         }
+
+                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                        var grandTotal = 0;
 
                         res.results.forEach(function (project) {
                             // Add Project Header Row
@@ -1873,21 +1953,52 @@
                                 var rowHtml = '<tr>' +
                                     '<td><div class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</div><small class="text-muted">' + site.clientTypeName + '</small></td>';
 
-                                site.days.forEach(function (daySchedules) {
-                                    rowHtml += '<td class="day-cell">';
+                                site.days.forEach(function (daySchedules, index) {
+                                    var cellDate = new Date(currentBinderStartDate);
+                                    cellDate.setDate(cellDate.getDate() + index);
+                                    var isDayLocked = cellDate < firstDayOfCurrentMonth;
+
+                                    rowHtml += '<td class="day-cell" data-site="' + site.siteId + '" data-day="' + index + '">';
                                     daySchedules.forEach(function (s) {
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
                                         if (s.status === 2) statusClass = 'status-declined';
 
-                                        rowHtml += '<div class="shift-card ' + statusClass + '" style="margin-bottom:2px; padding: 4px; font-size: 11px;">' +
-                                            '<div class="text-truncate" style="font-weight: 500;">' + s.guardName + '</div>' +
-                                            '<div style="font-size: 9px; display: flex; justify-content: space-between;">' +
-                                                '<span>' + s.shiftStart + '-' + s.shiftEnd + '</span>' +
-                                                '<span>' + s.durationHours + 'h</span>' +
+                                        var shiftValue = s.durationHours;
+                                        if (isFinancialMode) {
+                                            shiftValue = s.durationHours * s.payRate;
+                                        }
+                                        dailyTotals[index] += shiftValue;
+                                        grandTotal += shiftValue;
+
+                                        rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                            'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
+                                            '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
+                                                '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                                '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                             '</div>' +
-                                            '<div style="font-size: 9px; opacity: 0.7;">' + s.guardLicense + '</div>' +
-                                            (s.callsignName ? '<div style="font-weight:bold; font-size: 9px;">' + s.callsignName + '</div>' : '') +
+                                            '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                            (isSupplierMode ? 
+                                                '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                                ''
+                                            ) +
+                                            (isFinancialMode ? 
+                                                '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
+                                                ''
+                                            ) +
+                                            (!isSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
+                                            (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
+                                            (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
+                                            '<div class="shift-card-popup">' +
+                                            '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
+                                            '</div>' +
                                             '</div>';
                                     });
                                     rowHtml += '</td>';
@@ -1895,6 +2006,26 @@
                                 rowHtml += '</tr>';
                                 tbody.append(rowHtml);
                             });
+                        });
+
+                        // Update Binder Footer Totals
+                        $('#binder_footer').show();
+                        if (isFinancialMode) {
+                            $('#binder_grand_total').text('$' + grandTotal.toFixed(2));
+                            $('#binder_footer .total-label:contains("Weekly Total")').text("Weekly Pay");
+                        } else {
+                            $('#binder_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, '') + 'h');
+                            $('#binder_footer .total-label:contains("Weekly Pay")').text("Weekly Total");
+                        }
+
+                        $('.binder-day-total').each(function () {
+                            var day = $(this).data('day');
+                            var val = dailyTotals[day];
+                            if (isFinancialMode) {
+                                $(this).text('$' + val.toFixed(2));
+                            } else {
+                                $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
+                            }
                         });
                     }
                 });
@@ -1966,6 +2097,27 @@
                 d.setDate(d.getDate() - 7);
                 window.location.href = '/roster/Booking?startDate=' + d.toISOString().split('T')[0];
             });
+
+            if (currentBinderId) {
+                console.log('Restoring binder selection, ID:', currentBinderId);
+                $.ajax({
+                    url: '/roster/Booking?handler=SearchBinders',
+                    dataType: 'json',
+                    data: { search: '' },
+                    success: function(data) {
+                        var binder = data.results.find(function(b) { return b.id == currentBinderId; });
+                        if (binder) {
+                            var option = new Option(binder.text, binder.id, true, true);
+                            $('#binder_name').append(option).trigger('change');
+                            toggleBinderView(true);
+                            loadBinderRoster();
+                        } else {
+                            currentBinderId = null;
+                            toggleBinderView(false);
+                        }
+                    }
+                });
+            }
 
             $('#btnNextWeekBinder').on('click', function(e) {
                 e.preventDefault();
