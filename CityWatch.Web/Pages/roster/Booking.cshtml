@@ -1602,9 +1602,18 @@
 
             $(document).on('click', '.btn-download-weeks', function() {
                 var weeks = $(this).data('weeks');
-                var startDateStr = currentStartDate;
-                var extraParams = '&includeFinancials=' + $('#designToggle1').is(':checked') + '&includeSuppliers=' + $('#designToggle2').is(':checked');
-                var url = '/roster/Booking?handler=DownloadPdf&groupId=' + currentGroupId + '&startDate=' + startDateStr + '&weeks=' + weeks + extraParams;
+                var extraParams = '&includeFinancials=' + isFinancialMode + '&includeSuppliers=' + isSupplierMode;
+                
+                var url = '/roster/Booking?handler=DownloadPdf&startDate=' + currentStartDate + '&weeks=' + weeks + extraParams;
+                
+                if (activeTab === 'groups') {
+                    if (!currentBinderId) return;
+                    url += '&binderId=' + currentBinderId;
+                } else {
+                    if (!currentGroupId) return;
+                    url += '&groupId=' + currentGroupId;
+                }
+                
                 window.open(url, '_blank');
                 $('#downloadPdfModal').modal('hide');
             });
@@ -2086,9 +2095,7 @@
 
             $('#btnDownloadBinderPdf').on('click', function() {
                 if (!currentBinderId) return;
-                var extraParams = '&includeFinancials=' + isFinancialMode + '&includeSuppliers=' + isSupplierMode;
-                var url = '/roster/Booking?handler=DownloadPdf&binderId=' + currentBinderId + '&startDate=' + currentStartDate + '&weeks=1' + extraParams;
-                window.open(url, '_blank');
+                $('#downloadPdfModal').modal('show');
             });
 
             if (currentBinderId) {
