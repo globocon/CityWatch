@@ -15,6 +15,8 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using CityWatch.Data.Providers;
 
 using CityWatch.Data.Helpers;
 using iText.IO.Image;
@@ -35,16 +37,24 @@ namespace CityWatch.Web.Services
         private readonly CityWatchDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly string _imageRootDir;
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
+        private readonly Settings _settings;
+        private readonly string _subDomainImageRootDir;
 
         private const float MARGIN = 15f; // Match TimesheetReportGenerator
         private const float FONT_SIZE_HEADER = 12f;
         private const float FONT_SIZE_CELL = 7.5f; // Match TimesheetReportGenerator
 
-        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment)
+        public RosterReportGenerator(CityWatchDbContext context, IWebHostEnvironment webHostEnvironment, IClientDataProvider clientDataProvider, IConfigDataProvider configDataProvider, IOptions<Settings> options)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _clientDataProvider = clientDataProvider;
+            _configDataProvider = configDataProvider;
+            _settings = options.Value;
             _imageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _subDomainImageRootDir = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
         }
 
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1)
@@ -83,11 +93,37 @@ namespace CityWatch.Web.Services
 
                     var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
 
-                    var logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
-                    if (File.Exists(logoPath))
+                    // Resolve Logo (Check for 3rd Party Branding)
+                    string logoPath = string.Empty;
+                    foreach (var site in groupSites)
                     {
-                        var cwLogo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
-                        headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                        if (site.ClientSite != null)
+                        {
+                            var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
+                            if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
+                            {
+                                logoPath = System.IO.Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(logoPath))
+                    {
+                        logoPath = System.IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                    }
+
+                    if (!string.IsNullOrEmpty(logoPath))
+                    {
+                        try
+                        {
+                            var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                            headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                        }
+                        catch
+                        {
+                            headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                        }
                     }
                     else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
 
@@ -100,7 +136,26 @@ namespace CityWatch.Web.Services
                         .SetBorder(Border.NO_BORDER);
 
                     headerTable.AddCell(titleCell);
-                    headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                    
+                    var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                    var primarySite = groupSites.FirstOrDefault();
+                    if (primarySite != null)
+                    {
+                        var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
+                        if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                        {
+                            try
+                            {
+                                var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                var siteImage = new Image(ImageDataFactory.Create(siteImageUrl))
+                                    .SetHeight(50)
+                                    .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                cellSiteImage.Add(siteImage);
+                            }
+                            catch (Exception) { /* Fallback if image fails to load */ }
+                        }
+                    }
+                    headerTable.AddCell(cellSiteImage);
 
                     document.Add(headerTable);
                     document.Add(new Paragraph("\n"));
@@ -214,7 +269,7 @@ namespace CityWatch.Web.Services
             Paragraph footerText = new Paragraph()
                 .Add(new Text("Current as of: ").SetFontSize(11))
                 .Add(new Text($"{timestamp:dd/MM/yyyy}").SetBold().SetFontSize(11))
-                .Add(new Text(" @@ ").SetFontSize(11))
+                .Add(new Text(" @ ").SetFontSize(11))
                 .Add(new Text($"{timestamp:HH:mm}").SetBold().SetFontSize(11))
                 .Add(new Text(" hrs").SetFontSize(11))
                 .SetTextAlignment(TextAlignment.RIGHT)
