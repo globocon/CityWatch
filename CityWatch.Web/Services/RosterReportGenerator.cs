@@ -218,7 +218,7 @@ namespace CityWatch.Web.Services
                                     {
                                         var supplierName = shift.GuardId.HasValue ? (shift.Guard.Provider ?? "N/A") : (shift.ProviderName ?? "N/A");
                                         var callsignSuffix = shift.Callsign != null ? $" ({shift.Callsign.Name})" : "";
-                                        shiftBlock.Add(new Paragraph(supplierName + callsignSuffix).SetFontSize(6.5f).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold());
+                                        shiftBlock.Add(new Paragraph(supplierName + callsignSuffix).SetFontSize(6.5f).SetFontColor(new DeviceRgb(0, 86, 179)).SetBold());
                                     }
                                     else if (shift.Callsign != null)
                                     {
@@ -418,7 +418,7 @@ namespace CityWatch.Web.Services
                                     var callsignSuffix = shift.Callsign != null ? $" ({shift.Callsign.Name})" : "";
                                     shiftBlock.Add(new Paragraph(supplierName + callsignSuffix)
                                         .SetFontSize(6.5f)
-                                        .SetFontColor(new DeviceRgb(200, 0, 0)) // Bold Red
+                                        .SetFontColor(new DeviceRgb(0, 86, 179)) // Blue
                                         .SetBold());
                                 }
                                 else if (shift.Callsign != null)

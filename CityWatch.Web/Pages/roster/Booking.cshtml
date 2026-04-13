@@ -52,7 +52,7 @@
                         <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
                                 <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
-                                <span style="position: absolute; right: -4px; top: -6px; background: #333; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
                             </div>
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="designToggle2">
@@ -177,7 +177,7 @@
                              <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                                  <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
                                      <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
-                                     <span style="position: absolute; right: -4px; top: -6px; background: #333; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                                     <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
                                  </div>
                                  <div class="custom-control custom-switch">
                                      <input type="checkbox" class="custom-control-input" id="binderToggle2">
@@ -252,7 +252,7 @@
                                 <td class="p-0 border-right">
                                     <div class="grand-total-container">
                                         <div class="total-item">
-                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-label">Grand Total</span>
                                             <span class="total-value" id="binder_grand_total">0</span>
                                         </div>
                                     </div>
@@ -753,10 +753,31 @@
         /* Totals visibility was improved in the Layout Fixes block below */
 
         /* Layout Fixes */
-        #roster_footer {
+        #roster_footer, #binder_footer {
             background: #fff !important;
             color: #444 !important;
             border-top: 2px solid #dee2e6;
+        }
+
+        #binder_footer {
+            background: #fdfdfd !important; /* Slightly distinct background */
+            color: #2c3e50 !important;
+            border-top: 3px solid #667eea !important;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        #binder_footer .grand-total-container {
+            background: #f8faff !important; /* Light blue tint for grand total prominence */
+        }
+
+        #binder_grid tbody .project-total-row td {
+            background-color: #ffffff !important; /* Matches Project tab footer (white), overriding default row colors */
+        }
+
+        .project-total-row {
+            background-color: #ffffff !important;
+            border-top: 1px solid #dee2e6;
+            border-bottom: 2px solid #667eea;
         }
 
         .total-item {
@@ -1194,7 +1215,7 @@
                                         '</div>' +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (projectSupplierMode ? 
-                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                            '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                             ''
                                         ) +
                                         (projectFinancialMode ? 
@@ -1949,6 +1970,9 @@
                         var grandTotal = 0;
 
                         res.results.forEach(function (project) {
+                            var projectDailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                            var projectGrandTotal = 0;
+
                             // Add Project Header Row
                             var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-2 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
@@ -1980,6 +2004,12 @@
                                         if (groupFinancialMode) {
                                             shiftValue = s.durationHours * s.payRate;
                                         }
+                                        
+                                        // Add to project-specific totals
+                                        projectDailyTotals[index] += shiftValue;
+                                        projectGrandTotal += shiftValue;
+
+                                        // Add to global binder totals
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
@@ -1993,7 +2023,7 @@
                                             '</div>' +
                                             '<div class="shift-license">' + s.guardLicense + '</div>' +
                                             (groupSupplierMode ? 
-                                                '<div style="font-weight: 800; color: #ff3d00; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                                '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                                 ''
                                             ) +
                                             (groupFinancialMode ? 
@@ -2018,16 +2048,39 @@
                                 rowHtml += '</tr>';
                                 tbody.append(rowHtml);
                             });
+
+                            // Add Project Total Row
+                            var projectTotalHtml = '<tr class="project-total-row">' +
+                                '<td class="p-0 border-right">' +
+                                    '<div class="grand-total-container" style="background: transparent;">' +
+                                        '<div class="total-item">' +
+                                            '<span class="total-label">' + (groupFinancialMode ? "Weekly Pay" : "Weekly Total") + '</span>' +
+                                            '<span class="total-value" style="font-size: 13px;">' + (groupFinancialMode ? '$' + projectGrandTotal.toFixed(2) : projectGrandTotal.toFixed(2).replace(/\.00$/, "") + 'h') + '</span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</td>';
+                            
+                            for (var i = 0; i < 7; i++) {
+                                var val = projectDailyTotals[i];
+                                projectTotalHtml += '<td class="p-0">' +
+                                    '<div class="total-item">' +
+                                        '<span class="total-label">Daily Total</span>' +
+                                        '<span class="total-value" style="font-size: 13px;">' + (groupFinancialMode ? '$' + val.toFixed(2) : val.toFixed(2).replace(/\.00$/, "") + 'h') + '</span>' +
+                                    '</div>' +
+                                '</td>';
+                            }
+                            projectTotalHtml += '</tr>';
+                            tbody.append(projectTotalHtml);
                         });
 
                         // Update Binder Footer Totals
                         $('#binder_footer').show();
                         if (groupFinancialMode) {
                             $('#binder_grand_total').text('$' + grandTotal.toFixed(2));
-                            $('#binder_footer .total-label:contains("Weekly Total")').text("Weekly Pay");
+                            $('#binder_footer .total-label:contains("Grand Total")').text("Grand Pay");
                         } else {
                             $('#binder_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, '') + 'h');
-                            $('#binder_footer .total-label:contains("Weekly Pay")').text("Weekly Total");
+                            $('#binder_footer .total-label:contains("Grand Pay")').text("Grand Total");
                         }
 
                         $('.binder-day-total').each(function () {
