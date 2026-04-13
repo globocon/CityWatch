@@ -233,6 +233,49 @@ namespace CityWatch.Web.API
                 LiveEventsweblink = LiveEventsweblink
             });
         }
+
+        [HttpGet("GetClientSiteDetails/{clientsiteid}")]
+        public IActionResult GetClientSiteDetails(string clientsiteid)
+        {
+            if (string.IsNullOrWhiteSpace(clientsiteid) || clientsiteid == "0")
+                return BadRequest("Client Site is required.");
+
+            int clientid = int.Parse(clientsiteid);
+            var site = _clientDataProvider.GetClientSiteDetailsWithId(clientid).FirstOrDefault();
+            ClientSiteDto _clientSite = new ClientSiteDto();
+            if (site != null)
+            {
+                _clientSite = new ClientSiteDto
+                {
+                    Id = site.Id,
+                    TypeId = site.TypeId,
+                    Name = site.Name,
+                    Address = site.Address,
+                    State = site.State,
+                    Gps = site.Gps,
+                    Billing = site.Billing,
+                    Status = site.Status,
+                    StatusDate = site.StatusDate,
+                    SiteEmail = site.SiteEmail,
+                    LandLine = site.LandLine,
+                    DuressEmail = site.DuressEmail,
+                    DuressSms = site.DuressSms,
+                    UploadGuardLog = site.UploadGuardLog,
+                    UploadFusionLog = site.UploadFusionLog,
+                    GuardLogEmailTo = site.GuardLogEmailTo,
+                    DataCollectionEnabled = site.DataCollectionEnabled,
+                    IsActive = site.IsActive,
+                    IsDosDontList = site.IsDosDontList,
+                    MobAppShowClientTypeandSite = site.MobAppShowClientTypeandSite
+                };
+            }
+
+            return Ok(new
+            {
+                ClientSiteDetails = _clientSite
+            });
+        }
+
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
         {
             // Retrieve guard document details in one call
