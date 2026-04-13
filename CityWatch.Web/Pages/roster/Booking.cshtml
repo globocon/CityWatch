@@ -760,13 +760,23 @@
         }
 
         #binder_footer {
+            background: #fdfdfd !important; /* Slightly distinct background */
+            color: #2c3e50 !important;
             border-top: 3px solid #667eea !important;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
         }
 
+        #binder_footer .grand-total-container {
+            background: #f8faff !important; /* Light blue tint for grand total prominence */
+        }
+
+        #binder_grid tbody .project-total-row td {
+            background-color: #f1f4f9 !important; /* Forces uniform color across all columns, overriding Sat/Sun */
+        }
+
         .project-total-row {
             background-color: #f1f4f9 !important;
-            border-top: 1px solid #d1d9e6;
+            border-top: 1px solid #c8d2e0; /* Darker border for separation */
             border-bottom: 2px solid #667eea;
         }
 
