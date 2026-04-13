@@ -85,6 +85,10 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(binder.CoverFileName))
                 {
                     MergeCover(pdf, "Groups", binder.CoverFileName);
+                    while (document.GetPdfDocument().GetNumberOfPages() >= document.GetPageNumber())
+                    {
+                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
                 }
 
                 bool firstProject = true;
@@ -104,7 +108,10 @@ namespace CityWatch.Web.Services
                     if (!string.IsNullOrEmpty(group.CoverFileName))
                     {
                         MergeCover(pdf, "Projects", group.CoverFileName);
-                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        while (document.GetPdfDocument().GetNumberOfPages() >= document.GetPageNumber())
+                        {
+                            document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        }
                     }
 
                     var groupSites = await _context.RosterGroupSites
@@ -306,7 +313,10 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(group.CoverFileName))
                 {
                     MergeCover(pdf, "Projects", group.CoverFileName);
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    while (document.GetPdfDocument().GetNumberOfPages() >= document.GetPageNumber())
+                    {
+                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
                 }
 
                 var groupName = group.Name ?? "Unknown Project";
@@ -532,24 +542,27 @@ namespace CityWatch.Web.Services
             document.Add(footerTable);
         }
 
-        private void MergeCover(PdfDocument destinationPdf, string subDir, string fileName)
+        private int MergeCover(PdfDocument destinationPdf, string subDir, string fileName)
         {
-            if (string.IsNullOrEmpty(fileName)) return;
+            if (string.IsNullOrEmpty(fileName)) return 0;
             string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", subDir, fileName);
-            if (!File.Exists(filePath)) return;
+            if (!File.Exists(filePath)) return 0;
 
             try
             {
                 using (var coverReader = new PdfReader(filePath))
                 using (var coverPdf = new PdfDocument(coverReader))
                 {
-                    coverPdf.CopyPagesTo(1, coverPdf.GetNumberOfPages(), destinationPdf);
+                    int pages = coverPdf.GetNumberOfPages();
+                    coverPdf.CopyPagesTo(1, pages, destinationPdf);
+                    return pages;
                 }
             }
             catch (Exception ex)
             {
                 // Soft fail - log error but don't break generation
                 System.Diagnostics.Debug.WriteLine($"Error merging PDF cover: {ex.Message}");
+                return 0;
             }
         }
 
