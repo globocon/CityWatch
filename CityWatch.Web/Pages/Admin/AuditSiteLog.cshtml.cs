@@ -26,14 +26,15 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
-
+        public readonly ISmartWandReportZipGenarator _smartWandReportGenarator;
         public string ClientNameTitle { get; set; }
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService,
-            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider)
+            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider,
+            ISmartWandReportZipGenarator smartWandReportGenarator)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -42,6 +43,7 @@ namespace CityWatch.Web.Pages.Admin
             _clientViewDataService = clientViewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
             _configDataProvider = configDataProvider;
+            _smartWandReportGenarator = smartWandReportGenarator;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
@@ -756,6 +758,35 @@ namespace CityWatch.Web.Pages.Admin
             };
         }
         #endregion "Wand Strikes"
+        public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, string startdate, string endDate)
+        {
+
+
+
+
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificClientSite(clientSiteId, Convert.ToDateTime(startdate), Convert.ToDateTime(endDate).Date));
+        }
+        public JsonResult OnPostDownloadFQLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        {
+            var success = true;
+            var message = string.Empty;
+            var zipFileName = string.Empty;
+
+            try
+            {
+                zipFileName = _smartWandReportGenarator.GenerateZipFile(new int[] { clientSiteId }, logFromDate, logToDate).Result;
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+
+                if (ex.InnerException != null)
+                    message = ex.InnerException.Message;
+            }
+
+            return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+        }
 
 
     }

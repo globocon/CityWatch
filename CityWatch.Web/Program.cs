@@ -74,6 +74,7 @@ builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
 builder.Services.AddHttpClient<AiService>();
 
 builder.Services.AddScoped<IAlertEmailServices, AlertEmailServices>();
+builder.Services.AddScoped<ISmartWandReportZipGenarator, SmartWandReportZipGenarator>();
 
 
 builder.Services.AddRazorPages(options =>

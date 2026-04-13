@@ -433,6 +433,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogPax> GetKeyVehicleLogPaxs();
 
         public void DeleteKeyVehicleLogPax(int id);
+        List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -8203,6 +8204,20 @@ namespace CityWatch.Data.Providers
             {
                 _context.Remove(keyVehicleLogPaxToDelete);
                 _context.SaveChanges();
+            }
+        }
+        public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate)
+        {
+            try
+            {
+                return _context.Set<SiteTagStatusPendingNew>()
+                    .FromSqlRaw("EXEC Sp_GetClientSiteTagScanSummary @ClientId = {0}, @FromDate = {1}, @ToDate = {2}", clientId, fromDate,ToDate)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatusPendingNew>();
             }
         }
     }

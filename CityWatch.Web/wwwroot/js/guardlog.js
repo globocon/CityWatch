@@ -2425,6 +2425,119 @@ $(function () {
 
     });
 
+    //p4-142-fq number -start
+    $('#fqFromDate').val(start.toISOString().substr(0, 10));
+
+    //var dateObject = new Date().toISOString().substr(0, 10);
+    $('#fqToDate').val(systemDate);
+    let gridfqLog;
+    gridfqLog = $('#fq_site_log').grid({
+        dataSource: '/Admin/AuditSiteLog?handler=ClientSiteSWTagsDetails',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        //grouping: { groupBy: 'Date' },
+        primaryKey: 'id',
+        columns: [
+            { field: 'Id', hidden: true },
+            { field: 'tagType', title: 'Type', width: 100 },
+            {
+                field: 'labelDescription', title: 'Label', width: 440,
+              
+            },
+            { field: 'roundNumber', title: 'Pending FQ', width: 60 },
+            { field: 'todayScanCount', title: 'Scans', width: 60 },
+            {
+                field: 'myScans', title: '[RC[2] Scans', width: 60, renderer: function (value, record) {
+
+                    if (value > 0) {
+                        return '<i class="fa fa-check-circle" style="color:green;"></i> ' + value;
+                    } else {
+                        return '<i class="fa fa-times-circle" style="color:red;"></i> ' + value;
+                    }
+                }
+            }
+        ],
+        paramNames: { page: 'pageNo' },
+        pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
+    });
+    $('#fqClientType').on('change', function () {
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#fqClientSiteId');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+       
+        //gridsiteLog.clear();
+
+     
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#fqClientSiteId').append(new Option('Select', '', true, true));
+                data.map(function (site) {
+                    $('#fqClientSiteId').append(new Option(site.name, site.id, false, false));
+                });
+                /* vkl multiselect */
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+              //  clientSiteControl.multiselect('rebuild');
+            }
+        });
+
+
+    });
+    $('#btnGenerateFQReport').on('click', function () {
+
+        if ($('#fqClientSiteId').val() === '') {
+            alert('Please select a client site');
+            return;
+        }
+
+        gridfqLog.reload({
+            clientSiteId: $('#fqClientSiteId').val(),
+            startDate: $('#fqFromDate').val(),
+            endDate: $('#fqToDate').val(),
+          
+        });
+    });
+    $('#btnDownloadFQZip').on('click', function () {
+      
+        logBookTypeForAuditZip = 3;
+        if ($('#fqClientSiteId').val() === '') {
+            alert('Please select a client site');
+            return;
+        }
+        $('#auditlog-zip-modal').modal('show');
+    });
+    function downloadFQLogZipFile() {
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=DownloadFQLogZip',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                clientSiteId: $('#fqClientSiteId').val(),
+                logFromDate: $('#fqFromDate').val(),
+                logToDate: $('#fqToDate').val()
+
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (!response.success) {
+                $('#auditlog-zip-modal').modal('hide');
+                new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+            } else {
+                $('#btn-auditlog-zip-download').attr('href', response.fileName);
+                $('#btn-auditlog-zip-download').show();
+                $('#auditlog-zip-msg').hide();
+            }
+        });
+    }
+    //p4-142-fq number-end
+
     //if ($('#dglClientType').val() != null && $('#dglClientType').val() != '' && $('#dglClientType').val() != undefined) {
     //    var value = $('#dglClientType').val()
     //    $('#dglClientType').val(value)
@@ -2463,8 +2576,10 @@ $(function () {
 
         if (logBookTypeForAuditZip === 1)
             downloadDailyGuardLogZipFile();
-        else
+        else if (logBookTypeForAuditZip === 2)
             downloadKeyVehicleLogZipFile();
+        else
+            downloadFQLogZipFile();
     });
 
     function downloadDailyGuardLogZipFile() {
@@ -2492,7 +2607,7 @@ $(function () {
             }
         });
     }
-
+    
     function downloadKeyVehicleLogZipFile() {
         $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
