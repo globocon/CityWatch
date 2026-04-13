@@ -252,7 +252,7 @@
                                 <td class="p-0 border-right">
                                     <div class="grand-total-container">
                                         <div class="total-item">
-                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-label">Grand Total</span>
                                             <span class="total-value" id="binder_grand_total">0</span>
                                         </div>
                                     </div>
@@ -753,10 +753,21 @@
         /* Totals visibility was improved in the Layout Fixes block below */
 
         /* Layout Fixes */
-        #roster_footer {
+        #roster_footer, #binder_footer {
             background: #fff !important;
             color: #444 !important;
             border-top: 2px solid #dee2e6;
+        }
+
+        #binder_footer {
+            border-top: 3px solid #667eea !important;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+
+        .project-total-row {
+            background-color: #f1f4f9 !important;
+            border-top: 1px solid #d1d9e6;
+            border-bottom: 2px solid #667eea;
         }
 
         .total-item {
@@ -1949,6 +1960,9 @@
                         var grandTotal = 0;
 
                         res.results.forEach(function (project) {
+                            var projectDailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                            var projectGrandTotal = 0;
+
                             // Add Project Header Row
                             var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-2 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
@@ -1980,6 +1994,12 @@
                                         if (groupFinancialMode) {
                                             shiftValue = s.durationHours * s.payRate;
                                         }
+                                        
+                                        // Add to project-specific totals
+                                        projectDailyTotals[index] += shiftValue;
+                                        projectGrandTotal += shiftValue;
+
+                                        // Add to global binder totals
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
@@ -2018,16 +2038,39 @@
                                 rowHtml += '</tr>';
                                 tbody.append(rowHtml);
                             });
+
+                            // Add Project Total Row
+                            var projectTotalHtml = '<tr class="project-total-row">' +
+                                '<td class="p-0 border-right">' +
+                                    '<div class="grand-total-container" style="background: transparent;">' +
+                                        '<div class="total-item">' +
+                                            '<span class="total-label">' + (groupFinancialMode ? "Weekly Pay" : "Weekly Total") + '</span>' +
+                                            '<span class="total-value" style="font-size: 13px;">' + (groupFinancialMode ? '$' + projectGrandTotal.toFixed(2) : projectGrandTotal.toFixed(2).replace(/\.00$/, "") + 'h') + '</span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</td>';
+                            
+                            for (var i = 0; i < 7; i++) {
+                                var val = projectDailyTotals[i];
+                                projectTotalHtml += '<td class="p-0">' +
+                                    '<div class="total-item">' +
+                                        '<span class="total-label">Daily Total</span>' +
+                                        '<span class="total-value" style="font-size: 13px;">' + (groupFinancialMode ? '$' + val.toFixed(2) : val.toFixed(2).replace(/\.00$/, "") + 'h') + '</span>' +
+                                    '</div>' +
+                                '</td>';
+                            }
+                            projectTotalHtml += '</tr>';
+                            tbody.append(projectTotalHtml);
                         });
 
                         // Update Binder Footer Totals
                         $('#binder_footer').show();
                         if (groupFinancialMode) {
                             $('#binder_grand_total').text('$' + grandTotal.toFixed(2));
-                            $('#binder_footer .total-label:contains("Weekly Total")').text("Weekly Pay");
+                            $('#binder_footer .total-label:contains("Grand Total")').text("Grand Pay");
                         } else {
                             $('#binder_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, '') + 'h');
-                            $('#binder_footer .total-label:contains("Weekly Pay")').text("Weekly Total");
+                            $('#binder_footer .total-label:contains("Grand Pay")').text("Grand Total");
                         }
 
                         $('.binder-day-total').each(function () {
