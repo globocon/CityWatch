@@ -12,6 +12,9 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Enums;
 using CityWatch.Web.Services;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using CityWatch.Data.Helpers;
 
 namespace CityWatch.Web.Pages.roster
@@ -23,19 +26,22 @@ namespace CityWatch.Web.Pages.roster
         private readonly CityWatchDbContext _context;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IRosterReportGenerator _rosterReportGenerator;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public BookingModel(
             ILogger<BookingModel> logger,
             IViewDataService viewDataService,
             CityWatchDbContext context,
             IClientDataProvider clientDataProvider,
-            IRosterReportGenerator rosterReportGenerator)
+            IRosterReportGenerator rosterReportGenerator,
+            IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
             _viewDataService = viewDataService;
             _context = context;
             _clientDataProvider = clientDataProvider;
             _rosterReportGenerator = rosterReportGenerator;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public DateTime StartDate { get; set; }
@@ -767,6 +773,164 @@ namespace CityWatch.Web.Pages.roster
             }).ToList();
 
             return new JsonResult(new { results = select2Data });
+        }
+        public async Task<JsonResult> OnGetLoadSettingsProjects()
+        {
+            var projects = await _context.RosterGroups
+                .Where(x => !x.IsDeleted)
+                .Select(x => new {
+                    x.Id,
+                    x.Name,
+                    x.CoverFileName,
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                })
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            return new JsonResult(projects);
+        }
+
+        public async Task<JsonResult> OnGetLoadSettingsGroups()
+        {
+            var groups = await _context.RosterBinders
+                .Where(x => !x.IsDeleted)
+                .Select(x => new {
+                    x.Id,
+                    x.Name,
+                    x.CoverFileName,
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                })
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            return new JsonResult(groups);
+        }
+
+        public async Task<IActionResult> OnPostUploadProjectCover(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0) return new JsonResult(new { success = false, message = "No file uploaded." });
+            if (Path.GetExtension(file.FileName).ToLower() != ".pdf") return new JsonResult(new { success = false, message = "Only PDF files are allowed." });
+
+            var project = await _context.RosterGroups.FindAsync(id);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects");
+            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+            if (!string.IsNullOrEmpty(project.CoverFileName))
+            {
+                string oldPath = Path.Combine(uploadDir, project.CoverFileName);
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+
+            string fileName = $"Project_{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            string filePath = Path.Combine(uploadDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            project.CoverFileName = fileName;
+            project.CoverFileDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostUploadGroupCover(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0) return new JsonResult(new { success = false, message = "No file uploaded." });
+            if (Path.GetExtension(file.FileName).ToLower() != ".pdf") return new JsonResult(new { success = false, message = "Only PDF files are allowed." });
+
+            var binder = await _context.RosterBinders.FindAsync(id);
+            if (binder == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups");
+            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+            if (!string.IsNullOrEmpty(binder.CoverFileName))
+            {
+                string oldPath = Path.Combine(uploadDir, binder.CoverFileName);
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+
+            string fileName = $"Group_{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            string filePath = Path.Combine(uploadDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            binder.CoverFileName = fileName;
+            binder.CoverFileDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostDeleteProjectCover(int id)
+        {
+            var project = await _context.RosterGroups.FindAsync(id);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            if (!string.IsNullOrEmpty(project.CoverFileName))
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects", project.CoverFileName);
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+
+            project.CoverFileName = null;
+            project.CoverFileDate = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostDeleteGroupCover(int id)
+        {
+            var binder = await _context.RosterBinders.FindAsync(id);
+            if (binder == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            if (!string.IsNullOrEmpty(binder.CoverFileName))
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups", binder.CoverFileName);
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+
+            binder.CoverFileName = null;
+            binder.CoverFileDate = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnGetDownloadCover(string type, int id)
+        {
+            string fileName = "";
+            string subDir = "";
+
+            if (type == "project")
+            {
+                var project = await _context.RosterGroups.FindAsync(id);
+                if (project == null || string.IsNullOrEmpty(project.CoverFileName)) return NotFound();
+                fileName = project.CoverFileName;
+                subDir = "Projects";
+            }
+            else
+            {
+                var binder = await _context.RosterBinders.FindAsync(id);
+                if (binder == null || string.IsNullOrEmpty(binder.CoverFileName)) return NotFound();
+                fileName = binder.CoverFileName;
+                subDir = "Groups";
+            }
+
+            string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", subDir, fileName);
+            if (!System.IO.File.Exists(filePath)) return NotFound();
+
+            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            return File(fileBytes, "application/pdf", fileName);
         }
     }
 }

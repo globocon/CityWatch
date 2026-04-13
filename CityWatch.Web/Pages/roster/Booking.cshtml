@@ -17,6 +17,9 @@
         <li class="nav-item">
             <a class="nav-link" id="groups-tab" data-toggle="tab" href="#groups" role="tab" aria-controls="groups" aria-selected="false">Groups</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
+        </li>
     </ul>
 
     <div class="tab-content" id="rosterTabContent">
@@ -274,7 +277,61 @@
             </div>
         </div>
     </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+        <div class="card shadow-sm border-0 mt-3" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-header bg-white border-bottom-0 pb-0 pt-3">
+                <ul class="nav nav-pills custom-sub-tabs" id="settingsSubTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="settings-project-tab" data-toggle="tab" href="#settings-project" role="tab"><i class="fa fa-folder-open mr-1"></i>Project</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="settings-group-tab" data-toggle="tab" href="#settings-group" role="tab"><i class="fa fa-users mr-1"></i>Group</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body pt-0">
+                <div class="tab-content" id="settingsSubTabContent">
+                    <div class="tab-pane fade show active" id="settings-project" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover mt-3 align-middle" id="tableSettingsProjects">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th style="width: 30%;">Project</th>
+                                        <th style="width: 25%;">File Name</th>
+                                        <th style="width: 20%;">Date & Time Uploaded</th>
+                                        <th style="width: 25%;" class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="settings-group" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover mt-3 align-middle" id="tableSettingsGroups">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th style="width: 30%;">Group</th>
+                                        <th style="width: 25%;">File Name</th>
+                                        <th style="width: 20%;">Date & Time Uploaded</th>
+                                        <th style="width: 25%;" class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    </div>
+    </div>
+
+    <!-- Hidden Utils -->
+    <input type="file" id="coverUploadInput" style="display:none;" accept=".pdf" />
 
     <!-- Add Shift Modal -->
     <div class="modal fade" id="addShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -2172,9 +2229,136 @@
                             toggleBinderView(false);
                         }
                     }
+            }
+
+
+            // Settings Tab Logic
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if (e.target.id === 'settings-tab') {
+                    loadSettingsProjects();
+                    // Clear previous tab states to avoid conflicts
+                    currentGroupId = null;
+                    currentBinderId = null;
+                } else if (e.target.id === 'settings-project-tab') {
+                    loadSettingsProjects();
+                } else if (e.target.id === 'settings-group-tab') {
+                    loadSettingsGroups();
+                }
+            });
+
+            function loadSettingsProjects() {
+                $.get('/roster/Booking?handler=LoadSettingsProjects', function (data) {
+                    var tbody = $('#tableSettingsProjects tbody');
+                    tbody.empty();
+                    data.forEach(function (p) {
+                        var row = '<tr>' +
+                            '<td><strong class="text-primary">' + p.name + '</strong></td>' +
+                            '<td>' + (p.coverFileName || '<span class="text-muted italic" style="font-size: 0.85rem;">No cover uploaded</span>') + '</td>' +
+                            '<td>' + (p.coverFileDate || '-') + '</td>' +
+                            '<td class="text-right">' +
+                            '<div class="btn-group">' +
+                            '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="project" data-id="' + p.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
+                            (p.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="project" data-id="' + p.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
+                            (p.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="project" data-id="' + p.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+                        tbody.append(row);
+                    });
                 });
             }
 
+            function loadSettingsGroups() {
+                $.get('/roster/Booking?handler=LoadSettingsGroups', function (data) {
+                    var tbody = $('#tableSettingsGroups tbody');
+                    tbody.empty();
+                    data.forEach(function (g) {
+                        var row = '<tr>' +
+                            '<td><strong class="text-success">' + g.name + '</strong></td>' +
+                            '<td>' + (g.coverFileName || '<span class="text-muted italic" style="font-size: 0.85rem;">No cover uploaded</span>') + '</td>' +
+                            '<td>' + (g.coverFileDate || '-') + '</td>' +
+                            '<td class="text-right">' +
+                            '<div class="btn-group">' +
+                            '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="group" data-id="' + g.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
+                            (g.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="group" data-id="' + g.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
+                            (g.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="group" data-id="' + g.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+                        tbody.append(row);
+                    });
+                });
+            }
+
+            var activeUploadType = '';
+            var activeUploadId = 0;
+
+            $(document).on('click', '.btn-upload-cover', function () {
+                activeUploadType = $(this).data('type');
+                activeUploadId = $(this).data('id');
+                $('#coverUploadInput').trigger('click');
+            });
+
+            $('#coverUploadInput').on('change', function () {
+                var file = this.files[0];
+                if (!file) return;
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    alert('Please select a PDF file.');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('id', activeUploadId);
+                formData.append('file', file);
+
+                var handler = activeUploadType === 'project' ? 'UploadProjectCover' : 'UploadGroupCover';
+
+                $.ajax({
+                    url: '/roster/Booking?handler=' + handler,
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.success) {
+                            if (activeUploadType === 'project') loadSettingsProjects();
+                            else loadSettingsGroups();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+                $(this).val('');
+            });
+
+            $(document).on('click', '.btn-delete-cover', function () {
+                if (!confirm('Are you sure you want to delete this cover PDF?')) return;
+                var type = $(this).data('type');
+                var id = $(this).data('id');
+                var handler = type === 'project' ? 'DeleteProjectCover' : 'DeleteGroupCover';
+
+                $.ajax({
+                    url: '/roster/Booking?handler=' + handler,
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { id: id },
+                    success: function (res) {
+                        if (res.success) {
+                            if (type === 'project') loadSettingsProjects();
+                            else loadSettingsGroups();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-download-cover', function () {
+                var type = $(this).data('type');
+                var id = $(this).data('id');
+                window.open('/roster/Booking?handler=DownloadCover&type=' + type + '&id=' + id, '_blank');
+            });
 
         });
     </script>

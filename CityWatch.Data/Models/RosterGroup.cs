@@ -13,6 +13,10 @@ namespace CityWatch.Data.Models
         public string Name { get; set; }
 
         public bool IsDeleted { get; set; }
+        
+        [StringLength(255)]
+        public string CoverFileName { get; set; }
+        public DateTime? CoverFileDate { get; set; }
 
         public virtual ICollection<RosterGroupSite> RosterGroupSites { get; set; }
         public virtual ICollection<RosterSchedule> RosterSchedules { get; set; }

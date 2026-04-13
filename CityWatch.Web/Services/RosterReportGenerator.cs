@@ -22,6 +22,7 @@ using CityWatch.Data.Helpers;
 using iText.IO.Image;
 using iText.IO.Font.Constants;
 using iText.Kernel.Font;
+using iText.Kernel.Utils;
 
 namespace CityWatch.Web.Services
 {
@@ -80,6 +81,12 @@ namespace CityWatch.Web.Services
                 var document = new Document(pdf);
                 document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
+                // Prepend Group Cover
+                if (!string.IsNullOrEmpty(binder.CoverFileName))
+                {
+                    MergeCover(pdf, "Groups", binder.CoverFileName);
+                }
+
                 bool firstProject = true;
 
                 foreach (var bp in binderProjects.OrderBy(x => x.RosterGroup.Name))
@@ -92,6 +99,13 @@ namespace CityWatch.Web.Services
 
                     var groupId = bp.RosterGroupId;
                     var group = bp.RosterGroup;
+
+                    // Prepend Project Cover
+                    if (!string.IsNullOrEmpty(group.CoverFileName))
+                    {
+                        MergeCover(pdf, "Projects", group.CoverFileName);
+                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }
 
                     var groupSites = await _context.RosterGroupSites
                         .Where(x => x.RosterGroupId == groupId)
@@ -287,6 +301,13 @@ namespace CityWatch.Web.Services
                 pdf.SetDefaultPageSize(PageSize.A4.Rotate());
                 var document = new Document(pdf);
                 document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+
+                // Prepend Project Cover
+                if (!string.IsNullOrEmpty(group.CoverFileName))
+                {
+                    MergeCover(pdf, "Projects", group.CoverFileName);
+                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                }
 
                 var groupName = group.Name ?? "Unknown Project";
 
@@ -509,6 +530,27 @@ namespace CityWatch.Web.Services
 
             footerTable.SetFixedPosition(margin, footerY, width);
             document.Add(footerTable);
+        }
+
+        private void MergeCover(PdfDocument destinationPdf, string subDir, string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return;
+            string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", subDir, fileName);
+            if (!File.Exists(filePath)) return;
+
+            try
+            {
+                using (var coverReader = new PdfReader(filePath))
+                using (var coverPdf = new PdfDocument(coverReader))
+                {
+                    coverPdf.CopyPagesTo(1, coverPdf.GetNumberOfPages(), destinationPdf);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Soft fail - log error but don't break generation
+                System.Diagnostics.Debug.WriteLine($"Error merging PDF cover: {ex.Message}");
+            }
         }
 
         private Cell CreateHeaderCell(string text)
