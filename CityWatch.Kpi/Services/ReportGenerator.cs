@@ -127,9 +127,12 @@ namespace CityWatch.Kpi.Services
             var tableLayout = new Table(UnitValue.CreatePercentArray(new float[] { 75, 25 })).UseAllAvailableWidth();
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableData));
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
-            tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSitemartwands));
+            
             doc.Add(tableLayout);
+            doc.Add(new AreaBreak());
 
+            doc.Add(headerTable);
+            doc.Add(tableSitemartwands);
             if (_settings.GuardListOn)
             {
                 //doc.Add(new AreaBreak());
@@ -236,35 +239,35 @@ namespace CityWatch.Kpi.Services
             guardWandScanDetailsTable.AddCell(
                 new Cell()
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Type")));
 
             guardWandScanDetailsTable.AddCell(
                 new Cell()
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Label")));
 
             guardWandScanDetailsTable.AddCell(
                 new Cell()
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Pending FQ")));
 
             guardWandScanDetailsTable.AddCell(
                 new Cell()
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Scans")));
 
             guardWandScanDetailsTable.AddCell(
                 new Cell()
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("[HN] Scans")));
 
@@ -273,31 +276,31 @@ namespace CityWatch.Kpi.Services
             {
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.TagType)));
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                   
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.LabelDescription)));
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.RoundNumber.ToString())));
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                   
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                   
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.MyScans.ToString())));
             }
