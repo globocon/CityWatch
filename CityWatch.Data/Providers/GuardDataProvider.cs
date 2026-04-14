@@ -122,6 +122,7 @@ namespace CityWatch.Data.Providers
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         int GetClientSiteIdFromLogbook(int logbookId);
         List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId);
+        List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1424,6 +1425,20 @@ namespace CityWatch.Data.Providers
             return _context.GuardLoginSmartWandUse
                 .Where(z => z.SmartWandId == smartWandId)
                 .ToList();
+        }
+        public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate)
+        {
+            try
+            {
+                return _context.Set<SiteTagStatusPendingNew>()
+                    .FromSqlRaw("EXEC Sp_GetClientSiteTagScanSummary @ClientId = {0}, @FromDate = {1}, @ToDate = {2}", clientId, fromDate, ToDate)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatusPendingNew>();
+            }
         }
 
     }

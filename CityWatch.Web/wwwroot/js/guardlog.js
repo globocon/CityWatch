@@ -2481,9 +2481,9 @@ $(function () {
                     $('#fqClientSiteId').append(new Option(site.name, site.id, false, false));
                 });
                 /* vkl multiselect */
-                data.map(function (site) {
-                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
-                });
+                //data.map(function (site) {
+                //    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                //});
               //  clientSiteControl.multiselect('rebuild');
             }
         });

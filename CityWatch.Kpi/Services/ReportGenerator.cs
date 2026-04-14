@@ -119,11 +119,15 @@ namespace CityWatch.Kpi.Services
             var monthlyData = _viewDataService.GetKpiReportData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
             var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
             CreateReportDataSummary(tableData, monthlyData);
+            var clientsiteLogBook = _viewDataService.GetTagStatusPendingForSpecificClientSite(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
+
+            var tableSitemartwands = CreateGuardWandScanDetails(clientsiteLogBook);
             var tableSiteStats = CreateSiteStatsData(_clientSiteKpiSetting, monthlyData, fromDate);
 
             var tableLayout = new Table(UnitValue.CreatePercentArray(new float[] { 75, 25 })).UseAllAvailableWidth();
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableData));
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
+            tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSitemartwands));
             doc.Add(tableLayout);
 
             if (_settings.GuardListOn)
@@ -221,7 +225,85 @@ namespace CityWatch.Kpi.Services
 
             return reportFileName;
         }
+        private Table CreateGuardWandScanDetails(List<SiteTagStatusPendingNew> clientSiteLogBook)
+        {
+            var guardWandScanDetailsTable =
+                new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5, 2, 2 }))
+                .UseAllAvailableWidth()
+                .SetMarginBottom(15);
 
+            // HEADER ROW
+            guardWandScanDetailsTable.AddCell(
+                new Cell()
+                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph("Type")));
+
+            guardWandScanDetailsTable.AddCell(
+                new Cell()
+                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph("Label")));
+
+            guardWandScanDetailsTable.AddCell(
+                new Cell()
+                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph("Pending FQ")));
+
+            guardWandScanDetailsTable.AddCell(
+                new Cell()
+                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph("Scans")));
+
+            guardWandScanDetailsTable.AddCell(
+                new Cell()
+                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                .SetFontSize(CELL_FONT_SIZE)
+                .Add(new Paragraph("[HN] Scans")));
+
+            // DATA ROWS
+            foreach (var groupItem in clientSiteLogBook)
+            {
+                guardWandScanDetailsTable.AddCell(
+                    new Cell()
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .Add(new Paragraph(groupItem.TagType)));
+
+                guardWandScanDetailsTable.AddCell(
+                    new Cell()
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .Add(new Paragraph(groupItem.LabelDescription)));
+
+                guardWandScanDetailsTable.AddCell(
+                    new Cell()
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .Add(new Paragraph(groupItem.RoundNumber.ToString())));
+
+                guardWandScanDetailsTable.AddCell(
+                    new Cell()
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
+
+                guardWandScanDetailsTable.AddCell(
+                    new Cell()
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .Add(new Paragraph(groupItem.MyScans.ToString())));
+            }
+
+            return guardWandScanDetailsTable;
+        }
         private Table CreateReportDataSummary(Table table, MonthlyKpiResult monthlyKpiResult)
         {
             //row 1
