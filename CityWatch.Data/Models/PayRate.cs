@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
+    [Table("PayRates")]
     public class PayRate
     {
         [Key]

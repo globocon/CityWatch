@@ -214,10 +214,12 @@ function deletePayRate(id) {
 }
 
 function loadPayRateGroupsDropdown(selectedId) {
+    console.log("Loading Pay Rate Groups...");
     $.ajax({
         url: '/Admin/Settings?handler=PayRateGroupsList',
         type: 'GET',
         success: function (data) {
+            console.log("Groups loaded:", data);
             var items = '<option value="">No Group</option>';
             $.each(data, function (i, item) {
                 items += "<option value='" + item.id + "'>" + item.name + "</option>";
@@ -226,6 +228,10 @@ function loadPayRateGroupsDropdown(selectedId) {
             if (selectedId > 0) {
                 $('#drpPayRateGroup').val(selectedId);
             }
+        },
+        error: function (xhr, status, error) {
+            console.error("Failed to load groups:", status, error);
+            alert("Failed to load Pay Rate Groups. Check console for details.");
         }
     });
 }
