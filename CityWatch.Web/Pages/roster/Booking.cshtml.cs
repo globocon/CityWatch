@@ -160,7 +160,11 @@ namespace CityWatch.Web.Pages.roster
                             callsignName = s.Callsign?.Name ?? "",
                             status = (int)s.Status,
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                            reliefGuardId = s.ReliefGuardId,
+                            reliefGuardName = s.ReliefGuard?.Name ?? "",
+                            reliefProviderName = s.ReliefProviderName ?? "",
+                            reliefReason = s.ReliefReason ?? ""
                         })
                         .ToList();
                 }).ToList()
@@ -548,7 +552,11 @@ namespace CityWatch.Web.Pages.roster
                                 callsignName = s.Callsign?.Name ?? "",
                                 status = (int)s.Status,
                                 durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuard?.Name ?? "",
+                                reliefProviderName = s.ReliefProviderName ?? "",
+                                reliefReason = s.ReliefReason ?? ""
                             })
                             .ToList();
                     }).ToList()
