@@ -270,10 +270,7 @@ namespace CityWatch.Web.API
                 };
             }
 
-            return Ok(new
-            {
-                ClientSiteDetails = _clientSite
-            });
+            return Ok(_clientSite);
         }
 
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
