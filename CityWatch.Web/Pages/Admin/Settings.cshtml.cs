@@ -3770,9 +3770,15 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
-        public JsonResult OnGetPayRatesList(int? page, int? pageNo, int? limit, string searchString)
+        public JsonResult OnGetPayRatesList(int? page, int? pageNo, int? limit, string searchString, int? groupId)
         {
             var data = _configDataProvider.GetPayRates();
+            
+            if (groupId.HasValue && groupId > 0)
+            {
+                data = data.Where(x => x.PayRateGroupId == groupId.Value).ToList();
+            }
+
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();

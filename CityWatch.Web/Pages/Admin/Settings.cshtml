@@ -1488,7 +1488,7 @@
                                             vertical-align: middle;
                                         }
                                     </style>
-                                    <div class="row">
+                                                                        <div class="row">
                                         <div class="col-md-2">
                                             <div class="form-group row">
                                                 <label class="col-form-label col-md-4">Currency</label>
@@ -1504,21 +1504,33 @@
                                                 </div>
                                             </div>
                                         </div>
-                                         <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="input-group">
-                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Pay Rates">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fa fa-filter mr-1"></i>Group</span>
+                                                </div>
+                                                <select id="drpPayRateGroupFilter" class="form-control">
+                                                    <option value="">All Groups</option>
+                                                </select>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-info" id="btnManagePayRateGroups" title="Manage Groups"><i class="fa fa-cog"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Descriptions">
                                                  <div class="input-group-append" id="clearSearch" style="cursor:pointer; display:none;">
-                                                    <span class="input-group-text bg-transparent border-0"><i class="fa fa-times-circle"></i></span>
+                                                    <span class="input-group-text bg-transparent border-1"><i class="fa fa-times-circle"></i></span>
                                                 </div>
                                                  <div class="input-group-append">
                                                     <span class="input-group-text"><i class="fa fa-search"></i></span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 text-right">
-                                             <button class="btn btn-primary mb-3 mr-2" id="btnDownloadPayRatesExcel"><i class="fa fa-file-excel-o mr-2"></i>Download</button>
-                                             <button class="btn btn-outline-info mb-3 mr-2" id="btnManagePayRateGroups"><i class="fa fa-list mr-2"></i>Manage Groups</button>
-                                             <button class="btn btn-success mb-3" id="add_pay_rates"><i class="fa fa-plus mr-2"></i>Add Pay Rate</button>
+                                        <div class="col-md-4 text-right">
+                                             <button class="btn btn-primary mr-2" id="btnDownloadPayRatesExcel" title="Download Excel"><i class="fa fa-file-excel-o mr-1"></i>Excel</button>
+                                             <button class="btn btn-success" id="add_pay_rates"><i class="fa fa-plus mr-1"></i>Add Pay Rate</button>
                                         </div>
                                     </div>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_pay_rates">
@@ -6002,3 +6014,4 @@
         </div>
     </div>
 </div>
+

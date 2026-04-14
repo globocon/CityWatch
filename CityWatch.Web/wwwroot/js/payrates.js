@@ -10,8 +10,17 @@ $(document).ready(function () {
         initPayRatesGridIfSelected();
     });
 
+    loadGroupFilterDropdown(); // Add this line here for page load
+
+    $('#drpPayRateGroupFilter').on('change', function () {
+        if (gridPayRates) {
+            gridPayRates.reload({ groupId: $(this).val() });
+        }
+    });
+
     $('#add_pay_rates').on('click', function () {
         loadPayRateGroupsDropdown(0);
+    loadGroupFilterDropdown(); // Add this line
         $('#payRatesModal').modal('show');
         $('#payRateId').val(0);
         $('#txtPayRateDescription').val('');
@@ -24,7 +33,7 @@ $(document).ready(function () {
         $('#modalTitlePayRate').text('Add Pay Rate');
     });
 
-    $('#manage_pay_rate_groups').on('click', function () {
+    $('#btnManagePayRateGroups').on('click', function () {
         loadPayRateGroupsTable();
         $('#payRateGroupsModal').modal('show');
     });
@@ -141,7 +150,10 @@ function initPayRatesGridIfSelected() {
 
 function initializePayRatesGrid() {
     gridPayRates = $('#tbl_pay_rates').grid({
-        dataSource: '/Admin/Settings?handler=PayRatesList',
+        dataSource: { 
+            url: '/Admin/Settings?handler=PayRatesList',
+            data: { groupId: $('#drpPayRateGroupFilter').val() }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -266,8 +278,6 @@ function deletePayRateGroup(id) {
             success: function (result) {
                 if (result.success) {
                     loadPayRateGroupsTable();
-                } else {
-                    alert(result.message);
                 }
             },
             error: function () {
@@ -275,4 +285,18 @@ function deletePayRateGroup(id) {
             }
         });
     }
+}
+
+function loadGroupFilterDropdown() {
+    $.ajax({
+        url: '/Admin/Settings?handler=PayRateGroupsList',
+        type: 'GET',
+        success: function (data) {
+            var items = '<option value="">All Groups</option>';
+            $.each(data, function (i, item) {
+                items += "<option value='" + item.id + "'>" + item.name + "</option>";
+            });
+            $('#drpPayRateGroupFilter').html(items);
+        }
+    });
 }
