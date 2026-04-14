@@ -477,6 +477,23 @@ namespace CityWatch.Data.Providers
                 newClientSite.IsDosDontList = clientSite.IsDosDontList;
                 newClientSite.UploadFusionLog = clientSite.UploadFusionLog;
 
+                newClientSite.UploadGuardLog = clientSite.UploadGuardLog;
+                newClientSite.UploadKVLog = clientSite.UploadKVLog;
+                newClientSite.UploadSWLog = clientSite.UploadSWLog;
+                newClientSite.GuardLogEmailTo = clientSite.GuardLogEmailTo;
+
+                newClientSite.UploadGuardWeeklyLog = clientSite.UploadGuardWeeklyLog;
+                newClientSite.UploadKVWeeklyLog = clientSite.UploadKVWeeklyLog;
+                newClientSite.UploadSWWeeklyLog = clientSite.UploadSWWeeklyLog;
+                newClientSite.UploadFusionWeeklyLog = clientSite.UploadFusionWeeklyLog;
+                newClientSite.GuardLogEmailWeeklyLogTo = clientSite.GuardLogEmailWeeklyLogTo;
+
+                newClientSite.UploadGuardMonthlyLog = clientSite.UploadGuardMonthlyLog;
+                newClientSite.UploadKVMonthlyLog = clientSite.UploadKVMonthlyLog;
+                newClientSite.UploadSWMonthlyLog = clientSite.UploadSWMonthlyLog;
+                newClientSite.UploadFusionMonthlyLog = clientSite.UploadFusionMonthlyLog;
+                newClientSite.GuardLogEmailMonthlyLogTo = clientSite.GuardLogEmailMonthlyLogTo;
+
                 _context.ClientSites.Add(newClientSite);
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -502,6 +519,23 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.DuressEmail = clientSite.DuressEmail;
                 clientSiteToUpdate.IsDosDontList = clientSite.IsDosDontList;
                 clientSiteToUpdate.UploadFusionLog = clientSite.UploadFusionLog;
+
+                clientSiteToUpdate.UploadGuardLog = clientSite.UploadGuardLog;
+                clientSiteToUpdate.UploadKVLog = clientSite.UploadKVLog;
+                clientSiteToUpdate.UploadSWLog = clientSite.UploadSWLog;
+                clientSiteToUpdate.GuardLogEmailTo = clientSite.GuardLogEmailTo;
+
+                clientSiteToUpdate.UploadGuardWeeklyLog = clientSite.UploadGuardWeeklyLog;
+                clientSiteToUpdate.UploadKVWeeklyLog = clientSite.UploadKVWeeklyLog;
+                clientSiteToUpdate.UploadSWWeeklyLog = clientSite.UploadSWWeeklyLog;
+                clientSiteToUpdate.UploadFusionWeeklyLog = clientSite.UploadFusionWeeklyLog;
+                clientSiteToUpdate.GuardLogEmailWeeklyLogTo = clientSite.GuardLogEmailWeeklyLogTo;
+
+                clientSiteToUpdate.UploadGuardMonthlyLog = clientSite.UploadGuardMonthlyLog;
+                clientSiteToUpdate.UploadKVMonthlyLog = clientSite.UploadKVMonthlyLog;
+                clientSiteToUpdate.UploadSWMonthlyLog = clientSite.UploadSWMonthlyLog;
+                clientSiteToUpdate.UploadFusionMonthlyLog = clientSite.UploadFusionMonthlyLog;
+                clientSiteToUpdate.GuardLogEmailMonthlyLogTo = clientSite.GuardLogEmailMonthlyLogTo;
             }
             _context.SaveChanges();
 
