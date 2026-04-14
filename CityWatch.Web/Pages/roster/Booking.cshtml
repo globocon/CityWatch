@@ -1439,8 +1439,8 @@
                                     grandTotal += shiftValue;
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                        'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
+                                        'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate" style="font-weight: 500;">' + 
                                         ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
@@ -1601,7 +1601,7 @@
                 var end = card.data('end');
 
                 if (guardId) {
-                    var guardName = card.find('.text-truncate').text().trim();
+                    var guardName = card.data('guardname');
                     var newOption = new Option(guardName, guardId, true, true);
                     $('#modalGuardId').append(newOption).trigger('change');
                 } else {
@@ -1627,7 +1627,7 @@
                 var rReason = card.data('reliefreason');
 
                 if (rGuardId) {
-                    var rGuardName = (card.find('.relief-badge').length > 0) ? card.find('.text-truncate').text().replace('{R}', '').trim() : "";
+                    var rGuardName = card.data('reliefguardname');
                     var rOption = new Option(rGuardName, rGuardId, true, true);
                     $('#modalReliefGuardId').append(rOption).trigger('change');
                 } else {
