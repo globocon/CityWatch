@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
 @using CityWatch.Data.Providers;
@@ -1488,7 +1488,7 @@
                                             vertical-align: middle;
                                         }
                                     </style>
-                                    <div class="row">
+                                                                        <div class="row">
                                         <div class="col-md-2">
                                             <div class="form-group row">
                                                 <label class="col-form-label col-md-4">Currency</label>
@@ -1504,20 +1504,33 @@
                                                 </div>
                                             </div>
                                         </div>
-                                         <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="input-group">
-                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Pay Rates">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fa fa-filter mr-1"></i>Group</span>
+                                                </div>
+                                                <select id="drpPayRateGroupFilter" class="form-control">
+                                                    <option value="">All Groups</option>
+                                                </select>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-info" id="btnManagePayRateGroups" title="Manage Groups"><i class="fa fa-cog"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Descriptions">
                                                  <div class="input-group-append" id="clearSearch" style="cursor:pointer; display:none;">
-                                                    <span class="input-group-text bg-transparent border-0"><i class="fa fa-times-circle"></i></span>
+                                                    <span class="input-group-text bg-transparent border-1"><i class="fa fa-times-circle"></i></span>
                                                 </div>
                                                  <div class="input-group-append">
                                                     <span class="input-group-text"><i class="fa fa-search"></i></span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 text-right">
-                                             <button class="btn btn-primary mb-3 mr-2" id="btnDownloadPayRatesExcel"><i class="fa fa-file-excel-o mr-2"></i>Download</button>
-                                             <button class="btn btn-success mb-3" id="add_pay_rates"><i class="fa fa-plus mr-2"></i>Add Pay Rate</button>
+                                        <div class="col-md-4 text-right">
+                                             <button class="btn btn-primary mr-2" id="btnDownloadPayRatesExcel" title="Download Excel"><i class="fa fa-file-excel-o mr-1"></i>Excel</button>
+                                             <button class="btn btn-success" id="add_pay_rates"><i class="fa fa-plus mr-1"></i>Add Pay Rate</button>
                                         </div>
                                     </div>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_pay_rates">
@@ -5930,6 +5943,12 @@
             <div class="modal-body">
                 <input type="hidden" id="payRateId" value="0" />
                 <div class="form-group">
+                    <label for="drpPayRateGroup">Group (Client)</label>
+                    <select class="form-control" id="drpPayRateGroup">
+                        <option value="">Select Group</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="txtPayRateDescription">Payment Profile</label>
                     <input type="text" class="form-control" id="txtPayRateDescription" placeholder="Enter Payment Profile">
                 </div>
@@ -5958,3 +5977,42 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="payRateGroupsModal" tabindex="-1" role="dialog" aria-labelledby="payRateGroupsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Manage Pay Rate Groups</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="hdnEditPayRateGroupId" value="0" />
+                <div class="row mb-3">
+                    <div class="col-md-9">
+                        <input type="text" id="txtNewPayRateGroup" class="form-control" placeholder="New Group Name">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-success btn-block" id="btnAddPayRateGroup">Add Group</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm" id="tblPayRateGroups" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th style="width:100px">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

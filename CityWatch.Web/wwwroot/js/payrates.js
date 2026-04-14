@@ -1,6 +1,6 @@
 
 var gridPayRates;
-
+var gridPayRateGroups;
 
 $(document).ready(function () {
     // Initial check (in case page loads with Pay Rates selected)
@@ -10,7 +10,17 @@ $(document).ready(function () {
         initPayRatesGridIfSelected();
     });
 
+    loadGroupFilterDropdown(); // Add this line here for page load
+
+    $('#drpPayRateGroupFilter').on('change', function () {
+        if (gridPayRates) {
+            gridPayRates.reload({ groupId: $(this).val() });
+        }
+    });
+
     $('#add_pay_rates').on('click', function () {
+        loadPayRateGroupsDropdown(0);
+    loadGroupFilterDropdown(); // Add this line
         $('#payRatesModal').modal('show');
         $('#payRateId').val(0);
         $('#txtPayRateDescription').val('');
@@ -18,12 +28,49 @@ $(document).ready(function () {
         $('#txtComms1').val('');
         $('#txtComms2').val('');
         $('#txtGuardPayRate').val('');
+        $('#drpPayRateGroup').val('');
 
         $('#modalTitlePayRate').text('Add Pay Rate');
     });
 
+    $('#btnManagePayRateGroups').on('click', function () {
+        loadPayRateGroupsTable();
+        $('#payRateGroupsModal').modal('show');
+    });
+
+    $('#btnAddPayRateGroup').on('click', function () {
+        var name = $('#txtNewPayRateGroup').val();
+        if (name == '') {
+            alert('Group name is required.');
+            return;
+        }
+
+        var id = $('#hdnEditPayRateGroupId').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=SavePayRateGroup',
+            type: 'POST',
+            data: { Id: id, Name: name },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function (result) {
+                if (result.success) {
+                    $('#txtNewPayRateGroup').val('');
+                    $('#hdnEditPayRateGroupId').val(0);
+                    $('#btnAddPayRateGroup').text('Add Group').removeClass('btn-primary').addClass('btn-success');
+                    loadPayRateGroupsTable();
+                    loadGroupFilterDropdown();
+                } else {
+                    alert(result.message);
+                }
+            },
+            error: function () {
+                alert('An error occurred');
+            }
+        });
+    });
+
     $('#btnSavePayRate').on('click', function () {
         var id = $('#payRateId').val();
+        var groupId = $('#drpPayRateGroup').val();
         var description = $('#txtPayRateDescription').val();
         var sellRate = $('#txtSellRate').val();
         var comms1 = $('#txtComms1').val();
@@ -41,6 +88,7 @@ $(document).ready(function () {
             type: 'POST',
             data: {
                 Id: id,
+                PayRateGroupId: groupId,
                 Description: description,
                 SellRateToClient: sellRate,
                 Comms1: comms1,
@@ -106,16 +154,20 @@ function initPayRatesGridIfSelected() {
 
 function initializePayRatesGrid() {
     gridPayRates = $('#tbl_pay_rates').grid({
-        dataSource: '/Admin/Settings?handler=PayRatesList',
+        dataSource: { 
+            url: '/Admin/Settings?handler=PayRatesList',
+            data: { groupId: $('#drpPayRateGroupFilter').val() }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'description', title: 'Payment Profile', width: 200, align: 'left' },
-            { field: 'sellRateToClient', title: 'Sell Rate to Client', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'groupName', title: 'Group', width: 120, align: 'left', sortable: true },
+            { field: 'description', title: 'Profile / Rate Description', width: 200, align: 'left', sortable: true },
+            { field: 'sellRateToClient', title: 'Sell Rate', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'comms1', title: 'Comms 1', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
-            { field: 'guardPayRate', title: 'Guard Pay Rate', width: 100, align: 'center', renderer: currencyRenderer },
+            { field: 'guardPayRate', title: 'Guard Pay', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'currency', title: 'Currency', width: 80, align: 'center' },
             { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
         ],
@@ -134,12 +186,13 @@ function currencyRenderer(value, record) {
 
 function payRatesActionRenderer(value, record) {
     return '<div class="text-center">' +
-        '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ', \'' + (record.currency || '') + '\')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+        '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ', \'' + (record.currency || '') + '\', ' + (record.payRateGroupId || 0) + ')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
         '<button onclick="deletePayRate(' + record.id + ')" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
         '</div>';
 }
 
-function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate, currency) {
+function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate, currency, groupId) {
+    loadPayRateGroupsDropdown(groupId);
     $('#payRateId').val(id);
     $('#txtPayRateDescription').val(description);
     $('#txtSellRate').val(sellRate);
@@ -156,7 +209,7 @@ function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate
 }
 
 function deletePayRate(id) {
-    if (confirm('Are you sure you want to delete this Pay Rate?')) { // Action symbol/confirmation
+    if (confirm('Are you sure you want to delete this Pay Rate?')) {
         $.ajax({
             url: '/Admin/Settings?handler=DeletePayRate',
             type: 'POST',
@@ -174,4 +227,88 @@ function deletePayRate(id) {
             }
         });
     }
+}
+
+function loadPayRateGroupsDropdown(selectedId) {
+    console.log("Loading Pay Rate Groups...");
+    $.ajax({
+        url: '/Admin/Settings?handler=PayRateGroupsList',
+        type: 'GET',
+        success: function (data) {
+            console.log("Groups loaded:", data);
+            var items = '<option value="">No Group</option>';
+            $.each(data, function (i, item) {
+                items += "<option value='" + item.id + "'>" + item.name + "</option>";
+            });
+            $('#drpPayRateGroup').html(items);
+            if (selectedId > 0) {
+                $('#drpPayRateGroup').val(selectedId);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Failed to load groups:", status, error);
+            alert("Failed to load Pay Rate Groups. Check console for details.");
+        }
+    });
+}
+
+function loadPayRateGroupsTable() {
+    $.ajax({
+        url: '/Admin/Settings?handler=PayRateGroupsList',
+        type: 'GET',
+        success: function (data) {
+            var tbody = $('#tblPayRateGroups tbody');
+            tbody.empty();
+            $.each(data, function (i, item) {
+                var row = '<tr>' +
+                    '<td>' + item.name + '</td>' +
+                    '<td class="text-center">' +
+                    '<button onclick="editPayRateGroup(' + item.id + ', \'' + item.name + '\')" class="btn btn-sm btn-outline-primary mr-2" title="Edit Group"><i class="fa fa-pencil"></i></button>' +
+                    '<button onclick="deletePayRateGroup(' + item.id + ')" class="btn btn-sm btn-outline-danger" title="Delete Group"><i class="fa fa-trash"></i></button>' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+        }
+    });
+}
+
+function deletePayRateGroup(id) {
+    if (confirm('Are you sure you want to delete this group?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeletePayRateGroup',
+            type: 'POST',
+            data: { id: id },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function (result) {
+                if (result.success) {
+                    loadPayRateGroupsTable();
+                }
+            },
+            error: function () {
+                alert('An error occurred');
+            }
+        });
+    }
+}
+
+function editPayRateGroup(id, name) {
+    $('#hdnEditPayRateGroupId').val(id);
+    $('#txtNewPayRateGroup').val(name);
+    $('#btnAddPayRateGroup').text('Update Group').removeClass('btn-success').addClass('btn-primary');
+    $('#txtNewPayRateGroup').focus();
+}
+
+function loadGroupFilterDropdown() {
+    $.ajax({
+        url: '/Admin/Settings?handler=PayRateGroupsList',
+        type: 'GET',
+        success: function (data) {
+            var items = '<option value="">All Groups</option>';
+            $.each(data, function (i, item) {
+                items += "<option value='" + item.id + "'>" + item.name + "</option>";
+            });
+            $('#drpPayRateGroupFilter').html(items);
+        }
+    });
 }

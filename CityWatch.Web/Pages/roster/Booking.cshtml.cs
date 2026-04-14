@@ -319,19 +319,48 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
-        public JsonResult OnGetSearchPayRates(string search)
+        public JsonResult OnGetSearchPayRates(string search, int? groupId, int? id)
         {
-            var rates = _context.PayRates
-                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Description.Contains(search)))
+            var query = _context.PayRates.Include(x => x.PayRateGroup).Where(x => !x.IsDeleted);
+
+            if (id.HasValue)
+            {
+                query = query.Where(x => x.Id == id.Value);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(search))
+                    query = query.Where(x => x.Description.Contains(search));
+                
+                if (groupId.HasValue)
+                    query = query.Where(x => x.PayRateGroupId == groupId);
+            }
+
+            var rates = query.Select(x => new
+            {
+                id = x.Id,
+                text = x.Description,
+                guardPayRate = x.GuardPayRate,
+                groupId = x.PayRateGroupId,
+                groupName = x.PayRateGroup != null ? x.PayRateGroup.Name : "No Group"
+            }).ToList();
+
+            return new JsonResult(new { results = rates });
+        }
+
+        public JsonResult OnGetSearchPayRateGroups(string search)
+        {
+            var groups = _context.PayRateGroups
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .OrderBy(x => x.Name)
                 .Select(x => new
                 {
                     id = x.Id,
-                    text = x.Description,
-                    rate = x.GuardPayRate
+                    text = x.Name
                 })
                 .ToList();
 
-            return new JsonResult(new { results = rates });
+            return new JsonResult(new { results = groups });
         }
 
         public async Task<IActionResult> OnPostUpdateStatus(int id, int status)
