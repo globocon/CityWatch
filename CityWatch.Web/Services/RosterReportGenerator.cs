@@ -247,6 +247,7 @@ namespace CityWatch.Web.Services
             var schedules = await _context.RosterSchedules
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                 .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
                 .Include(x => x.PayRate)
                 .ToListAsync();
@@ -352,9 +353,34 @@ namespace CityWatch.Web.Services
                                     var value = includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
                                     weeklyTotal += value;
 
-                                    var shiftBlock = new Div().SetBackgroundColor(GetStatusColor(shift.Status)).SetMarginBottom(2).SetPadding(2).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
-                                    shiftBlock.Add(new Paragraph(shift.Guard?.Name ?? shift.ProviderName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()));
-                                    shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
+                                    var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
+                                    var bgColor = GetStatusColor(shift.Status);
+                                    var borderColor = ColorConstants.BLACK;
+                                    var fontColor = ColorConstants.BLACK;
+
+                                    if (isRelief)
+                                    {
+                                        bgColor = new DeviceRgb(243, 229, 245); // Light purple bg
+                                        borderColor = new DeviceRgb(111, 66, 193); // Purple border
+                                        fontColor = new DeviceRgb(74, 20, 140); // Dark purple text
+                                    }
+
+                                    var shiftBlock = new Div()
+                                        .SetBackgroundColor(bgColor)
+                                        .SetMarginBottom(2)
+                                        .SetPadding(2)
+                                        .SetBorder(new SolidBorder(borderColor, 0.5f));
+
+                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
+                                    if (isRelief) guardName = "{R} " + guardName;
+
+                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor));
+                                    shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f).SetFontColor(fontColor));
+
+                                    if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                    {
+                                        shiftBlock.Add(new Paragraph("[" + shift.ReliefReason + "]").SetFontSize(5f).SetItalic().SetFontColor(new DeviceRgb(111, 66, 193)));
+                                    }
 
                                     if (includeSuppliers)
                                     {

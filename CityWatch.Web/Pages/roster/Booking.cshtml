@@ -353,14 +353,73 @@
                     <input type="hidden" id="modalShiftId" />
                     <input type="hidden" id="modalSiteId" />
                     <input type="hidden" id="modalDayIndex" />
-                    <div class="form-group">
-                        <label>Guard</label>
-                        <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+
+                    <!-- Tab Headers -->
+                    <ul class="nav nav-tabs mb-3" id="modalShiftTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="modal-guard-tab" data-toggle="tab" href="#modal-guard" role="tab" style="font-size: 0.9rem; font-weight: 600;">Main Guard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="modal-relief-tab" data-toggle="tab" href="#modal-relief" role="tab" style="font-size: 0.9rem; font-weight: 600; color: #6f42c1;">
+                                <i class="fa fa-user-plus mr-1"></i>Relief Guard
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Main Guard Tab -->
+                        <div class="tab-pane fade show active" id="modal-guard" role="tabpanel">
+                            <div class="form-group">
+                                <label>Guard</label>
+                                <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Provider (Subcontractor)</label>
+                                <select id="modalProviderId" class="form-control" style="width: 100%"></select>
+                            </div>
+                        </div>
+
+                        <!-- Relief Guard Tab -->
+                        <div class="tab-pane fade" id="modal-relief" role="tabpanel">
+                            <div class="alert alert-light border mb-3" style="font-size: 0.8rem; border-left: 4px solid #6f42c1 !important;">
+                                <i class="fa fa-info-circle text-purple mr-1"></i>Assign a relief guard for this specific shift instance.
+                                <button type="button" class="btn btn-sm btn-link text-danger float-right p-0" id="btnClearRelief" style="font-size: 0.75rem;">Clear Relief</button>
+                            </div>
+                            <div class="form-group">
+                                <label>Relief Guard</label>
+                                <select id="modalReliefGuardId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Relief Provider</label>
+                                <select id="modalReliefProviderId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="d-block mb-1">Reason for Relief</label>
+                                <div class="d-flex flex-wrap">
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkSick" value="Sick">
+                                        <label class="custom-control-label" for="chkSick">Sick</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkHoliday" value="Holiday">
+                                        <label class="custom-control-label" for="chkHoliday">Holiday</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkAOL" value="AOL">
+                                        <label class="custom-control-label" for="chkAOL">AOL</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
+                                        <label class="custom-control-label" for="chkOther">Other</label>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="modalReliefReason" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Provider (Subcontractor)</label>
-                        <select id="modalProviderId" class="form-control" style="width: 100%"></select>
-                    </div>
+
+                    <hr />
+
                     <div class="form-group">
                         <label>Position (or Callsign)</label>
                         <select id="modalCallsignId" class="form-control" style="width: 100%">
@@ -638,6 +697,33 @@
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
             }
+
+            .shift-card.shift-relief {
+                background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important;
+                border-left: 3px solid #e1bee7 !important;
+            }
+
+        .relief-badge {
+            background-color: #ffffff;
+            color: #6f42c1;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 3px;
+            vertical-align: middle;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .relief-reason-tag {
+            font-size: 9px;
+            font-style: italic;
+            color: rgba(255,255,255,0.9);
+            display: block;
+            margin-top: 2px;
+            font-weight: 500;
+        }
 
         /* Enhanced Delete Button */
         .btn-delete-shift {
@@ -1242,6 +1328,56 @@
                 dropdownParent: $('#addShiftModal')
             });
 
+            // Relief Guard Select2 Init
+            $('#modalReliefGuardId').select2({
+                placeholder: 'Select Relief Guard',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchGuards',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { search: params.term }; },
+                    processResults: function (data) { return { results: data.results }; },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            $('#modalReliefProviderId').select2({
+                placeholder: 'Select Relief Provider',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchProviders',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { search: params.term }; },
+                    processResults: function (data) { return { results: data.results }; },
+                    cache: true
+                },
+                minimumInputLength: 0
+            });
+
+            // Clear Relief Logic
+            $('#btnClearRelief').on('click', function() {
+                $('#modalReliefGuardId').val(null).trigger('change');
+                $('#modalReliefProviderId').val(null).trigger('change');
+                $('.relief-reason-chk').prop('checked', false);
+                $('#modalReliefReason').val('');
+            });
+
+            // Relief Reason Checkbox Logic
+            $('.relief-reason-chk').on('change', function() {
+                var reasons = [];
+                $('.relief-reason-chk:checked').each(function() {
+                    reasons.push($(this).val());
+                });
+                $('#modalReliefReason').val(reasons.join(', '));
+            });
+
             $('#modalPositionId').on('select2:select', function (e) {
                 var element = $(e.params.data.element);
                 var rate = element.data('rate');
@@ -1302,14 +1438,18 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                        '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                        '<div class="text-truncate" style="font-weight: 500;">' + 
+                                        ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
+                                        (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
+                                        (s.reliefReason ? '<span class="relief-reason-tag">[' + s.reliefReason + ']</span>' : '') +
                                         '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (projectSupplierMode ? 
                                             '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
@@ -1434,6 +1574,13 @@
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
 
+                // Clear relief
+                $('#modalReliefGuardId').val(null).trigger('change');
+                $('#modalReliefProviderId').val(null).trigger('change');
+                $('.relief-reason-chk').prop('checked', false);
+                $('#modalReliefReason').val('');
+                $('#modal-guard-tab').tab('show');
+
                 $('#addShiftModal').modal('show');
             });
 
@@ -1474,6 +1621,36 @@
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
 
+                // Load Relief Data
+                var rGuardId = card.data('reliefguardid');
+                var rProvider = card.data('reliefprovider');
+                var rReason = card.data('reliefreason');
+
+                if (rGuardId) {
+                    var rGuardName = (card.find('.relief-badge').length > 0) ? card.find('.text-truncate').text().replace('{R}', '').trim() : "";
+                    var rOption = new Option(rGuardName, rGuardId, true, true);
+                    $('#modalReliefGuardId').append(rOption).trigger('change');
+                } else {
+                    $('#modalReliefGuardId').val(null).trigger('change');
+                }
+
+                if (rProvider) {
+                    var rpOption = new Option(rProvider, rProvider, true, true);
+                    $('#modalReliefProviderId').append(rpOption).trigger('change');
+                } else {
+                    $('#modalReliefProviderId').val(null).trigger('change');
+                }
+
+                $('#modalReliefReason').val(rReason || "");
+                $('.relief-reason-chk').prop('checked', false);
+                if (rReason) {
+                    var reasons = rReason.split(', ');
+                    reasons.forEach(function(r) {
+                        $('.relief-reason-chk[value="' + r + '"]').prop('checked', true);
+                    });
+                }
+                $('#modal-guard-tab').tab('show');
+
                 if (payRateId) {
                     $('#modalPositionId').val(payRateId).trigger('change');
                     var rate = $('#modalPositionId option:selected').data('rate');
@@ -1504,6 +1681,15 @@
                 var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
 
                 var callsignId = $('#modalCallsignId').val();
+
+                // Relief Data
+                var reliefGuardData = $('#modalReliefGuardId').select2('data');
+                var reliefGuardId = (reliefGuardData && reliefGuardData.length > 0) ? reliefGuardData[0].id : null;
+
+                var reliefProviderData = $('#modalReliefProviderId').select2('data');
+                var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
+
+                var reliefReason = $('#modalReliefReason').val();
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -1545,8 +1731,11 @@
                         guardId: guardId,
                         providerName: providerName,
                         payRateId: payRateId,
-                        shiftId: shiftId, // Pass shiftId for updates
-                        callsignId: callsignId
+                        shiftId: shiftId,
+                        callsignId: callsignId,
+                        reliefGuardId: reliefGuardId,
+                        reliefProviderName: reliefProviderName,
+                        reliefReason: reliefReason
                     },
                     success: function (res) {
                         if (res.success) {
