@@ -45,15 +45,19 @@ $(document).ready(function () {
             return;
         }
 
+        var id = $('#hdnEditPayRateGroupId').val();
         $.ajax({
             url: '/Admin/Settings?handler=SavePayRateGroup',
             type: 'POST',
-            data: { Name: name },
+            data: { Id: id, Name: name },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             success: function (result) {
                 if (result.success) {
                     $('#txtNewPayRateGroup').val('');
+                    $('#hdnEditPayRateGroupId').val(0);
+                    $('#btnAddPayRateGroup').text('Add Group').removeClass('btn-primary').addClass('btn-success');
                     loadPayRateGroupsTable();
+                    loadGroupFilterDropdown();
                 } else {
                     alert(result.message);
                 }
@@ -259,7 +263,8 @@ function loadPayRateGroupsTable() {
                 var row = '<tr>' +
                     '<td>' + item.name + '</td>' +
                     '<td class="text-center">' +
-                    '<button onclick="deletePayRateGroup(' + item.id + ')" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>' +
+                    '<button onclick="editPayRateGroup(' + item.id + ', \'' + item.name + '\')" class="btn btn-sm btn-outline-primary mr-2" title="Edit Group"><i class="fa fa-pencil"></i></button>' +
+                    '<button onclick="deletePayRateGroup(' + item.id + ')" class="btn btn-sm btn-outline-danger" title="Delete Group"><i class="fa fa-trash"></i></button>' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -285,6 +290,13 @@ function deletePayRateGroup(id) {
             }
         });
     }
+}
+
+function editPayRateGroup(id, name) {
+    $('#hdnEditPayRateGroupId').val(id);
+    $('#txtNewPayRateGroup').val(name);
+    $('#btnAddPayRateGroup').text('Update Group').removeClass('btn-success').addClass('btn-primary');
+    $('#txtNewPayRateGroup').focus();
 }
 
 function loadGroupFilterDropdown() {
