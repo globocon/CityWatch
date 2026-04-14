@@ -292,6 +292,12 @@
                 </ul>
             </div>
             <div class="card-body pt-0">
+                <div class="alert alert-info mt-3 mb-0 py-2 d-flex align-items-center" style="border-radius: 8px; border: 1px dashed #667eea; background: #f8faff;">
+                    <i class="fa fa-info-circle text-primary mr-3" style="font-size: 1.2rem;"></i>
+                    <span class="text-dark" style="font-size: 0.9rem;">
+                        <strong>Quick Tip:</strong> To verify your cover layout, click the <i class="fa fa-eye text-primary mx-1"></i> <strong>Preview</strong> button in the table below after uploading.
+                    </span>
+                </div>
                 <div class="tab-content" id="settingsSubTabContent">
                     <div class="tab-pane fade show active" id="settings-project" role="tabpanel">
                         <div class="table-responsive">
@@ -503,6 +509,40 @@
                         <button type="button" class="btn btn-outline-success btn-block btn-download-weeks" data-weeks="12" style="border-radius: 8px; font-weight: 500;">12 Weeks</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Cover Modal -->
+    <div class="modal fade" id="previewCoverModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 15px 50px rgba(0,0,0,0.3);">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title"><i class="fa fa-eye mr-2"></i>Live Layout Preview (Demo)</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0" style="height: 75vh; background: #525659;">
+                    <iframe id="previewCoverFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+                <div class="modal-footer bg-light">
+                    <div class="mr-auto text-muted small"><i class="fa fa-info-circle mr-1"></i>This shows a sample roster page appended to your cover.</div>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close Preview</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Processing Notification -->
+    <div id="uploadProcessingOverlay" style="display:none; position: fixed; top: 20px; right: 20px; z-index: 10000; background: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-left: 5px solid #28a745;">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border text-success mr-3" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div>
+                <strong class="text-dark">Processing PDF...</strong>
+                <div class="text-muted small">Optimizing and preparing preview</div>
             </div>
         </div>
     </div>
@@ -2259,6 +2299,7 @@
                             '<td class="text-right">' +
                             '<div class="btn-group">' +
                             '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="project" data-id="' + p.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
+                            (p.coverFileName ? '<button class="btn btn-outline-primary btn-sm btn-preview-cover" data-type="project" data-id="' + p.id + '" title="Preview Demo"><i class="fa fa-eye mr-1"></i>Preview</button>' : '') +
                             (p.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="project" data-id="' + p.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
                             (p.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="project" data-id="' + p.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
                             '</div>' +
@@ -2281,6 +2322,7 @@
                             '<td class="text-right">' +
                             '<div class="btn-group">' +
                             '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="group" data-id="' + g.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
+                            (g.coverFileName ? '<button class="btn btn-outline-primary btn-sm btn-preview-cover" data-type="group" data-id="' + g.id + '" title="Preview Demo"><i class="fa fa-eye mr-1"></i>Preview</button>' : '') +
                             (g.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="group" data-id="' + g.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
                             (g.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="group" data-id="' + g.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
                             '</div>' +
@@ -2308,6 +2350,8 @@
                     return;
                 }
 
+                $('#uploadProcessingOverlay').fadeIn();
+
                 var formData = new FormData();
                 formData.append('id', activeUploadId);
                 formData.append('file', file);
@@ -2322,12 +2366,20 @@
                     processData: false,
                     contentType: false,
                     success: function (res) {
+                        $('#uploadProcessingOverlay').fadeOut();
                         if (res.success) {
                             if (activeUploadType === 'project') loadSettingsProjects();
                             else loadSettingsGroups();
+
+                            // Automatically trigger preview
+                            showCoverPreview(activeUploadType, activeUploadId);
                         } else {
                             alert(res.message);
                         }
+                    },
+                    error: function() {
+                        $('#uploadProcessingOverlay').fadeOut();
+                        alert('Upload failed. Please try again.');
                     }
                 });
                 $(this).val('');
@@ -2360,6 +2412,18 @@
                 var id = $(this).data('id');
                 window.open('/roster/Booking?handler=DownloadCover&type=' + type + '&id=' + id, '_blank');
             });
+
+            $(document).on('click', '.btn-preview-cover', function() {
+                var type = $(this).data('type');
+                var id = $(this).data('id');
+                showCoverPreview(type, id);
+            });
+
+            function showCoverPreview(type, id) {
+                var url = '/roster/Booking?handler=PreviewCover&type=' + type + '&id=' + id + '&t=' + new Date().getTime();
+                $('#previewCoverFrame').attr('src', url);
+                $('#previewCoverModal').modal('show');
+            }
 
         });
     </script>

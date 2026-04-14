@@ -932,5 +932,12 @@ namespace CityWatch.Web.Pages.roster
             byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             return File(fileBytes, "application/pdf", fileName);
         }
+
+        public async Task<IActionResult> OnGetPreviewCover(string type, int id)
+        {
+            byte[] fileBytes = await _rosterReportGenerator.GeneratePreviewRosterPdfAsync(type, id);
+            if (fileBytes == null) return NotFound();
+            return File(fileBytes, "application/pdf");
+        }
     }
 }
