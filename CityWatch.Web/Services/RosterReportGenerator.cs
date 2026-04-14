@@ -72,13 +72,14 @@ namespace CityWatch.Web.Services
 
             var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
 
-            using (var stream = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
-                var writer = new PdfWriter(stream);
-                var pdf = new PdfDocument(writer);
-                pdf.SetDefaultPageSize(PageSize.A4.Rotate());
-                var document = new Document(pdf);
-                document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var document = new Document(pdf);
+                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
                 bool firstProject = true;
 
@@ -273,7 +274,8 @@ namespace CityWatch.Web.Services
                 }
 
                 document.Close();
-                return stream.ToArray();
+                }
+                return ms.ToArray();
             }
         }
 
@@ -298,13 +300,14 @@ namespace CityWatch.Web.Services
                 .Include(x => x.PayRate)
                 .ToListAsync();
 
-            using (var stream = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
-                var writer = new PdfWriter(stream);
-                var pdf = new PdfDocument(writer);
-                pdf.SetDefaultPageSize(PageSize.A4.Rotate());
-                var document = new Document(pdf);
-                document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var document = new Document(pdf);
+                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
 
                 var groupName = group.Name ?? "Unknown Project";
 
@@ -500,7 +503,8 @@ namespace CityWatch.Web.Services
                 }
 
                 document.Close();
-                return stream.ToArray();
+                }
+                return ms.ToArray();
             }
         }
 
