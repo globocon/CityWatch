@@ -44,6 +44,15 @@ namespace CityWatch.Data.Models
         [ForeignKey("CallsignId")]
         public virtual IncidentReportField Callsign { get; set; }
 
+        public int? ReliefGuardId { get; set; }
+        
+        [ForeignKey("ReliefGuardId")]
+        public virtual Guard ReliefGuard { get; set; }
+
+        public string ReliefProviderName { get; set; }
+
+        public string ReliefReason { get; set; }
+
         public bool IsDeleted { get; set; }
     }
 }

@@ -122,6 +122,7 @@ namespace CityWatch.Web.Pages.roster
             var schedules = await _context.RosterSchedules
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
                 .Include(x => x.PayRate)
                 .ToListAsync();
@@ -153,7 +154,10 @@ namespace CityWatch.Web.Pages.roster
                             callsignName = s.Callsign?.Name ?? "",
                             status = (int)s.Status,
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                            reliefGuardId = s.ReliefGuardId,
+                            reliefGuardName = s.ReliefGuardId.HasValue ? s.ReliefGuard.Name : s.ReliefProviderName,
+                            reliefReason = s.ReliefReason
                         })
                         .ToList();
                 }).ToList()
@@ -220,7 +224,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId = null, string reliefProviderName = null, string reliefReason = null)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -278,7 +282,10 @@ namespace CityWatch.Web.Pages.roster
                 existing.ProviderName = providerName;
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
-
+                existing.ReliefGuardId = reliefGuardId;
+                existing.ReliefProviderName = reliefProviderName;
+                existing.ReliefReason = reliefReason;
+                
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true, id = existing.Id });
             }
@@ -294,7 +301,10 @@ namespace CityWatch.Web.Pages.roster
                     ProviderName = providerName,
                     Status = RosterShiftStatus.Pushed,
                     PayRateId = payRateId,
-                    CallsignId = callsignId
+                    CallsignId = callsignId,
+                    ReliefGuardId = reliefGuardId,
+                    ReliefProviderName = reliefProviderName,
+                    ReliefReason = reliefReason
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -491,6 +501,7 @@ namespace CityWatch.Web.Pages.roster
             var schedules = await _context.RosterSchedules
                 .Where(x => projectIds.Contains(x.RosterGroupId) && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
                 .Include(x => x.PayRate)
                 .ToListAsync();
@@ -534,7 +545,10 @@ namespace CityWatch.Web.Pages.roster
                                 callsignName = s.Callsign?.Name ?? "",
                                 status = (int)s.Status,
                                 durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuardId.HasValue ? s.ReliefGuard.Name : s.ReliefProviderName,
+                                reliefReason = s.ReliefReason
                             })
                             .ToList();
                     }).ToList()

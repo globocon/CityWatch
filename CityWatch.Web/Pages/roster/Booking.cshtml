@@ -286,31 +286,85 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body pb-0">
+                    <ul class="nav nav-tabs nav-justified mb-3" id="shiftTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="guard-tab" data-toggle="tab" href="#guard-pane" role="tab" style="font-weight:bold;">Guard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="relief-tab" data-toggle="tab" href="#relief-pane" role="tab" style="font-weight:bold; color: #6f42c1;">Relief</a>
+                        </li>
+                    </ul>
+                    
                     <input type="hidden" id="modalShiftId" />
                     <input type="hidden" id="modalSiteId" />
                     <input type="hidden" id="modalDayIndex" />
-                    <div class="form-group">
-                        <label>Guard</label>
-                        <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+
+                    <div class="tab-content" id="shiftTabContent">
+                        <!-- Regular Guard Tab -->
+                        <div class="tab-pane fade show active" id="guard-pane" role="tabpanel">
+                            <div class="form-group">
+                                <label>Guard</label>
+                                <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Provider (Subcontractor)</label>
+                                <select id="modalProviderId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Position (or Callsign)</label>
+                                <select id="modalCallsignId" class="form-control" style="width: 100%">
+                                    <option value="">Select Callsign (Optional)</option>
+                                    @if (Model.CallsignList != null)
+                                    {
+                                        foreach (var callsign in Model.CallsignList)
+                                        {
+                                            <option value="@callsign.Id">@callsign.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Relief Guard Tab -->
+                        <div class="tab-pane fade" id="relief-pane" role="tabpanel">
+                            <div class="form-group">
+                                <label>Relief Guard</label>
+                                <select id="modalReliefGuardId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Provider (Subcontractor)</label>
+                                <select id="modalReliefProviderId" class="form-control" style="width: 100%"></select>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label class="d-block">Reason</label>
+                                <div class="d-flex flex-wrap" style="gap: 15px;">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input chk-relief-reason" id="reasonAL" value="AL / Holidays">
+                                        <label class="custom-control-label" for="reasonAL">AL / Holidays</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input chk-relief-reason" id="reasonRDO" value="RDO">
+                                        <label class="custom-control-label" for="reasonRDO">RDO</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input chk-relief-reason" id="reasonSick" value="Sick">
+                                        <label class="custom-control-label" for="reasonSick">Sick</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input chk-relief-reason" id="reasonCancelled" value="Cancelled">
+                                        <label class="custom-control-label" for="reasonCancelled">Cancelled</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearRelief"><i class="fa fa-times mr-1"></i> Clear Relief</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Provider (Subcontractor)</label>
-                        <select id="modalProviderId" class="form-control" style="width: 100%"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Position (or Callsign)</label>
-                        <select id="modalCallsignId" class="form-control" style="width: 100%">
-                            <option value="">Select Callsign (Optional)</option>
-                            @if (Model.CallsignList != null)
-                            {
-                                foreach (var callsign in Model.CallsignList)
-                                {
-                                    <option value="@callsign.Id">@callsign.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
+
+                    <hr />
+
                     <div class="form-group row">
                         <div class="col-6">
                             <label>Start Time</label>
@@ -856,6 +910,32 @@
             cursor: default;
         }
 
+        /* Relief Shift Styling */
+        .shift-relief {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1becd 100%) !important;
+            border-left: 4px solid #6f42c1 !important;
+            box-shadow: 0 2px 4px rgba(111, 66, 193, 0.2) !important;
+        }
+        .shift-relief .guard-icon {
+            color: #6f42c1 !important;
+        }
+        .relief-badge {
+            background-color: #6f42c1;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-right: 3px;
+            text-transform: uppercase;
+        }
+        .relief-reason-tag {
+            color: #6f42c1;
+            font-style: italic;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
     </style>
 </div>
 
@@ -1145,6 +1225,54 @@
                 dropdownParent: $('#addShiftModal')
             });
 
+            // Relief Guard Search initialization
+            $('#modalReliefGuardId').select2({
+                placeholder: 'Select Relief Guard (Optional)',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchGuards',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            });
+
+            // Relief Provider Search initialization
+            $('#modalReliefProviderId').select2({
+                placeholder: 'Select Relief Provider (Optional)',
+                theme: 'bootstrap4',
+                allowClear: true,
+                dropdownParent: $('#addShiftModal'),
+                ajax: {
+                    url: '/roster/Booking?handler=SearchProviders',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            });
+
+            $('#btnClearRelief').on('click', function() {
+                $('#modalReliefGuardId').val(null).trigger('change');
+                $('#modalReliefProviderId').val(null).trigger('change');
+                $('.chk-relief-reason').prop('checked', false);
+            });
+
             $('#modalPositionId').on('select2:select', function (e) {
                 var element = $(e.params.data.element);
                 var rate = element.data('rate');
@@ -1193,10 +1321,18 @@
                                 var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
                                 rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
-                                daySchedules.forEach(function (s) {
+                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
+
+                                    var isRelief = s.reliefGuardId || s.reliefGuardName;
+                                    if (isRelief) statusClass += ' shift-relief';
+
+                                    var guardDisplayName = s.guardName;
+                                    if (isRelief) {
+                                        guardDisplayName = '<span class="relief-badge">{R}</span>' + (s.reliefGuardName || 'Relief');
+                                    }
 
                                     var shiftValue = s.durationHours;
                                     if (projectFinancialMode) {
@@ -1205,10 +1341,11 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                    rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                     rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefprovider="' + (s.reliefGuardName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                        '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                        '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + guardDisplayName + '</div>' +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
@@ -1222,6 +1359,7 @@
                                             '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
                                             ''
                                         ) +
+                                        (isRelief && s.reliefReason ? '<div class="relief-reason-tag">[' + s.reliefReason + ']</div>' : '') +
                                         (!projectSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
                                         (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
                                         (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
@@ -1337,6 +1475,14 @@
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
 
+                // Clear Relief Fields
+                $('#modalReliefGuardId').val(null).trigger('change');
+                $('#modalReliefProviderId').val(null).trigger('change');
+                $('.chk-relief-reason').prop('checked', false);
+
+                // Reset tabs to Guard
+                $('#shiftTabs a[href="#guard-pane"]').tab('show');
+
                 $('#addShiftModal').modal('show');
             });
 
@@ -1388,6 +1534,39 @@
                     $('#modalPayRate').val('');
                 }
 
+                // Populate Relief Fields
+                var reliefGuardId = card.data('reliefguardid');
+                var reliefProvider = card.data('reliefprovider');
+                var reliefReason = card.data('reliefreason') || "";
+
+                if (reliefGuardId) {
+                    var rgOption = new Option(reliefProvider || 'Relief Guard', reliefGuardId, true, true);
+                    $('#modalReliefGuardId').append(rgOption).trigger('change');
+                    // If relief exists, show relief tab
+                    $('#shiftTabs a[href="#relief-pane"]').tab('show');
+                } else {
+                    $('#modalReliefGuardId').val(null).trigger('change');
+                    $('#shiftTabs a[href="#guard-pane"]').tab('show');
+                }
+
+                if (reliefProvider && !reliefGuardId) {
+                    var rpOption = new Option(reliefProvider, reliefProvider, true, true);
+                    $('#modalReliefProviderId').append(rpOption).trigger('change');
+                } else {
+                    $('#modalReliefProviderId').val(null).trigger('change');
+                }
+
+                // Set Reasons
+                $('.chk-relief-reason').prop('checked', false);
+                if (reliefReason) {
+                    var selectedReasons = reliefReason.split(',').map(s => s.trim());
+                    $('.chk-relief-reason').each(function() {
+                        if (selectedReasons.indexOf($(this).val()) !== -1) {
+                            $(this).prop('checked', true);
+                        }
+                    });
+                }
+
                 $('#addShiftModal').modal('show');
             };
 
@@ -1410,6 +1589,19 @@
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
+
+                // Relief Data
+                var reliefGuardData = $('#modalReliefGuardId').select2('data');
+                var reliefGuardId = (reliefGuardData && reliefGuardData.length > 0) ? reliefGuardData[0].id : null;
+
+                var reliefProviderData = $('#modalReliefProviderId').select2('data');
+                var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
+
+                var reliefReasons = [];
+                $('.chk-relief-reason:checked').each(function() {
+                    reliefReasons.push($(this).val());
+                });
+                var reliefReason = reliefReasons.join(', ');
 
                 // Client-side Validation: Time range check (00:01 - 23:59)
                 if (startTime === '00:00' || endTime === '00:00') {
@@ -1449,7 +1641,10 @@
                         providerName: providerName,
                         payRateId: payRateId,
                         shiftId: shiftId, // Pass shiftId for updates
-                        callsignId: callsignId
+                        callsignId: callsignId,
+                        reliefGuardId: reliefGuardId,
+                        reliefProviderName: reliefProviderName,
+                        reliefReason: reliefReason
                     },
                     success: function (res) {
                         if (res.success) {

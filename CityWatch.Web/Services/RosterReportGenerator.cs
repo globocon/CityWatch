@@ -102,6 +102,7 @@ namespace CityWatch.Web.Services
                     var schedules = await _context.RosterSchedules
                         .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                         .Include(x => x.Guard)
+                        .Include(x => x.ReliefGuard)
                         .Include(x => x.Callsign)
                         .Include(x => x.PayRate)
                         .ToListAsync();
@@ -202,16 +203,32 @@ namespace CityWatch.Web.Services
                                 var dayCell = new Cell().SetPadding(2);
                                 foreach (var shift in dayShifts)
                                 {
-                                    var statusColor = GetStatusColor(shift.Status);
+                                    bool isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
+                                    var statusColor = isRelief ? new DeviceRgb(243, 229, 245) : GetStatusColor(shift.Status);
+                                    
                                     var guardName = shift.GuardId.HasValue ? shift.Guard.Name : shift.ProviderName;
+                                    if (isRelief) {
+                                        guardName = "{R} " + (shift.ReliefGuardId.HasValue ? shift.ReliefGuard.Name : shift.ReliefProviderName);
+                                    }
+
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                     var timeRangeStr = $"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm}";
 
                                     dailyTotals[i] += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
                                     weeklyTotal += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
 
-                                    var shiftBlock = new Div().SetBackgroundColor(statusColor).SetMarginBottom(2).SetPadding(2).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
+                                    var shiftBlock = new Div()
+                                        .SetBackgroundColor(statusColor)
+                                        .SetMarginBottom(2)
+                                        .SetPadding(2)
+                                        .SetBorder(new SolidBorder(isRelief ? new DeviceRgb(111, 66, 193) : ColorConstants.BLACK, 0.5f));
+
                                     shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetBold());
+                                    
+                                    if (isRelief && !string.IsNullOrEmpty(shift.ReliefReason)) {
+                                        shiftBlock.Add(new Paragraph("[" + shift.ReliefReason + "]").SetFontSize(6).SetFontColor(new DeviceRgb(111, 66, 193)).SetItalic());
+                                    }
+
                                     shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
                                     
                                     if (includeSuppliers)
@@ -276,6 +293,7 @@ namespace CityWatch.Web.Services
             var schedules = await _context.RosterSchedules
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                 .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
                 .Include(x => x.PayRate)
                 .ToListAsync();
@@ -392,11 +410,17 @@ namespace CityWatch.Web.Services
                             var dayCell = new Cell().SetPadding(2);
                             foreach (var shift in dayShifts)
                             {
-                                var statusColor = GetStatusColor(shift.Status);
+                                bool isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
+                                var statusColor = isRelief ? new DeviceRgb(243, 229, 245) : GetStatusColor(shift.Status);
+                                
                                 var guardName = shift.GuardId.HasValue ? shift.Guard.Name : shift.ProviderName;
+                                if (isRelief) {
+                                    guardName = "{R} " + (shift.ReliefGuardId.HasValue ? shift.ReliefGuard.Name : shift.ReliefProviderName);
+                                }
+
                                 var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                 var timeRangeStr = $"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm}";
-
+                                
                                 dailyTotals[i] += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
                                 weeklyTotal += includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
 
@@ -404,9 +428,13 @@ namespace CityWatch.Web.Services
                                     .SetBackgroundColor(statusColor)
                                     .SetMarginBottom(2)
                                     .SetPadding(2)
-                                    .SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
+                                    .SetBorder(new SolidBorder(isRelief ? new DeviceRgb(111, 66, 193) : ColorConstants.BLACK, 0.5f));
 
                                 shiftBlock.Add(new Paragraph(guardName ?? "Unknown").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetBold());
+                                
+                                if (isRelief && !string.IsNullOrEmpty(shift.ReliefReason)) {
+                                    shiftBlock.Add(new Paragraph("[" + shift.ReliefReason + "]").SetFontSize(6).SetFontColor(new DeviceRgb(111, 66, 193)).SetItalic());
+                                }
                                 
                                 // Row 2: Time Range
                                 shiftBlock.Add(new Paragraph($"{timeRangeStr} ({Math.Round(duration, 2)}h)").SetFontSize(5.5f));
