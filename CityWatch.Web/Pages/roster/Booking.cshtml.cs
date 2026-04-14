@@ -649,6 +649,34 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "Project not found in group." });
         }
 
+        public async Task<IActionResult> OnPostCheckFutureData(int groupId, DateTime startDate, string option)
+        {
+            try
+            {
+                var endDate = startDate.AddDays(7);
+                var hasSourceData = await _context.RosterSchedules
+                    .AnyAsync(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate);
+
+                DateTime copyUntil;
+                if (option == "NextWeek") copyUntil = startDate.AddDays(14);
+                else if (option == "Month") copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
+                else if (option == "Year") copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+                else return new JsonResult(new { success = false, message = "Invalid option." });
+
+                var targetStart = startDate.AddDays(7);
+                var hasData = await _context.RosterSchedules
+                    .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
+                    .AnyAsync();
+
+                return new JsonResult(new { success = true, hasSourceData, hasData });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking future roster data");
+                return new JsonResult(new { success = false, message = "An error occurred checking future data." });
+            }
+        }
+
         public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
         {
             try
