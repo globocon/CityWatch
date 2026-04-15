@@ -1428,6 +1428,12 @@
                 $('#modalPayRate').val('');
             });
 
+            function truncateName(name, maxLength) {
+                if (!name) return "";
+                if (name.length <= maxLength) return name;
+                return name.substring(0, maxLength - 2) + "..";
+            }
+
             function loadRoster() {
                 console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
@@ -1479,17 +1485,18 @@
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
                                         '<div class="text-truncate" style="font-weight: 500;">' + 
                                         ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                        (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
+                                        (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                        (s.reliefReason ? ' <span style="font-size: 8.5px; font-style: italic; opacity: 0.9; font-weight: 400; margin-left: 4px;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 8) + '</span>' : '') +
+                                        '</div>' +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
-                                        (s.reliefReason ? '<span class="relief-reason-tag">[' + s.reliefReason + ']</span>' : '') +
-                                        '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                        '<div class="shift-license">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
                                         (projectSupplierMode ? 
                                             '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                             ''
@@ -2353,15 +2360,20 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                            'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                            'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                            'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                             'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                            '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
+                                            '<div class="text-truncate" style="font-weight: 500;">' + 
+                                            ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
+                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                            (s.reliefReason ? ' <span style="font-size: 8.5px; font-style: italic; opacity: 0.9; font-weight: 400; margin-left: 4px;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 8) + '</span>' : '') +
+                                            '</div>' +
                                             '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
                                                 '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                                 '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                             '</div>' +
-                                            '<div class="shift-license">' + s.guardLicense + '</div>' +
+                                            '<div class="shift-license">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
                                             (groupSupplierMode ? 
                                                 '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                                 ''

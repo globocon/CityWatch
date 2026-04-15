@@ -384,15 +384,30 @@ namespace CityWatch.Web.Services
                                         .SetBorder(new SolidBorder(borderColor, 0.5f));
 
                                     var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
-                                    if (isRelief) guardName = "{R} " + guardName;
+                                    if (isRelief)
+                                    {
+                                        guardName = "{R} " + guardName;
+                                        if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                        {
+                                            var replacedName = shift.Guard?.Name ?? shift.ProviderName ?? "";
+                                            if (!string.IsNullOrEmpty(replacedName))
+                                            {
+                                                guardName += " [" + shift.ReliefReason + "] " + Truncate(replacedName, 8);
+                                            }
+                                            else
+                                            {
+                                                guardName += " [" + shift.ReliefReason + "]";
+                                            }
+                                        }
+                                    }
 
                                     shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor));
-                                    shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
+                                    
+                                    // Add License Number
+                                    var license = (shift.ReliefGuardId.HasValue ? shift.ReliefGuard?.SecurityNo : shift.Guard?.SecurityNo) ?? "N/A";
+                                    shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFontColor(fontColor).SetMarginTop(-2));
 
-                                    if (!string.IsNullOrEmpty(shift.ReliefReason))
-                                    {
-                                        shiftBlock.Add(new Paragraph("[" + shift.ReliefReason + "]").SetFontSize(5f).SetItalic().SetFontColor(new DeviceRgb(111, 66, 193)));
-                                    }
+                                    shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
 
                                     if (includeSuppliers)
                                     {
@@ -513,6 +528,11 @@ namespace CityWatch.Web.Services
                 case CityWatch.Data.Enums.RosterShiftStatus.Declined: return new DeviceRgb(248, 215, 218); // Red-ish
                 default: return new DeviceRgb(255, 224, 178); // Orange
             }
+        }
+        private string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength - 2) + "..";
         }
     }
 }

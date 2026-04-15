@@ -163,6 +163,7 @@ namespace CityWatch.Web.Pages.roster
                             payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
                             reliefGuardId = s.ReliefGuardId,
                             reliefGuardName = s.ReliefGuard?.Name ?? "",
+                            reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                             reliefProviderName = s.ReliefProviderName ?? "",
                             reliefReason = s.ReliefReason ?? ""
                         })
@@ -584,6 +585,7 @@ namespace CityWatch.Web.Pages.roster
                                 payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
                                 reliefGuardId = s.ReliefGuardId,
                                 reliefGuardName = s.ReliefGuard?.Name ?? "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? ""
                             })
