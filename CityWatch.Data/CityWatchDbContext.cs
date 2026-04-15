@@ -115,6 +115,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteLogBook> ClientSiteLogBooks { get; set; }
         public DbSet<GuardLog> GuardLogs { get; set; }
         public DbSet<Guard> Guards { get; set; }
+        public DbSet<GuardUnavailability> GuardUnavailabilities { get; set; }
         public DbSet<ClientSiteKpiNote> ClientSiteKpiNotes { get; set; }
         public DbSet<RCActionList> RCActionList { get; set; }
         public DbSet<ClientSiteSmartWand> ClientSiteSmartWands { get; set; }
