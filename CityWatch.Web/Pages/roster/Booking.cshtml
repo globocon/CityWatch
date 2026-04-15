@@ -639,7 +639,9 @@
         }
 
         .ph-highlight {
-            background-color: #FFF9C4 !important; /* Light Yellow for Public Holidays */
+            background: #FFF9C4 !important; /* Forces yellow background, overriding gradients */
+            background-color: #FFF9C4 !important;
+            color: #333 !important; /* Ensure text is dark and readable on yellow */
         }
 
             #roster_grid thead th, #binder_grid thead th {
