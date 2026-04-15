@@ -55,6 +55,15 @@ namespace CityWatch.Web.Pages.roster
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
         public string ActiveTab { get; set; }
+        public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
+
+        public class PublicHolidayDayInfo
+        {
+            public DateTime Date { get; set; }
+            public bool IsPublicHoliday { get; set; }
+            public List<string> States { get; set; }
+            public string Reasons { get; set; }
+        }
 
         public void OnGet(DateTime? startDate, int? groupId, int? binderId, string tab)
         {
@@ -101,6 +110,84 @@ namespace CityWatch.Web.Pages.roster
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = StartDate < firstDayOfCurrentMonth;
 
+            PopulateWeeklyHolidays();
+        }
+
+        private void PopulateWeeklyHolidays()
+        {
+            var holidays = _context.BroadcastBannerCalendarEvents
+                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= StartDate && x.StartDate <= EndDate)
+                .ToList();
+
+            var eventIds = holidays.Select(x => x.id).ToList();
+            var holidayStates = _context.PublicHolidayStates
+                .Where(x => eventIds.Contains(x.CalendarEventId) && !x.IsDeleted)
+                .ToList();
+
+            WeeklyHolidays = new List<PublicHolidayDayInfo>();
+            for (int i = 0; i < 7; i++)
+            {
+                var date = StartDate.AddDays(i).Date;
+                var dayHolidays = holidays.Where(h => date >= h.StartDate.Date && date <= h.ExpiryDate.Date).ToList();
+                
+                var states = new List<string>();
+                var reasonsList = new List<string>();
+                bool isPh = false;
+                
+                foreach (var h in dayHolidays)
+                {
+                    var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
+                    var reasonLabel = h.TextMessage;
+                    if (hStates.Count > 0)
+                    {
+                        reasonLabel += " (" + string.Join(", ", hStates) + ")";
+                    }
+                    else
+                    {
+                        states.Add("ALL");
+                    }
+                    
+                    reasonsList.Add(reasonLabel);
+                    isPh = true;
+                    states.AddRange(hStates);
+                }
+
+                WeeklyHolidays.Add(new PublicHolidayDayInfo
+                {
+                    Date = date,
+                    IsPublicHoliday = isPh,
+                    States = states.Distinct().ToList(),
+                    Reasons = string.Join("; ", reasonsList)
+                });
+            }
+        }
+
+        private bool[] GetPublicHolidayFlags(string siteState, DateTime start)
+        {
+            var flags = new bool[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = start.AddDays(i).Date;
+                
+                // Weekend check: Saturday (5) or Sunday (6) if week starts on Mon
+                // Actually, logic is Mon-Fri only for PH highlight
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    flags[i] = false;
+                    continue;
+                }
+
+                var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    // Applies if "ALL" is in states or if site's state is in states
+                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Contains(siteState)))
+                    {
+                        flags[i] = true;
+                    }
+                }
+            }
+            return flags;
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -138,6 +225,7 @@ namespace CityWatch.Web.Pages.roster
                 siteId = gs.ClientSiteId,
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>
                 {
                     var targetDate = startDate.AddDays(dayOffset);
@@ -584,6 +672,7 @@ namespace CityWatch.Web.Pages.roster
                     clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
                     projectId = bp.RosterGroupId,
                     projectName = bp.RosterGroup.Name,
+                    isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
                     days = Enumerable.Range(0, 7).Select(dayOffset =>
                     {
                         var targetDate = startDate.AddDays(dayOffset);

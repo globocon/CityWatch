@@ -115,8 +115,14 @@
                                 @for (int i = 0; i < 7; i++)
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">
-                                        <div>@currentDay.ToString("ddd dd MMM")</div>
+                                    var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
+                                    var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+
+                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(anyPh ? ph.Reasons : "")">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            @if (anyPh) { <i class="fa fa-sun-o mr-1 text-warning" style="font-size: 0.8rem;"></i> }
+                                            <div>@currentDay.ToString("ddd dd MMM")</div>
+                                        </div>
                                         <div>@currentDay.ToString("yyyy")</div>
                                     </th>
                                 }
@@ -240,7 +246,10 @@
                                 @for (int i = 0; i < 7; i++)
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">
+                                    var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+
+                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")">
                                         <div>@currentDay.ToString("ddd dd MMM")</div>
                                         <div>@currentDay.ToString("yyyy")</div>
                                     </th>
@@ -628,6 +637,10 @@
             table-layout: fixed;
             width: 100%;
             /* overflow: hidden; Removed to allow tooltips to show */
+        }
+
+        .ph-highlight {
+            background-color: #FFF9C4 !important; /* Light Yellow for Public Holidays */
         }
 
             #roster_grid thead th, #binder_grid thead th {
@@ -1486,7 +1499,8 @@
                                 cellDate.setDate(cellDate.getDate() + index);
                                 var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
-                                rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
+                                    var phClass = (row.isPublicHoliday && row.isPublicHoliday[index]) ? "ph-highlight" : "";
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '">';
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
@@ -2356,8 +2370,9 @@
                                     var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
                                     var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                    var phClass = (site.isPublicHoliday && site.isPublicHoliday[index]) ? "ph-highlight" : "";
 
-                                    rowHtml += '<td class="day-cell" data-site="' + site.siteId + '" data-day="' + index + '">';
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + site.siteId + '" data-day="' + index + '">';
                                     daySchedules.forEach(function (s) {
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
