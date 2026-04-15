@@ -1485,8 +1485,8 @@ namespace CityWatch.Data.Providers
         {
             conflict = _context.GuardUnavailabilities
                 .FirstOrDefault(u => u.GuardId == guardId && 
-                                     u.FromDate <= end && 
-                                     u.ToDate >= start);
+                                     u.FromDate.Date <= end.Date && 
+                                     u.ToDate.Date >= start.Date);
             return conflict != null;
         }
     }

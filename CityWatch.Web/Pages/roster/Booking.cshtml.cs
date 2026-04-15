@@ -279,26 +279,26 @@ namespace CityWatch.Web.Pages.roster
 
                 // Check Guard Unavailability
                 var unavailGuard = await _context.GuardUnavailabilities
-                    .Where(u => u.GuardId == guardId && start <= u.ToDate && end >= u.FromDate)
+                    .Where(u => u.GuardId == guardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
                 
                 if (unavailGuard != null)
                 {
                     var guard = await _context.Guards.FindAsync(guardId);
-                    return new JsonResult(new { success = false, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMM yy} – {unavailGuard.ToDate:dd MMM yy}). Please select another guard or adjust their HR records." });
+                    return new JsonResult(new { success = false, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
                 }
             }
 
             if (reliefGuardId.HasValue)
             {
                 var unavailRelief = await _context.GuardUnavailabilities
-                    .Where(u => u.GuardId == reliefGuardId && start <= u.ToDate && end >= u.FromDate)
+                    .Where(u => u.GuardId == reliefGuardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
 
                 if (unavailRelief != null)
                 {
                     var guard = await _context.Guards.FindAsync(reliefGuardId);
-                    return new JsonResult(new { success = false, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMM yy} – {unavailRelief.ToDate:dd MMM yy}). Please select another guard or adjust their HR records." });
+                    return new JsonResult(new { success = false, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
                 }
             }
 

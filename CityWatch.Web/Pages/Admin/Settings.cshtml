@@ -6003,6 +6003,11 @@
         $(document).ready(function () {
             let currentGuardId = 0;
 
+            // Set min dates to today
+            let today = new Date().toLocaleDateString('en-CA'); // Gets YYYY-MM-DD in local time
+            $('#unav_From').attr('min', today);
+            $('#unav_To').attr('min', today);
+
             $('#addGuardModal').on('shown.bs.modal', function () {
                 var gid = $('#Guard_Id').val();
                 if (gid && gid > 0) {
@@ -6068,9 +6073,21 @@
                         return;
                     }
                     data.forEach(function (lbl) {
-                        let f = new Date(lbl.fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-                        let t = new Date(lbl.toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-                        tbody.append('<tr><td>' + f + '</td><td>' + t + '</td><td>' + lbl.reason + '</td><td class="text-center"><button class="btn btn-sm btn-danger btn-del-leave" data-id="' + lbl.id + '"><i class="fa fa-trash"></i></button></td></tr>');
+                        let startDate = new Date(lbl.fromDate);
+                        let endDate = new Date(lbl.toDate);
+                        
+                        let f = startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                        let t = endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                        
+                        // Calculate duration
+                        startDate.setHours(0,0,0,0);
+                        endDate.setHours(0,0,0,0);
+                        let diffTime = Math.abs(endDate - startDate);
+                        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        let durationMsg = diffDays + (diffDays === 1 ? ' Day' : ' Days');
+                        let reasonWithDuration = lbl.reason + ' <small class="text-muted">(' + durationMsg + ')</small>';
+
+                        tbody.append('<tr><td>' + f + '</td><td>' + t + '</td><td>' + reasonWithDuration + '</td><td class="text-center"><button class="btn btn-sm btn-danger btn-del-leave" data-id="' + lbl.id + '"><i class="fa fa-trash"></i></button></td></tr>');
                     });
                 });
             }

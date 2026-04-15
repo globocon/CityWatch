@@ -791,6 +791,11 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Leave saved successfully.";
             try
             {
+                if (fromDate.Date < DateTime.Today)
+                {
+                    return new JsonResult(new { success = false, message = "Leaves cannot be added for past dates." });
+                }
+
                 if (fromDate > toDate)
                 {
                     return new JsonResult(new { success = false, message = "'From Date' must be before or equal to 'To Date'." });
@@ -799,7 +804,7 @@ namespace CityWatch.Web.Pages.Admin
                 // Check overlap
                 if (_guardDataProvider.IsGuardUnavailable(guardId, fromDate, toDate, out var conflict))
                 {
-                    return new JsonResult(new { success = false, message = "Guard is already marked unavailable during this period: " + conflict.FromDate.ToString("dd MMM yyyy") + " to " + conflict.ToDate.ToString("dd MMM yyyy") });
+                    return new JsonResult(new { success = false, message = "Guard is already marked unavailable during this period: " + conflict.FromDate.ToString("dd MMMM yyyy") + " to " + conflict.ToDate.ToString("dd MMMM yyyy") });
                 }
 
                 _guardDataProvider.SaveGuardUnavailability(new GuardUnavailability
