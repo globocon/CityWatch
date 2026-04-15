@@ -401,12 +401,16 @@
                                         <label class="custom-control-label" for="chkSick">Sick</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mr-3 mb-1">
-                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkHoliday" value="Holiday">
-                                        <label class="custom-control-label" for="chkHoliday">Holiday</label>
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkAL" value="AL">
+                                        <label class="custom-control-label" for="chkAL">AL</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mr-3 mb-1">
-                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkAOL" value="AOL">
-                                        <label class="custom-control-label" for="chkAOL">AOL</label>
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkRDO" value="RDO">
+                                        <label class="custom-control-label" for="chkRDO">RDO</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkLWOP" value="LWOP">
+                                        <label class="custom-control-label" for="chkLWOP">LWOP</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-1">
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
@@ -1280,20 +1284,18 @@
                 minimumInputLength: 1
             }).on('select2:select', function (e) {
                 var data = e.params.data;
-                console.log('Guard selected:', data);
+                var pId = data.providerId || data.provider;
                 // Auto-select Provider if available
-                if (data.providerId && data.provider && data.provider !== 'N/A') {
-                    console.log('Auto-selecting Provider:', data.provider, data.providerId);
-                    
-                    // Create option if it doesn't exist
-                    if ($('#modalProviderId').find("option[value='" + data.providerId + "']").length) {
-                        $('#modalProviderId').val(data.providerId).trigger('change');
+                if (pId && data.provider && data.provider !== 'N/A') {
+                    if ($('#modalProviderId').find("option[value='" + pId + "']").length) {
+                        $('#modalProviderId').val(pId).trigger('change');
                     } else {
-                        // Create a DOM Option and pre-select it
-                        var newOption = new Option(data.provider, data.providerId, true, true);
+                        var newOption = new Option(data.provider, pId, true, true);
                         $('#modalProviderId').append(newOption).trigger('change');
                     }
                 }
+            }).on('select2:unselect', function (e) {
+                $('#modalProviderId').val(null).trigger('change');
             });
 
             // Provider Search initialization in Modal
@@ -1384,18 +1386,18 @@
                 minimumInputLength: 1
             }).on('select2:select', function (e) {
                 var data = e.params.data;
-                console.log('Relief Guard selected:', data);
+                var pId = data.providerId || data.provider;
                 // Auto-select Relief Provider if available
-                if (data.providerId && data.provider && data.provider !== 'N/A') {
-                    console.log('Auto-selecting Relief Provider:', data.provider, data.providerId);
-                    
-                    if ($('#modalReliefProviderId').find("option[value='" + data.providerId + "']").length) {
-                        $('#modalReliefProviderId').val(data.providerId).trigger('change');
+                if (pId && data.provider && data.provider !== 'N/A') {
+                    if ($('#modalReliefProviderId').find("option[value='" + pId + "']").length) {
+                        $('#modalReliefProviderId').val(pId).trigger('change');
                     } else {
-                        var newOption = new Option(data.provider, data.providerId, true, true);
+                        var newOption = new Option(data.provider, pId, true, true);
                         $('#modalReliefProviderId').append(newOption).trigger('change');
                     }
                 }
+            }).on('select2:unselect', function(e) {
+                $('#modalReliefProviderId').val(null).trigger('change');
             });
 
             $('#modalReliefProviderId').select2({
@@ -1433,7 +1435,7 @@
 
             $('#modalPositionId').on('select2:select', function (e) {
                 var data = e.params.data;
-                var rate = data.rate;
+                var rate = data.guardPayRate !== undefined ? data.guardPayRate : data.rate;
                 // Auto-populate pay rate
                 if (rate !== null && rate !== undefined) {
                     $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
