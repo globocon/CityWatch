@@ -4,6 +4,48 @@
     ViewData["Title"] = "Booking";
 }
 
+<style>
+    .sort-btn-group {
+        display: inline-flex;
+        background: #fdfdfd;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 1px;
+        margin-left: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        vertical-align: middle;
+    }
+    .sort-btn {
+        background: transparent;
+        border: none;
+        color: #495057;
+        padding: 0 8px;
+        font-size: 11px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .sort-btn:hover {
+        background: #f1f3f5;
+        color: #007bff;
+        transform: translateY(-1px);
+    }
+    .sort-btn:active {
+        background: #e9ecef;
+        transform: translateY(0);
+    }
+    .sort-btn:first-child {
+        border-right: 1px solid #dee2e6;
+    }
+    .sort-btn i {
+        font-weight: bold;
+    }
+</style>
+
+
 
 <form id="antiForgeryForm">
     @Html.AntiForgeryToken()
@@ -2343,9 +2385,9 @@
                                 '<div class="d-flex align-items-center justify-content-between">' +
                                 '<span>' +
                                     '<i class="fa fa-folder-open text-primary mr-2"></i><strong>Project: ' + project.projectName + '</strong>' +
-                                    '<span class="ml-3 btn-group">' +
-                                        '<button class="btn btn-outline-secondary btn-xs py-0 px-1" style="height: 18px; line-height: 1;" title="Move Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-arrow-up" style="font-size: 10px;"></i></button>' +
-                                        '<button class="btn btn-outline-secondary btn-xs py-0 px-1" style="height: 18px; line-height: 1;" title="Move Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-arrow-down" style="font-size: 10px;"></i></button>' +
+                                    '<span class="sort-btn-group ml-3">' +
+                                        '<button class="sort-btn" title="Sort Order: Move Project Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-chevron-up"></i></button>' +
+                                        '<button class="sort-btn" title="Sort Order: Move Project Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-chevron-down"></i></button>' +
                                     '</span>' +
                                 '</span>' +
                                 '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
