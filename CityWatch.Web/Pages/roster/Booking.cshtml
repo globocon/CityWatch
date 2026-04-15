@@ -2469,9 +2469,10 @@
                             }
                         });
                     }
-        }
+                });
+            }
 
-        window.moveBinderProject = function (projectId, direction) {
+            window.moveBinderProject = function (projectId, direction) {
             if (!currentBinderId) return;
             $.ajax({
                 url: '/roster/Booking?handler=MoveBinderProject',
