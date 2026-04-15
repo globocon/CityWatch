@@ -1614,7 +1614,7 @@
                         }
                     });
                 } else {
-                    alert('Please select a site to add.');
+                    alert('please select site first');
                 }
             });
 
@@ -2305,6 +2305,8 @@
                             }
                         }
                     });
+                } else {
+                    alert('please select project first');
                 }
             });
 
@@ -2339,7 +2341,13 @@
                             // Add Project Header Row
                             var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-2 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
-                                '<span><i class="fa fa-folder-open text-primary mr-2"></i><strong>Project: ' + project.projectName + '</strong></span>' +
+                                '<span>' +
+                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong>Project: ' + project.projectName + '</strong>' +
+                                    '<span class="ml-3 btn-group">' +
+                                        '<button class="btn btn-outline-secondary btn-xs py-0 px-1" style="height: 18px; line-height: 1;" title="Move Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-arrow-up" style="font-size: 10px;"></i></button>' +
+                                        '<button class="btn btn-outline-secondary btn-xs py-0 px-1" style="height: 18px; line-height: 1;" title="Move Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-arrow-down" style="font-size: 10px;"></i></button>' +
+                                    '</span>' +
+                                '</span>' +
                                 '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
                                 '</div></td></tr>';
                             tbody.append(headerHtml);
@@ -2461,10 +2469,26 @@
                             }
                         });
                     }
-                });
-            }
+        }
 
-            window.deleteProjectFromBinder = function(projectId, projectName) {
+        window.moveBinderProject = function (projectId, direction) {
+            if (!currentBinderId) return;
+            $.ajax({
+                url: '/roster/Booking?handler=MoveBinderProject',
+                type: 'POST',
+                headers: getHeaders(),
+                data: { binderId: currentBinderId, projectId: projectId, direction: direction },
+                success: function (res) {
+                    if (res.success) {
+                        loadBinderRoster();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        };
+
+        window.deleteProjectFromBinder = function(projectId, projectName) {
                 if (!confirm('Remove project "' + projectName + '" from this group?')) return;
                 $.ajax({
                     url: '/roster/Booking?handler=DeleteProjectFromBinder',

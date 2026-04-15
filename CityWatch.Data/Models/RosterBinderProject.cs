@@ -9,6 +9,7 @@ namespace CityWatch.Data.Models
 
         public int RosterBinderId { get; set; }
         public int RosterGroupId { get; set; }
+        public int SortOrder { get; set; }
 
         public virtual RosterBinder RosterBinder { get; set; }
         public virtual RosterGroup RosterGroup { get; set; }
