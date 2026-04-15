@@ -1382,6 +1382,20 @@
                     cache: true
                 },
                 minimumInputLength: 1
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+                console.log('Relief Guard selected:', data);
+                // Auto-select Relief Provider if available
+                if (data.providerId && data.provider && data.provider !== 'N/A') {
+                    console.log('Auto-selecting Relief Provider:', data.provider, data.providerId);
+                    
+                    if ($('#modalReliefProviderId').find("option[value='" + data.providerId + "']").length) {
+                        $('#modalReliefProviderId').val(data.providerId).trigger('change');
+                    } else {
+                        var newOption = new Option(data.provider, data.providerId, true, true);
+                        $('#modalReliefProviderId').append(newOption).trigger('change');
+                    }
+                }
             });
 
             $('#modalReliefProviderId').select2({
