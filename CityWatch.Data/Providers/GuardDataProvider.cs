@@ -123,6 +123,11 @@ namespace CityWatch.Data.Providers
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         int GetClientSiteIdFromLogbook(int logbookId);
         List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId);
+
+        GuardUnavailability SaveGuardUnavailability(GuardUnavailability record);
+        List<GuardUnavailability> GetGuardUnavailabilities(int guardId);
+        void DeleteGuardUnavailability(int id);
+        bool IsGuardUnavailable(int guardId, DateTime start, DateTime end, out GuardUnavailability conflict);
     }
 
     public class GuardDataProvider : IGuardDataProvider
