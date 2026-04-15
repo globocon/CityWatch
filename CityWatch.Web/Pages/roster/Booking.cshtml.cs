@@ -203,6 +203,9 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<JsonResult> OnGetLoadRoster(int groupId, DateTime startDate)
         {
+            this.StartDate = startDate;
+            this.EndDate = startDate.AddDays(6);
+            PopulateWeeklyHolidays();
 
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
@@ -638,6 +641,10 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<JsonResult> OnGetLoadBinderRoster(int binderId, DateTime startDate)
         {
+            this.StartDate = startDate;
+            this.EndDate = startDate.AddDays(6);
+            PopulateWeeklyHolidays();
+
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
             var binderProjects = await _context.RosterBinderProjects
