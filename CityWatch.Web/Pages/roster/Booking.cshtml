@@ -401,12 +401,16 @@
                                         <label class="custom-control-label" for="chkSick">Sick</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mr-3 mb-1">
-                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkHoliday" value="Holiday">
-                                        <label class="custom-control-label" for="chkHoliday">Holiday</label>
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkAL" value="AL">
+                                        <label class="custom-control-label" for="chkAL">AL</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mr-3 mb-1">
-                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkAOL" value="AOL">
-                                        <label class="custom-control-label" for="chkAOL">AOL</label>
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkRDO" value="RDO">
+                                        <label class="custom-control-label" for="chkRDO">RDO</label>
+                                    </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkLWOP" value="LWOP">
+                                        <label class="custom-control-label" for="chkLWOP">LWOP</label>
                                     </div>
                                     <div class="custom-control custom-checkbox mb-1">
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
@@ -1280,20 +1284,18 @@
                 minimumInputLength: 1
             }).on('select2:select', function (e) {
                 var data = e.params.data;
-                console.log('Guard selected:', data);
+                var pId = data.providerId || data.provider;
                 // Auto-select Provider if available
-                if (data.providerId && data.provider && data.provider !== 'N/A') {
-                    console.log('Auto-selecting Provider:', data.provider, data.providerId);
-                    
-                    // Create option if it doesn't exist
-                    if ($('#modalProviderId').find("option[value='" + data.providerId + "']").length) {
-                        $('#modalProviderId').val(data.providerId).trigger('change');
+                if (pId && data.provider && data.provider !== 'N/A') {
+                    if ($('#modalProviderId').find("option[value='" + pId + "']").length) {
+                        $('#modalProviderId').val(pId).trigger('change');
                     } else {
-                        // Create a DOM Option and pre-select it
-                        var newOption = new Option(data.provider, data.providerId, true, true);
+                        var newOption = new Option(data.provider, pId, true, true);
                         $('#modalProviderId').append(newOption).trigger('change');
                     }
                 }
+            }).on('select2:unselect', function (e) {
+                $('#modalProviderId').val(null).trigger('change');
             });
 
             // Provider Search initialization in Modal
@@ -1382,6 +1384,20 @@
                     cache: true
                 },
                 minimumInputLength: 1
+            }).on('select2:select', function (e) {
+                var data = e.params.data;
+                var pId = data.providerId || data.provider;
+                // Auto-select Relief Provider if available
+                if (pId && data.provider && data.provider !== 'N/A') {
+                    if ($('#modalReliefProviderId').find("option[value='" + pId + "']").length) {
+                        $('#modalReliefProviderId').val(pId).trigger('change');
+                    } else {
+                        var newOption = new Option(data.provider, pId, true, true);
+                        $('#modalReliefProviderId').append(newOption).trigger('change');
+                    }
+                }
+            }).on('select2:unselect', function(e) {
+                $('#modalReliefProviderId').val(null).trigger('change');
             });
 
             $('#modalReliefProviderId').select2({
@@ -1419,7 +1435,7 @@
 
             $('#modalPositionId').on('select2:select', function (e) {
                 var data = e.params.data;
-                var rate = data.rate;
+                var rate = data.guardPayRate !== undefined ? data.guardPayRate : data.rate;
                 // Auto-populate pay rate
                 if (rate !== null && rate !== undefined) {
                     $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
@@ -1427,6 +1443,12 @@
             }).on('select2:unselect', function (e) {
                 $('#modalPayRate').val('');
             });
+
+            function truncateName(name, maxLength) {
+                if (!name) return "";
+                if (name.length <= maxLength) return name;
+                return name.substring(0, maxLength - 2) + "..";
+            }
 
             function loadRoster() {
                 console.log('Loading roster for Group ID:', currentGroupId);
@@ -1479,17 +1501,18 @@
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                        '<div class="text-truncate" style="font-weight: 500;">' + 
-                                        ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                        (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
+                                        '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
+                                            ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
+                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                        '</div>' +
+                                        (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
+                                        '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
                                             '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
-                                        (s.reliefReason ? '<span class="relief-reason-tag">[' + s.reliefReason + ']</span>' : '') +
-                                        '<div class="shift-license">' + s.guardLicense + '</div>' +
                                         (projectSupplierMode ? 
                                             '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                             ''
@@ -2353,15 +2376,20 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        rowHtml += '<div class="shift-card ' + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                            'data-guardid="' + (s.guardId || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                            'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                            'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
                                             'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
-                                            '<div class="text-truncate" style="font-weight: 500;"><i class="fa fa-user guard-icon"></i>' + s.guardName + '</div>' +
-                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap;">' +
+                                            '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
+                                                ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
+                                                (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                            '</div>' +
+                                            (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
+                                            '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
                                                 '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                                 '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                             '</div>' +
-                                            '<div class="shift-license">' + s.guardLicense + '</div>' +
                                             (groupSupplierMode ? 
                                                 '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
                                                 ''
