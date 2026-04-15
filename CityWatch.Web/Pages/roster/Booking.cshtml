@@ -116,6 +116,7 @@
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
                                     var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
                                     var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
 
                                     <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(anyPh ? ph.Reasons : "")">
@@ -248,9 +249,13 @@
                                     var currentDay = Model.StartDate.AddDays(i);
                                     var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
                                     var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+                                    var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
 
-                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")">
-                                        <div>@currentDay.ToString("ddd dd MMM")</div>
+                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(anyPh ? ph.Reasons : "")">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            @if (anyPh) { <i class="fa fa-sun-o mr-1 text-warning" style="font-size: 0.8rem;"></i> }
+                                            <div>@currentDay.ToString("ddd dd MMM")</div>
+                                        </div>
                                         <div>@currentDay.ToString("yyyy")</div>
                                     </th>
                                 }
