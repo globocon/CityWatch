@@ -134,14 +134,9 @@ namespace CityWatch.Web.Services
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" });
             // Retrieve and filter the log books to upload only once.
-            var yesterday = DateTime.Now.AddDays(-1).Date;
-            //var yesterday = DateTime.Now.AddDays(-5).Date;
-            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
-            .Where(z =>
-                (z.ClientSite.UploadGuardLog || z.ClientSite.UploadFusionLog || z.ClientSite.UploadSWLog || z.ClientSite.UploadKVLog) // OR condition
-                && z.Date == yesterday
-                && !z.DbxUploaded)
-            .ToList();
+            //var yesterday = DateTime.Now.AddDays(-1).Date;
+            var yesterday = DateTime.Now.AddDays(-2).Date;
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooksForDailyLogBookGeneration(yesterday);
 
             // Check if there are any logs to process to avoid unnecessary operations.
             if (!siteLogBooksToUpload.Any())
@@ -443,10 +438,7 @@ namespace CityWatch.Web.Services
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start Second run---" });
             // Retrieve and filter the log books to upload only once.
             var today = DateTime.Now.Date;
-            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
-                .Where(z => (z.ClientSite.UploadGuardLog || z.ClientSite.UploadFusionLog || z.ClientSite.UploadSWLog || z.ClientSite.UploadKVLog) && z.Date == today && !z.DbxUploaded)
-                .ToList();
-
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooksForDailyLogBookGeneration(today);
             // Check if there are any logs to process to avoid unnecessary operations.
             if (!siteLogBooksToUpload.Any())
                 return;
@@ -1008,7 +1000,6 @@ namespace CityWatch.Web.Services
             return fileName;
         }
 
-
         private void SendEmail(string fileName, ClientSiteLogBook siteLogBook)
         {
             //return;
@@ -1139,8 +1130,6 @@ namespace CityWatch.Web.Services
                 throw;
             }
         }
-
-
 
         private bool ProcessDailyGuardLogUploadNew(ClientSiteLogBook clientSiteLogBook, string fileToUpload)
         {

@@ -504,7 +504,7 @@ namespace CityWatch.Web.Services
                 return new Table(1);
             }
 
-            var fieldNames = crowdControlLogs.Where(x=> x.ColHeaderName != "Head Count").Select(x => x.ColHeaderName).Distinct().ToList();
+            var fieldNames = crowdControlLogs.Where(x => x.ColHeaderName != "Head Count").Select(x => x.ColHeaderName).Distinct().ToList();
             var rows = new List<Dictionary<string, string>>();
 
             var columns = new Dictionary<string, string>();
@@ -1021,8 +1021,6 @@ namespace CityWatch.Web.Services
         }
 
 
-
-
         public string GeneratePdfReportForFusion(List<ClientSiteRadioChecksActivityStatus_History> funsionLog)
         {
             if (funsionLog == null || funsionLog.Count == 0)
@@ -1120,10 +1118,6 @@ namespace CityWatch.Web.Services
                 return string.Empty;
             }
         }
-
-
-
-
 
         private Table CreateReportDataForFusion(List<ClientSiteRadioChecksActivityStatus_History> guardLog)
         {
@@ -1391,12 +1385,44 @@ namespace CityWatch.Web.Services
                             .SetFontColor(ColorConstants.BLUE);
                         notesParagraph.Add(link);
                     }
+                    Paragraph notesParagraphnew = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                    Paragraph notesParagraphImage = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                    if (entry.LBId != null)
+                    {
+                        var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes((int)entry.LBId);
+
+                        foreach (var guardLogImage in guardlogImages)
+                        {
+                            var reportDataTablenew = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
+                            Paragraph notesParagraphnew1 = new Paragraph("See ").SetFontSize(CELL_FONT_SIZE);
+                            if (guardLogImage.IsRearfile == true)
+                            {
+                                string baseUrl = guardLogImage.ImagePath;
+                                string url = $"{baseUrl}";
+                                string linkText = IO.Path.GetFileName(guardLogImage.ImagePath);                                
+                                notesParagraphnew1.Add(linkText + " attached to this document");
+                                notesParagraphnew.Add(notesParagraphnew1);
+                            }
+                            if (guardLogImage.IsTwentyfivePercentfile == true)
+                            {
+                                var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
+                               .SetWidth(UnitValue.CreatePercentValue(27));
+                                logimage.SetTextAlignment(TextAlignment.RIGHT);
+                                logimage.SetMarginTop(10);
+                                logimage.SetMarginLeft(10);
+                                notesParagraphImage.Add(logimage);
+                            }
+                        }
+                    }
 
                     reportDataTable.AddCell(new Cell()
                      .SetKeepTogether(true)
                      .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
                      .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
-                     .Add(notesParagraph));
+                     .Add(notesParagraph)
+                     .Add(notesParagraphnew)
+                     .Add(notesParagraphImage)
+                     );
 
 
 
@@ -1590,7 +1616,11 @@ namespace CityWatch.Web.Services
             var index = lastPageIndex + 1;
             foreach (var entry in _guardLogs)
             {
-                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+                if (entry.LBId == null)
+                    continue;
+
+                int imageDocid = entry.LBId ?? 0;
+                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(imageDocid);
                 foreach (var guardLogImage in guardlogImages)
                 {
 
@@ -1617,6 +1647,7 @@ namespace CityWatch.Web.Services
                             Console.WriteLine($"Error attaching image: {ex.Message}");
                         }
                     }
+
                 }
             }
 
