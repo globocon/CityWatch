@@ -778,6 +778,60 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+
+        public JsonResult OnGetGuardUnavailabilities(int guardId)
+        {
+            var records = _guardDataProvider.GetGuardUnavailabilities(guardId);
+            return new JsonResult(records);
+        }
+
+        public JsonResult OnPostSaveGuardUnavailability(int guardId, string reason, DateTime fromDate, DateTime toDate)
+        {
+            var success = false;
+            var message = "Leave saved successfully.";
+            try
+            {
+                if (fromDate > toDate)
+                {
+                    return new JsonResult(new { success = false, message = "'From Date' must be before or equal to 'To Date'." });
+                }
+
+                // Check overlap
+                if (_guardDataProvider.IsGuardUnavailable(guardId, fromDate, toDate, out var conflict))
+                {
+                    return new JsonResult(new { success = false, message = "Guard is already marked unavailable during this period: " + conflict.FromDate.ToString("dd MMM yyyy") + " to " + conflict.ToDate.ToString("dd MMM yyyy") });
+                }
+
+                _guardDataProvider.SaveGuardUnavailability(new GuardUnavailability
+                {
+                    GuardId = guardId,
+                    Reason = reason,
+                    FromDate = fromDate,
+                    ToDate = toDate
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteGuardUnavailability(int id)
+        {
+            var success = true;
+            try
+            {
+                _guardDataProvider.DeleteGuardUnavailability(id);
+            }
+            catch (Exception)
+            {
+                success = false;
+            }
+            return new JsonResult(new { success });
+        }
+
         //to add new feedback type -start
         public JsonResult OnPostFeedBackType(FeedbackType FeedbackNewTyperecord)
         {

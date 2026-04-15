@@ -276,6 +276,30 @@ namespace CityWatch.Web.Pages.roster
                     var guard = await _context.Guards.FindAsync(guardId);
                     return new JsonResult(new { success = false, message = $"Conflict: Guard {guard.Name} is currently assigned to {conflict.ClientSite.Name} from {conflict.ShiftStart:HH:mm} to {conflict.ShiftEnd:HH:mm}." });
                 }
+
+                // Check Guard Unavailability
+                var unavailGuard = await _context.GuardUnavailabilities
+                    .Where(u => u.GuardId == guardId && start <= u.ToDate && end >= u.FromDate)
+                    .FirstOrDefaultAsync();
+                
+                if (unavailGuard != null)
+                {
+                    var guard = await _context.Guards.FindAsync(guardId);
+                    return new JsonResult(new { success = false, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMM yy} – {unavailGuard.ToDate:dd MMM yy}). Please select another guard or adjust their HR records." });
+                }
+            }
+
+            if (reliefGuardId.HasValue)
+            {
+                var unavailRelief = await _context.GuardUnavailabilities
+                    .Where(u => u.GuardId == reliefGuardId && start <= u.ToDate && end >= u.FromDate)
+                    .FirstOrDefaultAsync();
+
+                if (unavailRelief != null)
+                {
+                    var guard = await _context.Guards.FindAsync(reliefGuardId);
+                    return new JsonResult(new { success = false, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMM yy} – {unavailRelief.ToDate:dd MMM yy}). Please select another guard or adjust their HR records." });
+                }
             }
 
             if (shiftId.HasValue && shiftId.Value > 0)

@@ -1438,5 +1438,51 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(z => z.SecurityNo == securityNo);
         }
 
+        public GuardUnavailability SaveGuardUnavailability(GuardUnavailability record)
+        {
+            if (record.Id == 0)
+            {
+                _context.GuardUnavailabilities.Add(record);
+            }
+            else
+            {
+                var existing = _context.GuardUnavailabilities.Find(record.Id);
+                if (existing != null)
+                {
+                    existing.Reason = record.Reason;
+                    existing.FromDate = record.FromDate;
+                    existing.ToDate = record.ToDate;
+                }
+            }
+            _context.SaveChanges();
+            return record;
+        }
+
+        public List<GuardUnavailability> GetGuardUnavailabilities(int guardId)
+        {
+            return _context.GuardUnavailabilities
+                .Where(u => u.GuardId == guardId)
+                .OrderBy(u => u.FromDate)
+                .ToList();
+        }
+
+        public void DeleteGuardUnavailability(int id)
+        {
+            var record = _context.GuardUnavailabilities.Find(id);
+            if (record != null)
+            {
+                _context.GuardUnavailabilities.Remove(record);
+                _context.SaveChanges();
+            }
+        }
+
+        public bool IsGuardUnavailable(int guardId, DateTime start, DateTime end, out GuardUnavailability conflict)
+        {
+            conflict = _context.GuardUnavailabilities
+                .FirstOrDefault(u => u.GuardId == guardId && 
+                                     u.FromDate <= end && 
+                                     u.ToDate >= start);
+            return conflict != null;
+        }
     }
 }
