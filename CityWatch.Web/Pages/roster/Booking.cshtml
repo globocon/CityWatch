@@ -638,20 +638,7 @@
             /* overflow: hidden; Removed to allow tooltips to show */
         }
 
-        /* Public Holiday Highlighting */
-        .ph-highlight, 
-        #roster_grid thead th.ph-highlight, 
-        #binder_grid thead th.ph-highlight,
-        #roster_grid tbody td.ph-highlight,
-        #binder_grid tbody td.ph-highlight {
-            background: #FFF9C4 !important;
-            background-color: #FFF9C4 !important;
-            color: #333 !important;
-        }
 
-        .day-cell {
-            position: relative;
-        }
 
             #roster_grid thead th, #binder_grid thead th {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1070,6 +1057,19 @@
             cursor: default;
         }
 
+
+        /* Public Holiday Highlighting - Moved to end for specificity */
+        .ph-highlight, 
+        #roster_grid tbody td.ph-highlight,
+        #binder_grid tbody td.ph-highlight {
+            background: #FFF9C4 !important;
+            background-color: #FFF9C4 !important;
+            color: #333 !important;
+        }
+
+        .day-cell {
+            position: relative;
+        }
     </style>
 </div>
 
@@ -1513,10 +1513,6 @@
                                     var phClass = isPh ? "ph-highlight" : "";
                                     var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
                                     rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
-                                    
-                                    if (isPh) {
-                                        rowHtml += '<div style="position: absolute; right: 2px; top: 2px;"><i class="fa fa-sun-o text-warning" style="font-size: 0.7rem;"></i></div>';
-                                    }
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
@@ -2391,10 +2387,6 @@
                                     var phReason = (site.publicHolidayReasons && site.publicHolidayReasons[index]) || "";
 
                                     rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + site.siteId + '" data-day="' + index + '" title="' + phReason + '">';
-
-                                    if (isPh) {
-                                        rowHtml += '<div style="position: absolute; right: 2px; top: 2px;"><i class="fa fa-sun-o text-warning" style="font-size: 0.7rem;"></i></div>';
-                                    }
                                     daySchedules.forEach(function (s) {
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
