@@ -68,7 +68,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(guardId)).FirstOrDefault();
 
                 // Convert boolean to string value
-                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                UserRole = (guardDetails.IsRCFusionAccess || guardDetails.IsRCHRAccess) ? "1" : "0";
                 GuardId = int.Parse(guardId);
                 var clientSites = _guardDataProvider.GetGuardRcClientSiteAccess(int.Parse(guardId));
                 if (clientSites != null && clientSites.Any())
@@ -164,7 +164,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(int.Parse(LoginGuardId)).FirstOrDefault();
 
                 // Convert boolean to string value
-                UserRole = guardDetails.IsRCFusionAccess ? "1" : "0";
+                UserRole = (guardDetails.IsRCFusionAccess || guardDetails.IsRCHRAccess) ? "1" : "0";
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
                 return Page();
