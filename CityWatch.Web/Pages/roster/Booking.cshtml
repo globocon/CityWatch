@@ -115,8 +115,12 @@
                                 @for (int i = 0; i < 7; i++)
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">
-                                        <div>@currentDay.ToString("ddd dd MMM")</div>
+                                    var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+                                    var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+
+                                    <th style="width: 12.14%;" title="@(isNationalPh ? ph.Reasons : "")">
+                                        <div>@currentDay.ToString("ddd dd MMM") @if (isNationalPh) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg> }</div>
                                         <div>@currentDay.ToString("yyyy")</div>
                                     </th>
                                 }
@@ -240,8 +244,12 @@
                                 @for (int i = 0; i < 7; i++)
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
-                                    <th style="width: 12.14%;">
-                                        <div>@currentDay.ToString("ddd dd MMM")</div>
+                                    var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+                                    var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
+
+                                    <th style="width: 12.14%;" title="@(isNationalPh ? ph.Reasons : "")">
+                                        <div>@currentDay.ToString("ddd dd MMM") @if (isNationalPh) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg> }</div>
                                         <div>@currentDay.ToString("yyyy")</div>
                                     </th>
                                 }
@@ -629,6 +637,8 @@
             width: 100%;
             /* overflow: hidden; Removed to allow tooltips to show */
         }
+
+
 
             #roster_grid thead th, #binder_grid thead th {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1047,6 +1057,18 @@
             cursor: default;
         }
 
+
+        /* Public Holiday Highlighting - Moved to end for specificity */
+        #roster_grid tbody td.day-cell.ph-highlight,
+        #binder_grid tbody td.day-cell.ph-highlight {
+            background: #FFF9C4 !important;
+            background-color: #FFF9C4 !important;
+            color: #333 !important;
+        }
+
+        .day-cell {
+            position: relative;
+        }
     </style>
 </div>
 
@@ -1486,7 +1508,10 @@
                                 cellDate.setDate(cellDate.getDate() + index);
                                 var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
-                                rowHtml += '<td class="day-cell" data-site="' + row.siteId + '" data-day="' + index + '">';
+                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                                    var phClass = isPh ? "ph-highlight" : "";
+                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
@@ -2356,8 +2381,11 @@
                                     var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
                                     var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                    var isPh = (site.isPublicHoliday && site.isPublicHoliday[index]);
+                                    var phClass = isPh ? "ph-highlight" : "";
+                                    var phReason = (site.publicHolidayReasons && site.publicHolidayReasons[index]) || "";
 
-                                    rowHtml += '<td class="day-cell" data-site="' + site.siteId + '" data-day="' + index + '">';
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + site.siteId + '" data-day="' + index + '" title="' + phReason + '">';
                                     daySchedules.forEach(function (s) {
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
