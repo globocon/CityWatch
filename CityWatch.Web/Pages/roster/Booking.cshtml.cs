@@ -180,14 +180,41 @@ namespace CityWatch.Web.Pages.roster
                 var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
                 if (phInfo != null && phInfo.IsPublicHoliday)
                 {
-                    // Applies if "ALL" is in states or if site's state is in states
-                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Contains(siteState)))
+                    // Applies if "ALL" is in states or if site's state matches (trimmed & case-insensitive)
+                    var trimmedSiteState = siteState?.Trim().ToUpper();
+                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(trimmedSiteState) && phInfo.States.Any(s => s.Trim().ToUpper() == trimmedSiteState)))
                     {
                         flags[i] = true;
                     }
                 }
             }
             return flags;
+        }
+
+        private string[] GetPublicHolidayReasons(string siteState, DateTime start)
+        {
+            var reasons = new string[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = start.AddDays(i).Date;
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    reasons[i] = "";
+                    continue;
+                }
+
+                var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    var trimmedSiteState = siteState?.Trim().ToUpper();
+                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(trimmedSiteState) && phInfo.States.Any(s => s.Trim().ToUpper() == trimmedSiteState)))
+                    {
+                        reasons[i] = phInfo.Reasons;
+                    }
+                }
+                reasons[i] = reasons[i] ?? "";
+            }
+            return reasons;
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -229,6 +256,7 @@ namespace CityWatch.Web.Pages.roster
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
                 isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
+                publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>
                 {
                     var targetDate = startDate.AddDays(dayOffset);
@@ -680,6 +708,7 @@ namespace CityWatch.Web.Pages.roster
                     projectId = bp.RosterGroupId,
                     projectName = bp.RosterGroup.Name,
                     isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
+                    publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                     days = Enumerable.Range(0, 7).Select(dayOffset =>
                     {
                         var targetDate = startDate.AddDays(dayOffset);

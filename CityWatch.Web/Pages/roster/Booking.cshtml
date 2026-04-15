@@ -119,12 +119,9 @@
                                     var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
                                     var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
 
-                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(anyPh ? ph.Reasons : "")">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <div>@currentDay.ToString("ddd dd MMM")</div>
-                                            @if (anyPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem;"></i> }
-                                        </div>
-                                        <div>@currentDay.ToString("yyyy")</div>
+                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(isNationalPh ? ph.Reasons : "")">
+                                        <div>@currentDay.ToString("ddd dd MMM") @if (isNationalPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem;"></i> }</div>
+                                        <div>@currentDay.ToString("yyyy") @if (isNationalPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem; visibility: hidden;"></i> }</div>
                                     </th>
                                 }
                             </tr>
@@ -251,12 +248,9 @@
                                     var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL") && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
                                     var anyPh = ph != null && ph.IsPublicHoliday && currentDay.DayOfWeek != DayOfWeek.Saturday && currentDay.DayOfWeek != DayOfWeek.Sunday;
 
-                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(anyPh ? ph.Reasons : "")">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <div>@currentDay.ToString("ddd dd MMM")</div>
-                                            @if (anyPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem;"></i> }
-                                        </div>
-                                        <div>@currentDay.ToString("yyyy")</div>
+                                    <th style="width: 12.14%;" class="@(isNationalPh ? "ph-highlight" : "")" title="@(isNationalPh ? ph.Reasons : "")">
+                                        <div>@currentDay.ToString("ddd dd MMM") @if (isNationalPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem;"></i> }</div>
+                                        <div>@currentDay.ToString("yyyy") @if (isNationalPh) { <i class="fa fa-sun-o ml-1 text-warning" style="font-size: 0.8rem; visibility: hidden;"></i> }</div>
                                     </th>
                                 }
                             </tr>
@@ -1504,8 +1498,14 @@
                                 cellDate.setDate(cellDate.getDate() + index);
                                 var isDayLocked = cellDate < firstDayOfCurrentMonth;
 
-                                    var phClass = (row.isPublicHoliday && row.isPublicHoliday[index]) ? "ph-highlight" : "";
-                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '">';
+                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                                    var phClass = isPh ? "ph-highlight" : "";
+                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
+                                    
+                                    if (isPh) {
+                                        rowHtml += '<div style="position: absolute; right: 2px; top: 2px;"><i class="fa fa-sun-o text-warning" style="font-size: 0.7rem;"></i></div>';
+                                    }
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
@@ -2375,9 +2375,15 @@
                                     var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
                                     var isDayLocked = cellDate < firstDayOfCurrentMonth;
-                                    var phClass = (site.isPublicHoliday && site.isPublicHoliday[index]) ? "ph-highlight" : "";
+                                    var isPh = (site.isPublicHoliday && site.isPublicHoliday[index]);
+                                    var phClass = isPh ? "ph-highlight" : "";
+                                    var phReason = (site.publicHolidayReasons && site.publicHolidayReasons[index]) || "";
 
-                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + site.siteId + '" data-day="' + index + '">';
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + site.siteId + '" data-day="' + index + '" title="' + phReason + '">';
+
+                                    if (isPh) {
+                                        rowHtml += '<div style="position: absolute; right: 2px; top: 2px;"><i class="fa fa-sun-o text-warning" style="font-size: 0.7rem;"></i></div>';
+                                    }
                                     daySchedules.forEach(function (s) {
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
