@@ -692,7 +692,7 @@ namespace CityWatch.Web.Pages.roster
 
             var rosterData = new List<object>();
 
-            foreach (var bp in binderProjects.OrderBy(x => x.RosterGroup.Name))
+            foreach (var bp in binderProjects.OrderBy(x => x.SortOrder).ThenBy(x => x.Id))
             {
                 var groupSites = await _context.RosterGroupSites
                     .Where(x => x.RosterGroupId == bp.RosterGroupId)
@@ -822,10 +822,16 @@ namespace CityWatch.Web.Pages.roster
             var exists = await _context.RosterBinderProjects.AnyAsync(x => x.RosterBinderId == binderId && x.RosterGroupId == projectId);
             if (!exists)
             {
+                var maxSortOrder = await _context.RosterBinderProjects
+                    .Where(x => x.RosterBinderId == binderId)
+                    .Select(x => (int?)x.SortOrder)
+                    .MaxAsync() ?? 0;
+
                 _context.RosterBinderProjects.Add(new RosterBinderProject
                 {
                     RosterBinderId = binderId,
-                    RosterGroupId = projectId
+                    RosterGroupId = projectId,
+                    SortOrder = maxSortOrder + 1
                 });
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true });
@@ -1162,6 +1168,42 @@ namespace CityWatch.Web.Pages.roster
             byte[] fileBytes = await _rosterReportGenerator.GeneratePreviewRosterPdfAsync(type, id);
             if (fileBytes == null) return NotFound();
             return File(fileBytes, "application/pdf");
+        }
+
+        public async Task<IActionResult> OnPostMoveBinderProject(int binderId, int projectId, string direction)
+        {
+            var projects = await _context.RosterBinderProjects
+                .Where(x => x.RosterBinderId == binderId)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
+
+            var currentIdx = projects.FindIndex(x => x.RosterGroupId == projectId);
+            if (currentIdx == -1) return new JsonResult(new { success = false, message = "Project not found in group." });
+
+            // Normalize all sort orders to their current index to ensure movement is consistent
+            for (int i = 0; i < projects.Count; i++)
+            {
+                projects[i].SortOrder = i;
+            }
+
+            if (direction == "up" && currentIdx > 0)
+            {
+                projects[currentIdx].SortOrder = currentIdx - 1;
+                projects[currentIdx - 1].SortOrder = currentIdx;
+            }
+            else if (direction == "down" && currentIdx < projects.Count - 1)
+            {
+                projects[currentIdx].SortOrder = currentIdx + 1;
+                projects[currentIdx + 1].SortOrder = currentIdx;
+            }
+            else
+            {
+                return new JsonResult(new { success = true });
+            }
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
     }
 }

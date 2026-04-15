@@ -222,7 +222,7 @@ namespace CityWatch.Web.Services
                     }
 
                     // 2. Project Parts
-                    foreach (var bp in binderProjects.OrderBy(x => x.RosterGroup.Name))
+                    foreach (var bp in binderProjects.OrderBy(x => x.SortOrder).ThenBy(x => x.Id))
                     {
                         // 2a. Project Cover
                         if (!string.IsNullOrEmpty(bp.RosterGroup.CoverFileName))
