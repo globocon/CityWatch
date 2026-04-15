@@ -798,6 +798,13 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 .text-orange {
     color: #ff8c00;
 }
+.group td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* fallback */
+    font-size: 20px;
+    max-width: 100%;
+}
 
     
 
