@@ -227,4 +227,5 @@ $(document).ready(function () {
             $('#modal_states_v2').multiselect('refresh');
         }
     }
+    }
 });
