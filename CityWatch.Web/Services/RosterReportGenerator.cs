@@ -63,6 +63,12 @@ namespace CityWatch.Web.Services
             if (!Directory.Exists(groupCoverDir)) Directory.CreateDirectory(groupCoverDir);
         }
 
+        private class PublicHolidayInfo
+        {
+            public DateTime Date { get; set; }
+            public List<string> States { get; set; }
+        }
+
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
@@ -275,6 +281,30 @@ namespace CityWatch.Web.Services
                         var weekStart = startDate.AddDays(w * 7);
                         var weekEnd = weekStart.AddDays(6);
 
+                        // Fetch Holidays for this week
+                        var holidays = await _context.BroadcastBannerCalendarEvents
+                            .Where(x => x.IsPublicHoliday && x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)
+                            .ToListAsync();
+                        var holidayIds = holidays.Select(x => x.id).ToList();
+                        var holidayStates = await _context.PublicHolidayStates
+                            .Where(x => holidayIds.Contains(x.CalendarEventId) && !x.IsDeleted)
+                            .ToListAsync();
+
+                        var weeklyHolidays = new List<PublicHolidayInfo>();
+                        for (int d = 0; d < 7; d++)
+                        {
+                            var dDate = weekStart.AddDays(d).Date;
+                            var dayHolidays = holidays.Where(h => dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date).ToList();
+                            var states = new List<string>();
+                            foreach (var h in dayHolidays)
+                            {
+                                var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
+                                if (hStates.Count == 0) states.Add("ALL");
+                                else states.AddRange(hStates);
+                            }
+                            weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
+                        }
+
                         if (w > 0) document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 
                         var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
@@ -357,6 +387,26 @@ namespace CityWatch.Web.Services
                                 var dayShifts = schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart.Date == loopDate).OrderBy(s => s.ShiftStart).ToList();
                                 var dayCell = new Cell().SetPadding(2);
 
+                                // Background Highlighting Logic
+                                var columnBgColor = ColorConstants.WHITE;
+                                
+                                // Weekends
+                                if (loopDate.DayOfWeek == DayOfWeek.Saturday) columnBgColor = new DeviceRgb(215, 240, 215); // #d7f0d7
+                                else if (loopDate.DayOfWeek == DayOfWeek.Sunday) columnBgColor = new DeviceRgb(252, 228, 236); // #fce4ec
+
+                                // Public Holidays
+                                var phInfo = weeklyHolidays.FirstOrDefault(x => x.Date == loopDate);
+                                if (phInfo != null && phInfo.States.Any())
+                                {
+                                    var siteState = site.ClientSite?.State?.Trim().ToUpper();
+                                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Any(s => s.Trim().ToUpper() == siteState)))
+                                    {
+                                        columnBgColor = new DeviceRgb(255, 249, 196); // #FFF9C4
+                                    }
+                                }
+
+                                dayCell.SetBackgroundColor(columnBgColor);
+
                                 foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
@@ -367,14 +417,31 @@ namespace CityWatch.Web.Services
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
+                                    
+                                    // ADHOC Color Overrides
+                                    if (shift.ShiftType == "AdhocAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(27, 94, 32); // Dark Green
+                                    }
+                                    else if (shift.ShiftType == "AdhocNotAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(230, 81, 0); // Dark Orange
+                                    }
+
                                     var borderColor = ColorConstants.BLACK;
                                     var fontColor = ColorConstants.BLACK;
 
-                                    if (isRelief)
+                                    if (shift.ShiftType == "AdhocAccepted" || shift.ShiftType == "AdhocNotAccepted")
                                     {
-                                        bgColor = new DeviceRgb(243, 229, 245); // Light purple bg
-                                        borderColor = new DeviceRgb(111, 66, 193); // Purple border
-                                        fontColor = new DeviceRgb(74, 20, 140); // Dark purple text
+                                        fontColor = ColorConstants.WHITE;
+                                        borderColor = ColorConstants.WHITE;
+                                    }
+
+                                    if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular"))
+                                    {
+                                        bgColor = new DeviceRgb(111, 66, 193); // Dark purple bg (matches #6f42c1)
+                                        borderColor = ColorConstants.WHITE;
+                                        fontColor = ColorConstants.WHITE;
                                     }
 
                                     var shiftBlock = new Div()
@@ -524,8 +591,7 @@ namespace CityWatch.Web.Services
         {
             switch (status)
             {
-                case CityWatch.Data.Enums.RosterShiftStatus.Accepted: return new DeviceRgb(212, 237, 218); // Green
-                case CityWatch.Data.Enums.RosterShiftStatus.Declined: return new DeviceRgb(248, 215, 218); // Red-ish
+                case CityWatch.Data.Enums.RosterShiftStatus.Accepted:
                 default: return new DeviceRgb(255, 224, 178); // Orange
             }
         }

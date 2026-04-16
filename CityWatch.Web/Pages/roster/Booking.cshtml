@@ -499,19 +499,27 @@
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
-                            <label>Group (Client)</label>
-                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
-                        </div>
-                         <div class="col-6">
                             <label>Payment Profile</label>
                             <select id="modalPositionId" class="form-control" style="width: 100%">
                                 <option value="">Select Group First</option>
                             </select>
                         </div>
+                        <div class="col-6">
+                            <label>Type</label>
+                            <select id="modalShiftType" class="form-control" style="width: 100%">
+                                <option value="Regular" data-color="#667eea">Standard (Regular)</option>
+                                <option value="AdhocAccepted" data-color="#1B5E20">ADHOC shift accepted</option>
+                                <option value="AdhocNotAccepted" data-color="#E65100">ADHOC shift not accepted</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
-                            <label>Guard Pay Rate</label>
+                            <label>Rate Profile</label>
+                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
+                        </div>
+                         <div class="col-6">
+                            <label>Pay Rate</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">$</span>
@@ -520,8 +528,12 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-link text-dark font-weight-bold p-0 mr-auto" id="btnAllowances" style="text-decoration: none;">
+                        <i class="fa fa-plus-circle text-success mr-1" style="font-size: 1.2rem; vertical-align: middle;"></i> Allowances
+                    </button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="btnSaveShift">Save Shift</button>
                 </div>
@@ -764,7 +776,7 @@
             }
 
             .shift-card.status-accepted {
-                background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
             }
 
             .shift-card.status-declined {
@@ -796,6 +808,27 @@
             display: block;
             margin-top: 2px;
             font-weight: 500;
+        }
+
+        /* Shift Type ADHOC Shading */
+        .shift-card.adhoc-accepted {
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important;
+            border-left: 3px solid #81C784 !important;
+        }
+        .shift-card.adhoc-not-accepted {
+            background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important;
+            border-left: 3px solid #FFB74D !important;
+        }
+
+        /* Type Dropdown Color Dots */
+        .type-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         /* Enhanced Delete Button */
@@ -1446,6 +1479,23 @@
                 dropdownParent: $('#addShiftModal')
             });
 
+            function formatType(state) {
+                if (!state.id) return state.text;
+                var color = $(state.element).data('color');
+                var $state = $(
+                    '<span><span class="type-dot" style="background-color:' + color + ';"></span>' + state.text + '</span>'
+                );
+                return $state;
+            };
+
+            $('#modalShiftType').select2({
+                theme: 'bootstrap4',
+                minimumResultsForSearch: -1, // Hide search box
+                dropdownParent: $('#addShiftModal'),
+                templateResult: formatType,
+                templateSelection: formatType
+            });
+
             // Relief Guard Select2 Init
             $('#modalReliefGuardId').select2({
                 placeholder: 'Select Relief Guard',
@@ -1579,10 +1629,14 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                     var typeClass = '';
+                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
+                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                             (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -1715,6 +1769,7 @@
                 $('#modalPayRate').val('');
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
+                $('#modalShiftType').val('Regular').trigger('change');
 
                 // Clear relief
                 $('#modalReliefGuardId').val(null).trigger('change');
@@ -1725,6 +1780,52 @@
 
                 $('#addShiftModal').modal('show');
             });
+
+            // Quick Cycle Shift Type on Click
+            $('#roster_grid, #binder_grid').on('click', '.shift-card', function (e) {
+                // Ignore if clicked on delete/edit buttons
+                if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
+                
+                var card = $(this);
+                if (card.data('locked') === true || card.data('locked') === "true") return;
+
+                var id = card.data('id');
+                window.cycleShiftType(id, card);
+            });
+
+            window.cycleShiftType = function(id, card) {
+                $.ajax({
+                    url: '/roster/Booking?handler=CycleShiftType',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { id: id },
+                    success: function (res) {
+                        if (res.success) {
+                            // Find all instances of this shift in the DOM (both grids)
+                            var allCards = $('.shift-card[data-id="' + id + '"]');
+                            
+                            // Update Card Data and DOM Attributes for all instances
+                            allCards.data('shifttype', res.shiftType);
+                            allCards.attr('data-shifttype', res.shiftType);
+                            allCards.data('status', res.status);
+                            allCards.attr('data-status', res.status);
+                            
+                            // Update Classes for Shading
+                            allCards.removeClass('adhoc-accepted adhoc-not-accepted');
+                            if (res.shiftType === 'AdhocAccepted') allCards.addClass('adhoc-accepted');
+                            else if (res.shiftType === 'AdhocNotAccepted') allCards.addClass('adhoc-not-accepted');
+
+                            // Update Status Classes
+                            allCards.removeClass('status-pushed status-accepted status-declined');
+                            if (res.status === 1) allCards.addClass('status-accepted');
+                            else if (res.status === 2) allCards.addClass('status-declined');
+                            else allCards.addClass('status-pushed');
+                        } else {
+                            if (res.message) alert(res.message);
+                        }
+                    }
+                });
+            };
 
             window.editShift = function(id, event) {
                 if (event) event.stopPropagation();
@@ -1762,6 +1863,7 @@
 
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
+                $('#modalShiftType').val(card.data('shifttype') || 'Regular').trigger('change');
 
                 // Load Relief Data
                 var rGuardId = card.data('reliefguardid');
@@ -1849,6 +1951,8 @@
 
                 var reliefReason = $('#modalReliefReason').val();
 
+                var shiftType = $('#modalShiftType').val();
+
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
 
@@ -1893,7 +1997,8 @@
                         callsignId: callsignId,
                         reliefGuardId: reliefGuardId,
                         reliefProviderName: reliefProviderName,
-                        reliefReason: reliefReason
+                        reliefReason: reliefReason,
+                        shiftType: shiftType
                     },
                     success: function (res) {
                         if (res.success) {
@@ -2300,6 +2405,7 @@
                         providerName: shiftData.providerName,
                         payRateId: shiftData.payRateId,
                         callsignId: shiftData.callsignId,
+                        shiftType: 'Regular', // Default for dropped copies
                         shiftId: null // Always creating new
                     },
                     success: function (res) {
@@ -2493,10 +2599,14 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                        var typeClass = '';
+                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                             'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
                                             '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                                 ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                                 (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -2682,9 +2792,6 @@
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 if (e.target.id === 'settings-tab') {
                     loadSettingsProjects();
-                    // Clear previous tab states to avoid conflicts
-                    currentGroupId = null;
-                    currentBinderId = null;
                 } else if (e.target.id === 'settings-project-tab') {
                     loadSettingsProjects();
                 } else if (e.target.id === 'settings-group-tab') {

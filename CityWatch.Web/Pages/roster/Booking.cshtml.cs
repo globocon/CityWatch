@@ -284,7 +284,8 @@ namespace CityWatch.Web.Pages.roster
                             reliefGuardName = s.ReliefGuard?.Name ?? "",
                             reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                             reliefProviderName = s.ReliefProviderName ?? "",
-                            reliefReason = s.ReliefReason ?? ""
+                            reliefReason = s.ReliefReason ?? "",
+                            shiftType = s.ShiftType ?? "Regular"
                         })
                         .ToList();
                 }).ToList()
@@ -351,7 +352,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string shiftType)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -436,12 +437,19 @@ namespace CityWatch.Web.Pages.roster
                 existing.ReliefReason = reliefReason;
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
+                existing.ShiftType = shiftType;
+
+                if (shiftType == "AdhocAccepted") existing.Status = RosterShiftStatus.Accepted;
+                else if (shiftType == "AdhocNotAccepted") existing.Status = RosterShiftStatus.Pushed;
 
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true, id = existing.Id });
             }
             else
             {
+                var status = RosterShiftStatus.Pushed;
+                if (shiftType == "AdhocAccepted") status = RosterShiftStatus.Accepted;
+
                 var schedule = new RosterSchedule
                 {
                     RosterGroupId = groupId,
@@ -453,9 +461,10 @@ namespace CityWatch.Web.Pages.roster
                     ReliefGuardId = reliefGuardId,
                     ReliefProviderName = reliefProviderName,
                     ReliefReason = reliefReason,
-                    Status = RosterShiftStatus.Pushed,
+                    Status = status,
                     PayRateId = payRateId,
-                    CallsignId = callsignId
+                    CallsignId = callsignId,
+                    ShiftType = shiftType
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -736,7 +745,8 @@ namespace CityWatch.Web.Pages.roster
                                 reliefGuardName = s.ReliefGuard?.Name ?? "",
                                 reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                                 reliefProviderName = s.ReliefProviderName ?? "",
-                                reliefReason = s.ReliefReason ?? ""
+                                reliefReason = s.ReliefReason ?? "",
+                                shiftType = s.ShiftType ?? "Regular"
                             })
                             .ToList();
                     }).ToList()
@@ -1204,6 +1214,47 @@ namespace CityWatch.Web.Pages.roster
 
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostCycleShiftType(int id)
+        {
+            var schedule = await _context.RosterSchedules.FindAsync(id);
+            if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found." });
+
+            var today = DateTime.Today;
+            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+            if (schedule.ShiftStart < firstDayOfCurrentMonth)
+            {
+                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+            }
+
+            // Cycle: Regular -> AdhocAccepted -> AdhocNotAccepted -> Regular
+            var currentType = schedule.ShiftType ?? "Regular";
+            var nextType = "Regular";
+            var nextStatus = RosterShiftStatus.Pushed;
+
+            if (currentType == "Regular")
+            {
+                nextType = "AdhocAccepted";
+                nextStatus = RosterShiftStatus.Accepted;
+            }
+            else if (currentType == "AdhocAccepted")
+            {
+                nextType = "AdhocNotAccepted";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+            else
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+
+            schedule.ShiftType = nextType;
+            schedule.Status = nextStatus;
+
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
         }
     }
 }
