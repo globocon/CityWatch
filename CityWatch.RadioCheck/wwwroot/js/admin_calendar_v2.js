@@ -29,20 +29,20 @@ $(document).ready(function () {
                     return value;
                 }
             },
-            { field: 'textMessage', title: 'Event Message', width: 450 },
-            { field: 'formattedStartDate', title: 'Start Date', width: 140 },
-            { field: 'formattedExpiryDate', title: 'Expiry Date', width: 140 },
+            { field: 'textMessage', title: 'Event Message' },
+            { field: 'formattedStartDate', title: 'Start Date', width: 160 },
+            { field: 'formattedExpiryDate', title: 'Expiry Date', width: 160 },
             { 
                 field: 'repeatYearly', 
                 title: 'Repeat', 
-                width: 80, 
+                width: 100, 
                 align: 'center',
                 renderer: (value) => value ? '<i class="fa fa-check-circle text-success"></i>' : '<i class="fa fa-times-circle text-muted"></i>'
             },
             {
                 field: 'isPublicHoliday',
                 title: 'PH',
-                width: 150,
+                width: 220,
                 renderer: (value, record) => {
                     if (value === true || value === "true" || value === 1 || value === "1") {
                         return `<span class="badge badge-warning p-1" title="${record.states || 'All States'}"><i class="fa fa-flag mr-1"></i>PH</span> <small class="text-muted">${record.states ? record.states.substring(0, 10) + (record.states.length > 10 ? '...' : '') : 'ALL'}</small>`;
