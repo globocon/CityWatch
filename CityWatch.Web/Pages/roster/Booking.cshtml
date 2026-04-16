@@ -499,19 +499,27 @@
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
-                            <label>Group (Client)</label>
-                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
-                        </div>
-                         <div class="col-6">
                             <label>Payment Profile</label>
                             <select id="modalPositionId" class="form-control" style="width: 100%">
                                 <option value="">Select Group First</option>
                             </select>
                         </div>
+                        <div class="col-6">
+                            <label>Type</label>
+                            <select id="modalShiftType" class="form-control" style="width: 100%">
+                                <option value="Regular" data-color="#667eea">Standard (Regular)</option>
+                                <option value="AdhocAccepted" data-color="#1B5E20">ADHOC shift accepted</option>
+                                <option value="AdhocNotAccepted" data-color="#E65100">ADHOC shift not accepted</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
-                            <label>Guard Pay Rate</label>
+                            <label>Rate Profile</label>
+                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
+                        </div>
+                         <div class="col-6">
+                            <label>Pay Rate</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">$</span>
@@ -519,6 +527,12 @@
                                 <input type="text" id="modalPayRate" class="form-control" readonly />
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-link text-dark font-weight-bold p-0" id="btnAllowances" style="text-decoration: none;">
+                            <i class="fa fa-plus-circle text-success mr-1" style="font-size: 1.2rem; vertical-align: middle;"></i> Allowances
+                        </button>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -796,6 +810,27 @@
             display: block;
             margin-top: 2px;
             font-weight: 500;
+        }
+
+        /* Shift Type ADHOC Shading */
+        .shift-card.adhoc-accepted {
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important;
+            border-left: 3px solid #81C784 !important;
+        }
+        .shift-card.adhoc-not-accepted {
+            background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important;
+            border-left: 3px solid #FFB74D !important;
+        }
+
+        /* Type Dropdown Color Dots */
+        .type-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         /* Enhanced Delete Button */
@@ -1446,6 +1481,23 @@
                 dropdownParent: $('#addShiftModal')
             });
 
+            function formatType(state) {
+                if (!state.id) return state.text;
+                var color = $(state.element).data('color');
+                var $state = $(
+                    '<span><span class="type-dot" style="background-color:' + color + ';"></span>' + state.text + '</span>'
+                );
+                return $state;
+            };
+
+            $('#modalShiftType').select2({
+                theme: 'bootstrap4',
+                minimumResultsForSearch: -1, // Hide search box
+                dropdownParent: $('#addShiftModal'),
+                templateResult: formatType,
+                templateSelection: formatType
+            });
+
             // Relief Guard Select2 Init
             $('#modalReliefGuardId').select2({
                 placeholder: 'Select Relief Guard',
@@ -1579,10 +1631,14 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                     var typeClass = '';
+                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
+                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                             (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -1715,6 +1771,7 @@
                 $('#modalPayRate').val('');
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
+                $('#modalShiftType').val('Regular').trigger('change');
 
                 // Clear relief
                 $('#modalReliefGuardId').val(null).trigger('change');
@@ -1762,6 +1819,7 @@
 
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
+                $('#modalShiftType').val(card.data('shifttype') || 'Regular').trigger('change');
 
                 // Load Relief Data
                 var rGuardId = card.data('reliefguardid');
@@ -1849,6 +1907,8 @@
 
                 var reliefReason = $('#modalReliefReason').val();
 
+                var shiftType = $('#modalShiftType').val();
+
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
 
@@ -1893,7 +1953,8 @@
                         callsignId: callsignId,
                         reliefGuardId: reliefGuardId,
                         reliefProviderName: reliefProviderName,
-                        reliefReason: reliefReason
+                        reliefReason: reliefReason,
+                        shiftType: shiftType
                     },
                     success: function (res) {
                         if (res.success) {
@@ -2300,6 +2361,7 @@
                         providerName: shiftData.providerName,
                         payRateId: shiftData.payRateId,
                         callsignId: shiftData.callsignId,
+                        shiftType: 'Regular', // Default for dropped copies
                         shiftId: null // Always creating new
                     },
                     success: function (res) {
@@ -2493,10 +2555,14 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                        var typeClass = '';
+                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                             'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '">' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
                                             '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                                 ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                                 (s.reliefGuardName || s.reliefProviderName || s.guardName) + 

@@ -53,6 +53,9 @@ namespace CityWatch.Data.Models
         public string ReliefProviderName { get; set; }
 
         public string ReliefReason { get; set; }
+        
+        [StringLength(50)]
+        public string ShiftType { get; set; }
 
         public bool IsDeleted { get; set; }
     }

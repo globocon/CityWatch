@@ -367,10 +367,27 @@ namespace CityWatch.Web.Services
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
+                                    
+                                    // ADHOC Color Overrides
+                                    if (shift.ShiftType == "AdhocAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(27, 94, 32); // Dark Green
+                                    }
+                                    else if (shift.ShiftType == "AdhocNotAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(230, 81, 0); // Dark Orange
+                                    }
+
                                     var borderColor = ColorConstants.BLACK;
                                     var fontColor = ColorConstants.BLACK;
 
-                                    if (isRelief)
+                                    if (shift.ShiftType == "AdhocAccepted" || shift.ShiftType == "AdhocNotAccepted")
+                                    {
+                                        fontColor = ColorConstants.WHITE;
+                                        borderColor = ColorConstants.WHITE;
+                                    }
+
+                                    if (isRelief && shift.ShiftType == "Regular")
                                     {
                                         bgColor = new DeviceRgb(243, 229, 245); // Light purple bg
                                         borderColor = new DeviceRgb(111, 66, 193); // Purple border
