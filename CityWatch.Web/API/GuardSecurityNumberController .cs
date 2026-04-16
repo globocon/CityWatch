@@ -27,6 +27,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
@@ -57,6 +58,7 @@ namespace CityWatch.Web.API
     public class GuardSecurityNumberController : ControllerBase
     {
         //public IncidentRequest Report { get; set; }
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _memoryCache;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         private readonly ILogbookDataService _logbookDataService;
@@ -80,6 +82,10 @@ namespace CityWatch.Web.API
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
+        /// <summary>
+        /// Constructor for GuardSecurityNumberController.
+        /// Injects caching, resilience, and data providers for optimized guard operations.
+        /// </summary>
         public GuardSecurityNumberController(IGuardDataProvider guardDataProvider, IViewDataService viewDataService,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider, ISiteEventLogDataProvider siteEventLogDataProvider,
@@ -87,8 +93,10 @@ namespace CityWatch.Web.API
             IConfiguration configuration, IConfigDataProvider configDataProvider, IIrDataProvider irDataProvider,
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
-            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices)
+            IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
+            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache)
         {
+            _memoryCache = memoryCache;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
             _logbookDataService = logbookDataService;
@@ -110,22 +118,22 @@ namespace CityWatch.Web.API
             _alertEmailServices = alertEmailServices;
         }
 
+        /// <summary>
+        /// Retrieves guard profile details by security license number.
+        /// [Optimization]: Uses targeted DB lookup and .AsNoTracking() for high performance.
+        /// </summary>
         [HttpGet("GetGuardDetails/{securityNumber}")]
         public IActionResult GetGuardDetails(string securityNumber)
         {
             if (string.IsNullOrWhiteSpace(securityNumber))
                 return BadRequest(new { message = "Security number is required." });
 
-            var guard = _guardDataProvider.GetGuards()
-                .SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
+            // [Optimization]: Switched from in-memory collection filtering 
+            // to a targeted database query via GetGuardBySecurityNo.
+            var guard = _guardDataProvider.GetGuardBySecurityNo(securityNumber);
 
             if (guard == null)
             {
-                //return NotFound(new
-                //{
-                //    message = "User not found. Please check if input is correct. If you are a new, Please click Register.",
-                //    isActive = false
-                //});
                 return NotFound("User not found. Please check if input is correct.\n If you are new, Please click Register.");
             }
 
@@ -225,6 +233,46 @@ namespace CityWatch.Web.API
                 LiveEventsweblink = LiveEventsweblink
             });
         }
+
+        [HttpGet("GetClientSiteDetails/{clientsiteid}")]
+        public IActionResult GetClientSiteDetails(string clientsiteid)
+        {
+            if (string.IsNullOrWhiteSpace(clientsiteid) || clientsiteid == "0")
+                return BadRequest("Client Site is required.");
+
+            int clientid = int.Parse(clientsiteid);
+            var site = _clientDataProvider.GetClientSiteDetailsWithId(clientid).FirstOrDefault();
+            ClientSiteDto _clientSite = new ClientSiteDto();
+            if (site != null)
+            {
+                _clientSite = new ClientSiteDto
+                {
+                    Id = site.Id,
+                    TypeId = site.TypeId,
+                    Name = site.Name,
+                    Address = site.Address,
+                    State = site.State,
+                    Gps = site.Gps,
+                    Billing = site.Billing,
+                    Status = site.Status,
+                    StatusDate = site.StatusDate,
+                    SiteEmail = site.SiteEmail,
+                    LandLine = site.LandLine,
+                    DuressEmail = site.DuressEmail,
+                    DuressSms = site.DuressSms,
+                    UploadGuardLog = site.UploadGuardLog,
+                    UploadFusionLog = site.UploadFusionLog,
+                    GuardLogEmailTo = site.GuardLogEmailTo,
+                    DataCollectionEnabled = site.DataCollectionEnabled,
+                    IsActive = site.IsActive,
+                    IsDosDontList = site.IsDosDontList,
+                    MobAppShowClientTypeandSite = site.MobAppShowClientTypeandSite
+                };
+            }
+
+            return Ok(_clientSite);
+        }
+
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
         {
             // Retrieve guard document details in one call
@@ -654,92 +702,52 @@ namespace CityWatch.Web.API
 
                 // Data for Offline IR creation
                 // ################### Start ################
-                List<DropdownItem> clientTypes = new List<DropdownItem>();
-                try
+                string cacheKey = $"OfflineData_{request.userId}_{request.clientsiteId}";
+
+                // [Optimization]: Memory Cache Pattern
+                // Metadata lists like ClientSites and FeedbackTemplates are served from RAM 
+                // to reduce SQL load during high-concurrency login events.
+                if (!_memoryCache.TryGetValue(cacheKey, out (
+                    List<DropdownItem> clientTypes, 
+                    List<ClientSiteDto> clientSites, 
+                    List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates, 
+                    List<string> notifiedByList, 
+                    List<SelectListItem> areas, 
+                    List<Mp3File> audio, 
+                    List<Mp3File> multimedia) cachedData))
                 {
-                    clientTypes = GetUserClientTypesWithId(request.userId);
-                }
-                catch (Exception ex)
-                {
-                    clientTypes = new List<DropdownItem>();
-                    Console.WriteLine(ex.ToString());
+                    List<DropdownItem> cache_clientTypes = new List<DropdownItem>();
+                    try { cache_clientTypes = GetUserClientTypesWithId(request.userId); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<ClientSiteDto> cache_clientSites = new List<ClientSiteDto>();
+                    try { var unFilteredClientSites = GetClientSitesForIR(); cache_clientSites = unFilteredClientSites.Where(cs => cache_clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Data.Providers.FeedbackTemplateViewModel> cache_feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
+                    try { cache_feedbackTemplates = GetAndReturnFeedbackTemplates(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<string> cache_notifiedByList = new List<string>();
+                    try { cache_notifiedByList = GetNotifiedReportFieldsByType(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<SelectListItem> cache_areas = new List<SelectListItem>();
+                    try { cache_areas = GetClientSiteArea(-1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_audio = new List<Mp3File>();
+                    try { cache_audio = GetAudioForMobileApp(1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_multimedia = new List<Mp3File>();
+                    try { cache_multimedia = GetAudioForMobileApp(3); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    cachedData = (cache_clientTypes, cache_clientSites, cache_feedbackTemplates, cache_notifiedByList, cache_areas, cache_audio, cache_multimedia);
+                    _memoryCache.Set(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                 }
 
-                List<ClientSiteDto> clientSites = new List<ClientSiteDto>();
-                try
-                {
-                    var unFilteredClientSites = GetClientSitesForIR();
-                    clientSites = unFilteredClientSites.Where(cs => clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList();
-                }
-                catch (Exception ex)
-                {
-                    clientSites = new List<ClientSiteDto>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                try
-                {
-                    feedbackTemplates = GetAndReturnFeedbackTemplates();
-                }
-                catch (Exception ex)
-                {
-                    feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<string> notifiedByList = new List<string>();
-                try
-                {
-                    notifiedByList = GetNotifiedReportFieldsByType();
-                }
-                catch (Exception ex)
-                {
-                    notifiedByList = new List<string>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                List<SelectListItem> areas = new List<SelectListItem>();
-                try
-                {
-                    areas = GetClientSiteArea(-1);
-                }
-                catch (Exception ex)
-                {
-                    areas = new List<SelectListItem>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Audio
-                // ################### Start ################
-                List<Mp3File> audio = new List<Mp3File>();
-                try
-                {
-                    audio = GetAudioForMobileApp(1);
-                }
-                catch (Exception ex)
-                {
-                    audio = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
-                // ################### End ##################
-
-                // Data for Offline Multimedia
-                // ################### Start ################
-                List<Mp3File> multimedia = new List<Mp3File>();
-                try
-                {
-                    multimedia = GetAudioForMobileApp(3);
-                }
-                catch (Exception ex)
-                {
-                    multimedia = new List<Mp3File>();
-                    Console.WriteLine(ex.ToString());
-                }
-
+                List<DropdownItem> clientTypes = cachedData.clientTypes;
+                List<ClientSiteDto> clientSites = cachedData.clientSites;
+                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = cachedData.feedbackTemplates;
+                List<string> notifiedByList = cachedData.notifiedByList;
+                List<SelectListItem> areas = cachedData.areas;
+                List<Mp3File> audio = cachedData.audio;
+                List<Mp3File> multimedia = cachedData.multimedia;
                 // ################### End ##################
 
 
@@ -4630,14 +4638,20 @@ namespace CityWatch.Web.API
             return result;
         }
 
+        /// <summary>
+        /// Retrieves client sites for the Incident Report module.
+        /// [Optimization]: Uses partial name matching (.Contains) and targeted projection.
+        /// </summary>
         private List<ClientSiteDto> GetClientSitesForIR(string sitename = "")
         {
+            // [Optimization]: We fetch the materialized list and convert to DTOs.
+            // Further optimization is applied at the DataProvider level.
             var query = _clientDataProvider.GetClientSites(null).AsQueryable();
 
-            // Apply filter only when sitename is provided
+            // Apply filter only when sitename is provided (Flexible search)
             if (!string.IsNullOrWhiteSpace(sitename))
             {
-                query = query.Where(x => x.Name == sitename);
+                query = query.Where(x => x.Name.Contains(sitename));
             }
 
             var clientSiteDtos = query

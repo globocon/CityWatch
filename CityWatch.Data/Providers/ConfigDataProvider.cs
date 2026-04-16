@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
@@ -242,6 +242,9 @@ namespace CityWatch.Data.Providers
         List<PayRate> GetPayRates();
         void SavePayRate(PayRate payRate);
         void DeletePayRate(int id);
+        List<PayRateGroup> GetPayRateGroups();
+        void SavePayRateGroup(PayRateGroup group);
+        void DeletePayRateGroup(int id);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -255,7 +258,7 @@ namespace CityWatch.Data.Providers
 
         public List<PayRate> GetPayRates()
         {
-            return _context.PayRates.Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
+            return _context.PayRates.Include(x => x.PayRateGroup).Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
         }
 
         public void SavePayRate(PayRate payRate)
@@ -275,6 +278,7 @@ namespace CityWatch.Data.Providers
                 if (existing != null)
                 {
                     existing.Description = payRate.Description;
+                    existing.PayRateGroupId = payRate.PayRateGroupId;
                     existing.SellRateToClient = payRate.SellRateToClient;
                     existing.Comms1 = payRate.Comms1;
                     existing.Comms2 = payRate.Comms2;
@@ -290,6 +294,48 @@ namespace CityWatch.Data.Providers
             var existing = _context.PayRates.SingleOrDefault(x => x.Id == id);
             if (existing != null)
             {
+                existing.IsDeleted = true;
+                _context.SaveChanges();
+            }
+        }
+
+        public List<PayRateGroup> GetPayRateGroups()
+        {
+            return _context.PayRateGroups.Where(x => !x.IsDeleted).OrderBy(x => x.Name).ToList();
+        }
+
+        public void SavePayRateGroup(PayRateGroup group)
+        {
+            if (_context.PayRateGroups.Any(x => x.Name == group.Name && x.Id != group.Id && !x.IsDeleted))
+            {
+                throw new Exception("A Group with this name already exists.");
+            }
+
+            if (group.Id == 0)
+            {
+                _context.PayRateGroups.Add(group);
+            }
+            else
+            {
+                var existing = _context.PayRateGroups.SingleOrDefault(x => x.Id == group.Id);
+                if (existing != null)
+                {
+                    existing.Name = group.Name;
+                }
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeletePayRateGroup(int id)
+        {
+            var existing = _context.PayRateGroups.SingleOrDefault(x => x.Id == id);
+            if (existing != null)
+            {
+                // Optionally check if any pay rates are using this group
+                if (_context.PayRates.Any(x => x.PayRateGroupId == id && !x.IsDeleted))
+                {
+                    throw new Exception("Cannot delete group because it is being used by one or more pay rates.");
+                }
                 existing.IsDeleted = true;
                 _context.SaveChanges();
             }
@@ -369,16 +415,25 @@ namespace CityWatch.Data.Providers
 
         public void SaveReportTemplate(DateTime dateTimeUpdated)
         {
-            var templateToUpdate = _context.ReportTemplates.Single();
-            templateToUpdate.LastUpdated = dateTimeUpdated;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent "Sequence contains more than one element"
+            // if multiple template records exist.
+            var templateToUpdate = _context.ReportTemplates.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.LastUpdated = dateTimeUpdated;
+                _context.SaveChanges();
+            }
         }
         //To save the DefaultEmail
         public void SaveDefaultEmail(string DefaultEmail)
         {
-            var templateToUpdate = _context.ReportTemplates.Single();
-            templateToUpdate.DefaultEmail = DefaultEmail;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent crashing if multiple records exist.
+            var templateToUpdate = _context.ReportTemplates.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.DefaultEmail = DefaultEmail;
+                _context.SaveChanges();
+            }
         }
 
 
@@ -905,10 +960,15 @@ namespace CityWatch.Data.Providers
 
         public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
         {
-            var templateToUpdate = _context.CompanyDetails.Single();
-            templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
-            templateToUpdate.PrimaryLogoPath = primaryLogoPath;
-            _context.SaveChanges();
+            // Use FirstOrDefault instead of Single to prevent "Sequence contains more than one element"
+            // if multiple company details records exist.
+            var templateToUpdate = _context.CompanyDetails.FirstOrDefault();
+            if (templateToUpdate != null)
+            {
+                templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
+                templateToUpdate.PrimaryLogoPath = primaryLogoPath;
+                _context.SaveChanges();
+            }
         }
         public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId)
         {

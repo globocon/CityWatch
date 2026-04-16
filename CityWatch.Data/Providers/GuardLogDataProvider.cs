@@ -2807,8 +2807,11 @@ namespace CityWatch.Data.Providers
         }
         public int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date)
         {
+            // Use FirstOrDefault with ordering to prevent "Sequence contains more than one element" error
+            // This ensures robustness if multiple login records exist for the same criteria.
             return _context.GuardLogins
-                 .SingleOrDefault(z => z.ClientSiteLogBookId == clientsitelogbookId && z.GuardId == guardId && z.OnDuty.Date == date.Date).Id;
+                .OrderByDescending(z => z.Id)
+                .FirstOrDefault(z => z.ClientSiteLogBookId == clientsitelogbookId && z.GuardId == guardId && z.OnDuty.Date == date.Date)?.Id ?? 0;
         }
         public List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes)
         {
@@ -5911,7 +5914,9 @@ namespace CityWatch.Data.Providers
         //To get the Details of RadiocheckLogbookDetails start
         public RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails()
         {
-            return _context.RadioCheckLogbookSiteDetails.SingleOrDefault();
+            // Use FirstOrDefault instead of SingleOrDefault to prevent "Sequence contains more than one element"
+            // if multiple configuration records exist.
+            return _context.RadioCheckLogbookSiteDetails.OrderByDescending(x => x.Id).FirstOrDefault();
         }
 
         //To get the Details of RadiocheckLogbookDetails stop

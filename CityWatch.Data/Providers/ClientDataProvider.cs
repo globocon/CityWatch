@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
@@ -72,6 +72,7 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         int SaveRCList(RCActionList RC);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
+        List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
@@ -375,11 +376,17 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+        /// <summary>
+        /// Highly optimized fetch for client sites. 
+        /// [Optimization]: Uses .AsNoTracking() to ensure Entity Framework 
+        /// does not track objects in memory, reducing CPU and RAM load.
+        /// </summary>
         public List<ClientSite> GetClientSites(int? typeId)
         {
 
 
             return _context.ClientSites
+                .AsNoTracking()
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
@@ -471,6 +478,23 @@ namespace CityWatch.Data.Providers
                 newClientSite.IsDosDontList = clientSite.IsDosDontList;
                 newClientSite.UploadFusionLog = clientSite.UploadFusionLog;
 
+                newClientSite.UploadGuardLog = clientSite.UploadGuardLog;
+                newClientSite.UploadKVLog = clientSite.UploadKVLog;
+                newClientSite.UploadSWLog = clientSite.UploadSWLog;
+                newClientSite.GuardLogEmailTo = clientSite.GuardLogEmailTo;
+
+                newClientSite.UploadGuardWeeklyLog = clientSite.UploadGuardWeeklyLog;
+                newClientSite.UploadKVWeeklyLog = clientSite.UploadKVWeeklyLog;
+                newClientSite.UploadSWWeeklyLog = clientSite.UploadSWWeeklyLog;
+                newClientSite.UploadFusionWeeklyLog = clientSite.UploadFusionWeeklyLog;
+                newClientSite.GuardLogEmailWeeklyLogTo = clientSite.GuardLogEmailWeeklyLogTo;
+
+                newClientSite.UploadGuardMonthlyLog = clientSite.UploadGuardMonthlyLog;
+                newClientSite.UploadKVMonthlyLog = clientSite.UploadKVMonthlyLog;
+                newClientSite.UploadSWMonthlyLog = clientSite.UploadSWMonthlyLog;
+                newClientSite.UploadFusionMonthlyLog = clientSite.UploadFusionMonthlyLog;
+                newClientSite.GuardLogEmailMonthlyLogTo = clientSite.GuardLogEmailMonthlyLogTo;
+
                 _context.ClientSites.Add(newClientSite);
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -496,6 +520,23 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.DuressEmail = clientSite.DuressEmail;
                 clientSiteToUpdate.IsDosDontList = clientSite.IsDosDontList;
                 clientSiteToUpdate.UploadFusionLog = clientSite.UploadFusionLog;
+
+                clientSiteToUpdate.UploadGuardLog = clientSite.UploadGuardLog;
+                clientSiteToUpdate.UploadKVLog = clientSite.UploadKVLog;
+                clientSiteToUpdate.UploadSWLog = clientSite.UploadSWLog;
+                clientSiteToUpdate.GuardLogEmailTo = clientSite.GuardLogEmailTo;
+
+                clientSiteToUpdate.UploadGuardWeeklyLog = clientSite.UploadGuardWeeklyLog;
+                clientSiteToUpdate.UploadKVWeeklyLog = clientSite.UploadKVWeeklyLog;
+                clientSiteToUpdate.UploadSWWeeklyLog = clientSite.UploadSWWeeklyLog;
+                clientSiteToUpdate.UploadFusionWeeklyLog = clientSite.UploadFusionWeeklyLog;
+                clientSiteToUpdate.GuardLogEmailWeeklyLogTo = clientSite.GuardLogEmailWeeklyLogTo;
+
+                clientSiteToUpdate.UploadGuardMonthlyLog = clientSite.UploadGuardMonthlyLog;
+                clientSiteToUpdate.UploadKVMonthlyLog = clientSite.UploadKVMonthlyLog;
+                clientSiteToUpdate.UploadSWMonthlyLog = clientSite.UploadSWMonthlyLog;
+                clientSiteToUpdate.UploadFusionMonthlyLog = clientSite.UploadFusionMonthlyLog;
+                clientSiteToUpdate.GuardLogEmailMonthlyLogTo = clientSite.GuardLogEmailMonthlyLogTo;
             }
             _context.SaveChanges();
 
@@ -947,6 +988,17 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                 .Where(x => x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+        public List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(x => x.ClientSite.IsActive == true && 
+                (x.ClientSite.UploadGuardLog || x.ClientSite.UploadFusionLog || x.ClientSite.UploadSWLog || x.ClientSite.UploadKVLog) && 
+                x.Date == LogDate && !x.DbxUploaded)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();

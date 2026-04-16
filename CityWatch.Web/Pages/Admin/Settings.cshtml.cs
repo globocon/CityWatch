@@ -778,6 +778,65 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+
+        public JsonResult OnGetGuardUnavailabilities(int guardId)
+        {
+            var records = _guardDataProvider.GetGuardUnavailabilities(guardId);
+            return new JsonResult(records);
+        }
+
+        public JsonResult OnPostSaveGuardUnavailability(int guardId, string reason, DateTime fromDate, DateTime toDate)
+        {
+            var success = false;
+            var message = "Leave saved successfully.";
+            try
+            {
+                if (fromDate.Date < DateTime.Today)
+                {
+                    return new JsonResult(new { success = false, message = "Leaves cannot be added for past dates." });
+                }
+
+                if (fromDate > toDate)
+                {
+                    return new JsonResult(new { success = false, message = "'From Date' must be before or equal to 'To Date'." });
+                }
+
+                // Check overlap
+                if (_guardDataProvider.IsGuardUnavailable(guardId, fromDate, toDate, out var conflict))
+                {
+                    return new JsonResult(new { success = false, message = "Guard is already marked unavailable during this period: " + conflict.FromDate.ToString("dd MMMM yyyy") + " to " + conflict.ToDate.ToString("dd MMMM yyyy") });
+                }
+
+                _guardDataProvider.SaveGuardUnavailability(new GuardUnavailability
+                {
+                    GuardId = guardId,
+                    Reason = reason,
+                    FromDate = fromDate,
+                    ToDate = toDate
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteGuardUnavailability(int id)
+        {
+            var success = true;
+            try
+            {
+                _guardDataProvider.DeleteGuardUnavailability(id);
+            }
+            catch (Exception)
+            {
+                success = false;
+            }
+            return new JsonResult(new { success });
+        }
+
         //to add new feedback type -start
         public JsonResult OnPostFeedBackType(FeedbackType FeedbackNewTyperecord)
         {
@@ -3770,13 +3829,21 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
-        public JsonResult OnGetPayRatesList(int? page, int? pageNo, int? limit, string searchString)
+        public JsonResult OnGetPayRatesList(int? page, int? pageNo, int? limit, string searchString, int? groupId)
         {
             var data = _configDataProvider.GetPayRates();
+            
+            if (groupId.HasValue && groupId > 0)
+            {
+                data = data.Where(x => x.PayRateGroupId == groupId.Value).ToList();
+            }
+
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
-                data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) || (x.Currency != null && x.Currency.ToLower().Contains(searchString))).ToList();
+                data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) || 
+                                      (x.Currency != null && x.Currency.ToLower().Contains(searchString)) ||
+                                      (x.PayRateGroup != null && x.PayRateGroup.Name.ToLower().Contains(searchString))).ToList();
             }
 
             var total = data.Count();
@@ -3786,9 +3853,20 @@ namespace CityWatch.Web.Pages.Admin
             int pageSize = limit ?? 10;
 
             int skip = (currentPage - 1) * pageSize;
-            data = data.Skip(skip).Take(pageSize).ToList();
+            var records = data.Skip(skip).Take(pageSize).Select(x => new {
+                x.Id,
+                x.Description,
+                x.PayRateGroupId,
+                GroupName = x.PayRateGroup != null ? x.PayRateGroup.Name : "No Group",
+                x.SellRateToClient,
+                x.Comms1,
+                x.Comms2,
+                x.GuardPayRate,
+                x.Currency,
+                x.IsDeleted
+            }).ToList();
 
-            return new JsonResult(new { records = data, total = total });
+            return new JsonResult(new { records = records, total = total });
         }
 
         public IActionResult OnGetPayRatesExport(string searchString)
@@ -3871,6 +3949,44 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 _configDataProvider.DeletePayRate(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetPayRateGroupsList()
+        {
+            var data = _configDataProvider.GetPayRateGroups();
+            return new JsonResult(data);
+        }
+
+        public JsonResult OnPostSavePayRateGroup(PayRateGroup group)
+        {
+            var success = false;
+            var message = "Saved successfully";
+            try
+            {
+                _configDataProvider.SavePayRateGroup(group);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeletePayRateGroup(int id)
+        {
+            var success = false;
+            var message = "Deleted successfully";
+            try
+            {
+                _configDataProvider.DeletePayRateGroup(id);
                 success = true;
             }
             catch (Exception ex)

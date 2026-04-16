@@ -12,6 +12,10 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Enums;
 using CityWatch.Web.Services;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using CityWatch.Data.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -22,19 +26,22 @@ namespace CityWatch.Web.Pages.roster
         private readonly CityWatchDbContext _context;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IRosterReportGenerator _rosterReportGenerator;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public BookingModel(
             ILogger<BookingModel> logger,
             IViewDataService viewDataService,
             CityWatchDbContext context,
             IClientDataProvider clientDataProvider,
-            IRosterReportGenerator rosterReportGenerator)
+            IRosterReportGenerator rosterReportGenerator,
+            IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
             _viewDataService = viewDataService;
             _context = context;
             _clientDataProvider = clientDataProvider;
             _rosterReportGenerator = rosterReportGenerator;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public DateTime StartDate { get; set; }
@@ -43,10 +50,22 @@ namespace CityWatch.Web.Pages.roster
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
         public int? SelectedGroupId { get; set; }
+        public int? SelectedBinderId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
+        public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
+        public string ActiveTab { get; set; }
+        public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
 
-        public void OnGet(DateTime? startDate, int? groupId)
+        public class PublicHolidayDayInfo
+        {
+            public DateTime Date { get; set; }
+            public bool IsPublicHoliday { get; set; }
+            public List<string> States { get; set; }
+            public string Reasons { get; set; }
+        }
+
+        public void OnGet(DateTime? startDate, int? groupId, int? binderId, string tab)
         {
             var today = DateTime.Today;
             var timesheet = _clientDataProvider.GetTimesheetDetails();
@@ -75,15 +94,127 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
             SelectedGroupId = groupId;
+            SelectedBinderId = binderId;
+            ActiveTab = tab ?? "projects";
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)
+                .ToList();
+
+            CallsignList = _context.IncidentReportFields
+                .Where(x => x.TypeId == ReportFieldType.CallSign)
+                .OrderBy(x => x.Name)
                 .ToList();
 
             // Locking logic: Dec is locked if it's Jan.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = StartDate < firstDayOfCurrentMonth;
 
+            PopulateWeeklyHolidays();
+        }
+
+        private void PopulateWeeklyHolidays()
+        {
+            var holidays = _context.BroadcastBannerCalendarEvents
+                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= StartDate && x.StartDate <= EndDate)
+                .ToList();
+
+            var eventIds = holidays.Select(x => x.id).ToList();
+            var holidayStates = _context.PublicHolidayStates
+                .Where(x => eventIds.Contains(x.CalendarEventId) && !x.IsDeleted)
+                .ToList();
+
+            WeeklyHolidays = new List<PublicHolidayDayInfo>();
+            for (int i = 0; i < 7; i++)
+            {
+                var date = StartDate.AddDays(i).Date;
+                var dayHolidays = holidays.Where(h => date >= h.StartDate.Date && date <= h.ExpiryDate.Date).ToList();
+                
+                var states = new List<string>();
+                var reasonsList = new List<string>();
+                bool isPh = false;
+                
+                foreach (var h in dayHolidays)
+                {
+                    var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
+                    var reasonLabel = h.TextMessage;
+                    if (hStates.Count > 0)
+                    {
+                        reasonLabel += " (" + string.Join(", ", hStates) + ")";
+                    }
+                    else
+                    {
+                        states.Add("ALL");
+                    }
+                    
+                    reasonsList.Add(reasonLabel);
+                    isPh = true;
+                    states.AddRange(hStates);
+                }
+
+                WeeklyHolidays.Add(new PublicHolidayDayInfo
+                {
+                    Date = date,
+                    IsPublicHoliday = isPh,
+                    States = states.Distinct().ToList(),
+                    Reasons = string.Join("; ", reasonsList)
+                });
+            }
+        }
+
+        private bool[] GetPublicHolidayFlags(string siteState, DateTime start)
+        {
+            var flags = new bool[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = start.AddDays(i).Date;
+                
+                // Weekend check: Saturday (5) or Sunday (6) if week starts on Mon
+                // Actually, logic is Mon-Fri only for PH highlight
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    flags[i] = false;
+                    continue;
+                }
+
+                var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    // Applies if "ALL" is in states or if site's state matches (trimmed & case-insensitive)
+                    var trimmedSiteState = siteState?.Trim().ToUpper();
+                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(trimmedSiteState) && phInfo.States.Any(s => s.Trim().ToUpper() == trimmedSiteState)))
+                    {
+                        flags[i] = true;
+                    }
+                }
+            }
+            return flags;
+        }
+
+        private string[] GetPublicHolidayReasons(string siteState, DateTime start)
+        {
+            var reasons = new string[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = start.AddDays(i).Date;
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    reasons[i] = "";
+                    continue;
+                }
+
+                var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    var trimmedSiteState = siteState?.Trim().ToUpper();
+                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(trimmedSiteState) && phInfo.States.Any(s => s.Trim().ToUpper() == trimmedSiteState)))
+                    {
+                        reasons[i] = phInfo.Reasons;
+                    }
+                }
+                reasons[i] = reasons[i] ?? "";
+            }
+            return reasons;
         }
 
         public JsonResult OnGetSearchProjects(string search)
@@ -99,6 +230,9 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<JsonResult> OnGetLoadRoster(int groupId, DateTime startDate)
         {
+            this.StartDate = startDate;
+            this.EndDate = startDate.AddDays(6);
+            PopulateWeeklyHolidays();
 
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
@@ -111,6 +245,9 @@ namespace CityWatch.Web.Pages.roster
             var schedules = await _context.RosterSchedules
                 .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .ToListAsync();
 
             var rosterData = groupSites.Select(gs => new
@@ -118,6 +255,8 @@ namespace CityWatch.Web.Pages.roster
                 siteId = gs.ClientSiteId,
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
+                publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>
                 {
                     var targetDate = startDate.AddDays(dayOffset);
@@ -131,12 +270,21 @@ namespace CityWatch.Web.Pages.roster
                             guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
                             guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                            guardProvider = s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : s.ProviderName,
+                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             providerName = s.ProviderName,
                             payRateId = s.PayRateId,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
-                            status = (int)s.Status
+                            callsignId = s.CallsignId,
+                            callsignName = s.Callsign?.Name ?? "",
+                            status = (int)s.Status,
+                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                            reliefGuardId = s.ReliefGuardId,
+                            reliefGuardName = s.ReliefGuard?.Name ?? "",
+                            reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
+                            reliefProviderName = s.ReliefProviderName ?? "",
+                            reliefReason = s.ReliefReason ?? ""
                         })
                         .ToList();
                 }).ToList()
@@ -203,7 +351,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -211,6 +359,12 @@ namespace CityWatch.Web.Pages.roster
             if (start < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+            }
+
+            // Validation: Time range check (00:01 - 23:59)
+            if (start.TimeOfDay == TimeSpan.Zero || end.TimeOfDay == TimeSpan.Zero)
+            {
+                return new JsonResult(new { success = false, message = "Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59." });
             }
 
             // Validation 1: Start Date < End Date
@@ -241,6 +395,30 @@ namespace CityWatch.Web.Pages.roster
                     var guard = await _context.Guards.FindAsync(guardId);
                     return new JsonResult(new { success = false, message = $"Conflict: Guard {guard.Name} is currently assigned to {conflict.ClientSite.Name} from {conflict.ShiftStart:HH:mm} to {conflict.ShiftEnd:HH:mm}." });
                 }
+
+                // Check Guard Unavailability
+                var unavailGuard = await _context.GuardUnavailabilities
+                    .Where(u => u.GuardId == guardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
+                    .FirstOrDefaultAsync();
+                
+                if (unavailGuard != null)
+                {
+                    var guard = await _context.Guards.FindAsync(guardId);
+                    return new JsonResult(new { success = false, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
+                }
+            }
+
+            if (reliefGuardId.HasValue)
+            {
+                var unavailRelief = await _context.GuardUnavailabilities
+                    .Where(u => u.GuardId == reliefGuardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
+                    .FirstOrDefaultAsync();
+
+                if (unavailRelief != null)
+                {
+                    var guard = await _context.Guards.FindAsync(reliefGuardId);
+                    return new JsonResult(new { success = false, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
+                }
             }
 
             if (shiftId.HasValue && shiftId.Value > 0)
@@ -253,7 +431,11 @@ namespace CityWatch.Web.Pages.roster
                 existing.ShiftEnd = end;
                 existing.GuardId = guardId;
                 existing.ProviderName = providerName;
+                existing.ReliefGuardId = reliefGuardId;
+                existing.ReliefProviderName = reliefProviderName;
+                existing.ReliefReason = reliefReason;
                 existing.PayRateId = payRateId;
+                existing.CallsignId = callsignId;
 
                 await _context.SaveChangesAsync();
                 return new JsonResult(new { success = true, id = existing.Id });
@@ -268,8 +450,12 @@ namespace CityWatch.Web.Pages.roster
                     ShiftEnd = end,
                     GuardId = guardId,
                     ProviderName = providerName,
+                    ReliefGuardId = reliefGuardId,
+                    ReliefProviderName = reliefProviderName,
+                    ReliefReason = reliefReason,
                     Status = RosterShiftStatus.Pushed,
-                    PayRateId = payRateId
+                    PayRateId = payRateId,
+                    CallsignId = callsignId
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -277,19 +463,48 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
-        public JsonResult OnGetSearchPayRates(string search)
+        public JsonResult OnGetSearchPayRates(string search, int? groupId, int? id)
         {
-            var rates = _context.PayRates
-                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Description.Contains(search)))
+            var query = _context.PayRates.Include(x => x.PayRateGroup).Where(x => !x.IsDeleted);
+
+            if (id.HasValue)
+            {
+                query = query.Where(x => x.Id == id.Value);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(search))
+                    query = query.Where(x => x.Description.Contains(search));
+                
+                if (groupId.HasValue)
+                    query = query.Where(x => x.PayRateGroupId == groupId);
+            }
+
+            var rates = query.Select(x => new
+            {
+                id = x.Id,
+                text = x.Description,
+                guardPayRate = x.GuardPayRate,
+                groupId = x.PayRateGroupId,
+                groupName = x.PayRateGroup != null ? x.PayRateGroup.Name : "No Group"
+            }).ToList();
+
+            return new JsonResult(new { results = rates });
+        }
+
+        public JsonResult OnGetSearchPayRateGroups(string search)
+        {
+            var groups = _context.PayRateGroups
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .OrderBy(x => x.Name)
                 .Select(x => new
                 {
                     id = x.Id,
-                    text = x.Description,
-                    rate = x.GuardPayRate
+                    text = x.Name
                 })
                 .ToList();
 
-            return new JsonResult(new { results = rates });
+            return new JsonResult(new { results = groups });
         }
 
         public async Task<IActionResult> OnPostUpdateStatus(int id, int status)
@@ -416,19 +631,255 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int groupId, DateTime startDate)
+        public async Task<IActionResult> OnGetDownloadPdf(int? groupId, int? binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId, startDate);
+            byte[] pdfBytes = null;
+            string fileName = "";
+
+            if (binderId.HasValue && binderId.Value > 0)
+            {
+                pdfBytes = await _rosterReportGenerator.GenerateBinderRosterPdfAsync(binderId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                var binderName = await _context.RosterBinders.Where(x => x.Id == binderId.Value).Select(x => x.Name).FirstOrDefaultAsync();
+                fileName = $"Roster_Group_{binderName}_{startDate:yyyyMMdd}.pdf";
+            }
+            else if (groupId.HasValue && groupId.Value > 0)
+            {
+                pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                var groupName = await _context.RosterGroups.Where(x => x.Id == groupId.Value).Select(x => x.Name).FirstOrDefaultAsync();
+                fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
+            }
+
             if (pdfBytes != null)
             {
-                var groupName = await _context.RosterGroups.Where(x => x.Id == groupId).Select(x => x.Name).FirstOrDefaultAsync();
-                var fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
                 return File(pdfBytes, "application/pdf", fileName);
             }
             return NotFound();
         }
 
-        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option)
+        public JsonResult OnGetSearchBinders(string search)
+        {
+            var binders = _context.RosterBinders
+                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+                .OrderBy(x => x.Name)
+                .Select(x => new { id = x.Id, text = x.Name })
+                .ToList();
+
+            return new JsonResult(new { results = binders });
+        }
+
+        public async Task<JsonResult> OnGetLoadBinderRoster(int binderId, DateTime startDate)
+        {
+            this.StartDate = startDate;
+            this.EndDate = startDate.AddDays(6);
+            PopulateWeeklyHolidays();
+
+            var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
+
+            var binderProjects = await _context.RosterBinderProjects
+                .Where(x => x.RosterBinderId == binderId)
+                .Include(x => x.RosterGroup)
+                .ToListAsync();
+
+            var projectIds = binderProjects.Select(bp => bp.RosterGroupId).ToList();
+
+            var schedules = await _context.RosterSchedules
+                .Where(x => projectIds.Contains(x.RosterGroupId) && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
+                .ToListAsync();
+
+            var rosterData = new List<object>();
+
+            foreach (var bp in binderProjects.OrderBy(x => x.SortOrder).ThenBy(x => x.Id))
+            {
+                var groupSites = await _context.RosterGroupSites
+                    .Where(x => x.RosterGroupId == bp.RosterGroupId)
+                    .Include(x => x.ClientSite)
+                    .ThenInclude(x => x.ClientType)
+                    .ToListAsync();
+
+                var projectSites = groupSites.Select(gs => new
+                {
+                    siteId = gs.ClientSiteId,
+                    siteName = gs.ClientSite.Name,
+                    clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                    projectId = bp.RosterGroupId,
+                    projectName = bp.RosterGroup.Name,
+                    isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
+                    publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
+                    days = Enumerable.Range(0, 7).Select(dayOffset =>
+                    {
+                        var targetDate = startDate.AddDays(dayOffset);
+                        return schedules
+                            .Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
+                            .OrderBy(s => s.ShiftStart)
+                            .Select(s => new
+                            {
+                                id = s.Id,
+                                guardId = s.GuardId,
+                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
+                                guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
+                                guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                providerName = s.ProviderName,
+                                payRateId = s.PayRateId,
+                                shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                callsignId = s.CallsignId,
+                                callsignName = s.Callsign?.Name ?? "",
+                                status = (int)s.Status,
+                                durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuard?.Name ?? "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
+                                reliefProviderName = s.ReliefProviderName ?? "",
+                                reliefReason = s.ReliefReason ?? ""
+                            })
+                            .ToList();
+                    }).ToList()
+                }).ToList();
+
+                rosterData.Add(new { projectName = bp.RosterGroup.Name, projectId = bp.RosterGroupId, sites = projectSites });
+            }
+
+            return new JsonResult(new { results = rosterData });
+        }
+
+        public async Task<IActionResult> OnPostCreateBinder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Group name is required." });
+            }
+
+            var exists = await _context.RosterBinders.AnyAsync(x => x.Name == name.Trim() && !x.IsDeleted);
+            if (exists)
+            {
+                return new JsonResult(new { success = false, message = "A group with this name already exists." });
+            }
+
+            var binder = new RosterBinder
+            {
+                Name = name.Trim(),
+                IsDeleted = false
+            };
+
+            _context.RosterBinders.Add(binder);
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, id = binder.Id });
+        }
+
+        public async Task<IActionResult> OnPostEditBinder(int binderId, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new JsonResult(new { success = false, message = "Group name is required." });
+            }
+
+            var exists = await _context.RosterBinders.AnyAsync(x => x.Name == name.Trim() && x.Id != binderId && !x.IsDeleted);
+            if (exists)
+            {
+                return new JsonResult(new { success = false, message = "A group with this name already exists." });
+            }
+
+            var binder = await _context.RosterBinders.FindAsync(binderId);
+            if (binder != null)
+            {
+                binder.Name = name.Trim();
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Group not found." });
+        }
+
+        public async Task<IActionResult> OnPostDeleteBinder(int binderId)
+        {
+            var binder = await _context.RosterBinders.FindAsync(binderId);
+            if (binder != null)
+            {
+                var projects = await _context.RosterBinderProjects.Where(x => x.RosterBinderId == binderId).ToListAsync();
+                _context.RosterBinderProjects.RemoveRange(projects);
+
+                _context.RosterBinders.Remove(binder);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Group not found." });
+        }
+
+        public async Task<IActionResult> OnPostAddProjectToBinder(int binderId, int projectId)
+        {
+            var projectExists = await _context.RosterGroups.AnyAsync(x => x.Id == projectId && !x.IsDeleted);
+            if (!projectExists)
+            {
+                return new JsonResult(new { success = false, message = "Project not found or already deleted." });
+            }
+
+            var exists = await _context.RosterBinderProjects.AnyAsync(x => x.RosterBinderId == binderId && x.RosterGroupId == projectId);
+            if (!exists)
+            {
+                var maxSortOrder = await _context.RosterBinderProjects
+                    .Where(x => x.RosterBinderId == binderId)
+                    .Select(x => (int?)x.SortOrder)
+                    .MaxAsync() ?? 0;
+
+                _context.RosterBinderProjects.Add(new RosterBinderProject
+                {
+                    RosterBinderId = binderId,
+                    RosterGroupId = projectId,
+                    SortOrder = maxSortOrder + 1
+                });
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "This project is already added to this group." });
+        }
+
+        public async Task<IActionResult> OnPostDeleteProjectFromBinder(int binderId, int projectId)
+        {
+            var item = await _context.RosterBinderProjects.FirstOrDefaultAsync(x => x.RosterBinderId == binderId && x.RosterGroupId == projectId);
+            if (item != null)
+            {
+                _context.RosterBinderProjects.Remove(item);
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            return new JsonResult(new { success = false, message = "Project not found in group." });
+        }
+
+        public async Task<IActionResult> OnPostCheckFutureData(int groupId, DateTime startDate, string option)
+        {
+            try
+            {
+                var endDate = startDate.AddDays(7);
+                var hasSourceData = await _context.RosterSchedules
+                    .AnyAsync(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate);
+
+                DateTime copyUntil;
+                if (option == "NextWeek") copyUntil = startDate.AddDays(14);
+                else if (option == "Month") copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
+                else if (option == "Year") copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+                else return new JsonResult(new { success = false, message = "Invalid option." });
+
+                var targetStart = startDate.AddDays(7);
+                var hasData = await _context.RosterSchedules
+                    .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
+                    .AnyAsync();
+
+                return new JsonResult(new { success = true, hasSourceData, hasData });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking future roster data");
+                return new JsonResult(new { success = false, message = "An error occurred checking future data." });
+            }
+        }
+
+        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
         {
             try
             {
@@ -436,11 +887,6 @@ namespace CityWatch.Web.Pages.roster
                 var sourceSchedules = await _context.RosterSchedules
                     .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate)
                     .ToListAsync();
-
-                if (!sourceSchedules.Any())
-                {
-                    return new JsonResult(new { success = false, message = "No shifts found in the current week to copy." });
-                }
 
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
@@ -467,6 +913,24 @@ namespace CityWatch.Web.Pages.roster
 
                 var targetWeeks = new List<DateTime>();
                 var currentTargetStart = startDate.AddDays(7);
+                var targetStart = currentTargetStart;
+
+                if (eraseFuture)
+                {
+                    var shiftsToDelete = await _context.RosterSchedules
+                        .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
+                        .ToListAsync();
+                    
+                    // Do not delete shifts that are in previous/locked months
+                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => x.ShiftStart >= firstDayOfCurrentMonth).ToList();
+                    
+                    foreach (var shift in shiftsAllowedToDelete)
+                    {
+                        shift.IsDeleted = true;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 while (currentTargetStart < copyUntil)
                 {
                     targetWeeks.Add(currentTargetStart);
@@ -495,6 +959,9 @@ namespace CityWatch.Web.Pages.roster
                             x.RosterGroupId == groupId &&
                             x.ClientSiteId == source.ClientSiteId &&
                             x.ShiftStart == newStart &&
+                            x.GuardId == source.GuardId &&
+                            x.ProviderName == source.ProviderName &&
+                            x.CallsignId == source.CallsignId &&
                             !x.IsDeleted);
 
                         if (!exists)
@@ -508,7 +975,8 @@ namespace CityWatch.Web.Pages.roster
                                 ShiftStart = newStart,
                                 ShiftEnd = newEnd,
                                 Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
-                                PayRateId = source.PayRateId
+                                PayRateId = source.PayRateId,
+                                CallsignId = source.CallsignId
                             });
                         }
                     }
@@ -535,6 +1003,207 @@ namespace CityWatch.Web.Pages.roster
             }).ToList();
 
             return new JsonResult(new { results = select2Data });
+        }
+        public async Task<JsonResult> OnGetLoadSettingsProjects()
+        {
+            var projects = await _context.RosterGroups
+                .Where(x => !x.IsDeleted)
+                .Select(x => new {
+                    x.Id,
+                    x.Name,
+                    x.CoverFileName,
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                })
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            return new JsonResult(projects);
+        }
+
+        public async Task<JsonResult> OnGetLoadSettingsGroups()
+        {
+            var groups = await _context.RosterBinders
+                .Where(x => !x.IsDeleted)
+                .Select(x => new {
+                    x.Id,
+                    x.Name,
+                    x.CoverFileName,
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                })
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            return new JsonResult(groups);
+        }
+
+        public async Task<IActionResult> OnPostUploadProjectCover(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0) return new JsonResult(new { success = false, message = "No file uploaded." });
+            if (Path.GetExtension(file.FileName).ToLower() != ".pdf") return new JsonResult(new { success = false, message = "Only PDF files are allowed." });
+
+            var project = await _context.RosterGroups.FindAsync(id);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects");
+            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+            if (!string.IsNullOrEmpty(project.CoverFileName))
+            {
+                string oldPath = Path.Combine(uploadDir, project.CoverFileName);
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+
+            string fileName = $"Project_{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            string filePath = Path.Combine(uploadDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            project.CoverFileName = fileName;
+            project.CoverFileDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostUploadGroupCover(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0) return new JsonResult(new { success = false, message = "No file uploaded." });
+            if (Path.GetExtension(file.FileName).ToLower() != ".pdf") return new JsonResult(new { success = false, message = "Only PDF files are allowed." });
+
+            var binder = await _context.RosterBinders.FindAsync(id);
+            if (binder == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups");
+            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+            if (!string.IsNullOrEmpty(binder.CoverFileName))
+            {
+                string oldPath = Path.Combine(uploadDir, binder.CoverFileName);
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+
+            string fileName = $"Group_{id}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            string filePath = Path.Combine(uploadDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            binder.CoverFileName = fileName;
+            binder.CoverFileDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostDeleteProjectCover(int id)
+        {
+            var project = await _context.RosterGroups.FindAsync(id);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            if (!string.IsNullOrEmpty(project.CoverFileName))
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects", project.CoverFileName);
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+
+            project.CoverFileName = null;
+            project.CoverFileDate = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostDeleteGroupCover(int id)
+        {
+            var binder = await _context.RosterBinders.FindAsync(id);
+            if (binder == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            if (!string.IsNullOrEmpty(binder.CoverFileName))
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups", binder.CoverFileName);
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+
+            binder.CoverFileName = null;
+            binder.CoverFileDate = null;
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnGetDownloadCover(string type, int id)
+        {
+            string fileName = "";
+            string subDir = "";
+
+            if (type == "project")
+            {
+                var project = await _context.RosterGroups.FindAsync(id);
+                if (project == null || string.IsNullOrEmpty(project.CoverFileName)) return NotFound();
+                fileName = project.CoverFileName;
+                subDir = "Projects";
+            }
+            else
+            {
+                var binder = await _context.RosterBinders.FindAsync(id);
+                if (binder == null || string.IsNullOrEmpty(binder.CoverFileName)) return NotFound();
+                fileName = binder.CoverFileName;
+                subDir = "Groups";
+            }
+
+            string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", subDir, fileName);
+            if (!System.IO.File.Exists(filePath)) return NotFound();
+
+            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            return File(fileBytes, "application/pdf", fileName);
+        }
+
+        public async Task<IActionResult> OnGetPreviewCover(string type, int id)
+        {
+            byte[] fileBytes = await _rosterReportGenerator.GeneratePreviewRosterPdfAsync(type, id);
+            if (fileBytes == null) return NotFound();
+            return File(fileBytes, "application/pdf");
+        }
+
+        public async Task<IActionResult> OnPostMoveBinderProject(int binderId, int projectId, string direction)
+        {
+            var projects = await _context.RosterBinderProjects
+                .Where(x => x.RosterBinderId == binderId)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
+
+            var currentIdx = projects.FindIndex(x => x.RosterGroupId == projectId);
+            if (currentIdx == -1) return new JsonResult(new { success = false, message = "Project not found in group." });
+
+            // Normalize all sort orders to their current index to ensure movement is consistent
+            for (int i = 0; i < projects.Count; i++)
+            {
+                projects[i].SortOrder = i;
+            }
+
+            if (direction == "up" && currentIdx > 0)
+            {
+                projects[currentIdx].SortOrder = currentIdx - 1;
+                projects[currentIdx - 1].SortOrder = currentIdx;
+            }
+            else if (direction == "down" && currentIdx < projects.Count - 1)
+            {
+                projects[currentIdx].SortOrder = currentIdx + 1;
+                projects[currentIdx + 1].SortOrder = currentIdx;
+            }
+            else
+            {
+                return new JsonResult(new { success = true });
+            }
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
     }
 }

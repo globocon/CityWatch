@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
 @using CityWatch.Data.Providers;
@@ -1488,7 +1488,7 @@
                                             vertical-align: middle;
                                         }
                                     </style>
-                                    <div class="row">
+                                                                        <div class="row">
                                         <div class="col-md-2">
                                             <div class="form-group row">
                                                 <label class="col-form-label col-md-4">Currency</label>
@@ -1504,20 +1504,33 @@
                                                 </div>
                                             </div>
                                         </div>
-                                         <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="input-group">
-                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Pay Rates">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fa fa-filter mr-1"></i>Group</span>
+                                                </div>
+                                                <select id="drpPayRateGroupFilter" class="form-control">
+                                                    <option value="">All Groups</option>
+                                                </select>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-info" id="btnManagePayRateGroups" title="Manage Groups"><i class="fa fa-cog"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <input type="text" id="filesSearch" class="form-control" placeholder="Search Descriptions">
                                                  <div class="input-group-append" id="clearSearch" style="cursor:pointer; display:none;">
-                                                    <span class="input-group-text bg-transparent border-0"><i class="fa fa-times-circle"></i></span>
+                                                    <span class="input-group-text bg-transparent border-1"><i class="fa fa-times-circle"></i></span>
                                                 </div>
                                                  <div class="input-group-append">
                                                     <span class="input-group-text"><i class="fa fa-search"></i></span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 text-right">
-                                             <button class="btn btn-primary mb-3 mr-2" id="btnDownloadPayRatesExcel"><i class="fa fa-file-excel-o mr-2"></i>Download</button>
-                                             <button class="btn btn-success mb-3" id="add_pay_rates"><i class="fa fa-plus mr-2"></i>Add Pay Rate</button>
+                                        <div class="col-md-4 text-right">
+                                             <button class="btn btn-primary mr-2" id="btnDownloadPayRatesExcel" title="Download Excel"><i class="fa fa-file-excel-o mr-1"></i>Excel</button>
+                                             <button class="btn btn-success" id="add_pay_rates"><i class="fa fa-plus mr-1"></i>Add Pay Rate</button>
                                         </div>
                                     </div>
                                     <table class="table table-bordered table-sm" width="100%" id="tbl_pay_rates">
@@ -5120,7 +5133,53 @@
                                 </div>
                             </div>
                         </form>
+
+                        <div id="guardUnavailabilityContainer" class="border p-3 mt-3" style="display: none; border-left: 4px solid #dc3545 !important; background-color: #fbfbfb;">
+                            <form id="frm_guard_unavailability">
+                                <div class="form-group row mb-0 align-items-center">
+                                    <div class="col-md-1 pr-0">
+                                        <label class="text-danger mb-0 font-weight-bold" style="font-size:0.9rem;">Unavailable:</label>
+                                    </div>
+                                    <div class="col-md-4 d-flex flex-wrap pl-0">
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Sick" value="Sick">
+                                            <label class="custom-control-label" for="unav_Sick">Sick</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_AL" value="AL">
+                                            <label class="custom-control-label" for="unav_AL">AL</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_RDO" value="RDO">
+                                            <label class="custom-control-label" for="unav_RDO">RDO</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_LWOP" value="LWOP">
+                                            <label class="custom-control-label" for="unav_LWOP">LWOP</label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Other" value="Other">
+                                            <label class="custom-control-label" for="unav_Other">Other</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="text-danger mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">From:</label>
+                                        <input type="date" id="unav_From" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="text-danger mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">To:</label>
+                                        <input type="date" id="unav_To" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-sm btn-danger w-100 mb-1" id="btn_save_unavail">Save</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="btn_view_unavail" title="View Leaves" style="font-size:0.75rem;">Leaves</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
                     </div>
+
                 </div>
                 <div class="modal-footer justify-content-start" style="border-top:none">
                     <button type="button" class="btn btn-primary" id="btn_save_guard2">Save Guard</button>
@@ -5910,12 +5969,151 @@
 <partial name="_TrainingAndAssessmentSettings" />
 @*/*<partial name="_LinkedDuressPopup" />*/*@
 
+<div class="modal fade" id="viewLeavesModal" tabindex="-1" role="dialog" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title text-danger"><i class="fa fa-calendar-times-o"></i> Guard Leaves History</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-hover" id="tbl_guard_leaves">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Reason</th>
+                            <th class="text-center" style="width:100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="~/js/payrates.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            let currentGuardId = 0;
+
+            // Set min dates to today
+            let today = new Date().toLocaleDateString('en-CA'); // Gets YYYY-MM-DD in local time
+            $('#unav_From').attr('min', today);
+            $('#unav_To').attr('min', today);
+
+            $('#addGuardModal').on('shown.bs.modal', function () {
+                var gid = $('#Guard_Id').val();
+                if (gid && gid > 0) {
+                    currentGuardId = gid;
+                    $('#guardUnavailabilityContainer').show();
+                } else {
+                    currentGuardId = 0;
+                    $('#guardUnavailabilityContainer').hide();
+                }
+            });
+
+            $('#frm_guard_unavailability').on('submit', function (e) {
+                e.preventDefault();
+                if (currentGuardId <= 0) {
+                    alert('Please save the guard details first.');
+                    return;
+                }
+
+                let reason = $('.unavail-reason-chk:checked').val();
+                if (!reason) {
+                    alert("Please select a reason for unavailability.");
+                    return;
+                }
+
+                let fromDate = $('#unav_From').val();
+                let toDate = $('#unav_To').val();
+
+                $.ajax({
+                    url: '/Admin/Settings?handler=SaveGuardUnavailability',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    data: { guardId: currentGuardId, reason: reason, fromDate: fromDate, toDate: toDate }
+                }).done(function (res) {
+                    if (res.success) {
+                        alert(res.message);
+                        $('.unavail-reason-chk').prop('checked', false);
+                        $('#unav_From').val('');
+                        $('#unav_To').val('');
+                    } else {
+                        alert(res.message);
+                    }
+                }).fail(function () {
+                    alert('Error saving leave.');
+                });
+            });
+
+            $('#btn_view_unavail').on('click', function () {
+                if (currentGuardId <= 0) return;
+                loadLeaves();
+                $('#viewLeavesModal').modal('show');
+            });
+
+            function loadLeaves() {
+                $.ajax({
+                    url: '/Admin/Settings?handler=GuardUnavailabilities',
+                    type: 'GET',
+                    data: { guardId: currentGuardId }
+                }).done(function (data) {
+                    let tbody = $('#tbl_guard_leaves tbody');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.append('<tr><td colspan="4" class="text-center">No leaves found</td></tr>');
+                        return;
+                    }
+                    data.forEach(function (lbl) {
+                        let startDate = new Date(lbl.fromDate);
+                        let endDate = new Date(lbl.toDate);
+                        
+                        let f = startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                        let t = endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                        
+                        // Calculate duration
+                        startDate.setHours(0,0,0,0);
+                        endDate.setHours(0,0,0,0);
+                        let diffTime = Math.abs(endDate - startDate);
+                        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        let durationMsg = diffDays + (diffDays === 1 ? ' Day' : ' Days');
+                        let reasonWithDuration = lbl.reason + ' <small class="text-muted">(' + durationMsg + ')</small>';
+
+                        tbody.append('<tr><td>' + f + '</td><td>' + t + '</td><td>' + reasonWithDuration + '</td><td class="text-center"><button class="btn btn-sm btn-danger btn-del-leave" data-id="' + lbl.id + '"><i class="fa fa-trash"></i></button></td></tr>');
+                    });
+                });
+            }
+
+            $(document).on('click', '.btn-del-leave', function () {
+                if (!confirm("Are you sure you want to delete this leave record?")) return;
+                let id = $(this).data('id');
+                $.ajax({
+                    url: '/Admin/Settings?handler=DeleteGuardUnavailability',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    data: { id: id }
+                }).done(function (res) {
+                    if (res.success) {
+                        loadLeaves();
+                    } else {
+                        alert('Failed to delete.');
+                    }
+                });
+            });
+
+            $('.unavail-reason-chk').on('change', function() {
+                $('.unavail-reason-chk').not(this).prop('checked', false);
+            });
+        });
+    </script>
 }
 
 <div class="modal fade" id="payRatesModal" tabindex="-1" role="dialog" aria-labelledby="payRatesModalLabel" aria-hidden="true">
@@ -5929,6 +6127,12 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="payRateId" value="0" />
+                <div class="form-group">
+                    <label for="drpPayRateGroup">Group (Client)</label>
+                    <select class="form-control" id="drpPayRateGroup">
+                        <option value="">Select Group</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="txtPayRateDescription">Payment Profile</label>
                     <input type="text" class="form-control" id="txtPayRateDescription" placeholder="Enter Payment Profile">
@@ -5958,3 +6162,42 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="payRateGroupsModal" tabindex="-1" role="dialog" aria-labelledby="payRateGroupsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Manage Pay Rate Groups</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="hdnEditPayRateGroupId" value="0" />
+                <div class="row mb-3">
+                    <div class="col-md-9">
+                        <input type="text" id="txtNewPayRateGroup" class="form-control" placeholder="New Group Name">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-success btn-block" id="btnAddPayRateGroup">Add Group</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm" id="tblPayRateGroups" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th style="width:100px">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

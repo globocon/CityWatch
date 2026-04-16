@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -46,6 +46,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
+        Guard GetGuardBySecurityNo(string securityNo);
 
         public string GetDefaultEmailAddress();
         DateTime? GetLogbookDateFromLogbook(int logbookId);
@@ -122,7 +123,15 @@ namespace CityWatch.Data.Providers
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         int GetClientSiteIdFromLogbook(int logbookId);
         List<GuardLoginSmartWandUse> GetLastGuardUsedSmartWandBySmartWandId(int smartWandId);
+
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
+
+
+        GuardUnavailability SaveGuardUnavailability(GuardUnavailability record);
+        List<GuardUnavailability> GetGuardUnavailabilities(int guardId);
+        void DeleteGuardUnavailability(int id);
+        bool IsGuardUnavailable(int guardId, DateTime start, DateTime end, out GuardUnavailability conflict);
+
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -1441,5 +1450,62 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        /// <summary>
+        /// Highly optimized lookup for a single guard by security number.
+        /// Uses .AsNoTracking() to bypass the EF change tracker for read-only speed.
+        /// </summary>
+        public Guard GetGuardBySecurityNo(string securityNo)
+        {
+            return _context.Guards
+                .AsNoTracking()
+                .SingleOrDefault(z => z.SecurityNo == securityNo);
+        }
+
+        public GuardUnavailability SaveGuardUnavailability(GuardUnavailability record)
+        {
+            if (record.Id == 0)
+            {
+                _context.GuardUnavailabilities.Add(record);
+            }
+            else
+            {
+                var existing = _context.GuardUnavailabilities.Find(record.Id);
+                if (existing != null)
+                {
+                    existing.Reason = record.Reason;
+                    existing.FromDate = record.FromDate;
+                    existing.ToDate = record.ToDate;
+                }
+            }
+            _context.SaveChanges();
+            return record;
+        }
+
+        public List<GuardUnavailability> GetGuardUnavailabilities(int guardId)
+        {
+            return _context.GuardUnavailabilities
+                .Where(u => u.GuardId == guardId)
+                .OrderBy(u => u.FromDate)
+                .ToList();
+        }
+
+        public void DeleteGuardUnavailability(int id)
+        {
+            var record = _context.GuardUnavailabilities.Find(id);
+            if (record != null)
+            {
+                _context.GuardUnavailabilities.Remove(record);
+                _context.SaveChanges();
+            }
+        }
+
+        public bool IsGuardUnavailable(int guardId, DateTime start, DateTime end, out GuardUnavailability conflict)
+        {
+            conflict = _context.GuardUnavailabilities
+                .FirstOrDefault(u => u.GuardId == guardId && 
+                                     u.FromDate.Date <= end.Date && 
+                                     u.ToDate.Date >= start.Date);
+            return conflict != null;
+        }
     }
 }
