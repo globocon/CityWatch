@@ -9465,14 +9465,14 @@ $(function () {
 
     let wandStrikeLogExcel = $('#tbl_wandstrike_site_log_excel').DataTable({
         paging: false,
-        ordering: false,
+        ordering: true,
         order: [[1, 'asc']],
         info: false,
         searching: true,
         scrollX: true,
         data: [],
         columns: [
-            { data: 'groupText', visible: false },
+            { data: 'groupText', visible: false, orderable: false },
             {
                 data: 'clientSiteSmartWandTagsHitLog.hitLocalDateTime',
                 render: {
@@ -9504,7 +9504,7 @@ $(function () {
                     if (last !== group) {
                         $(rows)
                             .eq(i)
-                            .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
+                            .before('<tr class="group bg-light text-dark"><td colspan="8">' + group + '</td></tr>');
 
                         last = group;
                     }
@@ -9677,8 +9677,9 @@ $(function () {
                 // Optional: Flatten or clean up data if needed
                 var cleanedData = exportData.map(x => ({
                     "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
-                    "SmartWand / Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
-                    "SmartWand / Tag Type": x.smartWandType ?? '',
+                    "SmartWand": x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? '',
+                    "Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
+                    "Tag Type": x.smartWandType ?? '',
                     "End User": x.endUser ?? '',
                     "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
                     "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
