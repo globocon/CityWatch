@@ -70,7 +70,7 @@
                 <div class="col-md-12">
             <!-- Row 1: Project Name (Wide but constrained) -->
             <div class="row mb-3 mt-2">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="font-weight-bold text-muted mb-1" style="font-size: 0.85rem;">Project Name</label>
                     <select id="project_name" class="form-control border-primary shadow-sm" style="width: 100%; font-weight: bold;"></select>
                 </div>
@@ -87,16 +87,16 @@
                 <div class="col-auto mr-4">
                     <div id="project_actions" style="display:none; white-space: nowrap;">
                         <!-- Design Toggles -->
-                        <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
-                            <span class="text-danger font-weight-bold mr-1" style="font-size: 1.1rem; line-height: 1;">$</span>
-                            <input type="checkbox" id="projectFinancialMaster" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                            <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <input type="checkbox" id="projectFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                             
-                            <i class="fa fa-user-secret mr-1" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                            <div class="custom-control custom-switch">
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch mr-2">
                                 <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
                                 <label class="custom-control-label" for="designToggle1"></label>
                             </div>
-                            <i class="fa fa-cube ml-1" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
                         </div>
                         <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
@@ -208,7 +208,7 @@
             <div class="col-md-12">
                 <!-- Row 1: Group Name -->
                 <div class="row mb-3 mt-2">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="font-weight-bold text-muted mb-1" style="font-size: 0.85rem;">Group Name</label>
                         <select id="binder_name" class="form-control border-primary shadow-sm" style="width: 100%; font-weight: bold;"></select>
                     </div>
@@ -219,17 +219,17 @@
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
-                             <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
-                                 <span class="text-danger font-weight-bold mr-1" style="font-size: 1.1rem; line-height: 1;">$</span>
-                                 <input type="checkbox" id="groupFinancialMaster" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
-                                 
-                                 <i class="fa fa-user-secret mr-1" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                                 <div class="custom-control custom-switch">
-                                     <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
-                                     <label class="custom-control-label" for="binderToggle1"></label>
-                                 </div>
-                                 <i class="fa fa-cube ml-1" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
-                             </div>
+                              <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                                  <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                  <input type="checkbox" id="groupFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                                  
+                                  <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                                  <div class="custom-control custom-switch mr-2">
+                                      <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
+                                      <label class="custom-control-label" for="binderToggle1"></label>
+                                  </div>
+                                  <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                              </div>
                              <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                                  <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
                                      <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
@@ -1230,6 +1230,10 @@
             // Project Financial/Supplier mode toggles
             $('#projectFinancialMaster').on('change', function() {
                 projectFinancialMode = $(this).is(':checked');
+                if (!projectFinancialMode) {
+                    $('#designToggle1').prop('checked', false);
+                    projectFinancialRateType = 'guard';
+                }
                 $('#designToggle1').prop('disabled', !projectFinancialMode);
                 loadRoster();
             });
@@ -1247,6 +1251,10 @@
             // Group Financial/Supplier mode toggles
             $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
+                if (!groupFinancialMode) {
+                    $('#binderToggle1').prop('checked', false);
+                    groupFinancialRateType = 'guard';
+                }
                 $('#binderToggle1').prop('disabled', !groupFinancialMode);
                 loadBinderRoster();
             });
