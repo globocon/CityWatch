@@ -136,19 +136,35 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row mt-2" id="calendarEvents_v1_wrapper_admin" style="display:none;">
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between">
                                 <b><u>Line 2 - Known Calendar Events</u></b>
                                 <div class="col text-right">
-                                    <button class="btn btn-success" id="add_calendar_events"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                    <button class="btn btn-success" id="add_calendar_events_admin"><i class="fa fa-plus mr-2"></i>Add New</button>
                                 </div>
                             </div>
                             <div class="card-body row m-0">
                                 <div class="col-md-12">
-                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents"></table>
+                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents_Admin"></table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2" id="calendarEvents_v2_wrapper_admin">
+                    <div class="col-md-12">
+                        <div class="card shadow-sm border-primary">
+                            <div class="card-header d-flex justify-content-between bg-primary text-white align-items-center py-2">
+                                <h6 class="mb-0 font-weight-bold"><i class="fa fa-calendar mr-2"></i>Line 2 - Known Calendar Events</h6>
+                                <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2_admin">
+                                    <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <table id="BroadCastBannerCalendarEvents_V2_Admin"></table>
                             </div>
                         </div>
                     </div>

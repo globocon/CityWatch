@@ -3,8 +3,14 @@ $(document).ready(function () {
     let cachedStates = [];
 
     // Initialize the new grid
-    grid_V2 = $('#BroadCastBannerCalendarEvents_V2').grid({
-        dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
+    let $grid = $('#BroadCastBannerCalendarEvents_V2');
+    if ($grid.length === 0) {
+        $grid = $('#BroadCastBannerCalendarEvents_V2_Admin');
+    }
+
+    if ($grid.length > 0) {
+        grid_V2 = $grid.grid({
+            dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -85,7 +91,7 @@ $(document).ready(function () {
     });
 
     // Add New Button Click
-    $('#btn_add_calendar_event_v2').on('click', function () {
+    $('#btn_add_calendar_event_v2, #btn_add_calendar_event_v2_admin').on('click', function () {
         resetCalendarModal();
         $('#calendarEventModal_V2').modal('show');
     });
