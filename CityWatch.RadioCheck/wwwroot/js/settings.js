@@ -1,4 +1,4 @@
-﻿window.onload = function () {
+window.onload = function () {
 
     //To get the Duress Emails in pageload start
     $.ajax({
@@ -291,13 +291,13 @@ let isHoliday = false;
 
 let editStates = function (value, record, $cell, $displayEl, id, $grid) {
     var data = $grid.data();
-    let arr = record.states.split(","); 
+    let arr = (record.states || "").split(",").filter(x => x.trim() !== "");
     let totalStates = 0;
     $.get("/Admin/Settings?handler=ClientStates", function (data) {
 
         // Count total states
         totalStates = data.length;
-        let isPH = (record.isPublicHoliday + "").toString().toLowerCase() === "true";
+        let isPH = record.isPublicHoliday === true || record.isPublicHoliday === "true" || record.isPublicHoliday === 1 || record.isPublicHoliday === "1";
         if (isPH) {
             $chkIsPublicHoliday = $(' <label class="mb-0"><input type="checkbox" class="ph-flag" checked="checked" disabled> Is PH </label>');
             $chkIsPublicHoliday.prop("checked", true);
@@ -307,9 +307,9 @@ let editStates = function (value, record, $cell, $displayEl, id, $grid) {
                 $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
             }
             else {
-                let displayValues = arr.length > 1
-                    ? arr.slice(0, 1).join(", ") + " ..."   // e.g., "NSW, VIC ..."
-                    : arr.join(", ");
+                let displayValues = arr.length > 0
+                    ? (arr.length > 1 ? arr.slice(0, 1).join(", ") + " ..." : arr[0])
+                    : "None";
                 $btnStateDropdownChecklist = $(' <button type="button" id="btnDropdownState" class="btn pt-0 dropdown-btn" disabled>' + displayValues + ' ▼</button>');
 
                 $displayEl.empty().append($chkIsPublicHoliday).append($btnStateDropdownChecklist);
@@ -477,12 +477,18 @@ function stateMultiEditor($container, value, record) {
 
         $container.append(html);
 
-        const $textbox = $container.find(".ph-textbox");
+    const $textbox = $container.find(".ph-textbox");
     const $btndrp = $container.find("#btnDropdownState");
-        const $listBox = $container.find(".dropdown-list");
+    const $listBox = $container.find(".dropdown-list");
     const $checkbox = $container.find(".ph-flag");
     
-    let isPH = (record.isPublicHoliday + "").toString().toLowerCase() === "true";
+    // Robust detection of Public Holiday status
+    let isPH = record.isPublicHoliday === true || record.isPublicHoliday === "true" || record.isPublicHoliday === 1 || record.isPublicHoliday === "1";
+    
+    // Initialize global state for this row edit
+    isHoliday = isPH;
+    statesvalue = record.states || "";
+
     if (isPH) {
         $checkbox.prop("checked", true);
         // Enable button & checklist
@@ -756,7 +762,7 @@ if (gridBroadCastBannerCalendarEvents) {
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
                 url: '/Admin/Settings?handler=DeleteCalendarEvents',
-                data: { id: record },
+                data: { id: id },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': token },
             }).done(function () {
