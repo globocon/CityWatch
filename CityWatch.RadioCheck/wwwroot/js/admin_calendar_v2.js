@@ -107,10 +107,25 @@ $(document).ready(function () {
         $('#calendarEventModal_V2').modal('show');
     });
 
-    // Custom Data Loading & Rendering
+    // Custom Data Loading & Rendering with Sorting
     window.loadCalendarEvents = function () {
         $.get('/Admin/Settings?handler=BroadcastCalendarEvents', function (data) {
-            allCalendarEvents = data;
+            // Sort data: Non-PH first, then PH. Within each group, sort by referenceNo
+            let sortedData = data.sort((a, b) => {
+                let isPhA = a.isPublicHoliday === true || a.isPublicHoliday === "true" || a.isPublicHoliday === 1 || a.isPublicHoliday === "1";
+                let isPhB = b.isPublicHoliday === true || b.isPublicHoliday === "true" || b.isPublicHoliday === 1 || b.isPublicHoliday === "1";
+
+                if (!isPhA && isPhB) return -1; // Normal item comes first
+                if (isPhA && !isPhB) return 1;  // PH item comes later
+
+                // Match reference numbers to sort them chronologically within their group
+                let refA = parseInt(a.referenceNo) || 0;
+                let refB = parseInt(b.referenceNo) || 0;
+                
+                return refA - refB;
+            });
+            
+            allCalendarEvents = sortedData;
             if (grid_V2) {
                 grid_V2.render(allCalendarEvents);
             }
