@@ -40,6 +40,7 @@
 	  <Folder Include="wwwroot\AudioRecordings\" />
 	  <Folder Include="wwwroot\lib\Notify\" />
 	  <Folder Include="wwwroot\Pdf\Archive\" />
+	  <Folder Include="wwwroot\Pdf\Output\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="wwwroot\jsJotform\rerailscoping_excel_download.js" />

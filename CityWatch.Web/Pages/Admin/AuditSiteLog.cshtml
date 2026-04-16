@@ -35,6 +35,10 @@
                     </li>
                     <li class="nav-item">
 
+                        <a class="nav-link" id="fq_log" data-toggle="tab" href="#fq" role="tab" aria-controls="fqlog" aria-selected="false">FQ</a>
+                    </li>
+                    <li class="nav-item">
+
                         <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
                     </li>
 
@@ -99,6 +103,9 @@
                 <div class="tab-pane fade py-3" id="wandstrikeLog" role="tabpanel" aria-labelledby="wandstrike_log-tab">
                     <partial name="_WandStrikeAuditSiteLog" model="Model"></partial>
                 </div>
+            <div class="tab-pane fade py-3" id="fq" role="tabpanel" aria-labelledby="fq-tab">
+                <partial name="_FQlog"></partial>
+            </div>
                 <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
                     <partial name="_FusionGuardSiteLog"></partial> 
                 </div>

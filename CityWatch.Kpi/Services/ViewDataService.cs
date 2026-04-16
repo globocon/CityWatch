@@ -62,6 +62,7 @@ namespace CityWatch.Kpi.Services
         public KPITelematicsField GetMobileNo(int Id);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> getSmartWandForTourmodel();
+        List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
     }
 
     public class ViewDataService : IViewDataService
@@ -692,6 +693,18 @@ namespace CityWatch.Kpi.Services
             ));
 
             return items;
+        }
+        public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate)
+        {
+            try
+            {
+                return _guardDataProvider.GetTagStatusPendingForSpecificClientSite( clientId,  fromDate,  ToDate).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site tag status: {ex.Message}");
+                return new List<SiteTagStatusPendingNew>();
+            }
         }
 
     }

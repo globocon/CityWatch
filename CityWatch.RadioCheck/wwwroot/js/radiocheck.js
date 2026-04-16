@@ -2329,7 +2329,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value,
 
 
 /* for wand tags  details of the guard-start*/
-
+var displayedrecordsid = [];
 let clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetails').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -2392,11 +2392,74 @@ let clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetail
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        displayedrecordsid = [];
+        let dispdata = api.rows({ search: 'applied' }).data();
+        dispdata.each(function (row) {
+            displayedrecordsid.push(parseInt(row.roundNumber));
+        });
     },
 
 });
+$('#btnSmartwandTagsFQPdf').on('click', function () {
+    if (displayedrecordsid.length === 0) {
+        alert('No records available for download');
+        return;
+    }
 
+    // Build the URL with URL-encoded parameters
+    var params = new URLSearchParams({
+        ClientSiteId : parseInt($('#txtClientSiteId').val()),
+            GuardId : parseInt($('#txtGuardId').val())
+    });
+    var url = 'RadioCheckV2?handler=GeneratePdfForSmartWandsFQ&' + params.toString();
+
+
+    // Send AJAX request to get the PDF blob
+    $.ajax({
+        url: url,
+        method: 'GET',
+        xhrFields: {
+            responseType: 'blob' // Important for handling binary data
+        },
+        beforeSend: function () {
+            $('#loader').show();
+        },
+        success: function (blob, textStatus, request) {
+
+            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(contentDispositionHeader);
+            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+
+            const URL = window.URL || window.webkitURL;
+            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+            const bloburl = URL.createObjectURL(blob);
+            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+            const windowUrl = window.location.origin; // + window.location.pathname;
+            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+            var newTab = window.open(`${viewerUrl}${objectUrl}`);
+            if (!newTab) {
+                // If the new tab was blocked, fallback to downloading the file
+                var a = document.createElement('a');
+                a.href = bloburl;
+                a.download = downloadedFileName;
+                a.click();
+            }
+            URL.revokeObjectURL(bloburl);
+            URL.revokeObjectURL(objectUrl);
+        },
+        error: function (xhr, status, error) {
+            if (newTab) {
+                newTab.close(); // Close the tab if there is an error
+            }
+            console.error("Failed to generate PDF: ", error);
+        },
+        complete: function () {
+            $('#loader').hide();
+        }
+    });
+
+});
 $('#clientSiteActiveGuards tbody').on('click', '#btnWandTagdetails', function () {
 
     $('#guardSWTagsInfoModal').modal('show');
