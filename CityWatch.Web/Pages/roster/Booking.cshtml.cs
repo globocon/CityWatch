@@ -280,6 +280,7 @@ namespace CityWatch.Web.Pages.roster
                             status = (int)s.Status,
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                             payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                            sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
                             reliefGuardId = s.ReliefGuardId,
                             reliefGuardName = s.ReliefGuard?.Name ?? "",
                             reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
@@ -640,20 +641,20 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true, id = group.Id });
         }
 
-        public async Task<IActionResult> OnGetDownloadPdf(int? groupId, int? binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
+        public async Task<IActionResult> OnGetDownloadPdf(int? groupId, int? binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
         {
             byte[] pdfBytes = null;
             string fileName = "";
 
             if (binderId.HasValue && binderId.Value > 0)
             {
-                pdfBytes = await _rosterReportGenerator.GenerateBinderRosterPdfAsync(binderId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                pdfBytes = await _rosterReportGenerator.GenerateBinderRosterPdfAsync(binderId.Value, startDate, weeks, includeFinancials, includeSuppliers, rateType);
                 var binderName = await _context.RosterBinders.Where(x => x.Id == binderId.Value).Select(x => x.Name).FirstOrDefaultAsync();
                 fileName = $"Roster_Group_{binderName}_{startDate:yyyyMMdd}.pdf";
             }
             else if (groupId.HasValue && groupId.Value > 0)
             {
-                pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId.Value, startDate, weeks, includeFinancials, includeSuppliers);
+                pdfBytes = await _rosterReportGenerator.GenerateRosterPdfAsync(groupId.Value, startDate, weeks, includeFinancials, includeSuppliers, rateType);
                 var groupName = await _context.RosterGroups.Where(x => x.Id == groupId.Value).Select(x => x.Name).FirstOrDefaultAsync();
                 fileName = $"Roster_{groupName}_{startDate:yyyyMMdd}.pdf";
             }
@@ -741,6 +742,7 @@ namespace CityWatch.Web.Pages.roster
                                 status = (int)s.Status,
                                 durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                                 payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
                                 reliefGuardId = s.ReliefGuardId,
                                 reliefGuardName = s.ReliefGuard?.Name ?? "",
                                 reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",

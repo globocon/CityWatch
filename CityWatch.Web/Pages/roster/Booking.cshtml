@@ -88,11 +88,15 @@
                     <div id="project_actions" style="display:none; white-space: nowrap;">
                         <!-- Design Toggles -->
                         <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
-                            <span class="text-danger font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <span class="text-danger font-weight-bold mr-1" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <input type="checkbox" id="projectFinancialMaster" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                            
+                            <i class="fa fa-user-secret mr-1" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
                             <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="designToggle1">
+                                <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
                                 <label class="custom-control-label" for="designToggle1"></label>
                             </div>
+                            <i class="fa fa-cube ml-1" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
                         </div>
                         <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
@@ -215,13 +219,16 @@
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
-                             <!-- Design Toggles -->
                              <div class="d-inline-flex align-items-center mr-3" style="vertical-align: middle;">
-                                 <span class="text-danger font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                 <span class="text-danger font-weight-bold mr-1" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                 <input type="checkbox" id="groupFinancialMaster" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                                 
+                                 <i class="fa fa-user-secret mr-1" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
                                  <div class="custom-control custom-switch">
-                                     <input type="checkbox" class="custom-control-input" id="binderToggle1">
+                                     <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
                                      <label class="custom-control-label" for="binderToggle1"></label>
                                  </div>
+                                 <i class="fa fa-cube ml-1" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
                              </div>
                              <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
                                  <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
@@ -1172,8 +1179,10 @@
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
             var projectFinancialMode = false;
+            var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
             var projectSupplierMode = false;
             var groupFinancialMode = false;
+            var groupFinancialRateType = 'guard'; // 'guard' or 'sell'
             var groupSupplierMode = false;
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
@@ -1219,8 +1228,14 @@
 
             // Sync Toggles
             // Project Financial/Supplier mode toggles
-            $('#designToggle1').on('change', function() {
+            $('#projectFinancialMaster').on('change', function() {
                 projectFinancialMode = $(this).is(':checked');
+                $('#designToggle1').prop('disabled', !projectFinancialMode);
+                loadRoster();
+            });
+
+            $('#designToggle1').on('change', function() {
+                projectFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
                 loadRoster();
             });
 
@@ -1230,8 +1245,14 @@
             });
 
             // Group Financial/Supplier mode toggles
-            $('#binderToggle1').on('change', function() {
+            $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
+                $('#binderToggle1').prop('disabled', !groupFinancialMode);
+                loadBinderRoster();
+            });
+
+            $('#binderToggle1').on('change', function() {
+                groupFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
                 loadBinderRoster();
             });
 
@@ -1624,7 +1645,8 @@
 
                                     var shiftValue = s.durationHours;
                                     if (projectFinancialMode) {
-                                        shiftValue = s.durationHours * s.payRate;
+                                        var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
+                                        shiftValue = s.durationHours * activeRate;
                                     }
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
@@ -2174,7 +2196,8 @@
                 var weeks = $(this).data('weeks');
                 var finMode = (activeTab === 'groups') ? groupFinancialMode : projectFinancialMode;
                 var supMode = (activeTab === 'groups') ? groupSupplierMode : projectSupplierMode;
-                var extraParams = '&includeFinancials=' + finMode + '&includeSuppliers=' + supMode;
+                var rateType = (activeTab === 'groups') ? groupFinancialRateType : projectFinancialRateType;
+                var extraParams = '&includeFinancials=' + finMode + '&includeSuppliers=' + supMode + '&rateType=' + rateType;
                 
                 var url = '/roster/Booking?handler=DownloadPdf&startDate=' + currentStartDate + '&weeks=' + weeks + extraParams;
                 
@@ -2199,7 +2222,8 @@
                 
                 var finMode = (activeTab === 'groups') ? groupFinancialMode : projectFinancialMode;
                 var supMode = (activeTab === 'groups') ? groupSupplierMode : projectSupplierMode;
-                var extraParams = '&includeFinancials=' + finMode + '&includeSuppliers=' + supMode;
+                var rateType = (activeTab === 'groups') ? groupFinancialRateType : projectFinancialRateType;
+                var extraParams = '&includeFinancials=' + finMode + '&includeSuppliers=' + supMode + '&rateType=' + rateType;
                 
                 var url = '/roster/Booking?handler=DownloadPdf&startDate=' + currentStartDate + '&weeks=' + weeks + extraParams;
                 
@@ -2588,7 +2612,8 @@
 
                                         var shiftValue = s.durationHours;
                                         if (groupFinancialMode) {
-                                            shiftValue = s.durationHours * s.payRate;
+                                            var activeRate = (groupFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
+                                            shiftValue = s.durationHours * activeRate;
                                         }
                                         
                                         // Add to project-specific totals

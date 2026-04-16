@@ -28,8 +28,8 @@ namespace CityWatch.Web.Services
 {
     public interface IRosterReportGenerator
     {
-        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false);
-        Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false);
+        Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
+        Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
         Task<byte[]> GeneratePreviewRosterPdfAsync(string type, int id);
     }
 
@@ -69,12 +69,12 @@ namespace CityWatch.Web.Services
             public List<string> States { get; set; }
         }
 
-        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
+        public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
             if (group == null) return null;
 
-            byte[] rosterBytes = await GenerateSingleProjectRosterPartAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers);
+            byte[] rosterBytes = await GenerateSingleProjectRosterPartAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
 
             if (string.IsNullOrEmpty(group.CoverFileName))
             {
@@ -201,7 +201,7 @@ namespace CityWatch.Web.Services
             }
         }
 
-        public async Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false)
+        public async Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
         {
             var binder = await _context.RosterBinders.FindAsync(binderId);
             if (binder == null) return null;
@@ -237,7 +237,7 @@ namespace CityWatch.Web.Services
                         }
 
                         // 2b. Project Roster
-                        byte[] partBytes = await GenerateSingleProjectRosterPartAsync(bp.RosterGroupId, startDate, weeks, includeFinancials, includeSuppliers);
+                        byte[] partBytes = await GenerateSingleProjectRosterPartAsync(bp.RosterGroupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
                         AddBytesToMerger(merger, partBytes);
                     }
                     merger.Close();
@@ -246,7 +246,7 @@ namespace CityWatch.Web.Services
             }
         }
 
-        private async Task<byte[]> GenerateSingleProjectRosterPartAsync(int groupId, DateTime startDate, int weeks, bool includeFinancials, bool includeSuppliers)
+        private async Task<byte[]> GenerateSingleProjectRosterPartAsync(int groupId, DateTime startDate, int weeks, bool includeFinancials, bool includeSuppliers, string rateType)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
             var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
@@ -410,7 +410,8 @@ namespace CityWatch.Web.Services
                                 foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
-                                    var value = includeFinancials ? (duration * (double)(shift.PayRate?.GuardPayRate ?? 0)) : duration;
+                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var value = includeFinancials ? (duration * (double)rate) : duration;
                                     
                                     dailyTotals[i] += value;
                                     projectWeeklyGrandTotal += value;
