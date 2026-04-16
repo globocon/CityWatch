@@ -156,16 +156,18 @@
 
                 <div class="row mt-2" id="calendarEvents_v2_wrapper_admin">
                     <div class="col-md-12">
-                        <div class="card shadow-sm border-primary">
-                            <div class="card-header d-flex justify-content-between bg-primary text-white align-items-center py-2">
-                                <h6 class="mb-0 font-weight-bold"><i class="fa fa-calendar mr-2"></i>Line 2 - Known Calendar Events</h6>
-                                <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2_admin">
-                                    <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
-                                </button>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 2 - Known Calendar Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="btn_add_calendar_event_v2_admin"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                @Html.AntiForgeryToken()
-                                <table id="BroadCastBannerCalendarEvents_V2_Admin"></table>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    @Html.AntiForgeryToken()
+                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents_V2_Admin"></table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -422,16 +424,18 @@
 
                 <div class="row mt-2" id="calendarEvents_v2_wrapper">
                     <div class="col-md-12">
-                        <div class="card shadow-sm border-primary">
-                            <div class="card-header d-flex justify-content-between bg-primary text-white align-items-center py-2">
-                                <h6 class="mb-0 font-weight-bold"><i class="fa fa-calendar mr-2"></i>Line 2 - Known Calendar Events</h6>
-                                <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2">
-                                    <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
-                                </button>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 2 - Known Calendar Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="btn_add_calendar_event_v2"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                @Html.AntiForgeryToken()
-                                <table id="BroadCastBannerCalendarEvents_V2"></table>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    @Html.AntiForgeryToken()
+                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents_V2"></table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -648,12 +652,14 @@
                     </div>
 
                     <div class="row mt-3" id="states_container_v2" style="display:none;">
-                        <div class="col-md-12 p-3 border rounded bg-white mx-3">
-                            <label class="font-weight-bold small mb-2 d-block text-primary"><i class="fa fa-map-marker mr-1"></i>Select Applicable States</label>
-                            <select id="modal_states_v2" multiple="multiple" class="form-control">
-                                <!-- Populated by JS -->
-                            </select>
-                            <small class="text-muted d-block mt-2">Choose specific states or 'Select All' for national holidays.</small>
+                        <div class="col-md-12">
+                            <div class="p-3 border rounded bg-white">
+                                <label class="font-weight-bold small mb-2 d-block text-primary"><i class="fa fa-map-marker mr-1"></i>Select Applicable States</label>
+                                <select id="modal_states_v2" multiple="multiple" class="form-control">
+                                    <!-- Populated by JS -->
+                                </select>
+                                <small class="text-muted d-block mt-2">Choose specific states or 'Select All' for national holidays.</small>
+                            </div>
                         </div>
                     </div>
                 </form>
