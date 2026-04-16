@@ -17,7 +17,18 @@ $(document).ready(function () {
         primaryKey: 'id',
         columns: [
             { field: 'id', title: 'Id', hidden: true },
-            { field: 'referenceNo', title: 'Ref No', width: 100 },
+            { 
+                field: 'referenceNo', 
+                title: 'Ref No', 
+                width: 100,
+                renderer: (value, record) => {
+                    let isPH = record.isPublicHoliday === true || record.isPublicHoliday === "true" || record.isPublicHoliday === 1 || record.isPublicHoliday === "1";
+                    if (isPH && value && !String(value).toUpperCase().endsWith('-PH')) {
+                        return value + '-PH';
+                    }
+                    return value;
+                }
+            },
             { field: 'textMessage', title: 'Event Message', width: 450 },
             { field: 'formattedStartDate', title: 'Start Date', width: 140 },
             { field: 'formattedExpiryDate', title: 'Expiry Date', width: 140 },
@@ -50,8 +61,7 @@ $(document).ready(function () {
                             </div>`;
                 }
             }
-        ],
-        pager: { limit: 10, sizes: [10, 20, 50] }
+        ]
     });
 
     // Handle background coloring for PH rows
@@ -97,30 +107,15 @@ $(document).ready(function () {
         $('#calendarEventModal_V2').modal('show');
     });
 
-    // Custom Data Loading & Filtering
+    // Custom Data Loading & Rendering
     window.loadCalendarEvents = function () {
         $.get('/Admin/Settings?handler=BroadcastCalendarEvents', function (data) {
             allCalendarEvents = data;
-            filterAndRenderCalendarEvents();
+            if (grid_V2) {
+                grid_V2.render(allCalendarEvents);
+            }
         });
     };
-
-    window.filterAndRenderCalendarEvents = function () {
-        let filterVal = $('#filter_calendar_events_v2_admin').length > 0 ? $('#filter_calendar_events_v2_admin').val() : $('#filter_calendar_events_v2').val();
-        let dataToRender = allCalendarEvents;
-        
-        if (filterVal === 'PH') {
-            dataToRender = allCalendarEvents.filter(x => x.isPublicHoliday === true || x.isPublicHoliday === "true" || x.isPublicHoliday === 1 || x.isPublicHoliday === "1");
-        }
-        
-        if (grid_V2) {
-            grid_V2.render(dataToRender);
-        }
-    };
-
-    $('#filter_calendar_events_v2_admin, #filter_calendar_events_v2').on('change', function () {
-        filterAndRenderCalendarEvents();
-    });
 
     // Initial load
     if ($grid.length > 0) {
@@ -131,25 +126,19 @@ $(document).ready(function () {
     $('#modal_isPH_v2').on('change', function () {
         if ($(this).is(':checked')) {
             $('#states_container_v2').slideDown();
-            // Auto append -PH to ref no if not present
-            let ref = $('#modal_refNo_v2').val();
-            if (ref && !ref.endsWith('-PH')) {
-                $('#modal_refNo_v2').val(ref + '-PH');
-            }
         } else {
             $('#states_container_v2').slideUp();
-            // Remove -PH from ref no
-            let ref = $('#modal_refNo_v2').val();
-            if (ref && ref.endsWith('-PH')) {
-                $('#modal_refNo_v2').val(ref.replace(/-PH$/, ''));
-            }
         }
     });
 
     window.openCalendarModal = function (id, record) {
         resetCalendarModal();
         $('#modal_id_v2').val(record.id);
-        $('#modal_refNo_v2').val(record.referenceNo);
+        
+        // Remove trailing -PH for the input field to prevent validation errors on save
+        let cleanRef = record.referenceNo ? String(record.referenceNo).replace(/-PH$/i, '') : '';
+        $('#modal_refNo_v2').val(cleanRef);
+        
         $('#modal_message_v2').val(record.textMessage);
         $('#modal_startDate_v2').val(record.formattedStartDate);
         $('#modal_expiryDate_v2').val(record.formattedExpiryDate);
@@ -189,9 +178,10 @@ $(document).ready(function () {
             return;
         }
 
-        // Strip -PH for sending if needed (backend might want it striped or preserved, 
-        // original logic stripped it in rowDataChanged but kept it in record.referenceNo)
-        // Let's keep it as is in the input for now as the user explicitly asked for validations to exist.
+        // Strip -PH for sending to backend because backend strictly checks for numbers
+        if (refNo && String(refNo).toUpperCase().endsWith('-PH')) {
+            refNo = refNo.replace(/-PH$/i, '');
+        }
 
         let data = {
             id: parseInt(id) || -1,
