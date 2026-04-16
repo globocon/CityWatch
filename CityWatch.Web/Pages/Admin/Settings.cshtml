@@ -5134,49 +5134,6 @@
                             </div>
                         </form>
 
-                        <div id="guardUnavailabilityContainer" class="border p-3 mt-3" style="display: none; border-left: 4px solid #dc3545 !important; background-color: #fbfbfb;">
-                            <form id="frm_guard_unavailability">
-                                <div class="form-group row mb-0 align-items-center">
-                                    <div class="col-md-1 pr-0">
-                                        <label class="text-danger mb-0 font-weight-bold" style="font-size:0.9rem;">Unavailable:</label>
-                                    </div>
-                                    <div class="col-md-4 d-flex flex-wrap pl-0">
-                                        <div class="custom-control custom-checkbox mr-3">
-                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Sick" value="Sick">
-                                            <label class="custom-control-label" for="unav_Sick">Sick</label>
-                                        </div>
-                                        <div class="custom-control custom-checkbox mr-3">
-                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_AL" value="AL">
-                                            <label class="custom-control-label" for="unav_AL">AL</label>
-                                        </div>
-                                        <div class="custom-control custom-checkbox mr-3">
-                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_RDO" value="RDO">
-                                            <label class="custom-control-label" for="unav_RDO">RDO</label>
-                                        </div>
-                                        <div class="custom-control custom-checkbox mr-3">
-                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_LWOP" value="LWOP">
-                                            <label class="custom-control-label" for="unav_LWOP">LWOP</label>
-                                        </div>
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Other" value="Other">
-                                            <label class="custom-control-label" for="unav_Other">Other</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="text-danger mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">From:</label>
-                                        <input type="date" id="unav_From" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="text-danger mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">To:</label>
-                                        <input type="date" id="unav_To" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
-                                    </div>
-                                    <div class="col-md-1">
-                                        <button type="submit" class="btn btn-sm btn-danger w-100 mb-1" id="btn_save_unavail">Save</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="btn_view_unavail" title="View Leaves" style="font-size:0.75rem;">Leaves</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
 
                     </div>
 
@@ -5197,12 +5154,9 @@
                                     <a class="nav-link" id="trainingAndAssessment-tab" data-toggle="tab" href="#guardTrainingAndAssessment" role="tab" aria-controls="guardTrainingAndAssessment" aria-selected="true">Training & Assessment</a>
                                 </li>
                             }
-                            @* <li class="nav-item">
-                            <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
+                            <li class="nav-item" id="unavailability-tab-li" style="display: none;">
+                                <a class="nav-link" id="unavailability-tab" data-toggle="tab" href="#guardUnavailability" role="tab" aria-controls="guardUnavailability" aria-selected="false">Unavailable</a>
                             </li>
-                            <li class="nav-item">
-                            <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
-                            </li> *@
                         </ul>
                         <div class="tab-content" id="guardDataTabContent">
                             <div class="tab-pane fade show active py-3" id="guardLicensesandCompliance" role="tabpanel" aria-labelledby="licensesAndCombliance-tab">
@@ -5318,6 +5272,47 @@
                             </div>
                             </div>
                             </div> *@
+                            <div class="tab-pane fade py-3" id="guardUnavailability" role="tabpanel" aria-labelledby="unavailability-tab">
+                                <form id="frm_guard_unavailability">
+                                    <div class="form-group row mb-0 align-items-center">
+                                                                            
+                                        <div class="col-md-5 d-flex flex-wrap">
+                                            <div class="custom-control custom-checkbox mr-3">
+                                                <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Sick" value="Sick">
+                                                <label class="custom-control-label" for="unav_Sick">Sick</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mr-3">
+                                                <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_AL" value="AL">
+                                                <label class="custom-control-label" for="unav_AL">AL</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mr-3">
+                                                <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_RDO" value="RDO">
+                                                <label class="custom-control-label" for="unav_RDO">RDO</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mr-3">
+                                                <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_LWOP" value="LWOP">
+                                                <label class="custom-control-label" for="unav_LWOP">LWOP</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Other" value="Other">
+                                                <label class="custom-control-label" for="unav_Other">Other</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">From:</label>
+                                            <input type="date" id="unav_From" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="mr-1 mb-0 font-weight-bold" style="font-size:0.9rem;">To:</label>
+                                            <input type="date" id="unav_To" class="form-control form-control-sm d-inline-block w-75 mb-0" required />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="submit" class="btn btn-sm btn-danger w-100 mb-1" id="btn_save_unavail">Save</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="btn_view_unavail" title="View Leaves" style="font-size:0.75rem;">Leaves</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6012,10 +6007,10 @@
                 var gid = $('#Guard_Id').val();
                 if (gid && gid > 0) {
                     currentGuardId = gid;
-                    $('#guardUnavailabilityContainer').show();
+                    $('#unavailability-tab-li').show();
                 } else {
                     currentGuardId = 0;
-                    $('#guardUnavailabilityContainer').hide();
+                    $('#unavailability-tab-li').hide();
                 }
             });
 
