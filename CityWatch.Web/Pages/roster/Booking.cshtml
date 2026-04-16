@@ -1803,20 +1803,25 @@
                     data: { id: id },
                     success: function (res) {
                         if (res.success) {
-                            // Update Card Data
-                            card.data('shifttype', res.shiftType);
-                            card.data('status', res.status);
+                            // Find all instances of this shift in the DOM (both grids)
+                            var allCards = $('.shift-card[data-id="' + id + '"]');
+                            
+                            // Update Card Data and DOM Attributes for all instances
+                            allCards.data('shifttype', res.shiftType);
+                            allCards.attr('data-shifttype', res.shiftType);
+                            allCards.data('status', res.status);
+                            allCards.attr('data-status', res.status);
                             
                             // Update Classes for Shading
-                            card.removeClass('adhoc-accepted adhoc-not-accepted');
-                            if (res.shiftType === 'AdhocAccepted') card.addClass('adhoc-accepted');
-                            else if (res.shiftType === 'AdhocNotAccepted') card.addClass('adhoc-not-accepted');
+                            allCards.removeClass('adhoc-accepted adhoc-not-accepted');
+                            if (res.shiftType === 'AdhocAccepted') allCards.addClass('adhoc-accepted');
+                            else if (res.shiftType === 'AdhocNotAccepted') allCards.addClass('adhoc-not-accepted');
 
                             // Update Status Classes
-                            card.removeClass('status-pushed status-accepted status-declined');
-                            if (res.status === 1) card.addClass('status-accepted');
-                            else if (res.status === 2) card.addClass('status-declined');
-                            else card.addClass('status-pushed');
+                            allCards.removeClass('status-pushed status-accepted status-declined');
+                            if (res.status === 1) allCards.addClass('status-accepted');
+                            else if (res.status === 2) allCards.addClass('status-declined');
+                            else allCards.addClass('status-pushed');
                         } else {
                             if (res.message) alert(res.message);
                         }
