@@ -72,6 +72,7 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         int SaveRCList(RCActionList RC);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
+        List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
@@ -987,6 +988,17 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                 .Where(x => x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+        public List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(x => x.ClientSite.IsActive == true && 
+                (x.ClientSite.UploadGuardLog || x.ClientSite.UploadFusionLog || x.ClientSite.UploadSWLog || x.ClientSite.UploadKVLog) && 
+                x.Date == LogDate && !x.DbxUploaded)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();
