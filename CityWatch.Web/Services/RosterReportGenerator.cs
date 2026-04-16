@@ -387,11 +387,11 @@ namespace CityWatch.Web.Services
                                         borderColor = ColorConstants.WHITE;
                                     }
 
-                                    if (isRelief && shift.ShiftType == "Regular")
+                                    if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular"))
                                     {
-                                        bgColor = new DeviceRgb(243, 229, 245); // Light purple bg
-                                        borderColor = new DeviceRgb(111, 66, 193); // Purple border
-                                        fontColor = new DeviceRgb(74, 20, 140); // Dark purple text
+                                        bgColor = new DeviceRgb(111, 66, 193); // Dark purple bg (matches #6f42c1)
+                                        borderColor = ColorConstants.WHITE;
+                                        fontColor = ColorConstants.WHITE;
                                     }
 
                                     var shiftBlock = new Div()
@@ -541,8 +541,7 @@ namespace CityWatch.Web.Services
         {
             switch (status)
             {
-                case CityWatch.Data.Enums.RosterShiftStatus.Accepted: return new DeviceRgb(212, 237, 218); // Green
-                case CityWatch.Data.Enums.RosterShiftStatus.Declined: return new DeviceRgb(248, 215, 218); // Red-ish
+                case CityWatch.Data.Enums.RosterShiftStatus.Accepted:
                 default: return new DeviceRgb(255, 224, 178); // Orange
             }
         }
