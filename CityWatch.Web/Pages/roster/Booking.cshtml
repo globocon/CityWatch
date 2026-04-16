@@ -778,7 +778,7 @@
             }
 
             .shift-card.status-accepted {
-                background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
             }
 
             .shift-card.status-declined {
@@ -2794,9 +2794,6 @@
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 if (e.target.id === 'settings-tab') {
                     loadSettingsProjects();
-                    // Clear previous tab states to avoid conflicts
-                    currentGroupId = null;
-                    currentBinderId = null;
                 } else if (e.target.id === 'settings-project-tab') {
                     loadSettingsProjects();
                 } else if (e.target.id === 'settings-group-tab') {
