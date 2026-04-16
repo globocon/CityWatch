@@ -1215,5 +1215,46 @@ namespace CityWatch.Web.Pages.roster
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true });
         }
+
+        public async Task<IActionResult> OnPostCycleShiftType(int id)
+        {
+            var schedule = await _context.RosterSchedules.FindAsync(id);
+            if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found." });
+
+            var today = DateTime.Today;
+            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+            if (schedule.ShiftStart < firstDayOfCurrentMonth)
+            {
+                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+            }
+
+            // Cycle: Regular -> AdhocAccepted -> AdhocNotAccepted -> Regular
+            var currentType = schedule.ShiftType ?? "Regular";
+            var nextType = "Regular";
+            var nextStatus = RosterShiftStatus.Pushed;
+
+            if (currentType == "Regular")
+            {
+                nextType = "AdhocAccepted";
+                nextStatus = RosterShiftStatus.Accepted;
+            }
+            else if (currentType == "AdhocAccepted")
+            {
+                nextType = "AdhocNotAccepted";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+            else
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+
+            schedule.ShiftType = nextType;
+            schedule.Status = nextStatus;
+
+            await _context.SaveChangesAsync();
+
+            return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
+        }
     }
 }

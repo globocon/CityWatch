@@ -1783,6 +1783,47 @@
                 $('#addShiftModal').modal('show');
             });
 
+            // Quick Cycle Shift Type on Click
+            $('#roster_grid, #binder_grid').on('click', '.shift-card', function (e) {
+                // Ignore if clicked on delete/edit buttons
+                if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
+                
+                var card = $(this);
+                if (card.data('locked') === true || card.data('locked') === "true") return;
+
+                var id = card.data('id');
+                window.cycleShiftType(id, card);
+            });
+
+            window.cycleShiftType = function(id, card) {
+                $.ajax({
+                    url: '/roster/Booking?handler=CycleShiftType',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { id: id },
+                    success: function (res) {
+                        if (res.success) {
+                            // Update Card Data
+                            card.data('shifttype', res.shiftType);
+                            card.data('status', res.status);
+                            
+                            // Update Classes for Shading
+                            card.removeClass('adhoc-accepted adhoc-not-accepted');
+                            if (res.shiftType === 'AdhocAccepted') card.addClass('adhoc-accepted');
+                            else if (res.shiftType === 'AdhocNotAccepted') card.addClass('adhoc-not-accepted');
+
+                            // Update Status Classes
+                            card.removeClass('status-pushed status-accepted status-declined');
+                            if (res.status === 1) card.addClass('status-accepted');
+                            else if (res.status === 2) card.addClass('status-declined');
+                            else card.addClass('status-pushed');
+                        } else {
+                            if (res.message) alert(res.message);
+                        }
+                    }
+                });
+            };
+
             window.editShift = function(id, event) {
                 if (event) event.stopPropagation();
                 var card = $('.shift-card[data-id="' + id + '"]');
