@@ -1,6 +1,7 @@
 $(document).ready(function () {
     let grid_V2;
     let cachedStates = [];
+    let allCalendarEvents = [];
 
     // Initialize the new grid
     let $grid = $('#BroadCastBannerCalendarEvents_V2');
@@ -10,7 +11,7 @@ $(document).ready(function () {
 
     if ($grid.length > 0) {
         grid_V2 = $grid.grid({
-            dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
+            dataSource: [], // Locally managed data source
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -96,6 +97,36 @@ $(document).ready(function () {
         $('#calendarEventModal_V2').modal('show');
     });
 
+    // Custom Data Loading & Filtering
+    window.loadCalendarEvents = function () {
+        $.get('/Admin/Settings?handler=BroadcastCalendarEvents', function (data) {
+            allCalendarEvents = data;
+            filterAndRenderCalendarEvents();
+        });
+    };
+
+    window.filterAndRenderCalendarEvents = function () {
+        let filterVal = $('#filter_calendar_events_v2_admin').length > 0 ? $('#filter_calendar_events_v2_admin').val() : $('#filter_calendar_events_v2').val();
+        let dataToRender = allCalendarEvents;
+        
+        if (filterVal === 'PH') {
+            dataToRender = allCalendarEvents.filter(x => x.isPublicHoliday === true || x.isPublicHoliday === "true" || x.isPublicHoliday === 1 || x.isPublicHoliday === "1");
+        }
+        
+        if (grid_V2) {
+            grid_V2.render(dataToRender);
+        }
+    };
+
+    $('#filter_calendar_events_v2_admin, #filter_calendar_events_v2').on('change', function () {
+        filterAndRenderCalendarEvents();
+    });
+
+    // Initial load
+    if ($grid.length > 0) {
+        loadCalendarEvents();
+    }
+
     // PH Toggle handler
     $('#modal_isPH_v2').on('change', function () {
         if ($(this).is(':checked')) {
@@ -163,14 +194,14 @@ $(document).ready(function () {
         // Let's keep it as is in the input for now as the user explicitly asked for validations to exist.
 
         let data = {
-            id: id,
-            ReferenceNo: refNo,
-            TextMessage: message,
-            StartDate: start,
-            ExpiryDate: expiry,
-            RepeatYearly: repeat,
-            IsPublicHoliday: isPH,
-            States: states ? (Array.isArray(states) ? states.join(',') : states) : ""
+            id: parseInt(id) || -1,
+            referenceNo: refNo,
+            textMessage: message,
+            startDate: start,
+            expiryDate: expiry,
+            repeatYearly: repeat,
+            isPublicHoliday: isPH,
+            states: states ? (Array.isArray(states) ? states.join(',') : states) : ""
         };
 
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -184,7 +215,7 @@ $(document).ready(function () {
             if (res.status) {
                 $.notify(res.message || "Success", "success");
                 $('#calendarEventModal_V2').modal('hide');
-                grid_V2.reload();
+                loadCalendarEvents();
             } else {
                 $.notify(res.message || "Error occurred", "error");
             }
@@ -204,7 +235,7 @@ $(document).ready(function () {
             }).done(function (res) {
                 if (res.status) {
                     $.notify("Event deleted successfully", "success");
-                    grid_V2.reload();
+                    loadCalendarEvents();
                 } else {
                     $.notify(res.message || "Error occurred", "error");
                 }

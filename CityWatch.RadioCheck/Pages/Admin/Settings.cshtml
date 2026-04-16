@@ -159,11 +159,18 @@
                         <div class="card shadow-sm border-primary">
                             <div class="card-header d-flex justify-content-between bg-primary text-white align-items-center py-2">
                                 <h6 class="mb-0 font-weight-bold"><i class="fa fa-calendar mr-2"></i>Line 2 - Known Calendar Events</h6>
-                                <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2_admin">
-                                    <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
-                                </button>
+                                <div>
+                                    <select id="filter_calendar_events_v2_admin" class="form-control form-control-sm d-inline-block w-auto mr-2">
+                                        <option value="ALL">Show All</option>
+                                        <option value="PH">Show Public Holidays Only</option>
+                                    </select>
+                                    <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2_admin">
+                                        <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body p-0">
+                                @Html.AntiForgeryToken()
                                 <table id="BroadCastBannerCalendarEvents_V2_Admin"></table>
                             </div>
                         </div>
@@ -424,11 +431,18 @@
                         <div class="card shadow-sm border-primary">
                             <div class="card-header d-flex justify-content-between bg-primary text-white align-items-center py-2">
                                 <h6 class="mb-0 font-weight-bold"><i class="fa fa-calendar mr-2"></i>Line 2 - Known Calendar Events</h6>
-                                <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2">
-                                    <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
-                                </button>
+                                <div>
+                                    <select id="filter_calendar_events_v2" class="form-control form-control-sm d-inline-block w-auto mr-2">
+                                        <option value="ALL">Show All</option>
+                                        <option value="PH">Show Public Holidays Only</option>
+                                    </select>
+                                    <button class="btn btn-light btn-sm shadow-sm font-weight-bold" id="btn_add_calendar_event_v2">
+                                        <i class="fa fa-plus-circle mr-1 text-primary"></i> Add New Event
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body p-0">
+                                @Html.AntiForgeryToken()
                                 <table id="BroadCastBannerCalendarEvents_V2"></table>
                             </div>
                         </div>
