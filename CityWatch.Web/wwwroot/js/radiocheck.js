@@ -1736,7 +1736,10 @@ let gridGuardCompliancesLogDaily = $('#tbl_guard_compliances1').DataTable({
     },
 });
 
+var guardPinPurpose = 'hr';
+
 $('#btnHRDetails').on('click', function () {
+    guardPinPurpose = 'hr';
     $('#txt_guardKey').val('');
     $('#txt_guardKeyNewPIN').val('');
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
@@ -1746,11 +1749,9 @@ $('#btnHRDetails').on('click', function () {
         type: 'POST',
         data: {
             guardId: $('#GuardLog_GuardLogin_GuardId').val()
-
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
-
         if (result.accessPermission) {
             $('#loginHrNewPasswordSetGuard').modal('show');
             $('#loginHrEditGuard').modal('hide');
@@ -1758,14 +1759,33 @@ $('#btnHRDetails').on('click', function () {
         else {
             $('#loginHrNewPasswordSetGuard').modal('hide');
             $('#loginHrEditGuard').modal('show');
-
         }
-    }).fail(function () {
-    }).always(function () {
-
     });
+});
 
-
+$('#btnRosterDetails').on('click', function () {
+    guardPinPurpose = 'roster';
+    $('#txt_guardKey').val('');
+    $('#txt_guardKeyNewPIN').val('');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+        type: 'POST',
+        data: {
+            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.accessPermission) {
+            $('#loginHrNewPasswordSetGuard').modal('show');
+            $('#loginHrEditGuard').modal('hide');
+        }
+        else {
+            $('#loginHrNewPasswordSetGuard').modal('hide');
+            $('#loginHrEditGuard').modal('show');
+        }
+    });
 });
 
 
@@ -1793,6 +1813,11 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
         }).done(function (result) {
             if (result.accessPermission) {
                 $('#loginHrNewPasswordSetGuard').modal('hide');
+
+                if (guardPinPurpose === 'roster') {
+                    openGuardRosterPortal($('#ClientSiteID').val());
+                    return;
+                }
 
                 $.ajax({
                     type: 'GET',
@@ -1877,7 +1902,12 @@ $('#btnGuardHrUpdate').on('click', function () {
             if (result.accessPermission) {
 
                 $('#modelGuardLoginForHrUpdate').modal('hide');
+                $('#loginHrEditGuard').modal('hide');
 
+                if (guardPinPurpose === 'roster') {
+                    openGuardRosterPortal($('#ClientSiteID').val());
+                    return;
+                }
 
                 $.ajax({
                     type: 'GET',

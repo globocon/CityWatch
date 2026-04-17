@@ -31,49 +31,74 @@ namespace CityWatch.Web.Pages.roster
         {
             var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
 
-            // Fetch schedules for the specific site only, excluding financials/suppliers
+            // Fetch schedules for the specific site only
             var schedules = await _context.RosterSchedules
                 .Where(x => x.ClientSiteId == siteId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                 .Include(x => x.Guard)
                 .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
                 .OrderBy(x => x.ShiftStart)
-                .Select(x => new
-                {
-                    id = x.Id,
-                    shiftStart = x.ShiftStart.ToString("HH:mm"),
-                    shiftEnd = x.ShiftEnd.ToString("HH:mm"),
-                    guardName = x.ReliefGuardId.HasValue || !string.IsNullOrEmpty(x.ReliefProviderName) 
-                        ? "{R} " + (x.ReliefGuard != null ? x.ReliefGuard.Name : x.ReliefProviderName)
-                        : (x.Guard != null ? x.Guard.Name : x.ProviderName),
-                    shiftType = x.ShiftType ?? "Regular",
-                    status = (int)x.Status,
-                    callsignName = x.Callsign != null ? x.Callsign.Name : "",
-                    licenseNo = x.ReliefGuardId.HasValue 
-                        ? (x.ReliefGuard != null ? x.ReliefGuard.SecurityNo : "") 
-                        : (x.Guard != null ? x.Guard.SecurityNo : ""),
-                    startDate = x.ShiftStart.Date
-                })
                 .ToListAsync();
+
+            var site = await _context.ClientSites.Include(s => s.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
+
+            // Group into the format expected by the "mdel styles" UI
+            var results = new List<object>();
+
+            if (site != null)
+            {
+                var days = new List<List<object>>();
+                for (int i = 0; i < 7; i++)
+                {
+                    var loopDate = startDate.AddDays(i).Date;
+                    var dayShifts = schedules
+                        .Where(s => s.ShiftStart.Date == loopDate)
+                        .OrderBy(s => s.ShiftStart)
+                        .Select(s => new
+                        {
+                            s.Id,
+                            shiftStart = s.ShiftStart.ToString("HH:mm"),
+                            shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                            guardName = s.Guard != null ? s.Guard.Name : s.ProviderName,
+                            reliefGuardId = s.ReliefGuardId,
+                            reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
+                            reliefProviderName = s.ReliefProviderName,
+                            reliefReason = s.ReliefReason,
+                            guardLicense = s.Guard != null ? s.Guard.SecurityNo : "",
+                            reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                            shiftType = s.ShiftType ?? "Regular",
+                            status = (int)s.Status,
+                            callsignName = s.Callsign != null ? s.Callsign.Name : "",
+                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2)
+                        })
+                        .ToList<object>();
+                    days.Add(dayShifts);
+                }
+
+                results.Add(new
+                {
+                    siteName = site.Name,
+                    clientTypeName = site.ClientType?.Name ?? "Security Service",
+                    days = days
+                });
+            }
 
             // Fetch Holidays for the range
             var holidays = await _context.BroadcastBannerCalendarEvents
                 .Where(x => x.IsPublicHoliday && x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)
                 .Select(x => new
                 {
-                    id = x.id,
-                    startDate = x.StartDate,
-                    expiryDate = x.ExpiryDate,
-                    states = _context.PublicHolidayStates
+                    x.id,
+                    x.StartDate,
+                    x.ExpiryDate,
+                    States = _context.PublicHolidayStates
                         .Where(s => s.CalendarEventId == x.id && !s.IsDeleted)
                         .Select(s => s.State)
                         .ToList()
                 })
                 .ToListAsync();
 
-            var site = await _context.ClientSites.FirstOrDefaultAsync(x => x.Id == siteId);
-
-            return new JsonResult(new { results = schedules, holidays, siteState = site?.State, siteName = site?.Name });
+            return new JsonResult(new { results, holidays, siteState = site?.State });
         }
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1)

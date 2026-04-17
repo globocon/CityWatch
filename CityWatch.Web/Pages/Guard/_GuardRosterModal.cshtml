@@ -1,107 +1,46 @@
-@using CityWatch.Web.Helpers
-@using CityWatch.Data.Helpers
-
-<style>
-    #roster-modal-content .table th {
-        background-color: #6f42c1;
-        color: white;
-        text-align: center;
-        font-size: 0.85rem;
-        padding: 8px 4px;
-    }
-
-    #roster-modal-content .table td {
-        vertical-align: top;
-        padding: 4px;
-        min-width: 120px;
-        border: 1px solid #dee2e6;
-    }
-
-    .roster-shift-card {
-        font-size: 0.75rem;
-        margin-bottom: 4px;
-        padding: 4px;
-        border-radius: 4px;
-        border-left: 3px solid;
-    }
-
-    .roster-shift-regular {
-        background-color: #fff3e0;
-        border-left-color: #ff9800;
-    }
-
-    .roster-shift-relief {
-        background-color: #f3e5f5;
-        border-left-color: #6f42c1;
-        color: #4a148c;
-    }
-
-    .ph-highlight {
-        background-color: #fff9c4 !important;
-    }
-
-    .weekend-highlight {
-        background-color: #f8f9fa;
-    }
-</style>
-
-<!-- PIN Authentication Modal -->
-<div class="modal fade" id="rosterPinModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title"><i class="fa fa-lock mr-2"></i>Security Verification</h6>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-2">
-                    <label>Enter your PIN</label>
-                    <input type="password" id="rosterPinInput" class="form-control" maxlength="6" autocomplete="off" />
-                </div>
-                <div id="rosterPinError" class="text-danger small mb-2" style="display:none;"></div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="#" id="btnRosterForgotPin" class="small text-primary">Forgot PIN?</a>
-                    <button type="button" class="btn btn-primary btn-sm" id="btnVerifyRosterPin">
-                        <i class="fa fa-sign-in mr-1"></i>Verify
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Roster Modal -->
-<div class="modal fade" id="siteRosterModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title"><i class="fa fa-calendar-o mr-2"></i>Site Roster: <span id="rosterModalSiteName">Loading...</span></h5>
+<div class="modal fade" id="guardRosterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-dark text-white p-3 border-0 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fa fa-calendar-check-o text-white small"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title font-weight-bold mb-0" id="guardWeekRangeText">Site Roster: Loading...</h5>
+                    </div>
                 </div>
                 <div class="d-flex align-items-center">
-                    <div class="mr-3">
-                        <select id="rosterWeekSelect" class="form-control form-control-sm">
-                            <!-- Populated via JS -->
-                        </select>
+                    <div class="btn-group mr-3 shadow-sm bg-white rounded-pill p-1">
+                        <button class="btn btn-sm btn-light border-0 rounded-circle" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left text-primary"></i></button>
+                        <button class="btn btn-sm btn-light border-0 mx-1 px-3 font-weight-bold" disabled>Navigation</button>
+                        <button class="btn btn-sm btn-light border-0 rounded-circle" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right text-primary"></i></button>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm mr-3" id="btnDownloadRosterPdf">
-                        <i class="fa fa-download mr-1"></i>Download PDF
+                    <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
+                        <i class="fa fa-download mr-2"></i>Download PDF
                     </button>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close text-white opacity-100 p-0 m-0" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
                     </button>
                 </div>
             </div>
-            <div class="modal-body p-0" id="roster-modal-content">
+            <div class="modal-body p-0 bg-light" style="min-height: 500px;">
+                <div id="guardRosterEmpty" class="d-none text-center py-5">
+                    <div class="opacity-25"><i class="fa fa-calendar-times-o fa-5x"></i></div>
+                    <h4 class="mt-4 text-muted">No Roster Found</h4>
+                    <p class="text-muted small">We couldn't find any scheduled shifts for this site in the selected week.</p>
+                </div>
+                
                 <div class="table-responsive">
-                    <table class="table table-bordered mb-0">
-                        <thead id="rosterHeader">
-                            <!-- Populated via JS -->
+                    <table class="table table-bordered roster-grid mb-0" id="guard_roster_grid">
+                        <thead class="bg-white" id="guard_roster_header">
+                            <tr class="text-center text-uppercase text-muted small font-weight-bold">
+                                <th style="width: 180px; vertical-align: middle;" class="bg-light">Project / Site</th>
+                                <!-- Day headers will be injected here -->
+                            </tr>
                         </thead>
-                        <tbody id="rosterBody">
-                            <!-- Populated via JS -->
+                        <tbody id="guard_roster_body">
+                            <!-- Rows will be injected here -->
                         </tbody>
                     </table>
                 </div>
@@ -110,186 +49,256 @@
     </div>
 </div>
 
+<!-- Simple Filter Modal for PDF Download -->
+<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header p-3">
+                <h6 class="modal-title font-weight-bold">PDF Export Options</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="small font-weight-bold text-muted mb-2 d-block text-uppercase">Duration to export</label>
+                <select id="guardPdfWeeks" class="form-control form-control-sm border-primary">
+                    <option value="1">This Week Only</option>
+                    <option value="2">2 Weeks Binder</option>
+                    <option value="4">4 Weeks Binder</option>
+                </select>
+            </div>
+            <div class="modal-footer p-2 bg-light">
+                <button type="button" class="btn btn-primary btn-block font-weight-bold" id="btnConfirmGuardDownload">GENERATE REPORT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .roster-grid { table-layout: fixed; min-width: 1000px; border-collapse: separate; border-spacing: 0; }
+    .roster-grid th, .roster-grid td { border-color: rgba(0,0,0,0.06) !important; padding: 10px !important; }
+    .roster-grid th { font-size: 10px; letter-spacing: 1px; }
+    
+    .guard-day-cell { vertical-align: top; background: #fff; transition: all 0.2s; }
+    .guard-day-cell:hover { background: #fdfdfd; }
+    .guard-ph-highlight { background-color: #fff9c4 !important; }
+    
+    .guard-shift-card {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        color: #2c3e50;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+        font-size: 11px;
+        position: relative;
+        transition: transform 0.1s;
+    }
+    .guard-shift-card:hover { transform: scale(1.02); z-index: 10; cursor: default; }
+
+    .status-accepted { background: #fff3e0; border-left: 3px solid #ffb74d; }
+    .status-declined { background: #ffebee; border-left: 3px solid #ef5350; }
+    .status-pushed { background: #f1f8e9; border-left: 3px solid #81c784; }
+
+    /* Relief Card Styles */
+    .guard-shift-card.shift-relief { 
+        background: #6f42c1; 
+        color: white; 
+        border-left: 3px solid #4527a0;
+    }
+    .guard-relief-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-radius: 4px;
+        padding: 0 5px;
+        margin-right: 6px;
+        font-size: 10px;
+        font-weight: 900;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* Adhoc Styles */
+    .guard-shift-card.adhoc-accepted { 
+        background: #1b5e20; 
+        color: white; 
+        border-left: 3px solid #144414;
+    }
+    .guard-shift-card.adhoc-not-accepted { 
+        background: #e65100; 
+        color: white; 
+        border-right: 3px solid #ff9800;
+    }
+
+    .guard-shift-time {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(0,0,0,0.06);
+        font-weight: 700;
+    }
+    
+    .guard-shift-card.shift-relief .guard-shift-time,
+    .guard-shift-card.adhoc-accepted .guard-shift-time,
+    .guard-shift-card.adhoc-not-accepted .guard-shift-time {
+        border-top-color: rgba(255, 255, 255, 0.2);
+    }
+</style>
+
 <script>
-    jQuery(function($) {
-        var currentSiteId = 0;
-        var selectedStartDate = null;
+    var guardRosterStartDate = null;
+    var currentGuardSiteId = null;
 
-        $(document).on('click', '#btnRosterDetails', function() {
-            currentSiteId = $('#ClientSiteID').val();
-            $('#rosterPinInput').val('');
-            $('#rosterPinError').hide();
-            $('#rosterPinModal').modal('show');
+    $(document).ready(function() {
+        $('#btnPrevWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() - 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
         });
 
-        $('#btnVerifyRosterPin').on('click', function() {
-            verifyPin();
+        $('#btnNextWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() + 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
         });
 
-        $('#rosterPinInput').on('keypress', function(e) {
-            if (e.which == 13) verifyPin();
+        $('#btnDownloadGuardPdf').on('click', function() {
+            $('#guardDownloadFilterModal').modal('show');
         });
 
-        function verifyPin() {
-            var pin = $('#rosterPinInput').val();
-            var guardId = $('#GuardLog_GuardLogin_GuardId').val();
-
-            if (!pin) {
-                $('#rosterPinError').text('Please enter your PIN.').show();
-                return;
-            }
-
-            // Using the standard HR document login handler to ensure PIN sync
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
-                type: 'POST',
-                data: { guardId: guardId, key: pin },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function(result) {
-                if (result.accessPermission) {
-                    $('#rosterPinModal').modal('hide');
-                    initRosterModal();
-                } else {
-                    $('#rosterPinError').text('Invalid PIN. Please try again.').show();
-                }
-            }).fail(function() {
-                $('#rosterPinError').text('Communication error. Please try again.').show();
-            });
-        }
-
-        $('#btnRosterForgotPin').on('click', function(e) {
-            e.preventDefault();
-            $('#rosterPinModal').modal('hide');
-            $('#loginHrNewPasswordSetGuard').modal('show');
-        });
-
-        function initRosterModal() {
-            populateWeeks();
-            loadRoster();
-            $('#siteRosterModal').modal('show');
-        }
-
-        function populateWeeks() {
-            var $select = $('#rosterWeekSelect');
-            $select.empty();
-            
-            var today = new Date();
-            var currentDay = today.getDay();
-            var diff = today.getDate() - currentDay + (currentDay == 0 ? -6 : 1);
-            var monday = new Date(today.setDate(diff));
-            monday.setHours(0,0,0,0);
-
-            for (var i = -1; i <= 4; i++) {
-                var start = new Date(monday);
-                start.setDate(monday.getDate() + (i * 7));
-                var end = new Date(start);
-                end.setDate(start.getDate() + 6);
-                
-                var label = (i === 0 ? "Current Week" : (i === -1 ? "Previous Week" : "Week " + i));
-                var value = start.toISOString().split('T')[0];
-                
-                $select.append(`<option value="${value}" ${i === 0 ? 'selected' : ''}>${label} (${start.toLocaleDateString()} - ${end.toLocaleDateString()})</option>`);
-            }
-            selectedStartDate = $select.val();
-        }
-
-        $('#rosterWeekSelect').on('change', function() {
-            selectedStartDate = $(this).val();
-            loadRoster();
-        });
-
-        function loadRoster() {
-            $('#rosterBody').html('<tr><td colspan="8" class="text-center p-5"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Loading Roster...</td></tr>');
-            
-            $.get('/roster/GuardRosterAction?handler=LoadRosterForSite', {
-                siteId: currentSiteId,
-                startDate: selectedStartDate
-            }, function(data) {
-                renderRoster(data);
-            });
-        }
-
-        function renderRoster(data) {
-            $('#rosterModalSiteName').text(data.siteName || "Current Site");
-            
-            var headHtml = '<tr><th style="width:160px;">Guard Name</th>';
-            var start = new Date(selectedStartDate);
-            for (var i = 0; i < 7; i++) {
-                var d = new Date(start);
-                d.setDate(start.getDate() + i);
-                headHtml += `<th>${d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' })}</th>`;
-            }
-            headHtml += '</tr>';
-            $('#rosterHeader').html(headHtml);
-
-            var bodyHtml = '';
-            var guardShifts = {};
-            
-            // Group by guard
-            if (data.results) {
-                data.results.forEach(function(s) {
-                    if (!guardShifts[s.guardName]) guardShifts[s.guardName] = {};
-                    var dayStr = new Date(s.startDate).toISOString().split('T')[0];
-                    if (!guardShifts[s.guardName][dayStr]) guardShifts[s.guardName][dayStr] = [];
-                    guardShifts[s.guardName][dayStr].push(s);
-                });
-            }
-
-            var guards = Object.keys(guardShifts).sort();
-            if (guards.length === 0) {
-                bodyHtml = '<tr><td colspan="8" class="text-center text-muted p-4">No shifts found for this week.</td></tr>';
-            } else {
-                guards.forEach(function(name) {
-                    bodyHtml += `<tr><td class="font-weight-bold">${name}</td>`;
-                    for (var i = 0; i < 7; i++) {
-                        var d = new Date(start);
-                        d.setDate(start.getDate() + i);
-                        var dayStr = d.toISOString().split('T')[0];
-                        
-                        var isPH = isPublicHoliday(d, data.holidays, data.siteState);
-                        var isWeekend = (d.getDay() === 0 || d.getDay() === 6);
-                        var cellClass = isPH ? 'ph-highlight' : (isWeekend ? 'weekend-highlight' : '');
-                        
-                        bodyHtml += `<td class="${cellClass}">`;
-                        if (guardShifts[name] && guardShifts[name][dayStr]) {
-                            guardShifts[name][dayStr].forEach(function(s) {
-                                var isRelief = s.guardName.indexOf('{R}') === 0;
-                                var cardClass = isRelief ? 'roster-shift-relief' : 'roster-shift-regular';
-                                bodyHtml += `<div class="roster-shift-card ${cardClass}">
-                                    <div class="font-weight-bold">${s.shiftStart} - ${s.shiftEnd}</div>
-                                    <div class="small">${s.callsignName || ''}</div>
-                                    <div style="font-size:0.65rem; opacity:0.8;">${s.licenseNo || ''}</div>
-                                </div>`;
-                            });
-                        }
-                        bodyHtml += '</td>';
-                    }
-                    bodyHtml += '</tr>';
-                });
-            }
-            $('#rosterBody').html(bodyHtml);
-        }
-
-        function isPublicHoliday(date, holidays, state) {
-            if (!holidays) return false;
-            var dStr = date.toISOString().split('T')[0];
-            var siteState = (state || "").trim().toUpperCase();
-            
-            for (var i = 0; i < holidays.length; i++) {
-                var h = holidays[i];
-                var hStart = new Date(h.startDate).toISOString().split('T')[0];
-                var hEnd = new Date(h.expiryDate).toISOString().split('T')[0];
-                
-                if (dStr >= hStart && dStr <= hEnd) {
-                    if (!h.states || h.states.length === 0 || h.states.indexOf("ALL") !== -1) return true;
-                    if (h.states.indexOf(siteState) !== -1) return true;
-                }
-            }
-            return false;
-        }
-
-        $('#btnDownloadRosterPdf').on('click', function() {
-            window.open(`/roster/GuardRosterAction?handler=DownloadSiteRosterPdf&siteId=${currentSiteId}&startDate=${selectedStartDate}`, '_blank');
+        $('#btnConfirmGuardDownload').on('click', function() {
+            var weeks = $('#guardPdfWeeks').val();
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf&siteId=' + currentGuardSiteId + '&startDate=' + guardRosterStartDate + '&weeks=' + weeks;
+            window.open(url, '_blank');
+            $('#guardDownloadFilterModal').modal('hide');
         });
     });
+
+    function openGuardRosterPortal(siteId) {
+        currentGuardSiteId = siteId;
+        // Find Monday of current week
+        var today = new Date();
+        var day = today.getDay();
+        var diff = today.getDate() - day + (day == 0 ? -6 : 1);
+        var monday = new Date(today.setDate(diff));
+        guardRosterStartDate = monday.toISOString().split('T')[0];
+        
+        $('#guardRosterModal').modal('show');
+        loadGuardRoster();
+    }
+
+    function loadGuardRoster() {
+        if (!currentGuardSiteId || !guardRosterStartDate) return;
+
+        var end = new Date(guardRosterStartDate);
+        end.setDate(end.getDate() + 6);
+        $('#guardWeekRangeText').html('<i class="fa fa-clock mr-2 opacity-75 small"></i>' + formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
+
+        var tbody = $('#guard_roster_header').parent().parent().find('tbody');
+        var thead = $('#guard_roster_header');
+        
+        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">GENERATING VIEW...</p></td></tr>');
+
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function (res) {
+                tbody.empty();
+                thead.find('th:not(:first-child)').remove();
+
+                if (!res.results || res.results.length === 0) {
+                    $('#guardRosterEmpty').removeClass('d-none');
+                    $('#guard_roster_grid').addClass('d-none');
+                    return;
+                }
+                $('#guardRosterEmpty').addClass('d-none');
+                $('#guard_roster_grid').removeClass('d-none');
+
+                // Inject Day Headers
+                var d = new Date(guardRosterStartDate);
+                for (var i = 0; i < 7; i++) {
+                    var dayDate = new Date(d);
+                    dayDate.setDate(d.getDate() + i);
+                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' }).toUpperCase();
+                    thead.append('<th>' + dateStr + '</th>');
+                }
+
+                res.results.forEach(function (row) {
+                    var rowHtml = '<tr>' +
+                        '<td class="bg-light align-middle"><div class="font-weight-bold text-primary">' + row.siteName + '</div><div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">' + row.clientTypeName + '</div></td>';
+
+                    row.days.forEach(function (dayShifts, index) {
+                        var isPh = (res.holidays && isPublicHolidayAtDate(new Date(guardRosterStartDate).setDate(new Date(guardRosterStartDate).getDate() + index), res.holidays, res.siteState));
+                        var phClass = isPh ? "guard-ph-highlight" : "";
+                        
+                        rowHtml += '<td class="guard-day-cell ' + phClass + '">';
+                        
+                        dayShifts.forEach(function (s) {
+                            var statusClass = 'status-pushed';
+                            if (s.status === 1) statusClass = 'status-accepted';
+                            if (s.status === 2) statusClass = 'status-declined';
+
+                            var typeClass = '';
+                            if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                            else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                            var isRelief = s.reliefGuardId || s.reliefProviderName;
+
+                            rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
+                                '<div class="text-truncate font-weight-bold" style="font-size: 11px;">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user-circle mr-2 opacity-50"></i>') + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                '</div>' +
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 9px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                '<div class="mt-1 opacity-75" style="font-size: 9px; font-weight: 600;">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                '<div class="guard-shift-time">' +
+                                    '<span>' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                    '<span class="badge badge-pill badge-dark px-2" style="font-size: 8px; opacity: 0.6; font-weight: 600;">' + s.durationHours.toString().replace(/\.00$/, "") + 'H</span>' +
+                                '</div>' +
+                                (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;"><i class="fa fa-hashtag mr-1"></i>' + s.callsignName + '</div>' : '') +
+                                '</div>';
+                        });
+                        rowHtml += '</td>';
+                    });
+
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+                });
+            },
+            error: function() {
+                tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
+            }
+        });
+    }
+
+    function isPublicHolidayAtDate(time, holidays, state) {
+        var date = new Date(time);
+        var dStr = date.toISOString().split('T')[0];
+        var siteState = (state || "").trim().toUpperCase();
+        
+        for (var i = 0; i < holidays.length; i++) {
+            var h = holidays[i];
+            var hStart = new Date(h.startDate).toISOString().split('T')[0];
+            var hEnd = new Date(h.expiryDate).toISOString().split('T')[0];
+            
+            if (dStr >= hStart && dStr <= hEnd) {
+                if (!h.states || h.states.length === 0 || h.states.indexOf("ALL") !== -1) return true;
+                if (h.states.indexOf(siteState) !== -1) return true;
+            }
+        }
+        return false;
+    }
+
+    function formatGuardDate(date) {
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+    }
+
+    function truncateGuardName(str, num) {
+        if (!str) return "";
+        if (str.length <= num) return str;
+        return str.slice(0, num) + '..';
+    }
 </script>
