@@ -1,6 +1,7 @@
-﻿let nIntervId;
-const duration = 60 * 3;
+let nIntervId;
+const duration = 60 * 4;
 var isPaused = false;
+var guardPinPurpose = 'hr';
 var playedMessageIds = []; // Track played messages to prevent looping sound
 
 window.onload = function () {
@@ -1737,6 +1738,7 @@ let gridGuardCompliancesLogDaily = $('#tbl_guard_compliances1').DataTable({
 });
 
 $('#btnHRDetails').on('click', function () {
+    guardPinPurpose = 'hr';
     $('#txt_guardKey').val('');
     $('#txt_guardKeyNewPIN').val('');
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
@@ -1768,6 +1770,31 @@ $('#btnHRDetails').on('click', function () {
 
 });
 
+$('#btnRosterDetails').on('click', function () {
+    guardPinPurpose = 'roster';
+    $('#txt_guardKey').val('');
+    $('#txt_guardKeyNewPIN').val('');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+        type: 'POST',
+        data: {
+            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.accessPermission) {
+            $('#loginHrNewPasswordSetGuard').modal('show');
+            $('#loginHrEditGuard').modal('hide');
+        }
+        else {
+            $('#loginHrNewPasswordSetGuard').modal('hide');
+            $('#loginHrEditGuard').modal('show');
+        }
+    });
+});
+
 
 $('#btnHO').on('click', function () {
     $('#Handover-modal').modal('show');
@@ -1793,6 +1820,11 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
         }).done(function (result) {
             if (result.accessPermission) {
                 $('#loginHrNewPasswordSetGuard').modal('hide');
+
+                if (guardPinPurpose === 'roster') {
+                    openGuardRosterPortal($('#ClientSiteID').val());
+                    return;
+                }
 
                 $.ajax({
                     type: 'GET',
@@ -1877,7 +1909,12 @@ $('#btnGuardHrUpdate').on('click', function () {
             if (result.accessPermission) {
 
                 $('#modelGuardLoginForHrUpdate').modal('hide');
+                $('#loginHrEditGuard').modal('hide');
 
+                if (guardPinPurpose === 'roster') {
+                    openGuardRosterPortal($('#ClientSiteID').val());
+                    return;
+                }
 
                 $.ajax({
                     type: 'GET',

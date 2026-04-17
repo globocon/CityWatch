@@ -26,6 +26,10 @@ using iText.Kernel.Font;
 
 namespace CityWatch.Web.Services
 {
+    /// <summary>
+    /// Service for generating Roster PDF reports.
+    /// Used for Group, Project, and Binder reports.
+    /// </summary>
     public interface IRosterReportGenerator
     {
         Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
@@ -68,6 +72,7 @@ namespace CityWatch.Web.Services
             public DateTime Date { get; set; }
             public List<string> States { get; set; }
         }
+
 
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
         {
@@ -518,6 +523,7 @@ namespace CityWatch.Web.Services
                 return ms.ToArray();
             }
         }
+
 
         private void AddBrandedFooter(Document document, PdfDocument pdf, DateTime startDate)
         {
