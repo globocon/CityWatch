@@ -267,6 +267,7 @@
     var isAdminFinancialsOn = false;
     var isAdminSupplierOn = false;
     var adminRateType = 'guard'; // 'guard' or 'sell'
+    var currentRosterStatus = 'Live';
 
     $(document).ready(function() {
         $('#btnPrevWeekGuard').on('click', function() {
@@ -291,7 +292,7 @@
 
         $('#btnConfirmGuardDownload').on('click', function() {
             var weeks = $('#guardPdfWeeks').val();
-            var status = isAdminRoster ? $('#adminRosterStatus').val() : '';
+            var status = currentRosterStatus; // Send the status regardless of role
             var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' + 
                 '&siteId=' + currentGuardSiteId + 
                 '&startDate=' + guardRosterStartDate + 
@@ -372,7 +373,6 @@
     }
 
     function updateGridStatusDisplay(status) {
-        if (!isAdminRoster) return;
         var container = $('.admin-status-grid-display');
         container.empty();
         
@@ -391,6 +391,7 @@
             headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
             data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
             success: function(res) {
+                currentRosterStatus = newStatus;
                 updateGridStatusDisplay(newStatus);
                 
                 // Show Success Message
@@ -513,8 +514,11 @@
 
                 // Show Status Stamp in Grid
                 if (res.status) {
+                    currentRosterStatus = res.status;
                     updateGridStatusDisplay(res.status);
-                    $('#adminRosterStatus').val(res.status);
+                    if (isAdminRoster) {
+                        $('#adminRosterStatus').val(res.status);
+                    }
                 }
 
                 // Update Totals
