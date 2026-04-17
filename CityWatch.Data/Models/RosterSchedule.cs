@@ -53,6 +53,8 @@ namespace CityWatch.Data.Models
         public string ReliefProviderName { get; set; }
 
         public string ReliefReason { get; set; }
+
+        public string ReliefReasonOther { get; set; }
         
         [StringLength(50)]
         public string ShiftType { get; set; }

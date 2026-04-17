@@ -785,7 +785,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(records);
         }
 
-        public JsonResult OnPostSaveGuardUnavailability(int guardId, string reason, DateTime fromDate, DateTime toDate)
+        public JsonResult OnPostSaveGuardUnavailability(int guardId, string reason, string reasonOther, DateTime fromDate, DateTime toDate)
         {
             var success = false;
             var message = "Leave saved successfully.";
@@ -811,6 +811,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     GuardId = guardId,
                     Reason = reason,
+                    ReasonOther = reasonOther,
                     FromDate = fromDate,
                     ToDate = toDate
                 });

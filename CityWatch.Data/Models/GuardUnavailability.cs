@@ -13,6 +13,8 @@ namespace CityWatch.Data.Models
 
         public string Reason { get; set; }
 
+        public string ReasonOther { get; set; }
+
         public DateTime FromDate { get; set; }
 
         public DateTime ToDate { get; set; }

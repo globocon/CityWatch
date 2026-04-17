@@ -296,6 +296,7 @@ namespace CityWatch.Web.Pages.roster
                             reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                             reliefProviderName = s.ReliefProviderName ?? "",
                             reliefReason = s.ReliefReason ?? "",
+                            reliefReasonOther = s.ReliefReasonOther ?? "",
                             shiftType = s.ShiftType ?? "Regular"
                         })
                         .ToList();
@@ -363,7 +364,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string shiftType)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, bool ignoreUnavailability = false)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -413,10 +414,10 @@ namespace CityWatch.Web.Pages.roster
                     .Where(u => u.GuardId == guardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
                 
-                if (unavailGuard != null)
+                if (unavailGuard != null && !ignoreUnavailability)
                 {
                     var guard = await _context.Guards.FindAsync(guardId);
-                    return new JsonResult(new { success = false, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
+                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"{guard.Name} is marked unavailable ({unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy})." });
                 }
             }
 
@@ -426,10 +427,10 @@ namespace CityWatch.Web.Pages.roster
                     .Where(u => u.GuardId == reliefGuardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
 
-                if (unavailRelief != null)
+                if (unavailRelief != null && !ignoreUnavailability)
                 {
                     var guard = await _context.Guards.FindAsync(reliefGuardId);
-                    return new JsonResult(new { success = false, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
+                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"Relief Guard {guard.Name} is marked unavailable ({unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy})." });
                 }
             }
 
@@ -448,6 +449,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.ReliefReason = reliefReason;
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
+                existing.ReliefReasonOther = reliefReasonOther;
                 existing.ShiftType = shiftType;
 
                 if (shiftType == "AdhocAccepted") existing.Status = RosterShiftStatus.Accepted;
@@ -475,6 +477,7 @@ namespace CityWatch.Web.Pages.roster
                     Status = status,
                     PayRateId = payRateId,
                     CallsignId = callsignId,
+                    ReliefReasonOther = reliefReasonOther,
                     ShiftType = shiftType
                 };
                 _context.RosterSchedules.Add(schedule);
@@ -767,6 +770,7 @@ namespace CityWatch.Web.Pages.roster
                                 reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? "",
+                                reliefReasonOther = s.ReliefReasonOther ?? "",
                                 shiftType = s.ShiftType ?? "Regular"
                             })
                             .ToList();
@@ -1011,6 +1015,7 @@ namespace CityWatch.Web.Pages.roster
                                 ReliefGuardId = source.ReliefGuardId,
                                 ReliefProviderName = source.ReliefProviderName,
                                 ReliefReason = source.ReliefReason,
+                                ReliefReasonOther = source.ReliefReasonOther,
                                 ShiftType = source.ShiftType
                             });
                         }
@@ -1021,6 +1026,7 @@ namespace CityWatch.Web.Pages.roster
                             existingShift.ReliefGuardId = source.ReliefGuardId;
                             existingShift.ReliefProviderName = source.ReliefProviderName;
                             existingShift.ReliefReason = source.ReliefReason;
+                            existingShift.ReliefReasonOther = source.ReliefReasonOther;
                             existingShift.ShiftType = source.ShiftType;
                         }
                     }
