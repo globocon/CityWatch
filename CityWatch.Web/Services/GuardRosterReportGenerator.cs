@@ -133,11 +133,14 @@ namespace CityWatch.Web.Services
 
                             if (File.Exists(logoPath))
                             {
-                                try {
+                                try
+                                {
                                     var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
                                     headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
-                                } catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
-                            } else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+                                }
+                                catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+                            }
+                            else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
 
                             var titleCell = new Cell()
                                 .Add(new Paragraph($"Site Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
@@ -193,7 +196,7 @@ namespace CityWatch.Web.Services
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
-                                    
+
                                     if (shift.ShiftType == "AdhocAccepted") bgColor = new DeviceRgb(27, 94, 32);
                                     else if (shift.ShiftType == "AdhocNotAccepted") bgColor = new DeviceRgb(230, 81, 0);
 
@@ -248,13 +251,15 @@ namespace CityWatch.Web.Services
                                 table.AddCell(new Cell().Add(new Paragraph($"{dailyTotals[i]:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                             }
 
-                        document.Add(table);
-                        AddBrandedFooter(document, pdf, weekStart);
+                            document.Add(table);
+                            AddBrandedFooter(document, pdf, weekStart);
+                        }
+                        document.Close();
                     }
-                    document.Close();
+                    return ms.ToArray();
                 }
-                return ms.ToArray();
             }
+
         }
 
         private void AddBrandedFooter(Document document, PdfDocument pdf, DateTime startDate)
