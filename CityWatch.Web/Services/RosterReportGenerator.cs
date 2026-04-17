@@ -27,13 +27,9 @@ using iText.Kernel.Font;
 namespace CityWatch.Web.Services
 {
     /// <summary>
-    /// Service for generating Roster PDF reports for Admin/Booking modules.
-    /// Used for Group, Project, and Binder reports with full financial/supplier options.
+    /// Service for generating Roster PDF reports.
+    /// Used for Group, Project, and Binder reports.
     /// </summary>
-    /// <remarks>
-    /// NOTE: For Guard Portal / Guard Facing Roster reports, see GuardRosterReportGenerator.cs
-    /// to ensure isolation between Admin and Guard functionalities.
-    /// </remarks>
     public interface IRosterReportGenerator
     {
         Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
