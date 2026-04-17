@@ -177,23 +177,20 @@ namespace CityWatch.Web.Services
                             double projectWeeklyGrandTotal = 0;
 
                             // Row for the site (Same design as Admin)
-                            var siteCell = new Cell().SetPadding(0).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
-                            var siteInnerTable = new Table(1).UseAllAvailableWidth().SetHeight(120f);
+                            var siteCell = new Cell().SetPadding(5).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
                             
-                            var siteInfoCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(5);
-                            siteInfoCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
-                            siteInfoCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
-                            siteInnerTable.AddCell(siteInfoCell);
+                            // Site Name and Type
+                            siteCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetBold().SetMarginBottom(0));
+                            siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
 
-                            var statusCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(5).SetVerticalAlignment(VerticalAlignment.BOTTOM);
+                            // Status Section
                             if (!string.IsNullOrEmpty(status) && status != "Live")
                             {
-                                statusCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(5));
-                                statusCell.Add(GetStatusStampParagraph(status));
+                                siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
+                                siteCell.Add(GetStatusStampParagraph(status));
                             }
-                            siteInnerTable.AddCell(statusCell);
                             
-                            siteCell.Add(siteInnerTable);
+                            siteCell.SetMinHeight(120f);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)
@@ -319,22 +316,22 @@ namespace CityWatch.Web.Services
         private Paragraph GetStatusStampParagraph(string status)
         {
             Color color = ColorConstants.RED;
-            if (status == "Cancelled") color = ColorConstants.GRAY;
-            else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Greenish
+            if (status == "Cancelled") color = new DeviceRgb(97, 97, 97); // Gray
+            else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Green
+            else if (status == "Invoiced") color = new DeviceRgb(13, 71, 161); // Blue
 
             Paragraph stampPara = new Paragraph(status.ToUpper())
                 .SetFont(PdfHelper.GetPdfFont())
-                .SetFontSize(14)
+                .SetFontSize(11)
                 .SetFontColor(color)
                 .SetBold()
-                .SetBorder(new SolidBorder(color, 1.5f))
-                .SetPadding(3)
-                .SetPaddingLeft(10)
-                .SetPaddingRight(10)
+                .SetBorder(new SolidBorder(color, 1.2f))
+                .SetPadding(2)
+                .SetPaddingLeft(8)
+                .SetPaddingRight(8)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .SetRotationAngle(Math.PI / 12) // Slight Tilt
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                .SetMarginLeft(20);
+                .SetWidth(UnitValue.CreatePercentValue(80));
 
             return stampPara;
         }

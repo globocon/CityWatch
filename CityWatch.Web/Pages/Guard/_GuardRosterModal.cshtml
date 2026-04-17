@@ -11,24 +11,27 @@
                     <!-- Roster Admin Controls -->
                     <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
                         <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
-                            <input type="checkbox" id="adminFinancialToggle" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                            <div class="custom-control custom-checkbox mr-3 p-0" style="min-height: auto; width: 20px;">
+                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle">
+                                <label class="custom-control-label" for="adminFinancialToggle" style="padding-left: 20px; cursor: pointer;" title="Enable Financial Figures"></label>
+                            </div>
                             
-                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                            <div class="custom-control custom-switch mr-2 p-0" style="min-height: auto;">
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
                                 <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
                                 <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
                             </div>
-                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                            <i class="fa fa-cube ml-2" style="font-size: 1rem; color: #555;" title="Sell Rate to Client"></i>
                         </div>
 
                         <!-- Redesigned Capsule 2: Truck Toggle -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
-                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
-                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
-                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-3">
+                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
+                                <span style="position: absolute; right: -6px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 8px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff; transform: scale(0.8);">S</span>
                             </div>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto;">
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
                                 <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
                                 <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
                             </div>
