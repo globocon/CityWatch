@@ -247,6 +247,53 @@ namespace CityWatch.Web.Pages.Admin
                 _logger.LogError(ex.Message);
             }
             return new JsonResult(new List<object>());
+        public JsonResult OnPostVerifyGuardRosterAuth(string licenseNo, string pin)
+        {
+            var isSuccess = false;
+            var message = "";
+            int? guardId = null;
+
+            try
+            {
+                if (string.IsNullOrEmpty(licenseNo) || string.IsNullOrEmpty(pin))
+                {
+                    message = "Security License No and HR PIN are required.";
+                }
+                else
+                {
+                    var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(licenseNo.Trim());
+                    if (guard != null)
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.Pin == pin.Trim())
+                            {
+                                isSuccess = true;
+                                guardId = guard.Id;
+                            }
+                            else
+                            {
+                                message = "Invalid HR PIN.";
+                            }
+                        }
+                        else
+                        {
+                            message = "Your security profile is inactive. Please contact your administrator.";
+                        }
+                    }
+                    else
+                    {
+                        message = "Guard details not found for the provided License No.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                message = $"Error: {ex.Message}";
+            }
+
+            return new JsonResult(new { success = isSuccess, message = message, guardId = guardId });
         }
     }
 }
