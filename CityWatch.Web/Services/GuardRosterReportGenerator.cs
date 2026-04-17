@@ -30,7 +30,7 @@ namespace CityWatch.Web.Services
     /// </summary>
     public interface IGuardRosterReportGenerator
     {
-        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1);
+        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "");
     }
 
     public class GuardRosterReportGenerator : IGuardRosterReportGenerator
@@ -63,7 +63,7 @@ namespace CityWatch.Web.Services
             public List<string> States { get; set; }
         }
 
-        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1)
+        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "")
         {
             var site = await _context.ClientSites.Include(s => s.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
             if (site == null) return null;
@@ -164,6 +164,13 @@ namespace CityWatch.Web.Services
                             }
                             headerTable.AddCell(cellSiteImage);
                             document.Add(headerTable);
+
+                            // Status Stamp Logic
+                            if (!string.IsNullOrEmpty(status) && status != "Live")
+                            {
+                                DrawStatusStamp(document, status);
+                            }
+
                             document.Add(new Paragraph("\n"));
 
                             float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
@@ -249,6 +256,14 @@ namespace CityWatch.Web.Services
                                     shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
 
                                     if (shift.Callsign != null) shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6));
+
+                                    if (includeFinancials)
+                                    {
+                                        decimal rate = rateType == "sell" ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                        decimal total = (decimal)duration * rate;
+                                        shiftBlock.Add(new Paragraph($"Rate: ${rate:F2} | Total: ${total:F2}").SetFontSize(5.5f).SetFontColor(fontColor).SetItalic());
+                                    }
+
                                     dayCell.Add(shiftBlock);
                                 }
                                 table.AddCell(dayCell);
@@ -273,6 +288,27 @@ namespace CityWatch.Web.Services
                 }
             }
 
+        }
+
+        private void DrawStatusStamp(Document document, string status)
+        {
+            Color color = ColorConstants.RED;
+            if (status == "Cancelled") color = ColorConstants.GRAY;
+            else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Greenish
+
+            Paragraph stampPara = new Paragraph(status.ToUpper())
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(24)
+                .SetFontColor(color)
+                .SetBold()
+                .SetBorder(new SolidBorder(color, 2f))
+                .SetPadding(5)
+                .SetPaddingLeft(15)
+                .SetPaddingRight(15)
+                .SetFixedPosition(50, 80, 200) // Positioned bottom-leftish
+                .SetRotationAngle(Math.PI / 12); // Slight Tilt
+
+            document.Add(stampPara);
         }
 
         private void AddBrandedFooter(Document document, PdfDocument pdf, DateTime startDate)

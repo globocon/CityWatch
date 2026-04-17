@@ -10404,7 +10404,7 @@ $(function () {
                 $('#mdlAuthGuardForRosterSelector').modal('hide');
                 // Open the roster modal for the selected site
                 if (typeof openGuardRosterPortal === 'function') {
-                    openGuardRosterPortal(siteId);
+                    openGuardRosterPortal(siteId, result.isAdminRoster);
                 } else {
                     alert('Roster component not loaded correctly.');
                 }

@@ -7,6 +7,8 @@ using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using CityWatch.Data.Models;
+using CityWatch.Web.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -35,8 +37,10 @@ namespace CityWatch.Web.Pages.roster
             var schedules = await _context.RosterSchedules
                 .Where(x => x.ClientSiteId == siteId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
                 .Include(x => x.Guard)
+                .Include(x => x.Guard)
                 .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .OrderBy(x => x.ShiftStart)
                 .ToListAsync();
 
@@ -69,7 +73,9 @@ namespace CityWatch.Web.Pages.roster
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
-                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2)
+                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2),
+                            sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
+                            buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
                         })
                         .ToList<object>();
                     days.Add(dayShifts);
@@ -101,13 +107,49 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results, holidays, siteState = site?.State });
         }
 
-        public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1)
+        public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "")
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks);
+            var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks, includeFinancials, rateType, status);
             if (pdfBytes == null) return NotFound();
 
             string fileName = $"Site_Roster_{siteId}_{startDate:yyyyMMdd}.pdf";
             return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        public async Task<JsonResult> OnGetLoadRosterStatus(int siteId, DateTime startDate)
+        {
+            var statusObj = await _context.RosterSiteWeekStatuses
+                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+
+            return new JsonResult(new { status = statusObj?.Status ?? "Live" });
+        }
+
+        public async Task<JsonResult> OnPostSaveRosterStatus(int siteId, DateTime startDate, string status)
+        {
+            var statusObj = await _context.RosterSiteWeekStatuses
+                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+
+            if (statusObj == null)
+            {
+                statusObj = new RosterSiteWeekStatus
+                {
+                    ClientSiteId = siteId,
+                    StartDate = startDate.Date,
+                    Status = status,
+                    UpdatedDate = DateTime.Now,
+                    UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System"
+                };
+                _context.RosterSiteWeekStatuses.Add(statusObj);
+            }
+            else
+            {
+                statusObj.Status = status;
+                statusObj.UpdatedDate = DateTime.Now;
+                statusObj.UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System";
+            }
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
     }
 }

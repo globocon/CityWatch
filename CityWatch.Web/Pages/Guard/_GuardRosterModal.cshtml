@@ -8,6 +8,50 @@
                     <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
                 </div>
                 <div class="d-flex align-items-center">
+                    <!-- Roster Admin Controls -->
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
+                            <i class="fa fa-dollar text-dark font-weight-bold mr-2" style="font-size: 1rem;"></i>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto;">
+                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle" style="cursor: pointer;">
+                                <label class="custom-control-label" for="adminFinancialToggle" style="cursor: pointer; padding-left: 35px; margin-bottom: 0;"></label>
+                            </div>
+                        </div>
+
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
+                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                            </div>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto;">
+                                <input type="checkbox" class="custom-control-input" id="adminRateTypeToggle" style="cursor: pointer;" disabled>
+                                <label class="custom-control-label" for="adminRateTypeToggle" style="cursor: pointer; padding-left: 35px; margin-bottom: 0;"></label>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-sm mr-2" style="width: 160px;">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
+                            </div>
+                            <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="Live">Live</option>
+                                <option value="Invoiced">Invoiced</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+
+                         <div class="input-group input-group-sm" style="width: 140px;">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">MODE</span>
+                            </div>
+                            <select id="adminRosterMode" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="Weekly">Weekly</option>
+                                <option value="Daily">Daily</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
                         <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
                     </button>
@@ -192,6 +236,9 @@
 <script>
     var guardRosterStartDate = null;
     var currentGuardSiteId = null;
+    var isAdminRoster = false;
+    var isAdminFinancialsOn = false;
+    var adminRateType = 'guard'; // 'guard' or 'sell'
 
     $(document).ready(function() {
         $('#btnPrevWeekGuard').on('click', function() {
@@ -199,6 +246,7 @@
             d.setDate(d.getDate() - 7);
             guardRosterStartDate = d.toISOString().split('T')[0];
             loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
         });
 
         $('#btnNextWeekGuard').on('click', function() {
@@ -206,6 +254,7 @@
             d.setDate(d.getDate() + 7);
             guardRosterStartDate = d.toISOString().split('T')[0];
             loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
         });
 
         $('#btnDownloadGuardPdf').on('click', function() {
@@ -214,14 +263,53 @@
 
         $('#btnConfirmGuardDownload').on('click', function() {
             var weeks = $('#guardPdfWeeks').val();
-            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf&siteId=' + currentGuardSiteId + '&startDate=' + guardRosterStartDate + '&weeks=' + weeks;
+            var status = isAdminRoster ? $('#adminRosterStatus').val() : '';
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' + 
+                '&siteId=' + currentGuardSiteId + 
+                '&startDate=' + guardRosterStartDate + 
+                '&weeks=' + weeks + 
+                '&includeFinancials=' + isAdminFinancialsOn + 
+                '&rateType=' + adminRateType + 
+                '&status=' + status;
             window.open(url, '_blank');
             $('#guardDownloadFilterModal').modal('hide');
         });
+
+        // Admin Toggles
+        $('#adminFinancialToggle').on('change', function() {
+            isAdminFinancialsOn = $(this).is(':checked');
+            $('#adminRateTypeToggle').prop('disabled', !isAdminFinancialsOn);
+            if (!isAdminFinancialsOn) {
+                $('#adminRateTypeToggle').prop('checked', false);
+                adminRateType = 'guard';
+            }
+            loadGuardRoster();
+        });
+
+        $('#adminRateTypeToggle').on('change', function() {
+            adminRateType = $(this).is(':checked') ? 'sell' : 'guard';
+            loadGuardRoster();
+        });
+
+        $('#adminRosterStatus').on('change', function() {
+            saveAdminRosterStatus($(this).val());
+        });
     });
 
-    function openGuardRosterPortal(siteId) {
+    function openGuardRosterPortal(siteId, _isAdmin) {
         currentGuardSiteId = siteId;
+        isAdminRoster = _isAdmin === true;
+        
+        if (isAdminRoster) {
+            $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
+        } else {
+            $('#guardRosterAdminControls').removeClass('d-flex').addClass('d-none');
+            isAdminFinancialsOn = false;
+            adminRateType = 'guard';
+            $('#adminFinancialToggle').prop('checked', false);
+            $('#adminRateTypeToggle').prop('checked', false).prop('disabled', true);
+        }
+
         // Find Monday of current week
         var today = new Date();
         var day = today.getDay();
@@ -231,6 +319,31 @@
         
         $('#guardRosterModal').modal('show');
         loadGuardRoster();
+        if (isAdminRoster) loadAdminRosterStatus();
+    }
+
+    function loadAdminRosterStatus() {
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterStatus',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function(res) {
+                $('#adminRosterStatus').val(res.status || 'Live');
+            }
+        });
+    }
+
+    function saveAdminRosterStatus(newStatus) {
+         $.ajax({
+            url: '/roster/GuardRosterAction?handler=SaveRosterStatus',
+            type: 'POST',
+            container: '#guardRosterModal', // For anti-forgery token if needed, or use headers
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
+            success: function(res) {
+                // Optionally show a toast
+            }
+        });
     }
 
     function loadGuardRoster() {
@@ -319,6 +432,12 @@
                                 '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
                                 (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '') +
+                                (isAdminFinancialsOn ? 
+                                    '<div class="mt-2 border-top pt-1 text-right" style="font-size: 9px; border-top-color: rgba(255,255,255,0.2) !important;">' + 
+                                        '<span class="opacity-75 mr-1">Rate:</span>$' + (adminRateType == 'sell' ? s.sellRate : s.buyRate).toFixed(2) + 
+                                        '<span class="opacity-75 mx-1">|</span>' + 
+                                        '<span class="font-weight-bold">$' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</span>' +
+                                    '</div>' : '') +
                                 '</div>';
                         });
                         rowHtml += '</td>';
