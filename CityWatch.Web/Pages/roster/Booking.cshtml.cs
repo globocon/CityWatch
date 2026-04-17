@@ -985,8 +985,8 @@ namespace CityWatch.Web.Pages.roster
                             newEnd = newStart.Add(source.ShiftEnd - source.ShiftStart);
                         }
 
-                        // Check for duplicate
-                        var exists = await _context.RosterSchedules.AnyAsync(x =>
+                        // Check for duplicate or existing shift to update (for Merge support)
+                        var existingShift = await _context.RosterSchedules.FirstOrDefaultAsync(x =>
                             x.RosterGroupId == groupId &&
                             x.ClientSiteId == source.ClientSiteId &&
                             x.ShiftStart == newStart &&
@@ -995,7 +995,7 @@ namespace CityWatch.Web.Pages.roster
                             x.CallsignId == source.CallsignId &&
                             !x.IsDeleted);
 
-                        if (!exists)
+                        if (existingShift == null)
                         {
                             _context.RosterSchedules.Add(new RosterSchedule
                             {
@@ -1007,8 +1007,21 @@ namespace CityWatch.Web.Pages.roster
                                 ShiftEnd = newEnd,
                                 Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
                                 PayRateId = source.PayRateId,
-                                CallsignId = source.CallsignId
+                                CallsignId = source.CallsignId,
+                                ReliefGuardId = source.ReliefGuardId,
+                                ReliefProviderName = source.ReliefProviderName,
+                                ReliefReason = source.ReliefReason,
+                                ShiftType = source.ShiftType
                             });
+                        }
+                        else
+                        {
+                            // Update existing shift with relief details and type (Support for Preserving Relief on Merge)
+                            existingShift.ShiftEnd = newEnd; // Sync end time if it changed
+                            existingShift.ReliefGuardId = source.ReliefGuardId;
+                            existingShift.ReliefProviderName = source.ReliefProviderName;
+                            existingShift.ReliefReason = source.ReliefReason;
+                            existingShift.ShiftType = source.ShiftType;
                         }
                     }
                 }
