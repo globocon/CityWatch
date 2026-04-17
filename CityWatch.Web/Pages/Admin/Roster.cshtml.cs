@@ -254,7 +254,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "";
             int? guardId = null;
 
-            Guard guard = null;
+            CityWatch.Data.Models.Guard guard = null;
             try
             {
                 if (string.IsNullOrEmpty(licenseNo) || string.IsNullOrEmpty(pin))
