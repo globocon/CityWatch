@@ -1172,6 +1172,37 @@
         .day-cell {
             position: relative;
         }
+
+        /* Status Stamp Styling (Read-Only) */
+        .status-grid-display {
+            min-height: 38px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .guard-status-label {
+            font-size: 8px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .guard-status-stamp {
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border: 1.5px solid;
+            border-radius: 4px;
+            text-transform: uppercase;
+            display: inline-block;
+            transform: rotate(-10deg);
+            background: rgba(255,255,255,0.9);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        .guard-status-stamp.paid { color: #1b5e20; border-color: #1b5e20; }
+        .guard-status-stamp.invoiced { color: #0d47a1; border-color: #0d47a1; }
+        .guard-status-stamp.cancelled { color: #424242; border-color: #424242; }
     </style>
 </div>
 
@@ -1641,9 +1672,21 @@
                         var grandTotal = 0;
 
                         res.results.forEach(function (row) {
+                            var statusHtml = '';
+                            if (row.status && row.status !== 'Live') {
+                                statusHtml = '<div class="status-grid-display mt-auto pb-1">' + 
+                                               '<span class="guard-status-label">Status:</span>' + 
+                                               '<div class="guard-status-stamp ' + row.status.toLowerCase() + '">' + row.status.toUpperCase() + '</div>' + 
+                                             '</div>';
+                            }
+
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
-                                '<td><div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div><small class="text-muted">' + row.clientTypeName + '</small>' +
-                                (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + '</td>';
+                                '<td class="d-flex flex-column" style="min-height: 120px;">' + 
+                                    '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
+                                    '<small class="text-muted">' + row.clientTypeName + '</small>' +
+                                    (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
+                                    statusHtml + 
+                                '</td>';
 
                             row.days.forEach(function (daySchedules, index) {
                                 var cellDate = new Date(currentStartDate);
@@ -2609,8 +2652,20 @@
                             }
 
                             project.sites.forEach(function (site) {
+                                var statusHtml = '';
+                                if (site.status && site.status !== 'Live') {
+                                    statusHtml = '<div class="status-grid-display mt-auto pb-1">' + 
+                                                   '<span class="guard-status-label">Status:</span>' + 
+                                                   '<div class="guard-status-stamp ' + site.status.toLowerCase() + '">' + site.status.toUpperCase() + '</div>' + 
+                                                 '</div>';
+                                }
+
                                 var rowHtml = '<tr>' +
-                                    '<td><div class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</div><small class="text-muted">' + site.clientTypeName + '</small></td>';
+                                    '<td class="d-flex flex-column" style="min-height: 120px;">' + 
+                                        '<div><strong class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</strong></div>' + 
+                                        '<small class="text-muted">' + site.clientTypeName + '</small>' + 
+                                        statusHtml + 
+                                    '</td>';
 
                                 site.days.forEach(function (daySchedules, index) {
                                     var cellDate = new Date(currentStartDate);

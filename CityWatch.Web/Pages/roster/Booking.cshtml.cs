@@ -250,11 +250,21 @@ namespace CityWatch.Web.Pages.roster
                 .Include(x => x.PayRate)
                 .ToListAsync();
 
+            // Site Status Integration (Read-Only)
+            // Fetches the current roster status (Paid, Invoiced, Cancelled) for each site from RosterSiteWeekStatuses.
+            // This is used to display status stamps in the Booking grid for informational purposes.
+            var siteIds = groupSites.Select(gs => gs.ClientSiteId).ToList();
+            var weekStatuses = await _context.RosterSiteWeekStatuses
+                .Where(x => siteIds.Contains(x.ClientSiteId) && x.StartDate == startDate)
+                .ToListAsync();
+
             var rosterData = groupSites.Select(gs => new
             {
                 siteId = gs.ClientSiteId,
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                // Injection of status for UI stamp rendering
+                status = weekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? "Live",
                 isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
                 publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>
@@ -710,11 +720,20 @@ namespace CityWatch.Web.Pages.roster
                     .ThenInclude(x => x.ClientType)
                     .ToListAsync();
 
+                // Binder Site Status Sync
+                // Retrieves site-specific statuses for the binder/group view to ensure consistency with single project views.
+                var groupSiteIds = groupSites.Select(gs => gs.ClientSiteId).ToList();
+                var groupWeekStatuses = await _context.RosterSiteWeekStatuses
+                    .Where(x => groupSiteIds.Contains(x.ClientSiteId) && x.StartDate == startDate)
+                    .ToListAsync();
+
                 var projectSites = groupSites.Select(gs => new
                 {
                     siteId = gs.ClientSiteId,
                     siteName = gs.ClientSite.Name,
                     clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
+                    // Display status indicator in Binder grid
+                    status = groupWeekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? "Live",
                     projectId = bp.RosterGroupId,
                     projectName = bp.RosterGroup.Name,
                     isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
