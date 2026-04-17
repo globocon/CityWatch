@@ -247,6 +247,7 @@ namespace CityWatch.Web.Pages.Admin
                 _logger.LogError(ex.Message);
             }
             return new JsonResult(new List<object>());
+        }
         public JsonResult OnPostVerifyGuardRosterAuth(string licenseNo, string pin)
         {
             var isSuccess = false;
