@@ -2040,9 +2040,13 @@
 
             // Save Shift
             $('#btnSaveShift').on('click', function () {
+                saveShiftAttempt(false);
+            });
+
+            function saveShiftAttempt(ignoreUnavail) {
                 var siteId = $('#modalSiteId').val();
                 var dayIndex = $('#modalDayIndex').val();
-                var shiftId = $('#modalShiftId').val(); // Get shift ID
+                var shiftId = $('#modalShiftId').val();
 
                 var guardData = $('#modalGuardId').select2('data');
                 var guardId = (guardData && guardData.length > 0) ? guardData[0].id : null;
@@ -2110,7 +2114,7 @@
                 var endDateTime = dateStr + 'T' + endTime;
 
                 $.ajax({
-                    url: '/roster/Booking?handler=AddShift', // This handler will now also handle updates
+                    url: '/roster/Booking?handler=AddShift',
                     type: 'POST',
                     headers: getHeaders(),
                     data: {
@@ -2127,18 +2131,23 @@
                         reliefProviderName: reliefProviderName,
                         reliefReason: reliefReason,
                         reliefReasonOther: reliefReasonOther,
-                        shiftType: shiftType
+                        shiftType: shiftType,
+                        ignoreUnavailability: ignoreUnavail
                     },
                     success: function (res) {
                         if (res.success) {
                             $('#addShiftModal').modal('hide');
                             if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                        } else if (res.isUnavailConflict) {
+                            if (confirm(res.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                                saveShiftAttempt(true);
+                            }
                         } else {
                             alert(res.message);
                         }
                     }
                 });
-            });
+            }
 
             // Click shift to cycle status
             $('#roster_grid').on('click', '.shift-card', function () {
