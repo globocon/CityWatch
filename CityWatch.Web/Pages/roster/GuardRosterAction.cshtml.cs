@@ -73,7 +73,7 @@ namespace CityWatch.Web.Pages.roster
 
             var site = await _context.ClientSites.FirstOrDefaultAsync(x => x.Id == siteId);
 
-            return new JsonResult(new { results = schedules, holidays, siteState = site?.State });
+            return new JsonResult(new { results = schedules, holidays, siteState = site?.State, siteName = site?.Name });
         }
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1)

@@ -140,9 +140,9 @@
             }
 
             $.ajax({
-                url: '/Admin/GuardSettings?handler=CheckGuardLicenseNo',
+                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
                 type: 'POST',
-                data: { guardId: guardId, securityLicenseNo: pin },
+                data: { guardId: guardId, key: pin },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
             }).done(function(result) {
                 if (result.accessPermission) {
