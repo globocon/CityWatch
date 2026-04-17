@@ -186,6 +186,7 @@
         background: rgba(255,0,0,0.05);
     }
     .guard-status-stamp.paid { border-color: #1B5E20; color: #1B5E20; background: rgba(27, 94, 32, 0.05); }
+    .guard-status-stamp.invoiced { border-color: #0056b3; color: #0056b3; background: rgba(0, 86, 179, 0.05); }
     .guard-status-stamp.cancelled { border-color: #6c757d; color: #6c757d; background: rgba(108, 117, 125, 0.05); }
 
     /* Totals Styling */
@@ -261,6 +262,7 @@
     var currentGuardSiteId = null;
     var isAdminRoster = false;
     var isAdminFinancialsOn = false;
+    var isAdminSupplierOn = false;
     var adminRateType = 'guard'; // 'guard' or 'sell'
 
     $(document).ready(function() {
@@ -293,7 +295,8 @@
                 '&weeks=' + weeks + 
                 '&includeFinancials=' + isAdminFinancialsOn + 
                 '&rateType=' + adminRateType + 
-                '&status=' + status;
+                '&status=' + status +
+                '&includeSuppliers=' + isAdminSupplierOn;
             window.open(url, '_blank');
             $('#guardDownloadFilterModal').modal('hide');
         });
@@ -316,8 +319,7 @@
 
         // New Truck Toggle logic
         $('#adminTruckToggle').on('change', function() {
-            // Re-render or handle visibility if needed, for now just sync with financials
-            // Matching booking style where this might control visibility or other aspects
+            isAdminSupplierOn = $(this).is(':checked');
             loadGuardRoster();
         });
 
@@ -339,6 +341,7 @@
             $('#adminFinancialToggle').prop('checked', false);
             $('#adminRateTypeSwitch').prop('checked', false).prop('disabled', true);
             $('#adminTruckToggle').prop('checked', false);
+            isAdminSupplierOn = false;
         }
 
         // Find Monday of current week
@@ -488,13 +491,14 @@
                                 (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
                                 '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
-                                (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '') +
+                                (isAdminSupplierOn ? 
+                                    '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                    (!isAdminSupplierOn && s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '')
+                                ) +
                                 (isAdminFinancialsOn ? 
-                                    '<div class="mt-2 border-top pt-1 text-right" style="font-size: 9px; border-top-color: rgba(255,255,255,0.2) !important;">' + 
-                                        '<span class="opacity-75 mr-1">Rate:</span>$' + (adminRateType == 'sell' ? s.sellRate : s.buyRate).toFixed(2) + 
-                                        '<span class="opacity-75 mx-1">|</span>' + 
-                                        '<span class="font-weight-bold">$' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</span>' +
-                                    '</div>' : '') +
+                                    '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</div>' : 
+                                    ''
+                                ) +
                                 '</div>';
                         });
                         rowHtml += '</td>';
@@ -504,10 +508,23 @@
                     tbody.append(rowHtml);
                 });
 
+                // Show Status Stamp in Grid
+                if (res.status) {
+                    updateGridStatusDisplay(res.status);
+                    $('#adminRosterStatus').val(res.status);
+                }
+
                 // Update Totals
-                $('#guard_weekly_grand_total').text(grandTotal.toFixed(2));
-                for(var i=0; i<7; i++) {
-                    $('#daily_total_' + i).text(dailyTotals[i].toFixed(2));
+                if (isAdminFinancialsOn) {
+                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotal.toFixed(2) + '</span>');
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotals[i].toFixed(2) + '</span>');
+                    }
+                } else {
+                    $('#guard_weekly_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, ""));
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).text(dailyTotals[i].toFixed(2).replace(/\.00$/, ""));
+                    }
                 }
             },
             error: function() {

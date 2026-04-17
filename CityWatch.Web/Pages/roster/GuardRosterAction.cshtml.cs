@@ -104,12 +104,16 @@ namespace CityWatch.Web.Pages.roster
                 })
                 .ToListAsync();
 
-            return new JsonResult(new { results, holidays, siteState = site?.State });
+            var statusObj = await _context.RosterSiteWeekStatuses
+                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.WeekStartDate == startDate);
+            var status = statusObj?.Status ?? "Live";
+
+            return new JsonResult(new { results, holidays, siteState = site?.State, status });
         }
 
-        public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "")
+        public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
         {
-            var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks, includeFinancials, rateType, status);
+            var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks, includeFinancials, rateType, status, includeSuppliers);
             if (pdfBytes == null) return NotFound();
 
             string fileName = $"Site_Roster_{siteId}_{startDate:yyyyMMdd}.pdf";

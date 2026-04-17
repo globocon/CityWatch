@@ -30,7 +30,7 @@ namespace CityWatch.Web.Services
     /// </summary>
     public interface IGuardRosterReportGenerator
     {
-        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "");
+        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false);
     }
 
     public class GuardRosterReportGenerator : IGuardRosterReportGenerator
@@ -63,7 +63,7 @@ namespace CityWatch.Web.Services
             public List<string> States { get; set; }
         }
 
-        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "")
+        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
         {
             var site = await _context.ClientSites.Include(s => s.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
             if (site == null) return null;
@@ -217,7 +217,7 @@ namespace CityWatch.Web.Services
                                 }
                                 dayCell.SetBackgroundColor(columnBgColor);
 
-                                foreach (var shift in dayShifts)
+                                 foreach (var shift in dayShifts)
                                 {
                                     var duration = (shift.ShiftEnd - shift.ShiftStart).TotalHours;
                                     dailyTotals[i] += duration;
@@ -264,13 +264,24 @@ namespace CityWatch.Web.Services
                                     shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFontColor(fontColor).SetMarginTop(-2));
                                     shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
 
-                                    if (shift.Callsign != null) shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6));
+                                    if (includeSuppliers)
+                                    {
+                                        var providerInfo = shift.ReliefGuardId.HasValue ? shift.ReliefProviderName : shift.ProviderName;
+                                        var supplierText = providerInfo ?? "N/A";
+                                        if (shift.Callsign != null) supplierText += $" ({shift.Callsign.Name})";
+                                        
+                                        shiftBlock.Add(new Paragraph(supplierText).SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(0, 86, 179)).SetBold().SetMarginTop(1));
+                                    }
+                                    else if (shift.Callsign != null) 
+                                    {
+                                        shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6).SetFontColor(fontColor));
+                                    }
 
                                     if (includeFinancials)
                                     {
                                         decimal rate = rateType == "sell" ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
-                                        decimal total = (decimal)duration * rate;
-                                        shiftBlock.Add(new Paragraph($"Rate: ${rate:F2} | Total: ${total:F2}").SetFontSize(5.5f).SetFontColor(fontColor).SetItalic());
+                                        decimal totalAmount = (decimal)duration * rate;
+                                        shiftBlock.Add(new Paragraph($"$ {totalAmount:F2}").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(255, 61, 0)).SetBold().SetMarginTop(2));
                                     }
 
                                     dayCell.Add(shiftBlock);
@@ -280,12 +291,18 @@ namespace CityWatch.Web.Services
 
                             // Footer Row for Totals (Identical Style)
                             Cell totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2);
-                            totalLabelCell.Add(new Paragraph($"Total Hours: {projectWeeklyGrandTotal:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                            var grandTotalText = includeFinancials ? $"Weekly Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
+                            var grandTotalPara = new Paragraph(grandTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont());
+                            if (includeFinancials) grandTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
+                            totalLabelCell.Add(grandTotalPara);
                             table.AddCell(totalLabelCell);
 
                             for (int i = 0; i < 7; i++)
                             {
-                                table.AddCell(new Cell().Add(new Paragraph($"{dailyTotals[i]:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
+                                var dayTotalText = includeFinancials ? $"$ {dailyTotals[i]:F2}" : $"{dailyTotals[i]:F2}";
+                                var dayTotalPara = new Paragraph(dayTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER);
+                                if (includeFinancials) dayTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
+                                table.AddCell(new Cell().Add(dayTotalPara).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                             }
 
                             document.Add(table);
