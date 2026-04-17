@@ -14,6 +14,8 @@ using iText.Layout.Properties;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using iText.IO.Image;
 using iText.Kernel.Pdf;
