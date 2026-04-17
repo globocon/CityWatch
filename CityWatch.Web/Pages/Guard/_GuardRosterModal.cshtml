@@ -10,22 +10,27 @@
                 <div class="d-flex align-items-center">
                     <!-- Roster Admin Controls -->
                     <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                        <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
                         <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
-                            <i class="fa fa-dollar text-dark font-weight-bold mr-2" style="font-size: 1rem;"></i>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto;">
-                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle" style="cursor: pointer;">
-                                <label class="custom-control-label" for="adminFinancialToggle" style="cursor: pointer; padding-left: 35px; margin-bottom: 0;"></label>
+                            <input type="checkbox" id="adminFinancialToggle" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                            
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch mr-2 p-0" style="min-height: auto;">
+                                <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
+                                <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
                             </div>
+                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
                         </div>
 
+                        <!-- Redesigned Capsule 2: Truck Toggle -->
                         <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="height: 32px;">
-                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
-                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
+                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
                                 <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
                             </div>
                             <div class="custom-control custom-switch p-0" style="min-height: auto;">
-                                <input type="checkbox" class="custom-control-input" id="adminRateTypeToggle" style="cursor: pointer;" disabled>
-                                <label class="custom-control-label" for="adminRateTypeToggle" style="cursor: pointer; padding-left: 35px; margin-bottom: 0;"></label>
+                                <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
+                                <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
                             </div>
                         </div>
 
@@ -40,16 +45,6 @@
                                 <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
-
-                         <div class="input-group input-group-sm" style="width: 140px;">
-                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">MODE</span>
-                            </div>
-                            <select id="adminRosterMode" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
-                                <option value="Weekly">Weekly</option>
-                                <option value="Daily">Daily</option>
-                            </select>
-                        </div>
                     </div>
 
                     <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
@@ -59,6 +54,10 @@
                         <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
                     </button>
                 </div>
+            </div>
+            <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
+                <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
+            </div>
             </div>
             <div class="modal-body p-0 bg-light" style="min-height: 500px;">
                 <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
@@ -168,7 +167,7 @@
     /* Roster Status Stamp UI */
     .guard-status-label {
         font-weight: bold;
-        color: #ff0000;
+        color: #000;
         font-size: 11px;
         margin-top: 15px;
         display: block;
@@ -302,16 +301,23 @@
         // Admin Toggles
         $('#adminFinancialToggle').on('change', function() {
             isAdminFinancialsOn = $(this).is(':checked');
-            $('#adminRateTypeToggle').prop('disabled', !isAdminFinancialsOn);
+            $('#adminRateTypeSwitch').prop('disabled', !isAdminFinancialsOn);
             if (!isAdminFinancialsOn) {
-                $('#adminRateTypeToggle').prop('checked', false);
+                $('#adminRateTypeSwitch').prop('checked', false);
                 adminRateType = 'guard';
             }
             loadGuardRoster();
         });
 
-        $('#adminRateTypeToggle').on('change', function() {
+        $('#adminRateTypeSwitch').on('change', function() {
             adminRateType = $(this).is(':checked') ? 'sell' : 'guard';
+            loadGuardRoster();
+        });
+
+        // New Truck Toggle logic
+        $('#adminTruckToggle').on('change', function() {
+            // Re-render or handle visibility if needed, for now just sync with financials
+            // Matching booking style where this might control visibility or other aspects
             loadGuardRoster();
         });
 
@@ -331,7 +337,8 @@
             isAdminFinancialsOn = false;
             adminRateType = 'guard';
             $('#adminFinancialToggle').prop('checked', false);
-            $('#adminRateTypeToggle').prop('checked', false).prop('disabled', true);
+            $('#adminRateTypeSwitch').prop('checked', false).prop('disabled', true);
+            $('#adminTruckToggle').prop('checked', false);
         }
 
         // Find Monday of current week
@@ -379,6 +386,13 @@
             data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
             success: function(res) {
                 updateGridStatusDisplay(newStatus);
+                
+                // Show Success Message
+                $('#spanUpdatedStatusName').text(newStatus.toUpperCase());
+                $('#rosterAdminAlert').removeClass('d-none').hide().fadeIn();
+                setTimeout(function() {
+                    $('#rosterAdminAlert').fadeOut();
+                }, 3000);
             }
         });
     }

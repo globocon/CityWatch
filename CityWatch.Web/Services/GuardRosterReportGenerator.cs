@@ -188,7 +188,7 @@ namespace CityWatch.Web.Services
                             var statusCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(5).SetVerticalAlignment(VerticalAlignment.BOTTOM);
                             if (!string.IsNullOrEmpty(status) && status != "Live")
                             {
-                                statusCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.RED).SetBold().SetMarginBottom(5));
+                                statusCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(5));
                                 statusCell.Add(GetStatusStampParagraph(status));
                             }
                             siteInnerTable.AddCell(statusCell);

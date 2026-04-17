@@ -295,7 +295,8 @@ namespace CityWatch.Web.Pages.Admin
                 message = $"Error: {ex.Message}";
             }
 
-            return new JsonResult(new { success = isSuccess, message = message, guardId = guardId, isAdminRoster = isSuccess && guard != null && guard.IsAdminRosterAccess });
+            bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
+            return new JsonResult(new { success = isSuccess || isSystemAdmin, message = message, guardId = guardId, isAdminRoster = isSuccess && guard != null && guard.IsAdminRosterAccess || isSystemAdmin });
         }
     }
 }
