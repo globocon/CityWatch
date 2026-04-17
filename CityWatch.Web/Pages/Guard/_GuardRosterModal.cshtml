@@ -165,6 +165,30 @@
     .guard-sat-highlight { background-color: #d7f0d7 !important; }
     .guard-sun-highlight { background-color: #fce4ec !important; }
 
+    /* Roster Status Stamp UI */
+    .guard-status-label {
+        font-weight: bold;
+        color: #ff0000;
+        font-size: 11px;
+        margin-top: 15px;
+        display: block;
+    }
+    .guard-status-stamp {
+        display: inline-block;
+        border: 2px solid #ff0000;
+        color: #ff0000;
+        padding: 4px 10px;
+        font-weight: 800;
+        font-size: 14px;
+        text-transform: uppercase;
+        transform: rotate(-10deg);
+        margin-top: 5px;
+        border-radius: 4px;
+        background: rgba(255,0,0,0.05);
+    }
+    .guard-status-stamp.paid { border-color: #1B5E20; color: #1B5E20; background: rgba(27, 94, 32, 0.05); }
+    .guard-status-stamp.cancelled { border-color: #6c757d; color: #6c757d; background: rgba(108, 117, 125, 0.05); }
+
     /* Totals Styling */
     .total-item { padding: 10px 5px; text-align: center; }
     .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
@@ -329,19 +353,32 @@
             data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
             success: function(res) {
                 $('#adminRosterStatus').val(res.status || 'Live');
+                updateGridStatusDisplay(res.status || 'Live');
             }
         });
+    }
+
+    function updateGridStatusDisplay(status) {
+        if (!isAdminRoster) return;
+        var container = $('.admin-status-grid-display');
+        container.empty();
+        
+        if (status && status !== 'Live') {
+            var stampClass = status.toLowerCase();
+            container.append('<span class="guard-status-label">Status:</span>');
+            container.append('<div class="guard-status-stamp ' + stampClass + '">' + status.toUpperCase() + '</div>');
+        }
     }
 
     function saveAdminRosterStatus(newStatus) {
          $.ajax({
             url: '/roster/GuardRosterAction?handler=SaveRosterStatus',
             type: 'POST',
-            container: '#guardRosterModal', // For anti-forgery token if needed, or use headers
+            container: '#guardRosterModal',
             headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
             data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
             success: function(res) {
-                // Optionally show a toast
+                updateGridStatusDisplay(newStatus);
             }
         });
     }
@@ -393,7 +430,13 @@
 
                 res.results.forEach(function (row) {
                     var rowHtml = '<tr>' +
-                        '<td class="align-top px-3 text-left"><div class="guard-site-name">' + row.siteName + '</div><div class="guard-client-type">' + row.clientTypeName + '</div></td>';
+                        '<td class="align-top px-3 text-left d-flex flex-column" style="min-height: 150px;">' + 
+                            '<div>' + 
+                                '<div class="guard-site-name">' + row.siteName + '</div>' + 
+                                '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
+                            '</div>' + 
+                            '<div class="admin-status-grid-display mt-auto pb-2"></div>' + 
+                        '</td>';
 
                     row.days.forEach(function (dayShifts, index) {
                         var loopDate = new Date(guardRosterStartDate);

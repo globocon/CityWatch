@@ -165,12 +165,6 @@ namespace CityWatch.Web.Services
                             headerTable.AddCell(cellSiteImage);
                             document.Add(headerTable);
 
-                            // Status Stamp Logic
-                            if (!string.IsNullOrEmpty(status) && status != "Live")
-                            {
-                                DrawStatusStamp(document, status);
-                            }
-
                             document.Add(new Paragraph("\n"));
 
                             float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
@@ -183,8 +177,23 @@ namespace CityWatch.Web.Services
                             double projectWeeklyGrandTotal = 0;
 
                             // Row for the site (Same design as Admin)
-                            var siteCell = new Cell().Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
-                            siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
+                            var siteCell = new Cell().SetPadding(0).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
+                            var siteInnerTable = new Table(1).UseAllAvailableWidth().SetHeight(120f);
+                            
+                            var siteInfoCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(5);
+                            siteInfoCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                            siteInfoCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
+                            siteInnerTable.AddCell(siteInfoCell);
+
+                            var statusCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(5).SetVerticalAlignment(VerticalAlignment.BOTTOM);
+                            if (!string.IsNullOrEmpty(status) && status != "Live")
+                            {
+                                statusCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.RED).SetBold().SetMarginBottom(5));
+                                statusCell.Add(GetStatusStampParagraph(status));
+                            }
+                            siteInnerTable.AddCell(statusCell);
+                            
+                            siteCell.Add(siteInnerTable);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)
@@ -290,7 +299,7 @@ namespace CityWatch.Web.Services
 
         }
 
-        private void DrawStatusStamp(Document document, string status)
+        private Paragraph GetStatusStampParagraph(string status)
         {
             Color color = ColorConstants.RED;
             if (status == "Cancelled") color = ColorConstants.GRAY;
@@ -298,17 +307,19 @@ namespace CityWatch.Web.Services
 
             Paragraph stampPara = new Paragraph(status.ToUpper())
                 .SetFont(PdfHelper.GetPdfFont())
-                .SetFontSize(24)
+                .SetFontSize(14)
                 .SetFontColor(color)
                 .SetBold()
-                .SetBorder(new SolidBorder(color, 2f))
-                .SetPadding(5)
-                .SetPaddingLeft(15)
-                .SetPaddingRight(15)
-                .SetFixedPosition(50, 80, 200) // Positioned bottom-leftish
-                .SetRotationAngle(Math.PI / 12); // Slight Tilt
+                .SetBorder(new SolidBorder(color, 1.5f))
+                .SetPadding(3)
+                .SetPaddingLeft(10)
+                .SetPaddingRight(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetRotationAngle(Math.PI / 12) // Slight Tilt
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetMarginLeft(20);
 
-            document.Add(stampPara);
+            return stampPara;
         }
 
         private void AddBrandedFooter(Document document, PdfDocument pdf, DateTime startDate)
