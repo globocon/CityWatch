@@ -194,7 +194,7 @@
 
         $('#btnConfirmGuardDownload').on('click', function() {
             var weeks = $('#guardPdfWeeks').val();
-            var url = '/roster/Booking?handler=DownloadSiteRosterPdf&siteId=' + currentGuardSiteId + '&startDate=' + guardRosterStartDate + '&weeks=' + weeks;
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf&siteId=' + currentGuardSiteId + '&startDate=' + guardRosterStartDate + '&weeks=' + weeks;
             window.open(url, '_blank');
             $('#guardDownloadFilterModal').modal('hide');
         });
@@ -226,7 +226,7 @@
         tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">GENERATING VIEW...</p></td></tr>');
 
         $.ajax({
-            url: '/roster/Booking?handler=LoadRosterForSite',
+            url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
             type: 'GET',
             data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
             success: function (res) {
