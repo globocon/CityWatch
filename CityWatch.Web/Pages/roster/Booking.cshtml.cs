@@ -228,7 +228,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = projects });
         }
 
-        public async Task<JsonResult> OnGetLoadRoster(int groupId, DateTime startDate)
+        public async Task<JsonResult> OnGetLoadRosterForSite(int siteId, DateTime startDate)
         {
             this.StartDate = startDate;
             this.EndDate = startDate.AddDays(6);
@@ -236,63 +236,73 @@ namespace CityWatch.Web.Pages.roster
 
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
-            var groupSites = await _context.RosterGroupSites
-                .Where(x => x.RosterGroupId == groupId)
-                .Include(x => x.ClientSite)
-                .ThenInclude(x => x.ClientType)
-                .ToListAsync();
+            var clientSite = await _context.ClientSites
+                .Include(x => x.ClientType)
+                .FirstOrDefaultAsync(x => x.Id == siteId);
+
+            if (clientSite == null) return new JsonResult(new { results = new List<object>() });
 
             var schedules = await _context.RosterSchedules
-                .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
+                .Where(x => x.ClientSiteId == siteId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= endDate)
                 .Include(x => x.Guard)
                 .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
-                .Include(x => x.PayRate)
                 .ToListAsync();
 
-            var rosterData = groupSites.Select(gs => new
-            {
-                siteId = gs.ClientSiteId,
-                siteName = gs.ClientSite.Name,
-                clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
-                isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
-                publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
-                days = Enumerable.Range(0, 7).Select(dayOffset =>
+            var rosterData = new List<object> {
+                new
                 {
-                    var targetDate = startDate.AddDays(dayOffset);
-                    return schedules
-                        .Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
-                        .OrderBy(s => s.ShiftStart)
-                        .Select(s => new
-                        {
-                            id = s.Id,
-                            guardId = s.GuardId,
-                            guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
-                            guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
-                            guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
-                            providerName = s.ProviderName,
-                            payRateId = s.PayRateId,
-                            shiftStart = s.ShiftStart.ToString("HH:mm"),
-                            shiftEnd = s.ShiftEnd.ToString("HH:mm"),
-                            callsignId = s.CallsignId,
-                            callsignName = s.Callsign?.Name ?? "",
-                            status = (int)s.Status,
-                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                            payRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
-                            sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
-                            reliefGuardId = s.ReliefGuardId,
-                            reliefGuardName = s.ReliefGuard?.Name ?? "",
-                            reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
-                            reliefProviderName = s.ReliefProviderName ?? "",
-                            reliefReason = s.ReliefReason ?? "",
-                            shiftType = s.ShiftType ?? "Regular"
-                        })
-                        .ToList();
-                }).ToList()
-            }).ToList();
+                    siteId = clientSite.Id,
+                    siteName = clientSite.Name,
+                    clientTypeName = clientSite.ClientType?.Name ?? "N/A",
+                    isPublicHoliday = GetPublicHolidayFlags(clientSite.State, startDate),
+                    publicHolidayReasons = GetPublicHolidayReasons(clientSite.State, startDate),
+                    days = Enumerable.Range(0, 7).Select(dayOffset =>
+                    {
+                        var targetDate = startDate.AddDays(dayOffset);
+                        return schedules
+                            .Where(s => s.ShiftStart.Date == targetDate.Date)
+                            .OrderBy(s => s.ShiftStart)
+                            .Select(s => new
+                            {
+                                id = s.Id,
+                                guardId = s.GuardId,
+                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
+                                guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
+                                guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                providerName = s.ProviderName,
+                                shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                callsignId = s.CallsignId,
+                                callsignName = s.Callsign?.Name ?? "",
+                                status = (int)s.Status,
+                                durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuard?.Name ?? "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
+                                reliefProviderName = s.ReliefProviderName ?? "",
+                                reliefReason = s.ReliefReason ?? "",
+                                shiftType = s.ShiftType ?? "Regular"
+                            })
+                            .ToList();
+                    }).ToList()
+                }
+            };
 
             return new JsonResult(new { results = rosterData });
+        }
+
+        public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1)
+        {
+            var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks);
+            if (pdfBytes != null)
+            {
+                var siteName = await _context.ClientSites.Where(x => x.Id == siteId).Select(x => x.Name).FirstOrDefaultAsync();
+                string fileName = $"Roster_{siteName}_{startDate:yyyyMMdd}.pdf";
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            return NotFound();
         }
 
         public JsonResult OnGetSearchProviders(string search)

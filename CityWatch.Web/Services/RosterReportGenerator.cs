@@ -31,6 +31,7 @@ namespace CityWatch.Web.Services
         Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
         Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard");
         Task<byte[]> GeneratePreviewRosterPdfAsync(string type, int id);
+        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1);
     }
 
     public class RosterReportGenerator : IRosterReportGenerator
@@ -69,6 +70,194 @@ namespace CityWatch.Web.Services
             public List<string> States { get; set; }
         }
 
+        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1)
+        {
+            var site = await _context.ClientSites.Include(x => x.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
+            if (site == null) return null;
+
+            var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
+
+            var schedules = await _context.RosterSchedules
+                .Where(x => x.ClientSiteId == siteId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
+                .ToListAsync();
+
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var document = new Document(pdf);
+                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+
+                    for (int w = 0; w < weeks; w++)
+                    {
+                        var weekStart = startDate.AddDays(w * 7);
+                        var weekEnd = weekStart.AddDays(6);
+
+                        // Fetch Holidays for this week
+                        var holidays = await _context.BroadcastBannerCalendarEvents
+                            .Where(x => x.IsPublicHoliday && x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)
+                            .ToListAsync();
+                        var holidayIds = holidays.Select(x => x.id).ToList();
+                        var holidayStates = await _context.PublicHolidayStates
+                            .Where(x => holidayIds.Contains(x.CalendarEventId) && !x.IsDeleted)
+                            .ToListAsync();
+
+                        var weeklyHolidays = new List<PublicHolidayInfo>();
+                        for (int d = 0; d < 7; d++)
+                        {
+                            var dDate = weekStart.AddDays(d).Date;
+                            var dayHolidays = holidays.Where(h => dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date).ToList();
+                            var states = new List<string>();
+                            foreach (var h in dayHolidays)
+                            {
+                                var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
+                                if (hStates.Count == 0) states.Add("ALL");
+                                else states.AddRange(hStates);
+                            }
+                            weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
+                        }
+
+                        if (w > 0) document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
+                        var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
+
+                        // Branding Logic
+                        string logoPath = string.Empty;
+                        var subDomain = _configDataProvider.GetSubDomainID(site.TypeId);
+                        if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
+                        {
+                            logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                        }
+
+                        if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+
+                        if (File.Exists(logoPath))
+                        {
+                            try
+                            {
+                                var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                                headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                            }
+                            catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+                        }
+                        else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+
+                        var titleCell = new Cell()
+                            .Add(new Paragraph($"Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
+                            .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12))
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetBorder(Border.NO_BORDER);
+                        headerTable.AddCell(titleCell);
+
+                        var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                        var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+                        if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                        {
+                            try
+                            {
+                                var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                cellSiteImage.Add(siteImage);
+                            }
+                            catch { }
+                        }
+                        headerTable.AddCell(cellSiteImage);
+                        document.Add(headerTable);
+                        document.Add(new Paragraph("\n"));
+
+                        float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
+                        var table = new Table(UnitValue.CreatePercentArray(columnWidths)).UseAllAvailableWidth();
+
+                        table.AddHeaderCell(CreateHeaderCell("Site"));
+                        for (int i = 0; i < 7; i++) table.AddHeaderCell(CreateHeaderCell(weekStart.AddDays(i).ToString("ddd dd/MM")));
+
+                        double[] dailyTotals = new double[7];
+                        double projectWeeklyGrandTotal = 0;
+
+                        var siteCell = new Cell().Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                        siteCell.Add(new Paragraph(site.ClientType?.Name ?? "").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
+                        table.AddCell(siteCell);
+
+                        for (int i = 0; i < 7; i++)
+                        {
+                            var loopDate = weekStart.AddDays(i).Date;
+                            var dayShifts = schedules.Where(s => s.ShiftStart.Date == loopDate).OrderBy(s => s.ShiftStart).ToList();
+                            var dayCell = new Cell().SetPadding(2);
+
+                            var columnBgColor = ColorConstants.WHITE;
+                            if (loopDate.DayOfWeek == DayOfWeek.Saturday) columnBgColor = new DeviceRgb(215, 240, 215);
+                            else if (loopDate.DayOfWeek == DayOfWeek.Sunday) columnBgColor = new DeviceRgb(252, 228, 236);
+
+                            var phInfo = weeklyHolidays.FirstOrDefault(x => x.Date == loopDate);
+                            if (phInfo != null && phInfo.States.Any())
+                            {
+                                var siteState = site.State?.Trim().ToUpper();
+                                if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Any(s => s.Trim().ToUpper() == siteState)))
+                                {
+                                    columnBgColor = new DeviceRgb(255, 249, 196);
+                                }
+                            }
+                            dayCell.SetBackgroundColor(columnBgColor);
+
+                            foreach (var shift in dayShifts)
+                            {
+                                var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
+                                dailyTotals[i] += duration;
+                                projectWeeklyGrandTotal += duration;
+
+                                var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
+                                var bgColor = GetStatusColor(shift.Status);
+                                if (shift.ShiftType == "AdhocAccepted") bgColor = new DeviceRgb(27, 94, 32);
+                                else if (shift.ShiftType == "AdhocNotAccepted") bgColor = new DeviceRgb(230, 81, 0);
+
+                                var borderColor = ColorConstants.BLACK;
+                                var fontColor = ColorConstants.BLACK;
+                                if (shift.ShiftType == "AdhocAccepted" || shift.ShiftType == "AdhocNotAccepted") { fontColor = ColorConstants.WHITE; borderColor = ColorConstants.WHITE; }
+                                if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular")) { bgColor = new DeviceRgb(111, 66, 193); borderColor = ColorConstants.WHITE; fontColor = ColorConstants.WHITE; }
+
+                                var shiftBlock = new Div().SetBackgroundColor(bgColor).SetMarginBottom(2).SetPadding(2).SetBorder(new SolidBorder(borderColor, 0.5f));
+                                var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
+                                if (isRelief)
+                                {
+                                    guardName = "{R} " + guardName;
+                                    if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                    {
+                                        var replacedName = shift.Guard?.Name ?? shift.ProviderName ?? "";
+                                        if (!string.IsNullOrEmpty(replacedName)) guardName += " [" + shift.ReliefReason + "] " + Truncate(replacedName, 8);
+                                        else guardName += " [" + shift.ReliefReason + "]";
+                                    }
+                                }
+                                shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor));
+                                var license = (shift.ReliefGuardId.HasValue ? shift.ReliefGuard?.SecurityNo : shift.Guard?.SecurityNo) ?? "N/A";
+                                shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFontColor(fontColor).SetMarginTop(-2));
+                                shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
+                                if (shift.Callsign != null) shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6));
+                                dayCell.Add(shiftBlock);
+                            }
+                            table.AddCell(dayCell);
+                        }
+
+                        Cell totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2);
+                        totalLabelCell.Add(new Paragraph($"Total Hours: {projectWeeklyGrandTotal:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                        table.AddCell(totalLabelCell);
+                        for (int i = 0; i < 7; i++) table.AddCell(new Cell().Add(new Paragraph($"{dailyTotals[i]:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
+
+                        document.Add(table);
+                        AddBrandedFooter(document, pdf, weekStart);
+                    }
+                    document.Close();
+                }
+                return ms.ToArray();
+            }
+        }
+
         public async Task<byte[]> GenerateRosterPdfAsync(int groupId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
@@ -91,6 +280,429 @@ namespace CityWatch.Web.Services
                     AddFileToMerger(merger, "Projects", group.CoverFileName);
                     AddBytesToMerger(merger, rosterBytes);
                     merger.Close();
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public async Task<byte[]> GeneratePreviewRosterPdfAsync(string type, int id)
+        {
+            string fileName = "";
+            string subDir = "";
+
+            if (type == "project")
+            {
+                var project = await _context.RosterGroups.FindAsync(id);
+                if (project == null || string.IsNullOrEmpty(project.CoverFileName)) return null;
+                fileName = project.CoverFileName;
+                subDir = "Projects";
+            }
+            else
+            {
+                var binder = await _context.RosterBinders.FindAsync(id);
+                if (binder == null || string.IsNullOrEmpty(binder.CoverFileName)) return null;
+                fileName = binder.CoverFileName;
+                subDir = "Groups";
+            }
+
+            // 1. Generate Mock Roster Page
+            byte[] mockRosterBytes = await GenerateMockRosterPartAsync();
+
+            // 2. Merge with Cover
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var merger = new PdfMerger(pdf);
+                    AddFileToMerger(merger, subDir, fileName);
+                    AddBytesToMerger(merger, mockRosterBytes);
+                    merger.Close();
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private async Task<byte[]> GenerateMockRosterPartAsync()
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    using (var document = new Document(pdf))
+                    {
+                        document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+
+                        // Simple Mock Header
+                        Table headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth().SetMarginBottom(20);
+                        
+                        // Logo Placeholder
+                        string logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                        if (File.Exists(logoPath))
+                        {
+                            try {
+                                var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(40);
+                                headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                            } catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+                        } else {
+                            headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                        }
+
+                        headerTable.AddCell(new Cell()
+                            .Add(new Paragraph("LIVE PREVIEW DEMO").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
+                            .Add(new Paragraph("This is a sample layout for verification").SetFontSize(10))
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetBorder(Border.NO_BORDER));
+                        headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                        document.Add(headerTable);
+                        
+                        Table table = new Table(UnitValue.CreatePercentArray(8)).UseAllAvailableWidth().SetMarginTop(10);
+                        table.AddHeaderCell(CreateHeaderCell("Site"));
+                        table.AddHeaderCell(CreateHeaderCell("Mon 01/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Tue 02/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Wed 03/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Thu 04/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Fri 05/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Sat 06/01"));
+                        table.AddHeaderCell(CreateHeaderCell("Sun 07/01"));
+
+                        table.AddCell(new Cell().Add(new Paragraph("SAMPLE CLIENT SITE").SetFontSize(8)));
+                        for (int i = 0; i < 7; i++)
+                        {
+                            table.AddCell(new Cell().Add(new Paragraph("Sample Shift Name\n00:00 - 00:00 (H)").SetFontSize(7)));
+                        }
+
+                        // Mock Total Row
+                        table.AddCell(new Cell().Add(new Paragraph("Total Hours: 56.00").SetFontSize(8).SetFont(PdfHelper.GetPdfFont())).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                        for (int i = 0; i < 7; i++)
+                        {
+                            table.AddCell(new Cell().Add(new Paragraph("8.00").SetFontSize(8).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                        }
+
+                        document.Add(table);
+                        AddBrandedFooter(document, pdf, DateTime.Today);
+                    }
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public async Task<byte[]> GenerateBinderRosterPdfAsync(int binderId, DateTime startDate, int weeks = 1, bool includeFinancials = false, bool includeSuppliers = false, string rateType = "guard")
+        {
+            var binder = await _context.RosterBinders.FindAsync(binderId);
+            if (binder == null) return null;
+
+            var binderProjects = await _context.RosterBinderProjects
+                .Where(x => x.RosterBinderId == binderId)
+                .Include(x => x.RosterGroup)
+                .ToListAsync();
+
+            if (!binderProjects.Any()) return null;
+
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var merger = new PdfMerger(pdf);
+
+                    // 1. Group Cover
+                    if (!string.IsNullOrEmpty(binder.CoverFileName))
+                    {
+                        AddFileToMerger(merger, "Groups", binder.CoverFileName);
+                    }
+
+                    // 2. Project Parts
+                    foreach (var bp in binderProjects.OrderBy(x => x.SortOrder).ThenBy(x => x.Id))
+                    {
+                        // 2a. Project Cover
+                        if (!string.IsNullOrEmpty(bp.RosterGroup.CoverFileName))
+                        {
+                            AddFileToMerger(merger, "Projects", bp.RosterGroup.CoverFileName);
+                        }
+
+                        // 2b. Project Roster
+                        byte[] partBytes = await GenerateSingleProjectRosterPartAsync(bp.RosterGroupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
+                        AddBytesToMerger(merger, partBytes);
+                    }
+                    merger.Close();
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private async Task<byte[]> GenerateSingleProjectRosterPartAsync(int groupId, DateTime startDate, int weeks, bool includeFinancials, bool includeSuppliers, string rateType)
+        {
+            var group = await _context.RosterGroups.FindAsync(groupId);
+            var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
+
+            var groupSites = await _context.RosterGroupSites
+                .Where(x => x.RosterGroupId == groupId)
+                .Include(x => x.ClientSite)
+                .ThenInclude(x => x.ClientType)
+                .ToListAsync();
+
+            var schedules = await _context.RosterSchedules
+                .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
+                .ToListAsync();
+
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new PdfWriter(ms))
+                using (var pdf = new PdfDocument(writer))
+                {
+                    pdf.SetDefaultPageSize(PageSize.A4.Rotate());
+                    var document = new Document(pdf);
+                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+
+                    var groupName = group.Name ?? "Unknown Project";
+
+                    for (int w = 0; w < weeks; w++)
+                    {
+                        var weekStart = startDate.AddDays(w * 7);
+                        var weekEnd = weekStart.AddDays(6);
+
+                        // Fetch Holidays for this week
+                        var holidays = await _context.BroadcastBannerCalendarEvents
+                            .Where(x => x.IsPublicHoliday && x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)
+                            .ToListAsync();
+                        var holidayIds = holidays.Select(x => x.id).ToList();
+                        var holidayStates = await _context.PublicHolidayStates
+                            .Where(x => holidayIds.Contains(x.CalendarEventId) && !x.IsDeleted)
+                            .ToListAsync();
+
+                        var weeklyHolidays = new List<PublicHolidayInfo>();
+                        for (int d = 0; d < 7; d++)
+                        {
+                            var dDate = weekStart.AddDays(d).Date;
+                            var dayHolidays = holidays.Where(h => dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date).ToList();
+                            var states = new List<string>();
+                            foreach (var h in dayHolidays)
+                            {
+                                var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
+                                if (hStates.Count == 0) states.Add("ALL");
+                                else states.AddRange(hStates);
+                            }
+                            weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
+                        }
+
+                        if (w > 0) document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
+                        var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
+
+                        // Branding Logic
+                        string logoPath = string.Empty;
+                        foreach (var site in groupSites)
+                        {
+                            if (site.ClientSite != null)
+                            {
+                                var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
+                                if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
+                                {
+                                    logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+
+                        if (File.Exists(logoPath))
+                        {
+                            try
+                            {
+                                var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                                headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                            }
+                            catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+                        }
+                        else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+
+                        var titleCell = new Cell()
+                            .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
+                            .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12))
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetBorder(Border.NO_BORDER);
+                        headerTable.AddCell(titleCell);
+
+                        var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                        var primarySite = groupSites.FirstOrDefault();
+                        if (primarySite != null)
+                        {
+                            var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
+                            if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                            {
+                                try
+                                {
+                                    var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                    var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                    cellSiteImage.Add(siteImage);
+                                }
+                                catch { }
+                            }
+                        }
+                        headerTable.AddCell(cellSiteImage);
+                        document.Add(headerTable);
+                        document.Add(new Paragraph("\n"));
+
+                        float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
+                        var table = new Table(UnitValue.CreatePercentArray(columnWidths)).UseAllAvailableWidth();
+
+                        table.AddHeaderCell(CreateHeaderCell("Site"));
+                        for (int i = 0; i < 7; i++) table.AddHeaderCell(CreateHeaderCell(weekStart.AddDays(i).ToString("ddd dd/MM")));
+
+                        // Track totals for the week
+                        double[] dailyTotals = new double[7];
+                        double projectWeeklyGrandTotal = 0;
+
+                        foreach (var site in groupSites.OrderBy(x => x.ClientSite.Name))
+                        {
+                            var siteCell = new Cell().Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                            siteCell.Add(new Paragraph(site.ClientSite.ClientType?.Name ?? "").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
+                            table.AddCell(siteCell);
+
+                            for (int i = 0; i < 7; i++)
+                            {
+                                var loopDate = weekStart.AddDays(i).Date;
+                                var dayShifts = schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart.Date == loopDate).OrderBy(s => s.ShiftStart).ToList();
+                                var dayCell = new Cell().SetPadding(2);
+
+                                // Background Highlighting Logic
+                                var columnBgColor = ColorConstants.WHITE;
+                                
+                                // Weekends
+                                if (loopDate.DayOfWeek == DayOfWeek.Saturday) columnBgColor = new DeviceRgb(215, 240, 215); // #d7f0d7
+                                else if (loopDate.DayOfWeek == DayOfWeek.Sunday) columnBgColor = new DeviceRgb(252, 228, 236); // #fce4ec
+
+                                // Public Holidays
+                                var phInfo = weeklyHolidays.FirstOrDefault(x => x.Date == loopDate);
+                                if (phInfo != null && phInfo.States.Any())
+                                {
+                                    var siteState = site.ClientSite?.State?.Trim().ToUpper();
+                                    if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Any(s => s.Trim().ToUpper() == siteState)))
+                                    {
+                                        columnBgColor = new DeviceRgb(255, 249, 196); // #FFF9C4
+                                    }
+                                }
+
+                                dayCell.SetBackgroundColor(columnBgColor);
+
+                                foreach (var shift in dayShifts)
+                                {
+                                    var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
+                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var value = includeFinancials ? (duration * (double)rate) : duration;
+                                    
+                                    dailyTotals[i] += value;
+                                    projectWeeklyGrandTotal += value;
+
+                                    var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
+                                    var bgColor = GetStatusColor(shift.Status);
+                                    
+                                    // ADHOC Color Overrides
+                                    if (shift.ShiftType == "AdhocAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(27, 94, 32); // Dark Green
+                                    }
+                                    else if (shift.ShiftType == "AdhocNotAccepted")
+                                    {
+                                        bgColor = new DeviceRgb(230, 81, 0); // Dark Orange
+                                    }
+
+                                    var borderColor = ColorConstants.BLACK;
+                                    var fontColor = ColorConstants.BLACK;
+
+                                    if (shift.ShiftType == "AdhocAccepted" || shift.ShiftType == "AdhocNotAccepted")
+                                    {
+                                        fontColor = ColorConstants.WHITE;
+                                        borderColor = ColorConstants.WHITE;
+                                    }
+
+                                    if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular"))
+                                    {
+                                        bgColor = new DeviceRgb(111, 66, 193); // Dark purple bg (matches #6f42c1)
+                                        borderColor = ColorConstants.WHITE;
+                                        fontColor = ColorConstants.WHITE;
+                                    }
+
+                                    var shiftBlock = new Div()
+                                        .SetBackgroundColor(bgColor)
+                                        .SetMarginBottom(2)
+                                        .SetPadding(2)
+                                        .SetBorder(new SolidBorder(borderColor, 0.5f));
+
+                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
+                                    if (isRelief)
+                                    {
+                                        guardName = "{R} " + guardName;
+                                        if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                        {
+                                            var replacedName = shift.Guard?.Name ?? shift.ProviderName ?? "";
+                                            if (!string.IsNullOrEmpty(replacedName))
+                                            {
+                                                guardName += " [" + shift.ReliefReason + "] " + Truncate(replacedName, 8);
+                                            }
+                                            else
+                                            {
+                                                guardName += " [" + shift.ReliefReason + "]";
+                                            }
+                                        }
+                                    }
+
+                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor));
+                                    
+                                    // Add License Number
+                                    var license = (shift.ReliefGuardId.HasValue ? shift.ReliefGuard?.SecurityNo : shift.Guard?.SecurityNo) ?? "N/A";
+                                    shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFontColor(fontColor).SetMarginTop(-2));
+
+                                    shiftBlock.Add(new Paragraph($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)").SetFontSize(5.5f).SetFontColor(fontColor));
+
+                                    if (includeSuppliers)
+                                    {
+                                        var supplierName = shift.Guard?.Provider ?? shift.ProviderName ?? "N/A";
+                                        var callsignSuffix = shift.Callsign != null ? $" ({shift.Callsign.Name})" : "";
+                                        shiftBlock.Add(new Paragraph(supplierName + callsignSuffix).SetFontSize(6.5f).SetFontColor(new DeviceRgb(0, 86, 179)).SetBold());
+                                    }
+                                    else if (shift.Callsign != null)
+                                    {
+                                        shiftBlock.Add(new Paragraph($"Callsign: {shift.Callsign.Name}").SetFontSize(6));
+                                    }
+
+                                    if (includeFinancials)
+                                    {
+                                        shiftBlock.Add(new Paragraph($"$ {value:F2}").SetFontSize(6.5f).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold());
+                                    }
+                                    dayCell.Add(shiftBlock);
+                                }
+                                table.AddCell(dayCell);
+                            }
+                        }
+
+                        // Add Footer Row for Totals
+                        Cell totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2);
+                        string totalText = includeFinancials ? $"Total Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
+                        totalLabelCell.Add(new Paragraph(totalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
+                        table.AddCell(totalLabelCell);
+
+                        for (int i = 0; i < 7; i++)
+                        {
+                            string dailyTotalText = includeFinancials ? $"$ {dailyTotals[i]:F2}" : $"{dailyTotals[i]:F2}";
+                            table.AddCell(new Cell().Add(new Paragraph(dailyTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
+                        }
+
+                        document.Add(table);
+                        AddBrandedFooter(document, pdf, weekStart);
+                    }
+                    document.Close();
                 }
                 return ms.ToArray();
             }

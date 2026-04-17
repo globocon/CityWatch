@@ -1,0 +1,314 @@
+@using CityWatch.Data.Helpers
+@using CityWatch.Web.Helpers
+
+<!-- Guard Roster Modal -->
+<div class="modal fade" id="guardRosterModal" tabindex="-1" role="dialog" aria-labelledby="guardRosterModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" style="max-width: 95%;" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title font-weight-bold" id="guardRosterModalLabel">
+                    <i class="fa fa-calendar-alt mr-2"></i>SITE ROSTER VIEW
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0 bg-light">
+                <!-- Navigation & Controls -->
+                <div class="d-flex align-items-center justify-content-between p-3 bg-white border-bottom sticky-top" style="z-index: 10;">
+                    <div class="d-flex align-items-center">
+                        <div class="btn-group mr-3 shadow-sm">
+                            <button id="btnPrevWeekGuard" class="btn btn-outline-primary py-2 px-3" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
+                            <div class="btn btn-primary font-weight-bold px-4 py-2" id="guardWeekRangeText" style="min-width: 220px; pointer-events: none;">
+                                Loading week...
+                            </div>
+                            <button id="btnNextWeekGuard" class="btn btn-outline-primary py-2 px-3" title="Next Week"><i class="fa fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary d-flex align-items-center shadow-sm" id="btnDownloadGuardPdf" style="border-radius: 6px; font-weight: 600; padding: 10px 20px;">
+                            <i class="fa fa-file-pdf mr-2" style="font-size: 1.2em;"></i> DOWNLOAD ROSTER PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Roster Grid Container -->
+                <div class="p-3" style="min-height: 400px; max-height: 75vh; overflow-y: auto;">
+                    <div class="table-responsive shadow-sm rounded bg-white overflow-hidden">
+                        <table class="table table-bordered mb-0" id="guard_roster_grid" style="table-layout: fixed; width: 100%;">
+                            <thead class="bg-light">
+                                <tr id="guard_roster_header">
+                                    <th class="py-3 px-3 text-uppercase font-weight-bold" style="width: 180px; font-size: 11px; background: #f8f9fa; border-bottom: 2px solid #667eea !important; vertical-align: middle;">SITE NAME</th>
+                                    <!-- Days will be dynamically injected here -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Shifts will be dynamically injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="guardRosterEmpty" class="text-center py-5 d-none">
+                        <i class="fa fa-calendar-times fa-4x text-muted mb-3 opacity-25"></i>
+                        <h4 class="text-muted">No roster data found for this period.</h4>
+                        <p class="text-muted">Try navigating to another week.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white py-3 border-top shadow-sm-top">
+                <button type="button" class="btn btn-secondary font-weight-bold px-5 py-2" data-dismiss="modal">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Download Filter Modal for Guards -->
+<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" style="z-index: 2000;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-primary text-white py-3">
+                <h6 class="modal-title font-weight-bold"><i class="fa fa-file-download mr-2"></i>PDF Options</h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="form-group mb-0">
+                    <label class="font-weight-bold text-muted small mb-2 text-uppercase letter-spacing-1">Export Duration</label>
+                    <select class="form-control custom-select shadow-sm" id="guardPdfWeeks" style="height: 45px; font-weight: 500;">
+                        <option value="1">1 Week</option>
+                        <option value="2">2 Weeks</option>
+                        <option value="3">3 Weeks</option>
+                        <option value="4">4 Weeks (Month View)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer p-3 border-0">
+                <button type="button" class="btn btn-primary btn-block py-3 font-weight-bold shadow-sm" id="btnConfirmGuardDownload">START DOWNLOAD</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    
+    #guard_roster_grid thead th:not(:first-child) {
+        font-size: 11px;
+        color: #555;
+        text-align: center;
+        background: #f8f9fa;
+        border-bottom: 2px solid #667eea !important;
+        vertical-align: middle;
+    }
+
+    .guard-day-cell {
+        min-width: 150px;
+        padding: 10px !important;
+        vertical-align: top !important;
+        background-color: #fff;
+    }
+
+    .guard-shift-card {
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+        color: #333;
+        font-size: 11px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .guard-shift-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        z-index: 5;
+    }
+
+    .guard-shift-card.status-accepted { border-left: 4px solid #ff9800; background: #fffcf5; }
+    .guard-shift-card.status-pushed { border-left: 4px solid #fbc02d; background: #fffef2; }
+    
+    .guard-shift-card.adhoc-accepted { background: #1b5e20 !important; color: white !important; border-left: 4px solid #0a3d0b; }
+    .guard-shift-card.adhoc-not-accepted { background: #e65100 !important; color: white !important; border-left: 4px solid #bf360c; }
+    .guard-shift-card.shift-relief { background: #6f42c1 !important; color: white !important; border-left: 4px solid #4a148c; }
+
+    .guard-ph-highlight { background-color: #FFF9C4 !important; }
+
+    .guard-relief-badge {
+        background: #fff;
+        color: #6f42c1;
+        font-size: 9px;
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-weight: 800;
+        margin-right: 6px;
+        display: inline-block;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .guard-shift-card.shift-relief .guard-relief-badge {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+    
+    .guard-shift-time {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(0,0,0,0.06);
+        font-weight: 700;
+    }
+    
+    .guard-shift-card.shift-relief .guard-shift-time,
+    .guard-shift-card.adhoc-accepted .guard-shift-time,
+    .guard-shift-card.adhoc-not-accepted .guard-shift-time {
+        border-top-color: rgba(255, 255, 255, 0.2);
+    }
+</style>
+
+<script>
+    var guardRosterStartDate = null;
+    var currentGuardSiteId = null;
+
+    $(document).ready(function() {
+        $('#btnPrevWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() - 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
+        });
+
+        $('#btnNextWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() + 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
+        });
+
+        $('#btnDownloadGuardPdf').on('click', function() {
+            $('#guardDownloadFilterModal').modal('show');
+        });
+
+        $('#btnConfirmGuardDownload').on('click', function() {
+            var weeks = $('#guardPdfWeeks').val();
+            var url = '/roster/Booking?handler=DownloadSiteRosterPdf&siteId=' + currentGuardSiteId + '&startDate=' + guardRosterStartDate + '&weeks=' + weeks;
+            window.open(url, '_blank');
+            $('#guardDownloadFilterModal').modal('hide');
+        });
+    });
+
+    function openGuardRosterPortal(siteId) {
+        currentGuardSiteId = siteId;
+        // Find Monday of current week
+        var today = new Date();
+        var day = today.getDay();
+        var diff = today.getDate() - day + (day == 0 ? -6 : 1);
+        var monday = new Date(today.setDate(diff));
+        guardRosterStartDate = monday.toISOString().split('T')[0];
+        
+        $('#guardRosterModal').modal('show');
+        loadGuardRoster();
+    }
+
+    function loadGuardRoster() {
+        if (!currentGuardSiteId || !guardRosterStartDate) return;
+
+        var end = new Date(guardRosterStartDate);
+        end.setDate(end.getDate() + 6);
+        $('#guardWeekRangeText').html('<i class="fa fa-clock mr-2 opacity-75 small"></i>' + formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
+
+        var tbody = $('#guard_roster_grid tbody');
+        var thead = $('#guard_roster_header');
+        
+        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">GENERATING VIEW...</p></td></tr>');
+
+        $.ajax({
+            url: '/roster/Booking?handler=LoadRosterForSite',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function (res) {
+                tbody.empty();
+                thead.find('th:not(:first-child)').remove();
+
+                if (!res.results || res.results.length === 0 || (res.results[0].days && res.results[0].days.every(d => d.length === 0))) {
+                    // Show site name row even if empty, or show empty state if no site found
+                    if (!res.results || res.results.length === 0) {
+                        $('#guardRosterEmpty').removeClass('d-none');
+                        $('#guard_roster_grid').addClass('d-none');
+                        return;
+                    }
+                }
+                $('#guardRosterEmpty').addClass('d-none');
+                $('#guard_roster_grid').removeClass('d-none');
+
+                // Inject Day Headers
+                var d = new Date(guardRosterStartDate);
+                for (var i = 0; i < 7; i++) {
+                    var dayDate = new Date(d);
+                    dayDate.setDate(d.getDate() + i);
+                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' }).toUpperCase();
+                    thead.append('<th>' + dateStr + '</th>');
+                }
+
+                res.results.forEach(function (row) {
+                    var rowHtml = '<tr>' +
+                        '<td class="bg-light align-middle"><div class="font-weight-bold text-primary">' + row.siteName + '</div><div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">' + row.clientTypeName + '</div></td>';
+
+                    row.days.forEach(function (dayShifts, index) {
+                        var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                        var phClass = isPh ? "guard-ph-highlight" : "";
+                        var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
+                        
+                        rowHtml += '<td class="guard-day-cell ' + phClass + '" title="' + phReason + '">';
+                        
+                        dayShifts.forEach(function (s) {
+                            var statusClass = 'status-pushed';
+                            if (s.status === 1) statusClass = 'status-accepted';
+                            if (s.status === 2) statusClass = 'status-declined';
+
+                            var typeClass = '';
+                            if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                            else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                            var isRelief = s.reliefGuardId || s.reliefProviderName;
+
+                            rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
+                                '<div class="text-truncate font-weight-bold" style="font-size: 11px;">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user-circle mr-2 opacity-50"></i>') + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                '</div>' +
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 9px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                '<div class="mt-1 opacity-75" style="font-size: 9px; font-weight: 600;">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                '<div class="guard-shift-time">' +
+                                    '<span>' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                    '<span class="badge badge-pill badge-dark px-2" style="font-size: 8px; opacity: 0.6; font-weight: 600;">' + s.durationHours.toString().replace(/\.00$/, "") + 'H</span>' +
+                                '</div>' +
+                                (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;"><i class="fa fa-hashtag mr-1"></i>' + s.callsignName + '</div>' : '') +
+                                '</div>';
+                        });
+                        rowHtml += '</td>';
+                    });
+
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+                });
+            },
+            error: function() {
+                tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
+            }
+        });
+    }
+
+    function formatGuardDate(date) {
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+    }
+
+    function truncateGuardName(str, num) {
+        if (!str) return "";
+        if (str.length <= num) return str;
+        return str.slice(0, num) + '..';
+    }
+</script>

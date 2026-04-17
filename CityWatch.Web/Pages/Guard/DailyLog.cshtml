@@ -62,8 +62,8 @@ else
     </div>
     <div class="col-md-6">
         <div class="float-right">
-            <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
-            <button type="button" class="btn btn-outline-primary" title="Roster" id="btnRosterDetails"><i class="fa fa-calendar-o mr-1" aria-hidden="true" style="color: #007bff;"></i>R</button>
+            <button type="button" class="btn btn-outline-primary" id="btnHRDetails" data-pin-context="hr_docs"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+            <button type="button" class="btn btn-outline-primary" title="Roster" id="btnRosterDetails" data-pin-context="roster"><i class="fa fa-calendar-o mr-1" aria-hidden="true" style="color: #007bff;"></i>R</button>
 
             @if (clientSiteSOp.Count != 0)
             {
@@ -1384,4 +1384,4 @@ else
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
 }
-
+<partial name="_GuardRosterModal" />
