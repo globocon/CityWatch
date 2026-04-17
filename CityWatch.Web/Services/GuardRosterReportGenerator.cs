@@ -248,9 +248,8 @@ namespace CityWatch.Web.Services
                                 table.AddCell(new Cell().Add(new Paragraph($"{dailyTotals[i]:F2}").SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                             }
 
-                            document.Add(table);
-                            AddBrandedFooter(document, pdf, weekStart);
-                        }
+                        document.Add(table);
+                        AddBrandedFooter(document, pdf, weekStart);
                     }
                     document.Close();
                 }
