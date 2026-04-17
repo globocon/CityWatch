@@ -36,6 +36,19 @@
                         <tbody id="guard_roster_body">
                             <!-- Rows will be injected here -->
                         </tbody>
+                        <tfoot id="guard_roster_footer" style="display: none; background: #fff; border-top: 2px solid #dee2e6;">
+                            <tr>
+                                <td class="p-0 border-right align-middle">
+                                    <div class="grand-total-container" style="background: #f8faff;">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0.00</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Daily totals will be injected here -->
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -107,6 +120,11 @@
     .guard-ph-highlight { background-color: #FFF9C4 !important; }
     .guard-sat-highlight { background-color: #d7f0d7 !important; }
     .guard-sun-highlight { background-color: #fce4ec !important; }
+
+    /* Totals Styling */
+    .total-item { padding: 10px 5px; text-align: center; }
+    .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
+    .total-value { font-size: 12px; }
 
     /* Shift Card Styles matched to Booking module */
     .guard-shift-card {
@@ -224,8 +242,10 @@
 
         var tbody = $('#guard_roster_body');
         var thead = $('#guard_roster_header tr');
+        var tfoot = $('#guard_roster_footer');
         
         tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">LOADING ROSTER...</p></td></tr>');
+        tfoot.hide();
 
         $.ajax({
             url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
@@ -234,6 +254,7 @@
             success: function (res) {
                 tbody.empty();
                 thead.find('th:not(:first-child)').remove();
+                tfoot.find('td:not(:first-child)').remove();
 
                 if (!res.results || res.results.length === 0) {
                     $('#guardRosterEmpty').removeClass('d-none');
@@ -242,6 +263,7 @@
                 }
                 $('#guardRosterEmpty').addClass('d-none');
                 $('#guard_roster_grid').removeClass('d-none');
+                tfoot.show();
 
                 // Inject Day Headers (Arranged like Booking)
                 var d = new Date(guardRosterStartDate);
@@ -250,11 +272,15 @@
                     dayDate.setDate(d.getDate() + i);
                     var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
                     thead.append('<th style="width: 12.14%;">' + dateStr + '</th>');
+                    tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0.00</span></div></td>');
                 }
+
+                var grandTotal = 0;
+                var dailyTotals = [0,0,0,0,0,0,0];
 
                 res.results.forEach(function (row) {
                     var rowHtml = '<tr>' +
-                        '<td class="align-middle px-3"><div class="guard-site-name">' + row.siteName + '</div><div class="guard-client-type">' + row.clientTypeName + '</div></td>';
+                        '<td class="align-top px-3 text-left"><div class="guard-site-name">' + row.siteName + '</div><div class="guard-client-type">' + row.clientTypeName + '</div></td>';
 
                     row.days.forEach(function (dayShifts, index) {
                         var loopDate = new Date(guardRosterStartDate);
@@ -270,6 +296,10 @@
                         rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '">';
                         
                         dayShifts.forEach(function (s) {
+                            var duration = parseFloat(s.durationHours);
+                            dailyTotals[index] += duration;
+                            grandTotal += duration;
+
                             var statusClass = 'status-pushed';
                             if (s.status === 1) statusClass = 'status-accepted';
                             if (s.status === 2) statusClass = 'status-declined';
@@ -297,6 +327,12 @@
                     rowHtml += '</tr>';
                     tbody.append(rowHtml);
                 });
+
+                // Update Totals
+                $('#guard_weekly_grand_total').text(grandTotal.toFixed(2));
+                for(var i=0; i<7; i++) {
+                    $('#daily_total_' + i).text(dailyTotals[i].toFixed(2));
+                }
             },
             error: function() {
                 tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
