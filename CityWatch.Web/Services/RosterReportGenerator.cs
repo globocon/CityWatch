@@ -377,8 +377,26 @@ namespace CityWatch.Web.Services
 
                         foreach (var site in groupSites.OrderBy(x => x.ClientSite.Name))
                         {
-                            var siteCell = new Cell().Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()));
-                            siteCell.Add(new Paragraph(site.ClientSite.ClientType?.Name ?? "").SetFontSize(6f).SetFontColor(ColorConstants.GRAY));
+                            var siteCell = new Cell().SetPadding(5).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
+                            
+                            // Site Name and Type
+                            siteCell.Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetBold().SetMarginBottom(0));
+                            siteCell.Add(new Paragraph(site.ClientSite.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
+
+                            // Status Section (Read-Only Status from Roster Admin)
+                            // We fetch the status persisted in the Roster Admin module for the specific site and week start date.
+                            // If a status exists (Paid, Invoiced, Cancelled), we render a colored stamp on the site information column.
+                            var statusObj = await _context.RosterSiteWeekStatuses
+                                .FirstOrDefaultAsync(x => x.ClientSiteId == site.ClientSiteId && x.StartDate == weekStart);
+                            var status = statusObj?.Status ?? "Live";
+
+                            if (!string.IsNullOrEmpty(status) && status != "Live")
+                            {
+                                siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
+                                siteCell.Add(GetStatusStampParagraph(status));
+                            }
+                            
+                            siteCell.SetMinHeight(120f);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)
@@ -586,6 +604,29 @@ namespace CityWatch.Web.Services
                 .Add(new Paragraph(text).SetFont(PdfHelper.GetPdfFont()).SetFontSize(FONT_SIZE_CELL))
                 .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                 .SetTextAlignment(TextAlignment.CENTER);
+        }
+
+        private Paragraph GetStatusStampParagraph(string status)
+        {
+            Color color = ColorConstants.RED;
+            if (status == "Cancelled") color = new DeviceRgb(97, 97, 97); // Gray
+            else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Green
+            else if (status == "Invoiced") color = new DeviceRgb(13, 71, 161); // Blue
+
+            Paragraph stampPara = new Paragraph(status.ToUpper())
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(11)
+                .SetFontColor(color)
+                .SetBold()
+                .SetBorder(new SolidBorder(color, 1.2f))
+                .SetPadding(2)
+                .SetPaddingLeft(8)
+                .SetPaddingRight(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetWidth(UnitValue.CreatePercentValue(80));
+
+            return stampPara;
         }
 
         private Color GetStatusColor(CityWatch.Data.Enums.RosterShiftStatus status)

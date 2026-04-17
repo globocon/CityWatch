@@ -1,0 +1,570 @@
+<div class="modal fade" id="guardRosterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
+                    <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="guardWeekRangeText">Loading...</span>
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
+                </div>
+                <div class="d-flex align-items-center">
+                    <!-- Roster Admin Controls -->
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                        <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                            <div class="custom-control custom-checkbox mr-3 p-0" style="min-height: auto; width: 20px;">
+                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle">
+                                <label class="custom-control-label" for="adminFinancialToggle" style="padding-left: 20px; cursor: pointer;" title="Enable Financial Figures"></label>
+                            </div>
+                            
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                                <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
+                                <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                            </div>
+                            <i class="fa fa-cube ml-2" style="font-size: 1rem; color: #555;" title="Sell Rate to Client"></i>
+                        </div>
+
+                        <!-- Redesigned Capsule 2: Truck Toggle -->
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-3">
+                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
+                                <span style="position: absolute; right: -6px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 8px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff; transform: scale(0.8);">S</span>
+                            </div>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                                <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
+                                <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-sm mr-2" style="width: 160px;">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
+                            </div>
+                            <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="Live">Live</option>
+                                <option value="Invoiced">Invoiced</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
+                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
+                    </button>
+                    <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
+                <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
+            </div>
+            </div>
+            <div class="modal-body p-0 bg-light" style="min-height: 500px;">
+                <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
+                    <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
+                        <i class="fa fa-calendar-times-o"></i>
+                    </div>
+                    <h4 class="text-secondary mb-3" style="font-weight: 300;">No Roster Found</h4>
+                    <p class="text-muted mb-0">We couldn't find any scheduled shifts for this site in the selected week.</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0" id="guard_roster_grid">
+                        <thead id="guard_roster_header">
+                            <tr>
+                                <th style="width: 15%;" class="align-middle">Client Site</th>
+                                <!-- Day headers will be injected here -->
+                            </tr>
+                        </thead>
+                        <tbody id="guard_roster_body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                        <tfoot id="guard_roster_footer" style="display: none; background: #fff; border-top: 2px solid #dee2e6;">
+                            <tr>
+                                <td class="p-0 border-right align-middle">
+                                    <div class="grand-total-container" style="background: #f8faff;">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0.00</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Daily totals will be injected here -->
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Filter Modal for PDF Download -->
+<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header p-3">
+                <h6 class="modal-title font-weight-bold">PDF Export Options</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="small font-weight-bold text-muted mb-2 d-block text-uppercase">Duration to export</label>
+                <select id="guardPdfWeeks" class="form-control form-control-sm border-primary">
+                    <option value="1">This Week Only</option>
+                    <option value="2">2 Weeks Binder</option>
+                    <option value="4">4 Weeks Binder</option>
+                </select>
+            </div>
+            <div class="modal-footer p-2 bg-light">
+                <button type="button" class="btn btn-primary btn-block font-weight-bold" id="btnConfirmGuardDownload">GENERATE REPORT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Table Styling matched to Booking module */
+    #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
+    
+    #guard_roster_grid thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        padding: 12px 8px;
+        border: none !important;
+        text-align: center;
+    }
+
+    #guard_roster_grid tbody td {
+        padding: 10px 8px !important;
+        vertical-align: top;
+        border-color: #dee2e6 !important;
+    }
+
+    .guard-site-name {
+        color: #007bff;
+        font-weight: 700;
+        font-size: 13.5px;
+        line-height: 1.2;
+    }
+    
+    .guard-client-type {
+        font-size: 10px;
+        color: #6c757d;
+        margin-top: 3px;
+        font-weight: 500;
+    }
+
+    .guard-day-cell { transition: background-color 0.2s ease; }
+    .guard-day-cell:hover { background-color: #f8f9fa; }
+    .guard-ph-highlight { background-color: #FFF9C4 !important; }
+    .guard-sat-highlight { background-color: #d7f0d7 !important; }
+    .guard-sun-highlight { background-color: #fce4ec !important; }
+
+    /* Roster Status Stamp UI */
+    .guard-status-label {
+        font-weight: bold;
+        color: #000;
+        font-size: 11px;
+        margin-top: 15px;
+        display: block;
+    }
+    .guard-status-stamp {
+        display: inline-block;
+        border: 2px solid #ff0000;
+        color: #ff0000;
+        padding: 4px 10px;
+        font-weight: 800;
+        font-size: 14px;
+        text-transform: uppercase;
+        transform: rotate(-10deg);
+        margin-top: 5px;
+        border-radius: 4px;
+        background: rgba(255,0,0,0.05);
+    }
+    .guard-status-stamp.paid { border-color: #1B5E20; color: #1B5E20; background: rgba(27, 94, 32, 0.05); }
+    .guard-status-stamp.invoiced { border-color: #0056b3; color: #0056b3; background: rgba(0, 86, 179, 0.05); }
+    .guard-status-stamp.cancelled { border-color: #6c757d; color: #6c757d; background: rgba(108, 117, 125, 0.05); }
+
+    /* Totals Styling */
+    .total-item { padding: 10px 5px; text-align: center; }
+    .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
+    .total-value { font-size: 12px; }
+
+    /* Shift Card Styles matched to Booking module */
+    .guard-shift-card {
+        position: relative;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* Default fallback */
+        color: white;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        font-size: 10.5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 3px solid rgba(255,255,255,0.3);
+    }
+    .guard-shift-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; }
+
+    .status-pushed, .status-accepted { 
+        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%) !important; 
+    }
+    .status-declined { 
+        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; 
+    }
+
+    /* Relief Card Styles */
+    .guard-shift-card.shift-relief { 
+        background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; 
+        border-left: 3px solid #e1bee7 !important;
+    }
+    .guard-relief-badge {
+        background-color: #ffffff;
+        color: #6f42c1;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Adhoc Styles */
+    .guard-shift-card.adhoc-accepted { 
+        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important; 
+        border-left: 3px solid #81C784 !important;
+    }
+    .guard-shift-card.adhoc-not-accepted { 
+        background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important; 
+        border-left: 3px solid #FFB74D !important;
+    }
+
+    .guard-shift-license {
+        font-size: 9px;
+        color: rgba(255,255,255,0.85);
+        margin-top: 3px;
+        font-weight: 300;
+    }
+
+    .guard-shift-time {
+        font-weight: 700;
+        margin-top: 4px;
+        font-size: 10px;
+    }
+</style>
+
+<script>
+    var guardRosterStartDate = null;
+    var currentGuardSiteId = null;
+    var isAdminRoster = false;
+    var isAdminFinancialsOn = false;
+    var isAdminSupplierOn = false;
+    var adminRateType = 'guard'; // 'guard' or 'sell'
+    var currentRosterStatus = 'Live';
+
+    $(document).ready(function() {
+        $('#btnPrevWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() - 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        $('#btnNextWeekGuard').on('click', function() {
+            var d = new Date(guardRosterStartDate);
+            d.setDate(d.getDate() + 7);
+            guardRosterStartDate = d.toISOString().split('T')[0];
+            loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        $('#btnDownloadGuardPdf').on('click', function() {
+            $('#guardDownloadFilterModal').modal('show');
+        });
+
+        $('#btnConfirmGuardDownload').on('click', function() {
+            var weeks = $('#guardPdfWeeks').val();
+            var status = currentRosterStatus; // Send the status regardless of role
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' + 
+                '&siteId=' + currentGuardSiteId + 
+                '&startDate=' + guardRosterStartDate + 
+                '&weeks=' + weeks + 
+                '&includeFinancials=' + isAdminFinancialsOn + 
+                '&rateType=' + adminRateType + 
+                '&status=' + status +
+                '&includeSuppliers=' + isAdminSupplierOn;
+            window.open(url, '_blank');
+            $('#guardDownloadFilterModal').modal('hide');
+        });
+
+        // Admin Toggles
+        $('#adminFinancialToggle').on('change', function() {
+            isAdminFinancialsOn = $(this).is(':checked');
+            $('#adminRateTypeSwitch').prop('disabled', !isAdminFinancialsOn);
+            if (!isAdminFinancialsOn) {
+                $('#adminRateTypeSwitch').prop('checked', false);
+                adminRateType = 'guard';
+            }
+            loadGuardRoster();
+        });
+
+        $('#adminRateTypeSwitch').on('change', function() {
+            adminRateType = $(this).is(':checked') ? 'sell' : 'guard';
+            loadGuardRoster();
+        });
+
+        // New Truck Toggle logic
+        $('#adminTruckToggle').on('change', function() {
+            isAdminSupplierOn = $(this).is(':checked');
+            loadGuardRoster();
+        });
+
+        $('#adminRosterStatus').on('change', function() {
+            saveAdminRosterStatus($(this).val());
+        });
+    });
+
+    function openGuardRosterPortal(siteId, _isAdmin) {
+        currentGuardSiteId = siteId;
+        isAdminRoster = _isAdmin === true;
+        
+        if (isAdminRoster) {
+            $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
+        } else {
+            $('#guardRosterAdminControls').removeClass('d-flex').addClass('d-none');
+            isAdminFinancialsOn = false;
+            adminRateType = 'guard';
+            $('#adminFinancialToggle').prop('checked', false);
+            $('#adminRateTypeSwitch').prop('checked', false).prop('disabled', true);
+            $('#adminTruckToggle').prop('checked', false);
+            isAdminSupplierOn = false;
+        }
+
+        // Find Monday of current week
+        var today = new Date();
+        var day = today.getDay();
+        var diff = today.getDate() - day + (day == 0 ? -6 : 1);
+        var monday = new Date(today.setDate(diff));
+        guardRosterStartDate = monday.toISOString().split('T')[0];
+        
+        $('#guardRosterModal').modal('show');
+        loadGuardRoster();
+        if (isAdminRoster) loadAdminRosterStatus();
+    }
+
+    function loadAdminRosterStatus() {
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterStatus',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function(res) {
+                $('#adminRosterStatus').val(res.status || 'Live');
+                updateGridStatusDisplay(res.status || 'Live');
+            }
+        });
+    }
+
+    function updateGridStatusDisplay(status) {
+        var container = $('.admin-status-grid-display');
+        container.empty();
+        
+        if (status && status !== 'Live') {
+            var stampClass = status.toLowerCase();
+            container.append('<span class="guard-status-label">Status:</span>');
+            container.append('<div class="guard-status-stamp ' + stampClass + '">' + status.toUpperCase() + '</div>');
+        }
+    }
+
+    function saveAdminRosterStatus(newStatus) {
+         $.ajax({
+            url: '/roster/GuardRosterAction?handler=SaveRosterStatus',
+            type: 'POST',
+            container: '#guardRosterModal',
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
+            success: function(res) {
+                currentRosterStatus = newStatus;
+                updateGridStatusDisplay(newStatus);
+                
+                // Show Success Message
+                $('#spanUpdatedStatusName').text(newStatus.toUpperCase());
+                $('#rosterAdminAlert').removeClass('d-none').hide().fadeIn();
+                setTimeout(function() {
+                    $('#rosterAdminAlert').fadeOut();
+                }, 3000);
+            }
+        });
+    }
+
+    function loadGuardRoster() {
+        if (!currentGuardSiteId || !guardRosterStartDate) return;
+
+        var end = new Date(guardRosterStartDate);
+        end.setDate(end.getDate() + 6);
+        $('#guardWeekRangeText').html(formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
+
+        var tbody = $('#guard_roster_body');
+        var thead = $('#guard_roster_header tr');
+        var tfoot = $('#guard_roster_footer');
+        
+        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">LOADING ROSTER...</p></td></tr>');
+        tfoot.hide();
+
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function (res) {
+                tbody.empty();
+                thead.find('th:not(:first-child)').remove();
+                tfoot.find('td:not(:first-child)').remove();
+
+                if (!res.results || res.results.length === 0) {
+                    $('#guardRosterEmpty').removeClass('d-none');
+                    $('#guard_roster_grid').addClass('d-none');
+                    return;
+                }
+                $('#guardRosterEmpty').addClass('d-none');
+                $('#guard_roster_grid').removeClass('d-none');
+                tfoot.show();
+
+                // Inject Day Headers (Arranged like Booking)
+                var d = new Date(guardRosterStartDate);
+                for (var i = 0; i < 7; i++) {
+                    var dayDate = new Date(d);
+                    dayDate.setDate(d.getDate() + i);
+                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+                    thead.append('<th style="width: 12.14%;">' + dateStr + '</th>');
+                    tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0.00</span></div></td>');
+                }
+
+                var grandTotal = 0;
+                var dailyTotals = [0,0,0,0,0,0,0];
+
+                res.results.forEach(function (row) {
+                    var rowHtml = '<tr>' +
+                        '<td class="align-top px-3 text-left d-flex flex-column" style="min-height: 150px;">' + 
+                            '<div>' + 
+                                '<div class="guard-site-name">' + row.siteName + '</div>' + 
+                                '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
+                            '</div>' + 
+                            '<div class="admin-status-grid-display mt-auto pb-2"></div>' + 
+                        '</td>';
+
+                    row.days.forEach(function (dayShifts, index) {
+                        var loopDate = new Date(guardRosterStartDate);
+                        loopDate.setDate(loopDate.getDate() + index);
+                        
+                        var isPh = (res.holidays && isPublicHolidayAtDate(loopDate.getTime(), res.holidays, res.siteState));
+                        var phClass = isPh ? "guard-ph-highlight" : "";
+                        
+                        var weekendClass = "";
+                        if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
+                        else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
+                        
+                        rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '">';
+                        
+                        dayShifts.forEach(function (s) {
+                            var duration = parseFloat(s.durationHours);
+                            dailyTotals[index] += duration;
+                            grandTotal += duration;
+
+                            var statusClass = 'status-pushed';
+                            if (s.status === 1) statusClass = 'status-accepted';
+                            if (s.status === 2) statusClass = 'status-declined';
+
+                            var typeClass = '';
+                            if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                            else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                            var isRelief = s.reliefGuardId || s.reliefProviderName;
+
+                            rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
+                                '<div class="text-truncate font-weight-bold">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                '</div>' +
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
+                                (isAdminSupplierOn ? 
+                                    '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                    (!isAdminSupplierOn && s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '')
+                                ) +
+                                (isAdminFinancialsOn ? 
+                                    '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</div>' : 
+                                    ''
+                                ) +
+                                '</div>';
+                        });
+                        rowHtml += '</td>';
+                    });
+
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+                });
+
+                // Show Status Stamp in Grid
+                if (res.status) {
+                    currentRosterStatus = res.status;
+                    updateGridStatusDisplay(res.status);
+                    if (isAdminRoster) {
+                        $('#adminRosterStatus').val(res.status);
+                    }
+                }
+
+                // Update Totals
+                if (isAdminFinancialsOn) {
+                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotal.toFixed(2) + '</span>');
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotals[i].toFixed(2) + '</span>');
+                    }
+                } else {
+                    $('#guard_weekly_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, ""));
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).text(dailyTotals[i].toFixed(2).replace(/\.00$/, ""));
+                    }
+                }
+            },
+            error: function() {
+                tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
+            }
+        });
+    }
+
+    function isPublicHolidayAtDate(time, holidays, state) {
+        var date = new Date(time);
+        var dStr = date.toISOString().split('T')[0];
+        var siteState = (state || "").trim().toUpperCase();
+        
+        for (var i = 0; i < holidays.length; i++) {
+            var h = holidays[i];
+            var hStart = new Date(h.startDate).toISOString().split('T')[0];
+            var hEnd = new Date(h.expiryDate).toISOString().split('T')[0];
+            
+            if (dStr >= hStart && dStr <= hEnd) {
+                if (!h.states || h.states.length === 0 || h.states.indexOf("ALL") !== -1) return true;
+                if (h.states.indexOf(siteState) !== -1) return true;
+            }
+        }
+        return false;
+    }
+
+    function formatGuardDate(date) {
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function truncateGuardName(str, num) {
+        if (!str) return "";
+        if (str.length <= num) return str;
+        return str.slice(0, num) + '..';
+    }
+</script>

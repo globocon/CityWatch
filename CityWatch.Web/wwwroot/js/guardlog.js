@@ -1,4 +1,4 @@
-﻿
+
 var FileuploadFileChanged = null;
 $(function () {
 
@@ -10352,3 +10352,67 @@ if (typeof gridGuardLog !== 'undefined') {
 
 
 
+
+$(function () {
+    // Roster Dashboard Site Selector logic
+    $('#RosterSelector_ClientType').on('change', function () {
+        const option = $(this).val();
+        const clientSiteControl = $('#RosterSelector_ClientSite');
+        clientSiteControl.html('<option value="">Loading...</option>');
+
+        if (option == '') {
+            clientSiteControl.html('<option value="">Select</option>');
+            return false;
+        }
+
+        $.ajax({
+            url: '/Admin/Roster?handler=ClientSitesWithIds&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                clientSiteControl.html('');
+                clientSiteControl.append('<option value="">Select</option>')
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+            }
+        });
+    });
+
+    $('#btnRosterViewConfirm').on('click', function () {
+        $('#RosterSelectorValidationSummary').html('');
+        const licenseNo = $('#RosterAuth_LicenseNo').val();
+        const pin = $('#RosterAuth_PIN').val();
+        const siteId = $('#RosterSelector_ClientSite').val();
+
+        if (!licenseNo || !pin || !siteId) {
+            $('#RosterSelectorValidationSummary').html('Please fill in all fields.');
+            return;
+        }
+
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Roster?handler=VerifyGuardRosterAuth',
+            type: 'POST',
+            data: {
+                licenseNo: licenseNo,
+                pin: pin
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+                $('#mdlAuthGuardForRosterSelector').modal('hide');
+                // Open the roster modal for the selected site
+                if (typeof openGuardRosterPortal === 'function') {
+                    openGuardRosterPortal(siteId, result.isAdminRoster);
+                } else {
+                    alert('Roster component not loaded correctly.');
+                }
+            } else {
+                $('#RosterSelectorValidationSummary').html(result.message);
+            }
+        }).always(function () {
+            $('#loader').hide();
+        });
+    });
+});

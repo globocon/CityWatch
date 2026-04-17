@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Web.Services
@@ -38,11 +38,14 @@ else
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.Date" asp-format="{0:yyyy-MM-dd HH:mm:ss}" />
 <div id="loader" style="z-index: 99999"></div>
 <div class="row">
-    <div class="col-md-7">
+    <div class="col-md-3">
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
-    <div class="col-md-5" style="padding-left:61px;">
+    <div class="col-md-9 text-right">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+        <button type="button" class="btn btn-outline-primary" id="btnRosterDetails" title="Roster">
+            <i class="fa fa-calendar-o mr-1"></i> R
+        </button>
         @if (clientSiteSOp.Count != 0)
         {
 
@@ -91,8 +94,7 @@ else
             <button type="button" class="btn btn-outline-primary" id="btnSOP" aria-disabled="true">SOP</button>
         }
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
-        @* <a class="btn btn-outline-primary d-none" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a> *@
-        <button type="button" class="btn btn-outline-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId">Download PDF</button>
+        <button type="button" class="btn btn-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId"><i class="fa fa-download mr-1"></i>PDF</button>
         <a class="btn btn-primary" href="#" id="keyvehicle_offduty">Off Duty</a>
     </div>
 </div>
@@ -1471,5 +1473,6 @@ else
 
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
+    @await Html.PartialAsync("_GuardRosterModal")
 }
 @*to check whether the uploaded image is of person or vehicle - end*@

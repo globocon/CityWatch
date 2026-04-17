@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
@@ -57,13 +57,15 @@ else
     </div>
     <div class="col-md-2 p-0">
         <div class="float-right text-nowrap">
-            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+            Auto refresh in <span id="clockRefresh">04 min 00 sec</span>
         </div>
     </div>
     <div class="col-md-6">
         <div class="float-right">
-            @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
             <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+            <button type="button" class="btn btn-outline-primary" id="btnRosterDetails" title="Roster">
+                <i class="fa fa-calendar-o mr-1"></i> R
+            </button>
 
 
 
@@ -127,7 +129,7 @@ else
                 <i class="fa fa-qrcode" aria-hidden="true"></i>
             </button>
 
-            <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank"><i class="fa fa-download mr-1" aria-hidden="true"></i>PDF</a>
+            <a class="btn btn-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank"><i class="fa fa-download mr-1" aria-hidden="true"></i>PDF</a>
             <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
         </div>
     </div>
@@ -1389,5 +1391,5 @@ else
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
+    @await Html.PartialAsync("_GuardRosterModal")
 }
-

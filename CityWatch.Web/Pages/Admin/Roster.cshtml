@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Web.Helpers
 @model CityWatch.Web.Pages.Admin.RosterModel
 @{
@@ -45,7 +45,7 @@
         <div class="col-sm-3">
             <h3>ROSTERS</h3>
             <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
-                <a href="https://app.guardhousehq.com/au/account/login/" id="Ancompanysop3">
+                <a href="javascript:void(0);" id="BtnRosterAuthSelector" data-toggle="modal" data-target="#mdlAuthGuardForRosterSelector">
                     <img src="~/images/calender.png" class="center" />
                 </a>
             </div>
@@ -89,6 +89,70 @@
     <div id="dvformsandtemplates"><a href="/Incident/Downloads?type=3" id="Anformsandtemplates"><img src="~/images/formsandtemplates.png" class="center" /></a></div>
 </div> *@
 @Html.AntiForgeryToken()
+<!----------------- Guard Roster Selector Modal -------------------->
+<div class="modal fade" id="mdlAuthGuardForRosterSelector" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthGuardForRosterSelectorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Roster Access Authentication</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <div class="alert alert-info py-3 mb-3 text-center">
+                        <i class="fa fa-shield fa-2x mb-2 opacity-50"></i>
+                        <h6 class="font-weight-bold">System Administrator Access</h6>
+                        <p class="small mb-0">You have elevated privileges. Please select a site to proceed.</p>
+                    </div>
+                    <input type="hidden" id="RosterAuth_LicenseNo" value="ADMIN" />
+                    <input type="hidden" id="RosterAuth_PIN" value="ADMIN" />
+                }
+                else
+                {
+                    <div class="form-row pb-3">
+                        <div class="form-group col-md-12">
+                            <label>Security License No.</label>
+                            <input class="form-control" id="RosterAuth_LicenseNo" placeholder="Enter License No">
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label>HR PIN</label>
+                            <input type="password" class="form-control" id="RosterAuth_PIN" placeholder="Enter PIN">
+                        </div>
+                    </div>
+                }
+                <hr />
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="RosterSelector_ClientType">Client Type</label>
+                        <select class="form-control" id="RosterSelector_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="RosterSelector_ClientSite">Client Site</label>
+                        <select class="form-control" id="RosterSelector_ClientSite">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col text-right">
+                        <button type="button" class="btn btn-primary" id="btnRosterViewConfirm">View Roster</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div id="RosterSelectorValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!----------------- Guard Details Modal -------------------->
 <div class="modal fade" id="mdlAuthGuardForSopDownload" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateGuardForSopDownload" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -273,19 +337,6 @@
                                 </div>
                                 <div class="mt-2 d-flex justify-content-between align-items-center">
                                     <div class="text-start" style="flex-grow: 1;">
-                                        <a href="#" id="forgotRosterpassword" style="text-align: left; display: inline-block;">Forgot password?</a>
-                                        <div class="spinner-border spinner-border-sm pl-2 d-none" id="spinner" role="status">
-                                            <span class="sr-only">Loading...</span>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn btn-primary" id="btnGuardRosterUpdate" title="Get Access to Roster">
-                                        <i class="fa fa-sign-in mr-2"></i>
-                                        <span class="d-none d-md-inline-flex"></span>
-                                    </button>
-                                    <input type="hidden" id="hidden_rosterguardId"  />
-                                    <input type="hidden" id="hidden_rosterguardLicenses" />
-                                </div>
-                            </div>
                         </div>
                     </form>
                 </div>
@@ -301,5 +352,9 @@
 
 @section PageHeader {
     <h3 class="text-center">ROSTERS</h3>
+}
+
+@section scripts {
+    @await Html.PartialAsync("../Guard/_GuardRosterModal")
 }
 
