@@ -1637,9 +1637,18 @@
                 $('#modalReliefReason').val(selectedReason);
             });
 
-            // Default LWOP logic when Relief Guard is selected for the first time
-            $('#modalReliefGuardId').on('select2:select', function() {
-                if ($('.relief-reason-chk:checked').length === 0) {
+            // Default LWOP logic when Relief is enabled (Guard or Provider selected)
+            $('#modalReliefGuardId, #modalReliefProviderId').on('change select2:select', function() {
+                var hasRelief = $('#modalReliefGuardId').val() || $('#modalReliefProviderId').val();
+                if (hasRelief && $('.relief-reason-chk:checked').length === 0) {
+                    $('#chkLWOP').prop('checked', true).trigger('change');
+                }
+            });
+
+            // Fallback: Check when switching to relief tab
+            $('#modal-relief-tab').on('shown.bs.tab', function() {
+                var hasRelief = $('#modalReliefGuardId').val() || $('#modalReliefProviderId').val();
+                if (hasRelief && $('.relief-reason-chk:checked').length === 0) {
                     $('#chkLWOP').prop('checked', true).trigger('change');
                 }
             });
