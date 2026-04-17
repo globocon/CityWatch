@@ -105,7 +105,7 @@ namespace CityWatch.Web.Pages.roster
                 .ToListAsync();
 
             var statusObj = await _context.RosterSiteWeekStatuses
-                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.WeekStartDate == startDate);
+                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == startDate);
             var status = statusObj?.Status ?? "Live";
 
             return new JsonResult(new { results, holidays, siteState = site?.State, status });
