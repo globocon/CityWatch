@@ -5276,7 +5276,7 @@
                                 <form id="frm_guard_unavailability">
                                     <div class="form-group row mb-0 align-items-center">
                                                                             
-                                        <div class="col-md-5 d-flex flex-wrap">
+                                        <div class="col-md-5 d-flex flex-wrap align-items-center">
                                             <div class="custom-control custom-checkbox mr-3">
                                                 <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Sick" value="Sick">
                                                 <label class="custom-control-label" for="unav_Sick">Sick</label>
@@ -5293,9 +5293,10 @@
                                                 <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_LWOP" value="LWOP">
                                                 <label class="custom-control-label" for="unav_LWOP">LWOP</label>
                                             </div>
-                                            <div class="custom-control custom-checkbox">
+                                            <div class="custom-control custom-checkbox d-flex align-items-center">
                                                 <input type="checkbox" class="custom-control-input unavail-reason-chk" id="unav_Other" value="Other">
                                                 <label class="custom-control-label" for="unav_Other">Other</label>
+                                                <input type="text" id="unav_OtherNotes" class="form-control form-control-sm ml-2" placeholder="Notes..." style="display:none; width: 120px;">
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -5312,6 +5313,10 @@
                                         </div>
                                     </div>
                                 </form>
+                                <div class="mt-4 pl-2" style="color:red; font-weight:bold; font-size:0.95rem;">
+                                    <span>NOTE: &nbsp; This input will deny ability for guard to be rostered on FUTURE shifts during unavailable period</span><br />
+                                    <span style="padding-left:55px;">For existing shift, assumption is guard is ALREADY on roster and RELIEF tab completed</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6022,8 +6027,16 @@
                 }
 
                 let reason = $('.unavail-reason-chk:checked').val();
+                let reasonOther = $('#unav_OtherNotes').val();
+
                 if (!reason) {
                     alert("Please select a reason for unavailability.");
+                    return;
+                }
+
+                if (reason === "Other" && !reasonOther.trim()) {
+                    alert('Please specify the "Other" reason note.');
+                    $('#unav_OtherNotes').focus();
                     return;
                 }
 
@@ -6034,11 +6047,12 @@
                     url: '/Admin/Settings?handler=SaveGuardUnavailability',
                     type: 'POST',
                     headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    data: { guardId: currentGuardId, reason: reason, fromDate: fromDate, toDate: toDate }
+                    data: { guardId: currentGuardId, reason: reason, reasonOther: reasonOther, fromDate: fromDate, toDate: toDate }
                 }).done(function (res) {
                     if (res.success) {
                         alert(res.message);
                         $('.unavail-reason-chk').prop('checked', false);
+                        $('#unav_OtherNotes').hide().val('');
                         $('#unav_From').val('');
                         $('#unav_To').val('');
                     } else {
@@ -6080,7 +6094,12 @@
                         let diffTime = Math.abs(endDate - startDate);
                         let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                         let durationMsg = diffDays + (diffDays === 1 ? ' Day' : ' Days');
-                        let reasonWithDuration = lbl.reason + ' <small class="text-muted">(' + durationMsg + ')</small>';
+                        
+                        let displayReason = lbl.reason;
+                        if (lbl.reason === "Other" && lbl.reasonOther) {
+                            displayReason += ' (' + lbl.reasonOther + ')';
+                        }
+                        let reasonWithDuration = displayReason + ' <small class="text-muted">(' + durationMsg + ')</small>';
 
                         tbody.append('<tr><td>' + f + '</td><td>' + t + '</td><td>' + reasonWithDuration + '</td><td class="text-center"><button class="btn btn-sm btn-danger btn-del-leave" data-id="' + lbl.id + '"><i class="fa fa-trash"></i></button></td></tr>');
                     });
@@ -6105,7 +6124,15 @@
             });
 
             $('.unavail-reason-chk').on('change', function() {
-                $('.unavail-reason-chk').not(this).prop('checked', false);
+                if ($(this).is(':checked')) {
+                    $('.unavail-reason-chk').not(this).prop('checked', false);
+                }
+                
+                if ($('#unav_Other').is(':checked')) {
+                    $('#unav_OtherNotes').show();
+                } else {
+                    $('#unav_OtherNotes').hide().val('');
+                }
             });
         });
     </script>

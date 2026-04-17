@@ -1473,6 +1473,7 @@ namespace CityWatch.Data.Providers
                 if (existing != null)
                 {
                     existing.Reason = record.Reason;
+                    existing.ReasonOther = record.ReasonOther;
                     existing.FromDate = record.FromDate;
                     existing.ToDate = record.ToDate;
                 }

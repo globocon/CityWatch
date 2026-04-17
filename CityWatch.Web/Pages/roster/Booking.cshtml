@@ -477,9 +477,10 @@
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkLWOP" value="LWOP">
                                         <label class="custom-control-label" for="chkLWOP">LWOP</label>
                                     </div>
-                                    <div class="custom-control custom-checkbox mb-1">
+                                    <div class="custom-control custom-checkbox mb-1 d-flex align-items-center">
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
                                         <label class="custom-control-label" for="chkOther">Other</label>
+                                        <input type="text" id="modalReliefReasonOther" class="form-control form-control-sm ml-2" placeholder="Specify reason..." style="display:none; width: 150px;">
                                     </div>
                                 </div>
                                 <input type="hidden" id="modalReliefReason" />
@@ -1619,13 +1620,28 @@
                 $('#modalReliefReason').val('');
             });
 
-            // Relief Reason Checkbox Logic
+            // Relief Reason Checkbox Logic (Mutual Exclusivity)
             $('.relief-reason-chk').on('change', function() {
-                var reasons = [];
-                $('.relief-reason-chk:checked').each(function() {
-                    reasons.push($(this).val());
-                });
-                $('#modalReliefReason').val(reasons.join(', '));
+                if ($(this).is(':checked')) {
+                    $('.relief-reason-chk').not(this).prop('checked', false);
+                }
+                
+                var isOther = $('#chkOther').is(':checked');
+                if (isOther) {
+                    $('#modalReliefReasonOther').show();
+                } else {
+                    $('#modalReliefReasonOther').hide().val('');
+                }
+
+                var selectedReason = $('.relief-reason-chk:checked').val() || '';
+                $('#modalReliefReason').val(selectedReason);
+            });
+
+            // Default LWOP logic when Relief Guard is selected for the first time
+            $('#modalReliefGuardId').on('select2:select', function() {
+                if ($('.relief-reason-chk:checked').length === 0) {
+                    $('#chkLWOP').prop('checked', true).trigger('change');
+                }
             });
 
             $('#modalPositionId').on('select2:select', function (e) {
@@ -1716,7 +1732,7 @@
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
+                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
@@ -1968,11 +1984,18 @@
 
                 $('#modalReliefReason').val(rReason || "");
                 $('.relief-reason-chk').prop('checked', false);
+                $('#modalReliefReasonOther').hide().val('');
+
                 if (rReason) {
                     var reasons = rReason.split(', ');
                     reasons.forEach(function(r) {
                         $('.relief-reason-chk[value="' + r + '"]').prop('checked', true);
                     });
+
+                    if ($('#chkOther').is(':checked')) {
+                        var otherNote = card.data('reliefreasonother') || "";
+                        $('#modalReliefReasonOther').show().val(otherNote);
+                    }
                 }
                 $('#modal-guard-tab').tab('show');
 
@@ -2031,6 +2054,7 @@
                 var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
 
                 var reliefReason = $('#modalReliefReason').val();
+                var reliefReasonOther = $('#modalReliefReasonOther').val();
 
                 var shiftType = $('#modalShiftType').val();
 
@@ -2053,6 +2077,20 @@
                 if (startTime >= endTime) {
                     alert('End Time must be after Start Time.');
                     return;
+                }
+
+                // Client-side Validation 3: Relief Reason Validation
+                if (reliefGuardId || reliefProviderName) {
+                    if (!reliefReason) {
+                        alert('Please select a Reason for Relief.');
+                        $('#modal-relief-tab').tab('show');
+                        return;
+                    }
+                    if ($('#chkOther').is(':checked') && !reliefReasonOther.trim()) {
+                        alert('Please specify the "Other" relief reason.');
+                        $('#modalReliefReasonOther').focus();
+                        return;
+                    }
                 }
 
                 // Calculate actual DateTimes
@@ -2079,6 +2117,7 @@
                         reliefGuardId: reliefGuardId,
                         reliefProviderName: reliefProviderName,
                         reliefReason: reliefReason,
+                        reliefReasonOther: reliefReasonOther,
                         shiftType: shiftType
                     },
                     success: function (res) {
