@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
@@ -57,17 +57,13 @@ else
     </div>
     <div class="col-md-2 p-0">
         <div class="float-right text-nowrap">
-            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+            Auto refresh in <span id="clockRefresh">04 min 00 sec</span>
         </div>
     </div>
     <div class="col-md-6">
         <div class="float-right">
-            @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
             <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
-
-
-
-
+            <button type="button" class="btn btn-outline-primary" title="Roster" id="btnRosterDetails"><i class="fa fa-calendar-o mr-1" aria-hidden="true" style="color: #007bff;"></i>R</button>
 
             @if (clientSiteSOp.Count != 0)
             {
@@ -117,12 +113,10 @@ else
                 <button type="button" class="btn btn-outline-primary" id="btnSOP" aria-disabled="true">SOP</button>
             }
 
-
             <a class="btn btn-outline-primary" id="generate_log_AlldocketList" href="#">POI List</a>
-            
+
             <a class="btn btn-outline-primary" id="btnHO" href="#"><i class="fa fa-handshake-o mr-1" aria-hidden="true"></i>HO</a>
-            <!-- QR Code Button -->
-            
+
             <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#staticBackdrop">
                 <i class="fa fa-qrcode" aria-hidden="true"></i>
             </button>

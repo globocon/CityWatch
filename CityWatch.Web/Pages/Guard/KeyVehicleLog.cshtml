@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Web.Services
@@ -43,6 +43,7 @@ else
     </div>
     <div class="col-md-5" style="padding-left:61px;">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+        <button type="button" class="btn btn-outline-primary" title="Roster" id="btnRosterDetails"><i class="fa fa-calendar-o mr-1" aria-hidden="true" style="color: #007bff;"></i>R</button>
         @if (clientSiteSOp.Count != 0)
         {
 
