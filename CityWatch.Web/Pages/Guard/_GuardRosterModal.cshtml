@@ -105,6 +105,8 @@
     .guard-day-cell { transition: background-color 0.2s ease; }
     .guard-day-cell:hover { background-color: #f8f9fa; }
     .guard-ph-highlight { background-color: #FFF9C4 !important; }
+    .guard-sat-highlight { background-color: #d7f0d7 !important; }
+    .guard-sun-highlight { background-color: #fce4ec !important; }
 
     /* Shift Card Styles matched to Booking module */
     .guard-shift-card {
@@ -255,10 +257,17 @@
                         '<td class="align-middle px-3"><div class="guard-site-name">' + row.siteName + '</div><div class="guard-client-type">' + row.clientTypeName + '</div></td>';
 
                     row.days.forEach(function (dayShifts, index) {
-                        var isPh = (res.holidays && isPublicHolidayAtDate(new Date(guardRosterStartDate).setDate(new Date(guardRosterStartDate).getDate() + index), res.holidays, res.siteState));
+                        var loopDate = new Date(guardRosterStartDate);
+                        loopDate.setDate(loopDate.getDate() + index);
+                        
+                        var isPh = (res.holidays && isPublicHolidayAtDate(loopDate.getTime(), res.holidays, res.siteState));
                         var phClass = isPh ? "guard-ph-highlight" : "";
                         
-                        rowHtml += '<td class="guard-day-cell ' + phClass + '">';
+                        var weekendClass = "";
+                        if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
+                        else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
+                        
+                        rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '">';
                         
                         dayShifts.forEach(function (s) {
                             var statusClass = 'status-pushed';
