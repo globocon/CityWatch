@@ -1,41 +1,35 @@
 <div class="modal fade" id="guardRosterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
     <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
         <div class="modal-content border-0 shadow-lg overflow-hidden">
-            <div class="modal-header bg-dark text-white p-3 border-0 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                        <i class="fa fa-calendar-check-o text-white small"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title font-weight-bold mb-0" id="guardWeekRangeText">Site Roster: Loading...</h5>
-                    </div>
+            <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
+                    <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="guardWeekRangeText">Loading...</span>
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
                 </div>
                 <div class="d-flex align-items-center">
-                    <div class="btn-group mr-3 shadow-sm bg-white rounded-pill p-1">
-                        <button class="btn btn-sm btn-light border-0 rounded-circle" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left text-primary"></i></button>
-                        <button class="btn btn-sm btn-light border-0 mx-1 px-3 font-weight-bold" disabled>Navigation</button>
-                        <button class="btn btn-sm btn-light border-0 rounded-circle" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right text-primary"></i></button>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
-                        <i class="fa fa-download mr-2"></i>Download PDF
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
+                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
                     </button>
-                    <button type="button" class="close text-white opacity-100 p-0 m-0" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
                     </button>
                 </div>
             </div>
             <div class="modal-body p-0 bg-light" style="min-height: 500px;">
-                <div id="guardRosterEmpty" class="d-none text-center py-5">
-                    <div class="opacity-25"><i class="fa fa-calendar-times-o fa-5x"></i></div>
-                    <h4 class="mt-4 text-muted">No Roster Found</h4>
-                    <p class="text-muted small">We couldn't find any scheduled shifts for this site in the selected week.</p>
+                <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
+                    <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
+                        <i class="fa fa-calendar-times-o"></i>
+                    </div>
+                    <h4 class="text-secondary mb-3" style="font-weight: 300;">No Roster Found</h4>
+                    <p class="text-muted mb-0">We couldn't find any scheduled shifts for this site in the selected week.</p>
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-bordered roster-grid mb-0" id="guard_roster_grid">
-                        <thead class="bg-white" id="guard_roster_header">
-                            <tr class="text-center text-uppercase text-muted small font-weight-bold">
-                                <th style="width: 180px; vertical-align: middle;" class="bg-light">Project / Site</th>
+                    <table class="table table-bordered mb-0" id="guard_roster_grid">
+                        <thead id="guard_roster_header">
+                            <tr>
+                                <th style="width: 15%;" class="align-middle">Client Site</th>
                                 <!-- Day headers will be injected here -->
                             </tr>
                         </thead>
@@ -73,75 +67,105 @@
 </div>
 
 <style>
-    .roster-grid { table-layout: fixed; min-width: 1000px; border-collapse: separate; border-spacing: 0; }
-    .roster-grid th, .roster-grid td { border-color: rgba(0,0,0,0.06) !important; padding: 10px !important; }
-    .roster-grid th { font-size: 10px; letter-spacing: 1px; }
+    /* Table Styling matched to Booking module */
+    #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
     
-    .guard-day-cell { vertical-align: top; background: #fff; transition: all 0.2s; }
-    .guard-day-cell:hover { background: #fdfdfd; }
-    .guard-ph-highlight { background-color: #fff9c4 !important; }
-    
-    .guard-shift-card {
-        margin-bottom: 8px;
-        padding: 8px;
-        border-radius: 6px;
-        color: #2c3e50;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        border: 1px solid rgba(0,0,0,0.05);
+    #guard_roster_grid thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        font-weight: 600;
+        text-transform: uppercase;
         font-size: 11px;
-        position: relative;
-        transition: transform 0.1s;
+        letter-spacing: 0.5px;
+        padding: 12px 8px;
+        border: none !important;
+        text-align: center;
     }
-    .guard-shift-card:hover { transform: scale(1.02); z-index: 10; cursor: default; }
 
-    .status-accepted { background: #fff3e0; border-left: 3px solid #ffb74d; }
-    .status-declined { background: #ffebee; border-left: 3px solid #ef5350; }
-    .status-pushed { background: #f1f8e9; border-left: 3px solid #81c784; }
+    #guard_roster_grid tbody td {
+        padding: 10px 8px !important;
+        vertical-align: top;
+        border-color: #dee2e6 !important;
+    }
+
+    .guard-site-name {
+        color: #007bff;
+        font-weight: 700;
+        font-size: 13.5px;
+        line-height: 1.2;
+    }
+    
+    .guard-client-type {
+        font-size: 10px;
+        color: #6c757d;
+        margin-top: 3px;
+        font-weight: 500;
+    }
+
+    .guard-day-cell { transition: background-color 0.2s ease; }
+    .guard-day-cell:hover { background-color: #f8f9fa; }
+    .guard-ph-highlight { background-color: #FFF9C4 !important; }
+
+    /* Shift Card Styles matched to Booking module */
+    .guard-shift-card {
+        position: relative;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* Default fallback */
+        color: white;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        font-size: 10.5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 3px solid rgba(255,255,255,0.3);
+    }
+    .guard-shift-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; }
+
+    .status-pushed, .status-accepted { 
+        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%) !important; 
+    }
+    .status-declined { 
+        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; 
+    }
 
     /* Relief Card Styles */
     .guard-shift-card.shift-relief { 
-        background: #6f42c1; 
-        color: white; 
-        border-left: 3px solid #4527a0;
+        background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; 
+        border-left: 3px solid #e1bee7 !important;
     }
     .guard-relief-badge {
+        background-color: #ffffff;
+        color: #6f42c1;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: bold;
         display: inline-block;
-        background: rgba(255,255,255,0.2);
-        color: white;
-        border-radius: 4px;
-        padding: 0 5px;
-        margin-right: 6px;
-        font-size: 10px;
-        font-weight: 900;
-        border: 1px solid rgba(255,255,255,0.4);
+        margin-right: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
     /* Adhoc Styles */
     .guard-shift-card.adhoc-accepted { 
-        background: #1b5e20; 
-        color: white; 
-        border-left: 3px solid #144414;
+        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important; 
+        border-left: 3px solid #81C784 !important;
     }
     .guard-shift-card.adhoc-not-accepted { 
-        background: #e65100; 
-        color: white; 
-        border-right: 3px solid #ff9800;
+        background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important; 
+        border-left: 3px solid #FFB74D !important;
+    }
+
+    .guard-shift-license {
+        font-size: 9px;
+        color: rgba(255,255,255,0.85);
+        margin-top: 3px;
+        font-weight: 300;
     }
 
     .guard-shift-time {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 6px;
-        padding-top: 6px;
-        border-top: 1px solid rgba(0,0,0,0.06);
         font-weight: 700;
-    }
-    
-    .guard-shift-card.shift-relief .guard-shift-time,
-    .guard-shift-card.adhoc-accepted .guard-shift-time,
-    .guard-shift-card.adhoc-not-accepted .guard-shift-time {
-        border-top-color: rgba(255, 255, 255, 0.2);
+        margin-top: 4px;
+        font-size: 10px;
     }
 </style>
 
@@ -194,12 +218,12 @@
 
         var end = new Date(guardRosterStartDate);
         end.setDate(end.getDate() + 6);
-        $('#guardWeekRangeText').html('<i class="fa fa-clock mr-2 opacity-75 small"></i>' + formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
+        $('#guardWeekRangeText').html(formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
 
-        var tbody = $('#guard_roster_header').parent().parent().find('tbody');
-        var thead = $('#guard_roster_header');
+        var tbody = $('#guard_roster_body');
+        var thead = $('#guard_roster_header tr');
         
-        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">GENERATING VIEW...</p></td></tr>');
+        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">LOADING ROSTER...</p></td></tr>');
 
         $.ajax({
             url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
@@ -217,18 +241,18 @@
                 $('#guardRosterEmpty').addClass('d-none');
                 $('#guard_roster_grid').removeClass('d-none');
 
-                // Inject Day Headers
+                // Inject Day Headers (Arranged like Booking)
                 var d = new Date(guardRosterStartDate);
                 for (var i = 0; i < 7; i++) {
                     var dayDate = new Date(d);
                     dayDate.setDate(d.getDate() + i);
-                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit' }).toUpperCase();
-                    thead.append('<th>' + dateStr + '</th>');
+                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+                    thead.append('<th style="width: 12.14%;">' + dateStr + '</th>');
                 }
 
                 res.results.forEach(function (row) {
                     var rowHtml = '<tr>' +
-                        '<td class="bg-light align-middle"><div class="font-weight-bold text-primary">' + row.siteName + '</div><div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">' + row.clientTypeName + '</div></td>';
+                        '<td class="align-middle px-3"><div class="guard-site-name">' + row.siteName + '</div><div class="guard-client-type">' + row.clientTypeName + '</div></td>';
 
                     row.days.forEach(function (dayShifts, index) {
                         var isPh = (res.holidays && isPublicHolidayAtDate(new Date(guardRosterStartDate).setDate(new Date(guardRosterStartDate).getDate() + index), res.holidays, res.siteState));
@@ -248,17 +272,14 @@
                             var isRelief = s.reliefGuardId || s.reliefProviderName;
 
                             rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
-                                '<div class="text-truncate font-weight-bold" style="font-size: 11px;">' + 
-                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user-circle mr-2 opacity-50"></i>') + 
+                                '<div class="text-truncate font-weight-bold">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
                                     (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
                                 '</div>' +
-                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 9px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
-                                '<div class="mt-1 opacity-75" style="font-size: 9px; font-weight: 600;">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                '<div class="guard-shift-time">' +
-                                    '<span>' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                    '<span class="badge badge-pill badge-dark px-2" style="font-size: 8px; opacity: 0.6; font-weight: 600;">' + s.durationHours.toString().replace(/\.00$/, "") + 'H</span>' +
-                                '</div>' +
-                                (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;"><i class="fa fa-hashtag mr-1"></i>' + s.callsignName + '</div>' : '') +
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'H)</div>' +
+                                (s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '') +
                                 '</div>';
                         });
                         rowHtml += '</td>';
@@ -293,7 +314,7 @@
     }
 
     function formatGuardDate(date) {
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
     function truncateGuardName(str, num) {
