@@ -146,7 +146,20 @@ namespace CityWatch.Web.Services
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
                             headerTable.AddCell(titleCell);
-                            headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                            
+                            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                            var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+                            if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                            {
+                                try
+                                {
+                                    var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                    var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                    cellSiteImage.Add(siteImage);
+                                }
+                                catch { }
+                            }
+                            headerTable.AddCell(cellSiteImage);
                             document.Add(headerTable);
                             document.Add(new Paragraph("\n"));
 
