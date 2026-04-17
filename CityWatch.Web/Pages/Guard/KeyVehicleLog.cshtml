@@ -37,10 +37,11 @@ else
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.Date" asp-format="{0:yyyy-MM-dd HH:mm:ss}" />
 <div id="loader" style="z-index: 99999"></div>
-    <div class="col-md-6">
+<div class="row">
+    <div class="col-md-3">
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
-    <div class="col-md-6 text-right">
+    <div class="col-md-9 text-right">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
         <button type="button" class="btn btn-outline-primary" id="btnRosterDetails" title="Roster">
             <i class="fa fa-calendar-o mr-1"></i> R
