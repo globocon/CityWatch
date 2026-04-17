@@ -1,5 +1,5 @@
-﻿let nIntervId;
-const duration = 60 * 3;
+let nIntervId;
+const duration = 60 * 4;
 var isPaused = false;
 var playedMessageIds = []; // Track played messages to prevent looping sound
 

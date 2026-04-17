@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
@@ -57,12 +57,13 @@ else
     </div>
     <div class="col-md-2 p-0">
         <div class="float-right text-nowrap">
-            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+            Auto refresh in <span id="clockRefresh">04 min 00 sec</span>
         </div>
     </div>
     <div class="col-md-6">
         <div class="float-right">
             @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
+            <button type="button" class="btn btn-outline-primary p-1" title="Roster" id="btnRosterDetails" style="min-width: 45px;"><i class="fa fa-calendar-o mr-1"></i><i class="fa fa-file-pdf-o"></i></button>
             <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
 
 
@@ -1390,4 +1391,4 @@ else
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
 }
-
+@await Html.PartialAsync("_GuardRosterModal")

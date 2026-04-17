@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Enums;
 @using CityWatch.Data.Models;
 @using CityWatch.Web.Services
@@ -43,6 +43,7 @@ else
     </div>
     <div class="col-md-5" style="padding-left:61px;">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+        <button type="button" class="btn btn-outline-primary p-1" title="Roster" id="btnRosterDetails" style="min-width: 45px;"><i class="fa fa-calendar-o mr-1"></i><i class="fa fa-file-pdf-o"></i></button>
         @if (clientSiteSOp.Count != 0)
         {
 
@@ -1472,4 +1473,5 @@ else
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
 }
+@await Html.PartialAsync("_GuardRosterModal")
 @*to check whether the uploaded image is of person or vehicle - end*@
