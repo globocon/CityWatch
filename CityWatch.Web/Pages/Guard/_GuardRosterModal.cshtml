@@ -111,7 +111,7 @@
 </div>
 
 <script>
-    (function($) {
+    jQuery(function($) {
         var currentSiteId = 0;
         var selectedStartDate = null;
 
@@ -139,6 +139,7 @@
                 return;
             }
 
+            // Using the standard HR document login handler to ensure PIN sync
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
                 type: 'POST',
@@ -151,6 +152,8 @@
                 } else {
                     $('#rosterPinError').text('Invalid PIN. Please try again.').show();
                 }
+            }).fail(function() {
+                $('#rosterPinError').text('Communication error. Please try again.').show();
             });
         }
 
@@ -223,12 +226,14 @@
             var guardShifts = {};
             
             // Group by guard
-            data.results.forEach(function(s) {
-                if (!guardShifts[s.guardName]) guardShifts[s.guardName] = {};
-                var dayStr = new Date(s.startDate).toISOString().split('T')[0];
-                if (!guardShifts[s.guardName][dayStr]) guardShifts[s.guardName][dayStr] = [];
-                guardShifts[s.guardName][dayStr].push(s);
-            });
+            if (data.results) {
+                data.results.forEach(function(s) {
+                    if (!guardShifts[s.guardName]) guardShifts[s.guardName] = {};
+                    var dayStr = new Date(s.startDate).toISOString().split('T')[0];
+                    if (!guardShifts[s.guardName][dayStr]) guardShifts[s.guardName][dayStr] = [];
+                    guardShifts[s.guardName][dayStr].push(s);
+                });
+            }
 
             var guards = Object.keys(guardShifts).sort();
             if (guards.length === 0) {
@@ -246,7 +251,7 @@
                         var cellClass = isPH ? 'ph-highlight' : (isWeekend ? 'weekend-highlight' : '');
                         
                         bodyHtml += `<td class="${cellClass}">`;
-                        if (guardShifts[name][dayStr]) {
+                        if (guardShifts[name] && guardShifts[name][dayStr]) {
                             guardShifts[name][dayStr].forEach(function(s) {
                                 var isRelief = s.guardName.indexOf('{R}') === 0;
                                 var cardClass = isRelief ? 'roster-shift-relief' : 'roster-shift-regular';
@@ -286,6 +291,5 @@
         $('#btnDownloadRosterPdf').on('click', function() {
             window.open(`/roster/GuardRosterAction?handler=DownloadSiteRosterPdf&siteId=${currentSiteId}&startDate=${selectedStartDate}`, '_blank');
         });
-
-    })(jQuery);
+    });
 </script>
