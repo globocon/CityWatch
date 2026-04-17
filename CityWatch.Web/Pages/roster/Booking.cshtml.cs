@@ -1007,7 +1007,11 @@ namespace CityWatch.Web.Pages.roster
                                 ShiftEnd = newEnd,
                                 Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
                                 PayRateId = source.PayRateId,
-                                CallsignId = source.CallsignId
+                                CallsignId = source.CallsignId,
+                                ReliefGuardId = source.ReliefGuardId,
+                                ReliefProviderName = source.ReliefProviderName,
+                                ReliefReason = source.ReliefReason,
+                                ShiftType = source.ShiftType
                             });
                         }
                     }
