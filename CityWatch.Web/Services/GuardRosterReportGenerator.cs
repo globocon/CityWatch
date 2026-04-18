@@ -216,7 +216,7 @@ namespace CityWatch.Web.Services
 
                                  foreach (var shift in dayShifts)
                                 {
-                                    var duration = (shift.ShiftEnd - shift.ShiftStart).TotalHours;
+                                    var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                     dailyTotals[i] += duration;
                                     projectWeeklyGrandTotal += duration;
 
