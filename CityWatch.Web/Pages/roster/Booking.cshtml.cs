@@ -260,7 +260,7 @@ namespace CityWatch.Web.Pages.roster
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
                 // Injection of status for UI stamp rendering
-                status = weekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? "Live",
+                status = weekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? (schedules.Any(s => s.ClientSiteId == gs.ClientSiteId) ? "Live" : ""),
                 isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
                 publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>

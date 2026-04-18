@@ -138,9 +138,15 @@
         letter-spacing: 0.5px;
         padding: 12px 8px;
         border: none !important;
-        text-align: center;
     }
-
+    .status-stamp-img {
+        max-width: 100px;
+        height: auto;
+        display: block;
+        margin: 5px auto 0;
+    }
+</style>
+<script>
     #guard_roster_grid tbody td {
         padding: 10px 8px !important;
         vertical-align: top;
@@ -376,12 +382,22 @@
         var container = $('.admin-status-grid-display');
         container.empty();
         
-        if (status && status !== 'Live') {
-            var stampClass = status.toLowerCase();
-            container.append('<span class="guard-status-label">Status:</span>');
-            container.append('<div class="guard-status-stamp ' + stampClass + '">' + status.toUpperCase() + '</div>');
+        if (status) {
+            var imgName = '';
+            switch(status.toUpperCase()) {
+                case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+            }
+            if (imgName) {
+                container.append('<div class="text-center">' + 
+                                 '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                 '</div>');
+            }
         }
     }
+
 
     function saveAdminRosterStatus(newStatus) {
          $.ajax({

@@ -54,7 +54,14 @@
     .ph-highlight {
         background-color: #ffffcc !important;
     }
+    .status-stamp-img {
+        max-width: 100px;
+        height: auto;
+        display: block;
+        margin: 5px auto 0;
+    }
 </style>
+
 
 
 
@@ -1705,12 +1712,21 @@
 
                         res.results.forEach(function (row) {
                             var statusHtml = '';
-                            if (row.status && row.status !== 'Live') {
-                                statusHtml = '<div class="status-grid-display mt-auto pb-1">' + 
-                                               '<span class="guard-status-label">Status:</span>' + 
-                                               '<div class="guard-status-stamp ' + row.status.toLowerCase() + '">' + row.status.toUpperCase() + '</div>' + 
-                                             '</div>';
+                            if (row.status) {
+                                var imgName = '';
+                                switch(row.status.toUpperCase()) {
+                                    case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                                    case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                                    case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                }
+                                if (imgName) {
+                                    statusHtml = '<div class="mt-auto pb-1 text-center">' + 
+                                                   '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + row.status + '" />' + 
+                                                 '</div>';
+                                }
                             }
+
 
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
                                 '<td class="d-flex flex-column" style="min-height: 120px;">' + 
@@ -2717,12 +2733,21 @@
 
                             project.sites.forEach(function (site) {
                                 var statusHtml = '';
-                                if (site.status && site.status !== 'Live') {
-                                    statusHtml = '<div class="status-grid-display mt-auto pb-1">' + 
-                                                   '<span class="guard-status-label">Status:</span>' + 
-                                                   '<div class="guard-status-stamp ' + site.status.toLowerCase() + '">' + site.status.toUpperCase() + '</div>' + 
-                                                 '</div>';
+                                if (site.status) {
+                                    var imgName = '';
+                                    switch(site.status.toUpperCase()) {
+                                        case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                                        case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                                        case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                    }
+                                    if (imgName) {
+                                        statusHtml = '<div class="mt-auto pb-1 text-center">' + 
+                                                       '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + site.status + '" />' + 
+                                                     '</div>';
+                                    }
                                 }
+
 
                                 var rowHtml = '<tr>' +
                                     '<td class="d-flex flex-column" style="min-height: 120px;">' + 
