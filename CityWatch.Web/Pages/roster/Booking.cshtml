@@ -170,7 +170,7 @@
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
                                     var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
-                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL");
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday;
                                     var anyPh = ph != null && ph.IsPublicHoliday;
 
                                     <th style="width: 12.14%;" title="@(isNationalPh ? ph.Reasons : "")">
@@ -302,7 +302,7 @@
                                 {
                                     var currentDay = Model.StartDate.AddDays(i);
                                     var ph = Model.WeeklyHolidays != null && i < Model.WeeklyHolidays.Count ? Model.WeeklyHolidays[i] : null;
-                                    var isNationalPh = ph != null && ph.IsPublicHoliday && ph.States.Contains("ALL");
+                                    var isNationalPh = ph != null && ph.IsPublicHoliday;
                                     var anyPh = ph != null && ph.IsPublicHoliday;
 
                                     <th style="width: 12.14%;" title="@(isNationalPh ? ph.Reasons : "")">
