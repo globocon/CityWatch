@@ -617,14 +617,16 @@ namespace CityWatch.Web.Services
         {
             string fileName = status.ToUpper() switch
             {
-                "LIVE" => "LIVE.png",
-                "PAID" => "PAID.png",
-                "CANCELLED" => "CANCELED.png",
-                "CANCEL" => "CANCELED.png",
-                "CANCELED" => "CANCELED.png",
-                "INVOICED" => "INVOICED.png",
+                "LIVE" => "STAMP - LIVE.png",
+                "PAID" => "STAMP - PAID.png",
+                "CANCELLED" => "STAMP - CANCELD.jpg",
+                "CANCEL" => "STAMP - CANCELD.jpg",
+                "CANCELED" => "STAMP - CANCELD.jpg",
+                "INVOICED" => "STAMP - INV.png",
+                "INV" => "STAMP - INV.png",
                 _ => ""
             };
+
 
             if (!string.IsNullOrEmpty(fileName))
             {
