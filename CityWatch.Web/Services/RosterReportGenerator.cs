@@ -281,9 +281,9 @@ namespace CityWatch.Web.Services
                         var weekStart = startDate.AddDays(w * 7);
                         var weekEnd = weekStart.AddDays(6);
 
-                        // Fetch Holidays for this week
+                        // Fetch Holidays for this week (inclusive of recurring holidays)
                         var holidays = await _context.BroadcastBannerCalendarEvents
-                            .Where(x => x.IsPublicHoliday && x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)
+                            .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)))
                             .ToListAsync();
                         var holidayIds = holidays.Select(x => x.id).ToList();
                         var holidayStates = await _context.PublicHolidayStates
@@ -294,7 +294,12 @@ namespace CityWatch.Web.Services
                         for (int d = 0; d < 7; d++)
                         {
                             var dDate = weekStart.AddDays(d).Date;
-                            var dayHolidays = holidays.Where(h => dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date).ToList();
+                            // Match by absolute date or recurring Month/Day
+                            var dayHolidays = holidays.Where(h => 
+                                (dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date) ||
+                                (h.RepeatYearly && h.StartDate.Month == dDate.Month && h.StartDate.Day == dDate.Day)
+                            ).ToList();
+
                             var states = new List<string>();
                             foreach (var h in dayHolidays)
                             {

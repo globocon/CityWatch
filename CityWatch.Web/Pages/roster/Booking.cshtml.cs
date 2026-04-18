@@ -115,8 +115,10 @@ namespace CityWatch.Web.Pages.roster
 
         private void PopulateWeeklyHolidays()
         {
+            // Fetch all public holidays to handle recurring matching (Month/Day)
+            // Filtering for RepeatYearly or overlapping dates
             var holidays = _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= StartDate && x.StartDate <= EndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= StartDate && x.StartDate <= EndDate)))
                 .ToList();
 
             var eventIds = holidays.Select(x => x.id).ToList();
@@ -128,7 +130,14 @@ namespace CityWatch.Web.Pages.roster
             for (int i = 0; i < 7; i++)
             {
                 var date = StartDate.AddDays(i).Date;
-                var dayHolidays = holidays.Where(h => date >= h.StartDate.Date && date <= h.ExpiryDate.Date).ToList();
+                
+                // Matching logic: 
+                // 1. Exact date range match
+                // 2. If RepeatYearly is true, match Month and Day
+                var dayHolidays = holidays.Where(h => 
+                    (date >= h.StartDate.Date && date <= h.ExpiryDate.Date) || 
+                    (h.RepeatYearly && h.StartDate.Month == date.Month && h.StartDate.Day == date.Day)
+                ).ToList();
                 
                 var states = new List<string>();
                 var reasonsList = new List<string>();
