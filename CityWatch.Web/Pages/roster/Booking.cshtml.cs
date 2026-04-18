@@ -115,8 +115,10 @@ namespace CityWatch.Web.Pages.roster
 
         private void PopulateWeeklyHolidays()
         {
+            // Fetch all public holidays to handle recurring matching (Month/Day)
+            // Filtering for RepeatYearly or overlapping dates
             var holidays = _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= StartDate && x.StartDate <= EndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= StartDate && x.StartDate <= EndDate)))
                 .ToList();
 
             var eventIds = holidays.Select(x => x.id).ToList();
@@ -128,7 +130,14 @@ namespace CityWatch.Web.Pages.roster
             for (int i = 0; i < 7; i++)
             {
                 var date = StartDate.AddDays(i).Date;
-                var dayHolidays = holidays.Where(h => date >= h.StartDate.Date && date <= h.ExpiryDate.Date).ToList();
+                
+                // Matching logic: 
+                // 1. Exact date range match
+                // 2. If RepeatYearly is true, match Month and Day
+                var dayHolidays = holidays.Where(h => 
+                    (date >= h.StartDate.Date && date <= h.ExpiryDate.Date) || 
+                    (h.RepeatYearly && h.StartDate.Month == date.Month && h.StartDate.Day == date.Day)
+                ).ToList();
                 
                 var states = new List<string>();
                 var reasonsList = new List<string>();
@@ -169,14 +178,6 @@ namespace CityWatch.Web.Pages.roster
             {
                 var date = start.AddDays(i).Date;
                 
-                // Weekend check: Saturday (5) or Sunday (6) if week starts on Mon
-                // Actually, logic is Mon-Fri only for PH highlight
-                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    flags[i] = false;
-                    continue;
-                }
-
                 var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
                 if (phInfo != null && phInfo.IsPublicHoliday)
                 {
@@ -197,11 +198,6 @@ namespace CityWatch.Web.Pages.roster
             for (int i = 0; i < 7; i++)
             {
                 var date = start.AddDays(i).Date;
-                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    reasons[i] = "";
-                    continue;
-                }
 
                 var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
                 if (phInfo != null && phInfo.IsPublicHoliday)
@@ -264,7 +260,7 @@ namespace CityWatch.Web.Pages.roster
                 siteName = gs.ClientSite.Name,
                 clientTypeName = gs.ClientSite.ClientType?.Name ?? "N/A",
                 // Injection of status for UI stamp rendering
-                status = weekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? "Live",
+                status = weekStatuses.FirstOrDefault(ws => ws.ClientSiteId == gs.ClientSiteId)?.Status ?? (schedules.Any(s => s.ClientSiteId == gs.ClientSiteId) ? "Live" : ""),
                 isPublicHoliday = GetPublicHolidayFlags(gs.ClientSite.State, startDate),
                 publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite.State, startDate),
                 days = Enumerable.Range(0, 7).Select(dayOffset =>

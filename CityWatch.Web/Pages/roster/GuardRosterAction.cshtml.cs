@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using CityWatch.Data.Models;
 using CityWatch.Web.Helpers;
+using CityWatch.Data.Helpers;
+
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -73,7 +75,7 @@ namespace CityWatch.Web.Pages.roster
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
-                            durationHours = Math.Round((s.ShiftEnd - s.ShiftStart).TotalHours, 2),
+                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                             sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
                             buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
                         })
@@ -106,7 +108,8 @@ namespace CityWatch.Web.Pages.roster
 
             var statusObj = await _context.RosterSiteWeekStatuses
                 .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == startDate);
-            var status = statusObj?.Status ?? "Live";
+            var status = statusObj?.Status ?? (schedules.Any(s => s.ClientSiteId == siteId) ? "Live" : "");
+
 
             return new JsonResult(new { results, holidays, siteState = site?.State, status });
         }

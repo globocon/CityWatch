@@ -42,6 +42,8 @@ namespace CityWatch.Web.Services
         private readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly string _subDomainImageRootDir;
+        private readonly string _imageStampDir;
+
 
         private const float MARGIN = 15f;
         private const float FONT_SIZE_CELL = 7.5f;
@@ -55,6 +57,8 @@ namespace CityWatch.Web.Services
             _settings = options.Value;
             _imageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "images");
             _subDomainImageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
+            _imageStampDir = Path.Combine(webHostEnvironment.WebRootPath, "images", "stamps");
+
 
             // Ensure RosterCovers directories exist
             string projectCoverDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects");
@@ -281,9 +285,9 @@ namespace CityWatch.Web.Services
                         var weekStart = startDate.AddDays(w * 7);
                         var weekEnd = weekStart.AddDays(6);
 
-                        // Fetch Holidays for this week
+                        // Fetch Holidays for this week (inclusive of recurring holidays)
                         var holidays = await _context.BroadcastBannerCalendarEvents
-                            .Where(x => x.IsPublicHoliday && x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)
+                            .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= weekStart && x.StartDate <= weekEnd)))
                             .ToListAsync();
                         var holidayIds = holidays.Select(x => x.id).ToList();
                         var holidayStates = await _context.PublicHolidayStates
@@ -294,7 +298,12 @@ namespace CityWatch.Web.Services
                         for (int d = 0; d < 7; d++)
                         {
                             var dDate = weekStart.AddDays(d).Date;
-                            var dayHolidays = holidays.Where(h => dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date).ToList();
+                            // Match by absolute date or recurring Month/Day
+                            var dayHolidays = holidays.Where(h => 
+                                (dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date) ||
+                                (h.RepeatYearly && h.StartDate.Month == dDate.Month && h.StartDate.Day == dDate.Day)
+                            ).ToList();
+
                             var states = new List<string>();
                             foreach (var h in dayHolidays)
                             {
@@ -390,11 +399,9 @@ namespace CityWatch.Web.Services
                                 .FirstOrDefaultAsync(x => x.ClientSiteId == site.ClientSiteId && x.StartDate == weekStart);
                             var status = statusObj?.Status ?? "Live";
 
-                            if (!string.IsNullOrEmpty(status) && status != "Live")
-                            {
-                                siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
-                                siteCell.Add(GetStatusStampParagraph(status));
-                            }
+                            siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
+                            AddStatusStampToCell(siteCell, status);
+
                             
                             siteCell.SetMinHeight(120f);
                             table.AddCell(siteCell);
@@ -606,8 +613,40 @@ namespace CityWatch.Web.Services
                 .SetTextAlignment(TextAlignment.CENTER);
         }
 
-        private Paragraph GetStatusStampParagraph(string status)
+        private void AddStatusStampToCell(Cell cell, string status)
         {
+            string fileName = status.ToUpper() switch
+            {
+                "LIVE" => "STAMP - LIVE.png",
+                "PAID" => "STAMP - PAID.png",
+                "CANCELLED" => "STAMP - CANCELD.jpg",
+                "CANCEL" => "STAMP - CANCELD.jpg",
+                "CANCELED" => "STAMP - CANCELD.jpg",
+                "INVOICED" => "STAMP - INV.png",
+                "INV" => "STAMP - INV.png",
+                _ => ""
+            };
+
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                string filePath = Path.Combine(_imageStampDir, fileName);
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        Image stamp = new Image(ImageDataFactory.Create(filePath))
+                            .SetWidth(70) // Fixed width for consistent footprint
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetMarginTop(5);
+                        cell.Add(stamp);
+                        return;
+                    }
+                    catch { }
+                }
+            }
+
+            // Fallback to text stamp if image not found
             Color color = ColorConstants.RED;
             if (status == "Cancelled") color = new DeviceRgb(97, 97, 97); // Gray
             else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Green
@@ -624,10 +663,12 @@ namespace CityWatch.Web.Services
                 .SetPaddingRight(8)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                .SetWidth(UnitValue.CreatePercentValue(80));
+                .SetWidth(UnitValue.CreatePercentValue(80))
+                .SetMarginTop(5);
 
-            return stampPara;
+            cell.Add(stampPara);
         }
+
 
         private Color GetStatusColor(CityWatch.Data.Enums.RosterShiftStatus status)
         {

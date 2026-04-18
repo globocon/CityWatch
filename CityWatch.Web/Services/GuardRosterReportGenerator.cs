@@ -42,6 +42,8 @@ namespace CityWatch.Web.Services
         private readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly string _subDomainImageRootDir;
+        private readonly string _imageStampDir;
+
 
         private const float MARGIN = 15f;
         private const float FONT_SIZE_CELL = 7.5f;
@@ -55,7 +57,9 @@ namespace CityWatch.Web.Services
             _settings = options.Value;
             _imageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "images");
             _subDomainImageRootDir = Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
+            _imageStampDir = Path.Combine(webHostEnvironment.WebRootPath, "images", "stamps");
         }
+
 
         private class PublicHolidayInfo
         {
@@ -184,11 +188,9 @@ namespace CityWatch.Web.Services
                             siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
 
                             // Status Section
-                            if (!string.IsNullOrEmpty(status) && status != "Live")
-                            {
-                                siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
-                                siteCell.Add(GetStatusStampParagraph(status));
-                            }
+                            siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
+                            AddStatusStampToCell(siteCell, status);
+
                             
                             siteCell.SetMinHeight(120f);
                             table.AddCell(siteCell);
@@ -216,7 +218,7 @@ namespace CityWatch.Web.Services
 
                                  foreach (var shift in dayShifts)
                                 {
-                                    var duration = (shift.ShiftEnd - shift.ShiftStart).TotalHours;
+                                    var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
                                     dailyTotals[i] += duration;
                                     projectWeeklyGrandTotal += duration;
 
@@ -313,8 +315,40 @@ namespace CityWatch.Web.Services
 
         }
 
-        private Paragraph GetStatusStampParagraph(string status)
+        private void AddStatusStampToCell(Cell cell, string status)
         {
+            string fileName = status.ToUpper() switch
+            {
+                "LIVE" => "STAMP - LIVE.png",
+                "PAID" => "STAMP - PAID.png",
+                "CANCELLED" => "STAMP - CANCELD.jpg",
+                "CANCEL" => "STAMP - CANCELD.jpg",
+                "CANCELED" => "STAMP - CANCELD.jpg",
+                "INVOICED" => "STAMP - INV.png",
+                "INV" => "STAMP - INV.png",
+                _ => ""
+            };
+
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                string filePath = Path.Combine(_imageStampDir, fileName);
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        Image stamp = new Image(ImageDataFactory.Create(filePath))
+                            .SetWidth(70) // Fixed width for consistent footprint
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                            .SetMarginTop(5);
+                        cell.Add(stamp);
+                        return;
+                    }
+                    catch { }
+                }
+            }
+
+            // Fallback to text stamp if image not found
             Color color = ColorConstants.RED;
             if (status == "Cancelled") color = new DeviceRgb(97, 97, 97); // Gray
             else if (status == "Paid") color = new DeviceRgb(27, 94, 32); // Green
@@ -331,10 +365,12 @@ namespace CityWatch.Web.Services
                 .SetPaddingRight(8)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                .SetWidth(UnitValue.CreatePercentValue(80));
+                .SetWidth(UnitValue.CreatePercentValue(80))
+                .SetMarginTop(5);
 
-            return stampPara;
+            cell.Add(stampPara);
         }
+
 
         private void AddBrandedFooter(Document document, PdfDocument pdf, DateTime startDate)
         {

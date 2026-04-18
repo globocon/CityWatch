@@ -1,130 +1,3 @@
-<div class="modal fade" id="guardRosterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
-    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
-        <div class="modal-content border-0 shadow-lg overflow-hidden">
-            <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
-                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
-                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
-                    <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="guardWeekRangeText">Loading...</span>
-                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
-                </div>
-                <div class="d-flex align-items-center">
-                    <!-- Roster Admin Controls -->
-                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
-                        <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
-                            <div class="custom-control custom-checkbox mr-3 p-0" style="min-height: auto; width: 20px;">
-                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle">
-                                <label class="custom-control-label" for="adminFinancialToggle" style="padding-left: 20px; cursor: pointer;" title="Enable Financial Figures"></label>
-                            </div>
-                            
-                            <i class="fa fa-user-secret mr-2" style="font-size: 1rem; color: #555;" title="Guard Pay Rate"></i>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
-                                <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
-                                <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
-                            </div>
-                            <i class="fa fa-cube ml-2" style="font-size: 1rem; color: #555;" title="Sell Rate to Client"></i>
-                        </div>
-
-                        <!-- Redesigned Capsule 2: Truck Toggle -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
-                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-3">
-                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
-                                <span style="position: absolute; right: -6px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 8px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff; transform: scale(0.8);">S</span>
-                            </div>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
-                                <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
-                                <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
-                            </div>
-                        </div>
-
-                        <div class="input-group input-group-sm mr-2" style="width: 160px;">
-                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
-                            </div>
-                            <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
-                                <option value="Live">Live</option>
-                                <option value="Invoiced">Invoiced</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
-                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
-                    </button>
-                    <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
-                    </button>
-                </div>
-            </div>
-            <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
-                <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
-            </div>
-            </div>
-            <div class="modal-body p-0 bg-light" style="min-height: 500px;">
-                <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
-                    <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
-                        <i class="fa fa-calendar-times-o"></i>
-                    </div>
-                    <h4 class="text-secondary mb-3" style="font-weight: 300;">No Roster Found</h4>
-                    <p class="text-muted mb-0">We couldn't find any scheduled shifts for this site in the selected week.</p>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-bordered mb-0" id="guard_roster_grid">
-                        <thead id="guard_roster_header">
-                            <tr>
-                                <th style="width: 15%;" class="align-middle">Client Site</th>
-                                <!-- Day headers will be injected here -->
-                            </tr>
-                        </thead>
-                        <tbody id="guard_roster_body">
-                            <!-- Rows will be injected here -->
-                        </tbody>
-                        <tfoot id="guard_roster_footer" style="display: none; background: #fff; border-top: 2px solid #dee2e6;">
-                            <tr>
-                                <td class="p-0 border-right align-middle">
-                                    <div class="grand-total-container" style="background: #f8faff;">
-                                        <div class="total-item">
-                                            <span class="total-label">Weekly Total</span>
-                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0.00</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <!-- Daily totals will be injected here -->
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Simple Filter Modal for PDF Download -->
-<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header p-3">
-                <h6 class="modal-title font-weight-bold">PDF Export Options</h6>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
-            </div>
-            <div class="modal-body p-4">
-                <label class="small font-weight-bold text-muted mb-2 d-block text-uppercase">Duration to export</label>
-                <select id="guardPdfWeeks" class="form-control form-control-sm border-primary">
-                    <option value="1">This Week Only</option>
-                    <option value="2">2 Weeks Binder</option>
-                    <option value="4">4 Weeks Binder</option>
-                </select>
-            </div>
-            <div class="modal-footer p-2 bg-light">
-                <button type="button" class="btn btn-primary btn-block font-weight-bold" id="btnConfirmGuardDownload">GENERATE REPORT</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
     /* Table Styling matched to Booking module */
     #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
@@ -138,7 +11,12 @@
         letter-spacing: 0.5px;
         padding: 12px 8px;
         border: none !important;
-        text-align: center;
+    }
+    .status-stamp-img {
+        max-width: 100px;
+        height: auto;
+        display: block;
+        margin: 5px auto 0;
     }
 
     #guard_roster_grid tbody td {
@@ -259,6 +137,132 @@
         font-size: 10px;
     }
 </style>
+<div class="modal fade" id="guardRosterModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
+                    <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="guardWeekRangeText">Loading...</span>
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
+                </div>
+                <div class="d-flex align-items-center">
+                    <!-- Roster Admin Controls -->
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                        <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                            <div class="custom-control custom-checkbox mr-3 p-0" style="min-height: auto; width: 20px;">
+                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle">
+                                <label class="custom-control-label" for="adminFinancialToggle" style="padding-left: 20px; cursor: pointer;" title="Enable Financial Figures"></label>
+                            </div>
+                            
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                                <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
+                                <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                            </div>
+                            <i class="fa fa-cube ml-2" style="font-size: 1rem; color: #555;" title="Sell Rate to Client"></i>
+                        </div>
+
+                        <!-- Redesigned Capsule 2: Truck Toggle -->
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
+                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-3">
+                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
+                                <span style="position: absolute; right: -6px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 8px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff; transform: scale(0.8);">S</span>
+                            </div>
+                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                                <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
+                                <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-sm mr-2" style="width: 160px;">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
+                            </div>
+                            <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="Live">Live</option>
+                                <option value="Invoiced">Invoiced</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
+                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
+                    </button>
+                    <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
+                <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
+            </div>
+            <div class="modal-body p-0 bg-light" style="min-height: 500px;">
+                <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
+                    <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
+                        <i class="fa fa-calendar-times-o"></i>
+                    </div>
+                    <h4 class="text-secondary mb-3" style="font-weight: 300;">No Roster Found</h4>
+                    <p class="text-muted mb-0">We couldn't find any scheduled shifts for this site in the selected week.</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0" id="guard_roster_grid">
+                        <thead id="guard_roster_header">
+                            <tr>
+                                <th style="width: 15%;" class="align-middle">Client Site</th>
+                                <!-- Day headers will be injected here -->
+                            </tr>
+                        </thead>
+                        <tbody id="guard_roster_body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                        <tfoot id="guard_roster_footer" style="display: none; background: #fff; border-top: 2px solid #dee2e6;">
+                            <tr>
+                                <td class="p-0 border-right align-middle">
+                                    <div class="grand-total-container" style="background: #f8faff;">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0.00</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Daily totals will be injected here -->
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Filter Modal for PDF Download -->
+<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header p-3">
+                <h6 class="modal-title font-weight-bold">PDF Export Options</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="small font-weight-bold text-muted mb-2 d-block text-uppercase">Duration to export</label>
+                <select id="guardPdfWeeks" class="form-control form-control-sm border-primary">
+                    <option value="1">This Week Only</option>
+                    <option value="2">2 Weeks Binder</option>
+                    <option value="4">4 Weeks Binder</option>
+                </select>
+            </div>
+            <div class="modal-footer p-2 bg-light">
+                <button type="button" class="btn btn-primary btn-block font-weight-bold" id="btnConfirmGuardDownload">GENERATE REPORT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     var guardRosterStartDate = null;
@@ -376,12 +380,22 @@
         var container = $('.admin-status-grid-display');
         container.empty();
         
-        if (status && status !== 'Live') {
-            var stampClass = status.toLowerCase();
-            container.append('<span class="guard-status-label">Status:</span>');
-            container.append('<div class="guard-status-stamp ' + stampClass + '">' + status.toUpperCase() + '</div>');
+        if (status) {
+            var imgName = '';
+            switch(status.toUpperCase()) {
+                case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+            }
+            if (imgName) {
+                container.append('<div class="text-center">' + 
+                                 '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                 '</div>');
+            }
         }
     }
+
 
     function saveAdminRosterStatus(newStatus) {
          $.ajax({
