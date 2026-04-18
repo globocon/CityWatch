@@ -169,14 +169,6 @@ namespace CityWatch.Web.Pages.roster
             {
                 var date = start.AddDays(i).Date;
                 
-                // Weekend check: Saturday (5) or Sunday (6) if week starts on Mon
-                // Actually, logic is Mon-Fri only for PH highlight
-                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    flags[i] = false;
-                    continue;
-                }
-
                 var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
                 if (phInfo != null && phInfo.IsPublicHoliday)
                 {
@@ -197,11 +189,6 @@ namespace CityWatch.Web.Pages.roster
             for (int i = 0; i < 7; i++)
             {
                 var date = start.AddDays(i).Date;
-                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    reasons[i] = "";
-                    continue;
-                }
 
                 var phInfo = WeeklyHolidays.FirstOrDefault(x => x.Date == date);
                 if (phInfo != null && phInfo.IsPublicHoliday)
