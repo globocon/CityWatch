@@ -278,17 +278,19 @@
 
     $(document).ready(function() {
         $('#btnPrevWeekGuard').on('click', function() {
-            var d = new Date(guardRosterStartDate);
+            var parts = guardRosterStartDate.split('-');
+            var d = new Date(parts[0], parts[1] - 1, parts[2]);
             d.setDate(d.getDate() - 7);
-            guardRosterStartDate = d.toISOString().split('T')[0];
+            guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             loadGuardRoster();
             if (isAdminRoster) loadAdminRosterStatus();
         });
 
         $('#btnNextWeekGuard').on('click', function() {
-            var d = new Date(guardRosterStartDate);
+            var parts = guardRosterStartDate.split('-');
+            var d = new Date(parts[0], parts[1] - 1, parts[2]);
             d.setDate(d.getDate() + 7);
-            guardRosterStartDate = d.toISOString().split('T')[0];
+            guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             loadGuardRoster();
             if (isAdminRoster) loadAdminRosterStatus();
         });
@@ -355,16 +357,17 @@
             isAdminSupplierOn = false;
         }
 
-        // Find Monday of current week
-        var today = new Date();
-        var day = today.getDay();
-        var diff = today.getDate() - day + (day == 0 ? -6 : 1);
-        var monday = new Date(today.setDate(diff));
-        guardRosterStartDate = monday.toISOString().split('T')[0];
-        
-        $('#guardRosterModal').modal('show');
-        loadGuardRoster();
-        if (isAdminRoster) loadAdminRosterStatus();
+        // Fetch correct start of week from server to ensure parity with Booking
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=GetStartOfWeek',
+            type: 'GET',
+            success: function(res) {
+                guardRosterStartDate = res.startDate;
+                $('#guardRosterModal').modal('show');
+                loadGuardRoster();
+                if (isAdminRoster) loadAdminRosterStatus();
+            }
+        });
     }
 
     function loadAdminRosterStatus() {
@@ -424,9 +427,10 @@
     function loadGuardRoster() {
         if (!currentGuardSiteId || !guardRosterStartDate) return;
 
-        var end = new Date(guardRosterStartDate);
+        var parts = guardRosterStartDate.split('-');
+        var end = new Date(parts[0], parts[1] - 1, parts[2]);
         end.setDate(end.getDate() + 6);
-        $('#guardWeekRangeText').html(formatGuardDate(new Date(guardRosterStartDate)) + ' - ' + formatGuardDate(end));
+        $('#guardWeekRangeText').html(formatGuardDate(new Date(parts[0], parts[1] - 1, parts[2])) + ' - ' + formatGuardDate(end));
 
         var tbody = $('#guard_roster_body');
         var thead = $('#guard_roster_header tr');
@@ -454,7 +458,8 @@
                 tfoot.show();
 
                 // Inject Day Headers (Arranged like Booking)
-                var d = new Date(guardRosterStartDate);
+                var p = guardRosterStartDate.split('-');
+                var d = new Date(p[0], p[1] - 1, p[2]);
                 for (var i = 0; i < 7; i++) {
                     var dayDate = new Date(d);
                     dayDate.setDate(d.getDate() + i);
@@ -479,7 +484,8 @@
                         '</td>';
 
                     row.days.forEach(function (dayShifts, index) {
-                        var loopDate = new Date(guardRosterStartDate);
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
                         loopDate.setDate(loopDate.getDate() + index);
                         
                         var isPh = (res.holidays && isPublicHolidayAtDate(loopDate.getTime(), res.holidays, res.siteState));
