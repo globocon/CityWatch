@@ -1718,6 +1718,14 @@
                     data: { groupId: currentGroupId, startDate: currentStartDate },
                     success: function (res) {
                         var tbody = $('#roster_grid tbody');
+                        tbody.empty();
+
+                        if (res.results.length === 0) {
+                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                            $('#roster_footer').hide();
+                            return;
+                        }
+
                         var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                         var grandTotal = 0;
 

@@ -142,6 +142,12 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
         {
+            if (string.IsNullOrEmpty(status))
+            {
+                var statusObj = await _context.RosterSiteWeekStatuses.FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+                status = statusObj?.Status ?? "Live";
+            }
+
             var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks, includeFinancials, rateType, status, includeSuppliers);
             if (pdfBytes == null) return NotFound();
 
