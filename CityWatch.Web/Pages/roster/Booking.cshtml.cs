@@ -299,7 +299,7 @@ namespace CityWatch.Web.Pages.roster
                 }).ToList()
             }).ToList();
 
-            return new JsonResult(new { results = rosterData });
+            return new JsonResult(new { results = rosterData, projectStatus = rosterData.FirstOrDefault()?.status ?? "Live" });
         }
 
         public JsonResult OnGetSearchProviders(string search)
@@ -773,7 +773,12 @@ namespace CityWatch.Web.Pages.roster
                     }).ToList()
                 }).ToList();
 
-                rosterData.Add(new { projectName = bp.RosterGroup.Name, projectId = bp.RosterGroupId, sites = projectSites });
+                rosterData.Add(new { 
+                    projectName = bp.RosterGroup.Name, 
+                    projectId = bp.RosterGroupId, 
+                    sites = projectSites,
+                    projectStatus = projectSites.FirstOrDefault()?.status ?? "Live"
+                });
             }
 
             return new JsonResult(new { results = rosterData });
@@ -1291,6 +1296,44 @@ namespace CityWatch.Web.Pages.roster
             await _context.SaveChangesAsync();
 
             return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
+        }
+
+        public async Task<IActionResult> OnPostSaveProjectRosterStatus(int projectId, DateTime startDate, string status)
+        {
+            var projectSites = await _context.RosterGroupSites
+                .Where(x => x.RosterGroupId == projectId)
+                .Select(x => x.ClientSiteId)
+                .ToListAsync();
+
+            if (!projectSites.Any()) return new JsonResult(new { success = false, message = "No sites found in this project." });
+
+            foreach (var siteId in projectSites)
+            {
+                var statusObj = await _context.RosterSiteWeekStatuses
+                    .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+
+                if (statusObj == null)
+                {
+                    statusObj = new RosterSiteWeekStatus
+                    {
+                        ClientSiteId = siteId,
+                        StartDate = startDate.Date,
+                        Status = status,
+                        UpdatedDate = DateTime.Now,
+                        UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System"
+                    };
+                    _context.RosterSiteWeekStatuses.Add(statusObj);
+                }
+                else
+                {
+                    statusObj.Status = status;
+                    statusObj.UpdatedDate = DateTime.Now;
+                    statusObj.UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System";
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
     }
 }

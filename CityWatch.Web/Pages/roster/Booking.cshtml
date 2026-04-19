@@ -60,6 +60,20 @@
         display: block;
         margin: 5px auto 0;
     }
+    .form-control-xs {
+        height: calc(1.2em + 0.375rem + 2px);
+        padding: 0.125rem 0.25rem;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        border-radius: 0.2rem;
+    }
+    .header-status-container {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 2px 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
 </style>
 
 
@@ -1704,16 +1718,28 @@
                     data: { groupId: currentGroupId, startDate: currentStartDate },
                     success: function (res) {
                         var tbody = $('#roster_grid tbody');
-                        tbody.empty();
-
-                        if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
-                            $('#roster_footer').hide();
-                            return;
-                        }
-
                         var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                         var grandTotal = 0;
+
+                        // Add Project Header Row for consistency with Groups tab
+                        var projName = $('#project_name option:selected').text() || 'Selected Project';
+                        var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                            '<div class="d-flex align-items-center justify-content-between">' +
+                            '<div class="d-flex align-items-center">' +
+                                '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
+                                '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
+                                    '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
+                                    '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
+                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
+                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
+                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
+                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                    '</select>' +
+                                    '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
+                                '</div>' +
+                            '</div>' +
+                            '</div></td></tr>';
+                        tbody.append(headerHtml);
 
                         res.results.forEach(function (row) {
                             var statusHtml = '';
@@ -2719,15 +2745,25 @@
                             var projectGrandTotal = 0;
 
                             // Add Project Header Row
-                            var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-2 px-3">' +
+                            var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
-                                '<span>' +
-                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong>Project: ' + project.projectName + '</strong>' +
+                                '<div class="d-flex align-items-center">' +
+                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + project.projectName + '</strong>' +
                                     '<span class="sort-btn-group ml-3">' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-chevron-up"></i></button>' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-chevron-down"></i></button>' +
                                     '</span>' +
-                                '</span>' +
+                                    '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + project.projectId + '">' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
+                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
+                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
+                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
+                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '</select>' +
+                                        '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
+                                    '</div>' +
+                                '</div>' +
                                 '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
                                 '</div></td></tr>';
                             tbody.append(headerHtml);
@@ -3125,6 +3161,63 @@
                 var url = '/roster/Booking?handler=PreviewCover&type=' + type + '&id=' + id + '&t=' + new Date().getTime();
                 $('#previewCoverFrame').attr('src', url);
                 $('#previewCoverModal').modal('show');
+            }
+
+            $(document).on('change', '.project-status-select', function () {
+                var select = $(this);
+                var container = select.closest('.header-status-container');
+                var projectId = container.data('project-id');
+                var status = select.val();
+                var loading = container.find('.status-loading');
+
+                loading.fadeIn();
+
+                $.ajax({
+                    url: '/roster/Booking?handler=SaveProjectRosterStatus',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: { projectId: projectId, startDate: currentStartDate, status: status },
+                    success: function (res) {
+                        loading.fadeOut();
+                        if (res.success) {
+                            var projectSection;
+                            if ($('#projects-tab').hasClass('active')) {
+                                projectSection = $('#roster_grid tbody');
+                            } else {
+                                var headerRow = select.closest('tr');
+                                projectSection = headerRow.nextUntil('tr.bg-light');
+                            }
+                            updateProjectStamps(projectSection, status);
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function () {
+                        loading.fadeOut();
+                        alert('Error updating status.');
+                    }
+                });
+            });
+
+            function updateProjectStamps(container, status) {
+                var imgName = '';
+                switch(status.toUpperCase()) {
+                    case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                    case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                    case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                }
+
+                container.find('.status-stamp-img').each(function() {
+                    if (imgName) {
+                        $(this).attr('src', '/images/stamps/' + imgName).attr('alt', status);
+                        $(this).closest('div').show();
+                    } else {
+                        // If status is empty but we reached here, maybe it's just "Live" without a stamp or something.
+                        // But usually we have a stamp for all.
+                        $(this).closest('div').hide();
+                    }
+                });
             }
 
         });
