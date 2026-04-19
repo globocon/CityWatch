@@ -123,6 +123,7 @@ namespace CityWatch.Web.Pages.roster
                     x.id,
                     x.StartDate,
                     x.ExpiryDate,
+                    Reason = x.TextMessage,
                     States = _context.PublicHolidayStates
                         .Where(s => s.CalendarEventId == x.id && !s.IsDeleted)
                         .Select(s => s.State)
