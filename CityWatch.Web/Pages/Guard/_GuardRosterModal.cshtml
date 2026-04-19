@@ -229,7 +229,7 @@
                                     <div class="grand-total-container" style="background: #f8faff;">
                                         <div class="total-item">
                                             <span class="total-label">Weekly Total</span>
-                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0.00</span>
+                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0h</span>
                                         </div>
                                     </div>
                                 </td>
@@ -460,7 +460,7 @@
                     dayDate.setDate(d.getDate() + i);
                     var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
                     thead.append('<th style="width: 12.14%;">' + dateStr + '</th>');
-                    tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0.00</span></div></td>');
+                    tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0h</span></div></td>');
                 }
 
                 var grandTotal = 0;
@@ -545,9 +545,9 @@
                         $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotals[i].toFixed(2) + '</span>');
                     }
                 } else {
-                    $('#guard_weekly_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, ""));
+                    $('#guard_weekly_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, "") + "h");
                     for(var i=0; i<7; i++) {
-                        $('#daily_total_' + i).text(dailyTotals[i].toFixed(2).replace(/\.00$/, ""));
+                        $('#daily_total_' + i).text(dailyTotals[i].toFixed(2).replace(/\.00$/, "") + "h");
                     }
                 }
             },
