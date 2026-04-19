@@ -16,6 +16,7 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using CityWatch.Data.Helpers;
+using CityWatch.Web.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -1320,7 +1321,7 @@ namespace CityWatch.Web.Pages.roster
                         StartDate = startDate.Date,
                         Status = status,
                         UpdatedDate = DateTime.Now,
-                        UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System"
+                        UpdatedBy = AuthUserHelper.GetLoggedInUserId?.ToString() ?? "System"
                     };
                     _context.RosterSiteWeekStatuses.Add(statusObj);
                 }
@@ -1328,7 +1329,7 @@ namespace CityWatch.Web.Pages.roster
                 {
                     statusObj.Status = status;
                     statusObj.UpdatedDate = DateTime.Now;
-                    statusObj.UpdatedBy = AuthUserHelper.LoggedInUserId?.ToString() ?? "System";
+                    statusObj.UpdatedBy = AuthUserHelper.GetLoggedInUserId?.ToString() ?? "System";
                 }
             }
 
