@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using CityWatch.Data.Models;
 using CityWatch.Web.Helpers;
 using CityWatch.Data.Helpers;
+using CityWatch.Data.Providers;
 
 
 namespace CityWatch.Web.Pages.roster
@@ -22,14 +23,36 @@ namespace CityWatch.Web.Pages.roster
     {
         private readonly CityWatchDbContext _context;
         private readonly IGuardRosterReportGenerator _rosterReportGenerator;
+        private readonly IClientDataProvider _clientDataProvider;
 
-        public GuardRosterActionModel(CityWatchDbContext context, IGuardRosterReportGenerator rosterReportGenerator)
+        public GuardRosterActionModel(CityWatchDbContext context, IGuardRosterReportGenerator rosterReportGenerator, IClientDataProvider clientDataProvider)
         {
             _context = context;
             _rosterReportGenerator = rosterReportGenerator;
+            _clientDataProvider = clientDataProvider;
         }
 
         public void OnGet() { }
+
+        public JsonResult OnGetGetStartOfWeek(DateTime? date)
+        {
+            var today = date ?? DateTime.Today;
+            var timesheet = _clientDataProvider.GetTimesheetDetails();
+            DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
+
+            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+            {
+                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                {
+                    firstDayOfWeek = parsedDay;
+                }
+            }
+
+            int diff = (7 + (today.DayOfWeek - firstDayOfWeek)) % 7;
+            var startOfWeek = today.AddDays(-1 * diff).Date;
+            
+            return new JsonResult(new { startDate = startOfWeek.ToString("yyyy-MM-dd") });
+        }
 
         public async Task<JsonResult> OnGetLoadRosterForSite(int siteId, DateTime startDate, int weeks = 1)
         {
@@ -72,6 +95,7 @@ namespace CityWatch.Web.Pages.roster
                             reliefReason = s.ReliefReason,
                             guardLicense = s.Guard != null ? s.Guard.SecurityNo : "",
                             reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
@@ -93,12 +117,14 @@ namespace CityWatch.Web.Pages.roster
 
             // Fetch Holidays for the range
             var holidays = await _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)))
                 .Select(x => new
                 {
                     x.id,
                     x.StartDate,
                     x.ExpiryDate,
+                    x.RepeatYearly,
+                    Reason = x.TextMessage,
                     States = _context.PublicHolidayStates
                         .Where(s => s.CalendarEventId == x.id && !s.IsDeleted)
                         .Select(s => s.State)
@@ -116,6 +142,12 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
         {
+            if (string.IsNullOrEmpty(status))
+            {
+                var statusObj = await _context.RosterSiteWeekStatuses.FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+                status = statusObj?.Status ?? "Live";
+            }
+
             var pdfBytes = await _rosterReportGenerator.GenerateSiteRosterPdfAsync(siteId, startDate, weeks, includeFinancials, rateType, status, includeSuppliers);
             if (pdfBytes == null) return NotFound();
 

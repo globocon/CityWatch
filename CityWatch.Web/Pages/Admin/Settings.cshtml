@@ -6019,6 +6019,13 @@
                 }
             });
 
+            // Default to LWOP when Switch to Unavailability tab
+            $('#unavailability-tab').on('shown.bs.tab', function() {
+                if ($('.unavail-reason-chk:checked').length === 0) {
+                    $('#unav_LWOP').prop('checked', true).trigger('change');
+                }
+            });
+
             $('#frm_guard_unavailability').on('submit', function (e) {
                 e.preventDefault();
                 if (currentGuardId <= 0) {

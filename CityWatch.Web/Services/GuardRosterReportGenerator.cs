@@ -65,6 +65,7 @@ namespace CityWatch.Web.Services
         {
             public DateTime Date { get; set; }
             public List<string> States { get; set; }
+            public bool IsPublicHoliday { get; set; }
         }
 
         public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
@@ -80,12 +81,13 @@ namespace CityWatch.Web.Services
                 .Include(x => x.Guard)
                 .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .OrderBy(x => x.ShiftStart)
                 .ToListAsync();
 
-            // Fetch Holidays for the range
+            // Fetch Holidays for the range (including recurring match patterns)
             var holidayEvents = await _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)))
                 .ToListAsync();
 
             var holidayStates = await _context.PublicHolidayStates
@@ -111,15 +113,23 @@ namespace CityWatch.Web.Services
                             for (int i = 0; i < 7; i++)
                             {
                                 var dDate = weekStart.AddDays(i).Date;
-                                var hDay = holidayEvents.FirstOrDefault(h => h.StartDate.Date <= dDate && h.ExpiryDate.Date >= dDate);
+                                
+                                // Match by absolute date or recurring Month/Day
+                                var dayHolidays = holidayEvents.Where(h => 
+                                    (dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date) ||
+                                    (h.RepeatYearly && h.StartDate.Month == dDate.Month && h.StartDate.Day == dDate.Day)
+                                ).ToList();
+
                                 var states = new List<string>();
-                                if (hDay != null)
+                                bool isPh = dayHolidays.Any();
+
+                                foreach (var h in dayHolidays)
                                 {
-                                    var hStates = holidayStates.Where(s => s.CalendarEventId == hDay.id).Select(s => s.State).ToList();
+                                    var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
                                     if (hStates.Count == 0) states.Add("ALL");
                                     else states.AddRange(hStates);
                                 }
-                                weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
+                                weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList(), IsPublicHoliday = isPh });
                             }
 
                             if (w > 0) document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
@@ -206,7 +216,7 @@ namespace CityWatch.Web.Services
                                 else if (loopDate.DayOfWeek == DayOfWeek.Sunday) columnBgColor = new DeviceRgb(252, 228, 236);
 
                                 var phInfo = weeklyHolidays.FirstOrDefault(x => x.Date == loopDate);
-                                if (phInfo != null && phInfo.States.Any())
+                                if (phInfo != null && phInfo.IsPublicHoliday)
                                 {
                                     var siteState = site.State?.Trim().ToUpper();
                                     if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Any(s => s.Trim().ToUpper() == siteState)))
@@ -219,8 +229,11 @@ namespace CityWatch.Web.Services
                                  foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
-                                    dailyTotals[i] += duration;
-                                    projectWeeklyGrandTotal += duration;
+                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var value = includeFinancials ? (duration * (double)rate) : duration;
+
+                                    dailyTotals[i] += value;
+                                    projectWeeklyGrandTotal += value;
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
@@ -278,7 +291,6 @@ namespace CityWatch.Web.Services
 
                                     if (includeFinancials)
                                     {
-                                        decimal rate = rateType == "sell" ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
                                         decimal totalAmount = (decimal)duration * rate;
                                         shiftBlock.Add(new Paragraph($"$ {totalAmount:F2}").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(255, 61, 0)).SetBold().SetMarginTop(2));
                                     }
@@ -290,9 +302,8 @@ namespace CityWatch.Web.Services
 
                             // Footer Row for Totals (Identical Style)
                             Cell totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2);
-                            var grandTotalText = includeFinancials ? $"Weekly Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
+                            var grandTotalText = includeFinancials ? $"Total Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
                             var grandTotalPara = new Paragraph(grandTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont());
-                            if (includeFinancials) grandTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
                             totalLabelCell.Add(grandTotalPara);
                             table.AddCell(totalLabelCell);
 
@@ -300,7 +311,6 @@ namespace CityWatch.Web.Services
                             {
                                 var dayTotalText = includeFinancials ? $"$ {dailyTotals[i]:F2}" : $"{dailyTotals[i]:F2}";
                                 var dayTotalPara = new Paragraph(dayTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER);
-                                if (includeFinancials) dayTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
                                 table.AddCell(new Cell().Add(dayTotalPara).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                             }
 

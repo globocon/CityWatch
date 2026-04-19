@@ -16,6 +16,7 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using CityWatch.Data.Helpers;
+using CityWatch.Web.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
@@ -299,7 +300,7 @@ namespace CityWatch.Web.Pages.roster
                 }).ToList()
             }).ToList();
 
-            return new JsonResult(new { results = rosterData });
+            return new JsonResult(new { results = rosterData, projectStatus = rosterData.FirstOrDefault()?.status ?? "Live" });
         }
 
         public JsonResult OnGetSearchProviders(string search)
@@ -413,7 +414,7 @@ namespace CityWatch.Web.Pages.roster
                 if (unavailGuard != null && !ignoreUnavailability)
                 {
                     var guard = await _context.Guards.FindAsync(guardId);
-                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"{guard.Name} is marked unavailable ({unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy})." });
+                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"{guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailGuard.Reason}, {unavailGuard.FromDate:dd MMMM yyyy} – {unavailGuard.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
                 }
             }
 
@@ -426,7 +427,7 @@ namespace CityWatch.Web.Pages.roster
                 if (unavailRelief != null && !ignoreUnavailability)
                 {
                     var guard = await _context.Guards.FindAsync(reliefGuardId);
-                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"Relief Guard {guard.Name} is marked unavailable ({unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy})." });
+                    return new JsonResult(new { success = false, isUnavailConflict = true, message = $"Relief Guard {guard.Name} cannot be rostered on as they are marked unavailable during this period (reasons {unavailRelief.Reason}, {unavailRelief.FromDate:dd MMMM yyyy} – {unavailRelief.ToDate:dd MMMM yyyy}). Please select another guard or adjust their HR records." });
                 }
             }
 
@@ -773,7 +774,12 @@ namespace CityWatch.Web.Pages.roster
                     }).ToList()
                 }).ToList();
 
-                rosterData.Add(new { projectName = bp.RosterGroup.Name, projectId = bp.RosterGroupId, sites = projectSites });
+                rosterData.Add(new { 
+                    projectName = bp.RosterGroup.Name, 
+                    projectId = bp.RosterGroupId, 
+                    sites = projectSites,
+                    projectStatus = projectSites.FirstOrDefault()?.status ?? "Live"
+                });
             }
 
             return new JsonResult(new { results = rosterData });
@@ -1291,6 +1297,44 @@ namespace CityWatch.Web.Pages.roster
             await _context.SaveChangesAsync();
 
             return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
+        }
+
+        public async Task<IActionResult> OnPostSaveProjectRosterStatus(int projectId, DateTime startDate, string status)
+        {
+            var projectSites = await _context.RosterGroupSites
+                .Where(x => x.RosterGroupId == projectId)
+                .Select(x => x.ClientSiteId)
+                .ToListAsync();
+
+            if (!projectSites.Any()) return new JsonResult(new { success = false, message = "No sites found in this project." });
+
+            foreach (var siteId in projectSites)
+            {
+                var statusObj = await _context.RosterSiteWeekStatuses
+                    .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
+
+                if (statusObj == null)
+                {
+                    statusObj = new RosterSiteWeekStatus
+                    {
+                        ClientSiteId = siteId,
+                        StartDate = startDate.Date,
+                        Status = status,
+                        UpdatedDate = DateTime.Now,
+                        UpdatedBy = AuthUserHelper.GetLoggedInUserId?.ToString() ?? "System"
+                    };
+                    _context.RosterSiteWeekStatuses.Add(statusObj);
+                }
+                else
+                {
+                    statusObj.Status = status;
+                    statusObj.UpdatedDate = DateTime.Now;
+                    statusObj.UpdatedBy = AuthUserHelper.GetLoggedInUserId?.ToString() ?? "System";
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
         }
     }
 }

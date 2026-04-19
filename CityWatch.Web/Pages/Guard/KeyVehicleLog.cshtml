@@ -43,7 +43,7 @@ else
     </div>
     <div class="col-md-9 text-right">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
-        <button type="button" class="btn btn-outline-primary" id="btnRosterDetails" title="Roster">
+        <button type="button" class="btn btn-outline-primary mr-2" id="btnRosterDetails" title="Roster">
             <i class="fa fa-calendar-o mr-1"></i> R
         </button>
         @if (clientSiteSOp.Count != 0)
@@ -93,7 +93,7 @@ else
         {
             <button type="button" class="btn btn-outline-primary" id="btnSOP" aria-disabled="true">SOP</button>
         }
-        <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
+        <a class="btn btn-outline-primary mr-2" id="btn_kvl_pdf_POIList" href="#">POI List</a>
         <button type="button" class="btn btn-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId"><i class="fa fa-download mr-1"></i>PDF</button>
         <a class="btn btn-primary" href="#" id="keyvehicle_offduty">Off Duty</a>
     </div>
