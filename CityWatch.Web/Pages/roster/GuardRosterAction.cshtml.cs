@@ -72,6 +72,7 @@ namespace CityWatch.Web.Pages.roster
                             reliefReason = s.ReliefReason,
                             guardLicense = s.Guard != null ? s.Guard.SecurityNo : "",
                             reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
