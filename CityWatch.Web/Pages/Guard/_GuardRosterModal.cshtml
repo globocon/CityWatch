@@ -154,33 +154,31 @@
                 <div class="d-flex align-items-center">
                     <!-- Roster Admin Controls -->
                     <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
-                        <!-- Redesigned Capsule 1: Financials & Buy/Sell Rate -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
-                            <div class="custom-control custom-checkbox mr-3 p-0" style="min-height: auto; width: 20px;">
-                                <input type="checkbox" class="custom-control-input" id="adminFinancialToggle">
-                                <label class="custom-control-label" for="adminFinancialToggle" style="padding-left: 20px; cursor: pointer;" title="Enable Financial Figures"></label>
-                            </div>
+                        <!-- Financials & Buy/Sell Rate capsule -->
+                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                            <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <input type="checkbox" id="adminFinancialToggle" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                             
-                            <i class="fa fa-user-secret mr-2" style="font-size: 1rem; color: #555;" title="Guard Pay Rate"></i>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch mr-2">
                                 <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
-                                <label class="custom-control-label" for="adminRateTypeSwitch" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                                <label class="custom-control-label" for="adminRateTypeSwitch"></label>
                             </div>
-                            <i class="fa fa-cube ml-2" style="font-size: 1rem; color: #555;" title="Sell Rate to Client"></i>
+                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
                         </div>
 
-                        <!-- Redesigned Capsule 2: Truck Toggle -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-3 py-1 rounded-pill border shadow-sm" style="height: 34px;">
-                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-3">
-                                <i class="fa fa-truck text-dark" style="font-size: 1rem;"></i>
-                                <span style="position: absolute; right: -6px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 8px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff; transform: scale(0.8);">S</span>
+                        <!-- Truck Toggle group -->
+                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
                             </div>
-                            <div class="custom-control custom-switch p-0" style="min-height: auto; width: 35px;">
+                            <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
-                                <label class="custom-control-label" for="adminTruckToggle" style="padding-left: 35px; margin-bottom: 0; cursor: pointer;"></label>
+                                <label class="custom-control-label" for="adminTruckToggle"></label>
                             </div>
                         </div>
-
+                    </div>
                         <div class="input-group input-group-sm mr-2" style="width: 160px;">
                              <div class="input-group-prepend">
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
