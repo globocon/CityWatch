@@ -80,6 +80,7 @@ namespace CityWatch.Web.Services
                 .Include(x => x.Guard)
                 .Include(x => x.ReliefGuard)
                 .Include(x => x.Callsign)
+                .Include(x => x.PayRate)
                 .OrderBy(x => x.ShiftStart)
                 .ToListAsync();
 
@@ -219,8 +220,11 @@ namespace CityWatch.Web.Services
                                  foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
-                                    dailyTotals[i] += duration;
-                                    projectWeeklyGrandTotal += duration;
+                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var value = includeFinancials ? (duration * (double)rate) : duration;
+
+                                    dailyTotals[i] += value;
+                                    projectWeeklyGrandTotal += value;
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
@@ -290,9 +294,8 @@ namespace CityWatch.Web.Services
 
                             // Footer Row for Totals (Identical Style)
                             Cell totalLabelCell = new Cell().SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2);
-                            var grandTotalText = includeFinancials ? $"Weekly Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
+                            var grandTotalText = includeFinancials ? $"Total Pay: $ {projectWeeklyGrandTotal:F2}" : $"Total Hours: {projectWeeklyGrandTotal:F2}";
                             var grandTotalPara = new Paragraph(grandTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont());
-                            if (includeFinancials) grandTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
                             totalLabelCell.Add(grandTotalPara);
                             table.AddCell(totalLabelCell);
 
@@ -300,7 +303,6 @@ namespace CityWatch.Web.Services
                             {
                                 var dayTotalText = includeFinancials ? $"$ {dailyTotals[i]:F2}" : $"{dailyTotals[i]:F2}";
                                 var dayTotalPara = new Paragraph(dayTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER);
-                                if (includeFinancials) dayTotalPara.SetFontColor(new DeviceRgb(255, 61, 0)).SetBold();
                                 table.AddCell(new Cell().Add(dayTotalPara).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                             }
 

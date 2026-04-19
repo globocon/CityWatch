@@ -463,8 +463,10 @@
                     tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0h</span></div></td>');
                 }
 
-                var grandTotal = 0;
-                var dailyTotals = [0,0,0,0,0,0,0];
+                var grandTotalHours = 0;
+                var grandTotalCost = 0;
+                var dailyTotalHours = [0,0,0,0,0,0,0];
+                var dailyTotalCost = [0,0,0,0,0,0,0];
 
                 res.results.forEach(function (row) {
                     var rowHtml = '<tr>' +
@@ -491,8 +493,13 @@
                         
                         dayShifts.forEach(function (s) {
                             var duration = parseFloat(s.durationHours);
-                            dailyTotals[index] += duration;
-                            grandTotal += duration;
+                            var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
+                            var cost = duration * activeRate;
+
+                            dailyTotalHours[index] += duration;
+                            grandTotalHours += duration;
+                            dailyTotalCost[index] += cost;
+                            grandTotalCost += cost;
 
                             var statusClass = 'status-pushed';
                             if (s.status === 1) statusClass = 'status-accepted';
@@ -540,14 +547,16 @@
 
                 // Update Totals
                 if (isAdminFinancialsOn) {
-                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotal.toFixed(2) + '</span>');
+                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
+                    $('.total-label:contains("Weekly Total")').text("Weekly Pay");
                     for(var i=0; i<7; i++) {
-                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotals[i].toFixed(2) + '</span>');
+                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotalCost[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
                     }
                 } else {
-                    $('#guard_weekly_grand_total').text(grandTotal.toFixed(2).replace(/\.00$/, "") + "h");
+                    $('#guard_weekly_grand_total').text(grandTotalHours.toFixed(2).replace(/\.00$/, "") + "h");
+                    $('.total-label:contains("Weekly Pay")').text("Weekly Total");
                     for(var i=0; i<7; i++) {
-                        $('#daily_total_' + i).text(dailyTotals[i].toFixed(2).replace(/\.00$/, "") + "h");
+                        $('#daily_total_' + i).text(dailyTotalHours[i].toFixed(2).replace(/\.00$/, "") + "h");
                     }
                 }
             },
