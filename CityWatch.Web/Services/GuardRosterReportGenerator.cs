@@ -65,6 +65,7 @@ namespace CityWatch.Web.Services
         {
             public DateTime Date { get; set; }
             public List<string> States { get; set; }
+            public bool IsPublicHoliday { get; set; }
         }
 
         public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
@@ -84,9 +85,9 @@ namespace CityWatch.Web.Services
                 .OrderBy(x => x.ShiftStart)
                 .ToListAsync();
 
-            // Fetch Holidays for the range
+            // Fetch Holidays for the range (including recurring match patterns)
             var holidayEvents = await _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)))
                 .ToListAsync();
 
             var holidayStates = await _context.PublicHolidayStates
@@ -112,15 +113,23 @@ namespace CityWatch.Web.Services
                             for (int i = 0; i < 7; i++)
                             {
                                 var dDate = weekStart.AddDays(i).Date;
-                                var hDay = holidayEvents.FirstOrDefault(h => h.StartDate.Date <= dDate && h.ExpiryDate.Date >= dDate);
+                                
+                                // Match by absolute date or recurring Month/Day
+                                var dayHolidays = holidayEvents.Where(h => 
+                                    (dDate >= h.StartDate.Date && dDate <= h.ExpiryDate.Date) ||
+                                    (h.RepeatYearly && h.StartDate.Month == dDate.Month && h.StartDate.Day == dDate.Day)
+                                ).ToList();
+
                                 var states = new List<string>();
-                                if (hDay != null)
+                                bool isPh = dayHolidays.Any();
+
+                                foreach (var h in dayHolidays)
                                 {
-                                    var hStates = holidayStates.Where(s => s.CalendarEventId == hDay.id).Select(s => s.State).ToList();
+                                    var hStates = holidayStates.Where(s => s.CalendarEventId == h.id).Select(s => s.State).ToList();
                                     if (hStates.Count == 0) states.Add("ALL");
                                     else states.AddRange(hStates);
                                 }
-                                weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
+                                weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList(), IsPublicHoliday = isPh });
                             }
 
                             if (w > 0) document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
@@ -207,7 +216,7 @@ namespace CityWatch.Web.Services
                                 else if (loopDate.DayOfWeek == DayOfWeek.Sunday) columnBgColor = new DeviceRgb(252, 228, 236);
 
                                 var phInfo = weeklyHolidays.FirstOrDefault(x => x.Date == loopDate);
-                                if (phInfo != null && phInfo.States.Any())
+                                if (phInfo != null && phInfo.IsPublicHoliday)
                                 {
                                     var siteState = site.State?.Trim().ToUpper();
                                     if (phInfo.States.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phInfo.States.Any(s => s.Trim().ToUpper() == siteState)))

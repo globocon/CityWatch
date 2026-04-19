@@ -117,12 +117,13 @@ namespace CityWatch.Web.Pages.roster
 
             // Fetch Holidays for the range
             var holidays = await _context.BroadcastBannerCalendarEvents
-                .Where(x => x.IsPublicHoliday && x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)))
                 .Select(x => new
                 {
                     x.id,
                     x.StartDate,
                     x.ExpiryDate,
+                    x.RepeatYearly,
                     Reason = x.TextMessage,
                     States = _context.PublicHolidayStates
                         .Where(s => s.CalendarEventId == x.id && !s.IsDeleted)

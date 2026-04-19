@@ -590,15 +590,32 @@
     function isPublicHolidayAtDate(time, holidays, state) {
         if (!holidays) return null;
         var date = new Date(time);
-        var dStr = date.toISOString().split('T')[0];
+        var dYear = date.getFullYear();
+        var dMonth = date.getMonth();
+        var dDay = date.getDate();
+        
+        // Use local date string YYYY-MM-DD to avoid timezone shift issues with toISOString()
+        var dStr = dYear + '-' + String(dMonth + 1).padStart(2, '0') + '-' + String(dDay).padStart(2, '0');
         var siteState = (state || "").trim().toUpperCase();
         
         for (var i = 0; i < holidays.length; i++) {
             var h = holidays[i];
-            var hStart = new Date(h.startDate).toISOString().split('T')[0];
-            var hEnd = new Date(h.expiryDate).toISOString().split('T')[0];
+            var hS = new Date(h.startDate);
+            var hE = new Date(h.expiryDate);
+            var hSStr = hS.getFullYear() + '-' + String(hS.getMonth() + 1).padStart(2, '0') + '-' + String(hS.getDate()).padStart(2, '0');
+            var hEStr = hE.getFullYear() + '-' + String(hE.getMonth() + 1).padStart(2, '0') + '-' + String(hE.getDate()).padStart(2, '0');
             
-            if (dStr >= hStart && dStr <= hEnd) {
+            var isMatch = false;
+            // 1. Exact date range match (using local date strings)
+            if (dStr >= hSStr && dStr <= hEStr) {
+                isMatch = true;
+            }
+            // 2. RepeatYearly match (Month/Day)
+            else if (h.repeatYearly && hS.getMonth() === dMonth && hS.getDate() === dDay) {
+                isMatch = true;
+            }
+
+            if (isMatch) {
                 if (!h.states || h.states.length === 0 || h.states.indexOf("ALL") !== -1 || h.states.indexOf(siteState) !== -1) {
                     return h;
                 }
