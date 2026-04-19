@@ -282,7 +282,6 @@ namespace CityWatch.Web.Services
 
                                     if (includeFinancials)
                                     {
-                                        decimal rate = rateType == "sell" ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
                                         decimal totalAmount = (decimal)duration * rate;
                                         shiftBlock.Add(new Paragraph($"$ {totalAmount:F2}").SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(255, 61, 0)).SetBold().SetMarginTop(2));
                                     }
