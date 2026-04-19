@@ -1680,8 +1680,7 @@
 
             // Fallback: Check when switching to relief tab
             $('#modal-relief-tab').on('shown.bs.tab', function() {
-                var hasRelief = $('#modalReliefGuardId').val() || $('#modalReliefProviderId').val();
-                if (hasRelief && $('.relief-reason-chk:checked').length === 0) {
+                if ($('.relief-reason-chk:checked').length === 0) {
                     $('#chkLWOP').prop('checked', true).trigger('change');
                 }
             });
@@ -2067,6 +2066,9 @@
                         var otherNote = card.data('reliefreasonother') || "";
                         $('#modalReliefReasonOther').show().val(otherNote);
                     }
+                } else if (rGuardId || rProvider) {
+                    // Default to LWOP if relief exists but no reason specified
+                    $('#chkLWOP').prop('checked', true).trigger('change');
                 }
                 $('#modal-guard-tab').tab('show');
 
