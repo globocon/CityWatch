@@ -1963,11 +1963,25 @@ namespace CityWatch.Data.Providers
                 }
 
                 // Fetch ClientSiteSmartWands for processing
-                var smartWandLookup = _context.ClientSiteSmartWands
-     .Where(wand => !wand.IsDeleted)
-     .ToLookup(wand => wand.ClientSiteId);
+                var smartWandLookup = _context.ClientSiteSmartWands.Where(wand => !wand.IsDeleted).ToLookup(wand => wand.ClientSiteId);
 
                 var wandTages = _context.ClientSiteSmartWandTags.Where(wand => !wand.IsDeleted).ToLookup(wand => wand.ClientSiteId);
+
+                //var WeekOftoday = DateTime.Now.DayOfWeek;
+                //var kpisettingsday = _context.ClientSiteDayKpiSettings.Where(x => x.WeekDay == WeekOftoday).ToLookup(cs => cs.ClientSiteKpiSetting.ClientSiteId);
+
+                var weekOfToday = DateTime.Now.DayOfWeek;
+                var kpisettingsday = _context.ClientSiteDayKpiSettings
+                    .Include(x => x.ClientSiteKpiSetting)
+                    .Where(x => x.WeekDay == weekOfToday)
+                    .Select(x => new
+                    {
+                        x,
+                        x.ClientSiteKpiSetting.ClientSiteId
+                    })
+                    .AsNoTracking()
+                    .AsEnumerable()
+                    .ToLookup(x => x.ClientSiteId, x => x.x);
 
                 foreach (var item in allValues)
                 {
@@ -1990,10 +2004,20 @@ namespace CityWatch.Data.Providers
                             item.haswandtags = wandTagsForSite.Any() ? 1 : 0;
                         }
 
-                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
-                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+                        var PatrolFqForSite = kpisettingsday[item.ClientSiteId].FirstOrDefault();
+                        item.PatrolFqForDayOrHour = PatrolFqForSite?.NoOfPatrols != null ? $"{PatrolFqForSite.NoOfPatrols} P{(PatrolFqForSite.PatrolFrequency == 1 ? "D" : "H")} | " : item.PatrolFqForDayOrHour;
+
+                        //var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        //item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"font-sm\">" +
+                        //                $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}</span>" +
+                        //                $"&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                        item.SiteName =
+                            $"{item.SiteName}" +
+                            $"<span class=\"ml-2 align-middle text-nowrap text-truncate d-inline-block small\" style=\"max-width:900px;\">" +
+                            $"<i class=\"fa fa-mobile align-middle\"></i> {phoneNumbersString}</span>" +
+                            $"<span class=\"ml-2 align-middle icon-satellite-3 satellite-3-fontsize\" id=\"btnUpArrow\"></span>";
 
                         item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
                                        $"<i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a> {item.Address}" +
@@ -8216,7 +8240,7 @@ namespace CityWatch.Data.Providers
             try
             {
                 return _context.Set<SiteTagStatusPendingNew>()
-                    .FromSqlRaw("EXEC Sp_GetClientSiteTagScanSummary @ClientId = {0}, @FromDate = {1}, @ToDate = {2}", clientId, fromDate,ToDate)
+                    .FromSqlRaw("EXEC Sp_GetClientSiteTagScanSummary @ClientId = {0}, @FromDate = {1}, @ToDate = {2}", clientId, fromDate, ToDate)
                     .ToList();
             }
             catch (Exception ex)
