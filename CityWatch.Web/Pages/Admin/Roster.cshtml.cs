@@ -174,7 +174,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
 
-        public JsonResult OnPostVerifyBookingAccess(string guardLicNo)
+        public JsonResult OnPostVerifyBookingAccess(string guardLicNo, string pin)
         {
             var Issuccess = false;
             var exMessage = "";
@@ -182,7 +182,12 @@ namespace CityWatch.Web.Pages.Admin
             {
                 if (User.Identity.IsAuthenticated)
                 {
-                    if (!string.IsNullOrEmpty(guardLicNo))
+                    bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
+                    if (isSystemAdmin && guardLicNo == "ADMIN" && pin == "ADMIN")
+                    {
+                        Issuccess = true;
+                    }
+                    else if (!string.IsNullOrEmpty(guardLicNo) && !string.IsNullOrEmpty(pin))
                     {
                         var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo.Trim());
                         if (guard != null)
@@ -191,7 +196,14 @@ namespace CityWatch.Web.Pages.Admin
                             {
                                 if (guard.IsAdminRosterAccess)
                                 {
-                                    Issuccess = true;
+                                    if (guard.Pin == pin.Trim())
+                                    {
+                                        Issuccess = true;
+                                    }
+                                    else
+                                    {
+                                        exMessage = "Error: Invalid HR PIN.";
+                                    }
                                 }
                                 else
                                 {
@@ -210,7 +222,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
                     else
                     {
-                        exMessage = "Error: Invalid license no.";
+                        exMessage = "Error: Invalid license no or PIN.";
                     }
                 }
                 else

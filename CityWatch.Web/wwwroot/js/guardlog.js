@@ -9985,9 +9985,10 @@ $('#btnBookingAuthConfirm').on('click', function () {
     $('#bookingAuthValidationSummary').html('');
 
     var guardLicNo = $('#BookingAuth_SecurityNo').val();
+    var pin = $('#BookingAuth_PIN').val();
 
-    if (!guardLicNo) {
-        $('#bookingAuthValidationSummary').html('Please enter a license number.');
+    if (!guardLicNo || !pin) {
+        $('#bookingAuthValidationSummary').html('Please enter both license number and PIN.');
         return;
     }
 
@@ -9997,7 +9998,8 @@ $('#btnBookingAuthConfirm').on('click', function () {
         url: '/Admin/Roster?handler=VerifyBookingAccess',
         type: 'POST',
         data: {
-            guardLicNo: guardLicNo
+            guardLicNo: guardLicNo,
+            pin: pin
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -10017,11 +10019,13 @@ $('#btnBookingAuthConfirm').on('click', function () {
 
 $(document).on('show.bs.modal', '#mdlAuthBookingAccess', function () {
     $('#BookingAuth_SecurityNo').val('');
+    $('#BookingAuth_PIN').val('');
     $('#bookingAuthValidationSummary').html('');
 });
 
 $(document).on('hidden.bs.modal', '#mdlAuthBookingAccess', function () {
     $('#BookingAuth_SecurityNo').val('');
+    $('#BookingAuth_PIN').val('');
     $('#bookingAuthValidationSummary').html('');
 });
 
