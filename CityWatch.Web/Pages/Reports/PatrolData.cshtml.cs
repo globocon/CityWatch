@@ -1508,6 +1508,8 @@ namespace CityWatch.Web.Pages.Reports
                     };
                 })
                 .ToList();
+      
+
 
             //var dailySiteControllerWandStrikeData = new List<object>();
 
@@ -1572,7 +1574,7 @@ namespace CityWatch.Web.Pages.Reports
             //       }
             //   }
 
-            return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData } });
+            return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData,totalStrikes, individualFQWandStrikeData } });
         }
         public IActionResult OnPostGenerateReportGraphFifthTab(PatrolRequest ReportRequestnew, string[] TagId, string[] TagTypeId, string[] TagLabel,string GuardName,string LicenseNo, string[] SmartWandId)
         {
@@ -1617,7 +1619,7 @@ namespace CityWatch.Web.Pages.Reports
                     };
                 })
                 .ToList();
-
+         
             var filteredLogs = filterLogsLatest
     .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
                 x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
@@ -1652,7 +1654,7 @@ namespace CityWatch.Web.Pages.Reports
 
 
 
-            return new JsonResult(new { chartData = new { dailySiteControllerWandStrikeDataForDownselect, individualFQWandStrikeDataForDownselect } });
+            return new JsonResult(new { chartData = new { dailySiteControllerWandStrikeDataForDownselect,totalStrikes, individualFQWandStrikeDataForDownselect } });
         }
 
         public JsonResult OnGetClientSiteWandAndTags(string clientSites)
