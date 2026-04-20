@@ -10,6 +10,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using Microsoft.EntityFrameworkCore;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Word;
@@ -73,6 +74,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
+        private readonly CityWatchDbContext _context;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -81,7 +83,7 @@ namespace CityWatch.Web.Pages.Admin
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions, CityWatchDbContext context)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -95,6 +97,7 @@ namespace CityWatch.Web.Pages.Admin
             _dropboxUploadService = dropboxUploadService;
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
+            _context = context;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
