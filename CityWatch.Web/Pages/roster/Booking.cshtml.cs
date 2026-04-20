@@ -170,6 +170,7 @@ namespace CityWatch.Web.Pages.roster
                     IsPublicHoliday = isPh,
                     States = states.Distinct().ToList(),
                     Reasons = string.Join("; ", reasonsList)
+                });
             }
         }
 
