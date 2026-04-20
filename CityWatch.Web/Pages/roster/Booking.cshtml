@@ -545,9 +545,7 @@
                     <div class="form-group row">
                         <div class="col-6">
                             <label>Payment Profile</label>
-                            <select id="modalPositionId" class="form-control" style="width: 100%">
-                                <option value="">Select Group First</option>
-                            </select>
+                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
                         </div>
                         <div class="col-6">
                             <label>Type</label>
@@ -561,7 +559,9 @@
                     <div class="form-group row">
                         <div class="col-6">
                             <label>Rate Profile</label>
-                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
+                            <select id="modalPositionId" class="form-control" style="width: 100%">
+                                <option value="">Select Group First</option>
+                            </select>
                         </div>
                          <div class="col-6">
                             <label>Pay Rate</label>
@@ -1533,7 +1533,7 @@
 
             // Pay Rate Group Search initialization in Modal
             $('#modalPayRateGroupId').select2({
-                placeholder: 'Select Group (Client)',
+                placeholder: 'Select Payment Profile',
                 theme: 'bootstrap4',
                 allowClear: true,
                 dropdownParent: $('#addShiftModal'),
@@ -1554,7 +1554,7 @@
 
             // Position Search initialization in Modal
             $('#modalPositionId').select2({
-                placeholder: 'Select Payment Profile',
+                placeholder: 'Select Rate Profile',
                 theme: 'bootstrap4',
                 allowClear: true,
                 dropdownParent: $('#addShiftModal'),
