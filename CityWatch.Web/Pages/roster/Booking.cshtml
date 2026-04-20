@@ -181,22 +181,21 @@
                     </div>
                 </div>
 
-                <!-- Date Navigation -->
+                <!-- Date Navigation & Create Mode -->
                 <div class="col-auto flex-grow-1 text-center">
                     <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
                         <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
                         <span id="displayWeekRange" class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                         <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                        
+                        <div class="border-left ml-2 pl-2" id="createModeContainer">
+                            <select id="createModeSelect" class="form-control form-control-sm border-0 bg-light" style="width: 100px; height: 28px; font-size: 0.8rem;">
+                                <option value="1">Weekly</option>
+                                <option value="2">Fortnight</option>
+                                <option value="4">Monthly</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Create Mode Selection (Dropdown) -->
-                <div class="col-auto mr-4" id="createModeContainer">
-                    <select id="createModeSelect" class="form-control form-control-sm create-mode-select">
-                        <option value="1">Weekly</option>
-                        <option value="2">Fortnight</option>
-                        <option value="4">Monthly</option>
-                    </select>
                 </div>
 
                 <!-- Add Site Selection -->
@@ -1279,7 +1278,6 @@
         .guard-status-stamp.invoiced { color: #0d47a1; border-color: #0d47a1; }
         .guard-status-stamp.cancelled { color: #424242; border-color: #424242; }
     </style>
-</div>
 
 @section PageHeader {
     <h2 class="font-weight-bold mb-0 mr-3">Booking</h2>
@@ -1288,11 +1286,12 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            var isPageLocked = @(Model.IsLocked ? "true" : "false");
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
-            var activeTab = '@Model.ActiveTab';
+            var activeTab = '@(Model.ActiveTab ?? "projects")';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
-            var currentWeeks = @Model.Weeks;
+            var currentWeeks = parseInt('@Model.Weeks') || 1;
             
             // Set initial dropdown value
             $('#createModeSelect').val(currentWeeks);
@@ -1881,8 +1880,8 @@
                                     '<td class="d-flex flex-column" style="min-height: 120px; border-right: 1px solid #dee2e6 !important;">' + 
                                         '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
                                         '<small class="text-muted">' + row.clientTypeName + '</small>' +
-                                        (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
-                                        siteStatusHtml + 
+                                        (row.siteStatusHtml || '') + 
+                                        (!isPageLocked ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') +
                                     '</td>';
 
                                 for (var i = 0; i < 7; i++) {
