@@ -267,7 +267,7 @@ function loadPayRateGroupsTable() {
 
                 var row = '<tr>' +
                     '<td>' + item.name + '</td>' +
-                    '<td style="color:red; font-size: small;">' + sites + '</td>' +
+                    '<td style="font-size: small; color: #555;">' + sites + '</td>' +
                     '<td class="text-center">' +
                     '<button onclick="openPayRateGroupAssignment(' + item.id + ')" class="btn btn-sm btn-outline-info mr-2" title="Assign Sites"><i class="fa fa-link"></i></button>' +
                     '<button onclick="editPayRateGroup(' + item.id + ', \'' + item.name + '\')" class="btn btn-sm btn-outline-primary mr-2" title="Edit Group"><i class="fa fa-pencil"></i></button>' +
