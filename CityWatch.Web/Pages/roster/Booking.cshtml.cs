@@ -57,6 +57,7 @@ namespace CityWatch.Web.Pages.roster
         public bool IsLocked { get; set; }
         public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
         public int Weeks { get; set; } = 1;
+        public string ActiveTab { get; set; }
 
         public class PublicHolidayDayInfo
         {
@@ -253,7 +254,7 @@ namespace CityWatch.Web.Pages.roster
                 .ToListAsync();
 
             // Project Status
-            var projectStatus = (await _context.RosterGroupWeekStatuses.FirstOrDefaultAsync(x => x.RosterGroupId == groupId && x.StartDate == startDate))?.Status ?? "Live";
+            var projectStatus = "Live"; // Default to Live as RosterGroupWeekStatuses table is not available
 
             var rosterData = groupSites.Select(gs => {
                 var siteWeekStatuses = _context.RosterSiteWeekStatuses
@@ -1326,20 +1327,6 @@ namespace CityWatch.Web.Pages.roster
 
             foreach (var siteId in projectSites)
             {
-                var siteWeekStatuses = await _context.RosterSiteWeekStatuses
-                    .Where(x => x.ClientSiteId == gs.ClientSiteId && x.StartDate >= startDate && x.StartDate <= endDate)
-                    .ToListAsync();
-
-                var publicHolidayFlags = GetPublicHolidayFlags(gs.ClientSite?.State, startDate, numDays);
-                var publicHolidayReasons = GetPublicHolidayReasons(gs.ClientSite?.State, startDate, numDays);
-                
-                var weekStatuses = new string[weeks];
-                for (int w = 0; w < weeks; w++)
-                {
-                    var weekStart = startDate.AddDays(w * 7).Date;
-                    weekStatuses[w] = siteWeekStatuses.FirstOrDefault(x => x.StartDate.Date == weekStart)?.Status ?? "Live";
-                }
-
                 var statusObj = await _context.RosterSiteWeekStatuses
                     .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate.Date == startDate.Date);
 
