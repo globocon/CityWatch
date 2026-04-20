@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
+    [Table("PayRateGroupSite")]
     public class PayRateGroupSite
     {
         [Key]
