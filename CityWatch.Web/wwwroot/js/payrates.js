@@ -310,7 +310,7 @@ $(document).on('click', '#btnSavePrgSiteAssignment', function () {
         });
 
         $.ajax({
-            url: '/Admin/Settings?handler=PayRateGroupAssignments',
+            url: '/Admin/Settings?handler=SavePayRateGroupAssignments',
             data: {
                 groupId: groupId,
                 selectedSites: selectedSites
