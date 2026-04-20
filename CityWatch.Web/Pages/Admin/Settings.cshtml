@@ -5958,6 +5958,30 @@
     </div>
 </div>
 
+<!-- Pay Rate Group Site Assignment modal -->
+<div class="modal" tabindex="-1" role="dialog" id="payrate-group-site-assignment-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Manage RO Default Assignments</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="payrate-group-assignment-for-id" value="0" />
+                <button type="button" id="expandAllPrgAccess" class="btn btn-sm btn-light">Expand All</button>
+                <button type="button" id="collapseAllPrgAccess" class="btn btn-sm btn-light">Collapse All</button>
+                <hr />                
+                <div id="prgSiteTreeView"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSavePrgSiteAssignment" class="btn btn-outline-primary" data-dismiss="modal">Save Assignments</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <partial name="_SettingsPopup" />
 <partial name="_CriticaldocumentPopup" />
 @Html.AntiForgeryToken()
@@ -6215,7 +6239,8 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th style="width:100px">Action</th>
+                                <th style="color:red;">RO Default Assignments</th>
+                                <th style="width:120px">Action</th>
                             </tr>
                         </thead>
                         <tbody>

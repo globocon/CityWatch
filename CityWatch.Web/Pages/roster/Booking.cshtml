@@ -1541,7 +1541,12 @@
                     url: '/roster/Booking?handler=SearchPayRateGroups',
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) { return { search: params.term }; },
+                    data: function (params) { 
+                        return { 
+                            search: params.term,
+                            siteId: $('#modalSiteId').val() // Pass siteId for filtering
+                        }; 
+                    },
                     processResults: function (data) { return { results: data.results }; },
                     cache: true
                 },
@@ -1943,6 +1948,20 @@
                 $('#modalReliefProviderId').val(null).trigger('change');
                 $('.relief-reason-chk').prop('checked', false);
                 $('#modalReliefReason').val('');
+                // Auto-select Payment Profile if assigned to site
+                $.ajax({
+                    url: '/roster/Booking?handler=SiteDefaultAssignment',
+                    data: { siteId: siteId },
+                    success: function (res) {
+                        if (res.success) {
+                            var newOption = new Option(res.groupName, res.groupId, true, true);
+                            $('#modalPayRateGroupId').append(newOption).trigger('change');
+                        } else {
+                            $('#modalPayRateGroupId').val(null).trigger('change');
+                        }
+                    }
+                });
+
                 $('#modal-guard-tab').tab('show');
 
                 $('#addShiftModal').modal('show');

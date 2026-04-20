@@ -3961,8 +3961,49 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetPayRateGroupsList()
         {
-            var data = _configDataProvider.GetPayRateGroups();
+            var data = _configDataProvider.GetPayRateGroups().Select(x => new
+            {
+                x.Id,
+                x.Name,
+                AssignedSites = x.PayRateGroupSites?.Select(s => new { s.ClientSiteId, s.ClientSite?.Name }).ToList()
+            });
             return new JsonResult(data);
+        }
+
+        public JsonResult OnGetPayRateGroupAssignments(int groupId)
+        {
+            var results = new List<object>();
+            var groupAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).Select(x => x.ClientSiteId).ToList();
+            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => !x.IsDeleted).GroupBy(x => x.ClientType.Name);
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new
+                {
+                    Name = item.Key,
+                    ClientSites = item.Select(x => new
+                    {
+                        Id = x.Id,
+                        x.Name,
+                        Checked = groupAssignments.Contains(x.Id)
+                    }).ToList()
+                });
+            }
+
+            return new JsonResult(results);
+        }
+
+        public JsonResult OnPostSavePayRateGroupAssignments(int groupId, List<int> selectedSites)
+        {
+            try
+            {
+                _configDataProvider.SavePayRateGroupSites(groupId, selectedSites);
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
 
         public JsonResult OnPostSavePayRateGroup(PayRateGroup group)

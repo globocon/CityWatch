@@ -411,6 +411,7 @@ namespace CityWatch.Data
         public DbSet<irOfflineCacheNotSynced> irOfflineCacheNotSynced { get; set; }
         public DbSet<KeyVehicleLogPax> KeyVehicleLogsPax { get; set; }
         public DbSet<RosterSiteWeekStatus> RosterSiteWeekStatuses { get; set; }
+        public DbSet<PayRateGroupSite> PayRateGroupSites { get; set; }
     }
 
 
