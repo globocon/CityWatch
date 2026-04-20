@@ -3978,7 +3978,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             var results = new List<object>();
             var groupAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).Select(x => x.ClientSiteId).ToList();
-            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => !x.IsDeleted).GroupBy(x => x.ClientType.Name);
+            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => x.IsActive).GroupBy(x => x.ClientType.Name);
 
             foreach (var item in allClientSitesGrouped)
             {
