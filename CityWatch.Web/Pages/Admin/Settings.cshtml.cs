@@ -3965,13 +3965,20 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetPayRateGroupsList()
         {
-            var data = _configDataProvider.GetPayRateGroups().Select(x => new
+            try
             {
-                x.Id,
-                x.Name,
-                AssignedSites = x.PayRateGroupSites?.Select(s => new { s.ClientSiteId, s.ClientSite?.Name }).ToList()
-            });
-            return new JsonResult(data);
+                var data = _configDataProvider.GetPayRateGroups().Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    AssignedSites = x.PayRateGroupSites?.Select(s => new { s.ClientSiteId, s.ClientSite?.Name }).ToList()
+                }).ToList();
+                return new JsonResult(data);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { error = ex.Message });
+            }
         }
 
         public JsonResult OnGetPayRateGroupAssignments(int groupId)

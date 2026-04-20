@@ -763,11 +763,11 @@
                             <div class="form-group row">
                                 <label class="col-form-label col-md-2 text-right">Background Colour</label>
                                 <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" value="@(string.IsNullOrEmpty(Model.FeedbackTemplate?.BackgroundColour) ? "#ffffff" : Model.FeedbackTemplate.BackgroundColour)" />
                                 </div>
                                 <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
                                 <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" value="@(string.IsNullOrEmpty(Model.FeedbackTemplate?.TextColor) ? "#000000" : Model.FeedbackTemplate.TextColor)" />
                                 </div>
                                 <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Send to RC</label>
                                 <div class="col-md-1">
@@ -1034,11 +1034,11 @@
                             <div class="form-group row">
                                 <label class="col-form-label col-md-2">Banner Colour</label>
                                 <div class="col-md-4">
-                                    <input type="color" id="txt_color" />
+                                    <input type="color" id="txt_color" value="#ffffff" />
                                 </div>
                                 <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
                                 <div class="col-md-4">
-                                    <input type="color" id="txt_HyperlinkColor" />
+                                    <input type="color" id="txt_HyperlinkColor" value="#0000ff" />
                                 </div>
 
                             </div>
@@ -1073,8 +1073,7 @@
                                 </div>
                                 <label class="col-form-label col-md-2">Expires</label>
                                 <div class="col-md-2 pt-2">
-                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
+                                    <input type="date" id="txt_ExpiryDate" value="2050-06-30" disabled="disabled" />
                                 </div>
 
                             </div>
