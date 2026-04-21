@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using CityWatch.Data.Models;
 using CityWatch.Web.Helpers;
@@ -38,7 +38,7 @@ namespace CityWatch.Web.Helpers
             {
                 menuHtml.AppendLine("<div>");
                 // menuHtml.AppendLine(@"<a href=""https://app.guardhousehq.com/au/account/login/"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
-                menuHtml.AppendLine(@"<a href=""Admin/Roster"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
+                menuHtml.AppendLine(@"<a href=""/RoosterHub"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
                 menuHtml.AppendLine("</div>");
             }
 
