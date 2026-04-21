@@ -390,7 +390,7 @@ namespace CityWatch.Web.Services
                             var siteCell = new Cell().SetPadding(5).SetBorder(new SolidBorder(ColorConstants.BLACK, 0.5f));
                             
                             // Site Name and Type
-                            siteCell.Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetBold().SetMarginBottom(0));
+                            siteCell.Add(new Paragraph(site.ClientSite.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(0));
                             siteCell.Add(new Paragraph(site.ClientSite.ClientType?.Name ?? "Security Service").SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetMarginBottom(2));
 
                             // Status Section (Read-Only Status from Roster Admin)
@@ -501,7 +501,7 @@ namespace CityWatch.Web.Services
                                     pTime.Add(new Text($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)"));
                                     if (!includeSuppliers && shift.Callsign != null) 
                                     {
-                                        pTime.Add(new Text($" [{shift.Callsign.Name}]").SetFontColor(new DeviceRgb(200, 0, 0)).SetBold()); 
+                                        pTime.Add(new Text($" [{shift.Callsign.Name}]")); 
                                     }
                                     shiftBlock.Add(pTime);
 
