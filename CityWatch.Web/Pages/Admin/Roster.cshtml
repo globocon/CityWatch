@@ -17,7 +17,6 @@
         <!-- BOOKING -->
         <div class="col-sm-3">
             <h3>BOOKING</h3>
-            <div class="font-weight-bold text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 0.85rem;">(Admin Only)</div>
 
         @if (AuthUserHelper.IsAdminUserLoggedIn
             || AuthUserHelper.IsAdminGlobal
@@ -40,6 +39,7 @@
                     </a>
                 </div>
         }
+            <div class="font-weight-bold text-muted" style="margin-top: -15px; font-size: 0.85rem;">(Admin Only)</div>
         </div>
 
         <!-- ROSTERS -->
