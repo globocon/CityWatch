@@ -9794,7 +9794,7 @@ $(function () {
         const clientSiteControl = $('#Rooster_ClientSite');
         clientSiteControl.html('');
         $.ajax({
-            url: '/Admin/Roster?handler=ClientSitesWithIds&type=' + encodeURIComponent(option),
+            url: '/RoosterHub?handler=ClientSitesWithIds&type=' + encodeURIComponent(option),
             type: 'GET',
             dataType: 'json',
             success: function (data) {
@@ -9941,7 +9941,7 @@ $('#btnTimesheetConfirm').on('click', function () {
 
 
     $.ajax({
-        url: '/Admin/Roster?handler=CheckAndCreateDownloadAuditLog1',
+        url: '/RoosterHub?handler=CheckAndCreateDownloadAuditLog1',
         type: 'POST',
         data: {
             guardLicNo: guardLicNo
@@ -9958,7 +9958,7 @@ $('#btnTimesheetConfirm').on('click', function () {
                 clearGuardValidationSummary('GuardRosterValidationSummary');
                 $('#hidden_rosterguardLicenses').val(guardLicNo);
                 $.ajax({
-                    url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
+                    url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
                     type: 'GET',
                     dataType: 'json',
                     success: function (data) {
@@ -9995,7 +9995,7 @@ $('#btnBookingAuthConfirm').on('click', function () {
     $('#loader').show();
 
     $.ajax({
-        url: '/Admin/Roster?handler=VerifyBookingAccess',
+        url: '/RoosterHub?handler=VerifyBookingAccess',
         type: 'POST',
         data: {
             guardLicNo: guardLicNo,
@@ -10040,7 +10040,7 @@ $('#btnTimesheetSiteConfirm').on('click', function () {
     }
 
     $.ajax({
-        url: '/Admin/Roster?handler=CheckAndCreateDownloadAuditLogSite',
+        url: '/RoosterHub?handler=CheckAndCreateDownloadAuditLogSite',
         type: 'POST',
         data: {
             siteId: siteId
@@ -10074,7 +10074,7 @@ function GetTimesheetModel(guardLicNo) {
     $('#frequency').val('');
     $('#timesheetModal').modal('show');
     $.ajax({
-        url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
+        url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
         type: 'GET',
         dataType: 'json',
         success: function (data) {
@@ -10370,7 +10370,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/Admin/Roster?handler=ClientSitesWithIds&type=' + encodeURIComponent(option),
+            url: '/RoosterHub?handler=ClientSitesWithIds&type=' + encodeURIComponent(option),
             type: 'GET',
             dataType: 'json',
             success: function (data) {
@@ -10396,7 +10396,7 @@ $(function () {
 
         $('#loader').show();
         $.ajax({
-            url: '/Admin/Roster?handler=VerifyGuardRosterAuth',
+            url: '/RoosterHub?handler=VerifyGuardRosterAuth',
             type: 'POST',
             data: {
                 licenseNo: licenseNo,
