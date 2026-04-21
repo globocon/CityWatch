@@ -641,21 +641,6 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = groups });
         }
 
-        public JsonResult OnGetSearchSites(string search)
-        {
-            var sites = _context.ClientSites
-                .Include(x => x.ClientType)
-                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
-                .OrderBy(x => x.Name)
-                .Select(x => new { 
-                    id = x.Id, 
-                    text = x.Name + (x.ClientType != null ? " (" + x.ClientType.Name + ")" : "")
-                })
-                .ToList();
-
-            return new JsonResult(new { results = sites });
-        }
-
         public async Task<IActionResult> OnPostDeleteGroup(int groupId)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
