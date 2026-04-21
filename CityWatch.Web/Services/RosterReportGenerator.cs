@@ -314,14 +314,33 @@ namespace CityWatch.Web.Services
                             weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
                         }
 
-                        // --- PART B: Intelligent Stacking Logic ---
-                        var weekShiftsCount = schedules.Count(s => s.ShiftStart >= weekStart && s.ShiftStart <= weekEnd);
-                        bool isCurrentWeekSmall = weekShiftsCount <= 3;
+                        // --- PART B: Intelligent Stacking Logic (Refined) ---
+                        // We look at the "Max Lines Tall" (max shifts in any single day) to see if it's a "Short Week".
+                        int maxDailyShifts = 0;
+                        for (int i = 0; i < 7; i++)
+                        {
+                            var loopDate = weekStart.AddDays(i).Date;
+                            var dayCount = schedules.Count(s => s.ClientSiteId == groupSites.FirstOrDefault()?.ClientSiteId && s.ShiftStart.Date == loopDate);
+                            if (dayCount > maxDailyShifts) maxDailyShifts = dayCount;
+                        }
+                        
+                        bool isCurrentWeekSmall = maxDailyShifts <= 3; // Threshold: 1-3 lines tall as requested
+                        int prevMaxDailyShifts = 0;
+                        if (w > 0)
+                        {
+                            var prevWeekStart = startDate.AddDays((w - 1) * 7);
+                            for (int i = 0; i < 7; i++)
+                            {
+                                var loopDate = prevWeekStart.AddDays(i).Date;
+                                var dayCount = schedules.Count(s => s.ClientSiteId == groupSites.FirstOrDefault()?.ClientSiteId && s.ShiftStart.Date == loopDate);
+                                if (dayCount > prevMaxDailyShifts) prevMaxDailyShifts = dayCount;
+                            }
+                        }
 
                         if (w > 0)
                         {
-                            // If current week is large, or if we are transitioning from a large week, start a new page
-                            if (!isCurrentWeekSmall || (w > 0 && schedules.Count(s => s.ShiftStart >= startDate.AddDays((w-1) * 7) && s.ShiftStart <= startDate.AddDays((w-1) * 7 + 6)) > 3))
+                            // If current week is tall, or if the previous week was tall, start a new page
+                            if (!isCurrentWeekSmall || prevMaxDailyShifts > 3)
                             {
                                 document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
                             }
@@ -332,8 +351,7 @@ namespace CityWatch.Web.Services
                             }
                         }
 
-                        bool isPreviousWeekLarge = w > 0 && schedules.Count(s => s.ShiftStart >= startDate.AddDays((w - 1) * 7) && s.ShiftStart <= startDate.AddDays((w - 1) * 7 + 6)) > 3;
-                        bool showFullHeader = (w == 0) || !isCurrentWeekSmall || isPreviousWeekLarge;
+                        bool showFullHeader = (w == 0) || !isCurrentWeekSmall || (w > 0 && prevMaxDailyShifts > 3);
 
                         if (showFullHeader)
                         {
