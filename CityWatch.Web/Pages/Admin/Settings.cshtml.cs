@@ -10,6 +10,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using Microsoft.EntityFrameworkCore;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Word;
@@ -53,6 +54,7 @@ using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
+using CityWatch.Data;
 
 
 
@@ -73,6 +75,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
+        private readonly CityWatchDbContext _context;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -81,7 +84,7 @@ namespace CityWatch.Web.Pages.Admin
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions)
+             IOptions<EmailOptions> emailOptions, CityWatchDbContext context)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -95,6 +98,7 @@ namespace CityWatch.Web.Pages.Admin
             _dropboxUploadService = dropboxUploadService;
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
+            _context = context;
         }
         public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
@@ -3961,8 +3965,56 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetPayRateGroupsList()
         {
-            var data = _configDataProvider.GetPayRateGroups();
-            return new JsonResult(data);
+            try
+            {
+                var data = _configDataProvider.GetPayRateGroups().Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    AssignedSites = x.PayRateGroupSites?.Select(s => new { s.ClientSiteId, s.ClientSite?.Name }).ToList()
+                }).ToList();
+                return new JsonResult(data);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { error = ex.Message });
+            }
+        }
+
+        public JsonResult OnGetPayRateGroupAssignments(int groupId)
+        {
+            var results = new List<object>();
+            var groupAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).Select(x => x.ClientSiteId).ToList();
+            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => x.IsActive).GroupBy(x => x.ClientType.Name);
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new
+                {
+                    Name = item.Key,
+                    ClientSites = item.Select(x => new
+                    {
+                        Id = x.Id,
+                        x.Name,
+                        Checked = groupAssignments.Contains(x.Id)
+                    }).ToList()
+                });
+            }
+
+            return new JsonResult(results);
+        }
+
+        public JsonResult OnPostSavePayRateGroupAssignments(int groupId, List<int> selectedSites)
+        {
+            try
+            {
+                _configDataProvider.SavePayRateGroupSites(groupId, selectedSites);
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
 
         public JsonResult OnPostSavePayRateGroup(PayRateGroup group)

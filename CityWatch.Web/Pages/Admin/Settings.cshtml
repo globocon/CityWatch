@@ -763,11 +763,11 @@
                             <div class="form-group row">
                                 <label class="col-form-label col-md-2 text-right">Background Colour</label>
                                 <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" value="@(string.IsNullOrEmpty(Model.FeedbackTemplate?.BackgroundColour) ? "#ffffff" : Model.FeedbackTemplate.BackgroundColour)" />
                                 </div>
                                 <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
                                 <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" value="@(string.IsNullOrEmpty(Model.FeedbackTemplate?.TextColor) ? "#000000" : Model.FeedbackTemplate.TextColor)" />
                                 </div>
                                 <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Send to RC</label>
                                 <div class="col-md-1">
@@ -1034,11 +1034,11 @@
                             <div class="form-group row">
                                 <label class="col-form-label col-md-2">Banner Colour</label>
                                 <div class="col-md-4">
-                                    <input type="color" id="txt_color" />
+                                    <input type="color" id="txt_color" value="#ffffff" />
                                 </div>
                                 <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
                                 <div class="col-md-4">
-                                    <input type="color" id="txt_HyperlinkColor" />
+                                    <input type="color" id="txt_HyperlinkColor" value="#0000ff" />
                                 </div>
 
                             </div>
@@ -1073,8 +1073,7 @@
                                 </div>
                                 <label class="col-form-label col-md-2">Expires</label>
                                 <div class="col-md-2 pt-2">
-                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
+                                    <input type="date" id="txt_ExpiryDate" value="2050-06-30" disabled="disabled" />
                                 </div>
 
                             </div>
@@ -5958,6 +5957,30 @@
     </div>
 </div>
 
+<!-- Pay Rate Group Site Assignment modal -->
+<div class="modal" tabindex="-1" role="dialog" id="payrate-group-site-assignment-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Manage RO Default Assignments</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="payrate-group-assignment-for-id" value="0" />
+                <button type="button" id="expandAllPrgAccess" class="btn btn-sm btn-light">Expand All</button>
+                <button type="button" id="collapseAllPrgAccess" class="btn btn-sm btn-light">Collapse All</button>
+                <hr />                
+                <div id="prgSiteTreeView"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSavePrgSiteAssignment" class="btn btn-outline-primary" data-dismiss="modal">Save Assignments</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <partial name="_SettingsPopup" />
 <partial name="_CriticaldocumentPopup" />
 @Html.AntiForgeryToken()
@@ -6215,7 +6238,8 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th style="width:100px">Action</th>
+                                <th>RO Default Assignments</th>
+                                <th style="width:120px">Action</th>
                             </tr>
                         </thead>
                         <tbody>

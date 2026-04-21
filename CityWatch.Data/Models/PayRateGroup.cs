@@ -18,5 +18,6 @@ namespace CityWatch.Data.Models
         public bool IsDeleted { get; set; } = false;
 
         public virtual ICollection<PayRate> PayRates { get; set; }
+        public virtual ICollection<PayRateGroupSite> PayRateGroupSites { get; set; }
     }
 }

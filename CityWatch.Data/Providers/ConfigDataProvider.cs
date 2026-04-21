@@ -245,6 +245,7 @@ namespace CityWatch.Data.Providers
         List<PayRateGroup> GetPayRateGroups();
         void SavePayRateGroup(PayRateGroup group);
         void DeletePayRateGroup(int id);
+        void SavePayRateGroupSites(int groupId, List<int> siteIds);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -301,7 +302,12 @@ namespace CityWatch.Data.Providers
 
         public List<PayRateGroup> GetPayRateGroups()
         {
-            return _context.PayRateGroups.Where(x => !x.IsDeleted).OrderBy(x => x.Name).ToList();
+            return _context.PayRateGroups
+                .Include(x => x.PayRateGroupSites)
+                    .ThenInclude(x => x.ClientSite)
+                .Where(x => !x.IsDeleted)
+                .OrderBy(x => x.Name)
+                .ToList();
         }
 
         public void SavePayRateGroup(PayRateGroup group)
@@ -339,6 +345,24 @@ namespace CityWatch.Data.Providers
                 existing.IsDeleted = true;
                 _context.SaveChanges();
             }
+        }
+
+        public void SavePayRateGroupSites(int groupId, List<int> siteIds)
+        {
+            var existingAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).ToList();
+            _context.PayRateGroupSites.RemoveRange(existingAssignments);
+
+            if (siteIds != null && siteIds.Any())
+            {
+                var newAssignments = siteIds.Select(siteId => new PayRateGroupSite
+                {
+                    PayRateGroupId = groupId,
+                    ClientSiteId = siteId
+                });
+                _context.PayRateGroupSites.AddRange(newAssignments);
+            }
+
+            _context.SaveChanges();
         }
 
         public List<FeedbackTemplate> GetFeedbackTemplates()

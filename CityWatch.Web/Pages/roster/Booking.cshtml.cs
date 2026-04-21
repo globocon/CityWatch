@@ -512,10 +512,26 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = rates });
         }
 
-        public JsonResult OnGetSearchPayRateGroups(string search)
+        public JsonResult OnGetSearchPayRateGroups(string search, int? siteId)
         {
-            var groups = _context.PayRateGroups
-                .Where(x => !x.IsDeleted && (string.IsNullOrEmpty(search) || x.Name.Contains(search)))
+            var query = _context.PayRateGroups.Where(x => !x.IsDeleted);
+
+            if (siteId.HasValue)
+            {
+                // Filter by site assignment if it exists
+                var assignedGroupIds = _context.PayRateGroupSites
+                    .Where(x => x.ClientSiteId == siteId.Value)
+                    .Select(x => x.PayRateGroupId)
+                    .ToList();
+
+                if (assignedGroupIds.Any())
+                {
+                    query = query.Where(x => assignedGroupIds.Contains(x.Id));
+                }
+            }
+
+            var groups = query
+                .Where(x => string.IsNullOrEmpty(search) || x.Name.Contains(search))
                 .OrderBy(x => x.Name)
                 .Select(x => new
                 {
@@ -525,6 +541,25 @@ namespace CityWatch.Web.Pages.roster
                 .ToList();
 
             return new JsonResult(new { results = groups });
+        }
+
+        public async Task<JsonResult> OnGetSiteDefaultAssignment(int siteId)
+        {
+            var assignment = await _context.PayRateGroupSites
+                .Where(x => x.ClientSiteId == siteId)
+                .Include(x => x.PayRateGroup)
+                .FirstOrDefaultAsync();
+
+            if (assignment != null && assignment.PayRateGroup != null)
+            {
+                return new JsonResult(new { 
+                    success = true, 
+                    groupId = assignment.PayRateGroup.Id, 
+                    groupName = assignment.PayRateGroup.Name 
+                });
+            }
+
+            return new JsonResult(new { success = false });
         }
 
         public async Task<IActionResult> OnPostUpdateStatus(int id, int status)

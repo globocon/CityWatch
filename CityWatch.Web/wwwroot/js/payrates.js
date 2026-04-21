@@ -260,9 +260,16 @@ function loadPayRateGroupsTable() {
             var tbody = $('#tblPayRateGroups tbody');
             tbody.empty();
             $.each(data, function (i, item) {
+                var sites = "";
+                if (item.assignedSites && item.assignedSites.length > 0) {
+                    sites = item.assignedSites.map(s => s.name).join(", ");
+                }
+
                 var row = '<tr>' +
                     '<td>' + item.name + '</td>' +
+                    '<td style="font-size: small; color: #555;">' + sites + '</td>' +
                     '<td class="text-center">' +
+                    '<button onclick="openPayRateGroupAssignment(' + item.id + ')" class="btn btn-sm btn-outline-info mr-2" title="Assign Sites"><i class="fa fa-link"></i></button>' +
                     '<button onclick="editPayRateGroup(' + item.id + ', \'' + item.name + '\')" class="btn btn-sm btn-outline-primary mr-2" title="Edit Group"><i class="fa fa-pencil"></i></button>' +
                     '<button onclick="deletePayRateGroup(' + item.id + ')" class="btn btn-sm btn-outline-danger" title="Delete Group"><i class="fa fa-trash"></i></button>' +
                     '</td>' +
@@ -272,6 +279,64 @@ function loadPayRateGroupsTable() {
         }
     });
 }
+
+/** Pay Rate Group Site Assignment Logic **/
+let prgSiteTree;
+
+function openPayRateGroupAssignment(id) {
+    $('#payrate-group-assignment-for-id').val(id);
+    if (prgSiteTree === undefined) {
+        prgSiteTree = $('#prgSiteTreeView').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=PayRateGroupAssignments',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+    prgSiteTree.uncheckAll();
+    prgSiteTree.reload({ groupId: id });
+    $('#payrate-group-site-assignment-modal').modal('show');
+}
+
+$(document).on('click', '#btnSavePrgSiteAssignment', function () {
+    const groupId = $('#payrate-group-assignment-for-id').val();
+    if (prgSiteTree) {
+        let selectedSites = prgSiteTree.getCheckedNodes().filter(function (item) {
+            return item && item !== 'undefined';
+        });
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SavePayRateGroupAssignments',
+            data: {
+                groupId: groupId,
+                selectedSites: selectedSites
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (res) {
+            if (res.success) {
+                loadPayRateGroupsTable();
+                alert('Assignments saved successfully.');
+            } else {
+                alert('Error: ' + res.message);
+            }
+        }).fail(function () {
+            alert('Failed to save assignments.');
+        });
+    }
+});
+
+$(document).on('click', '#expandAllPrgAccess', function () {
+    if (prgSiteTree) prgSiteTree.expandAll();
+});
+
+$(document).on('click', '#collapseAllPrgAccess', function () {
+    if (prgSiteTree) prgSiteTree.collapseAll();
+});
 
 function deletePayRateGroup(id) {
     if (confirm('Are you sure you want to delete this group?')) {
