@@ -165,9 +165,9 @@
                             Weekly
                         </button>
                         <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="rosterModeDropdown">
-                            <a class="dropdown-item active" href="#"><i class="fa fa-calendar-check-o mr-2"></i>Weekly View</a>
-                            <a class="dropdown-item" href="#"><i class="fa fa-calendar-o mr-2"></i>Daily View</a>
-                            <a class="dropdown-item" href="#"><i class="fa fa-calendar-plus-o mr-2"></i>Monthly View</a>
+                            <a class="dropdown-item @(Model.Weeks == 1 ? "active" : "")" href="#" data-weeks="1"><i class="fa fa-calendar-check-o mr-2"></i>Weekly View</a>
+                            <a class="dropdown-item @(Model.Weeks == 2 ? "active" : "")" href="#" data-weeks="2"><i class="fa fa-calendar-o mr-2"></i>Fortnight View</a>
+                            <a class="dropdown-item @(Model.Weeks == 4 ? "active" : "")" href="#" data-weeks="4"><i class="fa fa-calendar-plus-o mr-2"></i>Monthly View</a>
                         </div>
                     </div>
                 </div>
@@ -461,6 +461,7 @@
                     <input type="hidden" id="modalShiftId" />
                     <input type="hidden" id="modalSiteId" />
                     <input type="hidden" id="modalDayIndex" />
+                    <input type="hidden" id="modalWeekOffset" />
 
                     <!-- Tab Headers -->
                     <ul class="nav nav-tabs mb-3" id="modalShiftTabs" role="tablist">
@@ -1265,6 +1266,7 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var currentRosterWeeks = @Model.Weeks;
             var projectFinancialMode = false;
             var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
             var projectSupplierMode = false;
@@ -1306,7 +1308,7 @@
             });
 
             function updateUrl() {
-                var newUrl = '/roster/Booking?startDate=' + currentStartDate;
+                var newUrl = '/roster/Booking?startDate=' + currentStartDate + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) newUrl += '&groupId=' + currentGroupId;
                 if (currentBinderId) newUrl += '&binderId=' + currentBinderId;
                 if (activeTab) newUrl += '&tab=' + activeTab;
@@ -1359,7 +1361,7 @@
             // Week navigation handlers
             $('#btnPrevWeek, #btnPrevWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab;
+                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
@@ -1367,10 +1369,31 @@
 
             $('#btnNextWeek, #btnNextWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab;
+                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
+            });
+
+            // Mode Dropdown Handler
+            $('.dropdown-item[data-weeks]').on('click', function(e) {
+                e.preventDefault();
+                var weeks = $(this).data('weeks');
+                var text = $(this).text().trim();
+                
+                $('#rosterModeDropdown').text(text);
+                $('.dropdown-item[data-weeks]').removeClass('active');
+                $(this).addClass('active');
+                
+                currentRosterWeeks = weeks;
+                loadRoster();
+                updateUrl();
+                
+                // Refresh headers since they iterate over 7 days in Razor
+                if (weeks > 1) {
+                   // Redirect if switching to multi-week to ensure razor headers logic is skipped and handled by JS
+                   window.location.href = '/roster/Booking?startDate=' + currentStartDate + '&weeks=' + weeks + '&tab=' + activeTab + (currentGroupId ? '&groupId=' + currentGroupId : '');
+                }
             });
 
             // Site Search initialization
@@ -1738,132 +1761,140 @@
                         var tbody = $('#roster_grid tbody');
                         tbody.empty();
 
-                        if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                        if (!res.weeks || res.weeks.length === 0) {
+                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No roster data found.</td></tr>');
                             $('#roster_footer').hide();
                             return;
                         }
 
-                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
-                        var grandTotal = 0;
+                        res.weeks.forEach(function (week, weekIdx) {
+                            var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                            var grandTotal = 0;
 
-                        // Add Project Header Row for consistency with Groups tab
-                        var projName = $('#project_name option:selected').text() || 'Selected Project';
-                        var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
-                            '<div class="d-flex align-items-center justify-content-between">' +
-                            '<div class="d-flex align-items-center">' +
-                                '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
-                                '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
-                                    '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
-                                    '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
-                                    '</select>' +
-                                    '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
-                                '</div>' +
-                            '</div>' +
-                            '</div></td></tr>';
-                        tbody.append(headerHtml);
-
-                        res.results.forEach(function (row) {
-                            var statusHtml = '';
-                            if (row.status) {
-                                var imgName = '';
-                                switch(row.status.toUpperCase()) {
-                                    case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
-                                    case 'PAID': imgName = 'STAMP - PAID.png'; break;
-                                    case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
-                                }
-                                if (imgName) {
-                                    statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                   '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + row.status + '" />' + 
-                                                 '</div>';
-                                }
-                            }
-
-
-                            var rowHtml = '<tr id="row_' + row.siteId + '">' +
-                                '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                    '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
-                                    '<small class="text-muted">' + row.clientTypeName + '</small>' +
-                                    (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
-                                    statusHtml + 
+                            // 1. WEEK DATE HEADER ROW (Mon-Sun) - Replicating original thead style inside tbody
+                            var dateHeaderHtml = '<tr class="bg-primary text-white font-weight-bold" style="font-size: 0.85rem;">' +
+                                '<td style="background: #6f42c1; color: white; vertical-align: middle;">' + 
+                                    '<div class="d-flex align-items-center justify-content-between">' +
+                                        '<span>WEEK ' + (week.weekNumber) + '</span>' +
+                                        '<small style="opacity: 0.8;">' + week.displayDateRange + '</small>' +
+                                    '</div>' +
                                 '</td>';
+                            
+                            var weekStartDate = new Date(week.startDate);
+                            for (var d = 0; d < 7; d++) {
+                                var currentDay = new Date(weekStartDate);
+                                currentDay.setDate(currentDay.getDate() + d);
+                                dateHeaderHtml += '<td class="text-center" style="background: #6f42c1; color: white;">' + 
+                                    '<div>' + currentDay.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) + '</div>' + 
+                                    '<div>' + currentDay.getFullYear() + '</div>' + 
+                                '</td>';
+                            }
+                            dateHeaderHtml += '</tr>';
+                            tbody.append(dateHeaderHtml);
 
-                            row.days.forEach(function (daySchedules, index) {
-                                var cellDate = new Date(currentStartDate);
-                                cellDate.setDate(cellDate.getDate() + index);
-                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                            // 2. PROJECT HEADER ROW
+                            var projName = $('#project_name option:selected').text() || 'Selected Project';
+                            var projectHeaderHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                                '<div class="d-flex align-items-center justify-content-between">' +
+                                '<div class="d-flex align-items-center">' +
+                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
+                                    '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
+                                            '<option value="Live" ' + (week.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
+                                            '<option value="Invoiced" ' + (week.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
+                                            '<option value="Paid" ' + (week.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
+                                            '<option value="Cancelled" ' + (week.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '</select>' +
+                                    '</div>' +
+                                '</div>' +
+                                '</div></td></tr>';
+                            tbody.append(projectHeaderHtml);
 
-                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                            // 3. SITE ROWS
+                            week.results.forEach(function (row) {
+                                var rowHtml = '<tr id="row_' + row.siteId + '_w' + weekIdx + '">' +
+                                    '<td class="d-flex flex-column" style="min-height: 120px;">' + 
+                                        '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
+                                        '<small class="text-muted">' + row.clientTypeName + '</small>' +
+                                        statusHtml + 
+                                    '</td>';
+
+                                row.days.forEach(function (daySchedules, dayIdx) {
+                                    var cellDate = new Date(week.startDate);
+                                    cellDate.setDate(cellDate.getDate() + dayIdx);
+                                    var isDayLocked = cellDate < firstDayOfCurrentMonth;
+
+                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[dayIdx]);
                                     var phClass = isPh ? "ph-highlight" : "";
-                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
-                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
-                                daySchedules.forEach(function (s) {
-                                    var statusClass = 'status-pushed';
-                                    if (s.status === 1) statusClass = 'status-accepted';
-                                    if (s.status === 2) statusClass = 'status-declined';
+                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[dayIdx]) || "";
+                                    
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + dayIdx + '" data-week-offset="' + weekIdx + '" title="' + phReason + '">';
+                                    
+                                    daySchedules.forEach(function (s) {
+                                        var statusClass = 'status-pushed';
+                                        if (s.status === 1) statusClass = 'status-accepted';
+                                        if (s.status === 2) statusClass = 'status-declined';
 
-                                    var shiftValue = s.durationHours;
-                                    if (projectFinancialMode) {
-                                        var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
-                                        shiftValue = s.durationHours * activeRate;
+                                        var shiftValue = s.durationHours;
+                                        if (projectFinancialMode) {
+                                            var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
+                                            shiftValue = s.durationHours * activeRate;
+                                        }
+                                        dailyTotals[dayIdx] += shiftValue;
+                                        grandTotal += shiftValue;
+
+                                        var typeClass = '';
+                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                            'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                            'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                            '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
+                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; margin-top: 1px;">' +
+                                                '<span>' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                                '<span class="hour-badge">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                            '</div>' +
+                                            (projectFinancialMode ? '<div class="mt-1" style="font-weight: 800; color: #ff3d00; font-size: 11px;">$ ' + shiftValue.toFixed(2) + '</div>' : '') +
+                                            (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
+                                            (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
+                                            '</div>';
+                                    });
+
+                                    if (!isDayLocked) {
+                                        rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + dayIdx + '" data-week-offset="' + weekIdx + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
                                     }
-                                    dailyTotals[index] += shiftValue;
-                                    grandTotal += shiftValue;
-
-                                     var typeClass = '';
-                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
-
-                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                        'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
-                                        '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
-                                            ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
-                                        '</div>' +
-                                        (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
-                                        '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
-                                        '</div>' +
-                                        (projectSupplierMode ? 
-                                            '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
-                                            ''
-                                        ) +
-                                        (projectFinancialMode ? 
-                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
-                                            ''
-                                        ) +
-                                        (!projectSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
-                                        (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
-                                        (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
-                                        '<div class="shift-card-popup">' +
-                                        '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
-                                        '</div>' +
-                                        '</div>';
+                                    rowHtml += '</td>';
                                 });
 
-                                if (!isDayLocked) {
-                                    rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
-                                }
-                                rowHtml += '</td>';
+                                rowHtml += '</tr>';
+                                tbody.append(rowHtml);
                             });
 
-                            rowHtml += '</tr>';
-                            tbody.append(rowHtml);
+                            // 4. WEEK TOTALS FOOTER ROW
+                            var footerHtml = '<tr class="bg-light font-weight-bold">' +
+                                '<td class="text-right py-2 px-3">' + (projectFinancialMode ? 'Weekly Pay' : 'Weekly Total') + ': <span class="ml-2 text-primary">' + (projectFinancialMode ? '$' + grandTotal.toFixed(2) : grandTotal.toFixed(2).replace(/\.00$/, '') + 'h') + '</span></td>';
+                            
+                            for (var t = 0; t < 7; t++) {
+                                var val = dailyTotals[t];
+                                footerHtml += '<td class="text-center py-2">' + 
+                                    '<div style="font-size: 0.75rem; color: #666;">DAILY TOTAL</div>' +
+                                    '<div class="text-dark">' + (projectFinancialMode ? '$' + val.toFixed(2) : val.toFixed(2).replace(/\.00$/, '') + 'h') + '</div>' + 
+                                '</td>';
+                            }
+                            footerHtml += '</tr>';
+                            tbody.append(footerHtml);
+                            
+                            // Add a separator row if not the last week
+                            if (weekIdx < res.weeks.length - 1) {
+                                tbody.append('<tr style="height: 30px;"><td colspan="8" style="background: transparent; border: none;"></td></tr>');
+                            }
                         });
+
+                        // Hide the static global footer as we now have per-week footers
+                        $('#roster_footer').hide();
 
                         // Update Footer Totals
                         $('#roster_footer').show();
@@ -1942,9 +1973,11 @@
             $('#roster_grid').on('click', '.btn-add-guard', function () {
                 var siteId = $(this).data('site');
                 var dayIndex = $(this).data('day');
+                var weekOffset = $(this).data('week-offset') || 0;
 
                 $('#modalSiteId').val(siteId);
                 $('#modalDayIndex').val(dayIndex);
+                $('#modalWeekOffset').val(weekOffset); // Track which week we are Adding to
                 $('#modalShiftId').val(''); // Clear shift ID for new shift
 
                 // Clear other fields
@@ -2030,10 +2063,13 @@
             window.editShift = function(id, event) {
                 if (event) event.stopPropagation();
                 var card = $('.shift-card[data-id="' + id + '"]');
-                var dayIndex = card.closest('td').data('day');
-                var siteId = card.closest('td').data('site');
+                var cell = card.closest('td');
+                var dayIndex = cell.data('day');
+                var siteId = cell.data('site');
+                var weekOffset = cell.data('week-offset') || 0;
 
                 $('#modalDayIndex').val(dayIndex);
+                $('#modalWeekOffset').val(weekOffset); // Track which week we are Editing in
                 $('#modalSiteId').val(siteId);
                 $('#modalShiftId').val(id);
 
@@ -2204,8 +2240,9 @@
                 }
 
                 // Calculate actual DateTimes
+                var weekOffset = parseInt($('#modalWeekOffset').val() || 0);
                 var shiftDate = new Date(currentStartDate);
-                shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                shiftDate.setDate(shiftDate.getDate() + (weekOffset * 7) + parseInt(dayIndex));
                 var dateStr = shiftDate.toISOString().split('T')[0];
                 var startDateTime = dateStr + 'T' + startTime;
                 var endDateTime = dateStr + 'T' + endTime;
