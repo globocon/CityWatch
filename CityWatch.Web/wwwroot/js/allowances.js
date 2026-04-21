@@ -32,7 +32,10 @@ $(document).ready(function () {
         $('#allowanceId').val('0');
         $('#txtAllowanceDescription').val('');
         $('#drpAllowanceFQ').val('');
-        $('#txtAllowanceAmount').val('');
+        $('#txtAllowanceSellRate').val('');
+        $('#txtAllowanceComms1').val('');
+        $('#txtAllowanceComms2').val('');
+        $('#txtAllowanceGuardPayRate').val('');
         $('#modalTitleAllowance').text('Add Allowance');
         $('#allowanceModal').modal('show');
     });
@@ -41,18 +44,27 @@ $(document).ready(function () {
         var id = $('#allowanceId').val();
         var description = $('#txtAllowanceDescription').val();
         var fq = $('#drpAllowanceFQ').val();
-        var amount = $('#txtAllowanceAmount').val();
+        var sellRate = $('#txtAllowanceSellRate').val();
+        var comms1 = $('#txtAllowanceComms1').val();
+        var comms2 = $('#txtAllowanceComms2').val();
+        var guardPayRate = $('#txtAllowanceGuardPayRate').val();
         var currency = $('#allowance_currency').val();
 
         if (!description) { alert('Please enter an allowance profile name.'); return; }
         if (!fq) { alert('Please select a frequency.'); return; }
-        if (!amount) { alert('Please enter an amount.'); return; }
+        // Rates can be 0 but usually should be provided
+        if (sellRate === '' || comms1 === '' || comms2 === '' || guardPayRate === '') { 
+            alert('Please fill in all rate fields.'); return; 
+        }
 
         var data = {
             id: id,
             description: description,
             fq: fq,
-            amount: amount,
+            sellRateToClient: sellRate,
+            comms1: comms1,
+            comms2: comms2,
+            guardPayRate: guardPayRate,
             currency: currency
         };
 
@@ -94,15 +106,13 @@ function initializeAllowancesGrid() {
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'description', title: 'Allowance Profile', width: 300, sortable: true },
-            { field: 'fq', title: 'FQ', width: 150, sortable: true },
-            { field: 'amount', title: 'Amount', width: 120, sortable: true, renderer: function (value, record) {
-                var symbol = '$';
-                if (record.currency === 'GBP') symbol = '£';
-                if (record.currency === 'EUR') symbol = '€';
-                return symbol + parseFloat(value).toFixed(2);
-            }},
-            { field: 'currency', title: 'Currency', width: 100, sortable: true },
+            { field: 'description', title: 'Allowance Profile', width: 200, sortable: true },
+            { field: 'fq', title: 'FQ', width: 100, sortable: true },
+            { field: 'sellRateToClient', title: 'Sell Rate', width: 100, sortable: true, renderer: (v, r) => formatCurrency(v, r.currency) },
+            { field: 'comms1', title: 'Comms 1', width: 100, sortable: true, renderer: (v, r) => formatCurrency(v, r.currency) },
+            { field: 'comms2', title: 'Comms 2', width: 100, sortable: true, renderer: (v, r) => formatCurrency(v, r.currency) },
+            { field: 'guardPayRate', title: 'Guard Pay', width: 100, sortable: true, renderer: (v, r) => formatCurrency(v, r.currency) },
+            { field: 'currency', title: 'Currency', width: 80, sortable: true },
             {
                 width: 100,
                 title: '',
@@ -124,13 +134,21 @@ function initializeAllowancesGrid() {
     });
 }
 
+function formatCurrency(value, currency) {
+    var symbol = '$';
+    if (currency === 'GBP') symbol = '£';
+    if (currency === 'EUR') symbol = '€';
+    return symbol + parseFloat(value || 0).toFixed(2);
+}
+
 function editAllowance(record) {
     $('#allowanceId').val(record.id);
     $('#txtAllowanceDescription').val(record.description);
     $('#drpAllowanceFQ').val(record.fq);
-    $('#txtAllowanceAmount').val(record.amount);
-    // Note: Currency is usually managed at section level but we could sync it if needed
-    // $('#allowance_currency').val(record.currency); 
+    $('#txtAllowanceSellRate').val(record.sellRateToClient);
+    $('#txtAllowanceComms1').val(record.comms1);
+    $('#txtAllowanceComms2').val(record.comms2);
+    $('#txtAllowanceGuardPayRate').val(record.guardPayRate);
     $('#modalTitleAllowance').text('Edit Allowance');
     $('#allowanceModal').modal('show');
 }

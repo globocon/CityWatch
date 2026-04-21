@@ -391,7 +391,10 @@ namespace CityWatch.Data.Providers
                 {
                     existing.Description = allowance.Description;
                     existing.FQ = allowance.FQ;
-                    existing.Amount = allowance.Amount;
+                    existing.SellRateToClient = allowance.SellRateToClient;
+                    existing.Comms1 = allowance.Comms1;
+                    existing.Comms2 = allowance.Comms2;
+                    existing.GuardPayRate = allowance.GuardPayRate;
                     existing.Currency = allowance.Currency;
                     existing.UpdatedDate = DateTime.Now;
                 }

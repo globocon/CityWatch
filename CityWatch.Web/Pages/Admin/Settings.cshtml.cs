@@ -4072,7 +4072,10 @@ namespace CityWatch.Web.Pages.Admin
                 x.Id,
                 x.Description,
                 x.FQ,
-                x.Amount,
+                x.SellRateToClient,
+                x.Comms1,
+                x.Comms2,
+                x.GuardPayRate,
                 x.Currency,
                 x.IsDeleted
             }).ToList();
