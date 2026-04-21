@@ -143,6 +143,63 @@
         margin-top: 4px;
         font-size: 10px;
     }
+
+    /* Remuneration Summary Styles */
+    #remuneration-summary-section {
+        margin: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+        overflow: hidden;
+    }
+    .remuneration-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .remuneration-table th {
+        font-weight: 600;
+        color: #4a5568 !important;
+        background-color: #f1f5f9 !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        padding: 10px 15px !important;
+    }
+    .remuneration-table td {
+        vertical-align: middle;
+        padding: 8px 15px !important;
+        color: #2d3748;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .remuneration-total {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+    .remuneration-note-input {
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        padding: 3px 8px;
+        width: 100%;
+        font-size: 0.75rem;
+        background-color: #fcfcfc;
+    }
+    .remuneration-note-input:focus {
+        border-color: #667eea;
+        background-color: #fff;
+        outline: none;
+    }
+    .paid-checkbox {
+        transform: scale(1.1);
+        cursor: pointer;
+    }
 </style>
 <div class="modal fade" id="guardRosterModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 95%;">
@@ -198,6 +255,16 @@
                                 <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
+
+                        <!-- Guard Filter Control [NEW] -->
+                        <div class="input-group input-group-sm ml-3" style="width: 190.14px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
+                            </div>
+                            <select id="adminGuardFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="ALL">ALL GUARDS</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -246,6 +313,31 @@
                         </tfoot>
                     </table>
                 </div>
+
+                <!-- Remuneration Summary Section -->
+                <div id="remuneration-summary-section" style="display: none;">
+                    <div class="remuneration-header">
+                        <h6 class="mb-0 text-primary font-weight-bold">
+                            <i class="fa fa-money mr-2"></i> Remuneration Summary
+                        </h6>
+                        <span class="badge badge-info px-3 py-1 rounded-pill" id="remuneration-week-label"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 remuneration-table" id="remuneration-summary-table">
+                            <thead>
+                                <tr>
+                                    <th class="px-3">Guard Name</th>
+                                    <th class="text-right" style="width: 130px;">Total Amount</th>
+                                    <th class="text-center" style="width: 70px;">Paid</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="remuneration-summary-body">
+                                <!-- Dynamic rows via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -283,6 +375,7 @@
     var isAdminSupplierOn = false;
     var adminRateType = 'guard'; // 'guard' or 'sell'
     var currentRosterStatus = 'Live';
+    var lastGuardRosterData = null;
     
     // Public Holiday Orange Sun SVG
     const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
@@ -333,22 +426,29 @@
                 $('#adminRateTypeSwitch').prop('checked', false);
                 adminRateType = 'guard';
             }
+            checkRemunerationVisibility();
             loadGuardRoster();
         });
 
         $('#adminRateTypeSwitch').on('change', function() {
             adminRateType = $(this).is(':checked') ? 'sell' : 'guard';
+            checkRemunerationVisibility();
             loadGuardRoster();
         });
 
         // New Truck Toggle logic
         $('#adminTruckToggle').on('change', function() {
             isAdminSupplierOn = $(this).is(':checked');
+            checkRemunerationVisibility();
             loadGuardRoster();
         });
 
         $('#adminRosterStatus').on('change', function() {
             saveAdminRosterStatus($(this).val());
+        });
+
+        $('#adminGuardFilter').on('change', function() {
+            applyGuardFilter();
         });
     });
 
@@ -367,6 +467,7 @@
             $('#adminTruckToggle').prop('checked', false);
             isAdminSupplierOn = false;
         }
+        checkRemunerationVisibility();
 
         // Fetch correct start of week from server to ensure parity with Booking
         $.ajax({
@@ -413,6 +514,133 @@
         }
     }
 
+    function checkRemunerationVisibility() {
+        var showSummary = isAdminRoster && isAdminFinancialsOn && adminRateType === 'guard' && !isAdminSupplierOn;
+        if (showSummary) {
+            $('#remuneration-summary-section').show();
+            if (lastGuardRosterData) updateRemunerationSummary();
+        } else {
+            $('#remuneration-summary-section').hide();
+        }
+    }
+
+    function updateRemunerationSummary() {
+        if (!lastGuardRosterData || !lastGuardRosterData.results) return;
+
+        var entities = {}; // Key: guardId ?? ("P_" + providerName)
+        var weekStart = guardRosterStartDate;
+        var weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        $('#remuneration-week-label').text('Week: ' + formatGuardDate(new Date(weekStart)) + ' - ' + formatGuardDate(weekEnd));
+
+        // Aggregate Pay per Entity
+        lastGuardRosterData.results.forEach(function(row) {
+            row.days.forEach(function(dayShifts) {
+                dayShifts.forEach(function(s) {
+                    var guardId = s.reliefGuardId || s.guardId;
+                    var guardName = s.reliefGuardName || s.guardName;
+                    
+                    var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                    
+                    if (!guardName) return;
+
+                    if (!entities[key]) {
+                        entities[key] = { id: guardId, name: guardName, provider: !guardId ? guardName : null, total: 0 };
+                    }
+                    
+                    var duration = parseFloat(s.durationHours) || 0;
+                    var payRate = s.buyRate || 0;
+                    entities[key].total += (payRate * duration);
+                });
+            });
+        });
+
+        var entityKeys = Object.keys(entities);
+        if (entityKeys.length === 0) {
+            $('#remuneration-summary-body').html('<tr><td colspan="4" class="text-center text-muted p-3 small">No guards to summarize.</td></tr>');
+            return;
+        }
+
+        // Fetch Database Status (Paid/Notes)
+        var guardIdsStr = entityKeys.filter(k => k.startsWith('G')).map(k => k.substring(1)).join(',');
+        
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRemunerationSummary',
+            type: 'GET',
+            data: { startDate: weekStart, guardIds: guardIdsStr },
+            success: function(res) {
+                if (!res.success) return;
+                
+                var tbody = $('#remuneration-summary-body');
+                tbody.empty();
+
+                var sortedKeys = entityKeys.sort(function(a, b) {
+                    return entities[a].name.localeCompare(entities[b].name);
+                });
+
+                var grandTotal = 0;
+
+                sortedKeys.forEach(function(key) {
+                    var ent = entities[key];
+                    grandTotal += ent.total;
+
+                    var dbItem = res.results.find(function(x) { 
+                        if (ent.id) return x.guardId == ent.id;
+                        return x.providerName == ent.provider;
+                    }) || { isPaid: false, notes: '' };
+                    
+                    var rowHtml = '<tr>' +
+                        '<td class="px-3 font-weight-bold">' + ent.name + '</td>' +
+                        '<td class="text-right remuneration-total">$' + ent.total.toFixed(2) + '</td>' +
+                        '<td class="text-center">' +
+                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' />' +
+                        '</td>' +
+                        '<td>' +
+                            '<input type="text" class="remuneration-note-input" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." />' +
+                        '</td>' +
+                    '</tr>';
+                    tbody.append(rowHtml);
+                });
+
+                // Add Summary Total Row
+                tbody.append('<tr class="bg-light font-weight-bold">' +
+                    '<td class="px-3 text-uppercase text-muted small">Summary Total</td>' +
+                    '<td class="text-right" style="color: #ff3d00; border-top: 2px solid #dee2e6;">$' + grandTotal.toFixed(2) + '</td>' +
+                    '<td colspan="2"></td>' +
+                    '</tr>');
+
+                $('.paid-checkbox').on('change', function() { saveRemunerationItem($(this)); });
+                $('.remuneration-note-input').on('blur', function() { saveRemunerationItem($(this)); }).on('keypress', function(e) { if (e.which === 13) $(this).blur(); });
+            }
+        });
+    }
+
+    function saveRemunerationItem(input) {
+        var guardId = input.data('guardid');
+        var providerName = input.data('providername');
+        var totalAmount = input.data('total');
+        var row = input.closest('tr');
+        var isPaid = row.find('.paid-checkbox').is(':checked');
+        var notes = row.find('.remuneration-note-input').val();
+
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=SaveRemunerationSummary',
+            type: 'POST',
+            container: '#guardRosterModal',
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: {
+                startDate: guardRosterStartDate,
+                guardId: guardId || null,
+                providerName: providerName || "",
+                isPaid: isPaid,
+                notes: notes,
+                totalAmount: totalAmount
+            },
+            success: function(res) {
+                if (!res.success) console.error('Error saving remuneration:', res.message);
+            }
+        });
+    }
 
     function saveAdminRosterStatus(newStatus) {
          $.ajax({
@@ -433,6 +661,11 @@
                 }, 3000);
             }
         });
+    }
+
+    function applyGuardFilter() {
+        var selectedVal = $('#adminGuardFilter').val(); // "G123" or "PProviderName"
+        loadGuardRoster(); // Re-render everything to update totals
     }
 
     function loadGuardRoster() {
@@ -484,6 +717,33 @@
                     tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0h</span></div></td>');
                 }
 
+                 lastGuardRosterData = res;
+
+                // Update Filter Dropdown (Add unique guards found in data)
+                var filterSelect = $('#adminGuardFilter');
+                var currentSelection = filterSelect.val();
+                filterSelect.find('option:not([value="ALL"])').remove();
+                
+                var filterGuards = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            var gId = s.reliefGuardId || s.guardId;
+                            var gName = s.reliefGuardName || s.guardName;
+                            var k = gId ? ("G" + gId) : ("P" + gName);
+                            if (gName && !filterGuards.find(x => x.key === k)) {
+                                filterGuards.push({ key: k, name: gName });
+                            }
+                        });
+                    });
+                });
+                
+                filterGuards.sort((a,b) => a.name.localeCompare(b.name)).forEach(g => {
+                    filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
+                });
+                filterSelect.val(currentSelection || "ALL");
+
+                var filterVal = filterSelect.val();
                 var grandTotalHours = 0;
                 var grandTotalCost = 0;
                 var dailyTotalHours = [0,0,0,0,0,0,0];
@@ -515,6 +775,13 @@
                         rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '" title="' + phReason + '">';
                         
                         dayShifts.forEach(function (s) {
+                            var guardId = s.reliefGuardId || s.guardId;
+                            var guardName = s.reliefGuardName || s.guardName;
+                            var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                            
+                            // Apply Filtering
+                            if (filterVal !== "ALL" && filterVal !== key) return;
+
                             var duration = parseFloat(s.durationHours);
                             var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
                             var cost = duration * activeRate;
@@ -582,6 +849,8 @@
                         $('#daily_total_' + i).text(dailyTotalHours[i].toFixed(2).replace(/\.00$/, "") + "h");
                     }
                 }
+                
+                checkRemunerationVisibility();
             },
             error: function() {
                 tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
