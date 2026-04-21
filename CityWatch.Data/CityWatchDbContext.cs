@@ -412,6 +412,7 @@ namespace CityWatch.Data
         public DbSet<KeyVehicleLogPax> KeyVehicleLogsPax { get; set; }
         public DbSet<RosterSiteWeekStatus> RosterSiteWeekStatuses { get; set; }
         public DbSet<PayRateGroupSite> PayRateGroupSites { get; set; }
+        public DbSet<RosterRemunerationSummary> RosterRemunerationSummaries { get; set; }
     }
 
 
