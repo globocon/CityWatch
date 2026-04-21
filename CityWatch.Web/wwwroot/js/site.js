@@ -1,4 +1,4 @@
-﻿$(function () {
+$(function () {
 
     $('#Report_DateLocation_ClientType').on('change', function () {
         $('#Report_DateLocation_ClientSite').val('');
@@ -6869,6 +6869,7 @@ if (gridLanguage) {
 
 $('#hr_settings_fields_types').on('change', function () {
     $('#PayRatesDiv').hide();
+    $('#AllowancesDiv').hide();
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
     if ($('#hr_settings_fields_types').val() == 1) {
         //gridHrSettings.show();
@@ -7079,7 +7080,12 @@ $('#hr_settings_fields_types').on('change', function () {
     }
     else if ($('#hr_settings_fields_types').val() == 9) {
         $('#PayRatesDiv').show();
-        //gridHrSettings.hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
+    }
+    else if ($('#hr_settings_fields_types').val() == 10) {
+        $('#AllowancesDiv').show();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridLanguage.hide();

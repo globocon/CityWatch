@@ -1536,6 +1536,47 @@
                                     </table>
                                 </div>
 
+                                <div id="AllowancesDiv" style="display:none">
+                                    <style>
+                                        #tbl_allowances td {
+                                            vertical-align: middle;
+                                        }
+                                    </style>
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="form-group row">
+                                                <label class="col-form-label col-md-4">Currency</label>
+                                                <div class="col-md-8">
+                                                    <select class="form-control" id="allowance_currency">
+                                                        <option value="AUD" selected>AUD $</option>
+                                                        <option value="USD">USD $</option>
+                                                        <option value="GBP">GBP £</option>
+                                                        <option value="EUR">EUR €</option>
+                                                        <option value="NZD">NZD $</option>
+                                                        <option value="CAD">CAD $</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <input type="text" id="allowanceSearch" class="form-control" placeholder="Search Allowance Profiles">
+                                                <div class="input-group-append" id="clearAllowanceSearch" style="cursor:pointer; display:none;">
+                                                    <span class="input-group-text bg-transparent border-1"><i class="fa fa-times-circle"></i></span>
+                                                </div>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7 text-right">
+                                            <button class="btn btn-success" id="add_allowance"><i class="fa fa-plus mr-1"></i>Add Allowance</button>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered table-sm" width="100%" id="tbl_allowances">
+                                    </table>
+                                </div>
+
                                 <div id="SettingsDiv" style="display:none">
                                     <div class="form-group row">
                                         <div class="col-md-8">
@@ -6022,6 +6063,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="~/js/payrates.js" asp-append-version="true"></script>
+    <script src="~/js/allowances.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function () {
             let currentGuardId = 0;
@@ -6210,6 +6252,45 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="btnSavePayRate">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="allowanceModal" tabindex="-1" role="dialog" aria-labelledby="allowanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleAllowance">Add Allowance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="allowanceId" value="0" />
+                <div class="form-group">
+                    <label for="txtAllowanceDescription">Allowance Profile</label>
+                    <input type="text" class="form-control" id="txtAllowanceDescription" placeholder="Enter Allowance Profile">
+                </div>
+                <div class="form-group">
+                    <label for="drpAllowanceFQ">Frequency (FQ)</label>
+                    <select class="form-control" id="drpAllowanceFQ">
+                        <option value="">Select Frequency</option>
+                        <option value="Per hr">Per hr</option>
+                        <option value="Per shift">Per shift</option>
+                        <option value="Per day">Per day</option>
+                        <option value="Per week">Per week</option>
+                        <option value="Per Km">Per Km</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="txtAllowanceAmount">Amount</label>
+                    <input type="number" step="0.01" class="form-control" id="txtAllowanceAmount" placeholder="Enter Amount">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSaveAllowance">Save changes</button>
             </div>
         </div>
     </div>

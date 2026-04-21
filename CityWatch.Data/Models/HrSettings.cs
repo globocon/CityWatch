@@ -24,6 +24,8 @@ namespace CityWatch.Data.Models
         HRGroupsCourseLibrary = 8,
         [Display(Name = "Renumeration – Pay Rates")]
         PayRates = 9,
+        [Display(Name = "Renumeration – Allowance")]
+        Allowances = 10,
     }
     public enum HrCriticalType
     {
