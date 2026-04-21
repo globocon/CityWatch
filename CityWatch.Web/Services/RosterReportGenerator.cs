@@ -314,66 +314,96 @@ namespace CityWatch.Web.Services
                             weeklyHolidays.Add(new PublicHolidayInfo { Date = dDate, States = states.Distinct().ToList() });
                         }
 
-                        // Removed forced NEXT_PAGE to allow weeks to stack and save paper
-                        if (w > 0) document.Add(new Paragraph("\n").SetFontSize(2)); 
+                        // --- PART B: Intelligent Stacking Logic ---
+                        var weekShiftsCount = schedules.Count(s => s.ShiftStart >= weekStart && s.ShiftStart <= weekEnd);
+                        bool isCurrentWeekSmall = weekShiftsCount <= 3;
 
-                        var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
-
-                        // Branding Logic
-                        string logoPath = string.Empty;
-                        foreach (var site in groupSites)
+                        if (w > 0)
                         {
-                            if (site.ClientSite != null)
+                            // If current week is large, or if we are transitioning from a large week, start a new page
+                            if (!isCurrentWeekSmall || (w > 0 && schedules.Count(s => s.ShiftStart >= startDate.AddDays((w-1) * 7) && s.ShiftStart <= startDate.AddDays((w-1) * 7 + 6)) > 3))
                             {
-                                var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
-                                if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
+                                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                            }
+                            else
+                            {
+                                // Stack small weeks with a minimal spacer
+                                document.Add(new Paragraph("\n").SetFontSize(2));
+                            }
+                        }
+
+                        bool isPreviousWeekLarge = w > 0 && schedules.Count(s => s.ShiftStart >= startDate.AddDays((w - 1) * 7) && s.ShiftStart <= startDate.AddDays((w - 1) * 7 + 6)) > 3;
+                        bool showFullHeader = (w == 0) || !isCurrentWeekSmall || isPreviousWeekLarge;
+
+                        if (showFullHeader)
+                        {
+                            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
+
+                            // Branding Logic
+                            string logoPath = string.Empty;
+                            foreach (var site in groupSites)
+                            {
+                                if (site.ClientSite != null)
                                 {
-                                    logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
-                                    break;
+                                    var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
+                                    if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
+                                    {
+                                        logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+                            if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
 
-                        if (File.Exists(logoPath))
-                        {
-                            try
-                            {
-                                var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
-                                headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
-                            }
-                            catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
-                        }
-                        else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
-
-                        var titleCell = new Cell()
-                            .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
-                            .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
-                            .SetTextAlignment(TextAlignment.CENTER)
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetBorder(Border.NO_BORDER);
-                        headerTable.AddCell(titleCell);
-
-                        var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
-                        var primarySite = groupSites.FirstOrDefault();
-                        if (primarySite != null)
-                        {
-                            var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
-                            if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                            if (File.Exists(logoPath))
                             {
                                 try
                                 {
-                                    var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
-                                    var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
-                                    cellSiteImage.Add(siteImage);
+                                    var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                                    headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
                                 }
-                                catch { }
+                                catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
                             }
+                            else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+
+                            var titleCell = new Cell()
+                                .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
+                                .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
+                                .SetTextAlignment(TextAlignment.CENTER)
+                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                .SetBorder(Border.NO_BORDER);
+                            headerTable.AddCell(titleCell);
+
+                            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+                            var primarySite = groupSites.FirstOrDefault();
+                            if (primarySite != null)
+                            {
+                                var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
+                                if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                                {
+                                    try
+                                    {
+                                        var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                                        var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                        cellSiteImage.Add(siteImage);
+                                    }
+                                    catch { }
+                                }
+                            }
+                            headerTable.AddCell(cellSiteImage);
+                            headerTable.SetMarginBottom(0f);
+                            document.Add(headerTable);
                         }
-                        headerTable.AddCell(cellSiteImage);
-                        headerTable.SetMarginBottom(0f);
-                        document.Add(headerTable);
+                        else
+                        {
+                            // Compact Header for stacked weeks
+                            document.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                                .SetFont(PdfHelper.GetPdfFont())
+                                .SetFontSize(12)
+                                .SetMarginTop(10)
+                                .SetMarginBottom(5));
+                        }
 
                         float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
                         var table = new Table(UnitValue.CreatePercentArray(columnWidths)).UseAllAvailableWidth();
