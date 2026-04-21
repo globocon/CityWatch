@@ -3894,7 +3894,7 @@ namespace CityWatch.Web.Pages.Admin
                     worksheetPart.Worksheet = new Worksheet(new SheetData());
 
                     var sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild(new Sheets());
-                    var sheet = new Sheet() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Pay Rates" };
+                    var sheet = new Sheet() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Renumeration – Pay Rates" };
                     sheets.Append(sheet);
 
                     var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
@@ -3927,7 +3927,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
 
-                return File(mem.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PayRates.xlsx");
+                return File(mem.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Renumeration_PayRates.xlsx");
             }
         }
 
@@ -4040,6 +4040,72 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 _configDataProvider.DeletePayRateGroup(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+
+        public JsonResult OnGetAllowancesList(int? page, int? pageNo, int? limit, string searchString)
+        {
+            var data = _configDataProvider.GetAllowances();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                data = data.Where(x => (x.Description != null && x.Description.ToLower().Contains(searchString)) ||
+                                      (x.FQ != null && x.FQ.ToLower().Contains(searchString)) ||
+                                      (x.Currency != null && x.Currency.ToLower().Contains(searchString))).ToList();
+            }
+
+            var total = data.Count();
+
+            int currentPage = page ?? pageNo ?? 1;
+            int pageSize = limit ?? 10;
+
+            int skip = (currentPage - 1) * pageSize;
+            var records = data.Skip(skip).Take(pageSize).Select(x => new {
+                x.Id,
+                x.Description,
+                x.FQ,
+                x.SellRateToClient,
+                x.Comms1,
+                x.Comms2,
+                x.GuardPayRate,
+                x.Currency,
+                x.IsDeleted
+            }).ToList();
+
+            return new JsonResult(new { records = records, total = total });
+        }
+
+        public JsonResult OnPostSaveAllowance(Allowance allowance)
+        {
+            var success = false;
+            var message = "Saved successfully";
+            try
+            {
+                _configDataProvider.SaveAllowance(allowance);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteAllowance(int id)
+        {
+            var success = false;
+            var message = "Deleted successfully";
+            try
+            {
+                _configDataProvider.DeleteAllowance(id);
                 success = true;
             }
             catch (Exception ex)

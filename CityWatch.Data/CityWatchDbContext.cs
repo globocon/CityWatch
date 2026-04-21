@@ -148,6 +148,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteManningKpiSettingADHOC> ClientSiteManningKpiSettingsADHOC { get; set; }
         public DbSet<IncidentReportsPlatesLoaded> IncidentReportsPlatesLoaded { get; set; }
         public DbSet<ClientSiteDuress> ClientSiteDuress { get; set; }
+        public DbSet<Allowance> Allowances { get; set; }
         public DbSet<ClientSiteLinksPageType> ClientSiteLinksPageType { get; set; }
         public DbSet<ClientSiteLinksDetails> ClientSiteLinksDetails { get; set; }
         public DbSet<ClientSiteRadioChecksActivityStatus> ClientSiteRadioChecksActivityStatus { get; set; }

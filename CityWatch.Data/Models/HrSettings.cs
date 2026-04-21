@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,8 +22,10 @@ namespace CityWatch.Data.Models
         ClassroomLocation = 7,
         [Display(Name = "HR Groups - Course Library Only")]
         HRGroupsCourseLibrary = 8,
-        [Display(Name = "Pay Rates")]
+        [Display(Name = "Renumeration – Pay Rates")]
         PayRates = 9,
+        [Display(Name = "Renumeration – Allowance")]
+        Allowances = 10,
     }
     public enum HrCriticalType
     {

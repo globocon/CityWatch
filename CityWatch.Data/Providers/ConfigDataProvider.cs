@@ -246,6 +246,9 @@ namespace CityWatch.Data.Providers
         void SavePayRateGroup(PayRateGroup group);
         void DeletePayRateGroup(int id);
         void SavePayRateGroupSites(int groupId, List<int> siteIds);
+        List<Allowance> GetAllowances();
+        void SaveAllowance(Allowance allowance);
+        void DeleteAllowance(int id);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -363,6 +366,51 @@ namespace CityWatch.Data.Providers
             }
 
             _context.SaveChanges();
+        }
+
+        public List<Allowance> GetAllowances()
+        {
+            return _context.Allowances.Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
+        }
+
+        public void SaveAllowance(Allowance allowance)
+        {
+            if (_context.Allowances.Any(x => x.Description == allowance.Description && x.Id != allowance.Id && !x.IsDeleted))
+            {
+                throw new Exception("An Allowance with this profile name already exists.");
+            }
+
+            if (allowance.Id == 0)
+            {
+                _context.Allowances.Add(allowance);
+            }
+            else
+            {
+                var existing = _context.Allowances.SingleOrDefault(x => x.Id == allowance.Id);
+                if (existing != null)
+                {
+                    existing.Description = allowance.Description;
+                    existing.FQ = allowance.FQ;
+                    existing.SellRateToClient = allowance.SellRateToClient;
+                    existing.Comms1 = allowance.Comms1;
+                    existing.Comms2 = allowance.Comms2;
+                    existing.GuardPayRate = allowance.GuardPayRate;
+                    existing.Currency = allowance.Currency;
+                    existing.UpdatedDate = DateTime.Now;
+                }
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteAllowance(int id)
+        {
+            var existing = _context.Allowances.SingleOrDefault(x => x.Id == id);
+            if (existing != null)
+            {
+                existing.IsDeleted = true;
+                existing.UpdatedDate = DateTime.Now;
+                _context.SaveChanges();
+            }
         }
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
