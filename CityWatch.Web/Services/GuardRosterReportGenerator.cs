@@ -397,8 +397,9 @@ namespace CityWatch.Web.Services
 
             var timestamp = DateTime.Now;
             Paragraph footerText = new Paragraph()
+                .SetFont(PdfHelper.GetPdfFont())
                 .Add(new Text("Current as of: ").SetFontSize(11))
-                .Add(new Text($"{timestamp:dd/MM/yyyy} @ {timestamp:HH:mm} hrs").SetBold().SetFontSize(11))
+                .Add(new Text($"{timestamp:dd/MM/yyyy} @ {timestamp:HH:mm} hrs").SetFontSize(11))
                 .SetTextAlignment(TextAlignment.RIGHT)
                 .SetVerticalAlignment(VerticalAlignment.BOTTOM);
 
