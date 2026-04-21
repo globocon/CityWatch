@@ -1205,6 +1205,48 @@
             cursor: default;
         }
 
+        /* Premium Roster Styling */
+        .week-header-gradient {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .week-number-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .project-toolbar-row {
+            background-color: #f8f9fa !important;
+            border-bottom: 2px solid #e9ecef !important;
+        }
+        .site-name-cell {
+            border-right: 2px solid #dee2e6 !important;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+        .site-name-cell:hover {
+            background-color: #f1f3f5;
+        }
+        .site-status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .status-live { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+        .status-invoiced { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+        .status-paid { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .status-cancelled { background: #ffebee; color: #b71c1c; border: 1px solid #ffcdd2; }
+
 
         /* Public Holiday Highlighting - Moved to end and made highly specific to override weekends */
         #roster_grid tbody td.day-cell.ph-highlight,
@@ -1760,6 +1802,9 @@
                     success: function (res) {
                         var tbody = $('#roster_grid tbody');
                         tbody.empty();
+                        
+                        // Hide native thead as we use dynamic weekly headers
+                        $('#roster_grid thead').hide();
 
                         if (!res.weeks || res.weeks.length === 0) {
                             tbody.append('<tr><td colspan="8" class="text-center text-muted">No roster data found.</td></tr>');
@@ -1771,12 +1816,12 @@
                             var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                             var grandTotal = 0;
 
-                            // 1. WEEK DATE HEADER ROW (Mon-Sun) - Replicating original thead style inside tbody
-                            var dateHeaderHtml = '<tr class="bg-primary text-white font-weight-bold" style="font-size: 0.85rem;">' +
-                                '<td style="background: #6f42c1; color: white; vertical-align: middle;">' + 
-                                    '<div class="d-flex align-items-center justify-content-between">' +
-                                        '<span>WEEK ' + (week.weekNumber) + '</span>' +
-                                        '<small style="opacity: 0.8;">' + week.displayDateRange + '</small>' +
+                            // 1. WEEK DATE HEADER ROW (Mon-Sun)
+                            var dateHeaderHtml = '<tr class="week-header-gradient">' +
+                                '<td style="vertical-align: middle; border-right: 2px solid rgba(255,255,255,0.2);">' + 
+                                    '<div class="d-flex align-items-center justify-content-between px-2">' +
+                                        '<span class="week-number-badge">WEEK ' + week.weekNumber + '</span>' +
+                                        '<small style="font-weight: 600; font-size: 0.75rem; opacity: 0.9;">' + week.displayDateRange + '</small>' +
                                     '</div>' +
                                 '</td>';
                             
@@ -1784,9 +1829,12 @@
                             for (var d = 0; d < 7; d++) {
                                 var currentDay = new Date(weekStartDate);
                                 currentDay.setDate(currentDay.getDate() + d);
-                                dateHeaderHtml += '<td class="text-center" style="background: #6f42c1; color: white;">' + 
-                                    '<div>' + currentDay.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) + '</div>' + 
-                                    '<div>' + currentDay.getFullYear() + '</div>' + 
+                                var isWeekend = (d === 5 || d === 6);
+                                var weekendStyle = isWeekend ? 'background: rgba(0,0,0,0.05);' : '';
+                                
+                                dateHeaderHtml += '<td class="text-center" style="color: white; border-left: 1px solid rgba(255,255,255,0.1); py-2; ' + weekendStyle + '">' + 
+                                    '<div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + currentDay.toLocaleDateString('en-GB', { weekday: 'short' }) + '</div>' + 
+                                    '<div style="font-size: 0.85rem; font-weight: 400; opacity: 0.9;">' + currentDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + '</div>' + 
                                 '</td>';
                             }
                             dateHeaderHtml += '</tr>';
@@ -1794,17 +1842,18 @@
 
                             // 2. PROJECT HEADER ROW
                             var projName = $('#project_name option:selected').text() || 'Selected Project';
-                            var projectHeaderHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                            var projectHeaderHtml = '<tr class="project-toolbar-row"><td colspan="8" class="py-1 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
                                 '<div class="d-flex align-items-center">' +
-                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
+                                    '<span class="badge badge-primary mr-2" style="padding: 5px;"><i class="fa fa-folder-open"></i></span>' +
+                                    '<strong style="font-size: 0.95rem; color: #495057;">Project: ' + projName + '</strong>' +
                                     '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
-                                        '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
-                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                            '<option value="Live" ' + (week.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                            '<option value="Invoiced" ' + (week.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                            '<option value="Paid" ' + (week.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                            '<option value="Cancelled" ' + (week.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Global Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 110px; height: 26px; padding: 0 8px; font-size: 0.75rem; border-radius: 4px; border: 1.5px solid #ced4da;">' +
+                                            '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>LIVE</option>' +
+                                            '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>INVOICED</option>' +
+                                            '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>PAID</option>' +
+                                            '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>CANCELLED</option>' +
                                         '</select>' +
                                     '</div>' +
                                 '</div>' +
@@ -1813,10 +1862,14 @@
 
                             // 3. SITE ROWS
                             week.results.forEach(function (row) {
+                                var pStatus = row.status || 'Live';
+                                var statusClass = 'status-' + pStatus.toLowerCase();
+                                var statusHtml = '<div class="mt-auto pt-2"><div class="site-status-badge ' + statusClass + '">' + pStatus + '</div></div>';
+
                                 var rowHtml = '<tr id="row_' + row.siteId + '_w' + weekIdx + '">' +
-                                    '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                        '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
-                                        '<small class="text-muted">' + row.clientTypeName + '</small>' +
+                                    '<td class="site-name-cell d-flex flex-column" style="min-height: 120px; padding: 10px 12px;">' + 
+                                        '<div><strong class="text-dark d-block" style="max-width: 180px; font-size: 0.9rem; margin-bottom: 2px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
+                                        '<small class="text-muted font-weight-bold" style="font-size: 0.7rem; text-transform: uppercase;">' + row.clientTypeName + '</small>' +
                                         statusHtml + 
                                     '</td>';
 
@@ -2809,13 +2862,39 @@
                     url: '/roster/Booking?handler=LoadBinderRoster',
                     type: 'GET',
                     data: { binderId: currentBinderId, startDate: currentStartDate },
-                    success: function (res) {
-                        tbody.empty();
-                        if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
-                            $('#binder_footer').hide();
-                            return;
-                        }
+                        success: function (res) {
+                            tbody.empty();
+                            $('#binder_grid thead').hide();
+                            
+                            if (res.results.length === 0) {
+                                tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
+                                $('#binder_footer').hide();
+                                return;
+                            }
+
+                            // 1. WEEK DATE HEADER ROW (At the top of Combined Roster)
+                            var dateHeaderHtml = '<tr class="week-header-gradient">' +
+                                '<td style="vertical-align: middle; border-right: 2px solid rgba(255,255,255,0.2);">' + 
+                                    '<div class="d-flex align-items-center justify-content-between px-2">' +
+                                        '<span class="week-number-badge">GROUP VIEW</span>' +
+                                        '<small style="font-weight: 600; font-size: 0.75rem; opacity: 0.9;">' + Model.WeekRange + '</small>' +
+                                    '</div>' +
+                                '</td>';
+                            
+                            var weekStartDate = new Date(currentStartDate);
+                            for (var d = 0; d < 7; d++) {
+                                var currentDay = new Date(weekStartDate);
+                                currentDay.setDate(currentDay.getDate() + d);
+                                var isWeekend = (d === 5 || d === 6);
+                                var weekendStyle = isWeekend ? 'background: rgba(0,0,0,0.05);' : '';
+                                
+                                dateHeaderHtml += '<td class="text-center" style="color: white; border-left: 1px solid rgba(255,255,255,0.1); py-2; ' + weekendStyle + '">' + 
+                                    '<div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + currentDay.toLocaleDateString('en-GB', { weekday: 'short' }) + '</div>' + 
+                                    '<div style="font-size: 0.85rem; font-weight: 400; opacity: 0.9;">' + currentDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + '</div>' + 
+                                '</td>';
+                            }
+                            dateHeaderHtml += '</tr>';
+                            tbody.append(dateHeaderHtml);
 
                         var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                         var grandTotal = 0;
@@ -2825,26 +2904,27 @@
                             var projectGrandTotal = 0;
 
                             // Add Project Header Row
-                            var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                            var headerHtml = '<tr class="project-toolbar-row"><td colspan="8" class="py-1 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
                                 '<div class="d-flex align-items-center">' +
-                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + project.projectName + '</strong>' +
+                                    '<span class="badge badge-primary mr-2" style="padding: 5px;"><i class="fa fa-folder-open"></i></span>' +
+                                    '<strong style="font-size: 0.95rem; color: #495057;">Project: ' + project.projectName + '</strong>' +
                                     '<span class="sort-btn-group ml-3">' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-chevron-up"></i></button>' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-chevron-down"></i></button>' +
                                     '</span>' +
                                     '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + project.projectId + '">' +
-                                        '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
-                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 110px; height: 26px; padding: 0 8px; font-size: 0.75rem; border-radius: 4px; border: 1.5px solid #ced4da;">' +
+                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>LIVE</option>' +
+                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>INVOICED</option>' +
+                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>PAID</option>' +
+                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>CANCELLED</option>' +
                                         '</select>' +
                                         '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                     '</div>' +
                                 '</div>' +
-                                '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
+                                '<button class="btn btn-link btn-xs text-danger p-0 font-weight-bold" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')" style="text-decoration: none;"><i class="fa fa-times-circle"></i> REMOVE PROJECT</button>' +
                                 '</div></td></tr>';
                             tbody.append(headerHtml);
 
@@ -2853,27 +2933,14 @@
                             }
 
                             project.sites.forEach(function (site) {
-                                var statusHtml = '';
-                                if (site.status) {
-                                    var imgName = '';
-                                    switch(site.status.toUpperCase()) {
-                                        case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
-                                        case 'PAID': imgName = 'STAMP - PAID.png'; break;
-                                        case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
-                                    }
-                                    if (imgName) {
-                                        statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                       '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + site.status + '" />' + 
-                                                     '</div>';
-                                    }
-                                }
-
+                                var pStatus = site.status || 'Live';
+                                var statusClass = 'status-' + pStatus.toLowerCase();
+                                var statusHtml = '<div class="mt-auto pt-2"><div class="site-status-badge ' + statusClass + '">' + pStatus + '</div></div>';
 
                                 var rowHtml = '<tr>' +
-                                    '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                        '<div><strong class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</strong></div>' + 
-                                        '<small class="text-muted">' + site.clientTypeName + '</small>' + 
+                                    '<td class="site-name-cell d-flex flex-column" style="min-height: 120px; padding: 10px 12px;">' + 
+                                        '<div><strong class="text-dark d-block" style="max-width: 180px; font-size: 0.9rem; margin-bottom: 2px;">' + site.siteName + '</strong></div>' + 
+                                        '<small class="text-muted font-weight-bold" style="font-size: 0.7rem; text-transform: uppercase;">' + site.clientTypeName + '</small>' + 
                                         statusHtml + 
                                     '</td>';
 
