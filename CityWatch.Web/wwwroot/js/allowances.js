@@ -54,7 +54,7 @@ $(document).ready(function () {
         if (!fq) { alert('Please select a frequency.'); return; }
         // Rates can be 0 but usually should be provided
         if (sellRate === '' || comms1 === '' || comms2 === '' || guardPayRate === '') { 
-            alert('Please fill in all rate fields.'); return; 
+            alert('Please enter values for all rate fields (Sell Rate, Comms, and Guard Pay).'); return; 
         }
 
         var data = {
