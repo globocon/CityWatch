@@ -366,6 +366,11 @@ namespace CityWatch.Web.Services
                                 {
                                     var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
                                     var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                                    cellSiteImage.Add(siteImage);
+                                }
+                                catch { }
+                            }
+                        }
                         headerTable.AddCell(cellSiteImage);
                         headerTable.SetMarginBottom(0f);
                         document.Add(headerTable);
