@@ -255,6 +255,16 @@
                                 <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
+
+                        <!-- Guard Filter Control [NEW] -->
+                        <div class="input-group input-group-sm ml-3" style="width: 190.14px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
+                            </div>
+                            <select id="adminGuardFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="ALL">ALL GUARDS</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -436,6 +446,10 @@
         $('#adminRosterStatus').on('change', function() {
             saveAdminRosterStatus($(this).val());
         });
+
+        $('#adminGuardFilter').on('change', function() {
+            applyGuardFilter();
+        });
     });
 
     function openGuardRosterPortal(siteId, _isAdmin) {
@@ -513,73 +527,87 @@
     function updateRemunerationSummary() {
         if (!lastGuardRosterData || !lastGuardRosterData.results) return;
 
-        var guards = {};
+        var entities = {}; // Key: guardId ?? ("P_" + providerName)
         var weekStart = guardRosterStartDate;
         var weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
         $('#remuneration-week-label').text('Week: ' + formatGuardDate(new Date(weekStart)) + ' - ' + formatGuardDate(weekEnd));
 
-        // Aggregate Pay per Guard
+        // Aggregate Pay per Entity
         lastGuardRosterData.results.forEach(function(row) {
             row.days.forEach(function(dayShifts) {
                 dayShifts.forEach(function(s) {
                     var guardId = s.reliefGuardId || s.guardId;
                     var guardName = s.reliefGuardName || s.guardName;
                     
-                    if (!guardId && s.guardName) {
-                         // External provider/adhoc case - we use name as ID or skip
-                         return;
-                    }
-                    if (!guardId) return;
+                    var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                    
+                    if (!guardName) return;
 
-                    if (!guards[guardId]) {
-                        guards[guardId] = { name: guardName, total: 0 };
+                    if (!entities[key]) {
+                        entities[key] = { id: guardId, name: guardName, provider: !guardId ? guardName : null, total: 0 };
                     }
                     
                     var duration = parseFloat(s.durationHours) || 0;
                     var payRate = s.buyRate || 0;
-                    guards[guardId].total += (payRate * duration);
+                    entities[key].total += (payRate * duration);
                 });
             });
         });
 
-        var guardIds = Object.keys(guards).join(',');
-        if (!guardIds) {
+        var entityKeys = Object.keys(entities);
+        if (entityKeys.length === 0) {
             $('#remuneration-summary-body').html('<tr><td colspan="4" class="text-center text-muted p-3 small">No guards to summarize.</td></tr>');
             return;
         }
 
         // Fetch Database Status (Paid/Notes)
+        var guardIdsStr = entityKeys.filter(k => k.startsWith('G')).map(k => k.substring(1)).join(',');
+        
         $.ajax({
             url: '/roster/GuardRosterAction?handler=LoadRemunerationSummary',
             type: 'GET',
-            data: { startDate: weekStart, guardIds: guardIds },
+            data: { startDate: weekStart, guardIds: guardIdsStr },
             success: function(res) {
                 if (!res.success) return;
                 
                 var tbody = $('#remuneration-summary-body');
                 tbody.empty();
 
-                var sortedIds = Object.keys(guards).sort(function(a, b) {
-                    return guards[a].name.localeCompare(guards[b].name);
+                var sortedKeys = entityKeys.sort(function(a, b) {
+                    return entities[a].name.localeCompare(entities[b].name);
                 });
 
-                sortedIds.forEach(function(id) {
-                    var g = guards[id];
-                    var dbItem = res.results.find(function(x) { return x.guardId == id; }) || { isPaid: false, notes: '' };
+                var grandTotal = 0;
+
+                sortedKeys.forEach(function(key) {
+                    var ent = entities[key];
+                    grandTotal += ent.total;
+
+                    var dbItem = res.results.find(function(x) { 
+                        if (ent.id) return x.guardId == ent.id;
+                        return x.providerName == ent.provider;
+                    }) || { isPaid: false, notes: '' };
                     
                     var rowHtml = '<tr>' +
-                        '<td class="px-3 font-weight-bold">' + g.name + '</td>' +
-                        '<td class="text-right remuneration-total">$' + g.total.toFixed(2) + '</td>' +
+                        '<td class="px-3 font-weight-bold">' + ent.name + '</td>' +
+                        '<td class="text-right remuneration-total">$' + ent.total.toFixed(2) + '</td>' +
                         '<td class="text-center">' +
-                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + id + '" data-total="' + g.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' />' +
+                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' />' +
                         '</td>' +
                         '<td>' +
-                            '<input type="text" class="remuneration-note-input" data-guardid="' + id + '" data-total="' + g.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." />' +
+                            '<input type="text" class="remuneration-note-input" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." />' +
                         '</td>' +
                     '</tr>';
                     tbody.append(rowHtml);
                 });
+
+                // Add Summary Total Row
+                tbody.append('<tr class="bg-light font-weight-bold">' +
+                    '<td class="px-3 text-uppercase text-muted small">Summary Total</td>' +
+                    '<td class="text-right" style="color: #ff3d00; border-top: 2px solid #dee2e6;">$' + grandTotal.toFixed(2) + '</td>' +
+                    '<td colspan="2"></td>' +
+                    '</tr>');
 
                 $('.paid-checkbox').on('change', function() { saveRemunerationItem($(this)); });
                 $('.remuneration-note-input').on('blur', function() { saveRemunerationItem($(this)); }).on('keypress', function(e) { if (e.which === 13) $(this).blur(); });
@@ -589,6 +617,7 @@
 
     function saveRemunerationItem(input) {
         var guardId = input.data('guardid');
+        var providerName = input.data('providername');
         var totalAmount = input.data('total');
         var row = input.closest('tr');
         var isPaid = row.find('.paid-checkbox').is(':checked');
@@ -601,7 +630,8 @@
             headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
             data: {
                 startDate: guardRosterStartDate,
-                guardId: guardId,
+                guardId: guardId || null,
+                providerName: providerName || "",
                 isPaid: isPaid,
                 notes: notes,
                 totalAmount: totalAmount
@@ -631,6 +661,11 @@
                 }, 3000);
             }
         });
+    }
+
+    function applyGuardFilter() {
+        var selectedVal = $('#adminGuardFilter').val(); // "G123" or "PProviderName"
+        loadGuardRoster(); // Re-render everything to update totals
     }
 
     function loadGuardRoster() {
@@ -782,6 +817,129 @@
                 }
                 
                 lastGuardRosterData = res;
+
+                // Update Filter Dropdown (Add unique guards found in data)
+                var filterSelect = $('#adminGuardFilter');
+                var currentSelection = filterSelect.val();
+                filterSelect.find('option:not([value="ALL"])').remove();
+                
+                var filterGuards = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            var gId = s.reliefGuardId || s.guardId;
+                            var gName = s.reliefGuardName || s.guardName;
+                            var k = gId ? ("G" + gId) : ("P" + gName);
+                            if (gName && !filterGuards.find(x => x.key === k)) {
+                                filterGuards.push({ key: k, name: gName });
+                            }
+                        });
+                    });
+                });
+                
+                filterGuards.sort((a,b) => a.name.localeCompare(b.name)).forEach(g => {
+                    filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
+                });
+                filterSelect.val(currentSelection || "ALL");
+
+                var filterVal = filterSelect.val();
+                var grandTotalHours = 0;
+                var grandTotalCost = 0;
+                var dailyTotalHours = [0,0,0,0,0,0,0];
+                var dailyTotalCost = [0,0,0,0,0,0,0];
+
+                res.results.forEach(function (row) {
+                    var rowHtml = '<tr>' +
+                        '<td class="align-top px-3 text-left d-flex flex-column" style="min-height: 150px;">' + 
+                            '<div>' + 
+                                '<div class="guard-site-name">' + row.siteName + '</div>' + 
+                                '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
+                            '</div>' + 
+                            '<div class="admin-status-grid-display mt-auto pb-2"></div>' + 
+                        '</td>';
+
+                    row.days.forEach(function (dayShifts, index) {
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
+                        loopDate.setDate(loopDate.getDate() + index);
+                        
+                        var ph = isPublicHolidayAtDate(loopDate.getTime(), res.holidays, res.siteState);
+                        var phClass = ph ? "guard-ph-highlight" : "";
+                        var phReason = ph ? ph.reason : "";
+                        
+                        var weekendClass = "";
+                        if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
+                        else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
+                        
+                        rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '" title="' + phReason + '">';
+                        
+                        dayShifts.forEach(function (s) {
+                            var guardId = s.reliefGuardId || s.guardId;
+                            var guardName = s.reliefGuardName || s.guardName;
+                            var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                            
+                            // Apply Filtering
+                            if (filterVal !== "ALL" && filterVal !== key) return;
+
+                            var duration = parseFloat(s.durationHours);
+                            var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
+                            var cost = duration * activeRate;
+
+                            dailyTotalHours[index] += duration;
+                            grandTotalHours += duration;
+                            dailyTotalCost[index] += cost;
+                            grandTotalCost += cost;
+
+                            var statusClass = 'status-pushed';
+                            if (s.status === 1) statusClass = 'status-accepted';
+                            if (s.status === 2) statusClass = 'status-declined';
+
+                            var typeClass = '';
+                            if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                            else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                            var isRelief = s.reliefGuardId || s.reliefProviderName;
+
+                            rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
+                                '<div class="text-truncate font-weight-bold">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                '</div>' +
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
+                                (isAdminSupplierOn ? 
+                                    '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                    (!isAdminSupplierOn && s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '')
+                                ) +
+                                (isAdminFinancialsOn ? 
+                                    '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</div>' : 
+                                    ''
+                                ) +
+                                '</div>';
+                        });
+                        rowHtml += '</td>';
+                    });
+
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+                });
+
+                // Update Totals
+                if (isAdminFinancialsOn) {
+                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
+                    $('.total-label:contains("Weekly Total")').text("Weekly Pay");
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotalCost[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
+                    }
+                } else {
+                    $('#guard_weekly_grand_total').text(grandTotalHours.toFixed(2).replace(/\.00$/, "") + "h");
+                    $('.total-label:contains("Weekly Pay")').text("Weekly Total");
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).text(dailyTotalHours[i].toFixed(2).replace(/\.00$/, "") + "h");
+                    }
+                }
+                
                 checkRemunerationVisibility();
             },
             error: function() {

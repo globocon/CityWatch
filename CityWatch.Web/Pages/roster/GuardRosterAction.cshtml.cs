@@ -89,6 +89,7 @@ namespace CityWatch.Web.Pages.roster
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             guardName = s.Guard != null ? s.Guard.Name : s.ProviderName,
+                            guardId = s.GuardId,
                             reliefGuardId = s.ReliefGuardId,
                             reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
                             reliefProviderName = s.ReliefProviderName,
@@ -197,18 +198,29 @@ namespace CityWatch.Web.Pages.roster
 
             try
             {
-                var ids = guardIds.Split(',').Select(x => int.Parse(x)).Distinct().ToList();
+                var validGuardIds = guardIds.Split(',')
+                    .Where(x => !string.IsNullOrEmpty(x) && int.TryParse(x, out _))
+                    .Select(x => int.Parse(x))
+                    .ToList();
+
                 var summaries = await _context.RosterRemunerationSummaries
-                    .Where(x => x.WeekStartDate == startDate.Date && ids.Contains(x.GuardId))
+                    .Where(x => x.WeekStartDate == startDate.Date)
                     .Select(x => new {
                         x.GuardId,
+                        x.ProviderName,
                         x.IsPaid,
                         x.Notes,
                         x.TotalAmount
                     })
                     .ToListAsync();
 
-                return new JsonResult(new { success = true, results = summaries });
+                // Only return summaries that match either the guard IDs or have a provider name
+                // In practice, we can just return all since we filter in JS, but let's be slightly more efficient
+                var filteredSummaries = summaries
+                    .Where(x => (x.GuardId.HasValue && validGuardIds.Contains(x.GuardId.Value)) || !string.IsNullOrEmpty(x.ProviderName))
+                    .ToList();
+
+                return new JsonResult(new { success = true, results = filteredSummaries });
             }
             catch (Exception ex)
             {
@@ -216,12 +228,21 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
-        public async Task<IActionResult> OnPostSaveRemunerationSummary(DateTime startDate, int guardId, bool isPaid, string notes, decimal totalAmount)
+        public async Task<IActionResult> OnPostSaveRemunerationSummary(DateTime startDate, int? guardId, string providerName, bool isPaid, string notes, decimal totalAmount)
         {
             try
             {
-                var summary = await _context.RosterRemunerationSummaries
-                    .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.GuardId == guardId);
+                RosterRemunerationSummary summary;
+                if (guardId.HasValue)
+                {
+                    summary = await _context.RosterRemunerationSummaries
+                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.GuardId == guardId.Value);
+                }
+                else
+                {
+                    summary = await _context.RosterRemunerationSummaries
+                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.ProviderName == providerName);
+                }
 
                 if (summary == null)
                 {
@@ -229,6 +250,7 @@ namespace CityWatch.Web.Pages.roster
                     {
                         WeekStartDate = startDate.Date,
                         GuardId = guardId,
+                        ProviderName = providerName,
                         IsPaid = isPaid,
                         Notes = notes,
                         TotalAmount = totalAmount

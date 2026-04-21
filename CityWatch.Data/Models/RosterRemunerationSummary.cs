@@ -11,7 +11,8 @@ namespace CityWatch.Data.Models
 
         public DateTime WeekStartDate { get; set; }
 
-        public int GuardId { get; set; }
+        public int? GuardId { get; set; }
+        public string ProviderName { get; set; }
 
         [ForeignKey("GuardId")]
         public virtual Guard Guard { get; set; }
