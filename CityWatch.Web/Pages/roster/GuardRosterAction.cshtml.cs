@@ -190,5 +190,65 @@ namespace CityWatch.Web.Pages.roster
             await _context.SaveChangesAsync();
             return new JsonResult(new { success = true });
         }
+
+        public async Task<JsonResult> OnGetLoadRemunerationSummary(DateTime startDate, string guardIds)
+        {
+            if (string.IsNullOrEmpty(guardIds)) return new JsonResult(new { results = new List<object>() });
+
+            try
+            {
+                var ids = guardIds.Split(',').Select(x => int.Parse(x)).Distinct().ToList();
+                var summaries = await _context.RosterRemunerationSummaries
+                    .Where(x => x.WeekStartDate == startDate.Date && ids.Contains(x.GuardId))
+                    .Select(x => new {
+                        x.GuardId,
+                        x.IsPaid,
+                        x.Notes,
+                        x.TotalAmount
+                    })
+                    .ToListAsync();
+
+                return new JsonResult(new { success = true, results = summaries });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error loading summary" });
+            }
+        }
+
+        public async Task<IActionResult> OnPostSaveRemunerationSummary(DateTime startDate, int guardId, bool isPaid, string notes, decimal totalAmount)
+        {
+            try
+            {
+                var summary = await _context.RosterRemunerationSummaries
+                    .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.GuardId == guardId);
+
+                if (summary == null)
+                {
+                    summary = new RosterRemunerationSummary
+                    {
+                        WeekStartDate = startDate.Date,
+                        GuardId = guardId,
+                        IsPaid = isPaid,
+                        Notes = notes,
+                        TotalAmount = totalAmount
+                    };
+                    _context.RosterRemunerationSummaries.Add(summary);
+                }
+                else
+                {
+                    summary.IsPaid = isPaid;
+                    summary.Notes = notes;
+                    summary.TotalAmount = totalAmount;
+                }
+
+                await _context.SaveChangesAsync();
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error saving summary" });
+            }
+        }
     }
 }
