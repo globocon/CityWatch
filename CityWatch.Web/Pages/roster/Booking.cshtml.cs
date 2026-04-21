@@ -264,10 +264,10 @@ namespace CityWatch.Web.Pages.roster
                             {
                                 id = s.Id,
                                 guardId = s.GuardId,
-                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
-                                guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
-                                guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                guardName = s.GuardId.HasValue ? (s.Guard?.Name ?? s.ProviderName ?? "N/A") : s.ProviderName,
+                                guardLicense = s.GuardId.HasValue ? (s.Guard?.SecurityNo ?? "N/A") : "External",
+                                guardState = s.GuardId.HasValue ? (s.Guard?.State ?? "N/A") : "N/A",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard?.Provider ?? "N/A") : "N/A"),
                                 providerName = s.ProviderName,
                                 payRateId = s.PayRateId,
                                 shiftStart = s.ShiftStart.ToString("HH:mm"),
@@ -280,7 +280,7 @@ namespace CityWatch.Web.Pages.roster
                                 sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
                                 reliefGuardId = s.ReliefGuardId,
                                 reliefGuardName = s.ReliefGuard?.Name ?? "",
-                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard?.SecurityNo ?? "N/A") : "",
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? "",
                                 reliefReasonOther = s.ReliefReasonOther ?? "",
@@ -299,7 +299,20 @@ namespace CityWatch.Web.Pages.roster
                 });
             }
 
-            return new JsonResult(new { weeks = rosterWeeks, projectStatus = (rosterWeeks.FirstOrDefault() as dynamic)?.results?.FirstOrDefault()?.status ?? "Live" });
+            var projectStatus = "Live";
+            if (rosterWeeks.Any())
+            {
+                var firstWeek = rosterWeeks.First();
+                // Safe way to get the status from the first site of the first week
+                var firstWeekResults = (IEnumerable<object>)firstWeek.GetType().GetProperty("results")?.GetValue(firstWeek, null);
+                if (firstWeekResults != null && firstWeekResults.Any())
+                {
+                    var firstSite = firstWeekResults.First();
+                    projectStatus = firstSite.GetType().GetProperty("status")?.GetValue(firstSite, null)?.ToString() ?? "Live";
+                }
+            }
+
+            return new JsonResult(new { weeks = rosterWeeks, projectStatus = projectStatus });
         }
 
         public JsonResult OnGetSearchProviders(string search)
@@ -793,10 +806,10 @@ namespace CityWatch.Web.Pages.roster
                             {
                                 id = s.Id,
                                 guardId = s.GuardId,
-                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
-                                guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
-                                guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
-                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                guardName = s.GuardId.HasValue ? (s.Guard?.Name ?? s.ProviderName ?? "N/A") : (s.ProviderName ?? "N/A"),
+                                guardLicense = s.GuardId.HasValue ? (s.Guard?.SecurityNo ?? "N/A") : "External",
+                                guardState = s.GuardId.HasValue ? (s.Guard?.State ?? "N/A") : "N/A",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard?.Provider ?? "N/A") : "N/A"),
                                 providerName = s.ProviderName,
                                 payRateId = s.PayRateId,
                                 shiftStart = s.ShiftStart.ToString("HH:mm"),
@@ -809,7 +822,7 @@ namespace CityWatch.Web.Pages.roster
                                 sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
                                 reliefGuardId = s.ReliefGuardId,
                                 reliefGuardName = s.ReliefGuard?.Name ?? "",
-                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard.SecurityNo ?? "N/A") : "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? (s.ReliefGuard?.SecurityNo ?? "N/A") : "",
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? "",
                                 reliefReasonOther = s.ReliefReasonOther ?? "",
