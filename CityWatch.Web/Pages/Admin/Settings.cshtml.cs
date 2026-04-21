@@ -3894,7 +3894,7 @@ namespace CityWatch.Web.Pages.Admin
                     worksheetPart.Worksheet = new Worksheet(new SheetData());
 
                     var sheets = spreadsheetDocument.WorkbookPart.Workbook.AppendChild(new Sheets());
-                    var sheet = new Sheet() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Pay Rates" };
+                    var sheet = new Sheet() { Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Renumeration – Pay Rates" };
                     sheets.Append(sheet);
 
                     var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
@@ -3927,7 +3927,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
 
-                return File(mem.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PayRates.xlsx");
+                return File(mem.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Renumeration_PayRates.xlsx");
             }
         }
 
