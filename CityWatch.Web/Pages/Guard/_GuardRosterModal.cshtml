@@ -500,11 +500,6 @@
         }
     }
 
-
-            }
-        });
-    }
-
     function checkRemunerationVisibility() {
         var showSummary = isAdminRoster && isAdminFinancialsOn && adminRateType === 'guard' && !isAdminSupplierOn;
         if (showSummary) {
@@ -520,7 +515,9 @@
 
         var guards = {};
         var weekStart = guardRosterStartDate;
-        $('#remuneration-week-label').text('Week: ' + moment(weekStart).format('DD MMM') + ' - ' + moment(weekStart).add(6, 'days').format('DD MMM YYYY'));
+        var weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        $('#remuneration-week-label').text('Week: ' + formatGuardDate(new Date(weekStart)) + ' - ' + formatGuardDate(weekEnd));
 
         // Aggregate Pay per Guard
         lastGuardRosterData.results.forEach(function(row) {
