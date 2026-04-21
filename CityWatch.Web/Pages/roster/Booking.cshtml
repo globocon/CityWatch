@@ -74,6 +74,63 @@
         padding: 2px 8px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
+
+    /* Remuneration Summary Styles */
+    #remuneration-summary-section {
+        margin-top: 30px;
+        margin-bottom: 50px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+        overflow: hidden;
+    }
+    .remuneration-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .remuneration-table th {
+        font-weight: 600;
+        color: #4a5568 !important;
+        background-color: #f1f5f9 !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    .remuneration-table td {
+        vertical-align: middle;
+        padding: 10px 15px;
+        color: #2d3748;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .remuneration-total {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+    .remuneration-note-input {
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        padding: 4px 8px;
+        width: 100%;
+        font-size: 0.8rem;
+        background-color: #fcfcfc;
+    }
+    .remuneration-note-input:focus {
+        border-color: #667eea;
+        background-color: #fff;
+        outline: none;
+    }
+    .paid-checkbox {
+        transform: scale(1.2);
+        cursor: pointer;
+    }
 </style>
 
 
@@ -1238,6 +1295,36 @@
         .guard-status-stamp.invoiced { color: #0d47a1; border-color: #0d47a1; }
         .guard-status-stamp.cancelled { color: #424242; border-color: #424242; }
     </style>
+    
+    <!-- Remuneration Summary Section -->
+    <div id="remuneration-summary-section" style="display: none;">
+        <div class="remuneration-header">
+            <h5 class="mb-0 text-primary font-weight-bold" style="font-size: 1.1rem;">
+                <i class="fa fa-money mr-2"></i> Remuneration Summary
+            </h5>
+            <div class="d-flex align-items-center">
+                <span class="badge badge-info px-3 py-2 rounded-pill mr-3" id="remuneration-week-label"></span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="updateRemunerationSummary()" title="Refresh Summary">
+                    <i class="fa fa-refresh"></i>
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 remuneration-table" id="remuneration-summary-table">
+                <thead>
+                    <tr>
+                        <th class="px-4">Guard Name</th>
+                        <th class="text-right" style="width: 150px;">Total Amount</th>
+                        <th class="text-center" style="width: 80px;">Paid</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="remuneration-summary-body">
+                    <!-- Dynamic rows via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 @section PageHeader {
@@ -1259,6 +1346,8 @@
             var groupSupplierMode = false;
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
+            var lastRosterData = null;
+            var lastBinderData = null;
 
             function getHeaders() {
                 var token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
@@ -1308,16 +1397,19 @@
                     projectFinancialRateType = 'guard';
                 }
                 $('#designToggle1').prop('disabled', !projectFinancialMode);
+                checkRemunerationVisibility();
                 loadRoster();
             });
 
             $('#designToggle1').on('change', function() {
                 projectFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                checkRemunerationVisibility();
                 loadRoster();
             });
 
             $('#designToggle2').on('change', function() {
                 projectSupplierMode = $(this).is(':checked');
+                checkRemunerationVisibility();
                 loadRoster();
             });
 
@@ -1329,10 +1421,42 @@
                     groupFinancialRateType = 'guard';
                 }
                 $('#binderToggle1').prop('disabled', !groupFinancialMode);
+                checkRemunerationVisibility();
                 loadBinderRoster();
             });
 
             $('#binderToggle1').on('change', function() {
+                groupFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                checkRemunerationVisibility();
+                loadBinderRoster();
+            });
+
+            $('#binderToggle2').on('change', function() {
+                groupSupplierMode = $(this).is(':checked');
+                checkRemunerationVisibility();
+                loadBinderRoster();
+            });
+
+            function checkRemunerationVisibility() {
+                var showSummary = false;
+                if (activeTab === 'groups') {
+                    showSummary = groupFinancialMode && groupFinancialRateType === 'guard' && !groupSupplierMode;
+                } else {
+                    showSummary = projectFinancialMode && projectFinancialRateType === 'guard' && !projectSupplierMode;
+                }
+
+                if (showSummary) {
+                    $('#remuneration-summary-section').show();
+                    // We don't call update here to avoid double AJAX during tab switch, 
+                    // it will be called by loadRoster/loadBinderRoster.
+                    // But if data is already loaded (e.g. just toggled), we can call it.
+                    if (activeTab === 'groups' ? lastBinderData : lastRosterData) {
+                        updateRemunerationSummary();
+                    }
+                } else {
+                    $('#remuneration-summary-section').hide();
+                }
+            }
                 groupFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
                 loadBinderRoster();
             });
@@ -1721,6 +1845,7 @@
                     type: 'GET',
                     data: { groupId: currentGroupId, startDate: currentStartDate },
                     success: function (res) {
+                        lastRosterData = res;
                         var tbody = $('#roster_grid tbody');
                         tbody.empty();
 
@@ -1871,6 +1996,8 @@
                                 $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
                             }
                         });
+
+                        checkRemunerationVisibility();
                     }
                 });
             }
@@ -2759,6 +2886,7 @@
                     type: 'GET',
                     data: { binderId: currentBinderId, startDate: currentStartDate },
                     success: function (res) {
+                        lastBinderData = res;
                         tbody.empty();
                         if (res.results.length === 0) {
                             tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
@@ -2942,6 +3070,8 @@
                                 $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
                             }
                         });
+
+                        checkRemunerationVisibility();
                     }
                 });
             }
@@ -3245,6 +3375,120 @@
                         // If status is empty but we reached here, maybe it's just "Live" without a stamp or something.
                         // But usually we have a stamp for all.
                         $(this).closest('div').hide();
+                    }
+                });
+            }
+
+            // Remuneration Summary Functions
+            window.updateRemunerationSummary = function() {
+                var data = activeTab === 'groups' ? lastBinderData : lastRosterData;
+                if (!data || !data.results) return;
+
+                var guards = {};
+                var weekStart = currentStartDate;
+                $('#remuneration-week-label').text('Week: ' + moment(weekStart).format('DD MMM') + ' - ' + moment(weekStart).add(6, 'days').format('DD MMM YYYY'));
+
+                // Aggregate Pay per Guard
+                var processResults = function(results) {
+                    results.forEach(function(row) {
+                        // In Group/Binder view, row is 'project', which contains 'sites'. In Project view, row is 'site'.
+                        var sites = activeTab === 'groups' ? row.sites : [row];
+                        sites.forEach(function(site) {
+                            if (!site.schedules) return;
+                            site.schedules.forEach(function(s) {
+                                var guardId = s.reliefGuardId || s.guardId;
+                                var guardName = s.reliefGuardName || s.guardName;
+                                
+                                if (!guardId) return; // Skip if no guard assigned
+
+                                if (!guards[guardId]) {
+                                    guards[guardId] = { name: guardName, total: 0 };
+                                }
+                                
+                                var payRate = s.payRate || 0;
+                                guards[guardId].total += (payRate * s.durationHours);
+                            });
+                        });
+                    });
+                };
+
+                processResults(data.results);
+
+                var guardIds = Object.keys(guards).join(',');
+                if (!guardIds) {
+                    $('#remuneration-summary-body').html('<tr><td colspan="4" class="text-center text-muted p-4">No guards assigned this week.</td></tr>');
+                    return;
+                }
+
+                // Fetch Database Status (Paid/Notes)
+                $.ajax({
+                    url: '/roster/Booking?handler=LoadRemunerationSummary',
+                    type: 'GET',
+                    data: { startDate: weekStart, guardIds: guardIds },
+                    success: function(res) {
+                        if (!res.success) return;
+                        
+                        var tbody = $('#remuneration-summary-body');
+                        tbody.empty();
+
+                        // Sort guards by name
+                        var sortedIds = Object.keys(guards).sort(function(a, b) {
+                            return guards[a].name.localeCompare(guards[b].name);
+                        });
+
+                        sortedIds.forEach(function(id) {
+                            var g = guards[id];
+                            var dbItem = res.results.find(function(x) { return x.guardId == id; }) || { isPaid: false, notes: '' };
+                            
+                            var rowHtml = '<tr>' +
+                                '<td class="px-4 font-weight-bold">' + g.name + '</td>' +
+                                '<td class="text-right remuneration-total">$' + g.total.toFixed(2) + '</td>' +
+                                '<td class="text-center">' +
+                                    '<input type="checkbox" class="paid-checkbox" data-guardid="' + id + '" data-total="' + g.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' />' +
+                                '</td>' +
+                                '<td>' +
+                                    '<input type="text" class="remuneration-note-input" data-guardid="' + id + '" data-total="' + g.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." />' +
+                                '</td>' +
+                            '</tr>';
+                            tbody.append(rowHtml);
+                        });
+
+                        // Event handlers for auto-save
+                        $('.paid-checkbox').on('change', function() {
+                            saveRemunerationItem($(this));
+                        });
+
+                        $('.remuneration-note-input').on('blur', function() {
+                            saveRemunerationItem($(this));
+                        }).on('keypress', function(e) {
+                            if (e.which === 13) $(this).blur();
+                        });
+                    }
+                });
+            };
+
+            function saveRemunerationItem(input) {
+                var guardId = input.data('guardid');
+                var totalAmount = input.data('total');
+                var row = input.closest('tr');
+                var isPaid = row.find('.paid-checkbox').is(':checked');
+                var notes = row.find('.remuneration-note-input').val();
+
+                $.ajax({
+                    url: '/roster/Booking?handler=SaveRemunerationSummary',
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: {
+                        startDate: currentStartDate,
+                        guardId: guardId,
+                        isPaid: isPaid,
+                        notes: notes,
+                        totalAmount: totalAmount
+                    },
+                    success: function(res) {
+                        if (!res.success) {
+                            console.error('Error saving remuneration data:', res.message);
+                        }
                     }
                 });
             }
