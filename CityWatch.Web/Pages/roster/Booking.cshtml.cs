@@ -171,6 +171,45 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
+        private bool[] GetPublicHolidayFlags(string state, DateTime weekStart)
+        {
+            var flags = new bool[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = weekStart.AddDays(i).Date;
+                var phInfo = WeeklyHolidays.FirstOrDefault(h => h.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    // Holiday applies if its States list is empty/contains "ALL", or matches the site's state
+                    if (phInfo.States.Count == 0 || phInfo.States.Contains("ALL") || 
+                        (!string.IsNullOrEmpty(state) && phInfo.States.Any(s => s.Equals(state, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        flags[i] = true;
+                    }
+                }
+            }
+            return flags;
+        }
+
+        private string[] GetPublicHolidayReasons(string state, DateTime weekStart)
+        {
+            var reasons = new string[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var date = weekStart.AddDays(i).Date;
+                var phInfo = WeeklyHolidays.FirstOrDefault(h => h.Date == date);
+                if (phInfo != null && phInfo.IsPublicHoliday)
+                {
+                    if (phInfo.States.Count == 0 || phInfo.States.Contains("ALL") || 
+                        (!string.IsNullOrEmpty(state) && phInfo.States.Any(s => s.Equals(state, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        reasons[i] = phInfo.Reasons;
+                    }
+                }
+            }
+            return reasons;
+        }
+
         public async Task<JsonResult> OnGetLoadRoster(int groupId, DateTime startDate, int weeks = 1)
         {
             this.StartDate = startDate;
