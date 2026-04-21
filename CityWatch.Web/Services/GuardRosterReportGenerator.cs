@@ -158,11 +158,11 @@ namespace CityWatch.Web.Services
                             else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
 
                             var titleCell = new Cell()
-                                .Add(new Paragraph($"Site Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
-                                .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12))
-                                .SetTextAlignment(TextAlignment.CENTER)
-                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                                .SetBorder(Border.NO_BORDER);
+                            .Add(new Paragraph($"Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
+                            .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetBorder(Border.NO_BORDER);
                             headerTable.AddCell(titleCell);
                             
                             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
@@ -178,7 +178,7 @@ namespace CityWatch.Web.Services
                                 catch { }
                             }
                             headerTable.AddCell(cellSiteImage);
-                            headerTable.SetMarginBottom(5f);
+                            headerTable.SetMarginBottom(0f);
                             document.Add(headerTable);
 
                             float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
@@ -195,14 +195,10 @@ namespace CityWatch.Web.Services
                             
                             // Site Name and Type
                             siteCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetBold().SetMarginBottom(0));
-                            siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
+                            siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6f).SetFontColor(ColorConstants.GRAY).SetMarginBottom(2));
 
                             // Status Section
-                            siteCell.Add(new Paragraph("Status:").SetFont(PdfHelper.GetPdfFont()).SetFontSize(9).SetFontColor(ColorConstants.BLACK).SetBold().SetMarginBottom(2));
-                            AddStatusStampToCell(siteCell, status);
-
-                            
-                            siteCell.SetMinHeight(80f);
+                            siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)
@@ -348,9 +344,8 @@ namespace CityWatch.Web.Services
                     try
                     {
                         Image stamp = new Image(ImageDataFactory.Create(filePath))
-                            .SetWidth(70) // Fixed width for consistent footprint
-                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                            .SetMarginTop(5);
+                            .SetWidth(60) 
+                            .SetHorizontalAlignment(HorizontalAlignment.CENTER);
                         cell.Add(stamp);
                         return;
                     }
