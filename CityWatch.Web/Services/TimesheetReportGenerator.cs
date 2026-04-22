@@ -648,6 +648,68 @@ namespace CityWatch.Web.Services
 
             return siteTable;
         }
+        private List<(GuardLogin login, List<int> originalIds)> MergeGuardLogins(List<GuardLogin> logins)
+        {
+            var result = new List<(GuardLogin, List<int>)>();
+            if (logins == null || logins.Count == 0) return result;
+
+            var grouped = logins.GroupBy(x => new { x.ClientSiteId, x.LoginDate.Date });
+
+            foreach (var group in grouped)
+            {
+                var sorted = group.OrderBy(x => x.OnDuty).ToList();
+                if (!sorted.Any()) continue;
+
+                // Clone to avoid modifying original objects if needed, but here we work on fresh list
+                var first = sorted[0];
+                var currentLogin = new GuardLogin 
+                { 
+                    Id = first.Id, 
+                    OnDuty = first.OnDuty, 
+                    OffDuty = first.OffDuty, 
+                    ClientSiteId = first.ClientSiteId, 
+                    GuardId = first.GuardId,
+                    LoginDate = first.LoginDate,
+                    ClientSite = first.ClientSite
+                };
+                var currentIds = new List<int> { first.Id };
+
+                for (int i = 1; i < sorted.Count; i++)
+                {
+                    var next = sorted[i];
+                    DateTime currentEnd = currentLogin.OffDuty ?? currentLogin.OnDuty;
+
+                    // Merge if they overlap or are within 30 minutes
+                    if (next.OnDuty <= currentEnd.AddMinutes(30))
+                    {
+                        if (next.OffDuty.HasValue && (!currentLogin.OffDuty.HasValue || next.OffDuty.Value > currentLogin.OffDuty.Value))
+                        {
+                            currentLogin.OffDuty = next.OffDuty;
+                        }
+                        currentIds.Add(next.Id);
+                    }
+                    else
+                    {
+                        result.Add((currentLogin, currentIds));
+                        var n = sorted[i];
+                        currentLogin = new GuardLogin 
+                        { 
+                            Id = n.Id, 
+                            OnDuty = n.OnDuty, 
+                            OffDuty = n.OffDuty, 
+                            ClientSiteId = n.ClientSiteId, 
+                            GuardId = n.GuardId, 
+                            LoginDate = n.LoginDate,
+                            ClientSite = n.ClientSite
+                        };
+                        currentIds = new List<int> { n.Id };
+                    }
+                }
+                result.Add((currentLogin, currentIds));
+            }
+            return result.OrderBy(x => x.login.OnDuty).ToList();
+        }
+
         private static Color GetColorFromHex(string hex)
         {
             if (string.IsNullOrEmpty(hex)) return ColorConstants.WHITE;
@@ -854,23 +916,27 @@ namespace CityWatch.Web.Services
                     string dayName = currentDate.ToString("ddd");
                     string dateStr = currentDate.ToString("dd/MM/yyyy");
 
-                    var dayLogins = LoginDetails.Where(x => x.LoginDate.Date == currentDate.Date).OrderBy(x => x.OnDuty).ToList();
+                    var dayLoginsRaw = LoginDetails.Where(x => x.LoginDate.Date == currentDate.Date).ToList();
+                    var dayMerged = MergeGuardLogins(dayLoginsRaw);
 
-                    if (dayLogins.Count > 0)
+                    if (dayMerged.Count > 0)
                     {
-                        foreach (var start in dayLogins)
+                        foreach (var session in dayMerged)
                         {
+                            var start = session.login;
+                            var originalIds = session.originalIds;
+
                             GuardTable.AddCell(GetUnifiedValueCell(dayName, false, null, CELL_BG_BLUE_HEADER));
                             GuardTable.AddCell(GetUnifiedValueCell(dateStr));
 
                             GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
-                            GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
+                            GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
 
                             TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                             if (duration.HasValue)
                             {
                                 GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
-                                GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
+                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
 
                                 int totalMin = (int)duration.Value.TotalMinutes;
                                 weeklyTotalHours += totalMin;
@@ -915,14 +981,25 @@ namespace CityWatch.Web.Services
             return (weeklyTables, TotalWeeklyHrs);
         }
 
-        private Cell GetGpsIconCell(int loginId, Dictionary<int, List<GuardLog>> logsLookup = null)
+        private Cell GetGpsIconCell(List<int> loginIds, Dictionary<int, List<GuardLog>> logsLookup = null)
         {
             GuardLog logEntry = null;
 
-            if (logsLookup != null && logsLookup.ContainsKey(loginId))
+            if (logsLookup != null)
             {
-                var list = logsLookup[loginId];
-                logEntry = list?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
+                foreach (var id in loginIds)
+                {
+                    if (logsLookup.ContainsKey(id))
+                    {
+                        var list = logsLookup[id];
+                        var found = list?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
+                        if (found != null)
+                        {
+                            logEntry = found;
+                            break;
+                        }
+                    }
+                }
             }
             else
             {
