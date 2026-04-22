@@ -102,7 +102,7 @@ namespace CityWatch.Web.Services
                     pdf.SetDefaultPageSize(PageSize.A4.Rotate());
                     using (var document = new Document(pdf))
                     {
-                        document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+                        document.SetMargins(20f, MARGIN, 60f, MARGIN);
 
                         for (int w = 0; w < weeks; w++)
                         {
@@ -155,10 +155,12 @@ namespace CityWatch.Web.Services
                                 }
                             }
 
+                            bool forceNewPage = (w > 0 && w % 2 == 0);
+
                             if (w > 0)
                             {
-                                // If current week is tall, or if the previous week was tall, start a new page
-                                if (!isCurrentWeekSmall || prevMaxDailyShifts > 3)
+                                // If current week is tall, or if the previous week was tall, or if we already have 2 weeks on the page, start a new page
+                                if (!isCurrentWeekSmall || prevMaxDailyShifts > 3 || forceNewPage)
                                 {
                                     document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
                                 }
@@ -198,7 +200,7 @@ namespace CityWatch.Web.Services
                                 var titleCell = new Cell()
                                 .Add(new Paragraph($"Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
                                 .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
-                                .SetTextAlignment(TextAlignment.CENTER)
+                                .SetTextAlignment(TextAlignment.LEFT)
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
                                 headerTable.AddCell(titleCell);
@@ -216,7 +218,7 @@ namespace CityWatch.Web.Services
                                     catch { }
                                 }
                                 headerTable.AddCell(cellSiteImage);
-                                headerTable.SetMarginBottom(0f);
+                                headerTable.SetMarginBottom(20f);
                                 document.Add(headerTable);
                             }
                             else
@@ -300,7 +302,11 @@ namespace CityWatch.Web.Services
                                         fontColor = ColorConstants.WHITE;
                                     }
 
-                                    var shiftBlock = new Div().SetBackgroundColor(bgColor).SetMarginBottom(1).SetPadding(1).SetBorder(new SolidBorder(borderColor, 0.5f));
+                                    var shiftBlock = new Div()
+                                        .SetBackgroundColor(bgColor)
+                                        .SetMarginBottom(2)
+                                        .SetPadding(3)
+                                        .SetBorder(new SolidBorder(borderColor, 0.5f));
 
                                     var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
                                     if (isRelief)
@@ -314,10 +320,10 @@ namespace CityWatch.Web.Services
                                         }
                                     }
 
-                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginBottom(0));
+                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginBottom(2));
                                     var license = (shift.ReliefGuardId.HasValue ? shift.ReliefGuard?.SecurityNo : shift.Guard?.SecurityNo) ?? "N/A";
-                                    shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(-1).SetMarginBottom(0));
-                                    var pTime = new Paragraph().SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(0).SetMarginBottom(0);
+                                    shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(-1).SetMarginBottom(2));
+                                    var pTime = new Paragraph().SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(0).SetMarginBottom(2);
                                     pTime.Add(new Text($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)"));
                                     if (!includeSuppliers && shift.Callsign != null) 
                                     {
@@ -331,13 +337,13 @@ namespace CityWatch.Web.Services
                                         var supplierText = providerInfo ?? "N/A";
                                         if (shift.Callsign != null) supplierText += $" ({shift.Callsign.Name})";
                                         
-                                        shiftBlock.Add(new Paragraph(supplierText).SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(0, 86, 179)).SetBold().SetMarginTop(0).SetMarginBottom(0));
+                                        shiftBlock.Add(new Paragraph(supplierText).SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold().SetMarginTop(0).SetMarginBottom(2));
                                     }
 
                                     if (includeFinancials)
                                     {
                                         decimal totalAmount = (decimal)duration * rate;
-                                        shiftBlock.Add(new Paragraph($"$ {totalAmount:F2}").SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(255, 61, 0)).SetBold().SetMarginTop(1).SetMarginBottom(0));
+                                        shiftBlock.Add(new Paragraph($"$ {totalAmount:F2}").SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold().SetMarginTop(1).SetMarginBottom(0));
                                     }
 
                                     dayCell.Add(shiftBlock);
