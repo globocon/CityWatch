@@ -280,6 +280,8 @@ namespace CityWatch.Web.Services
                     var document = new Document(pdf);
                     document.SetMargins(20f, MARGIN, 60f, MARGIN);
                     _pagesWithHeader.Clear();
+                    
+                    if (pdf.GetNumberOfPages() == 0) pdf.AddNewPage();
 
                     var groupName = group.Name ?? "Unknown Project";
 

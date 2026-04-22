@@ -106,6 +106,7 @@ namespace CityWatch.Web.Services
                     {
                         document.SetMargins(20f, MARGIN, 60f, MARGIN);
                         _pagesWithHeader.Clear();
+                        if (pdf.GetNumberOfPages() == 0) pdf.AddNewPage();
 
                         for (int w = 0; w < weeks; w++)
                         {
