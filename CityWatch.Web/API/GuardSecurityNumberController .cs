@@ -4460,6 +4460,13 @@ namespace CityWatch.Web.API
                     {
                         shift.ReliefGuardId = model.CallingGuardId;
                         shift.Status = RosterShiftStatus.Accepted;
+                        
+                        var callingGuard = await _context.Guards.FindAsync(model.CallingGuardId);
+                        if (callingGuard != null)
+                        {
+                            shift.ReliefProviderName = callingGuard.Provider;
+                        }
+
                         // Keep the existing ReliefReason (the reason for cancellation)
                         // but we could append that it was picked up via mobile
                         if (string.IsNullOrEmpty(shift.ReliefReason))
