@@ -197,8 +197,7 @@ namespace CityWatch.Web.Services
 
                                 var titleCell = new Cell()
                                 .Add(new Paragraph($"Roster: {site.Name}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
-                                .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
-                                .SetTextAlignment(TextAlignment.LEFT)
+                                .SetTextAlignment(TextAlignment.CENTER)
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
                                 headerTable.AddCell(titleCell);
@@ -216,8 +215,16 @@ namespace CityWatch.Web.Services
                                     catch { }
                                 }
                                 headerTable.AddCell(cellSiteImage);
-                                headerTable.SetMarginBottom(20f);
+                                headerTable.SetMarginBottom(10f);
                                 document.Add(headerTable);
+
+                                // Week text aligned LEFT (under the logo area)
+                                document.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                                    .SetFont(PdfHelper.GetPdfFont())
+                                    .SetFontSize(12)
+                                    .SetMarginTop(0)
+                                    .SetMarginBottom(10)
+                                    .SetTextAlignment(TextAlignment.LEFT));
                             }
                             else
                             {
