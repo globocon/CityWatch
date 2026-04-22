@@ -646,6 +646,19 @@ namespace CityWatch.Web.Services
 
             return siteTable;
         }
+        private static Color GetColorFromHex(string hex)
+        {
+            if (string.IsNullOrEmpty(hex)) return ColorConstants.WHITE;
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            if (hex.Length != 6) return ColorConstants.WHITE;
+
+            int r = int.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+            int g = int.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+            int b = int.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+
+            return new DeviceRgb(r, g, b);
+        }
+
         private static string TruncateSiteName(string siteName)
         {
             if (string.IsNullOrEmpty(siteName)) return "";
@@ -668,11 +681,11 @@ namespace CityWatch.Web.Services
             if (isBold) cell.SetBold();
             if (!string.IsNullOrEmpty(fontColorHex))
             {
-                cell.SetFontColor(PdfHelper.GetColorFromHex(fontColorHex));
+                cell.SetFontColor(GetColorFromHex(fontColorHex));
             }
             if (!string.IsNullOrEmpty(bgHex))
             {
-                cell.SetBackgroundColor(PdfHelper.GetColorFromHex(bgHex));
+                cell.SetBackgroundColor(GetColorFromHex(bgHex));
             }
             return cell;
         }
