@@ -282,8 +282,26 @@ namespace CityWatch.Web.Services
         }
         public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid,string fileNamePart)
         {
-            DateTime startdateTime = DateTime.Parse(startdate, System.Globalization.CultureInfo.InvariantCulture);
-            DateTime dateTime = DateTime.Parse(endDate, System.Globalization.CultureInfo.InvariantCulture);
+            DateTime startdateTime;
+            DateTime dateTime;
+
+            // Robust multi-format parsing
+            string[] formats = { "dd/MM/yyyy", "yyyy-MM-dd", "dd-MM-yyyy", "MM/dd/yyyy", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss" };
+            if (!DateTime.TryParseExact(startdate, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out startdateTime))
+            {
+                if (!DateTime.TryParse(startdate, CultureInfo.InvariantCulture, DateTimeStyles.None, out startdateTime))
+                {
+                    startdateTime = DateTime.Parse(startdate); // Fallback to system locale
+                }
+            }
+
+            if (!DateTime.TryParseExact(endDate, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            {
+                if (!DateTime.TryParse(endDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                {
+                    dateTime = DateTime.Parse(endDate); // Fallback to system locale
+                }
+            }
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
@@ -676,10 +694,11 @@ namespace CityWatch.Web.Services
             headerTable.AddCell(reportTitle);
             
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
-            var imagePath = GetSiteImage();
-            if (!string.IsNullOrEmpty(imagePath))
+            var logoName = GetSiteImage();
+            var logoPath = IO.Path.Combine(_imageRootDir, logoName);
+            if (IO.File.Exists(logoPath))
             {
-                var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                var siteImage = new Image(ImageDataFactory.Create(logoPath))
                     .SetHeight(25)
                     .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
                 cellSiteImage.Add(siteImage);
@@ -692,9 +711,7 @@ namespace CityWatch.Web.Services
 
         private string GetSiteImage()
         {
-
-            return $"{new Uri(_settings.KpiWebUrl)}{"CWSLogoPdf.png"}";
-
+            return "CWSLogoPdf.png";
         }
         private static Cell GetSiteValueCell(string text)
         {
@@ -723,21 +740,23 @@ namespace CityWatch.Web.Services
         private static Cell GetNoBorderValueCell(string text)
         {
             return new Cell()
-
+               .Add(new Paragraph(text ?? ""))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
                .SetBorderTop(Border.NO_BORDER)
                .SetBorderBottom(Border.NO_BORDER)
-                 .SetBorderLeft(Border.NO_BORDER);
-
+               .SetBorderLeft(Border.NO_BORDER);
         }
         private static Cell GetNoBorderTotalHrsCell(string text)
         {
             return new Cell()
-
+               .Add(new Paragraph(text ?? ""))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
                .SetBorderTop(Border.NO_BORDER)
                .SetBorderBottom(Border.NO_BORDER)
-                 .SetBorderLeft(Border.NO_BORDER)
-                 .SetBorderRight(Border.NO_BORDER);
-
+               .SetBorderLeft(Border.NO_BORDER)
+               .SetBorderRight(Border.NO_BORDER);
         }
         private static Cell GetNoBorderCommentCell(string text)
         {
@@ -906,11 +925,14 @@ namespace CityWatch.Web.Services
 
             if (_guardLogs != null && !string.IsNullOrEmpty(_guardLogs.GpsCoordinates))
             {
-                var imagePath = "wwwroot/images/GPSImage.png";
-                var siteImage = new Image(ImageDataFactory.Create(imagePath)).SetWidth(10).SetHeight(10);
-                var url = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                siteImage.SetAction(PdfAction.CreateURI(url));
-                cell.Add(new Paragraph().Add(siteImage).SetPadding(0));
+                var gpsImagePath = IO.Path.Combine(_imageRootDir, "GPSImage.png");
+                if (IO.File.Exists(gpsImagePath))
+                {
+                    var siteImage = new Image(ImageDataFactory.Create(gpsImagePath)).SetWidth(10).SetHeight(10);
+                    var url = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                    siteImage.SetAction(PdfAction.CreateURI(url));
+                    cell.Add(new Paragraph().Add(siteImage).SetPadding(0));
+                }
             }
             return cell;
         }
