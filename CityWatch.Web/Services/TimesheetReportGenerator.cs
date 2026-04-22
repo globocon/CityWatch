@@ -940,6 +940,100 @@ namespace CityWatch.Web.Services
         {
         }
 
+        private (List<Table> weeklyTables, double totalHours, decimal totalPay) CreateBookingDetails(
+            DateTime startDate,
+            DateTime endDate,
+            List<GuardLogin> LoginDetails,
+            List<RosterSchedule> rosterDetails,
+            string weekname)
+        {
+            Table CreateNewBookingTable()
+            {
+                var BookingTable = new Table(UnitValue.CreatePercentArray(UNIFIED_COLUMNS)).UseAllAvailableWidth();
+                CreateUnifiedHeader(BookingTable, false);
+                return BookingTable;
+            }
+
+            double totalHoursAll = 0;
+            decimal totalPayAll = 0;
+
+            DateTime currentDate = startDate;
+            int totalDays = (endDate - startDate).Days + 1;
+            List<Table> weeklyTables = new List<Table>();
+            int daysProcessed = 0;
+
+            while (daysProcessed < totalDays)
+            {
+                var BookingTable = CreateNewBookingTable();
+                double weeklyTotalHours = 0;
+                decimal weeklyTotalPay = 0;
+
+                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
+                {
+                    string dayName = currentDate.ToString("ddd");
+                    BookingTable.AddCell(GetUnifiedValueCell(dayName));
+
+                    if (currentDate > endDate)
+                    {
+                        for (int i = 0; i < 10; i++) BookingTable.AddCell(GetUnifiedValueCell(""));
+                    }
+                    else
+                    {
+                        BookingTable.AddCell(GetUnifiedValueCell(currentDate.ToString("dd/MM/yyyy")));
+
+                        // DRIVE BY ROSTER
+                        var roster = rosterDetails.FirstOrDefault(r => r.ShiftStart.Date == currentDate.Date);
+                        if (roster != null)
+                        {
+                            BookingTable.AddCell(GetUnifiedValueCell(roster.ShiftStart.ToString("HH:mm")));
+                            BookingTable.AddCell(GetUnifiedValueCell("")); // GPS Placeholder
+                            BookingTable.AddCell(GetUnifiedValueCell(roster.ShiftEnd.ToString("HH:mm")));
+                            BookingTable.AddCell(GetUnifiedValueCell("")); // GPS Placeholder
+
+                            TimeSpan duration = (roster.ShiftEnd - roster.ShiftStart).Duration();
+                            double hrs = duration.TotalHours;
+                            weeklyTotalHours += hrs;
+                            BookingTable.AddCell(GetUnifiedValueCell($"{duration.Hours:D2}:{duration.Minutes:D2}"));
+                            BookingTable.AddCell(GetUnifiedValueCell(TruncateSiteName(roster.ClientSite?.Name)));
+
+                            decimal rate = roster.PayRate?.GuardPayRate ?? 0;
+                            decimal pay = (decimal)hrs * rate;
+                            weeklyTotalPay += pay;
+
+                            BookingTable.AddCell(GetUnifiedValueCell(rate.ToString("F2")));
+                            BookingTable.AddCell(GetUnifiedValueCell($"{duration.Hours:D2}:{duration.Minutes:D2}"));
+                            BookingTable.AddCell(GetUnifiedValueCell(pay.ToString("F2")));
+                        }
+                        else
+                        {
+                            // Empty roster day
+                            for (int i = 0; i < 9; i++) BookingTable.AddCell(GetUnifiedValueCell(""));
+                        }
+                    }
+
+                    currentDate = currentDate.AddDays(1);
+                    daysProcessed++;
+                }
+
+                // Add totals row
+                for (int i = 0; i < 6; i++) BookingTable.AddCell(GetNoBorderTotalHrsCell(""));
+
+                int h = (int)weeklyTotalHours;
+                int m = (int)((weeklyTotalHours - h) * 60);
+                BookingTable.AddCell(GetUnifiedValueCell($"{h:D2}:{m:D2}"));
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Site
+                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Rate
+                BookingTable.AddCell(GetUnifiedValueCell($"{h:D2}:{m:D2}"));
+                BookingTable.AddCell(GetUnifiedValueCell(weeklyTotalPay.ToString("F2")));
+
+                totalHoursAll += weeklyTotalHours;
+                totalPayAll += weeklyTotalPay;
+                weeklyTables.Add(BookingTable);
+            }
+
+            return (weeklyTables, totalHoursAll, totalPayAll);
+        }
+
         private static Table GetCommentTable()
         {
             float[] columnPercentages = { 20, 80 };
