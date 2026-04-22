@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -502,7 +503,7 @@ namespace CityWatch.Web.Pages.roster
                 await _context.SaveChangesAsync();
 
                 // Real-time broadcast
-                var hubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                var hubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
                 if (hubNew != null && guardId.HasValue)
                 {
                     await hubNew.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
