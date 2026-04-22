@@ -328,6 +328,11 @@ namespace CityWatch.Web.Services
 
                 var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime) ?? new List<RosterSchedule>();
 
+                // Bulk Fetch Logs for Performance
+                int[] loginIds = LoginDetails.Select(x => x.Id).ToArray();
+                var logs = _clientDataProvider.GetGuardLogsByLoginIds(loginIds);
+                var logsLookup = logs.Where(x => x.GuardLoginId.HasValue).GroupBy(x => x.GuardLoginId.Value).ToDictionary(g => g.Key, g => g.ToList());
+
                 var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
                 pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
                 var doc = new Document(pdfDoc);
@@ -357,7 +362,7 @@ namespace CityWatch.Web.Services
 
                 Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
                 actualCell.Add(new Paragraph("ACTUAL").SetBold());
-                var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, weekName);
+                var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, weekName, logsLookup);
 
                 foreach (var table in GuardLoginTables)
                 {
@@ -445,7 +450,13 @@ namespace CityWatch.Web.Services
             // Right Column: ACTUAL
             Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
             actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            
+            // Bulk Fetch Logs for Performance
+            int[] loginIds = LoginDetails.Select(x => x.Id).ToArray();
+            var logs = _clientDataProvider.GetGuardLogsByLoginIds(loginIds);
+            var logsLookup = logs.Where(x => x.GuardLoginId.HasValue).GroupBy(x => x.GuardLoginId.Value).ToDictionary(g => g.Key, g => g.ToList());
+
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName, logsLookup);
             
             // Combine all Actual tables into one container or add them sequentially to the cell
             foreach(var table in GuardLoginTables)
@@ -537,7 +548,13 @@ namespace CityWatch.Web.Services
             // Right Column: ACTUAL
             Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
             actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            
+            // Bulk Fetch Logs for Performance
+            int[] loginIdsCustom = LoginDetails.Select(x => x.Id).ToArray();
+            var logsCustom = _clientDataProvider.GetGuardLogsByLoginIds(loginIdsCustom);
+            var logsLookupCustom = logsCustom.Where(x => x.GuardLoginId.HasValue).GroupBy(x => x.GuardLoginId.Value).ToDictionary(g => g.Key, g => g.ToList());
+
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName, logsLookupCustom);
             
             foreach(var table in GuardLoginTables)
             {
@@ -632,7 +649,7 @@ namespace CityWatch.Web.Services
         private static string TruncateSiteName(string siteName)
         {
             if (string.IsNullOrEmpty(siteName)) return "";
-            if (siteName.Length > 28) return siteName.Substring(0, 25) + "...";
+            if (siteName.Length > 25) return siteName.Substring(0, 22) + "...";
             return siteName;
         }
 
@@ -786,7 +803,8 @@ namespace CityWatch.Web.Services
     DateTime startDate,
     DateTime endDate,
     List<GuardLogin> LoginDetails,
-    string weekname)
+    string weekname,
+    Dictionary<int, List<GuardLog>> logsLookup = null)
         {
             Table CreateNewGuardTable()
             {
@@ -796,51 +814,6 @@ namespace CityWatch.Web.Services
             }
 
             var SiteName = LoginDetails.Select(x => x.ClientSite?.Name).FirstOrDefault() ?? "";
-
-            if (startDate.Date == endDate.Date)
-            {
-                var GuardTable = CreateNewGuardTable();
-                int dailyTotalHours = 0;
-                string dayName = startDate.ToString("ddd");
-                GuardTable.AddCell(GetUnifiedValueCell(dayName));
-                GuardTable.AddCell(GetUnifiedValueCell(startDate.ToString("dd/MM/yyyy")));
-                
-                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
-                if (start != null)
-                {
-                    GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
-                    GuardTable.AddCell(GetGpsIconCell(start.Id));
-
-                    TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
-                    if (endDateDifference.HasValue)
-                    {
-                        string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                        GuardTable.AddCell(GetUnifiedValueCell(enddate1));
-                        GuardTable.AddCell(GetGpsIconCell(start.Id)); // Simplified - actual might need off-duty log id if available
-
-                        TimeSpan TotalHrs = endDateDifference.Value.Duration();
-                        int totalMin = (int)TotalHrs.TotalMinutes;
-                        dailyTotalHours += totalMin;
-                        GuardTable.AddCell(GetUnifiedValueCell($"{TotalHrs.Hours:D2}:{TotalHrs.Minutes:D2}"));
-                    }
-                    else
-                    {
-                        GuardTable.AddCell(GetUnifiedValueCell(""));
-                        GuardTable.AddCell(GetUnifiedValueCell(""));
-                        GuardTable.AddCell(GetUnifiedValueCell(""));
-                    }
-                    GuardTable.AddCell(GetUnifiedValueCell(TruncateSiteName(start.ClientSite?.Name)));
-                }
-                else
-                {
-                    for (int i = 0; i < 6; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
-                }
-                
-                // Add empty financial columns to maintain structure
-                for (int i = 0; i < 3; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
-
-                return (new List<Table> { GuardTable }, dailyTotalHours);
-            }
 
             DateTime currentDate = startDate;
             int totalDays = (endDate - startDate).Days + 1;
@@ -860,6 +833,7 @@ namespace CityWatch.Web.Services
 
                     if (currentDate > endDate)
                     {
+                        // 10 spacer cells for the rest of the 11 columns
                         for (int i = 0; i < 10; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                     }
                     else
@@ -869,13 +843,16 @@ namespace CityWatch.Web.Services
                         if (start != null)
                         {
                             GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
-                            GuardTable.AddCell(GetGpsIconCell(start.Id));
+                            
+                            // Column 4: GPS
+                            GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
 
                             TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                             if (duration.HasValue)
                             {
                                 GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
-                                GuardTable.AddCell(GetGpsIconCell(start.Id));
+                                // Column 6: GPS
+                                GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
                                 
                                 int totalMin = (int)duration.Value.TotalMinutes;
                                 weeklyTotalHours += totalMin;
@@ -891,10 +868,11 @@ namespace CityWatch.Web.Services
                         }
                         else
                         {
+                            // Columns 3 through 8 (6 cols)
                             for (int i = 0; i < 6; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                         }
                         
-                        // Empty financial columns
+                        // Columns 9, 10, 11 (Empty financial spacers for alignment)
                         for (int i = 0; i < 3; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                     }
 
@@ -902,13 +880,13 @@ namespace CityWatch.Web.Services
                     daysProcessed++;
                 }
 
-                // Add totals row - 11 columns
+                // Add totals row - must have 11 columns
                 for (int i = 0; i < 6; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 
                 int hours1 = weeklyTotalHours / 60;
                 int minutes1 = weeklyTotalHours % 60;
                 GuardTable.AddCell(GetUnifiedValueCell($"{hours1:D2}:{minutes1:D2}"));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(TruncateSiteName(SiteName)));
                 for (int i = 0; i < 3; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
 
                 TotalWeeklyHrs += weeklyTotalHours;
@@ -918,9 +896,18 @@ namespace CityWatch.Web.Services
             return (weeklyTables, TotalWeeklyHrs);
         }
 
-        private Cell GetGpsIconCell(int loginId)
+        private Cell GetGpsIconCell(int loginId, Dictionary<int, List<GuardLog>> logsLookup = null)
         {
-            var _guardLogs = _clientDataProvider.GetGuardLogs(loginId);
+            List<GuardLog> _guardLogs = null;
+            if (logsLookup != null && logsLookup.ContainsKey(loginId))
+            {
+                _guardLogs = logsLookup[loginId];
+            }
+            else
+            {
+                _guardLogs = _clientDataProvider.GetGuardLogs(loginId);
+            }
+
             var cell = new Cell()
                 .SetFont(PdfHelper.GetPdfFont())
                 .SetFontSize(CELL_FONT_SIZE)
@@ -929,13 +916,15 @@ namespace CityWatch.Web.Services
                 .SetHeight(ROW_HEIGHT)
                 .SetPadding(1f);
 
-            if (_guardLogs != null && !string.IsNullOrEmpty(_guardLogs.GpsCoordinates))
+            var logEntry = _guardLogs?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
+
+            if (logEntry != null)
             {
                 var gpsImagePath = IO.Path.Combine(_imageRootDir, "GPSImage.png");
                 if (IO.File.Exists(gpsImagePath))
                 {
                     var siteImage = new Image(ImageDataFactory.Create(gpsImagePath)).SetWidth(10).SetHeight(10);
-                    var url = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                    var url = $"https://www.google.com/maps?q={logEntry.GpsCoordinates}";
                     siteImage.SetAction(PdfAction.CreateURI(url));
                     cell.Add(new Paragraph().Add(siteImage).SetPadding(0));
                 }
@@ -1014,9 +1003,9 @@ namespace CityWatch.Web.Services
                         if (roster != null)
                         {
                             BookingTable.AddCell(GetUnifiedValueCell(roster.ShiftStart.ToString("HH:mm")));
-                            BookingTable.AddCell(GetUnifiedValueCell("")); // GPS Placeholder
+                            BookingTable.AddCell(GetUnifiedValueCell("")); // Column 4: GPS Spacer
                             BookingTable.AddCell(GetUnifiedValueCell(roster.ShiftEnd.ToString("HH:mm")));
-                            BookingTable.AddCell(GetUnifiedValueCell("")); // GPS Placeholder
+                            BookingTable.AddCell(GetUnifiedValueCell("")); // Column 6: GPS Spacer
 
                             TimeSpan duration = (roster.ShiftEnd - roster.ShiftStart).Duration();
                             double hrs = duration.TotalHours;
@@ -1034,7 +1023,7 @@ namespace CityWatch.Web.Services
                         }
                         else
                         {
-                            // Empty roster day
+                            // Columns 3 through 11 (9 columns)
                             for (int i = 0; i < 9; i++) BookingTable.AddCell(GetUnifiedValueCell(""));
                         }
                     }

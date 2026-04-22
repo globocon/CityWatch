@@ -165,61 +165,60 @@
                 </button>
             </div>
             <div class="modal-body">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <div class="alert alert-info py-3 mb-3 text-center">
+                        <i class="fa fa-shield fa-2x mb-2 opacity-50"></i>
+                        <h6 class="font-weight-bold">System Administrator Access</h6>
+                        <p class="small mb-0">You have elevated privileges. Please search by Guard or Site.</p>
+                    </div>
+                }
                 <div class="form-row">
                     <div class="form-group col-md-12">
-                        @* <div class="d-flex flex-sm-row flex-column justify-content-between">
-                        <label class="col-form-label">Security License No.</label>
-                        </div> *@
-                        <div class="input-group">
-                            <input class="form-control" id="GuardDownloadSop_SecurityNo">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-primary" id="btnTimesheetConfirm" title="Authenticate guard"><i class="fa fa-key mr-2"></i><span class="d-none d-md-inline-flex">License No</span></button>
-                            </div>
+                        <label>Security License No.</label>
+                        <input class="form-control" id="GuardDownloadSop_SecurityNo" placeholder="Enter License No">
+                    </div>
+                    @if (!(AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser))
+                    {
+                        <div class="form-group col-md-12">
+                            <label>HR PIN</label>
+                            <input type="password" class="form-control" id="GuardDownloadSop_PIN" placeholder="Enter PIN">
                         </div>
+                    }
+                    <div class="form-group col-md-12 text-right">
+                        <button type="button" class="btn btn-primary" id="btnTimesheetConfirm" title="Authenticate guard">
+                            <i class="fa fa-key mr-2"></i>Verify Individual
+                        </button>
                     </div>
                 </div>
                 <div class="form-row pb-2">
                     <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
-                        Enter Security License No
                     </div>
                 </div>
               
             </div>
             <div class="modal-header">
-                <h6 class="modal-title">Or Select Site</h6>
-              
+                <h6 class="modal-title">Or Select Site (Bulk)</h6>
             </div>
             <div class="modal-body">
                 <div class="form-row">
                     <div class="form-group col-md-12">
                         <label for="Rooster_ClientType">Client Type</label>
-                        <div class="input-group">
-                            
-                            
-                            <select class="form-control" id="Rooster_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" ></select>
-                            
-                            
-                        </div>
+                        <select class="form-control" id="Rooster_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)"></select>
                     </div>
                     <div class="form-group col-md-12">
                         <label for="Rooster_ClientSite">Client Site</label>
-                        <div class="input-group">
-                            <input type="hidden" id="Rooster_ClientSiteID" />
-
-                            <select class="form-control" id="Rooster_ClientSite">
-                                <option value="">Select</option>
-                            </select>
-
-
-                        </div>
+                        <input type="hidden" id="Rooster_ClientSiteID" />
+                        <select class="form-control" id="Rooster_ClientSite">
+                            <option value="">Select</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="col text-right">
-                        <button type="button" class="btn btn-primary" id="btnTimesheetSiteConfirm" >Search</button>
+                        <button type="button" class="btn btn-primary" id="btnTimesheetSiteConfirm">Proceed with Site</button>
                     </div>
                 </div>
-
             </div>
             <div class="modal-footer" style="display:block">
                 <div class="text-left">
