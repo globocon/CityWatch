@@ -648,68 +648,6 @@ namespace CityWatch.Web.Services
 
             return siteTable;
         }
-        private List<(GuardLogin login, List<int> originalIds)> MergeGuardLogins(List<GuardLogin> logins)
-        {
-            var result = new List<(GuardLogin, List<int>)>();
-            if (logins == null || logins.Count == 0) return result;
-
-            var grouped = logins.GroupBy(x => new { x.ClientSiteId, x.LoginDate.Date });
-
-            foreach (var group in grouped)
-            {
-                var sorted = group.OrderBy(x => x.OnDuty).ToList();
-                if (!sorted.Any()) continue;
-
-                // Clone to avoid modifying original objects if needed, but here we work on fresh list
-                var first = sorted[0];
-                var currentLogin = new GuardLogin 
-                { 
-                    Id = first.Id, 
-                    OnDuty = first.OnDuty, 
-                    OffDuty = first.OffDuty, 
-                    ClientSiteId = first.ClientSiteId, 
-                    GuardId = first.GuardId,
-                    LoginDate = first.LoginDate,
-                    ClientSite = first.ClientSite
-                };
-                var currentIds = new List<int> { first.Id };
-
-                for (int i = 1; i < sorted.Count; i++)
-                {
-                    var next = sorted[i];
-                    DateTime currentEnd = currentLogin.OffDuty ?? currentLogin.OnDuty;
-
-                    // Merge if they start within 15 minutes OR if one is nested in another
-                    if (next.OnDuty <= currentLogin.OnDuty.AddMinutes(15) || (next.OnDuty < currentEnd && (next.OffDuty ?? next.OnDuty) <= currentEnd))
-                    {
-                        if (next.OffDuty.HasValue && (!currentLogin.OffDuty.HasValue || next.OffDuty.Value > currentLogin.OffDuty.Value))
-                        {
-                            currentLogin.OffDuty = next.OffDuty;
-                        }
-                        currentIds.Add(next.Id);
-                    }
-                    else
-                    {
-                        result.Add((currentLogin, currentIds));
-                        var n = sorted[i];
-                        currentLogin = new GuardLogin 
-                        { 
-                            Id = n.Id, 
-                            OnDuty = n.OnDuty, 
-                            OffDuty = n.OffDuty, 
-                            ClientSiteId = n.ClientSiteId, 
-                            GuardId = n.GuardId, 
-                            LoginDate = n.LoginDate,
-                            ClientSite = n.ClientSite
-                        };
-                        currentIds = new List<int> { n.Id };
-                    }
-                }
-                result.Add((currentLogin, currentIds));
-            }
-            return result.OrderBy(x => x.Item1.OnDuty).ToList();
-        }
-
         private static Color GetColorFromHex(string hex)
         {
             if (string.IsNullOrEmpty(hex)) return ColorConstants.WHITE;
@@ -916,36 +854,32 @@ namespace CityWatch.Web.Services
                     string dayName = currentDate.ToString("ddd");
                     string dateStr = currentDate.ToString("dd/MM/yyyy");
 
-                    var dayLoginsRaw = LoginDetails.Where(x => x.LoginDate.Date == currentDate.Date).ToList();
-                    var dayMerged = MergeGuardLogins(dayLoginsRaw);
+                    var dayLogins = LoginDetails.Where(x => x.LoginDate.Date == currentDate.Date).OrderBy(x => x.OnDuty).ToList();
 
-                    if (dayMerged.Count > 0)
+                    if (dayLogins.Count > 0)
                     {
-                        foreach (var session in dayMerged)
+                        foreach (var start in dayLogins)
                         {
-                            var start = session.Item1;
-                            var originalIds = session.Item2;
-
                             GuardTable.AddCell(GetUnifiedValueCell(dayName, false, null, CELL_BG_BLUE_HEADER));
                             GuardTable.AddCell(GetUnifiedValueCell(dateStr));
 
                             GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
-                            GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
+                            GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
 
                             TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                             if (duration.HasValue)
                             {
                                 GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
-                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
+                                GuardTable.AddCell(GetGpsIconCell(start.Id, logsLookup));
 
-                                double hrs = duration.Value.TotalHours;
-                                weeklyTotalHours += (int)duration.Value.TotalMinutes;
-                                GuardTable.AddCell(GetUnifiedValueCell(hrs.ToString("F2") + "h"));
+                                int totalMin = (int)duration.Value.TotalMinutes;
+                                weeklyTotalHours += totalMin;
+                                GuardTable.AddCell(GetUnifiedValueCell($"{duration.Value.Hours:D2}:{duration.Value.Minutes:D2}"));
                             }
                             else
                             {
                                 GuardTable.AddCell(GetUnifiedValueCell(""));
-                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup)); 
+                                GuardTable.AddCell(GetUnifiedValueCell(""));
                                 GuardTable.AddCell(GetUnifiedValueCell(""));
                             }
                             GuardTable.AddCell(GetUnifiedValueCell(TruncateSiteName(start.ClientSite?.Name)));
@@ -968,8 +902,9 @@ namespace CityWatch.Web.Services
                 // Add totals row - must have 11 columns
                 for (int i = 0; i < 6; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 
-                double totalHrs = (double)weeklyTotalHours / 60.0;
-                GuardTable.AddCell(GetUnifiedValueCell(totalHrs.ToString("F2") + "h"));
+                int hours1 = weeklyTotalHours / 60;
+                int minutes1 = weeklyTotalHours % 60;
+                GuardTable.AddCell(GetUnifiedValueCell($"{hours1:D2}:{minutes1:D2}"));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 for (int i = 0; i < 3; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
 
@@ -980,30 +915,19 @@ namespace CityWatch.Web.Services
             return (weeklyTables, TotalWeeklyHrs);
         }
 
-        private Cell GetGpsIconCell(List<int> loginIds, Dictionary<int, List<GuardLog>> logsLookup = null)
+        private Cell GetGpsIconCell(int loginId, Dictionary<int, List<GuardLog>> logsLookup = null)
         {
             GuardLog logEntry = null;
 
-            if (logsLookup != null)
+            if (logsLookup != null && logsLookup.ContainsKey(loginId))
             {
-                foreach (var id in loginIds)
-                {
-                    if (logsLookup.ContainsKey(id))
-                    {
-                        var list = logsLookup[id];
-                        var found = list?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
-                        if (found != null)
-                        {
-                            logEntry = found;
-                            break;
-                        }
-                    }
-                }
+                var list = logsLookup[loginId];
+                logEntry = list?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
             }
-            else if (loginIds != null && loginIds.Any())
+            else if (loginId > 0)
             {
-                // Fallback: Use the first ID if logsLookup is missing
-                logEntry = _clientDataProvider.GetGuardLogs(loginIds.First());
+                // Fallback: Use the login record itself if logsLookup is missing
+                logEntry = _clientDataProvider.GetGuardLogs(loginId);
             }
 
             var cell = new Cell()
