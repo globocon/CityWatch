@@ -550,9 +550,11 @@
                         <div class="col-6">
                             <label>Type</label>
                             <select id="modalShiftType" class="form-control" style="width: 100%">
-                                <option value="Regular" data-color="#667eea">Standard (Regular)</option>
-                                <option value="AdhocAccepted" data-color="#1B5E20">ADHOC shift accepted</option>
-                                <option value="AdhocNotAccepted" data-color="#E65100">ADHOC shift not accepted</option>
+                                <option value="Regular" data-color="#FFB74D">● Unassigned - FIXED</option>
+                                <option value="Adhoc" data-color="#FF8F00">● Unassigned - ADHOC</option>
+                                <option value="RegularAccepted" data-color="#90EE90">● Accepted - FIXED</option>
+                                <option value="AdhocAccepted" data-color="#32CD32">● Accepted - ADHOC</option>
+                                <option value="Declined" data-color="#000000">● DECLINED (OPEN)</option>
                             </select>
                         </div>
                     </div>
@@ -817,11 +819,11 @@
             }
 
             .shift-card.status-pushed {
-                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+                background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
             }
 
             .shift-card.status-accepted {
-                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+                background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%);
             }
 
             .shift-card.status-declined {
@@ -1990,22 +1992,28 @@
                             // Find all instances of this shift in the DOM (both grids)
                             var allCards = $('.shift-card[data-id="' + id + '"]');
                             
+                            // Remove all status/type classes
+                            allCards.removeClass('status-pushed status-accepted status-declined adhoc-accepted adhoc-not-accepted');
+                            
+                            var isAdhoc = res.shiftType === 'Adhoc';
+                            var statusClass = 'status-pushed';
+                            if (res.status === 1) statusClass = 'status-accepted';
+                            if (res.status === 2) statusClass = 'status-declined';
+                            
+                            allCards.addClass(statusClass);
+                            
+                            // Specific type highlighting if needed
+                            if (isAdhoc) {
+                                // Adhoc coloring logic
+                                if (res.status === 1) allCards.addClass('adhoc-accepted');
+                                else if (res.status === 0) allCards.addClass('adhoc-not-accepted');
+                            }
+                            
                             // Update Card Data and DOM Attributes for all instances
                             allCards.data('shifttype', res.shiftType);
                             allCards.attr('data-shifttype', res.shiftType);
                             allCards.data('status', res.status);
                             allCards.attr('data-status', res.status);
-                            
-                            // Update Classes for Shading
-                            allCards.removeClass('adhoc-accepted adhoc-not-accepted');
-                            if (res.shiftType === 'AdhocAccepted') allCards.addClass('adhoc-accepted');
-                            else if (res.shiftType === 'AdhocNotAccepted') allCards.addClass('adhoc-not-accepted');
-
-                            // Update Status Classes
-                            allCards.removeClass('status-pushed status-accepted status-declined');
-                            if (res.status === 1) allCards.addClass('status-accepted');
-                            else if (res.status === 2) allCards.addClass('status-declined');
-                            else allCards.addClass('status-pushed');
                         } else {
                             if (res.message) alert(res.message);
                         }
@@ -2049,7 +2057,17 @@
 
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
-                $('#modalShiftType').val(card.data('shifttype') || 'Regular').trigger('change');
+                var currentType = card.data('shifttype') || 'Regular';
+                var currentStatus = parseInt(card.data('status') || '0');
+                var compositeType = currentType;
+                
+                if (currentStatus === 1) {
+                    compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
+                } else if (currentStatus === 2) {
+                    compositeType = 'Declined';
+                }
+                
+                $('#modalShiftType').val(compositeType).trigger('change');
 
                 // Load Relief Data
                 var rGuardId = card.data('reliefguardid');
@@ -2153,6 +2171,7 @@
                 var reliefReasonOther = $('#modalReliefReasonOther').val();
 
                 var shiftType = $('#modalShiftType').val();
+                var shiftStatus = null; // Will be parsed on backend from shiftType
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -2215,6 +2234,7 @@
                         reliefReason: reliefReason,
                         reliefReasonOther: reliefReasonOther,
                         shiftType: shiftType,
+                        status: shiftStatus,
                         ignoreUnavailability: ignoreUnavail
                     },
                     success: function (res) {

@@ -9,6 +9,9 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
+using Microsoft.AspNetCore.SignalR;
+using CityWatch.Common.SignalRHub;
+using CityWatch.Data.Services;
 using ConvertApiDotNet;
 using Dropbox.Api.Files;
 
@@ -81,6 +84,8 @@ namespace CityWatch.Web.API
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
         private readonly IAlertEmailServices _alertEmailServices;
+        private readonly IHubContext<UpdateHub> _webHubContext;
+        private readonly IHubContext<MobileAppSignalRHub> _mobileHubContext;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
@@ -96,7 +101,8 @@ namespace CityWatch.Web.API
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
             IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
-            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context)
+            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context,
+            IHubContext<UpdateHub> webHubContext, IHubContext<MobileAppSignalRHub> mobileHubContext)
         {
             _context = context;
             _memoryCache = memoryCache;
@@ -119,6 +125,8 @@ namespace CityWatch.Web.API
             _userAuthentication = userAuthentication;
             _mobileAppDataServices = mobileAppDataServices;
             _alertEmailServices = alertEmailServices;
+            _webHubContext = webHubContext;
+            _mobileHubContext = mobileHubContext;
         }
 
         /// <summary>
@@ -4437,6 +4445,11 @@ namespace CityWatch.Web.API
                 // 3. Process status update to 'Accepted'
                 if (model.NewStatus == RosterShiftStatus.Accepted)
                 {
+                    if (model.CallingGuardId <= 0)
+                    {
+                        return BadRequest(new { isSuccess = false, message = "Invalid Guard ID." });
+                    }
+
                     // Primary guard accepting their own shift
                     if (shift.GuardId == model.CallingGuardId)
                     {
@@ -4447,7 +4460,12 @@ namespace CityWatch.Web.API
                     {
                         shift.ReliefGuardId = model.CallingGuardId;
                         shift.Status = RosterShiftStatus.Accepted;
-                        shift.ReliefReason = "Relief Guard assigned via Mobile";
+                        // Keep the existing ReliefReason (the reason for cancellation)
+                        // but we could append that it was picked up via mobile
+                        if (string.IsNullOrEmpty(shift.ReliefReason))
+                        {
+                             shift.ReliefReason = "Relief Guard assigned via Mobile";
+                        }
                     }
                     else
                     {
@@ -4472,7 +4490,19 @@ namespace CityWatch.Web.API
                 // 5. Save changes to the database
                 await _context.SaveChangesAsync();
 
-                // Note: In a live environment, a SignalR broadcast would be triggered here to refresh other clients.
+                // 6. Broadcast updates for real-time synchronization
+                try
+                {
+                    // Broadcast to Web (UpdateHub)
+                    await _webHubContext.Clients.All.SendAsync("UpdateRoster", new { shiftId = shift.Id, siteId = shift.ClientSiteId });
+
+                    // Broadcast to Mobile (MobileAppSignalRHub)
+                    await _mobileHubContext.Clients.All.SendAsync("RefreshRoster", new { siteId = shift.ClientSiteId });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"SignalR Broadcast failed: {ex.Message}");
+                }
 
                 return Ok(new { isSuccess = true, message = "Shift status updated successfully." });
             }

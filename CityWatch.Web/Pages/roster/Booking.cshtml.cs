@@ -361,7 +361,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, bool ignoreUnavailability = false)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -447,18 +447,39 @@ namespace CityWatch.Web.Pages.roster
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
                 existing.ReliefReasonOther = reliefReasonOther;
-                existing.ShiftType = shiftType;
+                var finalShiftType = shiftType;
+                var finalStatus = RosterShiftStatus.Pushed;
 
-                if (shiftType == "AdhocAccepted") existing.Status = RosterShiftStatus.Accepted;
-                else if (shiftType == "AdhocNotAccepted") existing.Status = RosterShiftStatus.Pushed;
+                if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
+                else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
+
+                existing.ShiftType = finalShiftType;
+                existing.Status = finalStatus;
 
                 await _context.SaveChangesAsync();
+                
+                // Real-time broadcast
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                if (hub != null && guardId.HasValue)
+                {
+                    await hub.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
+                }
+
                 return new JsonResult(new { success = true, id = existing.Id });
             }
             else
             {
-                var status = RosterShiftStatus.Pushed;
-                if (shiftType == "AdhocAccepted") status = RosterShiftStatus.Accepted;
+                var finalShiftType = shiftType;
+                var finalStatus = RosterShiftStatus.Pushed;
+
+                if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
+                else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
                 var schedule = new RosterSchedule
                 {
@@ -471,14 +492,22 @@ namespace CityWatch.Web.Pages.roster
                     ReliefGuardId = reliefGuardId,
                     ReliefProviderName = reliefProviderName,
                     ReliefReason = reliefReason,
-                    Status = status,
+                    Status = finalStatus,
                     PayRateId = payRateId,
                     CallsignId = callsignId,
                     ReliefReasonOther = reliefReasonOther,
-                    ShiftType = shiftType
+                    ShiftType = finalShiftType
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
+
+                // Real-time broadcast
+                var hubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                if (hubNew != null && guardId.HasValue)
+                {
+                    await hubNew.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
+                }
+
                 return new JsonResult(new { success = true, id = schedule.Id });
             }
         }
@@ -576,6 +605,13 @@ namespace CityWatch.Web.Pages.roster
 
                 schedule.Status = (RosterShiftStatus)status;
                 await _context.SaveChangesAsync();
+
+                // Real-time broadcast
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                if (hub != null && schedule.GuardId.HasValue)
+                {
+                    await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
+                }
             }
             return new JsonResult(new { success = true });
         }
@@ -1305,20 +1341,32 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
 
-            // Cycle: Regular -> AdhocAccepted -> AdhocNotAccepted -> Regular
+            // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular
             var currentType = schedule.ShiftType ?? "Regular";
+            var currentStatus = schedule.Status;
+            
             var nextType = "Regular";
             var nextStatus = RosterShiftStatus.Pushed;
 
-            if (currentType == "Regular")
+            if (currentType == "Regular" && currentStatus == RosterShiftStatus.Pushed)
             {
-                nextType = "AdhocAccepted";
+                nextType = "Adhoc";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+            else if (currentType == "Adhoc" && currentStatus == RosterShiftStatus.Pushed)
+            {
+                nextType = "Regular";
                 nextStatus = RosterShiftStatus.Accepted;
             }
-            else if (currentType == "AdhocAccepted")
+            else if (currentType == "Regular" && currentStatus == RosterShiftStatus.Accepted)
             {
-                nextType = "AdhocNotAccepted";
-                nextStatus = RosterShiftStatus.Pushed;
+                nextType = "Adhoc";
+                nextStatus = RosterShiftStatus.Accepted;
+            }
+            else if (currentType == "Adhoc" && currentStatus == RosterShiftStatus.Accepted)
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Declined;
             }
             else
             {
@@ -1330,6 +1378,13 @@ namespace CityWatch.Web.Pages.roster
             schedule.Status = nextStatus;
 
             await _context.SaveChangesAsync();
+
+            // Real-time broadcast
+            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+            if (hub != null && schedule.GuardId.HasValue)
+            {
+                await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
+            }
 
             return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
         }

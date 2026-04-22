@@ -288,13 +288,19 @@ namespace CityWatch.Web.Services
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
 
-                                    if (shift.ShiftType == "AdhocAccepted") bgColor = new DeviceRgb(27, 94, 32);
-                                    else if (shift.ShiftType == "AdhocNotAccepted") bgColor = new DeviceRgb(230, 81, 0);
+                                    // ADHOC Color Overrides
+                                    if (shift.ShiftType == "Adhoc")
+                                    {
+                                        if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Accepted)
+                                            bgColor = new DeviceRgb(50, 205, 50); // Dark Green (#32CD32)
+                                        else if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Pushed)
+                                            bgColor = new DeviceRgb(255, 143, 0); // Dark Orange (#FF8F00)
+                                    }
 
                                     var borderColor = ColorConstants.BLACK;
                                     var fontColor = ColorConstants.BLACK;
 
-                                    if (shift.ShiftType == "AdhocAccepted" || shift.ShiftType == "AdhocNotAccepted")
+                                    if (shift.ShiftType == "Adhoc" || shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
                                     {
                                         fontColor = ColorConstants.WHITE;
                                         borderColor = ColorConstants.WHITE;
@@ -476,7 +482,12 @@ namespace CityWatch.Web.Services
             switch (status)
             {
                 case CityWatch.Data.Enums.RosterShiftStatus.Accepted:
-                default: return new DeviceRgb(255, 224, 178); // Orange
+                    return new DeviceRgb(144, 238, 144); // Light Green
+                case CityWatch.Data.Enums.RosterShiftStatus.Declined:
+                    return new DeviceRgb(67, 67, 67); // Dark Gray
+                case CityWatch.Data.Enums.RosterShiftStatus.Pushed:
+                default: 
+                    return new DeviceRgb(255, 183, 77); // Orange
             }
         }
 
