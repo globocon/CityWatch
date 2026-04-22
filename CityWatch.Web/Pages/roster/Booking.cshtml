@@ -550,11 +550,11 @@
                         <div class="col-6">
                             <label>Type</label>
                             <select id="modalShiftType" class="form-control" style="width: 100%">
-                                <option value="Regular" data-color="#FFB74D">● Unassigned - FIXED</option>
-                                <option value="Adhoc" data-color="#FF8F00">● Unassigned - ADHOC</option>
-                                <option value="RegularAccepted" data-color="#90EE90">● Accepted - FIXED</option>
-                                <option value="AdhocAccepted" data-color="#32CD32">● Accepted - ADHOC</option>
-                                <option value="Declined" data-color="#000000">● DECLINED (OPEN)</option>
+                                <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
+                                <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
+                                <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
+                                <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
+                                <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
                             </select>
                         </div>
                     </div>
@@ -818,16 +818,25 @@
                 z-index: 2000;
             }
 
-            .shift-card.status-pushed {
+            .shift-card.type-regular.status-pushed {
                 background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
             }
 
-            .shift-card.status-accepted {
-                background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%);
+            .shift-card.type-adhoc.status-pushed {
+                background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%);
+            }
+
+            .shift-card.type-regular.status-accepted {
+                background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
+            }
+
+            .shift-card.type-adhoc.status-accepted {
+                background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
             }
 
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
+                color: #FFFFFF !important;
             }
 
             .shift-card.shift-relief {
@@ -1993,21 +2002,14 @@
                             var allCards = $('.shift-card[data-id="' + id + '"]');
                             
                             // Remove all status/type classes
-                            allCards.removeClass('status-pushed status-accepted status-declined adhoc-accepted adhoc-not-accepted');
+                            allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
                             
-                            var isAdhoc = res.shiftType === 'Adhoc';
+                            var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
                             var statusClass = 'status-pushed';
                             if (res.status === 1) statusClass = 'status-accepted';
                             if (res.status === 2) statusClass = 'status-declined';
                             
-                            allCards.addClass(statusClass);
-                            
-                            // Specific type highlighting if needed
-                            if (isAdhoc) {
-                                // Adhoc coloring logic
-                                if (res.status === 1) allCards.addClass('adhoc-accepted');
-                                else if (res.status === 0) allCards.addClass('adhoc-not-accepted');
-                            }
+                            allCards.addClass(statusClass + ' ' + typeClass);
                             
                             // Update Card Data and DOM Attributes for all instances
                             allCards.data('shifttype', res.shiftType);
@@ -2874,9 +2876,8 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        var typeClass = '';
-                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+                                        var typeClass = 'type-regular';
+                                        if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                                         rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
