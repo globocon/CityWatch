@@ -6057,6 +6057,16 @@
     </div>
 </div>
 
+<style>
+    /* Site Assignment Tree Selection Highlighting */
+    #prgSiteTreeView [data-role="wrapper"].node-selected {
+        background-color: #d1ffd1 !important; /* Light green highlight */
+        font-weight: bold;
+        border-radius: 4px;
+        color: #1b5e20 !important; /* Darker green text for contrast */
+    }
+</style>
+
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>

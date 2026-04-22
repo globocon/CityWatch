@@ -3983,25 +3983,37 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetPayRateGroupAssignments(int groupId)
         {
-            var results = new List<object>();
-            var groupAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).Select(x => x.ClientSiteId).ToList();
-            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => x.IsActive).GroupBy(x => x.ClientType.Name);
-
-            foreach (var item in allClientSitesGrouped)
+            try
             {
-                results.Add(new
-                {
-                    Name = item.Key,
-                    ClientSites = item.Select(x => new
-                    {
-                        Id = x.Id,
-                        x.Name,
-                        Checked = groupAssignments.Contains(x.Id)
-                    }).ToList()
-                });
-            }
+                var groupAssignments = _context.PayRateGroupSites
+                    .Where(x => x.PayRateGroupId == groupId)
+                    .Select(x => x.ClientSiteId)
+                    .ToList();
 
-            return new JsonResult(results);
+                var results = _context.ClientSites
+                    .Include(x => x.ClientType)
+                    .Where(x => x.IsActive)
+                    .AsEnumerable() // Move to memory for safe null handling and grouping
+                    .GroupBy(x => x.ClientType?.Name ?? "Uncategorized")
+                    .OrderBy(g => g.Key)
+                    .Select(g => new
+                    {
+                        Name = g.Key,
+                        ClientSites = g.OrderBy(s => s.Name).Select(s => new
+                        {
+                            Id = s.Id,
+                            s.Name,
+                            Checked = groupAssignments.Contains(s.Id)
+                        }).ToList()
+                    })
+                    .ToList();
+
+                return new JsonResult(results);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { error = ex.Message });
+            }
         }
 
         public JsonResult OnPostSavePayRateGroupAssignments(int groupId, List<int> selectedSites)
