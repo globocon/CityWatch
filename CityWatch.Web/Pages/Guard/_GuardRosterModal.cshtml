@@ -97,28 +97,27 @@
     }
     .guard-shift-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; }
 
-    /* Status Colors matching Mobile App */
-    .status-pushed { 
-        background: linear-gradient(135deg, #FFB74D 0%, #FB8C00 100%) !important; /* Orange */
+    /* Status Colors */
+    .guard-shift-card.type-regular.status-pushed {
+        background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%) !important;
         border-left: 3px solid #FFE0B2 !important;
     }
-    .status-accepted { 
-        background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%) !important; /* Light Green */
-        border-left: 3px solid #C8E6C9 !important;
-    }
-    .status-declined { 
-        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; /* Black */
-        border-left: 3px solid #616161 !important;
-    }
-
-    /* Adhoc overrides */
-    .guard-shift-card.adhoc-pushed {
-        background: linear-gradient(135deg, #FF8F00 0%, #E65100 100%) !important; /* Dark Orange */
+    .guard-shift-card.type-adhoc.status-pushed {
+        background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%) !important;
         border-left: 3px solid #FFCC80 !important;
     }
-    .guard-shift-card.adhoc-accepted { 
-        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important; /* Dark Green */
+    .guard-shift-card.type-regular.status-accepted {
+        background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%) !important;
+        border-left: 3px solid #C8E6C9 !important;
+    }
+    .guard-shift-card.type-adhoc.status-accepted {
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
         border-left: 3px solid #81C784 !important;
+    }
+    .guard-shift-card.status-declined {
+        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important;
+        border-left: 3px solid #616161 !important;
+        color: #FFFFFF !important;
     }
 
     /* Relief Card Styles */
@@ -136,16 +135,6 @@
         display: inline-block;
         margin-right: 5px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    /* Adhoc Styles */
-    .guard-shift-card.adhoc-accepted { 
-        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important; 
-        border-left: 3px solid #81C784 !important;
-    }
-    .guard-shift-card.adhoc-not-accepted { 
-        background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important; 
-        border-left: 3px solid #FFB74D !important;
     }
 
     .guard-shift-license {
@@ -813,8 +802,8 @@
                             if (s.status === 1) statusClass = 'status-accepted';
                             if (s.status === 2) statusClass = 'status-declined';
 
-                            var isAdhoc = s.shiftType === 'Adhoc';
-                            var typeClass = isAdhoc ? (s.status === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
+                            var typeClass = 'type-regular';
+                            if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                             var isRelief = s.reliefGuardId || s.reliefProviderName;
 

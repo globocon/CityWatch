@@ -1812,9 +1812,8 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                     var typeClass = '';
-                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+                                     var typeClass = 'type-regular';
+                                    if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
