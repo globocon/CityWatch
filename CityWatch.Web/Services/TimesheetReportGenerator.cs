@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -71,6 +71,9 @@ namespace CityWatch.Web.Services
         private const string CELL_FONT_YELLOW = "#FFFF00";
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
+
+        private static readonly float[] UNIFIED_COLUMNS = { 8, 12, 8, 5, 8, 5, 9, 22, 8, 7, 8 };
+        private const float ROW_HEIGHT = 16f;
 
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
@@ -510,7 +513,7 @@ namespace CityWatch.Web.Services
             // Right Column: ACTUAL
             Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
             actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails1(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
             
             foreach(var table in GuardLoginTables)
             {
@@ -602,40 +605,86 @@ namespace CityWatch.Web.Services
 
             return siteTable;
         }
+        private static string TruncateSiteName(string siteName)
+        {
+            if (string.IsNullOrEmpty(siteName)) return "";
+            if (siteName.Length > 28) return siteName.Substring(0, 25) + "...";
+            return siteName;
+        }
+
+        private static Cell GetUnifiedValueCell(string text, bool isBold = false)
+        {
+            var cell = new Cell()
+               .Add(new Paragraph().Add(new Text(text ?? "")))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.LEFT)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+               .SetHeight(ROW_HEIGHT)
+               .SetPadding(1f);
+
+            if (isBold) cell.SetBold();
+            return cell;
+        }
+
+        private static Cell GetUnifiedHeaderCell(string text)
+        {
+            Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
+            return new Cell()
+               .Add(new Paragraph().Add(new Text(text ?? "")))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.LEFT)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+               .SetBackgroundColor(CELL_BG_GREY_HEADER)
+               .SetHeight(ROW_HEIGHT)
+               .SetPadding(1f);
+        }
+
+        private static void CreateUnifiedHeader(Table table, bool isActual)
+        {
+            table.AddCell(GetUnifiedHeaderCell(""));
+            table.AddCell(GetUnifiedHeaderCell("Date"));
+            table.AddCell(GetUnifiedHeaderCell("Start"));
+            table.AddCell(GetUnifiedHeaderCell(isActual ? "GPS" : ""));
+            table.AddCell(GetUnifiedHeaderCell("Finish"));
+            table.AddCell(GetUnifiedHeaderCell(isActual ? "GPS" : ""));
+            table.AddCell(GetUnifiedHeaderCell("Total Hrs"));
+            table.AddCell(GetUnifiedHeaderCell("Site"));
+            table.AddCell(GetUnifiedHeaderCell(!isActual ? "$ P/Hr" : ""));
+            table.AddCell(GetUnifiedHeaderCell(!isActual ? "Hrs" : ""));
+            table.AddCell(GetUnifiedHeaderCell(!isActual ? "$" : ""));
+        }
+
         private Table CreateReportHeader()
         {
             var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 50, 30 })).UseAllAvailableWidth();
-
+            
             var cwLogo = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
-                .SetHeight(60);
+                .SetHeight(50); // Slightly smaller to save space
             headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER));
-
+            
             var reportTitle = new Cell()
                 .Add(new Paragraph().Add(new Text("TIME SHEET")))
                 .SetFont(PdfHelper.GetPdfFont())
-                .SetFontSize(CELL_FONT_SIZE * 4f)
+                .SetFontSize(CELL_FONT_SIZE * 3.5f) // Reduced slightly to save space
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                 .SetBorder(Border.NO_BORDER);
             headerTable.AddCell(reportTitle);
-
+            
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
-            var imagePath = string.Empty;
-
-            var cwLogopath = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")));
-
-            imagePath = GetSiteImage();
-            var folderPath = IO.Path.Combine(_SiteimageRootDir, imagePath);
-            if (IO.File.Exists(folderPath))
+            var imagePath = GetSiteImage();
+            if (!string.IsNullOrEmpty(imagePath))
             {
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                    .SetHeight(30)
+                    .SetHeight(25)
                     .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
                 cellSiteImage.Add(siteImage);
             }
             headerTable.AddCell(cellSiteImage).SetBorder(Border.NO_BORDER);
-
-
 
             return headerTable;
         }
@@ -714,164 +763,62 @@ namespace CityWatch.Web.Services
     List<GuardLogin> LoginDetails,
     string weekname)
         {
-            // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = { 10, 15, 10, 5, 10, 5, 10, 35 }; // Non-zero percentages for iText7
-                var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
-                CreateGuardDetailsHeader(GuardTable);
+                var GuardTable = new Table(UnitValue.CreatePercentArray(UNIFIED_COLUMNS)).UseAllAvailableWidth();
+                CreateUnifiedHeader(GuardTable, true);
                 return GuardTable;
             }
 
-            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
+            var SiteName = LoginDetails.Select(x => x.ClientSite?.Name).FirstOrDefault() ?? "";
 
-            // Handle single-day logic
             if (startDate.Date == endDate.Date)
             {
                 var GuardTable = CreateNewGuardTable();
                 int dailyTotalHours = 0;
-
-                // Only create a table for the specific day
-                string dayName = startDate.ToString("dddd");
-                GuardTable.AddCell(GetSiteValueCell(dayName));
-                GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
-                //GuardTable.AddCell(GetSiteValueCell(dayName));
+                string dayName = startDate.ToString("ddd");
+                GuardTable.AddCell(GetUnifiedValueCell(dayName));
+                GuardTable.AddCell(GetUnifiedValueCell(startDate.ToString("dd/MM/yyyy")));
+                
                 var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
                 if (start != null)
                 {
-                    GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                    var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
-                    //Set GPS Image start
-                    var imagePath = "wwwroot/images/GPSImage.png";
-                    var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                        .SetWidth(12)
-                        .SetHeight(12);
-
-                    siteImage.SetTextAlignment(TextAlignment.RIGHT);
-
-                    var paragraph = new Paragraph()
-                        .SetBorder(Border.NO_BORDER);
-                       if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                    {
-                        paragraph.Add(siteImage);
-                    }
-
-                    if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                    {
-                        var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                        var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                        siteImage.SetAction(linkAction);
-                    }
-                    var cell = new Cell()
-                        .SetFont(PdfHelper.GetPdfFont())
-                        .SetFontSize(CELL_FONT_SIZE)
-                        .SetTextAlignment(TextAlignment.LEFT)
-                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                        .SetPadding(2)
-                        .SetMargin(0)
-                        .SetHeight(15);
-
-                    cell.Add(paragraph);
-                    GuardTable.AddCell(cell);
-                    //Set GPS Image stop
+                    GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
+                    GuardTable.AddCell(GetGpsIconCell(start.Id));
 
                     TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
                     if (endDateDifference.HasValue)
                     {
-                        string enddate1 = string.Format("{0:D2}:{1:D2}",
-                                                        (int)endDateDifference.Value.TotalHours,
-                                                        endDateDifference.Value.Minutes);
-                        GuardTable.AddCell(GetSiteValueCell(enddate1));
+                        string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                        GuardTable.AddCell(GetUnifiedValueCell(enddate1));
+                        GuardTable.AddCell(GetGpsIconCell(start.Id)); // Simplified - actual might need off-duty log id if available
 
-                        //Set GPS Image start
-                        var imagePath1 = "wwwroot/images/GPSImage.png";
-                        var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
-                            .SetWidth(12)
-                            .SetHeight(12);
-
-                        siteImage1.SetTextAlignment(TextAlignment.RIGHT);
-
-                        var paragraph1 = new Paragraph()
-                            .SetBorder(Border.NO_BORDER);
-                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            paragraph1.Add(siteImage1);
-                        }
-                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                            siteImage1.SetAction(linkAction);
-                        }
-
-                        var cell1 = new Cell()
-                            .SetFont(PdfHelper.GetPdfFont())
-                            .SetFontSize(CELL_FONT_SIZE)
-                            .SetTextAlignment(TextAlignment.LEFT)
-                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetPadding(2)
-                            .SetMargin(0)
-                            .SetHeight(15);
-
-                        cell1.Add(paragraph1);
-                        GuardTable.AddCell(cell1);
-                        //Set GPS Image stop
-                        DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
-                        DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
-
-                        TimeSpan TotalHrs = (enddate - startd).Duration();
-                        int totalHrs = (int)TotalHrs.TotalMinutes;
-                        dailyTotalHours += totalHrs;
-                        int hoursDail = totalHrs / 60;
-                        int minutesDail = totalHrs % 60;
-                        GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
+                        TimeSpan TotalHrs = endDateDifference.Value.Duration();
+                        int totalMin = (int)TotalHrs.TotalMinutes;
+                        dailyTotalHours += totalMin;
+                        GuardTable.AddCell(GetUnifiedValueCell($"{TotalHrs.Hours:D2}:{TotalHrs.Minutes:D2}"));
                     }
-                    GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
+                    else
+                    {
+                        GuardTable.AddCell(GetUnifiedValueCell(""));
+                        GuardTable.AddCell(GetUnifiedValueCell(""));
+                        GuardTable.AddCell(GetUnifiedValueCell(""));
+                    }
+                    GuardTable.AddCell(GetUnifiedValueCell(TruncateSiteName(start.ClientSite?.Name)));
                 }
                 else
                 {
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(start?.ClientSite.Name ?? ""));
+                    for (int i = 0; i < 6; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                 }
+                
+                // Add empty financial columns to maintain structure
+                for (int i = 0; i < 3; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
 
                 return (new List<Table> { GuardTable }, dailyTotalHours);
             }
 
-            // Weekly logic for a range of dates
-            DateTime currentDate = new DateTime(startDate.Year, startDate.Month, 1); 
+            DateTime currentDate = startDate;
             int totalDays = (endDate - startDate).Days + 1;
-            int startDayIndex = Array.IndexOf(CultureInfo.CurrentCulture.DateTimeFormat.DayNames, weekname);
-
-            // Adjust the currentDate to start on the specified day of the week
-            //while ((int)currentDate.DayOfWeek != startDayIndex && currentDate <= endDate)
-            //{
-            //    currentDate = currentDate.AddDays(1);
-            //}
-            DayOfWeek targetStartDay = DayOfWeek.Monday; // Set this to your desired week start day
-            int daysToAdjust = ((int)startDate.DayOfWeek - (int)targetStartDay + 7) % 7;
-            bool isMonthlyView = (endDate - startDate).Days >= 28;
-            if (!isMonthlyView)
-            {
-                currentDate = startDate.AddDays(-daysToAdjust);
-            }
-            else
-            {
-                currentDate = currentDate;
-            }
-                
-
-            // Ensure endDate is exactly one week after startDate for single-week mode
-            //if ((endDate - startDate).Days >= 7)
-            //{
-            //    endDate = startDate.AddDays(6);
-            //}
-
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;
             int daysProcessed = 0;
@@ -881,148 +828,91 @@ namespace CityWatch.Web.Services
                 var GuardTable = CreateNewGuardTable();
                 int weeklyTotalHours = 0;
 
-                // Process each day in the week (up to 7 days or remaining days)
                 for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
-                    string dayName = currentDate.ToString("dddd");
-                    GuardTable.AddCell(GetSiteValueCellHeader(dayName));
+                    string dayName = currentDate.ToString("ddd");
+                    GuardTable.AddCell(GetUnifiedValueCell(dayName));
 
                     if (currentDate > endDate)
                     {
-                        GuardTable.AddCell(GetSiteValueCell(""));
+                        for (int i = 0; i < 10; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                     }
                     else
                     {
-                        GuardTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
-                    }
-
-                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
-                    if (start != null)
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                        var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
-                        //Set GPS Image start
-                        var imagePath = "wwwroot/images/GPSImage.png";
-                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                            .SetWidth(12) 
-                            .SetHeight(12); 
-
-                        siteImage.SetTextAlignment(TextAlignment.RIGHT);
-
-                        var paragraph = new Paragraph()
-                            .SetBorder(Border.NO_BORDER);
-                            if (_guardLogs!=null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                        GuardTable.AddCell(GetUnifiedValueCell(currentDate.ToString("dd/MM/yyyy")));
+                        var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
+                        if (start != null)
                         {
-                            paragraph.Add(siteImage);
-                        }
+                            GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
+                            GuardTable.AddCell(GetGpsIconCell(start.Id));
 
-                       
-                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                            siteImage.SetAction(linkAction);
-                        }
-                        var cell = new Cell()
-                            .SetFont(PdfHelper.GetPdfFont())
-                            .SetFontSize(CELL_FONT_SIZE)
-                            .SetTextAlignment(TextAlignment.LEFT)
-                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetPadding(2) 
-                            .SetMargin(0) 
-                            .SetHeight(15); 
-
-                        cell.Add(paragraph);
-                        GuardTable.AddCell(cell);
-                        //Set GPS Image stop
-                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
-                        if (endDateDifference.HasValue)
-                        {
-                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                            GuardTable.AddCell(GetSiteValueCell(enddate1));
-                            //Set GPS Image start
-                            var imagePath1 = "wwwroot/images/GPSImage.png";
-                            var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
-                                .SetWidth(12)
-                                .SetHeight(12);
-
-                            siteImage1.SetTextAlignment(TextAlignment.RIGHT);
-
-                            var paragraph1 = new Paragraph()
-                                .SetBorder(Border.NO_BORDER);
-                                if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
+                            if (duration.HasValue)
                             {
-                                paragraph1.Add(siteImage1);
+                                GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
+                                GuardTable.AddCell(GetGpsIconCell(start.Id));
+                                
+                                int totalMin = (int)duration.Value.TotalMinutes;
+                                weeklyTotalHours += totalMin;
+                                GuardTable.AddCell(GetUnifiedValueCell($"{duration.Value.Hours:D2}:{duration.Value.Minutes:D2}"));
                             }
-                            if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
+                            else
                             {
-                                var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                                var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                                siteImage1.SetAction(linkAction);
+                                GuardTable.AddCell(GetUnifiedValueCell(""));
+                                GuardTable.AddCell(GetUnifiedValueCell(""));
+                                GuardTable.AddCell(GetUnifiedValueCell(""));
                             }
-                            var cell1 = new Cell()
-                                .SetFont(PdfHelper.GetPdfFont())
-                                .SetFontSize(CELL_FONT_SIZE)
-                                .SetTextAlignment(TextAlignment.LEFT)
-                                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                                .SetPadding(2)
-                                .SetMargin(0)
-                                .SetHeight(15);
-
-                            cell1.Add(paragraph1);
-                            GuardTable.AddCell(cell1);
-                            //Set GPS Image stop
-                            TimeSpan enddate = TimeSpan.Parse(enddate1);
-                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
-
-                            TimeSpan TotalHrs = (enddate - startd).Duration();
-                            int totalHrs = (int)TotalHrs.TotalMinutes;
-                            weeklyTotalHours += totalHrs;
-
-                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
-                            GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                            GuardTable.AddCell(GetUnifiedValueCell(TruncateSiteName(start.ClientSite?.Name)));
                         }
                         else
                         {
-                            GuardTable.AddCell(GetSiteValueCell(""));
-                            GuardTable.AddCell(GetSiteValueCell(""));
+                            for (int i = 0; i < 6; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                         }
-
-                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite?.Name ?? ""));
-                    }
-                    else
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
+                        
+                        // Empty financial columns
+                        for (int i = 0; i < 3; i++) GuardTable.AddCell(GetUnifiedValueCell(""));
                     }
 
                     currentDate = currentDate.AddDays(1);
                     daysProcessed++;
                 }
 
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-
+                // Add totals row - 11 columns
+                for (int i = 0; i < 6; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                
                 int hours1 = weeklyTotalHours / 60;
                 int minutes1 = weeklyTotalHours % 60;
-                GuardTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}"));
-
+                GuardTable.AddCell(GetUnifiedValueCell($"{hours1:D2}:{minutes1:D2}"));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
+                for (int i = 0; i < 3; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+
                 TotalWeeklyHrs += weeklyTotalHours;
                 weeklyTables.Add(GuardTable);
             }
 
             return (weeklyTables, TotalWeeklyHrs);
+        }
+
+        private Cell GetGpsIconCell(int loginId)
+        {
+            var _guardLogs = _clientDataProvider.GetGuardLogs(loginId);
+            var cell = new Cell()
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetHeight(ROW_HEIGHT)
+                .SetPadding(1f);
+
+            if (_guardLogs != null && !string.IsNullOrEmpty(_guardLogs.GpsCoordinates))
+            {
+                var imagePath = "wwwroot/images/GPSImage.png";
+                var siteImage = new Image(ImageDataFactory.Create(imagePath)).SetWidth(10).SetHeight(10);
+                var url = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
+                siteImage.SetAction(PdfAction.CreateURI(url));
+                cell.Add(new Paragraph().Add(siteImage).SetPadding(0));
+            }
+            return cell;
         }
 
 
@@ -1032,315 +922,12 @@ namespace CityWatch.Web.Services
   List<GuardLogin> LoginDetails,
   string weekname)
         {
-            // Method to create a new table with headers
-            Table CreateNewGuardTable()
-            {
-                float[] columnPercentages = new float[8];
-                var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
-                CreateGuardDetailsHeader(GuardTable);
-                return GuardTable;
-            }
-
-            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
-
-            // Handle single-day logic
-            if (startDate.Date == endDate.Date)
-            {
-                var GuardTable = CreateNewGuardTable();
-                int dailyTotalHours = 0;
-
-                // Only create a table for the specific day
-                string dayName = startDate.ToString("dddd");
-                GuardTable.AddCell(GetSiteValueCell(dayName));
-                GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
-
-                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
-                if (start != null)
-                {
-                    GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                    var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
-                    //Set GPS Image start
-                    var imagePath = "wwwroot/images/GPSImage.png";
-                    var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                        .SetWidth(12)
-                        .SetHeight(12);
-
-                    siteImage.SetTextAlignment(TextAlignment.RIGHT);
-
-                    var paragraph = new Paragraph()
-                        .SetBorder(Border.NO_BORDER);
-                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                    {
-                        paragraph.Add(siteImage);
-                    }
-                    if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                    {
-                        var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                        var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                        siteImage.SetAction(linkAction);
-                    }
-
-                    var cell = new Cell()
-                        .SetFont(PdfHelper.GetPdfFont())
-                        .SetFontSize(CELL_FONT_SIZE)
-                        .SetTextAlignment(TextAlignment.LEFT)
-                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                        .SetPadding(2)
-                        .SetMargin(0)
-                        .SetHeight(15);
-
-                    cell.Add(paragraph);
-                    GuardTable.AddCell(cell);
-                    //Set GPS Image stop
-
-                    TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
-                    if (endDateDifference.HasValue)
-                    {
-                        string enddate1 = string.Format("{0:D2}:{1:D2}",
-                                                        (int)endDateDifference.Value.TotalHours,
-                                                        endDateDifference.Value.Minutes);
-                        GuardTable.AddCell(GetSiteValueCell(enddate1));
-                        //Set GPS Image start
-                        var imagePath1 = "wwwroot/images/GPSImage.png";
-                        var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
-                            .SetWidth(12)
-                            .SetHeight(12);
-
-                        siteImage1.SetTextAlignment(TextAlignment.RIGHT);
-
-                        var paragraph1 = new Paragraph()
-                            .SetBorder(Border.NO_BORDER);
-                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            paragraph1.Add(siteImage1);
-                        }
-
-                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                            siteImage1.SetAction(linkAction);
-                        }
-
-                        var cell1 = new Cell()
-                            .SetFont(PdfHelper.GetPdfFont())
-                            .SetFontSize(CELL_FONT_SIZE)
-                            .SetTextAlignment(TextAlignment.LEFT)
-                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetPadding(2)
-                            .SetMargin(0)
-                            .SetHeight(15);
-
-                        cell1.Add(paragraph1);
-                        GuardTable.AddCell(cell1);
-                        //Set GPS Image stop
-
-                        DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
-                        DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
-
-                        TimeSpan TotalHrs = (enddate - startd).Duration();
-                        int totalHrs = (int)TotalHrs.TotalMinutes;
-                        dailyTotalHours += totalHrs;
-                        int hoursDail = totalHrs / 60;
-                        int minutesDail = totalHrs % 60;
-                        GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
-                    }
-                    GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
-                }
-                else
-                {
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-                    GuardTable.AddCell(GetSiteValueCell(""));
-
-                    GuardTable.AddCell(GetSiteValueCell(start?.ClientSite.Name ?? ""));
-                }
-
-                return (new List<Table> { GuardTable }, dailyTotalHours);
-            }
-
-            // Weekly logic for a range of dates
-            DateTime currentDate = startDate;
-            int totalDays = (endDate - startDate).Days + 1;
-            int startDayIndex = Array.IndexOf(CultureInfo.CurrentCulture.DateTimeFormat.DayNames, weekname);
-
-            // Adjust the currentDate to start on the specified day of the week
-            //while ((int)currentDate.DayOfWeek != startDayIndex && currentDate <= endDate)
-            //{
-            //    currentDate = currentDate.AddDays(1);
-            //}
-           
-
-
-            // Ensure endDate is exactly one week after startDate for single-week mode
-            //if ((endDate - startDate).Days >= 7)
-            //{
-            //    endDate = startDate.AddDays(6);
-            //}
-
-            List<Table> weeklyTables = new List<Table>();
-            int TotalWeeklyHrs = 0;
-            int daysProcessed = 0;
-
-            while (daysProcessed < totalDays)
-            {
-                var GuardTable = CreateNewGuardTable();
-                int weeklyTotalHours = 0;
-
-                // Process each day in the week (up to 7 days or remaining days)
-                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
-                {
-                    string dayName = currentDate.ToString("dddd");
-                    GuardTable.AddCell(GetSiteValueCellHeader(dayName));
-
-                    if (currentDate > endDate)
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                    }
-                    else
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
-                    }
-
-                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
-                    if (start != null)
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                        var _guardLogs = _clientDataProvider.GetGuardLogs(start.Id);
-                        //Set GPS Image start
-                        var imagePath = "wwwroot/images/GPSImage.png";
-                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                            .SetWidth(12)
-                            .SetHeight(12);
-
-                        siteImage.SetTextAlignment(TextAlignment.RIGHT);
-
-                        var paragraph = new Paragraph()
-                            .SetBorder(Border.NO_BORDER);
-                             if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            paragraph.Add(siteImage);
-                        }
-                        if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                        {
-                            var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                            var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                            siteImage.SetAction(linkAction);
-                        }
-
-
-                        var cell = new Cell()
-                            .SetFont(PdfHelper.GetPdfFont())
-                            .SetFontSize(CELL_FONT_SIZE)
-                            .SetTextAlignment(TextAlignment.LEFT)
-                            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetPadding(2)
-                            .SetMargin(0)
-                            .SetHeight(15);
-
-                        cell.Add(paragraph);
-                        GuardTable.AddCell(cell);
-                        //Set GPS Image stop
-
-                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
-                        if (endDateDifference.HasValue)
-                        {
-                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                            GuardTable.AddCell(GetSiteValueCell(enddate1));
-                            //Set GPS Image start
-                            var imagePath1 = "wwwroot/images/GPSImage.png";
-                            var siteImage1 = new Image(ImageDataFactory.Create(imagePath1))
-                                .SetWidth(12)
-                                .SetHeight(12);
-
-                            siteImage1.SetTextAlignment(TextAlignment.RIGHT);
-
-                            var paragraph1 = new Paragraph()
-                                .SetBorder(Border.NO_BORDER);
-                                  if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                            {
-                                paragraph1.Add(siteImage1);
-                            }
-
-                            if (_guardLogs != null && _guardLogs.GpsCoordinates != null && _guardLogs.GpsCoordinates != "")
-                            {
-                                var urlWithTargetBlank = $"https://www.google.com/maps?q={_guardLogs.GpsCoordinates}";
-                                var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                                siteImage1.SetAction(linkAction);
-                            }
-
-                            var cell1 = new Cell()
-                                .SetFont(PdfHelper.GetPdfFont())
-                                .SetFontSize(CELL_FONT_SIZE)
-                                .SetTextAlignment(TextAlignment.LEFT)
-                                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                                .SetPadding(2)
-                                .SetMargin(0)
-                                .SetHeight(15);
-
-                            cell1.Add(paragraph1);
-                            GuardTable.AddCell(cell1);
-                            //Set GPS Image stop
-
-                            TimeSpan enddate = TimeSpan.Parse(enddate1);
-                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
-
-                            TimeSpan TotalHrs = (enddate - startd).Duration();
-                            int totalHrs = (int)TotalHrs.TotalMinutes;
-                            weeklyTotalHours += totalHrs;
-
-                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
-                            GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs));
-                        }
-                        else
-                        {
-                            GuardTable.AddCell(GetSiteValueCell(""));
-                            GuardTable.AddCell(GetSiteValueCell(""));
-                        }
-
-                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite?.Name ?? ""));
-                    }
-                    else
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                    }
-
-                    currentDate = currentDate.AddDays(1);
-                    daysProcessed++;
-                }
-
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-
-                int hours1 = weeklyTotalHours / 60;
-                int minutes1 = weeklyTotalHours % 60;
-                GuardTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}"));
-
-                GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
-                TotalWeeklyHrs += weeklyTotalHours;
-                weeklyTables.Add(GuardTable);
-            }
-
-            return (weeklyTables, TotalWeeklyHrs);
+            return CreateGuardLoginDetails(startDate, endDate, LoginDetails, weekname);
         }
 
-
-
+        private void CreateGuardDetailsHeader(Table table)
+        {
+        }
 
         private int WeeksBetweenDates(DateTime startDate, DateTime endDate)
         {
@@ -1348,242 +935,9 @@ namespace CityWatch.Web.Services
             int weeksBetween = (int)(dateDifference.TotalDays / 7);
             return weeksBetween;
         }
-        private void CreateGuardDetailsHeader(Table table)
-        {
-            try
-            {
-                Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
-
-                table.AddCell(GetSiteValueCellHeader(""));
-                table.AddCell(GetSiteValueCellHeader("Date"));
-                table.AddCell(GetSiteValueCellHeader("Start"));
-                table.AddCell(GetSiteValueCellHeader("GPS"));
-                table.AddCell(GetSiteValueCellHeader("Finish"));
-                table.AddCell(GetSiteValueCellHeader("GPS"));
-                table.AddCell(GetSiteValueCellHeader("Total Hrs"));
-                table.AddCell(GetSiteValueCellHeader("Site"));
-            }
-            catch (Exception ex)
-            {
-                // Handle the exception here, for example, log it or show an error message.
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                // You can rethrow the exception if needed.
-                throw;
-            }
-        }
-        private (List<Table> weeklyTables, double totalHours, decimal totalPay) CreateBookingDetails(
-            DateTime startDate,
-            DateTime endDate,
-            List<GuardLogin> LoginDetails,
-            List<RosterSchedule> rosterDetails,
-            string weekname)
-        {
-            // Method to create a new table with headers for BOOKING
-            Table CreateNewBookingTable()
-            {
-                float[] columnPercentages = { 10, 10, 10, 10, 10, 15, 15, 10, 10 }; // Non-zero percentages for iText7
-                var BookingTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
-                CreateBookingDetailsHeader(BookingTable);
-                return BookingTable;
-            }
-
-            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
-            double totalHours = 0;
-            decimal totalPay = 0;
-
-            // Handle single-day logic
-            if (startDate.Date == endDate.Date)
-            {
-                var BookingTable = CreateNewBookingTable();
-
-                // Only create a table for the specific day
-                string dayName = startDate.ToString("dddd");
-                BookingTable.AddCell(GetSiteValueCell(dayName));
-                BookingTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
-                
-                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
-                if (start != null)
-                {
-                    BookingTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-
-                    // EXACT COPY from CreateGuardLoginDetails
-                    TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
-                    if (endDateDifference.HasValue)
-                    {
-                        string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                        BookingTable.AddCell(GetSiteValueCell(enddate1));
-
-                        TimeSpan enddate = TimeSpan.Parse(enddate1);
-                        TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
-
-                        TimeSpan TotalHrs = (enddate - startd).Duration();
-                        
-                        string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
-                        BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
-                        
-                        // Calculate pay
-                        double hours = TotalHrs.TotalHours;
-                        var matchingRoster = rosterDetails
-                            .Where(r => r.ClientSiteId == start.ClientSiteId && 
-                                       r.ShiftStart.Date == start.LoginDate.Date)
-                            .FirstOrDefault();
-                        decimal rate = matchingRoster?.PayRate?.GuardPayRate ?? 0;
-                        decimal pay = (decimal)hours * rate;
-                        
-                        totalHours += hours;
-                        totalPay += pay;
-                        
-                        BookingTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
-                        BookingTable.AddCell(GetSiteValueCell(rate.ToString("F2")));
-                        BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
-                        BookingTable.AddCell(GetSiteValueCell(pay.ToString("F2")));
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < 6; i++) BookingTable.AddCell(GetSiteValueCell(""));
-                }
-
-                return (new List<Table> { BookingTable }, totalHours, totalPay);
-            }
-
-            // Weekly logic for a range of dates (EXACT COPY from CreateGuardLoginDetails)
-            DateTime currentDate = new DateTime(startDate.Year, startDate.Month, 1);
-            int totalDays = (endDate - startDate).Days + 1;
-            
-            DayOfWeek targetStartDay = DayOfWeek.Monday;
-            int daysToAdjust = ((int)startDate.DayOfWeek - (int)targetStartDay + 7) % 7;
-            bool isMonthlyView = (endDate - startDate).Days >= 28;
-            if (!isMonthlyView)
-            {
-                currentDate = startDate.AddDays(-daysToAdjust);
-            }
-            else
-            {
-                currentDate = currentDate;
-            }
-
-            List<Table> weeklyTables = new List<Table>();
-            int TotalWeeklyHrs = 0;
-            int daysProcessed = 0;
-
-            while (daysProcessed < totalDays)
-            {
-                var BookingTable = CreateNewBookingTable();
-                int weeklyTotalHours = 0;
-
-                // Process each day in the week (up to 7 days or remaining days)
-                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
-                {
-                    string dayName = currentDate.ToString("dddd");
-                    BookingTable.AddCell(GetSiteValueCellHeader(dayName)); // Use header style for day name
-
-                    if (currentDate > endDate)
-                    {
-                        BookingTable.AddCell(GetSiteValueCell(""));
-                    }
-                    else
-                    {
-                        BookingTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
-                    }
-
-                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
-                    if (start != null)
-                    {
-                        BookingTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-
-                        // EXACT COPY from CreateGuardLoginDetails
-                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
-                        if (endDateDifference.HasValue)
-                        {
-                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                            BookingTable.AddCell(GetSiteValueCell(enddate1));
-
-                            TimeSpan enddate = TimeSpan.Parse(enddate1);
-                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
-
-                            TimeSpan TotalHrs = (enddate - startd).Duration();
-                            int totalHrsMinutes = (int)TotalHrs.TotalMinutes;
-                            weeklyTotalHours += totalHrsMinutes;
-
-                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
-                            BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
-                            
-                            // Calculate pay
-                            double hours = TotalHrs.TotalHours;
-                            var matchingRoster = rosterDetails
-                                .Where(r => r.ClientSiteId == start.ClientSiteId && 
-                                           r.ShiftStart.Date == start.LoginDate.Date)
-                                .FirstOrDefault();
-                            decimal rate = matchingRoster?.PayRate?.GuardPayRate ?? 0;
-                            decimal pay = (decimal)hours * rate;
-                            
-                            totalHours += hours;
-                            totalPay += pay;
-                            
-                            BookingTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
-                            BookingTable.AddCell(GetSiteValueCell(rate.ToString("F2")));
-                            BookingTable.AddCell(GetSiteValueCell(formattedTotalHrs));
-                            BookingTable.AddCell(GetSiteValueCell(pay.ToString("F2")));
-                        }
-                        else
-                        {
-                            // No OffDuty - add empty cells for: Finish, Total Hrs, Site, $ P/Hr, Hrs, $
-                            for (int i = 0; i < 6; i++) BookingTable.AddCell(GetSiteValueCell(""));
-                        }
-                    }
-                    else
-                    {
-                        // No login - add empty cells for: Start, Finish, Total Hrs, Site, $ P/Hr, Hrs, $
-                        for (int i = 0; i < 7; i++) BookingTable.AddCell(GetSiteValueCell(""));
-                    }
-
-                    currentDate = currentDate.AddDays(1);
-                    daysProcessed++;
-                }
-
-                // Add totals row (same as ACTUAL) - 9 columns total
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Empty column
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Date
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Start
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Finish
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Hrs - keep empty (no total)
-
-                int hours1 = weeklyTotalHours / 60;
-                int minutes1 = weeklyTotalHours % 60;
-                
-                BookingTable.AddCell(GetNoBorderTotalHrsCell(SiteName)); // Site
-                BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // $ P/Hr
-                BookingTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}")); // Hrs (pay column)
-                BookingTable.AddCell(GetSiteValueCell(totalPay.ToString("F2"))); // $
-
-                weeklyTables.Add(BookingTable);
-                TotalWeeklyHrs += weeklyTotalHours;
-            }
-
-            return (weeklyTables, totalHours, totalPay);
-        }
 
         private void CreateBookingDetailsHeader(Table table)
         {
-            try
-            {
-                Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
-                table.AddCell(GetSiteValueCellHeader(""));
-                table.AddCell(GetSiteValueCellHeader("Date"));
-                table.AddCell(GetSiteValueCellHeader("Start"));
-                table.AddCell(GetSiteValueCellHeader("Finish"));
-                table.AddCell(GetSiteValueCellHeader("Hrs"));
-                table.AddCell(GetSiteValueCellHeader("Site"));
-                table.AddCell(GetSiteValueCellHeader("$ P/Hr"));
-                table.AddCell(GetSiteValueCellHeader("Hrs"));
-                table.AddCell(GetSiteValueCellHeader("$"));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                throw;
-            }
         }
 
         private static Table GetCommentTable()
