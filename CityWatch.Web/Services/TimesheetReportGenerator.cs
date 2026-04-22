@@ -923,8 +923,8 @@ namespace CityWatch.Web.Services
                     {
                         foreach (var session in dayMerged)
                         {
-                            var start = session.login;
-                            var originalIds = session.originalIds;
+                            var start = session.Item1;
+                            var originalIds = session.Item2;
 
                             GuardTable.AddCell(GetUnifiedValueCell(dayName, false, null, CELL_BG_BLUE_HEADER));
                             GuardTable.AddCell(GetUnifiedValueCell(dateStr));
@@ -1001,10 +1001,10 @@ namespace CityWatch.Web.Services
                     }
                 }
             }
-            else
+            else if (loginIds != null && loginIds.Any())
             {
-                // Fallback: This method returns a SINGLE GuardLog object, not a List
-                logEntry = _clientDataProvider.GetGuardLogs(loginId);
+                // Fallback: Use the first ID if logsLookup is missing
+                logEntry = _clientDataProvider.GetGuardLogs(loginIds.First());
             }
 
             var cell = new Cell()
