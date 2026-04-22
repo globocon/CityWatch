@@ -679,8 +679,8 @@ namespace CityWatch.Web.Services
                     var next = sorted[i];
                     DateTime currentEnd = currentLogin.OffDuty ?? currentLogin.OnDuty;
 
-                    // Merge if they overlap or are within 30 minutes
-                    if (next.OnDuty <= currentEnd.AddMinutes(30))
+                    // Merge if they start within 15 minutes OR if one is nested in another
+                    if (next.OnDuty <= currentLogin.OnDuty.AddMinutes(15) || (next.OnDuty < currentEnd && (next.OffDuty ?? next.OnDuty) <= currentEnd))
                     {
                         if (next.OffDuty.HasValue && (!currentLogin.OffDuty.HasValue || next.OffDuty.Value > currentLogin.OffDuty.Value))
                         {
@@ -932,15 +932,8 @@ namespace CityWatch.Web.Services
                             GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
                             GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
 
-                            TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
-                            if (duration.HasValue)
-                            {
-                                GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
-                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
-
-                                int totalMin = (int)duration.Value.TotalMinutes;
-                                weeklyTotalHours += totalMin;
-                                GuardTable.AddCell(GetUnifiedValueCell($"{duration.Value.Hours:D2}:{duration.Value.Minutes:D2}"));
+                                double hrs = (double)totalMin / 60.0;
+                                GuardTable.AddCell(GetUnifiedValueCell(hrs.ToString("F2") + "h"));
                             }
                             else
                             {
@@ -968,9 +961,8 @@ namespace CityWatch.Web.Services
                 // Add totals row - must have 11 columns
                 for (int i = 0; i < 6; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 
-                int hours1 = weeklyTotalHours / 60;
-                int minutes1 = weeklyTotalHours % 60;
-                GuardTable.AddCell(GetUnifiedValueCell($"{hours1:D2}:{minutes1:D2}"));
+                double totalHrs = (double)weeklyTotalHours / 60.0;
+                GuardTable.AddCell(GetUnifiedValueCell(totalHrs.ToString("F2") + "h"));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 for (int i = 0; i < 3; i++) GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
 
@@ -1105,7 +1097,7 @@ namespace CityWatch.Web.Services
                             double hrs = duration.TotalHours;
                             weeklyTotalHours += hrs;
 
-                            BookingTable.AddCell(GetUnifiedValueCell($"{duration.Hours:D2}:{duration.Minutes:D2}"));
+                            BookingTable.AddCell(GetUnifiedValueCell(hrs.ToString("F2") + "h"));
                             BookingTable.AddCell(GetUnifiedValueCell(TruncateSiteName(roster.ClientSite?.Name)));
 
                             decimal rate = roster.PayRate?.GuardPayRate ?? 0;
@@ -1113,7 +1105,7 @@ namespace CityWatch.Web.Services
                             weeklyTotalPay += pay;
 
                             BookingTable.AddCell(GetUnifiedValueCell(rate.ToString("F2")));
-                            BookingTable.AddCell(GetUnifiedValueCell($"{duration.Hours:D2}:{duration.Minutes:D2}"));
+                            BookingTable.AddCell(GetUnifiedValueCell(hrs.ToString("F2") + "h"));
                             BookingTable.AddCell(GetUnifiedValueCell(pay.ToString("F2")));
                         }
                     }
@@ -1131,12 +1123,10 @@ namespace CityWatch.Web.Services
                 // Add totals row
                 for (int i = 0; i < 6; i++) BookingTable.AddCell(GetNoBorderTotalHrsCell(""));
 
-                int h = (int)weeklyTotalHours;
-                int m = (int)((weeklyTotalHours - h) * 60);
-                BookingTable.AddCell(GetUnifiedValueCell($"{h:D2}:{m:D2}"));
+                BookingTable.AddCell(GetUnifiedValueCell(weeklyTotalHours.ToString("F2") + "h"));
                 BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Site
                 BookingTable.AddCell(GetNoBorderTotalHrsCell("")); // Rate
-                BookingTable.AddCell(GetUnifiedValueCell($"{h:D2}:{m:D2}"));
+                BookingTable.AddCell(GetUnifiedValueCell(weeklyTotalHours.ToString("F2") + "h"));
                 BookingTable.AddCell(GetUnifiedValueCell(weeklyTotalPay.ToString("F2")));
 
                 totalHoursAll += weeklyTotalHours;

@@ -10178,6 +10178,10 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
 
 
 
+    $('#loader').show();
+    if (typeof showStatusNotification === 'function') {
+        showStatusNotification(true, 'Generating timesheet, please wait...');
+    }
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
         data: {
@@ -10188,6 +10192,7 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
+        $('#loader').hide();
         if (response.statusCode === -1) {
 
         } else {
@@ -10221,6 +10226,10 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
 
 
 
+    $('#loader').show();
+    if (typeof showStatusNotification === 'function') {
+        showStatusNotification(true, 'Generating timesheet, please wait...');
+    }
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheet',
         data: {
@@ -10233,6 +10242,7 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
+        $('#loader').hide();
         if (response.statusCode === -1) {
 
         } else {
