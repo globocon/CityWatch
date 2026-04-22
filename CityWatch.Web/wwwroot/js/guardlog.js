@@ -10178,10 +10178,10 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
 
 
 
+    var $btn = $('#btnDownloadTimesheetFrequencyRoster');
+    var originalText = $btn.text();
+    $btn.text('Downloading...').prop('disabled', true);
     $('#loader').show();
-    if (typeof showStatusNotification === 'function') {
-        showStatusNotification(true, 'Generating timesheet, please wait...');
-    }
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
         data: {
@@ -10193,6 +10193,7 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
         $('#loader').hide();
+        $btn.text(originalText).prop('disabled', false);
         if (response.statusCode === -1) {
 
         } else {
@@ -10226,10 +10227,10 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
 
 
 
+    var $btn = $('#btnDownloadTimesheetRoster');
+    var originalText = $btn.text();
+    $btn.text('Downloading...').prop('disabled', true);
     $('#loader').show();
-    if (typeof showStatusNotification === 'function') {
-        showStatusNotification(true, 'Generating timesheet, please wait...');
-    }
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheet',
         data: {
@@ -10243,6 +10244,7 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
         $('#loader').hide();
+        $btn.text(originalText).prop('disabled', false);
         if (response.statusCode === -1) {
 
         } else {
