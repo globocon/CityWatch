@@ -276,7 +276,7 @@ namespace CityWatch.Web.Services
                 {
                     pdf.SetDefaultPageSize(PageSize.A4.Rotate());
                     var document = new Document(pdf);
-                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+                    document.SetMargins(20f, MARGIN, 60f, MARGIN);
 
                     var groupName = group.Name ?? "Unknown Project";
 
@@ -387,7 +387,6 @@ namespace CityWatch.Web.Services
 
                             var titleCell = new Cell()
                                 .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
-                                .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
                                 .SetTextAlignment(TextAlignment.CENTER)
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
@@ -410,8 +409,16 @@ namespace CityWatch.Web.Services
                                 }
                             }
                             headerTable.AddCell(cellSiteImage);
-                            headerTable.SetMarginBottom(0f);
+                            headerTable.SetMarginBottom(10f);
                             document.Add(headerTable);
+
+                            // Week text aligned LEFT (under the logo area)
+                            document.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                                .SetFont(PdfHelper.GetPdfFont())
+                                .SetFontSize(12)
+                                .SetMarginTop(0)
+                                .SetMarginBottom(10)
+                                .SetTextAlignment(TextAlignment.LEFT));
                         }
                         else
                         {
@@ -518,7 +525,7 @@ namespace CityWatch.Web.Services
                                     var shiftBlock = new Div()
                                         .SetBackgroundColor(bgColor)
                                         .SetMarginBottom(1)
-                                        .SetPadding(1)
+                                        .SetPadding(1.5f)
                                         .SetBorder(new SolidBorder(borderColor, 0.5f));
 
                                     var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
@@ -539,13 +546,13 @@ namespace CityWatch.Web.Services
                                         }
                                     }
 
-                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginBottom(0));
+                                    shiftBlock.Add(new Paragraph(guardName).SetFontSize(7.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginBottom(0));
                                     
                                     // Add License Number
                                     var license = (shift.ReliefGuardId.HasValue ? shift.ReliefGuard?.SecurityNo : shift.Guard?.SecurityNo) ?? "N/A";
-                                    shiftBlock.Add(new Paragraph(license).SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(-1).SetMarginBottom(0));
-
-                                    var pTime = new Paragraph().SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(0).SetMarginBottom(0);
+                                    shiftBlock.Add(new Paragraph(license).SetFontSize(6f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(0).SetMarginBottom(0));
+ 
+                                    var pTime = new Paragraph().SetFontSize(6f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(fontColor).SetMarginTop(0).SetMarginBottom(0);
                                     pTime.Add(new Text($"{shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm} ({duration:F2}h)"));
                                     if (!includeSuppliers && shift.Callsign != null) 
                                     {
@@ -557,12 +564,12 @@ namespace CityWatch.Web.Services
                                     {
                                         var supplierName = shift.Guard?.Provider ?? shift.ProviderName ?? "N/A";
                                         var callsignSuffix = shift.Callsign != null ? $" ({shift.Callsign.Name})" : "";
-                                        shiftBlock.Add(new Paragraph(supplierName + callsignSuffix).SetFontSize(6.5f).SetFontColor(new DeviceRgb(0, 86, 179)).SetBold().SetMarginTop(0).SetMarginBottom(0));
+                                        shiftBlock.Add(new Paragraph(supplierName + callsignSuffix).SetFontSize(6.5f).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold().SetMarginTop(0).SetMarginBottom(0));
                                     }
 
                                     if (includeFinancials)
                                     {
-                                        shiftBlock.Add(new Paragraph($"$ {value:F2}").SetFontSize(6.5f).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold().SetMarginTop(1).SetMarginBottom(0));
+                                        shiftBlock.Add(new Paragraph($"$ {value:F2}").SetFontSize(7f).SetFontColor(new DeviceRgb(200, 0, 0)).SetBold().SetMarginTop(0.5f).SetMarginBottom(0));
                                     }
                                     dayCell.Add(shiftBlock);
                                 }
