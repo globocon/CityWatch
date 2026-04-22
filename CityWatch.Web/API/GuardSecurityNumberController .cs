@@ -4359,6 +4359,7 @@ namespace CityWatch.Web.API
                             s.Id,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                            guardId = s.GuardId,
                             guardName = s.Guard != null ? s.Guard.Name : s.ProviderName,
                             reliefGuardId = s.ReliefGuardId,
                             reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
@@ -4415,6 +4416,69 @@ namespace CityWatch.Web.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while fetching roster", error = ex.Message });
+            }
+        }
+
+        [HttpPost("UpdateShiftStatus")]
+        public async Task<IActionResult> UpdateShiftStatus([FromBody] RosterStatusUpdateModel model)
+        {
+            try
+            {
+                // 1. Fetch the shift record from the database
+                var shift = await _context.RosterSchedules.FindAsync(model.ShiftId);
+                if (shift == null) return NotFound(new { isSuccess = false, message = "Shift not found." });
+
+                // 2. Concurrency check: verify the status hasn't changed since the mobile app last fetched data
+                if (shift.Status != model.ExpectedStatus)
+                {
+                    return BadRequest(new { isSuccess = false, message = "Shift status has changed. Please refresh the roster." });
+                }
+
+                // 3. Process status update to 'Accepted'
+                if (model.NewStatus == RosterShiftStatus.Accepted)
+                {
+                    // Primary guard accepting their own shift
+                    if (shift.GuardId == model.CallingGuardId)
+                    {
+                        shift.Status = RosterShiftStatus.Accepted;
+                    }
+                    // Picking up a declined shift as a Relief Guard
+                    else if (shift.Status == RosterShiftStatus.Declined)
+                    {
+                        shift.ReliefGuardId = model.CallingGuardId;
+                        shift.Status = RosterShiftStatus.Accepted;
+                        shift.ReliefReason = "Relief Guard assigned via Mobile";
+                    }
+                    else
+                    {
+                        return BadRequest(new { isSuccess = false, message = "You are not authorized to accept this shift." });
+                    }
+                }
+                // 4. Process status update to 'Declined'
+                else if (model.NewStatus == RosterShiftStatus.Declined)
+                {
+                    // Only the assigned guard or existing relief guard can decline
+                    if (shift.GuardId == model.CallingGuardId || shift.ReliefGuardId == model.CallingGuardId)
+                    {
+                        shift.Status = RosterShiftStatus.Declined;
+                        shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
+                    }
+                    else
+                    {
+                        return BadRequest(new { isSuccess = false, message = "Only the assigned guard can decline this shift." });
+                    }
+                }
+
+                // 5. Save changes to the database
+                await _context.SaveChangesAsync();
+
+                // Note: In a live environment, a SignalR broadcast would be triggered here to refresh other clients.
+
+                return Ok(new { isSuccess = true, message = "Shift status updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { isSuccess = false, message = ex.Message });
             }
         }
 
