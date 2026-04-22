@@ -250,6 +250,8 @@ namespace CityWatch.Web.Services
             }
         }
 
+        private HashSet<int> _pagesWithHeader = new HashSet<int>();
+
         private async Task<byte[]> GenerateSingleProjectRosterPartAsync(int groupId, DateTime startDate, int weeks, bool includeFinancials, bool includeSuppliers, string rateType)
         {
             var group = await _context.RosterGroups.FindAsync(groupId);
@@ -277,6 +279,7 @@ namespace CityWatch.Web.Services
                     pdf.SetDefaultPageSize(PageSize.A4.Rotate());
                     var document = new Document(pdf);
                     document.SetMargins(20f, MARGIN, 60f, MARGIN);
+                    _pagesWithHeader.Clear();
 
                     var groupName = group.Name ?? "Unknown Project";
 
@@ -344,75 +347,42 @@ namespace CityWatch.Web.Services
 
                         var weekContainer = new Div().SetKeepTogether(true);
 
-                        bool showFullHeader = (w % 2 == 0);
-
-                        if (showFullHeader)
+                        // Fetch Branding info once
+                        string logoPath = string.Empty;
+                        foreach (var site in groupSites)
                         {
-                            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
-
-                            // Branding Logic
-                            string logoPath = string.Empty;
-                            foreach (var site in groupSites)
+                            if (site.ClientSite != null)
                             {
-                                if (site.ClientSite != null)
+                                var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
+                                if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
                                 {
-                                    var subDomain = _configDataProvider.GetSubDomainID(site.ClientSite.TypeId);
-                                    if (subDomain != null && !string.IsNullOrEmpty(subDomain.Logo))
-                                    {
-                                        logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
-                                        break;
-                                    }
+                                    logoPath = Path.Combine(_subDomainImageRootDir, subDomain.Logo);
+                                    break;
                                 }
                             }
-
-                            if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
-
-                            if (File.Exists(logoPath))
-                            {
-                                try
-                                {
-                                    var logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
-                                    headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
-                                }
-                                catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
-                            }
-                            else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
-
-                            var titleCell = new Cell()
-                                .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
-                                .SetTextAlignment(TextAlignment.CENTER)
-                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                                .SetBorder(Border.NO_BORDER);
-                            headerTable.AddCell(titleCell);
-
-                            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
-                            var primarySite = groupSites.FirstOrDefault();
-                            if (primarySite != null)
-                            {
-                                var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
-                                if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
-                                {
-                                    try
-                                    {
-                                        var siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
-                                        var siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
-                                        cellSiteImage.Add(siteImage);
-                                    }
-                                    catch { }
-                                }
-                            }
-                            headerTable.AddCell(cellSiteImage);
-                            headerTable.SetMarginBottom(5f);
-                            weekContainer.Add(headerTable);
                         }
-                        else
+                        if (string.IsNullOrEmpty(logoPath)) logoPath = Path.Combine(_imageRootDir, "CWSLogoPdf.png");
+
+                        string siteImageUrl = string.Empty;
+                        var primarySite = groupSites.FirstOrDefault();
+                        if (primarySite != null)
                         {
-                            // Add a small spacer if it's the second week on the page
-                            weekContainer.SetMarginTop(20f);
+                            var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(primarySite.ClientSiteId);
+                            if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                            {
+                                try { siteImageUrl = $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}"; } catch { }
+                            }
                         }
+
+                        // Add Smart Header (Draws only once per page)
+                        AddSmartHeader(document, pdf, groupName, logoPath, siteImageUrl);
+
+                        // Create a wrapper table to ensure everything (Week text + Roster table) stays together
+                        var weekWrapper = new Table(1).SetWidth(UnitValue.CreatePercentValue(100)).SetKeepTogether(true).SetBorder(Border.NO_BORDER);
+                        var weekWrapperCell = new Cell().SetBorder(Border.NO_BORDER).SetPadding(0);
 
                         // Week text aligned LEFT (under the logo area and aligned with table)
-                        weekContainer.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                        weekWrapperCell.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
                             .SetFont(PdfHelper.GetPdfFont())
                             .SetFontSize(12)
                             .SetMarginTop(0)
@@ -578,8 +548,12 @@ namespace CityWatch.Web.Services
                             table.AddCell(new Cell().Add(new Paragraph(dailyTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                         }
 
-                        weekContainer.Add(table);
-                        document.Add(weekContainer);
+                        weekWrapperCell.Add(table);
+                        weekWrapper.AddCell(weekWrapperCell);
+                        document.Add(weekWrapper);
+
+                        // Call again in case the wrapper moved to a new page!
+                        AddSmartHeader(document, pdf, groupName, logoPath, siteImageUrl);
 
                         AddBrandedFooter(document, pdf, weekStart);
                     }
@@ -615,8 +589,53 @@ namespace CityWatch.Web.Services
                 .SetVerticalAlignment(VerticalAlignment.BOTTOM);
 
             footerTable.AddCell(new Cell().Add(footerText).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.BOTTOM));
-            footerTable.SetFixedPosition(margin, footerY, width);
+            footerTable.SetFixedPosition(pdf.GetNumberOfPages(), margin, footerY, width);
             document.Add(footerTable);
+        }
+
+        private void AddSmartHeader(Document document, PdfDocument pdf, string groupName, string logoPath, string siteImageUrl)
+        {
+            int currentPage = pdf.GetNumberOfPages();
+            if (_pagesWithHeader.Contains(currentPage)) return;
+            _pagesWithHeader.Add(currentPage);
+
+            float margin = 20;
+            float headerY = pdf.GetDefaultPageSize().GetHeight() - 75;
+            float width = pdf.GetDefaultPageSize().GetWidth() - (margin * 2);
+
+            Table headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).SetWidth(width);
+            
+            // Logo
+            if (File.Exists(logoPath))
+            {
+                try {
+                    Image logo = new Image(ImageDataFactory.Create(logoPath)).SetHeight(50);
+                    headerTable.AddCell(new Cell().Add(logo).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                } catch { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+            }
+            else { headerTable.AddCell(new Cell().SetBorder(Border.NO_BORDER)); }
+
+            // Title
+            headerTable.AddCell(new Cell()
+                .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16))
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(Border.NO_BORDER));
+
+            // Site Image
+            Cell cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+            if (!string.IsNullOrEmpty(siteImageUrl))
+            {
+                try
+                {
+                    Image siteImage = new Image(ImageDataFactory.Create(siteImageUrl)).SetHeight(50).SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                    cellSiteImage.Add(siteImage);
+                } catch { }
+            }
+            headerTable.AddCell(cellSiteImage);
+
+            headerTable.SetFixedPosition(currentPage, margin, headerY, width);
+            document.Add(headerTable);
         }
 
         private void AddFileToMerger(PdfMerger merger, string subDir, string fileName)
