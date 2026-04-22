@@ -932,13 +932,20 @@ namespace CityWatch.Web.Services
                             GuardTable.AddCell(GetUnifiedValueCell(start.OnDuty.ToString("HH:mm")));
                             GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
 
-                                double hrs = (double)totalMin / 60.0;
+                            TimeSpan? duration = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
+                            if (duration.HasValue)
+                            {
+                                GuardTable.AddCell(GetUnifiedValueCell(start.OffDuty.Value.ToString("HH:mm")));
+                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup));
+
+                                double hrs = duration.Value.TotalHours;
+                                weeklyTotalHours += (int)duration.Value.TotalMinutes;
                                 GuardTable.AddCell(GetUnifiedValueCell(hrs.ToString("F2") + "h"));
                             }
                             else
                             {
                                 GuardTable.AddCell(GetUnifiedValueCell(""));
-                                GuardTable.AddCell(GetUnifiedValueCell(""));
+                                GuardTable.AddCell(GetGpsIconCell(originalIds, logsLookup)); 
                                 GuardTable.AddCell(GetUnifiedValueCell(""));
                             }
                             GuardTable.AddCell(GetUnifiedValueCell(TruncateSiteName(start.ClientSite?.Name)));
