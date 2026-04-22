@@ -707,7 +707,7 @@ namespace CityWatch.Web.Services
                 }
                 result.Add((currentLogin, currentIds));
             }
-            return result.OrderBy(x => x.login.OnDuty).ToList();
+            return result.OrderBy(x => x.Item1.OnDuty).ToList();
         }
 
         private static Color GetColorFromHex(string hex)
