@@ -462,7 +462,7 @@ namespace CityWatch.Web.Pages.roster
                 await _context.SaveChangesAsync();
                 
                 // Real-time broadcast
-                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
                 if (hub != null && guardId.HasValue)
                 {
                     await hub.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
@@ -607,7 +607,7 @@ namespace CityWatch.Web.Pages.roster
                 await _context.SaveChangesAsync();
 
                 // Real-time broadcast
-                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
                 if (hub != null && schedule.GuardId.HasValue)
                 {
                     await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
@@ -1380,7 +1380,7 @@ namespace CityWatch.Web.Pages.roster
             await _context.SaveChangesAsync();
 
             // Real-time broadcast
-            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.SignalRHub>));
+            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
             if (hub != null && schedule.GuardId.HasValue)
             {
                 await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());

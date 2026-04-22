@@ -10,7 +10,7 @@ using CityWatch.Web.Models;
 using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.SignalR;
-using CityWatch.Common.SignalRHub;
+using CityWatch.Common.Models;
 using CityWatch.Data.Services;
 using ConvertApiDotNet;
 using Dropbox.Api.Files;
