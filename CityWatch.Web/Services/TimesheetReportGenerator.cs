@@ -898,14 +898,17 @@ namespace CityWatch.Web.Services
 
         private Cell GetGpsIconCell(int loginId, Dictionary<int, List<GuardLog>> logsLookup = null)
         {
-            List<GuardLog> _guardLogs = null;
+            GuardLog logEntry = null;
+
             if (logsLookup != null && logsLookup.ContainsKey(loginId))
             {
-                _guardLogs = logsLookup[loginId];
+                var list = logsLookup[loginId];
+                logEntry = list?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
             }
             else
             {
-                _guardLogs = _clientDataProvider.GetGuardLogs(loginId);
+                // Fallback: This method returns a SINGLE GuardLog object, not a List
+                logEntry = _clientDataProvider.GetGuardLogs(loginId);
             }
 
             var cell = new Cell()
@@ -915,8 +918,6 @@ namespace CityWatch.Web.Services
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetHeight(ROW_HEIGHT)
                 .SetPadding(1f);
-
-            var logEntry = _guardLogs?.FirstOrDefault(x => !string.IsNullOrEmpty(x.GpsCoordinates));
 
             if (logEntry != null)
             {
