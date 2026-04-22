@@ -308,7 +308,8 @@ namespace CityWatch.Web.Services
 
             try
             {
-                var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime) ?? new List<GuardLogin>();
+                var LoginDetailsFull = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime) ?? new List<GuardLogin>();
+                var LoginDetails = LoginDetailsFull.Where(x => (!siteId.HasValue || x.ClientSiteId == siteId.Value) && (x.OffDuty.HasValue && x.OffDuty.Value > x.OnDuty)).ToList();
                 var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime) ?? "Unknown";
                 var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime) ?? "";
                 var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime) ?? "";
