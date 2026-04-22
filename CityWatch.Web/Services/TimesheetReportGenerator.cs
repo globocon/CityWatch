@@ -113,6 +113,9 @@ namespace CityWatch.Web.Services
             if (!IO.Directory.Exists(IO.Path.Combine(_reportRootDir, REPORT_DIR)))
                 IO.Directory.CreateDirectory(IO.Path.Combine(_reportRootDir, REPORT_DIR));
 
+            if (!IO.Directory.Exists(_downloadsFolderPath))
+                IO.Directory.CreateDirectory(_downloadsFolderPath);
+
             if (!IO.Directory.Exists(_graphImageRootDir))
                 IO.Directory.CreateDirectory(_graphImageRootDir);
         }
@@ -299,92 +302,95 @@ namespace CityWatch.Web.Services
             {
                 if (!DateTime.TryParse(endDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
                 {
-                    dateTime = DateTime.Parse(endDate); // Fallback to system locale
+                    dateTime = DateTime.Parse(endDate); 
                 }
             }
-            var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
-            var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
-            var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
-            var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime);
-            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet- {fileNamePart} -_{new Random().Next()}.pdf";
-            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
-            var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
-            var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid);
-            var State = _clientDataProvider.GetGuardLicenseState(guradid);
-            var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid);
 
-            // New Data Retrieval for Booking
-            var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime);
-
-            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
-            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
-            var doc = new Document(pdfDoc);
-            var renderer = new HelperDocumentRenderer(doc);
-            doc.SetRenderer(renderer);
-            doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
-
-
-            var headerTable = CreateReportHeader();
-            doc.Add(headerTable);
-
-            doc.Add(CreateNameTable(Name, Enrollment));
-            doc.Add(CreateLicenseTable(LicenseNo, State));
-            doc.Add(CreateDateTable(dateTime, Supplier));
-            // doc.Add(CreateSiteTable(SiteName));
-            doc.Add(new Paragraph("\n"));
-
-            // 2-Column Layout Implementation
-            Table masterTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
-
-            // Left Column: BOOKING
-            Cell bookingCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingRight(5);
-            bookingCell.Add(new Paragraph("BOOKING").SetBold());
-            var (bookingTables, totalBookingHours, totalBookingPay) = CreateBookingDetails(startdateTime, dateTime, LoginDetails, rosterDetails, TimesheetDetails.weekName);
-            foreach(var table in bookingTables)
+            try
             {
-                bookingCell.Add(table);
-                bookingCell.Add(new Paragraph("\n"));
-            }
-            masterTable.AddCell(bookingCell);
+                var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime) ?? new List<GuardLogin>();
+                var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime) ?? "Unknown";
+                var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime) ?? "";
+                var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime) ?? "";
+                
+                var sanitizedName = FileNameHelper.GetSanitizedFileNamePart(Name);
+                var sanitizedSitePart = FileNameHelper.GetSanitizedFileNamePart(fileNamePart);
+                
+                var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {sanitizedName} - Time Sheet - {sanitizedSitePart} -_{new Random().Next()}.pdf";
+                var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+                
+                var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+                var weekName = TimesheetDetails?.weekName ?? "Week";
+                
+                var Enrollment = _clientDataProvider.GetGuardEnrollment(guradid) ?? "";
+                var State = _clientDataProvider.GetGuardLicenseState(guradid) ?? "";
+                var Supplier = _clientDataProvider.GetGuardCRMSupplier(guradid) ?? "";
 
-            // Right Column: ACTUAL
-            Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
-            actualCell.Add(new Paragraph("ACTUAL").SetBold()); // Removed Red
-            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
-            
-            foreach(var table in GuardLoginTables)
-            {
-                actualCell.Add(table);
-                actualCell.Add(new Paragraph("\n"));
-            }
-            masterTable.AddCell(actualCell);
+                var rosterDetails = _clientDataProvider.GetGuardRosterDetails(guradid, startdateTime, dateTime) ?? new List<RosterSchedule>();
 
-            doc.Add(masterTable);
+                var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+                pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+                var doc = new Document(pdfDoc);
+                var renderer = new HelperDocumentRenderer(doc);
+                doc.SetRenderer(renderer);
+                doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
 
-            bool hasContentOnCurrentPage = true;
-            if (hasContentOnCurrentPage)
-            {
-                // Check available space using custom renderer
+                var headerTable = CreateReportHeader();
+                doc.Add(headerTable);
+
+                doc.Add(CreateNameTable(Name, Enrollment));
+                doc.Add(CreateLicenseTable(LicenseNo, State));
+                doc.Add(CreateDateTable(dateTime, Supplier));
+                doc.Add(new Paragraph("\n"));
+
+                Table masterTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
+
+                Cell bookingCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingRight(5);
+                bookingCell.Add(new Paragraph("BOOKING").SetBold());
+                var (bookingTables, totalBookingHours, totalBookingPay) = CreateBookingDetails(startdateTime, dateTime, LoginDetails, rosterDetails, weekName);
+                foreach (var table in bookingTables)
+                {
+                    bookingCell.Add(table);
+                    bookingCell.Add(new Paragraph("\n"));
+                }
+                masterTable.AddCell(bookingCell);
+
+                Cell actualCell = new Cell().SetBorder(Border.NO_BORDER).SetPaddingLeft(5);
+                actualCell.Add(new Paragraph("ACTUAL").SetBold());
+                var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, weekName);
+
+                foreach (var table in GuardLoginTables)
+                {
+                    actualCell.Add(table);
+                    actualCell.Add(new Paragraph("\n"));
+                }
+                masterTable.AddCell(actualCell);
+
+                doc.Add(masterTable);
+
                 if (doc.GetRenderer() is HelperDocumentRenderer helperRenderer)
                 {
                     float currentY = helperRenderer.GetCurrentY();
-                    // Estimated table height (80) + Margin (15) + Buffer (20) = 115
-                    if (currentY < 115) 
+                    if (currentY < 115)
                     {
                         doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
                     }
                 }
+
+                var commentTable = GetCommentTable();
+                float pageWidth = pdfDoc.GetDefaultPageSize().GetWidth();
+                commentTable.SetFixedPosition(PDF_DOC_MARGIN, PDF_DOC_MARGIN, pageWidth - (2 * PDF_DOC_MARGIN));
+                doc.Add(commentTable);
+                doc.Close();
+                pdfDoc.Close();
+
+                return reportFileName;
             }
-
-            var commentTable = GetCommentTable();
-            // Position at bottom of current page
-            float pageWidth = pdfDoc.GetDefaultPageSize().GetWidth();
-            commentTable.SetFixedPosition(PDF_DOC_MARGIN, PDF_DOC_MARGIN, pageWidth - (2 * PDF_DOC_MARGIN));
-            doc.Add(commentTable);
-            doc.Close();
-            pdfDoc.Close();
-
-            return reportFileName;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating individual PDF for guard {GuardId}", guradid);
+                return null;
+            }
         }
         public string GeneratePdfTimesheetReport(string startdate, string endDate, int guradid)
         {
