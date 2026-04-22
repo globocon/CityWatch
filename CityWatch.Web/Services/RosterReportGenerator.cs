@@ -337,23 +337,14 @@ namespace CityWatch.Web.Services
                             }
                         }
 
-                        bool forceNewPage = (w > 0 && w % 2 == 0);
-
-                        if (w > 0)
+                        if (w > 0 && w % 2 == 0)
                         {
-                            // If current week is tall, or if the previous week was tall, or if we already have 2 weeks on the page, start a new page
-                            if (!isCurrentWeekSmall || prevMaxDailyShifts > 3 || forceNewPage)
-                            {
-                                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                            }
-                            else
-                            {
-                                // Stack small weeks with a minimal spacer
-                                document.Add(new Paragraph("\n").SetFontSize(2));
-                            }
+                            document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
                         }
 
-                        bool showFullHeader = (w == 0) || !isCurrentWeekSmall || (w > 0 && prevMaxDailyShifts > 3);
+                        var weekContainer = new Div().SetKeepTogether(true);
+
+                        bool showFullHeader = true;
 
                         if (showFullHeader)
                         {
@@ -389,8 +380,7 @@ namespace CityWatch.Web.Services
 
                             var titleCell = new Cell()
                                 .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
-                                .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
-                                .SetTextAlignment(TextAlignment.LEFT)
+                                .SetTextAlignment(TextAlignment.CENTER)
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
                             headerTable.AddCell(titleCell);
@@ -412,17 +402,16 @@ namespace CityWatch.Web.Services
                                 }
                             }
                             headerTable.AddCell(cellSiteImage);
-                            headerTable.SetMarginBottom(20f);
-                            document.Add(headerTable);
-                        }
-                        else
-                        {
-                            // Compact Header for stacked weeks
-                            document.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                            headerTable.SetMarginBottom(5f);
+                            weekContainer.Add(headerTable);
+
+                            // Week text aligned LEFT (under the logo area and aligned with table)
+                            weekContainer.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
                                 .SetFont(PdfHelper.GetPdfFont())
                                 .SetFontSize(12)
-                                .SetMarginTop(10)
-                                .SetMarginBottom(5));
+                                .SetMarginTop(0)
+                                .SetMarginBottom(10)
+                                .SetTextAlignment(TextAlignment.LEFT));
                         }
 
                         float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
@@ -584,7 +573,9 @@ namespace CityWatch.Web.Services
                             table.AddCell(new Cell().Add(new Paragraph(dailyTotalText).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER)).SetBackgroundColor(ColorConstants.LIGHT_GRAY).SetPadding(2));
                         }
 
-                        document.Add(table);
+                        weekContainer.Add(table);
+                        document.Add(weekContainer);
+
                         AddBrandedFooter(document, pdf, weekStart);
                     }
                     document.Close();
