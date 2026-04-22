@@ -276,7 +276,7 @@ namespace CityWatch.Web.Services
                 {
                     pdf.SetDefaultPageSize(PageSize.A4.Rotate());
                     var document = new Document(pdf);
-                    document.SetMargins(MARGIN, MARGIN, MARGIN, MARGIN);
+                    document.SetMargins(20f, MARGIN, 60f, MARGIN);
 
                     var groupName = group.Name ?? "Unknown Project";
 
@@ -388,7 +388,7 @@ namespace CityWatch.Web.Services
                             var titleCell = new Cell()
                                 .Add(new Paragraph($"Roster: {groupName}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(16).SetMarginBottom(0))
                                 .Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}").SetFontSize(12).SetMarginTop(0).SetMarginBottom(0))
-                                .SetTextAlignment(TextAlignment.CENTER)
+                                .SetTextAlignment(TextAlignment.LEFT)
                                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                                 .SetBorder(Border.NO_BORDER);
                             headerTable.AddCell(titleCell);
@@ -410,7 +410,7 @@ namespace CityWatch.Web.Services
                                 }
                             }
                             headerTable.AddCell(cellSiteImage);
-                            headerTable.SetMarginBottom(0f);
+                            headerTable.SetMarginBottom(20f);
                             document.Add(headerTable);
                         }
                         else
