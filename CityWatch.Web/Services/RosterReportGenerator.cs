@@ -344,7 +344,7 @@ namespace CityWatch.Web.Services
 
                         var weekContainer = new Div().SetKeepTogether(true);
 
-                        bool showFullHeader = true;
+                        bool showFullHeader = (w % 2 == 0);
 
                         if (showFullHeader)
                         {
@@ -404,15 +404,20 @@ namespace CityWatch.Web.Services
                             headerTable.AddCell(cellSiteImage);
                             headerTable.SetMarginBottom(5f);
                             weekContainer.Add(headerTable);
-
-                            // Week text aligned LEFT (under the logo area and aligned with table)
-                            weekContainer.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
-                                .SetFont(PdfHelper.GetPdfFont())
-                                .SetFontSize(12)
-                                .SetMarginTop(0)
-                                .SetMarginBottom(10)
-                                .SetTextAlignment(TextAlignment.LEFT));
                         }
+                        else
+                        {
+                            // Add a small spacer if it's the second week on the page
+                            weekContainer.SetMarginTop(20f);
+                        }
+
+                        // Week text aligned LEFT (under the logo area and aligned with table)
+                        weekContainer.Add(new Paragraph($"Week: {weekStart:dd MMM yyyy} - {weekEnd:dd MMM yyyy}")
+                            .SetFont(PdfHelper.GetPdfFont())
+                            .SetFontSize(12)
+                            .SetMarginTop(0)
+                            .SetMarginBottom(10)
+                            .SetTextAlignment(TextAlignment.LEFT));
 
                         float[] columnWidths = { 20f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f, 11.4f };
                         var table = new Table(UnitValue.CreatePercentArray(columnWidths)).UseAllAvailableWidth();
