@@ -72,7 +72,7 @@ namespace CityWatch.Web.Services
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
 
-        private static readonly float[] UNIFIED_COLUMNS = { 8, 12, 8, 5, 8, 5, 9, 22, 8, 7, 8 };
+        private static readonly float[] UNIFIED_COLUMNS = { 7, 10, 7, 4, 7, 4, 8, 40, 4, 4, 5 };
         private const float ROW_HEIGHT = 16f;
 
         private readonly string _reportRootDir;
@@ -649,11 +649,11 @@ namespace CityWatch.Web.Services
         private static string TruncateSiteName(string siteName)
         {
             if (string.IsNullOrEmpty(siteName)) return "";
-            if (siteName.Length > 25) return siteName.Substring(0, 22) + "...";
+            if (siteName.Length > 45) return siteName.Substring(0, 42) + "...";
             return siteName;
         }
 
-        private static Cell GetUnifiedValueCell(string text, bool isBold = false)
+        private static Cell GetUnifiedValueCell(string text, bool isBold = false, string fontColorHex = null, string bgHex = null)
         {
             var cell = new Cell()
                .Add(new Paragraph().Add(new Text(text ?? "")))
@@ -666,6 +666,14 @@ namespace CityWatch.Web.Services
                .SetPadding(1f);
 
             if (isBold) cell.SetBold();
+            if (!string.IsNullOrEmpty(fontColorHex))
+            {
+                cell.SetFontColor(PdfHelper.GetColorFromHex(fontColorHex));
+            }
+            if (!string.IsNullOrEmpty(bgHex))
+            {
+                cell.SetBackgroundColor(PdfHelper.GetColorFromHex(bgHex));
+            }
             return cell;
         }
 
@@ -829,7 +837,7 @@ namespace CityWatch.Web.Services
                 for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
                     string dayName = currentDate.ToString("ddd");
-                    GuardTable.AddCell(GetUnifiedValueCell(dayName));
+                    GuardTable.AddCell(GetUnifiedValueCell(dayName, false, null, COLOR_GREY));
 
                     if (currentDate > endDate)
                     {
@@ -989,7 +997,7 @@ namespace CityWatch.Web.Services
                 for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
                     string dayName = currentDate.ToString("ddd");
-                    BookingTable.AddCell(GetUnifiedValueCell(dayName));
+                    BookingTable.AddCell(GetUnifiedValueCell(dayName, false, null, COLOR_GREY));
 
                     if (currentDate > endDate)
                     {
