@@ -294,7 +294,24 @@ function openPayRateGroupAssignment(id) {
             autoLoad: false,
             textField: 'name',
             childrenField: 'clientSites',
-            checkedField: 'checked'
+            checkedField: 'checked',
+            dataBound: function () {
+                // Initial highlighting of loaded checked nodes
+                $('#prgSiteTreeView [data-role="node"]').each(function () {
+                    var $node = $(this);
+                    var nodeId = $node.attr('data-id');
+                    if (nodeId && prgSiteTree.getCheckedNodes().indexOf(nodeId) > -1) {
+                        $node.find('> div').addClass('node-selected');
+                    }
+                });
+            },
+            checkboxChange: function (e, $node, record, state) {
+                if (state === 'checked') {
+                    $node.find('> div').addClass('node-selected');
+                } else {
+                    $node.find('> div').removeClass('node-selected');
+                }
+            }
         });
     }
     prgSiteTree.uncheckAll();

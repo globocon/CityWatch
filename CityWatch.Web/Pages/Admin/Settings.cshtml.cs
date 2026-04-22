@@ -3985,7 +3985,15 @@ namespace CityWatch.Web.Pages.Admin
         {
             var results = new List<object>();
             var groupAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).Select(x => x.ClientSiteId).ToList();
-            var allClientSitesGrouped = _context.ClientSites.Include(x => x.ClientType).Where(x => x.IsActive).GroupBy(x => x.ClientType.Name);
+
+            // Order by ClientType Name, then by Site Name
+            var allClientSitesGrouped = _context.ClientSites
+                .Include(x => x.ClientType)
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .GroupBy(x => x.ClientType.Name)
+                .OrderBy(g => g.Key); // Final sort of the groups themselves
 
             foreach (var item in allClientSitesGrouped)
             {
