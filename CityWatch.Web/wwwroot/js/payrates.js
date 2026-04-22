@@ -297,19 +297,20 @@ function openPayRateGroupAssignment(id) {
             checkedField: 'checked',
             dataBound: function () {
                 // Initial highlighting of loaded checked nodes
+                const checkedIds = prgSiteTree.getCheckedNodes().map(id => String(id));
                 $('#prgSiteTreeView [data-role="node"]').each(function () {
                     var $node = $(this);
-                    var nodeId = $node.attr('data-id');
-                    if (nodeId && prgSiteTree.getCheckedNodes().indexOf(nodeId) > -1) {
-                        $node.find('> div').addClass('node-selected');
+                    var nodeId = String($node.attr('data-id'));
+                    if (nodeId && checkedIds.indexOf(nodeId) > -1) {
+                        $node.find('> [data-role="wrapper"]').addClass('node-selected');
                     }
                 });
             },
             checkboxChange: function (e, $node, record, state) {
                 if (state === 'checked') {
-                    $node.find('> div').addClass('node-selected');
+                    $node.find('> [data-role="wrapper"]').addClass('node-selected');
                 } else {
-                    $node.find('> div').removeClass('node-selected');
+                    $node.find('> [data-role="wrapper"]').removeClass('node-selected');
                 }
             }
         });
