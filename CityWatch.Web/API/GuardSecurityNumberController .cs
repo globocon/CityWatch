@@ -4443,6 +4443,11 @@ namespace CityWatch.Web.API
                 }
 
                 // 3. Process status update to 'Accepted'
+                if (shift.ShiftStart.Date < DateTime.Today)
+                {
+                    return BadRequest(new { isSuccess = false, message = "You cannot accept or decline shifts from previous days." });
+                }
+
                 if (model.NewStatus == RosterShiftStatus.Accepted)
                 {
                     if (model.CallingGuardId <= 0)

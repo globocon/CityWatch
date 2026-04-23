@@ -469,6 +469,12 @@ namespace CityWatch.Web.Pages.roster
                     await hub.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
                 }
 
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = existing.ClientSiteId });
+                }
+
                 return new JsonResult(new { success = true, id = existing.Id });
             }
             else
@@ -507,6 +513,12 @@ namespace CityWatch.Web.Pages.roster
                 if (hubNew != null && guardId.HasValue)
                 {
                     await hubNew.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
+                }
+
+                var mobileHubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHubNew != null)
+                {
+                    await mobileHubNew.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
                 }
 
                 return new JsonResult(new { success = true, id = schedule.Id });
@@ -613,6 +625,12 @@ namespace CityWatch.Web.Pages.roster
                 {
                     await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
                 }
+
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+                }
             }
             return new JsonResult(new { success = true });
         }
@@ -631,6 +649,12 @@ namespace CityWatch.Web.Pages.roster
 
                 schedule.IsDeleted = true;
                 await _context.SaveChangesAsync();
+
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+                }
             }
             return new JsonResult(new { success = true });
         }
@@ -1387,6 +1411,12 @@ namespace CityWatch.Web.Pages.roster
                 await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
             }
 
+            var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+            if (mobileHub != null)
+            {
+                await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+            }
+
             return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
         }
 
@@ -1425,6 +1455,24 @@ namespace CityWatch.Web.Pages.roster
             }
 
             await _context.SaveChangesAsync();
+
+            // Real-time broadcast
+            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+            var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+            
+            foreach (var siteId in projectSites)
+            {
+                if (hub != null)
+                {
+                    // For Web, passing siteId triggers a refresh if they are on that site
+                    await hub.Clients.All.SendAsync("UpdateRoster", new { siteId = siteId });
+                }
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = siteId });
+                }
+            }
+
             return new JsonResult(new { success = true });
         }
     }

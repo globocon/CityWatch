@@ -1256,6 +1256,7 @@
 }
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
     <script>
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
@@ -3246,6 +3247,44 @@
                         // But usually we have a stamp for all.
                         $(this).closest('div').hide();
                     }
+                });
+            }
+
+            // SignalR Connection for Real-time Roster Updates
+            if (typeof signalR !== 'undefined') {
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/updateHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("UpdateRoster", function (data) {
+                    console.log("Roster update received via SignalR", data);
+                    
+                    if (activeTab === 'groups' && currentBinderId) {
+                        loadBinderRoster();
+                    } else if (activeTab === 'projects') {
+                        var selectedSiteId = parseInt($('#search_site').val());
+                        if (data && data.siteId && selectedSiteId === data.siteId) {
+                            loadRoster();
+                        } else if (!data || !data.siteId) {
+                            loadRoster(); // Fallback
+                        }
+                    }
+                });
+
+                connection.on("RefreshRoster", function (data) {
+                    console.log("Roster refresh received via SignalR", data);
+                    if (activeTab === 'groups' && currentBinderId) {
+                        loadBinderRoster();
+                    } else {
+                        loadRoster();
+                    }
+                });
+
+                connection.start().then(function() {
+                    console.log("SignalR connected to /updateHub for roster updates.");
+                }).catch(function (err) {
+                    console.error("SignalR Connection Error: ", err.toString());
                 });
             }
 
