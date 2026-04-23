@@ -9,6 +9,9 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
+using Microsoft.AspNetCore.SignalR;
+using CityWatch.Common.Models;
+using CityWatch.Data.Services;
 using ConvertApiDotNet;
 using Dropbox.Api.Files;
 
@@ -81,6 +84,8 @@ namespace CityWatch.Web.API
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
         private readonly IAlertEmailServices _alertEmailServices;
+        private readonly IHubContext<UpdateHub> _webHubContext;
+        private readonly IHubContext<MobileAppSignalRHub> _mobileHubContext;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
@@ -96,7 +101,8 @@ namespace CityWatch.Web.API
             ILogger<RegisterModel> logger, IUserDataProvider userDataProvider, IIncidentReportGenerator incidentReportGenerator,
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
             IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
-            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context)
+            Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context,
+            IHubContext<UpdateHub> webHubContext, IHubContext<MobileAppSignalRHub> mobileHubContext)
         {
             _context = context;
             _memoryCache = memoryCache;
@@ -119,6 +125,8 @@ namespace CityWatch.Web.API
             _userAuthentication = userAuthentication;
             _mobileAppDataServices = mobileAppDataServices;
             _alertEmailServices = alertEmailServices;
+            _webHubContext = webHubContext;
+            _mobileHubContext = mobileHubContext;
         }
 
         /// <summary>
@@ -4359,6 +4367,7 @@ namespace CityWatch.Web.API
                             s.Id,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                            guardId = s.GuardId,
                             guardName = s.Guard != null ? s.Guard.Name : s.ProviderName,
                             reliefGuardId = s.ReliefGuardId,
                             reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
@@ -4415,6 +4424,178 @@ namespace CityWatch.Web.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while fetching roster", error = ex.Message });
+            }
+        }
+
+        [HttpPost("UpdateShiftStatus")]
+        public async Task<IActionResult> UpdateShiftStatus([FromBody] RosterStatusUpdateModel model)
+        {
+            try
+            {
+                // 1. Fetch the shift record from the database
+                var shift = await _context.RosterSchedules.FindAsync(model.ShiftId);
+                if (shift == null) return NotFound(new { isSuccess = false, message = "Shift not found." });
+
+                // 2. Concurrency check: verify the status hasn't changed since the mobile app last fetched data
+                if (shift.Status != model.ExpectedStatus)
+                {
+                    return BadRequest(new { isSuccess = false, message = "Shift status has changed. Please refresh the roster." });
+                }
+
+                int oldStatus = (int)shift.Status;
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string platform = Request.Headers["User-Agent"].ToString();
+
+                // 3. Process status update to 'Accepted'
+                if (shift.ShiftStart.Date < DateTime.Today)
+                {
+                    return BadRequest(new { isSuccess = false, message = "You cannot accept or decline shifts from previous days." });
+                }
+
+                if (model.NewStatus == RosterShiftStatus.Accepted)
+                {
+                    if (model.CallingGuardId <= 0)
+                    {
+                        return BadRequest(new { isSuccess = false, message = "Invalid Guard ID." });
+                    }
+
+                    // Primary guard accepting their own shift
+                    if (shift.GuardId == model.CallingGuardId)
+                    {
+                        shift.Status = RosterShiftStatus.Accepted;
+                    }
+                    // Picking up a declined shift as a Relief Guard
+                    else if (shift.Status == RosterShiftStatus.Declined)
+                    {
+                        shift.ReliefGuardId = model.CallingGuardId;
+                        shift.Status = RosterShiftStatus.Accepted;
+                        
+                        var callingGuard = await _context.Guards.FindAsync(model.CallingGuardId);
+                        if (callingGuard != null)
+                        {
+                            shift.ReliefProviderName = callingGuard.Provider;
+                        }
+
+                        // Keep the existing ReliefReason (the reason for cancellation)
+                        // but we could append that it was picked up via mobile
+                        if (string.IsNullOrEmpty(shift.ReliefReason))
+                        {
+                             shift.ReliefReason = "Relief Guard assigned via Mobile";
+                        }
+                    }
+                    else
+                    {
+                        return BadRequest(new { isSuccess = false, message = "You are not authorized to accept this shift." });
+                    }
+                }
+                // 4. Process status update to 'Declined'
+                else if (model.NewStatus == RosterShiftStatus.Declined)
+                {
+                    bool canDecline = false;
+                    string unauthorizedMessage = "You are not authorized to decline this shift.";
+                    
+                    if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
+                    {
+                        // If a relief guard is assigned, ONLY the relief guard can decline it
+                        canDecline = (shift.ReliefGuardId == model.CallingGuardId);
+                        if (!canDecline)
+                        {
+                            var reliefGuard = await _context.Guards.FindAsync(shift.ReliefGuardId.Value);
+                            string rName = reliefGuard != null ? reliefGuard.Name : "the relief guard";
+                            unauthorizedMessage = $"You cannot modify this. Only {rName} can modify this.";
+                        }
+                    }
+                    else
+                    {
+                        // No relief guard assigned, so only the original assigned guard can decline
+                        canDecline = (shift.GuardId == model.CallingGuardId);
+                    }
+
+                    if (canDecline)
+                    {
+                        shift.Status = RosterShiftStatus.Declined;
+                        shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
+                        
+                        // If the cancelling guard is the relief guard, clear the relief guard details
+                        // so the shift becomes open for other guards to accept.
+                        if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId == model.CallingGuardId)
+                        {
+                            shift.ReliefGuardId = null;
+                            shift.ReliefProviderName = null;
+                        }
+                    }
+                    else
+                    {
+                        return BadRequest(new { isSuccess = false, message = unauthorizedMessage });
+                    }
+                }
+
+                // 5. Save the updated status and reason to DB
+                await _context.SaveChangesAsync();
+
+                // 6. Separately try to log the audit entry
+                try
+                {
+                    string details = "";
+                    string action = "";
+                    if (model.NewStatus == RosterShiftStatus.Accepted)
+                    {
+                        action = "Accepted";
+                        details = shift.ReliefGuardId == model.CallingGuardId ? "Relief Guard picked up the declined shift." : "Primary guard accepted the shift.";
+                    }
+                    else if (model.NewStatus == RosterShiftStatus.Declined)
+                    {
+                        action = "Declined";
+                        details = $"Guard declined shift with reason: {model.Reason}";
+                        if (shift.ReliefGuardId == null && model.NewStatus == RosterShiftStatus.Declined && oldStatus == (int)RosterShiftStatus.Accepted)
+                        {
+                             // This is a bit tricky to detect after save, but we can infer
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(action))
+                    {
+                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                        {
+                            RosterScheduleId = shift.Id,
+                            ActionTime = DateTime.Now,
+                            GuardId = model.CallingGuardId,
+                            ActionSource = "Mobile",
+                            Action = action,
+                            Details = details,
+                            IPAddress = ipAddress,
+                            Platform = platform,
+                            OldStatus = oldStatus,
+                            NewStatus = (int)shift.Status
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore audit logging errors
+                }
+
+                // 7. Notify SignalR (this ensures BOTH web and mobile listen and reload)
+                try
+                {
+                    // Broadcast to Web (UpdateHub)
+                    await _webHubContext.Clients.All.SendAsync("UpdateRoster", new { shiftId = shift.Id, siteId = shift.ClientSiteId });
+                    await _webHubContext.Clients.All.SendAsync("RefreshRoster", shift.GuardId?.ToString()); // Force a refresh like the web code does
+
+                    // Broadcast to Mobile (MobileAppSignalRHub)
+                    await _mobileHubContext.Clients.All.SendAsync("RefreshRoster", new { siteId = shift.ClientSiteId });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"SignalR Broadcast failed: {ex.Message}");
+                }
+
+                return Ok(new { isSuccess = true, message = "Shift status updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { isSuccess = false, message = ex.Message });
             }
         }
 

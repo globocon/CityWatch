@@ -97,11 +97,27 @@
     }
     .guard-shift-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; }
 
-    .status-pushed, .status-accepted { 
-        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%) !important; 
+    /* Status Colors */
+    .guard-shift-card.type-regular.status-pushed {
+        background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%) !important;
+        border-left: 3px solid #FFE0B2 !important;
     }
-    .status-declined { 
-        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; 
+    .guard-shift-card.type-adhoc.status-pushed {
+        background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%) !important;
+        border-left: 3px solid #FFCC80 !important;
+    }
+    .guard-shift-card.type-regular.status-accepted {
+        background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%) !important;
+        border-left: 3px solid #C8E6C9 !important;
+    }
+    .guard-shift-card.type-adhoc.status-accepted {
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
+        border-left: 3px solid #81C784 !important;
+    }
+    .guard-shift-card.status-declined {
+        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important;
+        border-left: 3px solid #616161 !important;
+        color: #FFFFFF !important;
     }
 
     /* Relief Card Styles */
@@ -119,16 +135,6 @@
         display: inline-block;
         margin-right: 5px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    /* Adhoc Styles */
-    .guard-shift-card.adhoc-accepted { 
-        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%) !important; 
-        border-left: 3px solid #81C784 !important;
-    }
-    .guard-shift-card.adhoc-not-accepted { 
-        background: linear-gradient(135deg, #E65100 0%, #EF6C00 100%) !important; 
-        border-left: 3px solid #FFB74D !important;
     }
 
     .guard-shift-license {
@@ -249,10 +255,11 @@
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
                             </div>
                             <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
-                                <option value="Live">Live</option>
-                                <option value="Invoiced">Invoiced</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Cancelled">Cancelled</option>
+                                <option value="Live">Live (Pushed)</option>
+                                <option value="Accepted">Accepted (Green)</option>
+                                <option value="Paid">Paid (Stamp)</option>
+                                <option value="Invoiced">Invoiced (Stamp)</option>
+                                <option value="Cancelled">Cancelled (Black)</option>
                             </select>
                         </div>
 
@@ -795,13 +802,13 @@
                             if (s.status === 1) statusClass = 'status-accepted';
                             if (s.status === 2) statusClass = 'status-declined';
 
-                            var typeClass = '';
-                            if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                            else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+                            var typeClass = 'type-regular';
+                            if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                             var isRelief = s.reliefGuardId || s.reliefProviderName;
 
-                            rowHtml += '<div class="guard-shift-card ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '">' +
+                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
+                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '">' +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
                                     (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -897,6 +904,51 @@
 
     function formatGuardDate(date) {
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // Click-to-cycle status logic
+    $(document).on('click', '.clickable-shift', function() {
+        if (!isAdminRoster) return;
+        
+        var card = $(this);
+        var shiftId = card.data('shift-id');
+        var currentStatus = parseInt(card.data('status'));
+        
+        // Cycle: Pushed (0) -> Accepted (1) -> Declined (2) -> Pushed (0)
+        var nextStatus = (currentStatus + 1) % 3;
+        
+        updateShiftStatusViaWeb(shiftId, nextStatus, card);
+    });
+
+    function updateShiftStatusViaWeb(shiftId, newStatus, card) {
+        $.ajax({
+            url: '/api/GuardSecurityNumber/UpdateShiftStatus',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                shiftId: shiftId,
+                newStatus: newStatus,
+                callingGuardId: 1, // System/Admin ID for web updates
+                reason: newStatus === 2 ? "Cancelled via Web Dashboard" : ""
+            }),
+            success: function(res) {
+                if (res.isSuccess) {
+                    // Update card locally for immediate feedback
+                    card.data('status', newStatus);
+                    
+                    // Remove all status classes
+                    card.removeClass('status-pushed status-accepted status-declined adhoc-pushed adhoc-accepted');
+                    
+                    var isAdhoc = card.data('type') === 'Adhoc';
+                    var statusClass = 'status-pushed';
+                    if (newStatus === 1) statusClass = 'status-accepted';
+                    if (newStatus === 2) statusClass = 'status-declined';
+                    
+                    var typeClass = isAdhoc ? (newStatus === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
+                    card.addClass(statusClass + ' ' + typeClass);
+                }
+            }
+        });
     }
 
     function truncateGuardName(str, num) {

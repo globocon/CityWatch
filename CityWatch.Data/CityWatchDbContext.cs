@@ -414,6 +414,7 @@ namespace CityWatch.Data
         public DbSet<RosterSiteWeekStatus> RosterSiteWeekStatuses { get; set; }
         public DbSet<PayRateGroupSite> PayRateGroupSites { get; set; }
         public DbSet<RosterRemunerationSummary> RosterRemunerationSummaries { get; set; }
+        public DbSet<RosterScheduleAuditLog> RosterScheduleAuditLogs { get; set; }
     }
 
 

@@ -550,9 +550,11 @@
                         <div class="col-6">
                             <label>Type</label>
                             <select id="modalShiftType" class="form-control" style="width: 100%">
-                                <option value="Regular" data-color="#667eea">Standard (Regular)</option>
-                                <option value="AdhocAccepted" data-color="#1B5E20">ADHOC shift accepted</option>
-                                <option value="AdhocNotAccepted" data-color="#E65100">ADHOC shift not accepted</option>
+                                <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
+                                <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
+                                <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
+                                <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
+                                <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
                             </select>
                         </div>
                     </div>
@@ -816,16 +818,25 @@
                 z-index: 2000;
             }
 
-            .shift-card.status-pushed {
-                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+            .shift-card.type-regular.status-pushed {
+                background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%);
             }
 
-            .shift-card.status-accepted {
-                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+            .shift-card.type-adhoc.status-pushed {
+                background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%);
+            }
+
+            .shift-card.type-regular.status-accepted {
+                background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
+            }
+
+            .shift-card.type-adhoc.status-accepted {
+                background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
             }
 
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
+                color: #FFFFFF !important;
             }
 
             .shift-card.shift-relief {
@@ -1245,6 +1256,7 @@
 }
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
     <script>
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
@@ -1630,6 +1642,12 @@
                         $('#modalReliefProviderId').append(newOption).trigger('change');
                     }
                 }
+                
+                // Auto-check "Other" if no reason is currently checked
+                if ($('.relief-reason-chk:checked').length === 0) {
+                    $('#chkOther').prop('checked', true).trigger('change');
+                    $('#modalReliefReasonOther').show().val('Relief Guard assigned manually');
+                }
             }).on('select2:unselect', function(e) {
                 $('#modalReliefProviderId').val(null).trigger('change');
             });
@@ -1801,9 +1819,8 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                     var typeClass = '';
-                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+                                     var typeClass = 'type-regular';
+                                    if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
@@ -1990,22 +2007,21 @@
                             // Find all instances of this shift in the DOM (both grids)
                             var allCards = $('.shift-card[data-id="' + id + '"]');
                             
+                            // Remove all status/type classes
+                            allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
+                            
+                            var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
+                            var statusClass = 'status-pushed';
+                            if (res.status === 1) statusClass = 'status-accepted';
+                            if (res.status === 2) statusClass = 'status-declined';
+                            
+                            allCards.addClass(statusClass + ' ' + typeClass);
+                            
                             // Update Card Data and DOM Attributes for all instances
                             allCards.data('shifttype', res.shiftType);
                             allCards.attr('data-shifttype', res.shiftType);
                             allCards.data('status', res.status);
                             allCards.attr('data-status', res.status);
-                            
-                            // Update Classes for Shading
-                            allCards.removeClass('adhoc-accepted adhoc-not-accepted');
-                            if (res.shiftType === 'AdhocAccepted') allCards.addClass('adhoc-accepted');
-                            else if (res.shiftType === 'AdhocNotAccepted') allCards.addClass('adhoc-not-accepted');
-
-                            // Update Status Classes
-                            allCards.removeClass('status-pushed status-accepted status-declined');
-                            if (res.status === 1) allCards.addClass('status-accepted');
-                            else if (res.status === 2) allCards.addClass('status-declined');
-                            else allCards.addClass('status-pushed');
                         } else {
                             if (res.message) alert(res.message);
                         }
@@ -2029,6 +2045,7 @@
                 var start = card.data('start');
                 var end = card.data('end');
 
+                $('#modalGuardId').empty();
                 if (guardId) {
                     var guardName = card.data('guardname');
                     var newOption = new Option(guardName, guardId, true, true);
@@ -2037,6 +2054,7 @@
                     $('#modalGuardId').val(null).trigger('change');
                 }
 
+                $('#modalProviderId').empty();
                 if (provider) {
                     var provOption = new Option(provider, provider, true, true);
                     $('#modalProviderId').append(provOption).trigger('change');
@@ -2049,7 +2067,17 @@
 
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
-                $('#modalShiftType').val(card.data('shifttype') || 'Regular').trigger('change');
+                var currentType = card.data('shifttype') || 'Regular';
+                var currentStatus = parseInt(card.data('status') || '0');
+                var compositeType = currentType;
+                
+                if (currentStatus === 1) {
+                    compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
+                } else if (currentStatus === 2) {
+                    compositeType = 'Declined';
+                }
+                
+                $('#modalShiftType').val(compositeType).trigger('change');
 
                 // Load Relief Data
                 var rGuardId = card.data('reliefguardid');
@@ -2059,16 +2087,16 @@
                 if (rGuardId) {
                     var rGuardName = card.data('reliefguardname');
                     var rOption = new Option(rGuardName, rGuardId, true, true);
-                    $('#modalReliefGuardId').append(rOption).trigger('change');
+                    $('#modalReliefGuardId').empty().append(rOption).trigger('change');
                 } else {
-                    $('#modalReliefGuardId').val(null).trigger('change');
+                    $('#modalReliefGuardId').empty().val(null).trigger('change');
                 }
 
                 if (rProvider) {
                     var rpOption = new Option(rProvider, rProvider, true, true);
-                    $('#modalReliefProviderId').append(rpOption).trigger('change');
+                    $('#modalReliefProviderId').empty().append(rpOption).trigger('change');
                 } else {
-                    $('#modalReliefProviderId').val(null).trigger('change');
+                    $('#modalReliefProviderId').empty().val(null).trigger('change');
                 }
 
                 $('#modalReliefReason').val(rReason || "");
@@ -2077,11 +2105,20 @@
 
                 if (rReason) {
                     var reasons = rReason.split(', ');
+                    var matchedAny = false;
                     reasons.forEach(function(r) {
-                        $('.relief-reason-chk[value="' + r + '"]').prop('checked', true);
+                        var chk = $('.relief-reason-chk[value="' + r + '"]');
+                        if (chk.length) {
+                            chk.prop('checked', true);
+                            matchedAny = true;
+                        }
                     });
 
-                    if ($('#chkOther').is(':checked')) {
+                    // Handle custom reasons from the Mobile App (which sets ReliefReason directly to the custom string)
+                    if (!matchedAny && reasons.length > 0) {
+                        $('#chkOther').prop('checked', true);
+                        $('#modalReliefReasonOther').show().val(rReason);
+                    } else if ($('#chkOther').is(':checked')) {
                         var otherNote = card.data('reliefreasonother') || "";
                         $('#modalReliefReasonOther').show().val(otherNote);
                     }
@@ -2153,6 +2190,7 @@
                 var reliefReasonOther = $('#modalReliefReasonOther').val();
 
                 var shiftType = $('#modalShiftType').val();
+                var shiftStatus = null; // Will be parsed on backend from shiftType
 
                 var startTime = $('#modalShiftStart').val();
                 var endTime = $('#modalShiftEnd').val();
@@ -2215,6 +2253,7 @@
                         reliefReason: reliefReason,
                         reliefReasonOther: reliefReasonOther,
                         shiftType: shiftType,
+                        status: shiftStatus,
                         ignoreUnavailability: ignoreUnavail
                     },
                     success: function (res) {
@@ -2232,26 +2271,6 @@
                 });
             }
 
-            // Click shift to cycle status
-            $('#roster_grid').on('click', '.shift-card', function () {
-                if ($(this).data('locked') === true || $(this).data('locked') === "true") return;
-
-                var shiftId = $(this).data('id');
-                var currentStatus = parseInt($(this).data('status'));
-                var nextStatus = (currentStatus + 1) % 3;
-
-                $.ajax({
-                    url: '/roster/Booking?handler=UpdateStatus',
-                    type: 'POST',
-                    headers: getHeaders(),
-                    data: { id: shiftId, status: nextStatus },
-                    success: function (res) {
-                        if (res.success) {
-                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
-                        }
-                    }
-                });
-            });
 
             window.deleteShift = function(id, event) {
                 event.stopPropagation();
@@ -2854,9 +2873,8 @@
                                         dailyTotals[index] += shiftValue;
                                         grandTotal += shiftValue;
 
-                                        var typeClass = '';
-                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+                                        var typeClass = 'type-regular';
+                                        if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                                         rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
@@ -3246,6 +3264,44 @@
                         // But usually we have a stamp for all.
                         $(this).closest('div').hide();
                     }
+                });
+            }
+
+            // SignalR Connection for Real-time Roster Updates
+            if (typeof signalR !== 'undefined') {
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/updateHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("UpdateRoster", function (data) {
+                    console.log("Roster update received via SignalR", data);
+                    
+                    if (activeTab === 'groups' && currentBinderId) {
+                        loadBinderRoster();
+                    } else if (activeTab === 'projects') {
+                        var selectedSiteId = parseInt($('#search_site').val());
+                        if (data && data.siteId && selectedSiteId === data.siteId) {
+                            loadRoster();
+                        } else if (!data || !data.siteId) {
+                            loadRoster(); // Fallback
+                        }
+                    }
+                });
+
+                connection.on("RefreshRoster", function (data) {
+                    console.log("Roster refresh received via SignalR", data);
+                    if (activeTab === 'groups' && currentBinderId) {
+                        loadBinderRoster();
+                    } else {
+                        loadRoster();
+                    }
+                });
+
+                connection.start().then(function() {
+                    console.log("SignalR connected to /updateHub for roster updates.");
+                }).catch(function (err) {
+                    console.error("SignalR Connection Error: ", err.toString());
                 });
             }
 

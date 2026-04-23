@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -361,7 +362,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, bool ignoreUnavailability = false)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -436,6 +437,14 @@ namespace CityWatch.Web.Pages.roster
                 var existing = await _context.RosterSchedules.FindAsync(shiftId.Value);
                 if (existing == null) return new JsonResult(new { success = false, message = "Shift not found." });
 
+                // Capture old values for detailed logging
+                var oldGuardId = existing.GuardId;
+                var oldReliefGuardId = existing.ReliefGuardId;
+                var oldStart = existing.ShiftStart;
+                var oldEnd = existing.ShiftEnd;
+                int oldStatusVal = (int)existing.Status;
+
+                // Update the entity
                 existing.ClientSiteId = siteId;
                 existing.ShiftStart = start;
                 existing.ShiftEnd = end;
@@ -447,18 +456,89 @@ namespace CityWatch.Web.Pages.roster
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
                 existing.ReliefReasonOther = reliefReasonOther;
-                existing.ShiftType = shiftType;
 
-                if (shiftType == "AdhocAccepted") existing.Status = RosterShiftStatus.Accepted;
-                else if (shiftType == "AdhocNotAccepted") existing.Status = RosterShiftStatus.Pushed;
+                var finalShiftType = shiftType;
+                var finalStatus = RosterShiftStatus.Pushed;
 
+                if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
+                else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
+
+                existing.ShiftType = finalShiftType;
+                existing.Status = finalStatus;
+
+                // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
+
+                // 2. Build a detailed change message
+                try
+                {
+                    var changes = new List<string>();
+                    if (oldGuardId != guardId) changes.Add("Guard changed");
+                    if (oldReliefGuardId != reliefGuardId) 
+                    {
+                        if (reliefGuardId.HasValue) changes.Add("Relief Guard added");
+                        else changes.Add("Relief Guard removed");
+                    }
+                    if (oldStart != start || oldEnd != end) changes.Add("Time changed");
+                    if (oldStatusVal != (int)finalStatus) changes.Add($"Status changed to {finalStatus}");
+
+                    string detailedMessage = changes.Count > 0 ? string.Join(", ", changes) : "Shift updated (no major changes)";
+
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = existing.Id,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Edited",
+                        Details = detailedMessage,
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = oldStatusVal,
+                        NewStatus = (int)existing.Status
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create detailed roster audit log for Edit.");
+                }
+                
+                // Real-time broadcast
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+                if (hub != null && guardId.HasValue)
+                {
+                    await hub.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
+                }
+
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = existing.ClientSiteId });
+                }
+
                 return new JsonResult(new { success = true, id = existing.Id });
             }
             else
             {
-                var status = RosterShiftStatus.Pushed;
-                if (shiftType == "AdhocAccepted") status = RosterShiftStatus.Accepted;
+                var finalShiftType = shiftType;
+                var finalStatus = RosterShiftStatus.Pushed;
+
+                if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
+                else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
+                else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
                 var schedule = new RosterSchedule
                 {
@@ -471,14 +551,57 @@ namespace CityWatch.Web.Pages.roster
                     ReliefGuardId = reliefGuardId,
                     ReliefProviderName = reliefProviderName,
                     ReliefReason = reliefReason,
-                    Status = status,
+                    Status = finalStatus,
                     PayRateId = payRateId,
                     CallsignId = callsignId,
                     ReliefReasonOther = reliefReasonOther,
-                    ShiftType = shiftType
+                    ShiftType = finalShiftType
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
+
+                try
+                {
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id, // Captured after SaveChanges
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Created",
+                        Details = "Shift created by admin.",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = null,
+                        NewStatus = (int)schedule.Status
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create roster audit log for Add.");
+                }
+
+                // Real-time broadcast
+                var hubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+                if (hubNew != null && guardId.HasValue)
+                {
+                    await hubNew.Clients.All.SendAsync("RefreshRoster", guardId.Value.ToString());
+                }
+
+                var mobileHubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHubNew != null)
+                {
+                    await mobileHubNew.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+                }
+
                 return new JsonResult(new { success = true, id = schedule.Id });
             }
         }
@@ -576,6 +699,19 @@ namespace CityWatch.Web.Pages.roster
 
                 schedule.Status = (RosterShiftStatus)status;
                 await _context.SaveChangesAsync();
+
+                // Real-time broadcast
+                var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+                if (hub != null && schedule.GuardId.HasValue)
+                {
+                    await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
+                }
+
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+                }
             }
             return new JsonResult(new { success = true });
         }
@@ -592,8 +728,47 @@ namespace CityWatch.Web.Pages.roster
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
 
+                int oldStatusVal = (int)schedule.Status;
                 schedule.IsDeleted = true;
+
+                // 1. Save the actual shift deletion first
                 await _context.SaveChangesAsync();
+
+                // 2. Separately try to log the audit entry
+                try
+                {
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Deleted",
+                        Details = "Shift was deleted by admin.",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = oldStatusVal,
+                        NewStatus = null
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create roster audit log for Delete.");
+                }
+
+                var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+                }
             }
             return new JsonResult(new { success = true });
         }
@@ -1305,20 +1480,32 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
 
-            // Cycle: Regular -> AdhocAccepted -> AdhocNotAccepted -> Regular
+            // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular
             var currentType = schedule.ShiftType ?? "Regular";
+            var currentStatus = schedule.Status;
+            
             var nextType = "Regular";
             var nextStatus = RosterShiftStatus.Pushed;
 
-            if (currentType == "Regular")
+            if (currentType == "Regular" && currentStatus == RosterShiftStatus.Pushed)
             {
-                nextType = "AdhocAccepted";
+                nextType = "Adhoc";
+                nextStatus = RosterShiftStatus.Pushed;
+            }
+            else if (currentType == "Adhoc" && currentStatus == RosterShiftStatus.Pushed)
+            {
+                nextType = "Regular";
                 nextStatus = RosterShiftStatus.Accepted;
             }
-            else if (currentType == "AdhocAccepted")
+            else if (currentType == "Regular" && currentStatus == RosterShiftStatus.Accepted)
             {
-                nextType = "AdhocNotAccepted";
-                nextStatus = RosterShiftStatus.Pushed;
+                nextType = "Adhoc";
+                nextStatus = RosterShiftStatus.Accepted;
+            }
+            else if (currentType == "Adhoc" && currentStatus == RosterShiftStatus.Accepted)
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Declined;
             }
             else
             {
@@ -1330,6 +1517,19 @@ namespace CityWatch.Web.Pages.roster
             schedule.Status = nextStatus;
 
             await _context.SaveChangesAsync();
+
+            // Real-time broadcast
+            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+            if (hub != null && schedule.GuardId.HasValue)
+            {
+                await hub.Clients.All.SendAsync("RefreshRoster", schedule.GuardId.Value.ToString());
+            }
+
+            var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+            if (mobileHub != null)
+            {
+                await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = schedule.ClientSiteId });
+            }
 
             return new JsonResult(new { success = true, shiftType = nextType, status = (int)nextStatus });
         }
@@ -1369,6 +1569,24 @@ namespace CityWatch.Web.Pages.roster
             }
 
             await _context.SaveChangesAsync();
+
+            // Real-time broadcast
+            var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+            var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+            
+            foreach (var siteId in projectSites)
+            {
+                if (hub != null)
+                {
+                    // For Web, passing siteId triggers a refresh if they are on that site
+                    await hub.Clients.All.SendAsync("UpdateRoster", new { siteId = siteId });
+                }
+                if (mobileHub != null)
+                {
+                    await mobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = siteId });
+                }
+            }
+
             return new JsonResult(new { success = true });
         }
     }
