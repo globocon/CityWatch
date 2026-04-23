@@ -461,26 +461,35 @@ namespace CityWatch.Web.Pages.roster
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
 
-                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                int? parsedUserId = null;
-                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                try
                 {
-                    parsedUserId = uid;
-                }
+                    int oldStatusVal = oldStatus;
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
 
-                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = existing.Id,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Edited",
+                        Details = "Shift updated by admin.",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = oldStatusVal,
+                        NewStatus = (int)existing.Status
+                    });
+                }
+                catch (Exception ex)
                 {
-                    RosterScheduleId = existing.Id,
-                    ActionTime = DateTime.Now,
-                    UserId = parsedUserId,
-                    ActionSource = "Web",
-                    Action = "Edited",
-                    Details = "Shift updated by admin.",
-                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    Platform = Request.Headers["User-Agent"].ToString(),
-                    OldStatus = oldStatus,
-                    NewStatus = (int)existing.Status
-                });
+                    // Log error but don't crash the main process
+                    _logger.LogError(ex, "Failed to create roster audit log for Edit.");
+                }
 
                 await _context.SaveChangesAsync();
                 
@@ -530,28 +539,34 @@ namespace CityWatch.Web.Pages.roster
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
 
-                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                int? parsedUserId = null;
-                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                try
                 {
-                    parsedUserId = uid;
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id, // Captured after SaveChanges
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Created",
+                        Details = "Shift created by admin.",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = null,
+                        NewStatus = (int)schedule.Status
+                    });
+                    await _context.SaveChangesAsync();
                 }
-
-                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                catch (Exception ex)
                 {
-                    RosterScheduleId = schedule.Id, // Captured after SaveChanges
-                    ActionTime = DateTime.Now,
-                    UserId = parsedUserId,
-                    ActionSource = "Web",
-                    Action = "Created",
-                    Details = "Shift created by admin.",
-                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    Platform = Request.Headers["User-Agent"].ToString(),
-                    OldStatus = null,
-                    NewStatus = (int)schedule.Status
-                });
-
-                await _context.SaveChangesAsync();
+                    _logger.LogError(ex, "Failed to create roster audit log for Add.");
+                }
 
                 // Real-time broadcast
                 var hubNew = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
@@ -692,29 +707,36 @@ namespace CityWatch.Web.Pages.roster
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
 
-                int oldStatus = (int)schedule.Status;
+                int oldStatusVal = (int)schedule.Status;
                 schedule.IsDeleted = true;
 
-                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                int? parsedUserId = null;
-                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                try
                 {
-                    parsedUserId = uid;
-                }
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
 
-                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = "Deleted",
+                        Details = "Shift was deleted by admin.",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = oldStatusVal,
+                        NewStatus = null
+                    });
+                }
+                catch (Exception ex)
                 {
-                    RosterScheduleId = schedule.Id,
-                    ActionTime = DateTime.Now,
-                    UserId = parsedUserId,
-                    ActionSource = "Web",
-                    Action = "Deleted",
-                    Details = "Shift was deleted by admin.",
-                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    Platform = Request.Headers["User-Agent"].ToString(),
-                    OldStatus = oldStatus,
-                    NewStatus = null
-                });
+                    _logger.LogError(ex, "Failed to create roster audit log for Delete.");
+                }
 
                 await _context.SaveChangesAsync();
 
