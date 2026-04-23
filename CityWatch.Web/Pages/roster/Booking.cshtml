@@ -116,7 +116,7 @@
             <!-- Row 2: All Tools (Buttons, Date Nav, Add Site) on One Line -->
             <div class="row mb-4 align-items-center no-gutters">
                 <!-- Action Buttons -->
-                <div class="col-auto mr-4">
+                <div class="col-auto mr-2">
                     <div id="project_actions" style="display:none; white-space: nowrap;">
                         <!-- Design Toggles -->
                         <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
@@ -150,7 +150,7 @@
                 </div>
 
                 <!-- Date Navigation -->
-                <div class="col-auto flex-grow-1 text-center">
+                <div class="col-auto mx-auto text-center">
                     <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
                         <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
                         <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
@@ -158,10 +158,24 @@
                     </div>
                 </div>
 
+                <!-- Mode Dropdown -->
+                <div class="col-auto ml-1">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle font-weight-bold" type="button" id="rosterModeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 6px; padding: 4px 12px; border-width: 1.5px;">
+                            Weekly
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right shadow-sm" aria-labelledby="rosterModeDropdown">
+                            <a class="dropdown-item @(Model.Weeks == 1 ? "active" : "")" href="#" data-weeks="1"><i class="fa fa-calendar-check-o mr-2"></i>Weekly View</a>
+                            <a class="dropdown-item @(Model.Weeks == 2 ? "active" : "")" href="#" data-weeks="2"><i class="fa fa-calendar-o mr-2"></i>Fortnight View</a>
+                            <a class="dropdown-item @(Model.Weeks == 4 ? "active" : "")" href="#" data-weeks="4"><i class="fa fa-calendar-plus-o mr-2"></i>Monthly View</a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Add Site Selection -->
-                <div class="col-auto ml-4">
+                <div class="col-auto ml-auto">
                     <div class="d-flex align-items-center">
-                        <div class="position-relative" style="width: 280px;">
+                        <div class="position-relative" style="width: 220px;">
                             <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
                             <select id="search_site" class="form-control form-control-sm pl-4"></select>
                         </div>
@@ -447,6 +461,7 @@
                     <input type="hidden" id="modalShiftId" />
                     <input type="hidden" id="modalSiteId" />
                     <input type="hidden" id="modalDayIndex" />
+                    <input type="hidden" id="modalWeekOffset" />
 
                     <!-- Tab Headers -->
                     <ul class="nav nav-tabs mb-3" id="modalShiftTabs" role="tablist">
@@ -1190,6 +1205,48 @@
             cursor: default;
         }
 
+        /* Premium Roster Styling */
+        .week-header-gradient {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .week-number-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .project-toolbar-row {
+            background-color: #f8f9fa !important;
+            border-bottom: 2px solid #e9ecef !important;
+        }
+        .site-name-cell {
+            border-right: 2px solid #dee2e6 !important;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+        .site-name-cell:hover {
+            background-color: #f1f3f5;
+        }
+        .site-status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .status-live { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+        .status-invoiced { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+        .status-paid { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .status-cancelled { background: #ffebee; color: #b71c1c; border: 1px solid #ffcdd2; }
+
 
         /* Public Holiday Highlighting - Moved to end and made highly specific to override weekends */
         #roster_grid tbody td.day-cell.ph-highlight,
@@ -1251,6 +1308,7 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var currentRosterWeeks = @Model.Weeks;
             var projectFinancialMode = false;
             var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
             var projectSupplierMode = false;
@@ -1292,7 +1350,7 @@
             });
 
             function updateUrl() {
-                var newUrl = '/roster/Booking?startDate=' + currentStartDate;
+                var newUrl = '/roster/Booking?startDate=' + currentStartDate + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) newUrl += '&groupId=' + currentGroupId;
                 if (currentBinderId) newUrl += '&binderId=' + currentBinderId;
                 if (activeTab) newUrl += '&tab=' + activeTab;
@@ -1345,7 +1403,7 @@
             // Week navigation handlers
             $('#btnPrevWeek, #btnPrevWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab;
+                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
@@ -1353,10 +1411,31 @@
 
             $('#btnNextWeek, #btnNextWeekBinder').on('click', function(e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab;
+                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab + '&weeks=' + currentRosterWeeks;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
+            });
+
+            // Mode Dropdown Handler
+            $('.dropdown-item[data-weeks]').on('click', function(e) {
+                e.preventDefault();
+                var weeks = $(this).data('weeks');
+                var text = $(this).text().trim();
+                
+                $('#rosterModeDropdown').text(text);
+                $('.dropdown-item[data-weeks]').removeClass('active');
+                $(this).addClass('active');
+                
+                currentRosterWeeks = weeks;
+                loadRoster();
+                updateUrl();
+                
+                // Refresh headers since they iterate over 7 days in Razor
+                if (weeks > 1) {
+                   // Redirect if switching to multi-week to ensure razor headers logic is skipped and handled by JS
+                   window.location.href = '/roster/Booking?startDate=' + currentStartDate + '&weeks=' + weeks + '&tab=' + activeTab + (currentGroupId ? '&groupId=' + currentGroupId : '');
+                }
             });
 
             // Site Search initialization
@@ -1723,133 +1802,152 @@
                     success: function (res) {
                         var tbody = $('#roster_grid tbody');
                         tbody.empty();
+                        
+                        // Hide native thead as we use dynamic weekly headers
+                        $('#roster_grid thead').hide();
 
-                        if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
+                        if (!res.weeks || res.weeks.length === 0) {
+                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No roster data found.</td></tr>');
                             $('#roster_footer').hide();
                             return;
                         }
 
-                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
-                        var grandTotal = 0;
+                        res.weeks.forEach(function (week, weekIdx) {
+                            var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                            var grandTotal = 0;
 
-                        // Add Project Header Row for consistency with Groups tab
-                        var projName = $('#project_name option:selected').text() || 'Selected Project';
-                        var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
-                            '<div class="d-flex align-items-center justify-content-between">' +
-                            '<div class="d-flex align-items-center">' +
-                                '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
-                                '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
-                                    '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
-                                    '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
-                                    '</select>' +
-                                    '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
-                                '</div>' +
-                            '</div>' +
-                            '</div></td></tr>';
-                        tbody.append(headerHtml);
-
-                        res.results.forEach(function (row) {
-                            var statusHtml = '';
-                            if (row.status) {
-                                var imgName = '';
-                                switch(row.status.toUpperCase()) {
-                                    case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
-                                    case 'PAID': imgName = 'STAMP - PAID.png'; break;
-                                    case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
-                                }
-                                if (imgName) {
-                                    statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                   '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + row.status + '" />' + 
-                                                 '</div>';
-                                }
-                            }
-
-
-                            var rowHtml = '<tr id="row_' + row.siteId + '">' +
-                                '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                    '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
-                                    '<small class="text-muted">' + row.clientTypeName + '</small>' +
-                                    (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
-                                    statusHtml + 
+                            // 1. WEEK DATE HEADER ROW (Mon-Sun)
+                            var dateHeaderHtml = '<tr class="week-header-gradient">' +
+                                '<td style="vertical-align: middle; border-right: 2px solid rgba(255,255,255,0.2);">' + 
+                                    '<div class="d-flex align-items-center justify-content-between px-2">' +
+                                        '<span class="week-number-badge">WEEK ' + week.weekNumber + '</span>' +
+                                        '<small style="font-weight: 600; font-size: 0.75rem; opacity: 0.9;">' + week.displayDateRange + '</small>' +
+                                    '</div>' +
                                 '</td>';
+                            
+                            var weekStartDate = new Date(week.startDate);
+                            for (var d = 0; d < 7; d++) {
+                                var currentDay = new Date(weekStartDate);
+                                currentDay.setDate(currentDay.getDate() + d);
+                                var isWeekend = (d === 5 || d === 6);
+                                var weekendStyle = isWeekend ? 'background: rgba(0,0,0,0.05);' : '';
+                                
+                                dateHeaderHtml += '<td class="text-center" style="color: white; border-left: 1px solid rgba(255,255,255,0.1); py-2; ' + weekendStyle + '">' + 
+                                    '<div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + currentDay.toLocaleDateString('en-GB', { weekday: 'short' }) + '</div>' + 
+                                    '<div style="font-size: 0.85rem; font-weight: 400; opacity: 0.9;">' + currentDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + '</div>' + 
+                                '</td>';
+                            }
+                            dateHeaderHtml += '</tr>';
+                            tbody.append(dateHeaderHtml);
 
-                            row.days.forEach(function (daySchedules, index) {
-                                var cellDate = new Date(currentStartDate);
-                                cellDate.setDate(cellDate.getDate() + index);
-                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                            // 2. PROJECT HEADER ROW
+                            var projName = $('#project_name option:selected').text() || 'Selected Project';
+                            var projectHeaderHtml = '<tr class="project-toolbar-row"><td colspan="8" class="py-1 px-3">' +
+                                '<div class="d-flex align-items-center justify-content-between">' +
+                                '<div class="d-flex align-items-center">' +
+                                    '<span class="badge badge-primary mr-2" style="padding: 5px;"><i class="fa fa-folder-open"></i></span>' +
+                                    '<strong style="font-size: 0.95rem; color: #495057;">Project: ' + projName + '</strong>' +
+                                    '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Global Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 110px; height: 26px; padding: 0 8px; font-size: 0.75rem; border-radius: 4px; border: 1.5px solid #ced4da;">' +
+                                            '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>LIVE</option>' +
+                                            '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>INVOICED</option>' +
+                                            '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>PAID</option>' +
+                                            '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>CANCELLED</option>' +
+                                        '</select>' +
+                                    '</div>' +
+                                '</div>' +
+                                '</div></td></tr>';
+                            tbody.append(projectHeaderHtml);
 
-                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                            // 3. SITE ROWS
+                            week.results.forEach(function (row) {
+                                var pStatus = row.status || 'Live';
+                                var statusClass = 'status-' + pStatus.toLowerCase();
+                                var statusHtml = '<div class="mt-auto pt-2"><div class="site-status-badge ' + statusClass + '">' + pStatus + '</div></div>';
+
+                                var rowHtml = '<tr id="row_' + row.siteId + '_w' + weekIdx + '">' +
+                                    '<td class="site-name-cell d-flex flex-column" style="min-height: 120px; padding: 10px 12px;">' + 
+                                        '<div><strong class="text-dark d-block" style="max-width: 180px; font-size: 0.9rem; margin-bottom: 2px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
+                                        '<small class="text-muted font-weight-bold" style="font-size: 0.7rem; text-transform: uppercase;">' + row.clientTypeName + '</small>' +
+                                        statusHtml + 
+                                    '</td>';
+
+                                row.days.forEach(function (daySchedules, dayIdx) {
+                                    var cellDate = new Date(week.startDate);
+                                    cellDate.setDate(cellDate.getDate() + dayIdx);
+                                    var isDayLocked = cellDate < firstDayOfCurrentMonth;
+
+                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[dayIdx]);
                                     var phClass = isPh ? "ph-highlight" : "";
-                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
-                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
-                                daySchedules.forEach(function (s) {
-                                    var statusClass = 'status-pushed';
-                                    if (s.status === 1) statusClass = 'status-accepted';
-                                    if (s.status === 2) statusClass = 'status-declined';
+                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[dayIdx]) || "";
+                                    
+                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + dayIdx + '" data-week-offset="' + weekIdx + '" title="' + phReason + '">';
+                                    
+                                    daySchedules.forEach(function (s) {
+                                        var statusClass = 'status-pushed';
+                                        if (s.status === 1) statusClass = 'status-accepted';
+                                        if (s.status === 2) statusClass = 'status-declined';
 
-                                    var shiftValue = s.durationHours;
-                                    if (projectFinancialMode) {
-                                        var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
-                                        shiftValue = s.durationHours * activeRate;
+                                        var shiftValue = s.durationHours;
+                                        if (projectFinancialMode) {
+                                            var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
+                                            shiftValue = s.durationHours * activeRate;
+                                        }
+                                        dailyTotals[dayIdx] += shiftValue;
+                                        grandTotal += shiftValue;
+
+                                        var typeClass = '';
+                                        if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
+                                        else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
+
+                                        rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                            'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
+                                            'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                            '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
+                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; margin-top: 1px;">' +
+                                                '<span>' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                                '<span class="hour-badge">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
+                                            '</div>' +
+                                            (projectFinancialMode ? '<div class="mt-1" style="font-weight: 800; color: #ff3d00; font-size: 11px;">$ ' + shiftValue.toFixed(2) + '</div>' : '') +
+                                            (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
+                                            (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
+                                            '</div>';
+                                    });
+
+                                    if (!isDayLocked) {
+                                        rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + dayIdx + '" data-week-offset="' + weekIdx + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
                                     }
-                                    dailyTotals[index] += shiftValue;
-                                    grandTotal += shiftValue;
-
-                                     var typeClass = '';
-                                    if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
-                                    else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
-
-                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
-                                        'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
-                                        'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
-                                        '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
-                                            ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
-                                        '</div>' +
-                                        (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
-                                        '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
-                                        '</div>' +
-                                        (projectSupplierMode ? 
-                                            '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
-                                            ''
-                                        ) +
-                                        (projectFinancialMode ? 
-                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
-                                            ''
-                                        ) +
-                                        (!projectSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
-                                        (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
-                                        (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
-                                        '<div class="shift-card-popup">' +
-                                        '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
-                                        '</div>' +
-                                        '</div>';
+                                    rowHtml += '</td>';
                                 });
 
-                                if (!isDayLocked) {
-                                    rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
-                                }
-                                rowHtml += '</td>';
+                                rowHtml += '</tr>';
+                                tbody.append(rowHtml);
                             });
 
-                            rowHtml += '</tr>';
-                            tbody.append(rowHtml);
+                            // 4. WEEK TOTALS FOOTER ROW
+                            var footerHtml = '<tr class="bg-light font-weight-bold">' +
+                                '<td class="text-right py-2 px-3">' + (projectFinancialMode ? 'Weekly Pay' : 'Weekly Total') + ': <span class="ml-2 text-primary">' + (projectFinancialMode ? '$' + grandTotal.toFixed(2) : grandTotal.toFixed(2).replace(/\.00$/, '') + 'h') + '</span></td>';
+                            
+                            for (var t = 0; t < 7; t++) {
+                                var val = dailyTotals[t];
+                                footerHtml += '<td class="text-center py-2">' + 
+                                    '<div style="font-size: 0.75rem; color: #666;">DAILY TOTAL</div>' +
+                                    '<div class="text-dark">' + (projectFinancialMode ? '$' + val.toFixed(2) : val.toFixed(2).replace(/\.00$/, '') + 'h') + '</div>' + 
+                                '</td>';
+                            }
+                            footerHtml += '</tr>';
+                            tbody.append(footerHtml);
+                            
+                            // Add a separator row if not the last week
+                            if (weekIdx < res.weeks.length - 1) {
+                                tbody.append('<tr style="height: 30px;"><td colspan="8" style="background: transparent; border: none;"></td></tr>');
+                            }
                         });
+
+                        // Hide the static global footer as we now have per-week footers
+                        $('#roster_footer').hide();
 
                         // Update Footer Totals
                         $('#roster_footer').show();
@@ -1928,9 +2026,11 @@
             $('#roster_grid').on('click', '.btn-add-guard', function () {
                 var siteId = $(this).data('site');
                 var dayIndex = $(this).data('day');
+                var weekOffset = $(this).data('week-offset') || 0;
 
                 $('#modalSiteId').val(siteId);
                 $('#modalDayIndex').val(dayIndex);
+                $('#modalWeekOffset').val(weekOffset); // Track which week we are Adding to
                 $('#modalShiftId').val(''); // Clear shift ID for new shift
 
                 // Clear other fields
@@ -2016,10 +2116,13 @@
             window.editShift = function(id, event) {
                 if (event) event.stopPropagation();
                 var card = $('.shift-card[data-id="' + id + '"]');
-                var dayIndex = card.closest('td').data('day');
-                var siteId = card.closest('td').data('site');
+                var cell = card.closest('td');
+                var dayIndex = cell.data('day');
+                var siteId = cell.data('site');
+                var weekOffset = cell.data('week-offset') || 0;
 
                 $('#modalDayIndex').val(dayIndex);
+                $('#modalWeekOffset').val(weekOffset); // Track which week we are Editing in
                 $('#modalSiteId').val(siteId);
                 $('#modalShiftId').val(id);
 
@@ -2190,8 +2293,9 @@
                 }
 
                 // Calculate actual DateTimes
+                var weekOffset = parseInt($('#modalWeekOffset').val() || 0);
                 var shiftDate = new Date(currentStartDate);
-                shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                shiftDate.setDate(shiftDate.getDate() + (weekOffset * 7) + parseInt(dayIndex));
                 var dateStr = shiftDate.toISOString().split('T')[0];
                 var startDateTime = dateStr + 'T' + startTime;
                 var endDateTime = dateStr + 'T' + endTime;
@@ -2758,13 +2862,39 @@
                     url: '/roster/Booking?handler=LoadBinderRoster',
                     type: 'GET',
                     data: { binderId: currentBinderId, startDate: currentStartDate },
-                    success: function (res) {
-                        tbody.empty();
-                        if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
-                            $('#binder_footer').hide();
-                            return;
-                        }
+                        success: function (res) {
+                            tbody.empty();
+                            $('#binder_grid thead').hide();
+                            
+                            if (res.results.length === 0) {
+                                tbody.append('<tr><td colspan="8" class="text-center text-muted p-4">No projects added to this group. Add projects using the search box above.</td></tr>');
+                                $('#binder_footer').hide();
+                                return;
+                            }
+
+                            // 1. WEEK DATE HEADER ROW (At the top of Combined Roster)
+                            var dateHeaderHtml = '<tr class="week-header-gradient">' +
+                                '<td style="vertical-align: middle; border-right: 2px solid rgba(255,255,255,0.2);">' + 
+                                    '<div class="d-flex align-items-center justify-content-between px-2">' +
+                                        '<span class="week-number-badge">GROUP VIEW</span>' +
+                                        '<small style="font-weight: 600; font-size: 0.75rem; opacity: 0.9;">' + Model.WeekRange + '</small>' +
+                                    '</div>' +
+                                '</td>';
+                            
+                            var weekStartDate = new Date(currentStartDate);
+                            for (var d = 0; d < 7; d++) {
+                                var currentDay = new Date(weekStartDate);
+                                currentDay.setDate(currentDay.getDate() + d);
+                                var isWeekend = (d === 5 || d === 6);
+                                var weekendStyle = isWeekend ? 'background: rgba(0,0,0,0.05);' : '';
+                                
+                                dateHeaderHtml += '<td class="text-center" style="color: white; border-left: 1px solid rgba(255,255,255,0.1); py-2; ' + weekendStyle + '">' + 
+                                    '<div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + currentDay.toLocaleDateString('en-GB', { weekday: 'short' }) + '</div>' + 
+                                    '<div style="font-size: 0.85rem; font-weight: 400; opacity: 0.9;">' + currentDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + '</div>' + 
+                                '</td>';
+                            }
+                            dateHeaderHtml += '</tr>';
+                            tbody.append(dateHeaderHtml);
 
                         var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
                         var grandTotal = 0;
@@ -2774,26 +2904,27 @@
                             var projectGrandTotal = 0;
 
                             // Add Project Header Row
-                            var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                            var headerHtml = '<tr class="project-toolbar-row"><td colspan="8" class="py-1 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
                                 '<div class="d-flex align-items-center">' +
-                                    '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + project.projectName + '</strong>' +
+                                    '<span class="badge badge-primary mr-2" style="padding: 5px;"><i class="fa fa-folder-open"></i></span>' +
+                                    '<strong style="font-size: 0.95rem; color: #495057;">Project: ' + project.projectName + '</strong>' +
                                     '<span class="sort-btn-group ml-3">' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Up" onclick="moveBinderProject(' + project.projectId + ', \'up\')"><i class="fa fa-chevron-up"></i></button>' +
                                         '<button class="sort-btn" title="Sort Order: Move Project Down" onclick="moveBinderProject(' + project.projectId + ', \'down\')"><i class="fa fa-chevron-down"></i></button>' +
                                     '</span>' +
                                     '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + project.projectId + '">' +
-                                        '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
-                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '<label class="mb-0 mr-2 text-muted font-weight-bold" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>' +
+                                        '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 110px; height: 26px; padding: 0 8px; font-size: 0.75rem; border-radius: 4px; border: 1.5px solid #ced4da;">' +
+                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>LIVE</option>' +
+                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>INVOICED</option>' +
+                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>PAID</option>' +
+                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>CANCELLED</option>' +
                                         '</select>' +
                                         '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                     '</div>' +
                                 '</div>' +
-                                '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
+                                '<button class="btn btn-link btn-xs text-danger p-0 font-weight-bold" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')" style="text-decoration: none;"><i class="fa fa-times-circle"></i> REMOVE PROJECT</button>' +
                                 '</div></td></tr>';
                             tbody.append(headerHtml);
 
@@ -2802,27 +2933,14 @@
                             }
 
                             project.sites.forEach(function (site) {
-                                var statusHtml = '';
-                                if (site.status) {
-                                    var imgName = '';
-                                    switch(site.status.toUpperCase()) {
-                                        case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
-                                        case 'PAID': imgName = 'STAMP - PAID.png'; break;
-                                        case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
-                                    }
-                                    if (imgName) {
-                                        statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                       '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + site.status + '" />' + 
-                                                     '</div>';
-                                    }
-                                }
-
+                                var pStatus = site.status || 'Live';
+                                var statusClass = 'status-' + pStatus.toLowerCase();
+                                var statusHtml = '<div class="mt-auto pt-2"><div class="site-status-badge ' + statusClass + '">' + pStatus + '</div></div>';
 
                                 var rowHtml = '<tr>' +
-                                    '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                        '<div><strong class="font-weight-bold text-truncate" style="max-width: 180px;">' + site.siteName + '</strong></div>' + 
-                                        '<small class="text-muted">' + site.clientTypeName + '</small>' + 
+                                    '<td class="site-name-cell d-flex flex-column" style="min-height: 120px; padding: 10px 12px;">' + 
+                                        '<div><strong class="text-dark d-block" style="max-width: 180px; font-size: 0.9rem; margin-bottom: 2px;">' + site.siteName + '</strong></div>' + 
+                                        '<small class="text-muted font-weight-bold" style="font-size: 0.7rem; text-transform: uppercase;">' + site.clientTypeName + '</small>' + 
                                         statusHtml + 
                                     '</td>';
 

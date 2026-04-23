@@ -111,11 +111,13 @@ function showNotificationSlider(message, isFromGuard, id) {
 }
 
 function updateLanguagesDropdown() {
-    var GuardID = $('#Guard_Id1').val();
+    var guardEl = $('#Guard_Id1');
+    if (guardEl.length === 0) return; // Not on a guard management page
 
+    var GuardID = guardEl.val();
 
     if (!GuardID) {
-        console.error("GuardID is missing or invalid.");
+        console.warn("GuardID is missing or invalid.");
         return;
     }
 
