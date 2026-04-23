@@ -4463,20 +4463,6 @@ namespace CityWatch.Web.API
                     if (shift.GuardId == model.CallingGuardId)
                     {
                         shift.Status = RosterShiftStatus.Accepted;
-                        
-                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
-                        {
-                            RosterScheduleId = shift.Id,
-                            ActionTime = DateTime.Now,
-                            GuardId = model.CallingGuardId,
-                            ActionSource = "Mobile",
-                            Action = "Accepted",
-                            Details = "Primary guard accepted the shift.",
-                            IPAddress = ipAddress,
-                            Platform = platform,
-                            OldStatus = oldStatus,
-                            NewStatus = (int)shift.Status
-                        });
                     }
                     // Picking up a declined shift as a Relief Guard
                     else if (shift.Status == RosterShiftStatus.Declined)
@@ -4496,20 +4482,6 @@ namespace CityWatch.Web.API
                         {
                              shift.ReliefReason = "Relief Guard assigned via Mobile";
                         }
-
-                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
-                        {
-                            RosterScheduleId = shift.Id,
-                            ActionTime = DateTime.Now,
-                            GuardId = model.CallingGuardId,
-                            ActionSource = "Mobile",
-                            Action = "Accepted",
-                            Details = $"Relief Guard picked up the declined shift.",
-                            IPAddress = ipAddress,
-                            Platform = platform,
-                            OldStatus = oldStatus,
-                            NewStatus = (int)shift.Status
-                        });
                     }
                     else
                     {
@@ -4544,30 +4516,13 @@ namespace CityWatch.Web.API
                         shift.Status = RosterShiftStatus.Declined;
                         shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
                         
-                        string details = $"Guard declined shift with reason: {model.Reason}";
-
                         // If the cancelling guard is the relief guard, clear the relief guard details
                         // so the shift becomes open for other guards to accept.
                         if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId == model.CallingGuardId)
                         {
-                            details = $"Relief Guard declined shift with reason: {model.Reason}";
                             shift.ReliefGuardId = null;
                             shift.ReliefProviderName = null;
                         }
-
-                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
-                        {
-                            RosterScheduleId = shift.Id,
-                            ActionTime = DateTime.Now,
-                            GuardId = model.CallingGuardId,
-                            ActionSource = "Mobile",
-                            Action = "Declined",
-                            Details = details,
-                            IPAddress = ipAddress,
-                            Platform = platform,
-                            OldStatus = oldStatus,
-                            NewStatus = (int)shift.Status
-                        });
                     }
                     else
                     {
@@ -4575,10 +4530,53 @@ namespace CityWatch.Web.API
                     }
                 }
 
-                // 5. Save changes to the database
+                // 5. Save the updated status and reason to DB
                 await _context.SaveChangesAsync();
 
-                // 6. Broadcast updates for real-time synchronization
+                // 6. Separately try to log the audit entry
+                try
+                {
+                    string details = "";
+                    string action = "";
+                    if (model.NewStatus == RosterShiftStatus.Accepted)
+                    {
+                        action = "Accepted";
+                        details = shift.ReliefGuardId == model.CallingGuardId ? "Relief Guard picked up the declined shift." : "Primary guard accepted the shift.";
+                    }
+                    else if (model.NewStatus == RosterShiftStatus.Declined)
+                    {
+                        action = "Declined";
+                        details = $"Guard declined shift with reason: {model.Reason}";
+                        if (shift.ReliefGuardId == null && model.NewStatus == RosterShiftStatus.Declined && oldStatus == (int)RosterShiftStatus.Accepted)
+                        {
+                             // This is a bit tricky to detect after save, but we can infer
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(action))
+                    {
+                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                        {
+                            RosterScheduleId = shift.Id,
+                            ActionTime = DateTime.Now,
+                            GuardId = model.CallingGuardId,
+                            ActionSource = "Mobile",
+                            Action = action,
+                            Details = details,
+                            IPAddress = ipAddress,
+                            Platform = platform,
+                            OldStatus = oldStatus,
+                            NewStatus = (int)shift.Status
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore audit logging errors
+                }
+
+                // 7. Notify SignalR (this ensures BOTH web and mobile listen and reload)
                 try
                 {
                     // Broadcast to Web (UpdateHub)

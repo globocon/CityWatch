@@ -461,6 +461,10 @@ namespace CityWatch.Web.Pages.roster
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
 
+                // 1. Save the actual shift change first
+                await _context.SaveChangesAsync();
+
+                // 2. Separately try to log the audit entry
                 try
                 {
                     int oldStatusVal = oldStatus;
@@ -484,14 +488,12 @@ namespace CityWatch.Web.Pages.roster
                         OldStatus = oldStatusVal,
                         NewStatus = (int)existing.Status
                     });
+                    await _context.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
-                    // Log error but don't crash the main process
                     _logger.LogError(ex, "Failed to create roster audit log for Edit.");
                 }
-
-                await _context.SaveChangesAsync();
                 
                 // Real-time broadcast
                 var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
@@ -710,6 +712,10 @@ namespace CityWatch.Web.Pages.roster
                 int oldStatusVal = (int)schedule.Status;
                 schedule.IsDeleted = true;
 
+                // 1. Save the actual shift deletion first
+                await _context.SaveChangesAsync();
+
+                // 2. Separately try to log the audit entry
                 try
                 {
                     var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -732,13 +738,12 @@ namespace CityWatch.Web.Pages.roster
                         OldStatus = oldStatusVal,
                         NewStatus = null
                     });
+                    await _context.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to create roster audit log for Delete.");
                 }
-
-                await _context.SaveChangesAsync();
 
                 var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
                 if (mobileHub != null)
