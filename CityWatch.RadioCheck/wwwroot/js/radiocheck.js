@@ -636,7 +636,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'logBook',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -648,7 +648,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'keyVehicle',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -660,7 +660,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'incidentReport',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -672,7 +672,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'smartWands',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -693,7 +693,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             data: 'completedRounds',
             name: 'completedRoundsCol',
-            width: '6%',
+            width: '9%',
             defaultContent: '',
             className: "text-center",
             visible: (userRole === "1"),
@@ -705,8 +705,12 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
                     if (data.tourMode === 'STND') {
 
-                        return value +
-                            ' [<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        var bgcolr = '#A9A9A9';
+                        if (value > 0)
+                            bgcolr = '#FFD580';
+
+                        return data.patrolFqForDayOrHour + '<span class="p-1" style="background: ' + bgcolr + ';">' + value + '</span>' +
+                            '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
                             'data-client="' + data.clientSiteId + '" ' +
                             'data-guard="' + data.guardId + '" ' +
                             'data-value="' + value + '">?</a>]';
@@ -750,7 +754,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'rcColorId',
-            width: '5%',
+            width: '8%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return '';

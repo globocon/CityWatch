@@ -426,7 +426,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 HR3 = detail.HR3,
                 CompletedRounds = detail.CompletedRounds,
                 haswandtags = detail.haswandtags,
-                TourMode = detail.TourMode
+                TourMode = detail.TourMode,
+                PatrolFqForDayOrHour = detail.PatrolFqForDayOrHour
             }).ToList();
 
             //// 5. Clean SiteName
