@@ -437,6 +437,14 @@ namespace CityWatch.Web.Pages.roster
                 var existing = await _context.RosterSchedules.FindAsync(shiftId.Value);
                 if (existing == null) return new JsonResult(new { success = false, message = "Shift not found." });
 
+                // Capture old values for detailed logging
+                var oldGuardId = existing.GuardId;
+                var oldReliefGuardId = existing.ReliefGuardId;
+                var oldStart = existing.ShiftStart;
+                var oldEnd = existing.ShiftEnd;
+                int oldStatusVal = (int)existing.Status;
+
+                // Update the entity
                 existing.ClientSiteId = siteId;
                 existing.ShiftStart = start;
                 existing.ShiftEnd = end;
@@ -448,6 +456,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
                 existing.ReliefReasonOther = reliefReasonOther;
+
                 var finalShiftType = shiftType;
                 var finalStatus = RosterShiftStatus.Pushed;
 
@@ -457,17 +466,27 @@ namespace CityWatch.Web.Pages.roster
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
-                int oldStatus = (int)existing.Status;
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
 
                 // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
 
-                // 2. Separately try to log the audit entry
+                // 2. Build a detailed change message
                 try
                 {
-                    int oldStatusVal = oldStatus;
+                    var changes = new List<string>();
+                    if (oldGuardId != guardId) changes.Add("Guard changed");
+                    if (oldReliefGuardId != reliefGuardId) 
+                    {
+                        if (reliefGuardId.HasValue) changes.Add("Relief Guard added");
+                        else changes.Add("Relief Guard removed");
+                    }
+                    if (oldStart != start || oldEnd != end) changes.Add("Time changed");
+                    if (oldStatusVal != (int)finalStatus) changes.Add($"Status changed to {finalStatus}");
+
+                    string detailedMessage = changes.Count > 0 ? string.Join(", ", changes) : "Shift updated (no major changes)";
+
                     var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
                     int? parsedUserId = null;
                     if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
@@ -482,7 +501,7 @@ namespace CityWatch.Web.Pages.roster
                         UserId = parsedUserId,
                         ActionSource = "Web",
                         Action = "Edited",
-                        Details = "Shift updated by admin.",
+                        Details = detailedMessage,
                         IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                         Platform = Request.Headers["User-Agent"].ToString(),
                         OldStatus = oldStatusVal,
@@ -492,7 +511,7 @@ namespace CityWatch.Web.Pages.roster
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create roster audit log for Edit.");
+                    _logger.LogError(ex, "Failed to create detailed roster audit log for Edit.");
                 }
                 
                 // Real-time broadcast
