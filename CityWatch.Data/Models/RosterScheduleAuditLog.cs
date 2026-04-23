@@ -28,7 +28,6 @@ namespace CityWatch.Data.Models
         [StringLength(50)]
         public string IPAddress { get; set; }
 
-        [StringLength(100)]
         public string Platform { get; set; } // e.g., "Mobile (Android)", "Web (Chrome)"
 
         public int? OldStatus { get; set; }

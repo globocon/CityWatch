@@ -468,7 +468,7 @@ namespace CityWatch.Web.Pages.roster
                 try
                 {
                     int oldStatusVal = oldStatus;
-                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
                     int? parsedUserId = null;
                     if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
                     {
@@ -543,7 +543,7 @@ namespace CityWatch.Web.Pages.roster
 
                 try
                 {
-                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
                     int? parsedUserId = null;
                     if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
                     {
@@ -718,7 +718,7 @@ namespace CityWatch.Web.Pages.roster
                 // 2. Separately try to log the audit entry
                 try
                 {
-                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
                     int? parsedUserId = null;
                     if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
                     {
