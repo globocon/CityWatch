@@ -1642,6 +1642,12 @@
                         $('#modalReliefProviderId').append(newOption).trigger('change');
                     }
                 }
+                
+                // Auto-check "Other" if no reason is currently checked
+                if ($('.relief-reason-chk:checked').length === 0) {
+                    $('#chkOther').prop('checked', true).trigger('change');
+                    $('#modalReliefReasonOther').show().val('Relief Guard assigned manually');
+                }
             }).on('select2:unselect', function(e) {
                 $('#modalReliefProviderId').val(null).trigger('change');
             });
@@ -2039,6 +2045,7 @@
                 var start = card.data('start');
                 var end = card.data('end');
 
+                $('#modalGuardId').empty();
                 if (guardId) {
                     var guardName = card.data('guardname');
                     var newOption = new Option(guardName, guardId, true, true);
@@ -2047,6 +2054,7 @@
                     $('#modalGuardId').val(null).trigger('change');
                 }
 
+                $('#modalProviderId').empty();
                 if (provider) {
                     var provOption = new Option(provider, provider, true, true);
                     $('#modalProviderId').append(provOption).trigger('change');
@@ -2079,16 +2087,16 @@
                 if (rGuardId) {
                     var rGuardName = card.data('reliefguardname');
                     var rOption = new Option(rGuardName, rGuardId, true, true);
-                    $('#modalReliefGuardId').append(rOption).trigger('change');
+                    $('#modalReliefGuardId').empty().append(rOption).trigger('change');
                 } else {
-                    $('#modalReliefGuardId').val(null).trigger('change');
+                    $('#modalReliefGuardId').empty().val(null).trigger('change');
                 }
 
                 if (rProvider) {
                     var rpOption = new Option(rProvider, rProvider, true, true);
-                    $('#modalReliefProviderId').append(rpOption).trigger('change');
+                    $('#modalReliefProviderId').empty().append(rpOption).trigger('change');
                 } else {
-                    $('#modalReliefProviderId').val(null).trigger('change');
+                    $('#modalReliefProviderId').empty().val(null).trigger('change');
                 }
 
                 $('#modalReliefReason').val(rReason || "");

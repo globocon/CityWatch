@@ -4487,15 +4487,27 @@ namespace CityWatch.Web.API
                 // 4. Process status update to 'Declined'
                 else if (model.NewStatus == RosterShiftStatus.Declined)
                 {
-                    // Only the assigned guard or existing relief guard can decline
-                    if (shift.GuardId == model.CallingGuardId || shift.ReliefGuardId == model.CallingGuardId)
+                    bool canDecline = false;
+                    
+                    if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
+                    {
+                        // If a relief guard is assigned, ONLY the relief guard can decline it
+                        canDecline = (shift.ReliefGuardId == model.CallingGuardId);
+                    }
+                    else
+                    {
+                        // No relief guard assigned, so only the original assigned guard can decline
+                        canDecline = (shift.GuardId == model.CallingGuardId);
+                    }
+
+                    if (canDecline)
                     {
                         shift.Status = RosterShiftStatus.Declined;
                         shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
                     }
                     else
                     {
-                        return BadRequest(new { isSuccess = false, message = "Only the assigned guard can decline this shift." });
+                        return BadRequest(new { isSuccess = false, message = "You are not authorized to decline this shift." });
                     }
                 }
 
