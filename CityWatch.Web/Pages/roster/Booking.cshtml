@@ -153,8 +153,16 @@
                 <div class="col-auto flex-grow-1 text-center">
                     <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
                         <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
-                        <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
+                        <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="displayWeekRange">@Model.WeekRange</span>
                         <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                        
+                        <div class="border-left ml-2 pl-2" id="createModeContainer">
+                            <select id="createModeSelect" class="form-control form-control-sm border-0 bg-light" style="width: 100px; height: 28px; font-size: 0.8rem;">
+                                <option value="1">Weekly</option>
+                                <option value="2">Fortnight</option>
+                                <option value="4">Monthly</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -1245,12 +1253,18 @@
 }
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script>
         $(document).ready(function () {
+            var isPageLocked = @(Model.IsLocked ? "true" : "false");
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
-            var activeTab = '@Model.ActiveTab';
+            var activeTab = '@(Model.ActiveTab ?? "projects")';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var currentWeeks = parseInt('@Model.Weeks') || 1;
+
+            // Set initial dropdown value
+            $('#createModeSelect').val(currentWeeks);
             var projectFinancialMode = false;
             var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
             var projectSupplierMode = false;
@@ -1343,17 +1357,31 @@
             });
 
             // Week navigation handlers
-            $('#btnPrevWeek, #btnPrevWeekBinder').on('click', function(e) {
+            $('#btnPrevWeek').on('click', function (e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + previousWeekDate + '&tab=' + activeTab;
-                if (currentGroupId) url += '&groupId=' + currentGroupId;
-                if (currentBinderId) url += '&binderId=' + currentBinderId;
-                window.location.href = url;
+                var start = new Date(currentStartDate);
+                start.setDate(start.getDate() - 7);
+                location.href = '/roster/Booking?startDate=' + moment(start).format('YYYY-MM-DD') + 
+                    (currentGroupId ? '&groupId=' + currentGroupId : '') + 
+                    (currentBinderId ? '&binderId=' + currentBinderId : '') + 
+                    '&tab=' + activeTab +
+                    '&weeks=' + currentWeeks;
             });
 
-            $('#btnNextWeek, #btnNextWeekBinder').on('click', function(e) {
+            $('#btnNextWeek').on('click', function (e) {
                 e.preventDefault();
-                var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab;
+                var start = new Date(currentStartDate);
+                start.setDate(start.getDate() + 7);
+                location.href = '/roster/Booking?startDate=' + moment(start).format('YYYY-MM-DD') + 
+                    (currentGroupId ? '&groupId=' + currentGroupId : '') + 
+                    (currentBinderId ? '&binderId=' + currentBinderId : '') + 
+                    '&tab=' + activeTab +
+                    '&weeks=' + currentWeeks;
+            });
+
+            $('#btnPrevWeekBinder, #btnNextWeekBinder').on('click', function(e) {
+                e.preventDefault();
+                var url = '/roster/Booking?startDate=' + (this.id === 'btnPrevWeekBinder' ? previousWeekDate : nextWeekDate) + '&tab=' + activeTab;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
@@ -1707,35 +1735,80 @@
                 return name.substring(0, maxLength - 2) + "..";
             }
 
+            $('#createModeSelect').on('change', function() {
+                currentWeeks = parseInt($(this).val());
+                loadRoster();
+            });
+
             function loadRoster() {
-                console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
 
-                var today = new Date();
-                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-                $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+                $('#roster_grid tbody').empty().append('<tr><td colspan="' + (1 + (currentWeeks * 7)) + '" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+                
+                // Show/hide mode selector based on tab
+                if (activeTab === 'groups') {
+                    $('#createModeContainer').hide();
+                    currentWeeks = 1;
+                } else {
+                    $('#createModeContainer').show();
+                }
 
                 $.ajax({
                     url: '/roster/Booking?handler=LoadRoster',
                     type: 'GET',
-                    data: { groupId: currentGroupId, startDate: currentStartDate },
+                    data: { groupId: currentGroupId, startDate: currentStartDate, weeks: currentWeeks },
                     success: function (res) {
                         var tbody = $('#roster_grid tbody');
                         tbody.empty();
+                        
+                        // Update header date range text
+                        var start = new Date(currentStartDate);
+                        var end = new Date(start);
+                        end.setDate(start.getDate() + (currentWeeks * 7) - 1);
+                        var rangeText = moment(start).format('DD MMM YYYY') + ' - ' + moment(end).format('DD MMM YYYY');
+                        $('#displayWeekRange').text(rangeText);
 
+                        // Update Table Header
+                        var thead = $('#roster_grid thead');
+                        thead.empty();
+                        var headerRow = '<tr><th style="width: 15%;">Client Site</th>';
+                        var colWidth = 85 / (currentWeeks * 7);
+                        for (var w = 0; w < currentWeeks; w++) {
+                            for (var i = 0; i < 7; i++) {
+                                var idx = (w * 7) + i;
+                                var dayDate = new Date(start);
+                                dayDate.setDate(start.getDate() + idx);
+                                var ph = res.holidays[idx];
+                                var phIcon = ph && ph.isPublicHoliday ? ' <i class="fa fa-sun-o text-warning"></i>' : '';
+                                headerRow += '<th style="width: ' + colWidth + '%;" title="' + (ph ? ph.reasons : '') + '">' +
+                                    '<div>' + moment(dayDate).format('ddd DD MMM') + phIcon + '</div>' +
+                                    '<div>' + moment(dayDate).format('YYYY') + '</div>' +
+                                    '</th>';
+                            }
+                        }
+                        headerRow += '</tr>';
+                        thead.append(headerRow);
+                        
+                        // Update Table Footer Daily Total Cells
+                        var tfoot = $('#roster_grid tfoot');
+                        tfoot.find('.day-total').closest('td').not(':first').remove(); 
+                        for (var idx = 0; idx < (currentWeeks * 7); idx++) {
+                            tfoot.find('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value day-total" data-day="' + idx + '">0</span></div></td>');
+                        }
+                        $('#roster_footer').show();
+
+                        var totalCols = 1 + (currentWeeks * 7);
                         if (res.results.length === 0) {
-                            tbody.append('<tr><td colspan="8" class="text-center text-muted">No sites added to this project. Search and add a site above.</td></tr>');
-                            $('#roster_footer').hide();
+                            tbody.append('<tr><td colspan="' + totalCols + '" class="text-center text-muted p-4">No sites added to this project yet.</td></tr>');
                             return;
                         }
 
-                        var dailyTotals = [0, 0, 0, 0, 0, 0, 0];
+                        var dailyTotals = new Array(currentWeeks * 7).fill(0);
                         var grandTotal = 0;
 
-                        // Add Project Header Row for consistency with Groups tab
+                        // Add Project Header Row
                         var projName = $('#project_name option:selected').text() || 'Selected Project';
-                        var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
+                        var headerHtml = '<tr class="bg-light"><td colspan="' + totalCols + '" class="py-1 px-3">' +
                             '<div class="d-flex align-items-center justify-content-between">' +
                             '<div class="d-flex align-items-center">' +
                                 '<i class="fa fa-folder-open text-primary mr-2"></i><strong style="font-size: 1rem;">Project: ' + projName + '</strong>' +
@@ -1770,24 +1843,30 @@
                                 }
                             }
 
+                            var siteHeaderHtml = '<strong>' + row.siteName + '</strong><br/><small class="text-muted">' + row.clientTypeName + '</small>';
+                            if (currentWeeks > 1 && row.weekStatuses) {
+                                siteHeaderHtml += '<div class="mt-1">';
+                                row.weekStatuses.forEach(function(s, wi) {
+                                    siteHeaderHtml += '<div style="font-size: 10px; line-height: 1.1;"><span class="text-muted">W' + (wi+1) + ':</span> <span class="font-weight-bold ' + (s === 'Paid' ? 'text-success' : 'text-primary') + '">' + s + '</span></div>';
+                                });
+                                siteHeaderHtml += '</div>';
+                            }
 
+                            var isPageLocked = @(Model.IsLocked ? "true" : "false");
                             var rowHtml = '<tr id="row_' + row.siteId + '">' +
-                                '<td class="d-flex flex-column" style="min-height: 120px;">' + 
-                                    '<div><strong class="text-truncate d-block" style="max-width: 180px;" title="' + row.siteName + '">' + row.siteName + '</strong></div>' + 
-                                    '<small class="text-muted">' + row.clientTypeName + '</small>' +
-                                    (@(Model.IsLocked ? "false" : "true") ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
+                                '<td class="d-flex flex-column" style="min-height: 120px; border-right: 1px solid #dee2e6 !important;">' + 
+                                    siteHeaderHtml +
+                                    (!isPageLocked ? '<i class="fa fa-trash btn-delete-site" title="Remove Site from Group" onclick="deleteSiteFromGroup(' + row.siteId + ', \'' + row.siteName.replace(/'/g, "\\'") + '\')"></i>' : '') + 
                                     statusHtml + 
                                 '</td>';
 
                             row.days.forEach(function (daySchedules, index) {
-                                var cellDate = new Date(currentStartDate);
-                                cellDate.setDate(cellDate.getDate() + index);
-                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
-
-                                    var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
-                                    var phClass = isPh ? "ph-highlight" : "";
-                                    var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
-                                    rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
+                                var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
+                                var phClass = isPh ? "ph-highlight" : "";
+                                var phReason = (row.publicHolidayReasons && row.publicHolidayReasons[index]) || "";
+                                
+                                rowHtml += '<td class="day-cell ' + phClass + '" data-site="' + row.siteId + '" data-day="' + index + '" title="' + phReason + '">';
+                                
                                 daySchedules.forEach(function (s) {
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
@@ -1801,47 +1880,25 @@
                                     dailyTotals[index] += shiftValue;
                                     grandTotal += shiftValue;
 
-                                     var typeClass = '';
+                                    var typeClass = '';
                                     if (s.shiftType === 'AdhocAccepted') typeClass = 'adhoc-accepted';
                                     else if (s.shiftType === 'AdhocNotAccepted') typeClass = 'adhoc-not-accepted';
 
-                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
+                                    rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" data-id="' + s.id + '" data-status="' + s.status + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
-                                        '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
-                                            ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                        '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + (s.reliefGuardName || s.reliefProviderName || s.guardName) + '</div>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; margin-top: 1px;">' +
+                                            '<span>' + s.shiftStart + '-' + s.shiftEnd + '</span>' +
+                                            '<span class="hour-badge">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
-                                        (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
-                                        '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
-                                            '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
-                                        '</div>' +
-                                        (projectSupplierMode ? 
-                                            '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + s.guardProvider + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
-                                            ''
-                                        ) +
-                                        (projectFinancialMode ? 
-                                            '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + shiftValue.toFixed(2) + '</div>' : 
-                                            ''
-                                        ) +
-                                        (!projectSupplierMode && s.callsignName ? '<div class="mt-1" style="font-weight:bold;">' + s.callsignName + '</div>' : '') +
-                                        (!isDayLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
-                                        (!isDayLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
-                                        '<div class="shift-card-popup">' +
-                                        '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
-                                        '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
-                                        '</div>' +
+                                        (!isPageLocked ? '<span class="btn-delete-shift" onclick="deleteShift(' + s.id + ', event)"><i class="fa fa-times"></i></span>' : '') +
+                                        (!isPageLocked ? '<span class="btn-edit-shift" onclick="editShift(' + s.id + ', event)"><i class="fa fa-pencil"></i></span>' : '') +
                                         '</div>';
                                 });
 
-                                if (!isDayLocked) {
+                                if (!isPageLocked) {
                                     rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-day="' + index + '" data-site="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
                                 }
                                 rowHtml += '</td>';
@@ -1852,23 +1909,21 @@
                         });
 
                         // Update Footer Totals
-                        $('#roster_footer').show();
-                        
                         if (projectFinancialMode) {
                             $('#grand_total_hours').text('$' + grandTotal.toFixed(2));
-                            $('.total-label:contains("Weekly Total")').text("Weekly Pay");
+                            $('.total-label:contains("Total")').first().text("Range Pay");
                         } else {
                             $('#grand_total_hours').text(grandTotal.toFixed(2).replace(/\.00$/, '') + 'h');
-                            $('.total-label:contains("Weekly Pay")').text("Weekly Total");
+                            $('.total-label:contains("Pay")').first().text("Range Total");
                         }
 
                         $('.day-total').each(function () {
-                            var day = $(this).data('day');
-                            var val = dailyTotals[day];
+                            var d = $(this).data('day');
+                            var v = dailyTotals[d];
                             if (projectFinancialMode) {
-                                $(this).text('$' + val.toFixed(2));
+                                $(this).text('$' + v.toFixed(2));
                             } else {
-                                $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
+                                $(this).text(v.toFixed(2).replace(/\.00$/, '') + 'h');
                             }
                         });
                     }
