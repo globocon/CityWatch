@@ -147,52 +147,108 @@ namespace CityWatch.Web.Services
             return dailyGuardLogGroups.ToList();
         }
 
+        //public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
+        //{
+
+        //    List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
+        //    List<ClientSiteSmartWandTagsHitLog> filterLogs = new List<ClientSiteSmartWandTagsHitLog>();
+        //    List<ClientSiteSmartWand> smartWands = new List<ClientSiteSmartWand>();
+
+        //    List<Guard> guards = new List<Guard>();
+        //    List<ClientSite> clientSites = new List<ClientSite>();
+
+        //    guards = _guardDataProvider.GetGuards();
+        //    int? Id = null;
+        //    clientSites = _guardLogDataProvider.GetClientSites(Id);
+
+        //    strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
+        //    smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
+
+        //    if (strikeLogs.Any())
+        //    {
+        //        foreach (var item in strikeLogs.Where(x => x.SmartWandId.HasValue && x.SmartWandId.Value > 0))
+        //        {
+        //            var smartWand = smartWands.FirstOrDefault(z => z.Id == item.SmartWandId.Value);
+        //            if (smartWand != null)
+        //            {
+        //                item.SmartWandNameId = smartWand.SmartWandId;
+        //            }
+        //        }
+
+        //        filterLogs = strikeLogs.Where(z =>
+        //           (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
+        //           (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+        //           (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
+        //           (string.IsNullOrEmpty(wsRequest.SmartWandId) || wsRequest.SmartWandIds.Contains(z.SmartWandNameId)) &&
+        //           (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
+        //           (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
+        //       ).ToList();
+        //    }
+
+        //    var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
+        //    {
+        //        clientSiteSmartWandTagsHitLog = z
+        //    })
+        //        .ToList();
+
+        //    return filteredLogs;
+
+        //}
         public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
         {
+            var strikeLogs = _clientSiteWandDataProvider
+                .GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
 
-            List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
-            List<ClientSiteSmartWandTagsHitLog> filterLogs = new List<ClientSiteSmartWandTagsHitLog>();
-            List<ClientSiteSmartWand> smartWands = new List<ClientSiteSmartWand>();
+            if (!strikeLogs.Any())
+                return new List<WandStrikeAuditLogViewModel>();
 
-            List<Guard> guards = new List<Guard>();
-            List<ClientSite> clientSites = new List<ClientSite>();
-
-            guards = _guardDataProvider.GetGuards();
-            int? Id = null;
-            clientSites = _guardLogDataProvider.GetClientSites(Id);
-
-            strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
-            smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
-                        
-            if (strikeLogs.Any())
-            {
-                foreach (var item in strikeLogs.Where(x => x.SmartWandId.HasValue && x.SmartWandId.Value > 0))
+            // ✅ 1. REMOVE DUPLICATES (VERY IMPORTANT)
+            strikeLogs = strikeLogs
+                .GroupBy(x => new
                 {
-                    var smartWand = smartWands.FirstOrDefault(z => z.Id == item.SmartWandId.Value);
-                    if (smartWand != null)
-                    {
-                        item.SmartWandNameId = smartWand.SmartWandId;
-                    }
-                }
-                                
-                filterLogs = strikeLogs.Where(z =>
-                   (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
-                   (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
-                   (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
-                   (string.IsNullOrEmpty(wsRequest.SmartWandId) || wsRequest.SmartWandIds.Contains(z.SmartWandNameId)) &&
-                   (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
-                   (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
-               ).ToList();
-            }
-
-            var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
-            {
-                clientSiteSmartWandTagsHitLog = z
-            })
+                    x.TagUId,
+                    x.HitUtcDateTime,
+                    x.LoggedInGuardId
+                })
+                .Select(g =>
+                {
+                    // ✅ Prefer record that has LinkedClientSite (actual scan site)
+                    return g.OrderByDescending(x => x.TagLinkedClientSiteId.HasValue).First();
+                })
                 .ToList();
 
-            return filteredLogs;
+            // ✅ 2. Load ALL smart wands
+            var smartWands = _clientSiteWandDataProvider.GetAllSmartWands();
+            var smartWandDict = smartWands.ToDictionary(x => x.Id, x => x.SmartWandId);
 
+            // ✅ 3. Map SmartWand safely
+            foreach (var item in strikeLogs)
+            {
+                if (item.SmartWandId.HasValue && smartWandDict.ContainsKey(item.SmartWandId.Value))
+                {
+                    item.SmartWandNameId = smartWandDict[item.SmartWandId.Value];
+                }
+                
+            }
+
+            // ✅ 4. Apply filters safely
+            var filterLogs = strikeLogs.Where(z =>
+                (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
+                (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
+                (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
+                (string.IsNullOrEmpty(wsRequest.SmartWandId) ||
+                    (!string.IsNullOrEmpty(z.SmartWandNameId) && wsRequest.SmartWandIds.Contains(z.SmartWandNameId))) &&
+                (string.IsNullOrEmpty(wsRequest.GuardName) ||
+                    (z.LoggedInGuard != null && z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase))) &&
+                (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) ||
+                    (z.LoggedInGuard != null && string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase)))
+            ).ToList();
+
+            // ✅ 5. Final mapping
+            return filterLogs.Select(z => new WandStrikeAuditLogViewModel
+            {
+                clientSiteSmartWandTagsHitLog = z
+            }).ToList();
         }
     }
 }

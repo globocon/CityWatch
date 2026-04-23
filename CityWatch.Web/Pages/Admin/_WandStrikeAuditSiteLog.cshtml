@@ -43,6 +43,15 @@
 			<label class="mx-1">Client Site</label>
 			<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeClientSiteId"></select>
 		</div>
+		<div class="form-group col-md-2">
+			<label class="mx-1">Patrol Car</label>
+			<div class="custom-control custom-switch custom-control-inline pt-2">
+				<input type="checkbox" class="custom-control-input" id="wandStrikeIsPatrolCar">
+				<label class="custom-control-label" for="wandStrikeIsPatrolCar"></label>
+			</div>
+			<select class="form-control mx-1 wandstrikemultiselect" asp-items="viewDataService.GetOfficerPositionsNewForWandStrike(OfficerPositionFilter.PatrolOnly)" multiple="multiple" id="wandstrikePatrolCarId"></select>
+			
+		</div>
 		@* <div class="form-group" style="width: 157px !important;">
 			<label class="mx-1" for="KeyVehicleKeydownselect">Keyword Downselect</label>
 			<input type="text" class="form-control"  asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyVehicleDownselect" />
@@ -55,7 +64,7 @@
 			<label class="mx-1" for="wandstrikeAudtitToDate">To Date</label>
 			<input type="date" class="form-control" id="wandstrikeAudtitToDate">
 		</div>
-		<div class="form-group col-md-4">
+		<div class="form-group col-md-2">
 			<label class="mx-1">&nbsp;</label>
 			<div>
 				<button type="button" class="btn btn-primary" id="btnGenerateWandstrikeAuditReport">View Report</button>

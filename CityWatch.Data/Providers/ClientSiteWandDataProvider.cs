@@ -40,6 +40,8 @@ namespace CityWatch.Data.Providers
         void DeleteClientSiteEquipments(int id);
         bool SaveOfflineSmartWandTagHitDataRecordError(ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced _offlineRecordsNotSynced);
         List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags();
+        List<ClientSiteSmartWand> GetAllSmartWands();
+        List<ClientSiteSmartWandTagsHitLog> GetSmartWandsIdswithloggedinClientSiteId(int[] clientSiteIds);
 
     }
 
@@ -343,77 +345,124 @@ namespace CityWatch.Data.Providers
             return tagList;
         }
 
+        //public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
+        //{
+        //    toDate = toDate.AddDays(1); // Include the entire 'toDate' day
+
+        //    // Step 1: Get UTC offsets per client site
+        //    var utcOffsets = _dbContext.ClientSiteKpiSettings
+        //        .Where(x => clientSiteIds.Contains(x.ClientSiteId))
+        //        .Select(x => new
+        //        {
+        //            x.ClientSiteId,
+        //            _siteUTC = x.UTC.Replace("+", "") ?? "+10:00" // Default to +10:00 if null
+        //        })
+        //        .ToList();
+
+        //    // Prepare a list to accumulate matching logs
+        //    var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
+
+        //    foreach (var site in utcOffsets)
+        //    {
+        //        // Step 2: Parse UTC offset like "+05:30" or "-04:00"
+        //        if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
+        //        {
+        //            // Default offset if parsing fails (you can customize this)
+        //            offset = TimeSpan.Zero;
+        //        }
+
+        //        // Step 3: Convert the local from/to to UTC for this site
+        //        var fromUtc = fromDate - offset;
+        //        var toUtc = toDate - offset;
+
+        //        // Step 4: Get logs for this client site in the adjusted range
+        //        var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
+        //            .Where(x =>
+        //                (x.LoggedInClientSiteId == site.ClientSiteId ||
+        //                 (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
+        //                x.HitUtcDateTime >= fromUtc &&
+        //                x.HitUtcDateTime <= toUtc)
+        //            .Include(x => x.SmartWandTagsType)
+        //            .Include(x => x.LoggedInClientSite)
+        //            .Include(x => x.LinkedClientSite)
+        //            .Include(x => x.LoggedInGuard)
+        //            .Include(x => x.LoggedInUser)
+        //            .ToList();
+
+        //        var logsWithLocal = logs.Select(log => new ClientSiteSmartWandTagsHitLog
+        //        {
+        //            Id = log.Id,
+        //            LoggedInClientSiteId = log.LoggedInClientSiteId,
+        //            LoggedInUserId = log.LoggedInUserId,
+        //            LoggedInGuardId = log.LoggedInGuardId,
+        //            TagUId = log.TagUId,
+        //            TagsTypeId = log.TagsTypeId,
+        //            LabelDescription = log.LabelDescription,
+        //            TagLinkedClientSiteId = log.TagLinkedClientSiteId,
+        //            HitUtcDateTime = log.HitUtcDateTime,
+        //            HitLocalDateTime = log.HitUtcDateTime + offset, // Add local time conversion
+        //            LoggedInClientSite = log.LoggedInClientSite,
+        //            LinkedClientSite = log.LinkedClientSite,
+        //            SmartWandTagsType = log.SmartWandTagsType,
+        //            SmartWandNameId = log.SmartWandNameId,
+        //            SmartWandId = log.SmartWandId,
+        //            LoggedInGuard = log.LoggedInGuard,
+        //            LoggedInUser = log.LoggedInUser
+        //        }).Where(l => l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
+
+        //        matchingLogs.AddRange(logsWithLocal);
+        //    }
+
+        //    return matchingLogs;
+        //}
         public List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
         {
-            toDate = toDate.AddDays(1); // Include the entire 'toDate' day
+            toDate = toDate.AddDays(1);
 
-            // Step 1: Get UTC offsets per client site
+            // Get UTC offsets
             var utcOffsets = _dbContext.ClientSiteKpiSettings
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-                .Select(x => new
-                {
-                    x.ClientSiteId,
-                    _siteUTC = x.UTC.Replace("+", "") ?? "+10:00" // Default to +10:00 if null
-                })
+                .ToDictionary(x => x.ClientSiteId, x => x.UTC.Replace("+", "") ?? "10:00");
+
+            // Get logs ONCE (no loop)
+            var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(x =>
+                    clientSiteIds.Contains(x.LoggedInClientSiteId) ||
+                    (x.TagLinkedClientSiteId.HasValue && clientSiteIds.Contains(x.TagLinkedClientSiteId.Value))
+                )
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.LoggedInClientSite)
+                .Include(x => x.LinkedClientSite)
+                .Include(x => x.LoggedInGuard)
+                .Include(x => x.LoggedInUser)
                 .ToList();
 
-            // Prepare a list to accumulate matching logs
-            var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
+            var result = new List<ClientSiteSmartWandTagsHitLog>();
 
-            foreach (var site in utcOffsets)
+            foreach (var log in logs)
             {
-                // Step 2: Parse UTC offset like "+05:30" or "-04:00"
-                if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
-                {
-                    // Default offset if parsing fails (you can customize this)
+                // Pick ONE site for timezone (avoid duplication)
+                var siteId = log.TagLinkedClientSiteId ?? log.LoggedInClientSiteId;
+
+                if (!utcOffsets.ContainsKey(siteId))
+                    continue;
+
+                var offsetStr = utcOffsets[siteId];
+
+                if (!TimeSpan.TryParse(offsetStr, out TimeSpan offset))
                     offset = TimeSpan.Zero;
-                }
 
-                // Step 3: Convert the local from/to to UTC for this site
-                var fromUtc = fromDate - offset;
-                var toUtc = toDate - offset;
+                var localTime = log.HitUtcDateTime + offset;
 
-                // Step 4: Get logs for this client site in the adjusted range
-                var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
-                    .Where(x =>
-                        (x.LoggedInClientSiteId == site.ClientSiteId ||
-                         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
-                        x.HitUtcDateTime >= fromUtc &&
-                        x.HitUtcDateTime <= toUtc)
-                    .Include(x => x.SmartWandTagsType)
-                    .Include(x => x.LoggedInClientSite)
-                    .Include(x => x.LinkedClientSite)
-                    .Include(x => x.LoggedInGuard)
-                    .Include(x => x.LoggedInUser)
-                    .ToList();
-
-                var logsWithLocal = logs.Select(log => new ClientSiteSmartWandTagsHitLog
+                if (localTime.Date >= fromDate.Date && localTime.Date < toDate.Date)
                 {
-                    Id = log.Id,
-                    LoggedInClientSiteId = log.LoggedInClientSiteId,
-                    LoggedInUserId = log.LoggedInUserId,
-                    LoggedInGuardId = log.LoggedInGuardId,
-                    TagUId = log.TagUId,
-                    TagsTypeId = log.TagsTypeId,
-                    LabelDescription = log.LabelDescription,
-                    TagLinkedClientSiteId = log.TagLinkedClientSiteId,
-                    HitUtcDateTime = log.HitUtcDateTime,
-                    HitLocalDateTime = log.HitUtcDateTime + offset, // Add local time conversion
-                    LoggedInClientSite = log.LoggedInClientSite,
-                    LinkedClientSite = log.LinkedClientSite,
-                    SmartWandTagsType = log.SmartWandTagsType,
-                    SmartWandNameId = log.SmartWandNameId,
-                    SmartWandId = log.SmartWandId,
-                    LoggedInGuard = log.LoggedInGuard,
-                    LoggedInUser = log.LoggedInUser
-                }).Where(l => l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
-
-                matchingLogs.AddRange(logsWithLocal);
+                    log.HitLocalDateTime = localTime;
+                    result.Add(log);
+                }
             }
 
-            return matchingLogs;
+            return result;
         }
-
         public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId,string tagUid)
         {
             return _dbContext.ClientSiteSmartWandTagsHitLogs
@@ -501,6 +550,27 @@ namespace CityWatch.Data.Providers
                 item.TagsType = item.SmartWandTagsType.value;
             }
             return smartwandtags;
+        }
+        public List<ClientSiteSmartWand> GetAllSmartWands()
+        {
+            return _dbContext.ClientSiteSmartWands
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
+        public List<ClientSiteSmartWandTagsHitLog> GetSmartWandsIdswithloggedinClientSiteId(int[] clientSiteIds)
+        {
+            return _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(x =>
+                    clientSiteIds.Contains(x.LoggedInClientSiteId) ||
+                    (x.TagLinkedClientSiteId.HasValue && clientSiteIds.Contains(x.TagLinkedClientSiteId.Value))
+                )
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.LoggedInClientSite)
+                .Include(x => x.LinkedClientSite)
+                .Include(x => x.LoggedInGuard)
+                .Include(x => x.LoggedInUser)
+                .ToList();
         }
     }
 }

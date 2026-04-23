@@ -707,6 +707,11 @@ namespace CityWatch.Web.Pages.Admin
                             .ToList();
 
             smartWandIds = _viewDataService.GetClientSiteSmartWandIds(arClientSiteIds);
+            if (!smartWandIds.Any())
+            {
+                var strikeLogssmartwwandids = _viewDataService .GetClientSiteSmartWandTagsByLoggedInClientsiteIds(arClientSiteIds);
+                smartWandIds = _viewDataService.GetSmartWandWithIds(strikeLogssmartwwandids); // fallback
+            }
 
             return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds });
         }
