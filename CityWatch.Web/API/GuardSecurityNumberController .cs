@@ -4442,6 +4442,10 @@ namespace CityWatch.Web.API
                     return BadRequest(new { isSuccess = false, message = "Shift status has changed. Please refresh the roster." });
                 }
 
+                int oldStatus = (int)shift.Status;
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string platform = Request.Headers["User-Agent"].ToString();
+
                 // 3. Process status update to 'Accepted'
                 if (shift.ShiftStart.Date < DateTime.Today)
                 {
@@ -4459,6 +4463,20 @@ namespace CityWatch.Web.API
                     if (shift.GuardId == model.CallingGuardId)
                     {
                         shift.Status = RosterShiftStatus.Accepted;
+                        
+                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                        {
+                            RosterScheduleId = shift.Id,
+                            ActionTime = DateTime.Now,
+                            GuardId = model.CallingGuardId,
+                            ActionSource = "Mobile",
+                            Action = "Accepted",
+                            Details = "Primary guard accepted the shift.",
+                            IPAddress = ipAddress,
+                            Platform = platform,
+                            OldStatus = oldStatus,
+                            NewStatus = (int)shift.Status
+                        });
                     }
                     // Picking up a declined shift as a Relief Guard
                     else if (shift.Status == RosterShiftStatus.Declined)
@@ -4478,6 +4496,20 @@ namespace CityWatch.Web.API
                         {
                              shift.ReliefReason = "Relief Guard assigned via Mobile";
                         }
+
+                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                        {
+                            RosterScheduleId = shift.Id,
+                            ActionTime = DateTime.Now,
+                            GuardId = model.CallingGuardId,
+                            ActionSource = "Mobile",
+                            Action = "Accepted",
+                            Details = $"Relief Guard picked up the declined shift.",
+                            IPAddress = ipAddress,
+                            Platform = platform,
+                            OldStatus = oldStatus,
+                            NewStatus = (int)shift.Status
+                        });
                     }
                     else
                     {
@@ -4488,11 +4520,18 @@ namespace CityWatch.Web.API
                 else if (model.NewStatus == RosterShiftStatus.Declined)
                 {
                     bool canDecline = false;
+                    string unauthorizedMessage = "You are not authorized to decline this shift.";
                     
                     if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
                     {
                         // If a relief guard is assigned, ONLY the relief guard can decline it
                         canDecline = (shift.ReliefGuardId == model.CallingGuardId);
+                        if (!canDecline)
+                        {
+                            var reliefGuard = await _context.Guards.FindAsync(shift.ReliefGuardId.Value);
+                            string rName = reliefGuard != null ? reliefGuard.Name : "the relief guard";
+                            unauthorizedMessage = $"You cannot modify this. Only {rName} can modify this.";
+                        }
                     }
                     else
                     {
@@ -4504,10 +4543,35 @@ namespace CityWatch.Web.API
                     {
                         shift.Status = RosterShiftStatus.Declined;
                         shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
+                        
+                        string details = $"Guard declined shift with reason: {model.Reason}";
+
+                        // If the cancelling guard is the relief guard, clear the relief guard details
+                        // so the shift becomes open for other guards to accept.
+                        if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId == model.CallingGuardId)
+                        {
+                            details = $"Relief Guard declined shift with reason: {model.Reason}";
+                            shift.ReliefGuardId = null;
+                            shift.ReliefProviderName = null;
+                        }
+
+                        _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                        {
+                            RosterScheduleId = shift.Id,
+                            ActionTime = DateTime.Now,
+                            GuardId = model.CallingGuardId,
+                            ActionSource = "Mobile",
+                            Action = "Declined",
+                            Details = details,
+                            IPAddress = ipAddress,
+                            Platform = platform,
+                            OldStatus = oldStatus,
+                            NewStatus = (int)shift.Status
+                        });
                     }
                     else
                     {
-                        return BadRequest(new { isSuccess = false, message = "You are not authorized to decline this shift." });
+                        return BadRequest(new { isSuccess = false, message = unauthorizedMessage });
                     }
                 }
 

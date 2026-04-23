@@ -457,8 +457,30 @@ namespace CityWatch.Web.Pages.roster
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
+                int oldStatus = (int)existing.Status;
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
+
+                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int? parsedUserId = null;
+                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                {
+                    parsedUserId = uid;
+                }
+
+                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                {
+                    RosterScheduleId = existing.Id,
+                    ActionTime = DateTime.Now,
+                    UserId = parsedUserId,
+                    ActionSource = "Web",
+                    Action = "Edited",
+                    Details = "Shift updated by admin.",
+                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Platform = Request.Headers["User-Agent"].ToString(),
+                    OldStatus = oldStatus,
+                    NewStatus = (int)existing.Status
+                });
 
                 await _context.SaveChangesAsync();
                 
@@ -506,6 +528,29 @@ namespace CityWatch.Web.Pages.roster
                     ShiftType = finalShiftType
                 };
                 _context.RosterSchedules.Add(schedule);
+                await _context.SaveChangesAsync();
+
+                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int? parsedUserId = null;
+                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                {
+                    parsedUserId = uid;
+                }
+
+                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                {
+                    RosterScheduleId = schedule.Id, // Captured after SaveChanges
+                    ActionTime = DateTime.Now,
+                    UserId = parsedUserId,
+                    ActionSource = "Web",
+                    Action = "Created",
+                    Details = "Shift created by admin.",
+                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Platform = Request.Headers["User-Agent"].ToString(),
+                    OldStatus = null,
+                    NewStatus = (int)schedule.Status
+                });
+
                 await _context.SaveChangesAsync();
 
                 // Real-time broadcast
@@ -647,7 +692,30 @@ namespace CityWatch.Web.Pages.roster
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
 
+                int oldStatus = (int)schedule.Status;
                 schedule.IsDeleted = true;
+
+                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int? parsedUserId = null;
+                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                {
+                    parsedUserId = uid;
+                }
+
+                _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                {
+                    RosterScheduleId = schedule.Id,
+                    ActionTime = DateTime.Now,
+                    UserId = parsedUserId,
+                    ActionSource = "Web",
+                    Action = "Deleted",
+                    Details = "Shift was deleted by admin.",
+                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Platform = Request.Headers["User-Agent"].ToString(),
+                    OldStatus = oldStatus,
+                    NewStatus = null
+                });
+
                 await _context.SaveChangesAsync();
 
                 var mobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
