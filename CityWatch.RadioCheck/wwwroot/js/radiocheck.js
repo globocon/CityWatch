@@ -4821,7 +4821,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             data: 'logBook',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -4833,7 +4833,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             data: 'keyVehicle',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -4845,7 +4845,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             data: 'incidentReport',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -4858,7 +4858,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             data: 'smartWands',
-            width: '6%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -4879,7 +4879,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
             data: 'completedRounds',
             name: 'completedRoundsCol',
-            width: '6%',
+            width: '9%',
             defaultContent: '',
             className: "text-center",
             visible: (userRoleSinglePage === "1"),
@@ -4891,7 +4891,11 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
                     if (data.tourMode === 'STND') {
 
-                        return value +
+                        var bgcolr = '#A9A9A9';
+                        if (value > 0)
+                            bgcolr = '#FFD580';
+
+                        return data.patrolFqForDayOrHour + '<span class="p-1" style="background: ' + bgcolr + ';">' + value + '</span>' +
                             ' [<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
                             'data-client="' + data.clientSiteId + '" ' +
                             'data-guard="' + data.guardId + '" ' +
@@ -4935,7 +4939,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
         {
             data: 'rcColorId',
-            width: '5%',
+            width: '8%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return '';
