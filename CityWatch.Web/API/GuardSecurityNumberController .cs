@@ -4581,6 +4581,7 @@ namespace CityWatch.Web.API
                 {
                     // Broadcast to Web (UpdateHub)
                     await _webHubContext.Clients.All.SendAsync("UpdateRoster", new { shiftId = shift.Id, siteId = shift.ClientSiteId });
+                    await _webHubContext.Clients.All.SendAsync("RefreshRoster", shift.GuardId?.ToString()); // Force a refresh like the web code does
 
                     // Broadcast to Mobile (MobileAppSignalRHub)
                     await _mobileHubContext.Clients.All.SendAsync("RefreshRoster", new { siteId = shift.ClientSiteId });
