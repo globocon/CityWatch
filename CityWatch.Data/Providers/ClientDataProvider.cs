@@ -138,6 +138,7 @@ namespace CityWatch.Data.Providers
         //to get incident reports-start-jisha
         public List<IncidentReport> GetIncidentReports(DateTime date, int clientSiteId);
         //to get incident reports-end-jisha
+        List<GuardLog> GetGuardLogsByLoginIds(int[] loginIds);
 
         List<SelectListItem> GetUserClientTypesHavingAccess(int? userId);
         void SaveClientSiteForRcLogBook(int clientSiteId);
@@ -2443,6 +2444,13 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogs
                 .Where(z => z.GuardLoginId == GuardLoginId && z.ClientSiteLogBookId == logBookId)
 
+                .ToList();
+        }
+
+        public List<GuardLog> GetGuardLogsByLoginIds(int[] loginIds)
+        {
+            return _context.GuardLogs
+                .Where(z => z.GuardLoginId.HasValue && loginIds.Contains(z.GuardLoginId.Value) && z.IsSystemEntry == false)
                 .ToList();
         }
 

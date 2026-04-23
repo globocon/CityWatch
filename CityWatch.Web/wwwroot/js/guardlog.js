@@ -9938,47 +9938,62 @@ $('#btnTimesheetConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 
     var guardLicNo = $('#GuardDownloadSop_SecurityNo').val();
+    var pinField = $('#GuardDownloadSop_PIN');
+    var guardPin = pinField.length > 0 ? pinField.val() : "ADMIN";
 
+    if (!guardLicNo) {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter License Number.');
+        return;
+    }
 
+    $('#loader').show();
+
+    // 1. Get Guard ID from License No
     $.ajax({
-        url: '/RoosterHub?handler=CheckAndCreateDownloadAuditLog1',
-        type: 'POST',
-        data: {
-            guardLicNo: guardLicNo
-        },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        if (result.success) {
-
-            $('#mdlAuthGuardForSopDownload').modal('hide');
-            //p1-339-security concern with roster- jisha-start
-            if (result.message == 'Need Pin') {
-                $('#loginRosterEditGuard').modal('show');
-                $('#txt_guardRosterKey').val('');
-                clearGuardValidationSummary('GuardRosterValidationSummary');
-                $('#hidden_rosterguardLicenses').val(guardLicNo);
-                $.ajax({
-                    url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (data) {
-                        $('#hidden_rosterguardId').val(data);
-
-                    }
-                });
-            }
-            else {
-                GetTimesheetModel(guardLicNo)
-            }
-            //p1-339-security concern with roster- jisha-end
-
-        } else {
-            console.log('Error: ', result.message);
-            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
+        url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (guardId) {
+        if (!guardId || guardId <= 0) {
+            $('#AuthGuardForSopDwnldValidationSummary1').html('Invalid License Number.');
+            $('#loader').hide();
+            return;
         }
-    }).always(function () {
+
+        // 2. Verify PIN if not Admin
+        if (guardPin !== "ADMIN") {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
+                type: 'POST',
+                data: { guardId: guardId, key: guardPin },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    proceedToTimesheetModal(guardLicNo, guardId);
+                } else {
+                    $('#AuthGuardForSopDwnldValidationSummary1').html(result.successMessage || 'Incorrect PIN.');
+                    $('#loader').hide();
+                }
+            });
+        } else {
+            // Admin Bypass
+            proceedToTimesheetModal(guardLicNo, guardId);
+        }
+    }).fail(function () {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Error verifying guard details.');
         $('#loader').hide();
     });
+
+    function proceedToTimesheetModal(licNo, id) {
+        $('#mdlAuthGuardForSopDownload').modal('hide');
+        $('#TimesheetGuard_Id1').val(id);
+        $('#TimesheetSite_Id1').val('');
+        $('#startDateRoster').val('');
+        $('#endDateRoster').val('');
+        $('#frequency').val('');
+        $('#timesheetModal').modal('show');
+        $('#loader').hide();
+    }
 });
 
 $('#btnBookingAuthConfirm').on('click', function () {
@@ -10163,6 +10178,10 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
 
 
 
+    var $btn = $('#btnDownloadTimesheetFrequencyRoster');
+    var originalText = $btn.text();
+    $btn.text('Downloading...').prop('disabled', true);
+    $('#loader').show();
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
         data: {
@@ -10173,6 +10192,8 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
+        $('#loader').hide();
+        $btn.text(originalText).prop('disabled', false);
         if (response.statusCode === -1) {
 
         } else {
@@ -10206,6 +10227,10 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
 
 
 
+    var $btn = $('#btnDownloadTimesheetRoster');
+    var originalText = $btn.text();
+    $btn.text('Downloading...').prop('disabled', true);
+    $('#loader').show();
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheet',
         data: {
@@ -10218,6 +10243,8 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         type: 'POST',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
+        $('#loader').hide();
+        $btn.text(originalText).prop('disabled', false);
         if (response.statusCode === -1) {
 
         } else {
