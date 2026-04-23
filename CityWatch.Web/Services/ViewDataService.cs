@@ -238,7 +238,11 @@ namespace CityWatch.Web.Services
 
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter);
-    }
+        int[] GetClientSiteSmartWandTagsByLoggedInClientsiteIds(int[] clientSiteIds);
+        List<SelectListItem> GetSmartWandWithIds(int[] smartwandIds);
+        List<SelectListItem> GetOfficerPositionsNewForWandStrike(OfficerPositionFilter positionFilter = OfficerPositionFilter.All);
+
+	}
 
 
     public class ViewDataService : IViewDataService
@@ -3570,9 +3574,49 @@ namespace CityWatch.Web.Services
         }
 
         //p7-137--pax-end
-    }
+        public int[] GetClientSiteSmartWandTagsByLoggedInClientsiteIds(int[] clientSiteIds)
+        {
 
-    public class DropdownItemWithAddress
+            // Get logs ONCE (no loop)
+            var logs = _clientSiteWandDataProvider.GetSmartWandsIdswithloggedinClientSiteId(clientSiteIds).Where(x => x.SmartWandId.HasValue && x.SmartWandId!=0)
+                
+            .Select(x => x.SmartWandId.Value).Distinct().ToArray();
+
+
+
+
+
+            return logs;
+        }
+        public List<SelectListItem> GetSmartWandWithIds(int[] smartwandIds)
+        {
+            var siteSmartWands = new List<SelectListItem>();
+            siteSmartWands.AddRange(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => smartwandIds.Contains(z.Id)).Select(z => new SelectListItem($"{z.SmartWandId} - [ {z.PhoneNumber} ]", z.SmartWandId)));
+            return siteSmartWands;
+        }
+		public List<SelectListItem> GetOfficerPositionsNewForWandStrike(OfficerPositionFilter positionFilter = OfficerPositionFilter.All)
+		{
+            var items = new List<SelectListItem>(); 
+			
+			var officerPositions = _configDataProvider.GetPositions();
+			foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilter.All ||
+				 positionFilter == OfficerPositionFilter.PatrolOnly && z.IsPatrolCar ||
+				 positionFilter == OfficerPositionFilter.NonPatrolOnly && !z.IsPatrolCar ||
+				 positionFilter == OfficerPositionFilter.SecurityOnly && z.Name.Contains("Security")))
+			{
+				items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
+
+
+
+			}
+
+			return items;
+		}
+
+
+	}
+
+	public class DropdownItemWithAddress
     {
         public int Id { get; set; }
         public string Name { get; set; }
