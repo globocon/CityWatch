@@ -2097,11 +2097,20 @@
 
                 if (rReason) {
                     var reasons = rReason.split(', ');
+                    var matchedAny = false;
                     reasons.forEach(function(r) {
-                        $('.relief-reason-chk[value="' + r + '"]').prop('checked', true);
+                        var chk = $('.relief-reason-chk[value="' + r + '"]');
+                        if (chk.length) {
+                            chk.prop('checked', true);
+                            matchedAny = true;
+                        }
                     });
 
-                    if ($('#chkOther').is(':checked')) {
+                    // Handle custom reasons from the Mobile App (which sets ReliefReason directly to the custom string)
+                    if (!matchedAny && reasons.length > 0) {
+                        $('#chkOther').prop('checked', true);
+                        $('#modalReliefReasonOther').show().val(rReason);
+                    } else if ($('#chkOther').is(':checked')) {
                         var otherNote = card.data('reliefreasonother') || "";
                         $('#modalReliefReasonOther').show().val(otherNote);
                     }
