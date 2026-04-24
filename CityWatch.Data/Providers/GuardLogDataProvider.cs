@@ -2005,13 +2005,8 @@ namespace CityWatch.Data.Providers
                         }
 
                         var PatrolFqForSite = kpisettingsday[item.ClientSiteId].FirstOrDefault();
-                        item.PatrolFqForDayOrHour = PatrolFqForSite?.NoOfPatrols != null ? $"{PatrolFqForSite.NoOfPatrols} P{(PatrolFqForSite.PatrolFrequency == 1 ? "D" : "H")} | " : item.PatrolFqForDayOrHour;
-
-                        //var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                        //item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"font-sm\">" +
-                        //                $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}</span>" +
-                        //                $"&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
-
+                        item.PatrolFqForDayOrHour = PatrolFqForSite?.NoOfPatrols != null ? $"{PatrolFqForSite.NoOfPatrols} P{(PatrolFqForSite.PatrolFrequency == 1 ? "D" : "H")}&nbsp;&nbsp;&nbsp;&nbsp | &nbsp;&nbsp;&nbsp;&nbsp" : item.PatrolFqForDayOrHour;
+                                               
                         var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
                         item.SiteName =
                             $"{item.SiteName}" +
