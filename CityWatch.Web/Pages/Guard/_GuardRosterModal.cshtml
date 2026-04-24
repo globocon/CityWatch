@@ -409,6 +409,53 @@
     </div>
 </div>
 
+<!-- Modal for Cancellation Reason -->
+<div class="modal fade" id="guardCancellationModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1100;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-dark text-white p-3">
+                <h6 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>Reason for Relief</h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="small text-muted mb-3 font-weight-bold text-uppercase">Please select a reason for cancelling this shift:</p>
+                
+                <div class="d-flex flex-wrap mb-3">
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optSick" name="cancelReason" class="custom-control-input" value="Sick">
+                        <label class="custom-control-label font-weight-bold" for="optSick">Sick</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optAL" name="cancelReason" class="custom-control-input" value="AL">
+                        <label class="custom-control-label font-weight-bold" for="optAL">AL</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optRDO" name="cancelReason" class="custom-control-input" value="RDO">
+                        <label class="custom-control-label font-weight-bold" for="optRDO">RDO</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optLWOP" name="cancelReason" class="custom-control-input" value="LWOP">
+                        <label class="custom-control-label font-weight-bold" for="optLWOP">LWOP</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="optOther" name="cancelReason" class="custom-control-input" value="Other">
+                        <label class="custom-control-label font-weight-bold" for="optOther">Other</label>
+                    </div>
+                </div>
+
+                <div id="cancelReasonOtherArea" style="display: none;">
+                    <label class="small font-weight-bold text-muted mb-1 text-uppercase">Specify Other Reason</label>
+                    <textarea id="txtCancelReasonOther" class="form-control border-primary" rows="2" placeholder="Enter details..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light p-2">
+                <button type="button" class="btn btn-secondary btn-sm font-weight-bold" data-dismiss="modal">CLOSE</button>
+                <button type="button" class="btn btn-danger btn-sm px-4 font-weight-bold" id="btnConfirmCancellation">CONFIRM CANCELLATION</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     var guardRosterStartDate = null;
@@ -493,6 +540,34 @@
 
         $('#adminGuardFilter').on('change', function() {
             applyGuardFilter();
+        });
+
+        // Cancellation Reason Logic
+        $('input[name="cancelReason"]').on('change', function() {
+            if ($(this).val() === 'Other') {
+                $('#cancelReasonOtherArea').slideDown();
+            } else {
+                $('#cancelReasonOtherArea').slideUp();
+            }
+        });
+
+        $('#btnConfirmCancellation').on('click', function() {
+            var selectedReason = $('input[name="cancelReason"]:checked').val();
+            var finalReason = selectedReason;
+            if (selectedReason === 'Other') {
+                finalReason = $('#txtCancelReasonOther').val();
+            }
+            
+            if (!finalReason || finalReason.trim() === "") {
+                alert("Please provide a reason for cancellation.");
+                return;
+            }
+
+            var shiftId = $(this).data('shift-id');
+            var expectedStatus = $(this).data('expected-status');
+            
+            $('#guardCancellationModal').modal('hide');
+            executeShiftStatusUpdate(shiftId, 2, expectedStatus, finalReason);
         });
     });
 
@@ -978,16 +1053,12 @@
                 } else if (currentStatus === 1) { // Green -> Black (Cancel)
                     processGuardShiftAction(shiftId, 2, 1);
                 } else if (currentStatus === 2) { // Black -> Orange (Reset)
-                     if (confirm("Do you want to reset this shift to Pushed status?")) {
-                        processGuardShiftAction(shiftId, 0, 2);
-                    }
+                    processGuardShiftAction(shiftId, 0, 2);
                 }
             } else {
                 // Not my shift - can only pickup if Black (Declined)
                 if (currentStatus === 2) {
-                    if (confirm("Do you want to add as relief guard?")) {
-                        processGuardShiftAction(shiftId, 1, 2);
-                    }
+                    processGuardShiftAction(shiftId, 1, 2, true);
                 }
             }
         }
@@ -1028,16 +1099,26 @@
     }
 
     function processGuardShiftAction(shiftId, newStatus, expectedStatus, isReliefPickup) {
-        var reason = "";
-        if (newStatus === 2) { // Cancel
-            reason = prompt("Please enter a reason for cancelling this shift:");
-            if (reason === null) return; // User cancelled prompt
-            if (reason.trim() === "") {
-                alert("Reason is required to cancel a shift.");
-                return;
-            }
+        if (newStatus === 2) { // Cancel (Green -> Black)
+            // Show custom cancellation modal
+            $('input[name="cancelReason"]').prop('checked', false);
+            $('#cancelReasonOtherArea').hide();
+            $('#txtCancelReasonOther').val('');
+            $('#btnConfirmCancellation').data('shift-id', shiftId).data('expected-status', expectedStatus);
+            $('#guardCancellationModal').modal('show');
+            return;
         }
 
+        if (isReliefPickup) {
+            if (!confirm("Do you want to add as relief guard?")) return;
+        } else if (newStatus === 0) {
+            if (!confirm("Do you want to reset this shift to Pushed status?")) return;
+        }
+
+        executeShiftStatusUpdate(shiftId, newStatus, expectedStatus, "");
+    }
+
+    function executeShiftStatusUpdate(shiftId, newStatus, expectedStatus, reason) {
         $('#loader').show();
         $.ajax({
             url: '/api/GuardSecurityNumber/UpdateShiftStatus',
@@ -1052,7 +1133,7 @@
             }),
             success: function(res) {
                 if (res.isSuccess) {
-                    loadGuardRoster(); // Reload full roster to show updated colors and assignments
+                    loadGuardRoster(); 
                 } else {
                     alert(res.message || "Action failed. Please try again.");
                 }
