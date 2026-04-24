@@ -923,7 +923,11 @@
                             if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                              var isRelief = s.reliefGuardId || s.reliefProviderName;
-                            var belongsToLoggedGuard = loggedGuardId && (s.guardId === loggedGuardId || s.reliefGuardId === loggedGuardId);
+                            // Ownership logic: If a relief guard is assigned, they are the ONLY owner. 
+                            // Otherwise, the main guard is the owner.
+                            var belongsToLoggedGuard = loggedGuardId && (
+                                s.reliefGuardId ? (s.reliefGuardId === loggedGuardId) : (s.guardId === loggedGuardId)
+                            );
                             
                             // Check if date is today or future
                             var shiftDate = new Date(s.shiftDate || loopDate);
@@ -1059,7 +1063,11 @@
 
             var shiftGuardId = card.data('guard-id') ? parseInt(card.data('guard-id')) : null;
             var shiftReliefId = card.data('relief-guard-id') ? parseInt(card.data('relief-guard-id')) : null;
-            var belongsToMe = (shiftGuardId === loggedGuardId) || (shiftReliefId === loggedGuardId);
+            
+            // Ownership logic: If relief exists, only relief guard can edit. Otherwise, main guard.
+            var belongsToMe = loggedGuardId && (
+                shiftReliefId ? (shiftReliefId === loggedGuardId) : (shiftGuardId === loggedGuardId)
+            );
 
             if (belongsToMe) {
                 if (currentStatus === 0) { // Orange (Pending) -> Green (Accept)

@@ -4469,6 +4469,10 @@ namespace CityWatch.Web.API
                     // Primary guard accepting their own shift
                     if (shift.GuardId == model.CallingGuardId)
                     {
+                        if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
+                        {
+                            return BadRequest(new { isSuccess = false, message = "This shift is already assigned to a relief guard." });
+                        }
                         shift.Status = RosterShiftStatus.Accepted;
                     }
                     // Picking up a declined shift as a Relief Guard
