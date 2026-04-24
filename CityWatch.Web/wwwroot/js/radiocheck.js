@@ -1815,7 +1815,7 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                 $('#loginHrNewPasswordSetGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal');
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val());
                     return;
                 }
 
@@ -1905,7 +1905,7 @@ $('#btnGuardHrUpdate').on('click', function () {
                 $('#loginHrEditGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal');
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val());
                     return;
                 }
 
