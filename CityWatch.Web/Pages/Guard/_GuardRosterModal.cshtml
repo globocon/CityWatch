@@ -137,18 +137,51 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
-    .guard-shift-license {
-        font-size: 9px;
-        color: rgba(255,255,255,0.85);
-        margin-top: 3px;
-        font-weight: 300;
-    }
-
     .guard-shift-time {
         font-weight: 700;
         margin-top: 4px;
         font-size: 10px;
     }
+
+    /* Action Buttons & Edit Icon */
+    .guard-edit-icon {
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .guard-shift-actions {
+        margin-top: 8px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        gap: 5px;
+    }
+    
+    .btn-roster-action {
+        flex: 1;
+        font-size: 9px;
+        padding: 3px 5px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        transition: all 0.2s;
+    }
+    
+    .btn-roster-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .btn-roster-accept { background: rgba(76, 175, 80, 0.4); }
+    .btn-roster-cancel { background: rgba(244, 67, 54, 0.4); }
+    .btn-roster-relief { background: rgba(156, 39, 176, 0.4); }
 
     /* Remuneration Summary Styles */
     #remuneration-summary-section {
@@ -377,6 +410,7 @@
 <script>
     var guardRosterStartDate = null;
     var currentGuardSiteId = null;
+    var loggedGuardId = null;
     var isAdminRoster = false;
     var isAdminFinancialsOn = false;
     var isAdminSupplierOn = false;
@@ -459,9 +493,10 @@
         });
     });
 
-    function openGuardRosterPortal(siteId, _isAdmin) {
+    function openGuardRosterPortal(siteId, _isAdmin, guardId) {
         currentGuardSiteId = siteId;
         isAdminRoster = _isAdmin === true;
+        loggedGuardId = guardId ? parseInt(guardId) : null;
         
         if (isAdminRoster) {
             $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
@@ -806,9 +841,17 @@
                             if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
 
                             var isRelief = s.reliefGuardId || s.reliefProviderName;
+                            var belongsToLoggedGuard = (s.guardId === loggedGuardId) || (s.reliefGuardId === loggedGuardId);
+                            
+                            // Check if date is today or future
+                            var shiftDate = new Date(s.shiftDate || loopDate);
+                            var today = new Date();
+                            today.setHours(0,0,0,0);
+                            var isFutureOrToday = shiftDate >= today;
 
-                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
-                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '">' +
+                            rowHtml += '<div class="guard-shift-card ' + (isAdminRoster ? 'clickable-shift ' : '') + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
+                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '">' +
+                                (belongsToLoggedGuard ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
                                     (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -823,8 +866,28 @@
                                 (isAdminFinancialsOn ? 
                                     '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</div>' : 
                                     ''
-                                ) +
-                                '</div>';
+                                );
+                                
+                            // Add Action Buttons for non-admin guards
+                            if (!isAdminRoster && isFutureOrToday && loggedGuardId) {
+                                if (belongsToLoggedGuard) {
+                                    if (s.status === 0) { // Orange (Pushed) -> Accept
+                                        rowHtml += '<div class="guard-shift-actions">' +
+                                            '<button class="btn-roster-action btn-roster-accept" onclick="processGuardShiftAction(' + s.id + ', 1, ' + s.status + ')">Accept</button>' +
+                                            '</div>';
+                                    } else if (s.status === 1) { // Green (Accepted) -> Cancel
+                                        rowHtml += '<div class="guard-shift-actions">' +
+                                            '<button class="btn-roster-action btn-roster-cancel" onclick="processGuardShiftAction(' + s.id + ', 2, ' + s.status + ')">Cancel</button>' +
+                                            '</div>';
+                                    }
+                                } else if (s.status === 2) { // Black (Declined) -> Pickup Relief
+                                    rowHtml += '<div class="guard-shift-actions">' +
+                                        '<button class="btn-roster-action btn-roster-relief" onclick="processGuardShiftAction(' + s.id + ', 1, ' + s.status + ', true)">Pickup Relief</button>' +
+                                        '</div>';
+                                }
+                            }
+                            
+                            rowHtml += '</div>';
                         });
                         rowHtml += '</td>';
                     });
@@ -928,6 +991,7 @@
             data: JSON.stringify({
                 shiftId: shiftId,
                 newStatus: newStatus,
+                expectedStatus: parseInt(card.data('status')),
                 callingGuardId: 1, // System/Admin ID for web updates
                 reason: newStatus === 2 ? "Cancelled via Web Dashboard" : ""
             }),
@@ -946,7 +1010,45 @@
                     
                     var typeClass = isAdhoc ? (newStatus === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
                     card.addClass(statusClass + ' ' + typeClass);
+                } else {
+                    alert(res.message || "Failed to update shift status.");
                 }
+            }
+        });
+    }
+
+    function processGuardShiftAction(shiftId, newStatus, expectedStatus, isReliefPickup) {
+        var reason = "";
+        if (newStatus === 2) { // Cancel
+            reason = prompt("Please enter a reason for cancelling this shift:");
+            if (reason === null) return; // User cancelled prompt
+            if (reason.trim() === "") {
+                alert("Reason is required to cancel a shift.");
+                return;
+            }
+        }
+
+        $('#loader').show();
+        $.ajax({
+            url: '/api/GuardSecurityNumber/UpdateShiftStatus',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                shiftId: shiftId,
+                newStatus: newStatus,
+                expectedStatus: expectedStatus,
+                callingGuardId: loggedGuardId,
+                reason: reason
+            }),
+            success: function(res) {
+                if (res.isSuccess) {
+                    loadGuardRoster(); // Reload full roster to show updated colors and assignments
+                } else {
+                    alert(res.message || "Action failed. Please try again.");
+                }
+            },
+            complete: function() {
+                $('#loader').hide();
             }
         });
     }
