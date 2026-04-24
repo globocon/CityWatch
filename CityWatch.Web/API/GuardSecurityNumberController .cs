@@ -4428,6 +4428,13 @@ namespace CityWatch.Web.API
         }
 
         [HttpPost("UpdateShiftStatus")]
+        /* 
+         * GUARD ROSTER FLOW (Web & Mobile Sync):
+         * 1. Orange (Pushed/Pending) -> Green (Accepted) [One-click accept]
+         * 2. Green (Accepted) -> Black (Declined) [Requires Reason, stays with original guard]
+         * 3. Black (Declined) -> OWNER clicks -> Green (Accepted) [Re-Acceptance]
+         * 4. Black (Declined) -> OTHER clicks -> Purple (Relief) [Relief Assignment]
+         */
         public async Task<IActionResult> UpdateShiftStatus([FromBody] RosterStatusUpdateModel model)
         {
             try
@@ -4462,6 +4469,10 @@ namespace CityWatch.Web.API
                     // Primary guard accepting their own shift
                     if (shift.GuardId == model.CallingGuardId)
                     {
+                        if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
+                        {
+                            return BadRequest(new { isSuccess = false, message = "This shift is already assigned to a relief guard." });
+                        }
                         shift.Status = RosterShiftStatus.Accepted;
                     }
                     // Picking up a declined shift as a Relief Guard
