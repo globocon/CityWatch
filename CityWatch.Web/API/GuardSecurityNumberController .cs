@@ -4428,6 +4428,13 @@ namespace CityWatch.Web.API
         }
 
         [HttpPost("UpdateShiftStatus")]
+        /* 
+         * GUARD ROSTER FLOW (Web & Mobile Sync):
+         * 1. Orange (Pushed/Pending) -> Green (Accepted) [One-click accept]
+         * 2. Green (Accepted) -> Black (Declined) [Requires Reason, stays with original guard]
+         * 3. Black (Declined) -> OWNER clicks -> Green (Accepted) [Re-Acceptance]
+         * 4. Black (Declined) -> OTHER clicks -> Purple (Relief) [Relief Assignment]
+         */
         public async Task<IActionResult> UpdateShiftStatus([FromBody] RosterStatusUpdateModel model)
         {
             try

@@ -120,10 +120,14 @@
         color: #FFFFFF !important;
     }
 
-    /* Relief Card Styles */
-    .guard-shift-card.shift-relief { 
+    /* Relief Card Styles - Ensure high specificity to override status colors */
+    .guard-shift-card.shift-relief, 
+    .guard-shift-card.shift-relief.status-accepted,
+    .guard-shift-card.shift-relief.status-pushed,
+    .guard-shift-card.shift-relief.type-regular.status-accepted { 
         background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; 
         border-left: 3px solid #e1bee7 !important;
+        color: #FFFFFF !important;
     }
     .guard-relief-badge {
         background-color: #ffffff;
@@ -291,7 +295,7 @@
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
                             </div>
                             <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
-                                <option value="Live">Live (Pushed)</option>
+                                <option value="Live">Live (Pending)</option>
                                 <option value="Accepted">Accepted (Green)</option>
                                 <option value="Paid">Paid (Stamp)</option>
                                 <option value="Invoiced">Invoiced (Stamp)</option>
@@ -979,6 +983,10 @@
                     }
                 }
                 
+                // Update Legend or Status labels if needed
+                $('.status-label:contains("PUSHED")').text("PENDING");
+                $('.status-label:contains("Pushed")').text("Pending");
+
                 checkRemunerationVisibility();
             },
             error: function() {
@@ -1028,7 +1036,13 @@
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // Click-to-cycle status logic
+    // Click-to-cycle status logic for Guard Roster
+    // FLOW SUMMARY (as requested 24/04/2026):
+    // 1. Owner clicks Orange (Pending) -> Status 1 (Green/Accepted) [One-click]
+    // 2. Owner clicks Green (Accepted) -> Status 2 (Black/Cancelled) [Reason Modal]
+    // 3. Owner clicks Black (Cancelled) -> Status 1 (Green/Accepted) [Re-Accept Prompt]
+    // 4. Non-Owner clicks Black (Cancelled) -> Status 1 (Purple/Relief) [Relief Prompt]
+    // * Note: Guards cannot reset back to Orange (Pending) once interacted.
     $(document).on('click', '.clickable-shift', function() {
         var card = $(this);
         var shiftId = card.data('shift-id');
@@ -1048,12 +1062,12 @@
             var belongsToMe = (shiftGuardId === loggedGuardId) || (shiftReliefId === loggedGuardId);
 
             if (belongsToMe) {
-                if (currentStatus === 0) { // Orange -> Green (Accept)
+                if (currentStatus === 0) { // Orange (Pending) -> Green (Accept)
                     processGuardShiftAction(shiftId, 1, 0);
-                } else if (currentStatus === 1) { // Green -> Black (Cancel)
+                } else if (currentStatus === 1) { // Green (Accepted) -> Black (Cancel)
                     processGuardShiftAction(shiftId, 2, 1);
-                } else if (currentStatus === 2) { // Black -> Orange (Reset)
-                    processGuardShiftAction(shiftId, 0, 2);
+                } else if (currentStatus === 2) { // Black (Cancelled) -> Green (Re-Accept)
+                    processGuardShiftAction(shiftId, 1, 2);
                 }
             } else {
                 // Not my shift - can only pickup if Black (Declined)
@@ -1098,6 +1112,10 @@
         });
     }
 
+    /**
+     * Handles specific guard actions based on current status.
+     * Flow: Orange -> Green (Accept), Green -> Black (Cancel), Black -> Green (Re-Accept) or Purple (Relief)
+     */
     function processGuardShiftAction(shiftId, newStatus, expectedStatus, isReliefPickup) {
         if (newStatus === 2) { // Cancel (Green -> Black)
             // Show custom cancellation modal
@@ -1111,8 +1129,11 @@
 
         if (isReliefPickup) {
             if (!confirm("Do you want to add as relief guard?")) return;
+        } else if (newStatus === 1 && expectedStatus === 2) {
+            if (!confirm("Do you want to re-accept this shift?")) return;
         } else if (newStatus === 0) {
-            if (!confirm("Do you want to reset this shift to Pushed status?")) return;
+            // Guards shouldn't be able to reset to 0 based on new rules, but keeping for admin/system safety
+            if (!confirm("Do you want to reset this shift to Pending status?")) return;
         }
 
         executeShiftStatusUpdate(shiftId, newStatus, expectedStatus, "");
