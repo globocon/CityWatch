@@ -812,13 +812,15 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                             return '<i class="fa fa-circle"style="color:orange;"></i>';
                         }
                         else {
+                            
 
                             // Include the sort value as a hidden element and render the color circle
-                            return '<span style="display:none;">' + value + '</span>' +
+                            return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1">' +
+                            '<span style="display:none;">' + value + '</span>' +
                                 '<i class="fa fa-circle text-' +
                                 (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                                     value == 'Yellow' ? 'warning' : 'muted') +
-                                '"></i>';
+                                '"></i>' + '</button>';
                         }
                 }
                 else {
