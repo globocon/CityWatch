@@ -624,119 +624,28 @@
 <div class="modal fade" id="addGuardModalForCompliances" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addGuardModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add/Edit Compliance</h5>
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardHrDocDetails"></label></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="row m-0">
                     <div class="col-md-12">
                         @*<form id="frm_add_guard">*@
-                        <input type="hidden" id="Guard_Id" name="Guard.Id" />
-                        @*    <div class="form-group row">
-                        <label class="col-md-2 col-form-label">Guard Name</label>
-                        <div class="col-md-3">
-                        <input type="text" class="form-control" id="Guard_Name1" name="Guard.Name">
-                        </div>
-                        <label class="col-md-1 col-form-label text-left">Intial</label>
-                        <div class="col-md-2">
-                        <input type="text" class="form-control" id="Guard_Initial1" name="Guard.Initial">
-                        </div>
-                        <label class="col-md-1 col-form-label">Mobile</label>
-                        <div class="col-md-3">
-                        <input type="text" class="form-control" id="Guard_Mobile1" name="Guard.Mobile" value="+61 4">
-                        </div>
-
-                        </div>
-                        <div class="form-group row">
-                        <label class="col-md-2 col-form-label">License No (Primary)</label>
-                        <div class="col-md-3">
-                        <input type="text" class="form-control" id="Guard_SecurityNo1" name="Guard.SecurityNo">
-                        </div>
-                        <label class="col-md-1 col-form-label">State</label>
-                        <div class="col-md-2">
-                        <select id="Guard_State1" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
-                        </div>
-                        <label class="col-md-1 col-form-label">Email</label>
-                        <div class="col-md-3">
-                        <input type="text" class="form-control" id="Guard_Email1" name="Guard.Email">
-                        </div>
-                        </div>
-                        <div class="form-group row">
-
-                        <label class="col-md-2 form-check-label">Access</label>
-                        <div class="col-md-3">
-                        <select class="form-control" multiple="multiple" id="Guard_Access1" name="Guard.GuardAccess">
-                        @foreach (var AccessType in viewDataService.GetAccessTypes(true))
-                        {
-
-                        <option value="@AccessType.Value">@AccessType.Text</option>
-                        }
-                        </select>
-
-                        </div>
-                        <label class="col-md-1 form-check-label">Is Active</label>
-                        <div class="col-md-2">
-                        <input type="checkbox" class="form-check" id="cbIsActive1">
-                        <input type="hidden" id="Guard_IsActive1" name="Guard.IsActive">
-                        </div>
-                        <label class="col-md-1 col-form-label">Provider</label>
-                        <div class="col-md-3">
-                        <input type="text" class="form-control" id="Guard_Provider1" name="Guard.Provider">
-                        </div>
-                        </div>
-
-
-                        @*    <div class="form-group row">
-                        <label class="col-md-2 form-check-label">Is Active</label>
-                        <div class="col-md-3">
-                        <input type="checkbox" class="form-check" id="cbIsActive">
-                        <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
-                        </div>
-                        </div> *@
-                        @*     <div class="form-row">
-                        <div class="col-md-12">
-                        <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status1">
-                        <i class="fa fa-check-circle-o mr-2"></i>Guard saved successfully
-                        </div>
-                        <div asp-validation-summary="All" id="glValidationSummary1"></div>
-                        </div>
-                        </div>
-                        </form>
-                        </div>
-                        </div>
-                        <hr />*@
+                        <input type="hidden" id="Guard_Id"  />
+                        <input type="hidden" id="HrStatusColor" />
+                        <input type="hidden" id="HrGroup" />
+                       
                         <div class="row m-0">
                             <div class="col-md-12">
-                                <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="lote-tab" data-toggle="tab" href="#lote" role="tab" aria-controls="lote" aria-selected="true">Personal</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link active" id="trainingAndAssessment-tab" data-toggle="tab" href="#guardTrainingAndAssessment" role="tab" aria-controls="guardTrainingAndAssessment" aria-selected="true">Training & Assessment</a>
-                                    </li>
-                                    @*  <li class="nav-item">
-                                    <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
-                                    </li>
-                                    <li class="nav-item">
-                                    <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
-                                    </li> *@
-                                </ul>
-                                <div class="tab-content" id="guardDataTabContent">
-                                    <div class="tab-pane fade show py-3" id="guardLicensesandCompliance" role="tabpanel" aria-labelledby="licensesAndCombliance-tab">
-                                        <div class="form-row mb-2 btn-add-guard-addl-details">
-                                            <div class="col-md-2 offset-md-10 text-right">
-                                                <button class="btn btn-success" id="btnAddGuardLicenseKey"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
-                                            </div>
-                                        </div>
+
+                                 
                                         <div class="form-row">
                                             <div class="col-md-12">
-                                                <table id="tbl_guard_licensesAndComplianceKey" class="table table-bordered table-sm" width="100%">
+                                                <table id="tbl_guard_licensesAndComplianceDetailsForRC" class="table table-bordered table-sm" width="100%">
                                                     <thead>
                                                         <tr>
                                                             <th>HR Group</th>
@@ -744,115 +653,17 @@
                                                             <th>Expiry Date</th>
                                                             <th>File</th>
                                                             <th>Status</th>
-                                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                          @*   <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th> *@
                                                         </tr>
                                                     </thead>
                                                 </table>
                                             </div>
                                         </div>
-                                        <br />
-                                        <div class="form-row mb-2 btn-add-guard-addl-details">
-                                            <div class="col-md-2 offset-md-10 text-right">
-                                                <button class="btn btn-success" id="btnAddGuardLicenseKey2"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                       
 
-                                    <div class="tab-pane fade show py-3" id="lote" role="tabpanel" aria-labelledby="lote-tab">
-                                        <div class="container-fluid">
-                                            <div class="form-row">
-                                                <div class="col-md-6">
-                                                    <form id="frm_add_personal">
-                                                        <input type="hidden" id="Guard_Id1" name="Guard.Id" />
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <label for="userName" class="col-sm-4 col-form-label">Guard Name</label>
-                                                            <div class="col-sm-6">
-                                                                @* <input type="text" class="form-control" id="guardName" value="@Model.GuardLog.GuardLogin.Guard.Name" disabled="disabled"> *@
-                                                                <input type="text" class="form-control" id="guardNameTraining" name="Guard.Name" disabled="disabled">
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <label for="userPassword" class="col-sm-4 col-form-label">License No(Primary)</label>
-                                                            <div class="col-sm-6">
-                                                                @* <input type="text" class="form-control" id="licenseNo" value="@Model.GuardLog.GuardLogin.Guard.SecurityNo" disabled="disabled"> *@
-                                                                <input type="text" class="form-control" id="licenseNoTraining" />
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Mobile</label>
-                                                            <div class="col-sm-6">
-                                                                @* <input type="text" class="form-control" id="mobile" value="@Model.GuardLog.GuardLogin.Guard.Mobile" disabled="disabled"> *@
-                                                                <input type="text" class="form-control" id="mobileTraining" />
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">Email</label>
-                                                            <div class="col-sm-6">
-                                                                @* <input type="text" class="form-control" id="email" value="@Model.GuardLog.GuardLogin.Guard.Email" disabled="disabled"> *@
-                                                                <input type="text" class="form-control" id="emailTraining" />
-                                                            </div>
-
-                                                        </div>
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <label for="userConfirmPassword" class="col-sm-4 col-form-label">LOTE</label>
-                                                            <div class="col-sm-6">
-                                                                <select class="form-control" multiple="multiple" id="LoteDrp" name="Guard.LanguageDetails">
-                                                                  @*   @foreach (var AccessType in viewDataServiceNew.GetLanguageMaster(true))
-                                                                    {
-
-                                                                        <option value="@AccessType.Value">@AccessType.Text</option>
-                                                                    } *@
+                                   
 
 
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group row m-0 mb-3">
-                                                            <div class="col-sm-4">
-                                                                <button type="button" class="btn btn-primary" id="btn_save_PersonalTraining">Save</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="col-sm-7" style="padding-top:164px">
-                                                        <div class="container p-0" style="display:flex;font-size:11px;color:black">
-
-                                                            <p class="left-text">Note:</p>&nbsp;&nbsp;
-
-                                                            <p class="right-text">
-                                                                Only LOTE can be edited  from this portal.<br>If other details need to be updated,Please
-                                                                contact your supervior or ADMIN
-                                                            </p>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade show active py-3" id="guardTrainingAndAssessment" role="tabpanel" aria-labelledby="trainingAndAssessment-tab">
-
-                                        <div class="form-row">
-                                            <div class="col-md-12">
-                                                <table id="tbl_guard_trainingAndAssessment" class="table table-bordered table-sm" width="100%">
-                                                    <thead>
-                                                        <tr>
-                                                            <th></th>
-                                                            <th>HR Group</th>
-                                                            <th>Description</th>
-                                                            <th></th>
-                                                            <th class="text-center">Course</i></th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
 
                             </div>
                             @*<div class="modal-footer justify-content-start">

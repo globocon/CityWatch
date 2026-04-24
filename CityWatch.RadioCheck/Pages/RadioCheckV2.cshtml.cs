@@ -3244,6 +3244,26 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return _smartWandReportGenarator.GenerateSartWandPdfReportWithClientSiteAndGuardIds(ClientSiteId, GuardId);
         }
 
+        public JsonResult OnGetGuardLicenseAndComplianceData(int guardId,string statusColor,string hrGroup)
+        {
+            HrGroup selectedGroup;
+
+            if (hrGroup?.ToLower() == "hr1")
+                selectedGroup = HrGroup.HR1;
+            else if (hrGroup?.ToLower() == "hr2")
+                selectedGroup = HrGroup.HR2;
+            else
+                selectedGroup = HrGroup.HR3;
+            var GuardDetails = _viewDataService.GetGuardLicenseAndComplianceData(guardId).Where(x=>x.HrGroup== selectedGroup);
+            if (AuthUserHelper.IsAdminUserLoggedIn)
+            {
+                foreach (var guard in GuardDetails)
+                {
+                    guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
+                }
+            }
+            return new JsonResult(GuardDetails);
+        }
 
 
     }

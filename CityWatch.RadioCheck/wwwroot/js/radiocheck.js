@@ -809,7 +809,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     
                         if (value == 'Orange') {
 
-                            return '<i class="fa fa-circle"style="color:orange;"></i>';
+                            return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle"style="color:orange;"></i></button>';
                         }
                         else {
                             
@@ -839,16 +839,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
                     if (value == 'Orange') {
 
-                        return '<i class="fa fa-circle"style="color:orange;"></i>';
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle"style="color:orange;"></i></button>';
                     }
                     else {
 
                         // Include the sort value as a hidden element and render the color circle
-                        return '<span style="display:none;">' + value + '</span>' +
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><span style="display:none;">' + value + '</span>' +
                             '<i class="fa fa-circle text-' +
                             (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                                 value == 'Yellow' ? 'warning' : 'muted') +
-                            '"></i>';
+                            '"></i></button>';
                     }
                 }
                 else {
@@ -866,16 +866,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
                     if (value == 'Orange') {
 
-                        return '<i class="fa fa-circle"style="color:orange;"></i>';
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle"style="color:orange;"></i></button>';
                     }
                     else {
 
                         // Include the sort value as a hidden element and render the color circle
-                        return '<span style="display:none;">' + value + '</span>' +
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><span style="display:none;">' + value + '</span>' +
                             '<i class="fa fa-circle text-' +
                             (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                                 value == 'Yellow' ? 'warning' : 'muted') +
-                            '"></i>';
+                            '"></i></button>';
                     }
                 }
                 else {
@@ -2823,7 +2823,89 @@ function renderSwDateTime(value, record) {
         return '';
     }
 }
+let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceDetailsForRC').DataTable({
+    autoWidth: false,
+    ordering: false,
+    searching: false,
+    paging: false,
+    info: false,
+    ajax: {
+        url: '/RadioCheckV2?handler=GuardLicenseAndComplianceData',
+        data: function (d) {
+            d.guardId = $('#Guard_Id').val();
+            d.statusColor = $('#HrStatusColor').val();
+            d.hrGroup = $('#HrGroup').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'hrGroupText', width: "12%" },
+        { data: 'description', width: "27%" },
+        { data: 'expiryDate', width: '15%', orderable: true },
+        { data: 'fileName', width: '30%' },
+        { data: 'status', width: "1%" }
+        
+    ],
+    columnDefs: [{
+        targets: 3,
+        data: 'fileName',
+        render: function (data, type, row, meta) {
+            if (data)
+                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+            return '-';
+        }
+    },
+    {
+        targets: 4,
+        data: 'status',
+        render: function (data, type, row, meta) {
+            var currentDate = new Date();
+            var ExpiryDate = new Date(row.expiryDate);
+            var timeDifference = ExpiryDate - currentDate;
+            var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            var pendingDifference = currentDate - ExpiryDate;
+            var pendinddaysDifference = Math.ceil(pendingDifference / (1000 * 60 * 60 * 24));
+            /*var statusColor = 'green';*/
+            var statusColor = row.statusColor;
 
+            //if (row.dateType == true) {
+            //    statusColor = 'green';
+            //}
+            //else if (row.expiryDate != null) {
+            //    if (daysDifference <= 45) {
+            //        statusColor = 'yellow';
+            //    }
+
+            //    if (ExpiryDate < currentDate && row.dateType != true) {
+            //        if (pendinddaysDifference <= 60 && row.isPending == true) {
+            //            statusColor = 'red';
+            //        }
+            //        statusColor = 'red';
+            //    }
+            //}
+
+
+            return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+        }
+
+
+
+    }
+    ],
+    'createdRow': function (row, data, index) {
+        if (data.expiryDate !== null) {
+            var formattedDate = getFormattedDate(new Date(data.expiryDate), null, ' ');
+            if (data.dateType === true) {
+                formattedDate = formattedDate + '  (I)';
+                $('td', row).eq(2).html(formattedDate);
+            }
+            else {
+                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+            }
+
+        }
+    },
+});
 let clientSiteActiveGuardsSmartWandHistory = $('#clientSiteActiveGuardsSwHistory').DataTable({
     ordering: false,
     info: false,
@@ -2879,7 +2961,21 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnSwHistoryByGuard', functi
 });
 
 /* for SmartWand history of the guard end*/
-
+$('#clientSiteActiveGuards').on('click', '#btnGuardHRDocsHistory', function (value, record) {
+    var data = clientSiteActiveGuards.row($(this).parents('tr')).data();
+    $('#addGuardModalForCompliances').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var StatusColor = $(this).attr('data-color');
+    var hrgroup = $(this).attr('data-hrgroup');
+    $('#HrGroup').val(hrgroup);
+    $('#HrStatusColor').val(StatusColor);
+    $('#Guard_Id').val(GuardId);
+    $('#lbl_GuardHrDocDetails').text(GuardName);
+    gridGuardLicensesAndLicenceKey.clear().draw();
+    gridGuardLicensesAndLicenceKey.ajax.reload();
+});
 
 /*For radio check dropdown start*/
 
