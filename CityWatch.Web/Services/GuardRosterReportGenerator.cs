@@ -252,7 +252,14 @@ namespace CityWatch.Web.Services
                             siteCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(0));
                             siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetMarginBottom(2));
 
-                                    siteCell.SetMinHeight(60f);
+                            var statusObj = await _context.RosterSiteWeekStatuses
+                                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == weekStart);
+                            var weekStatus = statusObj?.Status ?? status;
+                            if (string.IsNullOrEmpty(weekStatus)) weekStatus = "Live";
+
+                            AddStatusStampToCell(siteCell, weekStatus);
+
+                            siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)

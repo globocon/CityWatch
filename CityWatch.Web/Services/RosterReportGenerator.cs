@@ -455,6 +455,8 @@ namespace CityWatch.Web.Services
                                 .FirstOrDefaultAsync(x => x.ClientSiteId == site.ClientSiteId && x.StartDate == weekStart);
                             var status = statusObj?.Status ?? "Live";
 
+                            AddStatusStampToCell(siteCell, status);
+
                             siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
