@@ -339,24 +339,21 @@ namespace CityWatch.Web.Services
                             }
                         }
 
-                        bool forcePageBreak = weeksOnCurrentPage > 2;
-
                         if (w > 0)
                         {
-                            // If current week is tall, or if the previous week was tall, or if we exceeded 2 weeks per page, start a new page
-                            if (forcePageBreak || !isCurrentWeekSmall || prevMaxDailyShifts > 3)
+                            // Limit to 2 rosters (weeks) per page
+                            if (w % 2 == 0)
                             {
                                 document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                                weeksOnCurrentPage = 1; // Reset counter for the new page
                             }
                             else
                             {
-                                // Stack small weeks with a minimal spacer
+                                // Stack weeks with a minimal spacer
                                 document.Add(new Paragraph("\n").SetFontSize(2));
                             }
                         }
 
-                        bool showFullHeader = (w == 0) || (weeksOnCurrentPage == 1);
+                        bool showFullHeader = (w % 2 == 0);
 
                         if (showFullHeader)
                         {
