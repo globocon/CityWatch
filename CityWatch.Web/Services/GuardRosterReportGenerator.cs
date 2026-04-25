@@ -103,10 +103,12 @@ namespace CityWatch.Web.Services
                     using (var document = new Document(pdf))
                     {
                         document.SetMargins(20f, MARGIN, 60f, MARGIN);
+                        int weeksOnCurrentPage = 0;
 
                         for (int w = 0; w < weeks; w++)
                         {
                             var weekStart = startDate.AddDays(w * 7);
+                            weeksOnCurrentPage++;
                             var weekEnd = weekStart.AddDays(6);
 
                             var weeklyHolidays = new List<PublicHolidayInfo>();
@@ -155,12 +157,16 @@ namespace CityWatch.Web.Services
                                 }
                             }
 
+                            bool forcePageBreak = (w % 2 == 0);
+                            bool pageBreakHappened = false;
+
                             if (w > 0)
                             {
-                                // If current week is tall, or if the previous week was tall, start a new page
-                                if (!isCurrentWeekSmall || prevMaxDailyShifts > 3)
+                                // Break if we reached 2 weeks, or if current week is tall, or previous week was tall
+                                if (forcePageBreak || !isCurrentWeekSmall || prevMaxDailyShifts > 3)
                                 {
                                     document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                    pageBreakHappened = true;
                                 }
                                 else
                                 {
@@ -169,7 +175,7 @@ namespace CityWatch.Web.Services
                                 }
                             }
 
-                            bool showFullHeader = (w == 0) || !isCurrentWeekSmall || (w > 0 && prevMaxDailyShifts > 3);
+                            bool showFullHeader = (w == 0) || pageBreakHappened;
 
                             if (showFullHeader)
                             {
@@ -252,7 +258,14 @@ namespace CityWatch.Web.Services
                             siteCell.Add(new Paragraph(site.Name).SetFontSize(FONT_SIZE_CELL).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(0));
                             siteCell.Add(new Paragraph(site.ClientType?.Name ?? "Security Service").SetFontSize(6.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetMarginBottom(2));
 
-                                    siteCell.SetMinHeight(60f);
+                            var statusObj = await _context.RosterSiteWeekStatuses
+                                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == weekStart);
+                            var weekStatus = statusObj?.Status ?? status;
+                            if (string.IsNullOrEmpty(weekStatus)) weekStatus = "Live";
+
+                            AddStatusStampToCell(siteCell, weekStatus);
+
+                            siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
                             for (int i = 0; i < 7; i++)

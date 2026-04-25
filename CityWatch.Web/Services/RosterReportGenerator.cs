@@ -279,10 +279,12 @@ namespace CityWatch.Web.Services
                     document.SetMargins(20f, MARGIN, 60f, MARGIN);
 
                     var groupName = group.Name ?? "Unknown Project";
+                    int weeksOnCurrentPage = 0;
 
                     for (int w = 0; w < weeks; w++)
                     {
                         var weekStart = startDate.AddDays(w * 7);
+                        weeksOnCurrentPage++;
                         var weekEnd = weekStart.AddDays(6);
 
                         // Fetch Holidays for this week (inclusive of recurring holidays)
@@ -337,12 +339,16 @@ namespace CityWatch.Web.Services
                             }
                         }
 
+                        bool forcePageBreak = (w % 2 == 0);
+                        bool pageBreakHappened = false;
+
                         if (w > 0)
                         {
-                            // If current week is tall, or if the previous week was tall, start a new page
-                            if (!isCurrentWeekSmall || prevMaxDailyShifts > 3)
+                            // Break if we reached 2 weeks, or if current week is tall, or previous week was tall
+                            if (forcePageBreak || !isCurrentWeekSmall || prevMaxDailyShifts > 3)
                             {
                                 document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                pageBreakHappened = true;
                             }
                             else
                             {
@@ -351,7 +357,7 @@ namespace CityWatch.Web.Services
                             }
                         }
 
-                        bool showFullHeader = (w == 0) || !isCurrentWeekSmall || (w > 0 && prevMaxDailyShifts > 3);
+                        bool showFullHeader = (w == 0) || pageBreakHappened;
 
                         if (showFullHeader)
                         {
@@ -454,6 +460,8 @@ namespace CityWatch.Web.Services
                             var statusObj = await _context.RosterSiteWeekStatuses
                                 .FirstOrDefaultAsync(x => x.ClientSiteId == site.ClientSiteId && x.StartDate == weekStart);
                             var status = statusObj?.Status ?? "Live";
+
+                            AddStatusStampToCell(siteCell, status);
 
                             siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
