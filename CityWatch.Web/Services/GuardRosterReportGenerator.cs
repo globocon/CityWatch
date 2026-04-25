@@ -103,10 +103,12 @@ namespace CityWatch.Web.Services
                     using (var document = new Document(pdf))
                     {
                         document.SetMargins(20f, MARGIN, 60f, MARGIN);
+                        int weeksOnCurrentPage = 0;
 
                         for (int w = 0; w < weeks; w++)
                         {
                             var weekStart = startDate.AddDays(w * 7);
+                            weeksOnCurrentPage++;
                             var weekEnd = weekStart.AddDays(6);
 
                             var weeklyHolidays = new List<PublicHolidayInfo>();
@@ -155,12 +157,15 @@ namespace CityWatch.Web.Services
                                 }
                             }
 
+                            bool forcePageBreak = weeksOnCurrentPage > 2;
+
                             if (w > 0)
                             {
-                                // If current week is tall, or if the previous week was tall, start a new page
-                                if (!isCurrentWeekSmall || prevMaxDailyShifts > 3)
+                                // If current week is tall, or if the previous week was tall, or if we exceeded 2 weeks per page, start a new page
+                                if (forcePageBreak || !isCurrentWeekSmall || prevMaxDailyShifts > 3)
                                 {
                                     document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                    weeksOnCurrentPage = 1; // Reset counter for the new page
                                 }
                                 else
                                 {
@@ -169,7 +174,7 @@ namespace CityWatch.Web.Services
                                 }
                             }
 
-                            bool showFullHeader = (w == 0) || !isCurrentWeekSmall || (w > 0 && prevMaxDailyShifts > 3);
+                            bool showFullHeader = (w == 0) || (weeksOnCurrentPage == 1);
 
                             if (showFullHeader)
                             {
