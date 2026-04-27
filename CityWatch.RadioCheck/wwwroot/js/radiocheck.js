@@ -2976,6 +2976,21 @@ $('#clientSiteActiveGuards').on('click', '#btnGuardHRDocsHistory', function (val
     gridGuardLicensesAndLicenceKey.clear().draw();
     gridGuardLicensesAndLicenceKey.ajax.reload();
 });
+$('#clientSiteActiveGuardsSinglePage').on('click', '#btnGuardHRDocsHistory', function (value, record) {
+    var data = clientSiteActiveGuardsSinglePage.row($(this).parents('tr')).data();
+    $('#addGuardModalForCompliances').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var StatusColor = $(this).attr('data-color');
+    var hrgroup = $(this).attr('data-hrgroup');
+    $('#HrGroup').val(hrgroup);
+    $('#HrStatusColor').val(StatusColor);
+    $('#Guard_Id').val(GuardId);
+    $('#lbl_GuardHrDocDetails').text(GuardName);
+    gridGuardLicensesAndLicenceKey.clear().draw();
+    gridGuardLicensesAndLicenceKey.ajax.reload();
+});
 
 /*For radio check dropdown start*/
 
@@ -5088,11 +5103,13 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
 
             render: function (value, type, data) {
-                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                
+
+                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-success"></i></button>';
+                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-danger"></i></button>';
+                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-warning"></i></button>';
                 if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<i class="fa fa-circle"style="color:orange;"></i>';
+                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle"style="color:orange;"></i></button>';
             }
         },
         {
@@ -5101,11 +5118,12 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
 
             render: function (value, type, data) {
-                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+               
+                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-success"></i></button>';
+                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-danger"></i></button>';
+                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-warning"></i></button>';
                 if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<i class="fa fa-circle"style="color:orange;"></i>';
+                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle"style="color:orange;"></i></button>';
             }
         },
         {
@@ -5114,11 +5132,13 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
 
             render: function (value, type, data) {
-                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                
+
+                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-success"></i></button>';
+                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-danger"></i></button>';
+                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-warning"></i></button>';
                 if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<i class="fa fa-circle"style="color:orange;"></i>';
+                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle"style="color:orange;"></i></button>';
             }
         },
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
