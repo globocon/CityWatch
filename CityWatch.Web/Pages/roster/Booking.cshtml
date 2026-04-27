@@ -1832,8 +1832,8 @@
                                         '</div>' +
                                         (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
                                         '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 1px;">' +
+                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         (projectSupplierMode ? 
