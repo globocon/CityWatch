@@ -4544,6 +4544,26 @@ namespace CityWatch.Web.API
                 // 5. Save the updated status and reason to DB
                 await _context.SaveChangesAsync();
 
+                // 5b. Send email alert for cancellation
+                if (model.NewStatus == RosterShiftStatus.Declined)
+                {
+                    try
+                    {
+                        var guard = await _context.Guards.FindAsync(model.CallingGuardId);
+                        var site = await _context.ClientSites.FindAsync(shift.ClientSiteId);
+                        
+                        string gName = guard?.Name ?? "Unknown Guard";
+                        string lNo = guard?.SecurityNo ?? "N/A";
+                        string sName = site?.Name ?? "Unknown Site";
+                        
+                        await _alertEmailServices.SendShiftCancelledAlertMail(shift, gName, lNo, sName, model.Reason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to send shift cancellation email: {ex.Message}");
+                    }
+                }
+
                 // 6. Separately try to log the audit entry
                 try
                 {

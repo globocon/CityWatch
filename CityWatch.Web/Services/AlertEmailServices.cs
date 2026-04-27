@@ -1,4 +1,6 @@
-﻿using CityWatch.Data.Helpers;
+using System;
+using CityWatch.Data.Helpers;
+
 using CityWatch.Data.Providers;
 using Microsoft.Extensions.Options;
 using MailKit.Net.Smtp;
@@ -13,6 +15,7 @@ namespace CityWatch.Web.Services
     public interface IAlertEmailServices
     {
         Task<bool> SendNewGuardRegisterAlertMail(Guard guard, string LoggedInSite);
+        Task<bool> SendShiftCancelledAlertMail(RosterSchedule shift, string guardName, string licenseNo, string siteName, string reason);
     }
     public class AlertEmailServices : IAlertEmailServices
     {
@@ -53,6 +56,47 @@ namespace CityWatch.Web.Services
             var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
             var toAddressNew = emailAddresses.Split(',');
             var _toAddressList = GetToEmailAddressList(toAddressNew);
+
+            await SendEmail(mailBodyHtml, subject, _toAddressList, FromAddress);
+            return true;
+        }
+
+        public async Task<bool> SendShiftCancelledAlertMail(RosterSchedule shift, string guardName, string licenseNo, string siteName, string reason)
+        {
+            var subject = $"Shift Cancelled Alert - {siteName} - {guardName}";
+            var mailBodyHtml = $"<h2>Shift Cancelled Alert</h2>" +
+                               $"<p>A guard has cancelled a shift with the following details:</p>" +
+                               $"<p><strong>Site:</strong> {siteName}</p>" +
+                               $"<p><strong>Guard:</strong> {guardName}</p>" +
+                               $"<p><strong>License No:</strong> {licenseNo}</p>" +
+                               $"<p><strong>Date:</strong> {shift.ShiftStart:dd-MM-yyyy}</p>" +
+                               $"<p><strong>Time:</strong> {shift.ShiftStart:HH:mm} - {shift.ShiftEnd:HH:mm}</p>" +
+                               $"<p><strong>Reason:</strong> {reason}</p>" +
+                               $"</br>Thank you";
+
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
+
+            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+
+            try
+            {
+                var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(shift.ClientSiteId);
+                if (kpiSetting != null && kpiSetting.KPITelematicsFieldID.HasValue)
+                {
+                    var manager = _clientDataProvider.GetKPITelematicsDetails(kpiSetting.KPITelematicsFieldID.Value);
+                    if (manager != null && !string.IsNullOrEmpty(manager.Email))
+                    {
+                        toAddresses.Add(manager.Email);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log or ignore if we can't get manager email, we still want to send to default
+            }
+
+            var _toAddressList = GetToEmailAddressList(toAddresses.ToArray());
 
             await SendEmail(mailBodyHtml, subject, _toAddressList, FromAddress);
             return true;
