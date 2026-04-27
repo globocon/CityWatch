@@ -2117,12 +2117,20 @@ namespace CityWatch.Data.Providers
                         var phoneNumbers = smartWandLookup[item.ClientSiteId]
                             .Select(wand => wand.PhoneNumber)
                             .ToList();
+                    
 
                         // Format phone numbers and site name
-                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                        item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-                                        $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
-                                        $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
+                        var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+
+                        item.SiteName =
+                           $"{item.SiteName}" +
+                           $"<span class=\"ml-2 align-middle text-nowrap text-truncate d-inline-block small\" style=\"max-width:900px;\">" +
+                           $"<i class=\"fa fa-mobile align-middle\"></i> {phoneNumbersString}</span>" +
+                           $"<span class=\"ml-2 align-middle icon-satellite-3 satellite-3-fontsize\" id=\"btnUpArrow\"></span>";
+
+                        //item.SiteName = $"{item.SiteName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+                        //                $"<i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> {phoneNumbersString}" +
+                        //                $"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
 
                         // Format address with map link
                         item.Address = $"<a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q={item.GPS}\" target=\"_blank\">" +
