@@ -691,7 +691,7 @@
         $.ajax({
             url: '/roster/GuardRosterAction?handler=LoadRemunerationSummary',
             type: 'GET',
-            data: { startDate: weekStart, guardIds: guardIdsStr },
+            data: { startDate: weekStart, guardIds: guardIdsStr, siteId: currentGuardSiteId },
             success: function(res) {
                 if (!res.success) return;
                 
@@ -758,7 +758,8 @@
                 providerName: providerName || "",
                 isPaid: isPaid,
                 notes: notes,
-                totalAmount: totalAmount
+                totalAmount: totalAmount,
+                siteId: currentGuardSiteId
             },
             success: function(res) {
                 if (!res.success) console.error('Error saving remuneration:', res.message);
