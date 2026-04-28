@@ -1,7 +1,18 @@
 
 var FileuploadFileChanged = null;
 $(function () {
+    if ($('#ClientSiteID').val() == 629) {
+        var targetDiv = document.querySelector(' body');
 
+        if (targetDiv) {
+            // Apply style directly to this division
+            targetDiv.style.backgroundColor = '#d3d3d3';
+            // Keep all content sections white so tables/buttons stay normal
+            $(" table")
+                .css("background-color", "#ffffff");
+
+        }
+    }
     // To fix the Datatable column header issue when hidden inside tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
