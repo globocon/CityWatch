@@ -319,7 +319,7 @@ namespace CityWatch.Web.Services
                                         borderColor = ColorConstants.WHITE;
                                     }
 
-                                    if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular"))
+                                    if (isRelief && (string.IsNullOrEmpty(shift.ShiftType) || shift.ShiftType == "Regular") && shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Pushed)
                                     {
                                         bgColor = new DeviceRgb(111, 66, 193);
                                         borderColor = ColorConstants.WHITE;
