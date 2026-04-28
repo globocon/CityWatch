@@ -3014,6 +3014,8 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
     var inpcallfun = $('#inpCallingFunction').val();
     $('#download_siteRCSOPList').removeAttr('href');
+    $('#download_siteRCSOPList').removeClass('btn-primary');
+    $('#download_siteRCSOPList').addClass('text-primary');
     if (inpcallfun == 'STEPBUTTON') {
         $('#textMessageTab').addClass('d-none').removeClass('active');
         $('#textMessage').addClass('d-none').removeClass('show').removeClass('active');
@@ -3057,6 +3059,8 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
     $('#download_siteRCSOPList').removeAttr('href');
+    $('#download_siteRCSOPList').removeClass('btn-primary');
+    $('#download_siteRCSOPList').addClass('text-primary');
     $('#btnSendPushLotificationMessage').prop('disabled', false);
     $('#btnSendGlabalNotificationMessage').prop('disabled', false);
     $('#btnSendActionList').prop('disabled', false);
@@ -3562,22 +3566,32 @@ $('#dglClientSiteIdActionList').on('change', function () {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
                 $('#download_imageRCList').attr('href', data.sopAlarmFilePath + data.sopAlarmFileNme);
+                $('#download_imageRCList').addClass('btn-primary');
+                $('#download_imageRCList').removeClass('text-primary');
 
             } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
                 $('#download_imageRCList')
                     .attr('data-toggle', 'modal')
                     .attr('data-target', '.bd-example-modal-lgAlarm');
+                $('#download_imageRCList').addClass('btn-primary');
+                $('#download_imageRCList').removeClass('text-primary');
                 //$('.bd-example-modal-lg').show();
             }
             else {
                 $('#download_imageRCList').removeAttr('href');
+                $('#download_imageRCList').addClass('text-primary');
+                $('#download_imageRCList').removeClass('btn-primary');
             }
             if (data.sopFileNme != null) {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
+                $('#download_siteRCSOPList').addClass('btn-primary');
+                $('#download_siteRCSOPList').removeClass('text-primary');
                 $('#download_siteRCSOPList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopFileNme);
             } else {
                 $('#download_siteRCSOPList').removeAttr('href');
+                $('#download_siteRCSOPList').addClass('text-primary');
+                $('#download_siteRCSOPList').removeClass('btn-primary');
             }
             $('.traffic-status')
                 .removeClass('text-success text-warning text-danger')
@@ -3610,7 +3624,9 @@ $('#dglClientSiteIdActionList').on('change', function () {
     getSiteAddressAndMapDetails(clientSiteId);
     sitebuttonSelectedClientSiteId = -1;
 });
-
+$('#download_siteRCSOPList,#download_imageRCList').on('mouseEnter', function () {
+    this.blur(); // Removes focus immediately
+});
 function getSiteAddressAndMapDetails(clientSiteId) {
     $('#pn_client_site_address').val('');
     $('#pn_sitegpsmap').attr('href', "javascript:void(0)");
@@ -7045,6 +7061,8 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
                 } else {
                     $('#download_imageRCList').removeAttr('href');
                     $('#download_imageRCList').removeAttr('download');
+                    $('#download_imageRCList').removeClass('btn-primary');
+                    $('#download_imageRCList').addClass('text-primary');
                 }
 
 
