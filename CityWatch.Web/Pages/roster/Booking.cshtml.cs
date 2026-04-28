@@ -467,6 +467,11 @@ namespace CityWatch.Web.Pages.roster
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
+                if (reliefGuardId.HasValue || !string.IsNullOrEmpty(reliefProviderName))
+                {
+                    finalStatus = RosterShiftStatus.Accepted;
+                }
+
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
 
@@ -540,6 +545,11 @@ namespace CityWatch.Web.Pages.roster
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
+
+                if (reliefGuardId.HasValue || !string.IsNullOrEmpty(reliefProviderName))
+                {
+                    finalStatus = RosterShiftStatus.Accepted;
+                }
 
                 var schedule = new RosterSchedule
                 {
