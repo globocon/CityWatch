@@ -433,6 +433,27 @@
     <!-- Hidden Utils -->
     <input type="file" id="coverUploadInput" style="display:none;" accept=".pdf" />
 
+    <!-- Overnight Shift Modal -->
+    <div class="modal fade" id="overnightShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i>Overnight Shift</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+                <div class="modal-footer justify-content-center border-top-0">
+                    <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Edit</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnSplitShift">Split</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Shift Modal -->
     <div class="modal fade" id="addShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -2208,10 +2229,173 @@
                     return;
                 }
 
-                // Client-side Validation 2: Time check
+                // Client-side Validation 2: Time check (Overnight Shift Split)
                 if (startTime >= endTime) {
-                    alert('End Time must be after Start Time.');
+                    var shiftDate = new Date(currentStartDate);
+                    shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                    var dateStr = shiftDate.toISOString().split('T')[0];
+                    
+                    var nextShiftDate = new Date(shiftDate);
+                    nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+                    var nextDateStr = nextShiftDate.toISOString().split('T')[0];
+
+                    // Calculate Durations
+                    var parts1 = startTime.split(':');
+                    var h1 = parseInt(parts1[0]);
+                    var m1 = parseInt(parts1[1]);
+                    
+                    var parts2 = endTime.split(':');
+                    var h2 = parseInt(parts2[0]);
+                    var m2 = parseInt(parts2[1]);
+
+                    var totalMin1 = (23 - h1) * 60 + (59 - m1);
+                    var hrs1 = Math.floor(totalMin1 / 60);
+                    var mins1 = totalMin1 % 60;
+                    var durationStr1 = hrs1 + 'h ' + mins1 + 'm';
+
+                    var totalMin2 = h2 * 60 + m2 - 1;
+                    var hrs2 = Math.floor(totalMin2 / 60);
+                    var mins2 = totalMin2 % 60;
+                    var durationStr2 = hrs2 + 'h ' + mins2 + 'm';
+
+                    // Update Modal Content
+                    $('#overnightShiftModal .modal-body').html(
+                        '<p class="mb-3 text-muted">This shift crosses midnight. If you split, it will create two shifts:</p>' +
+                        '<div class="alert alert-light border text-left mb-3" style="font-size: 0.9rem;">' +
+                            '<div><i class="fa fa-calendar mr-2 text-primary"></i><strong>' + dateStr + '</strong>: ' + startTime + ' - 23:59 (' + durationStr1 + ')</div>' +
+                            '<div class="mt-2"><i class="fa fa-calendar mr-2 text-success"></i><strong>' + nextDateStr + '</strong>: 00:01 - ' + endTime + ' (' + durationStr2 + ')</div>' +
+                        '</div>' +
+                        '<p class="mb-0 text-muted">Please choose how to proceed.</p>'
+                    );
+
+                    $('#overnightShiftModal').modal('show');
+                    
+                    $('#btnSplitShift').off('click').on('click', function() {
+                        $('#overnightShiftModal').modal('hide');
+                        saveSplitShiftAttempt(false);
+                    });
                     return;
+                }
+
+                function saveSplitShiftAttempt(ignoreUnavailFlag) {
+                    var shiftDate = new Date(currentStartDate);
+                    shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                    var dateStr = shiftDate.toISOString().split('T')[0];
+                    
+                    var nextShiftDate = new Date(shiftDate);
+                    nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+                    var nextDateStr = nextShiftDate.toISOString().split('T')[0];
+
+                    var startDateTime1 = dateStr + 'T' + startTime;
+                    var endDateTime1 = dateStr + 'T23:59';
+                    
+                    var startDateTime2 = nextDateStr + 'T00:01';
+                    var endDateTime2 = nextDateStr + 'T' + endTime;
+
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: {
+                            groupId: currentGroupId,
+                            siteId: siteId,
+                            start: startDateTime1,
+                            end: endDateTime1,
+                            guardId: guardId,
+                            providerName: providerName,
+                            payRateId: payRateId,
+                            shiftId: shiftId,
+                            callsignId: callsignId,
+                            reliefGuardId: reliefGuardId,
+                            reliefProviderName: reliefProviderName,
+                            reliefReason: reliefReason,
+                            reliefReasonOther: reliefReasonOther,
+                            shiftType: shiftType,
+                            status: shiftStatus,
+                            ignoreUnavailability: ignoreUnavailFlag
+                        },
+                        success: function (res1) {
+                            if (res1.success) {
+                                $.ajax({
+                                    url: '/roster/Booking?handler=AddShift',
+                                    type: 'POST',
+                                    headers: getHeaders(),
+                                    data: {
+                                        groupId: currentGroupId,
+                                        siteId: siteId,
+                                        start: startDateTime2,
+                                        end: endDateTime2,
+                                        guardId: guardId,
+                                        providerName: providerName,
+                                        payRateId: payRateId,
+                                        shiftId: '', // Always new shift
+                                        callsignId: callsignId,
+                                        reliefGuardId: reliefGuardId,
+                                        reliefProviderName: reliefProviderName,
+                                        reliefReason: reliefReason,
+                                        reliefReasonOther: reliefReasonOther,
+                                        shiftType: shiftType,
+                                        status: shiftStatus,
+                                        ignoreUnavailability: ignoreUnavailFlag
+                                    },
+                                    success: function (res2) {
+                                        if (res2.success) {
+                                            $('#addShiftModal').modal('hide');
+                                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                                        } else if (res2.isUnavailConflict) {
+                                            if (confirm("Shift 1 saved.\n\nShift 2 Conflict: " + res2.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                                                saveSecondShiftOnly(startDateTime2, endDateTime2, true);
+                                            }
+                                        } else {
+                                            alert('Shift 1 saved, but Shift 2 failed: ' + res2.message);
+                                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                                        }
+                                    }
+                                });
+                            } else if (res1.isUnavailConflict) {
+                                if (confirm("Shift 1 Conflict: " + res1.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                                    saveSplitShiftAttempt(true);
+                                }
+                            } else {
+                                alert(res1.message);
+                            }
+                        }
+                    });
+                }
+
+                function saveSecondShiftOnly(start2, end2, ignoreUnavailFlag) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: {
+                            groupId: currentGroupId,
+                            siteId: siteId,
+                            start: start2,
+                            end: end2,
+                            guardId: guardId,
+                            providerName: providerName,
+                            payRateId: payRateId,
+                            shiftId: '',
+                            callsignId: callsignId,
+                            reliefGuardId: reliefGuardId,
+                            reliefProviderName: reliefProviderName,
+                            reliefReason: reliefReason,
+                            reliefReasonOther: reliefReasonOther,
+                            shiftType: shiftType,
+                            status: shiftStatus,
+                            ignoreUnavailability: ignoreUnavailFlag
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                $('#addShiftModal').modal('hide');
+                                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                            } else {
+                                alert('Shift 2 failed: ' + res.message);
+                                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                            }
+                        }
+                    });
                 }
 
                 // Client-side Validation 3: Relief Reason Validation
