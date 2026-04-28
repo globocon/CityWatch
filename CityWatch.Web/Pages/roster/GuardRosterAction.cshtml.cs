@@ -192,7 +192,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public async Task<JsonResult> OnGetLoadRemunerationSummary(DateTime startDate, string guardIds)
+        public async Task<JsonResult> OnGetLoadRemunerationSummary(DateTime startDate, string guardIds, int? siteId)
         {
             if (string.IsNullOrEmpty(guardIds)) return new JsonResult(new { results = new List<object>() });
 
@@ -204,7 +204,7 @@ namespace CityWatch.Web.Pages.roster
                     .ToList();
 
                 var summaries = await _context.RosterRemunerationSummaries
-                    .Where(x => x.WeekStartDate == startDate.Date)
+                    .Where(x => x.WeekStartDate == startDate.Date && x.ClientSiteId == siteId)
                     .Select(x => new {
                         x.GuardId,
                         x.ProviderName,
@@ -228,7 +228,7 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
-        public async Task<IActionResult> OnPostSaveRemunerationSummary(DateTime startDate, int? guardId, string providerName, bool isPaid, string notes, decimal totalAmount)
+        public async Task<IActionResult> OnPostSaveRemunerationSummary(DateTime startDate, int? guardId, string providerName, bool isPaid, string notes, decimal totalAmount, int? siteId)
         {
             try
             {
@@ -236,12 +236,12 @@ namespace CityWatch.Web.Pages.roster
                 if (guardId.HasValue)
                 {
                     summary = await _context.RosterRemunerationSummaries
-                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.GuardId == guardId.Value);
+                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.GuardId == guardId.Value && x.ClientSiteId == siteId);
                 }
                 else
                 {
                     summary = await _context.RosterRemunerationSummaries
-                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.ProviderName == providerName);
+                        .FirstOrDefaultAsync(x => x.WeekStartDate == startDate.Date && x.ProviderName == providerName && x.ClientSiteId == siteId);
                 }
 
                 if (summary == null)
@@ -253,7 +253,8 @@ namespace CityWatch.Web.Pages.roster
                         ProviderName = providerName,
                         IsPaid = isPaid,
                         Notes = notes,
-                        TotalAmount = totalAmount
+                        TotalAmount = totalAmount,
+                        ClientSiteId = siteId
                     };
                     _context.RosterRemunerationSummaries.Add(summary);
                 }
