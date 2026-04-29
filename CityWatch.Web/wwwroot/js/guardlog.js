@@ -9632,7 +9632,84 @@ $(function () {
             });
     });
 
-    $('#btnDownloadWandstrikeAuditExcel').on('click', function () {
+    let columnConfig;
+    columnConfig = [        
+        {
+            header: "Strike DateTime",
+            get: x => convertWandStrikeDateTimeString(
+                x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime
+            )
+        },
+        {
+            header: "SmartWand",
+            get: x => x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? ''
+        },
+        {
+            header: "Tag ID",
+            get: x => x.clientSiteSmartWandTagsHitLog?.tagUId ?? ''
+        },
+        {
+            header: "Tag Type",
+            get: x => x.smartWandType ?? ''
+        },
+        {
+            header: "End User",
+            get: x => x.endUser ?? ''
+        },
+        {
+            header: "Client Site",
+            get: x => x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? ''
+        },
+        {
+            header: "Scan",
+            get: x => x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+        }
+    ];
+
+    $('#btnDownloadWandstrikeAuditReportDateTime').on('click', function () {
+        generateDataForExportToExcel('DATETIME');
+    });
+
+    $('#btnDownloadWandstrikeAuditReportSite').on('click', function () {
+        //Change Column export order
+        columnConfig = [
+            {
+                header: "Client Site",
+                get: x => x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? ''
+            },
+            {
+                header: "Strike DateTime",
+                get: x => convertWandStrikeDateTimeString(
+                    x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime
+                )
+            },
+            {
+                header: "Scan",
+                get: x => x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+            },
+            {
+                header: "SmartWand",
+                get: x => x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? ''
+            },
+            {
+                header: "Tag ID",
+                get: x => x.clientSiteSmartWandTagsHitLog?.tagUId ?? ''
+            },
+            {
+                header: "Tag Type",
+                get: x => x.smartWandType ?? ''
+            },
+            {
+                header: "End User",
+                get: x => x.endUser ?? ''
+            }
+        ];
+        generateDataForExportToExcel('SITE');
+    });
+
+    
+    function generateDataForExportToExcel(exporttype) {
+
         if ($('#wandstrikeClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
@@ -9666,35 +9743,42 @@ $(function () {
             data: $('#form_wandstrike_auditlog_request').serialize(),
             /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
         })
-            .done(function (response) {
+            .done(async function (response) {
                 wandStrikeLogExcel.clear().rows.add(response.wandStrikeAuditLogViewModel).draw();
                 var searchtext = wandStrikeLogReport.search();
-                wandStrikeLogExcel.search(searchtext).draw();
+                if (exporttype === 'SITE') {
+                    // Sorting and filtering as per site.
+                    wandStrikeLogExcel.search(searchtext).order([6, 'asc'], [1, 'asc']).draw();
+                }
+                else {
+                    // Already sorted by api call applying filter.
+                    wandStrikeLogExcel.search(searchtext).draw();
+                }
 
                 // Get raw data directly from DataTable
                 var exportData = wandStrikeLogExcel.rows({ search: 'applied' }).data().toArray();
 
-                // Optional: Flatten or clean up data if needed
-                var cleanedData = exportData.map(x => ({
-                    "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
-                    "SmartWand": x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? '',
-                    "Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
-                    "Tag Type": x.smartWandType ?? '',
-                    "End User": x.endUser ?? '',
-                    "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
-                    "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
-                }));
+                const cleanedData = exportData.map(row => {
+                    const obj = {};
+                    columnConfig.forEach(col => {
+                        obj[col.header] = col.get(row);
+                    });
+                    return obj;
+                });
 
-                // Convert to worksheet
-                var worksheet = XLSX.utils.json_to_sheet(cleanedData);
-                // Create workbook
-                var workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "WandStrikeLogs");
+                //// Optional: Flatten or clean up data if needed
+                //var cleanedData = exportData.map(x => ({
+                //    "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
+                //    "SmartWand": x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? '',
+                //    "Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
+                //    "Tag Type": x.smartWandType ?? '',
+                //    "End User": x.endUser ?? '',
+                //    "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
+                //    "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+                //}));
 
-                // Generate and download Excel file
-                var name = 'Wand Strike Data Logs - ' + $('#wandstrikeAudtitFromDate').val() + ' to ' + $('#wandstrikeAudtitToDate').val() + '.xlsx';
-                XLSX.writeFile(workbook, name);
-
+                await exportToExcel(cleanedData);
+                $('#loader').hide();
             })
             .fail(function (xhr, status, error) {
                 console.error('AJAX error:', status, error);
@@ -9702,7 +9786,78 @@ $(function () {
             .always(function () {
                 $('#loader').hide();
             });
-    });
+    };
+
+
+    
+
+    async function exportToExcel(cleanedData) {
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("WandStrikeLogs");
+
+        if (!cleanedData || cleanedData.length === 0) return;
+
+        //// Define columns from keys
+        //const columns = Object.keys(cleanedData[0]).map(key => ({
+        //    header: key,
+        //    key: key
+        //}));
+                
+        const columns = columnConfig.map(col => ({
+            header: col.header,
+            key: col.header
+        }));
+
+        worksheet.columns = columns;
+
+        // Add rows
+        cleanedData.forEach(item => {
+            worksheet.addRow(item);
+        });
+
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF27C2F5' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+            let maxLength = column.header.length;
+
+            column.eachCell({ includeEmpty: true }, cell => {
+                const value = cell.value ? cell.value.toString() : "";
+                maxLength = Math.max(maxLength, value.length);
+            });
+
+            column.width = maxLength + 2; // padding
+        });
+
+        worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+        // Generate file
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        const fromDate = $('#wandstrikeAudtitFromDate').val();
+        const toDate = $('#wandstrikeAudtitToDate').val();
+
+        const fileName = `Wand Strike Data Logs - ${fromDate} to ${toDate}.xlsx`;
+
+        saveAs(new Blob([buffer]), fileName);
+    }
 
 
     $('#btnDownloadWandstrikeAuditZip').on('click', function () {
