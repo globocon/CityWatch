@@ -1,6 +1,7 @@
 
 var FileuploadFileChanged = null;
 $(function () {
+ //p4-147-lb shade-start
     if ($('#ClientSiteID').val() == 629) {
         var targetDiv = document.querySelector(' body');
 
@@ -13,6 +14,8 @@ $(function () {
 
         }
     }
+    //p4-147-lb shade-end
+
     // To fix the Datatable column header issue when hidden inside tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
