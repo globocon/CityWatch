@@ -6,7 +6,7 @@
 
 <form id="form_wandstrike_auditlog_request" method="post" class="border-bottom">
 	<div class="form-row">
-		<div class="form-group col-md-2">
+		<div class="form-group col-md-3">
 			<label class="mx-1">Client Type</label>
 			  @if (Model.ClientTypeId != 0)
 				{
@@ -39,28 +39,58 @@
 						</select>
 					}
 		</div>
-		<div class="form-group col-md-2">
+		<div class="form-group col-md-3">
 			<label class="mx-1">Client Site</label>
 			<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeClientSiteId"></select>
 		</div>
-		@* <div class="form-group" style="width: 157px !important;">
-			<label class="mx-1" for="KeyVehicleKeydownselect">Keyword Downselect</label>
-			<input type="text" class="form-control"  asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyVehicleDownselect" />
-		</div> *@
-		<div class="form-group col-auto">
+		<div class="form-group col-md-2">
+			 <div class="d-flex flex-row justify-content-between align-items-center">
+				<label class="mx-1">Patrol Car </label>
+				<div class="custom-control custom-switch">
+					<input type="checkbox" class="custom-control-input" id="patrolCarToggle">
+					<label class="custom-control-label" for="patrolCarToggle"></label>
+					<input type="hidden" id="IspatrolCarToggle" name="IspatrolCarDownselect">
+				</div>
+			</div>
+
+			<select class="form-control mx-1 wandstrikemultiselect"
+					multiple="multiple"
+					id="wandstrikePatrolCarId">
+			</select>
+		</div>
+
+		<div class="form-group col-md-2">
 			<label class="mx-1">From Date</label>
 			<input type="date" class="form-control" id="wandstrikeAudtitFromDate" />
 		</div>
-		<div class="form-group col-auto">
+		<div class="form-group col-md-2">
 			<label class="mx-1" for="wandstrikeAudtitToDate">To Date</label>
 			<input type="date" class="form-control" id="wandstrikeAudtitToDate">
+		</div>		
 		</div>
-		<div class="form-group col-md-4">
-			<label class="mx-1">&nbsp;</label>
-			<div>
-				<button type="button" class="btn btn-primary" id="btnGenerateWandstrikeAuditReport">View Report</button>
-				<a href="#" class="btn btn-primary" id="btnDownloadWandstrikeAuditExcel">Download Exl</a>
-				@* <button type="button" class="btn btn-primary" id="btnDownloadWandstrikeAuditZip" title="Download Logs As Zip">Download Zip</button> *@
+		<div class="row">
+			<div class="form-group col-auto ml-auto">
+				<div class="d-flex justify-content-end align-items-center flex-wrap">
+            
+					<button type="button" class="btn btn-primary mr-5" id="btnGenerateWandstrikeAuditReport">
+						View Report
+					</button>
+
+					<img class="mr-2" src="../images/icons/Excel_2025.svg" height="32"/>
+
+					<button type="button" class="btn btn-primary mr-2" id="btnDownloadWandstrikeAuditReportDateTime">
+						<i class="fa fa-arrow-down mr-1"></i>Date/Time
+					</button>
+
+					<button type="button" class="btn btn-primary mr-2" id="btnDownloadWandstrikeAuditReportSite">
+						<i class="fa fa-arrow-down mr-1"></i>Site
+					</button>
+
+					@* <button type="button" class="btn btn-primary" id="btnDownloadWandstrikeAuditReportMoSun">
+						<i class="fa fa-arrow-down mr-1"></i>Mon-Sun
+					</button> *@
+
+				</div>
 			</div>
 		</div>
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.ClientSiteId" />
@@ -71,52 +101,63 @@
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagLabel" />
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.SmartWandId" />
 
-		<div class="row col-md-12">
-			<div class="row col-md-5">
-				 <div class="col-md-12 mt-1">
-					<label style="color:#0366d6">Tag Downselect</label>
-					<hr class="mt-0" />
+		<div class="row">			
+			<div class="col-md-5">
+				<div class="row">
+					 <div class="col-md-12 mt-1">
+						<label style="color:#0366d6">Tag Downselect</label>
+						<hr class="mt-0" />
+					</div>
 				</div>
-				<div class="form-group col-md-3">
-					<label>UID</label>
-					<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagId"></select>
-				</div>
-				<div class="form-group col-md-3">
-					<label>TYPE</label>
-					<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagTypeId"></select>
-				</div>
-				<div class="form-group col-md-6">
-					<label>Label</label>
-					<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagLabel"></select>
+				<div class="row">
+					<div class="form-group col-md-3">
+						<label>UID</label>
+						<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagId"></select>
+					</div>
+					<div class="form-group col-md-3">
+						<label>TYPE</label>
+						<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagTypeId"></select>
+					</div>
+					<div class="form-group col-md-6">
+						<label>Label</label>
+						<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagLabel"></select>
+					</div>
 				</div>
 			</div>
 
-			<div class="row col-md-4">
-				<div class="col-md-12 mt-1">
-					<label style="color:#0366d6">End-User Downselect</label>
-					<hr class="mt-0" />
+			<div class="col-md-4">
+				<div class="row">
+					<div class="col-md-12 mt-1">
+						<label style="color:#0366d6">End-User Downselect</label>
+						<hr class="mt-0" />
+					</div>
 				</div>
-				<div class="form-group col-md-6">
-					<label>Licence No (Primary)</label>
-					<input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardLicenceNoId" />
-				</div>
-				<div class="form-group col-md-6">
-					<label>Guard Name</label>
-					<input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardName" />
+				<div class="row">
+					<div class="form-group col-md-7">
+						<label>Licence No (Primary)</label>
+						<input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardLicenceNoId" />
+					</div>
+					<div class="form-group col-md-5">
+						<label>Guard Name</label>
+						<input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardName" />
+					</div>
 				</div>
 			</div>
-			<div class="row col-md-3">
-				<div class="col-md-12 mt-1">
-					<label style="color:#0366d6">Smart WAND Downselect</label>
-					<hr class="mt-0" />
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md-12 mt-1">
+						<label style="color:#0366d6">SmartWAND Downselect</label>
+						<hr class="mt-0" />
+					</div>
 				</div>
-				<div class="form-group col-md-12">
-					<label>Wand ID</label>
-					<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeSmartWandId"></select>
+				<div class="row">
+					<div class="form-group col-md-12">
+						<label>Wand ID</label>
+						<select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeSmartWandId"></select>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>    
 </form>
 <div class="full-width"> 
 	<div class="row mt-3">
@@ -156,3 +197,5 @@
 	</div>
 </div>
 		
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
