@@ -3014,8 +3014,10 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
     var inpcallfun = $('#inpCallingFunction').val();
     $('#download_siteRCSOPList').removeAttr('href');
+    //p4-143-steps-update-start
     $('#download_siteRCSOPList').removeClass('btn-primary');
     $('#download_siteRCSOPList').addClass('text-primary');
+    //p4-143-steps-update-end
     if (inpcallfun == 'STEPBUTTON') {
         $('#textMessageTab').addClass('d-none').removeClass('active');
         $('#textMessage').addClass('d-none').removeClass('show').removeClass('active');
@@ -3059,8 +3061,10 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
     $('#download_siteRCSOPList').removeAttr('href');
+    //p4-143-steps-update-start
     $('#download_siteRCSOPList').removeClass('btn-primary');
     $('#download_siteRCSOPList').addClass('text-primary');
+    //p4-143-steps-update-end
     $('#btnSendPushLotificationMessage').prop('disabled', false);
     $('#btnSendGlabalNotificationMessage').prop('disabled', false);
     $('#btnSendActionList').prop('disabled', false);
@@ -3566,9 +3570,10 @@ $('#dglClientSiteIdActionList').on('change', function () {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
                 $('#download_imageRCList').attr('href', data.sopAlarmFilePath + data.sopAlarmFileNme);
+                //p4-143-steps-update-start
                 $('#download_imageRCList').addClass('btn-primary');
                 $('#download_imageRCList').removeClass('text-primary');
-
+                //p4-143-steps-update-end
             } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
                 $('#download_imageRCList')
                     .attr('data-toggle', 'modal')
@@ -3579,19 +3584,25 @@ $('#dglClientSiteIdActionList').on('change', function () {
             }
             else {
                 $('#download_imageRCList').removeAttr('href');
+                //p4-143-steps-update-start
                 $('#download_imageRCList').addClass('text-primary');
                 $('#download_imageRCList').removeClass('btn-primary');
+                //p4-143-steps-update-end
             }
             if (data.sopFileNme != null) {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
+                //p4-143-steps-update-start
                 $('#download_siteRCSOPList').addClass('btn-primary');
                 $('#download_siteRCSOPList').removeClass('text-primary');
+                //p4-143-steps-update-end
                 $('#download_siteRCSOPList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopFileNme);
             } else {
                 $('#download_siteRCSOPList').removeAttr('href');
+                //p4-143-steps-update-start
                 $('#download_siteRCSOPList').addClass('text-primary');
                 $('#download_siteRCSOPList').removeClass('btn-primary');
+                //p4-143-steps-update-end
             }
             $('.traffic-status')
                 .removeClass('text-success text-warning text-danger')
@@ -3624,9 +3635,11 @@ $('#dglClientSiteIdActionList').on('change', function () {
     getSiteAddressAndMapDetails(clientSiteId);
     sitebuttonSelectedClientSiteId = -1;
 });
+//p4-143-steps-update-start
 $('#download_siteRCSOPList,#download_imageRCList').on('mouseEnter', function () {
     this.blur(); // Removes focus immediately
 });
+//p4-143-steps-update-end
 function getSiteAddressAndMapDetails(clientSiteId) {
     $('#pn_client_site_address').val('');
     $('#pn_sitegpsmap').attr('href', "javascript:void(0)");
@@ -7061,8 +7074,10 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
                 } else {
                     $('#download_imageRCList').removeAttr('href');
                     $('#download_imageRCList').removeAttr('download');
+                    //p4-143-steps-update-start
                     $('#download_imageRCList').removeClass('btn-primary');
                     $('#download_imageRCList').addClass('text-primary');
+                    //p4-143-steps-update-end
                 }
 
 
