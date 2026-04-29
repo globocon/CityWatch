@@ -28,6 +28,7 @@ namespace CityWatch.RadioCheck.Services
         List<ClientSite> GetUserClientSitesHavingAccess(int[] typeId, int? userId, string searchTerm, string searchTermtwo);
         public List<SelectListItem> KPITelematicsList();
         public Guard GetGuardsDetails(int GuardID);
+        List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId);
     }
 
     public class ViewDataService : IViewDataService
@@ -322,6 +323,11 @@ namespace CityWatch.RadioCheck.Services
             }
             return items;
 
+        }
+        public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId)
+        {
+            var GuardDetails = _guardDataProvider.GetGuardLicensesandcompliance(guardId);
+            return GuardDetails;
         }
     }
 }
