@@ -110,7 +110,7 @@ namespace CityWatch.Web.Pages.roster
 
             // Locking logic: Dec is locked if it's Jan.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            IsLocked = StartDate < firstDayOfCurrentMonth;
+            IsLocked = EndDate < firstDayOfCurrentMonth;
 
             PopulateWeeklyHolidays();
         }
@@ -368,7 +368,8 @@ namespace CityWatch.Web.Pages.roster
             // Lock Check
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            if (start < firstDayOfCurrentMonth)
+            var weekEndDate = StartOfWeek(start, DayOfWeek.Monday).AddDays(6);
+            if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
@@ -703,7 +704,8 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+                if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
@@ -734,7 +736,8 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+                if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
@@ -1181,7 +1184,7 @@ namespace CityWatch.Web.Pages.roster
                         .ToListAsync();
                     
                     // Do not delete shifts that are in previous/locked months
-                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => x.ShiftStart >= firstDayOfCurrentMonth).ToList();
+                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, DayOfWeek.Monday).AddDays(6) >= firstDayOfCurrentMonth).ToList();
                     
                     foreach (var shift in shiftsAllowedToDelete)
                     {
@@ -1198,7 +1201,7 @@ namespace CityWatch.Web.Pages.roster
 
                 foreach (var targetWeekStart in targetWeeks)
                 {
-                    if (targetWeekStart < firstDayOfCurrentMonth) continue; // Safety check
+                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check
 
                     foreach (var source in sourceSchedules)
                     {
@@ -1487,7 +1490,8 @@ namespace CityWatch.Web.Pages.roster
 
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            if (schedule.ShiftStart < firstDayOfCurrentMonth)
+            var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+            if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
