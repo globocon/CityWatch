@@ -41,8 +41,8 @@ namespace CityWatch.Data.Models
         {
             get
             {
-                //if (IsPHO != 1)
-                //{
+                if (IsPHO != 1)
+                {
                     if (!string.IsNullOrEmpty(EmpHoursEnd) && !string.IsNullOrEmpty(EmpHoursStart))
                     {
 
@@ -54,11 +54,11 @@ namespace CityWatch.Data.Models
                     {
                         return 0.0;
                     }
-                //}
-                //else
-                //{
-                //    return 0.0;
-                //}
+                }
+                else
+                {
+                    return 0.0;
+                }
 
 
             }
