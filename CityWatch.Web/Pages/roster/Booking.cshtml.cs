@@ -71,15 +71,7 @@ namespace CityWatch.Web.Pages.roster
         {
             var today = DateTime.Today;
             var timesheet = _clientDataProvider.GetTimesheetDetails();
-            DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
-
-            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
-            {
-                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
-                {
-                    firstDayOfWeek = parsedDay;
-                }
-            }
+            DayOfWeek firstDayOfWeek = GetFirstDayOfWeek();
 
             if (startDate == null)
             {
@@ -368,7 +360,7 @@ namespace CityWatch.Web.Pages.roster
             // Lock Check
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(start, DayOfWeek.Monday).AddDays(6);
+            var weekEndDate = StartOfWeek(start, GetFirstDayOfWeek()).AddDays(6);
             if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
@@ -694,7 +686,7 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
                 if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
@@ -726,7 +718,7 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
                 if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
@@ -1174,7 +1166,8 @@ namespace CityWatch.Web.Pages.roster
                         .ToListAsync();
                     
                     // Do not delete shifts that are in previous/locked months
-                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, DayOfWeek.Monday).AddDays(6) >= firstDayOfCurrentMonth).ToList();
+                    var firstDayOfWeek = GetFirstDayOfWeek();
+                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, firstDayOfWeek).AddDays(6) >= firstDayOfCurrentMonth).ToList();
                     
                     foreach (var shift in shiftsAllowedToDelete)
                     {
@@ -1480,7 +1473,7 @@ namespace CityWatch.Web.Pages.roster
 
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(schedule.ShiftStart, DayOfWeek.Monday).AddDays(6);
+            var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
             if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
@@ -1594,6 +1587,24 @@ namespace CityWatch.Web.Pages.roster
             }
 
             return new JsonResult(new { success = true });
+        }
+        private DayOfWeek GetFirstDayOfWeek()
+        {
+            var timesheet = _clientDataProvider.GetTimesheetDetails();
+            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+            {
+                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                {
+                    return parsedDay;
+                }
+            }
+            return DayOfWeek.Monday;
+        }
+
+        private DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
         }
     }
 }
