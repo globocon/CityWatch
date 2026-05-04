@@ -301,13 +301,6 @@ namespace CityWatch.Web.Services
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
 
-                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
-                                    {
-                                        borderColor = ColorConstants.RED;
-                                        fontColor = ColorConstants.RED;
-                                        bgColor = ColorConstants.WHITE;
-                                    }
-
                                     // ADHOC Color Overrides
                                     if (shift.ShiftType == "Adhoc")
                                     {
@@ -331,6 +324,13 @@ namespace CityWatch.Web.Services
                                         bgColor = new DeviceRgb(111, 66, 193);
                                         borderColor = ColorConstants.WHITE;
                                         fontColor = ColorConstants.WHITE;
+                                    }
+
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
+                                    {
+                                        borderColor = ColorConstants.RED;
+                                        fontColor = ColorConstants.RED;
+                                        bgColor = ColorConstants.WHITE;
                                     }
 
                                     var shiftBlock = new Div().SetBackgroundColor(bgColor).SetMarginBottom(1).SetPadding(1.5f).SetBorder(new SolidBorder(borderColor, shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled ? 1.0f : 0.5f));
