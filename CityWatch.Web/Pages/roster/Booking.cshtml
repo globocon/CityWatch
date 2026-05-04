@@ -2312,7 +2312,7 @@
                 }
 
                 // Client-side Validation 1: At least one selected
-                if (!guardId && !providerName) {
+                if (!guardId && !providerName && shiftType !== 'Cancelled') {
                     alert('Please select either a Guard OR a Provider.');
                     return;
                 }

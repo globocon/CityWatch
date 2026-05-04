@@ -379,8 +379,8 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "Shift End Time must be greater than Start Time." });
             }
 
-            // Validation 2: Guard OR Provider must be selected
-            if (!guardId.HasValue && string.IsNullOrEmpty(providerName))
+            // Validation 2: Guard OR Provider must be selected (Unless Cancelled)
+            if (!guardId.HasValue && string.IsNullOrEmpty(providerName) && shiftType != "Cancelled")
             {
                 return new JsonResult(new { success = false, message = "Please select a Guard or a Subcontractor Provider." });
             }
@@ -390,7 +390,7 @@ namespace CityWatch.Web.Pages.roster
             {
                 var conflict = await _context.RosterSchedules
                     .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
-                                !x.IsDeleted && x.Id != (shiftId ?? 0) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -419,7 +419,7 @@ namespace CityWatch.Web.Pages.roster
             {
                 var reliefConflict = await _context.RosterSchedules
                     .Where(x => ((x.GuardId == reliefGuardId && x.ReliefGuardId == null) || x.ReliefGuardId == reliefGuardId) &&
-                                !x.IsDeleted && x.Id != (shiftId ?? 0) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -482,13 +482,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
 
-                if (finalStatus == RosterShiftStatus.Cancelled)
-                {
-                    existing.GuardId = null;
-                    existing.ProviderName = null;
-                    existing.ReliefGuardId = null;
-                    existing.ReliefProviderName = null;
-                }
+
 
                 // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
@@ -562,13 +556,7 @@ namespace CityWatch.Web.Pages.roster
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
-                if (finalStatus == RosterShiftStatus.Cancelled)
-                {
-                    guardId = null;
-                    providerName = null;
-                    reliefGuardId = null;
-                    reliefProviderName = null;
-                }
+
 
                 var schedule = new RosterSchedule
                 {
