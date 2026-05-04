@@ -140,6 +140,51 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
+    .guard-shift-card.status-cancelled {
+        background: white !important;
+        color: #d32f2f !important;
+        border: 1px solid #ffcdd2 !important;
+        border-left: 3px solid #f44336 !important;
+        box-shadow: none !important;
+        opacity: 0.9;
+    }
+    .guard-shift-card.status-cancelled::before,
+    .guard-shift-card.status-cancelled::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(211, 47, 47, 0.4);
+        z-index: 5;
+    }
+    .guard-shift-card.status-cancelled::before { transform: rotate(15deg); }
+    .guard-shift-card.status-cancelled::after { transform: rotate(-15deg); }
+
+    /* For the big X overlay */
+    .guard-shift-card.status-cancelled .cancelled-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+    }
+    .guard-shift-card.status-cancelled .cancelled-overlay::before,
+    .guard-shift-card.status-cancelled .cancelled-overlay::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: -10%;
+        width: 120%;
+        height: 2px;
+        background: #f44336;
+    }
+    .guard-shift-card.status-cancelled .cancelled-overlay::before { transform: rotate(15deg); }
+    .guard-shift-card.status-cancelled .cancelled-overlay::after { transform: rotate(-15deg); }
+
     .guard-shift-time {
         font-weight: 700;
         margin-top: 4px;
@@ -924,6 +969,7 @@
                             var statusClass = 'status-pushed';
                             if (s.status === 1) statusClass = 'status-accepted';
                             if (s.status === 2) statusClass = 'status-declined';
+                            if (s.status === 3) statusClass = 'status-cancelled';
 
                             var typeClass = 'type-regular';
                             if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
@@ -946,8 +992,9 @@
                                 (belongsToLoggedGuard ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
-                                    (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                 '</div>' +
+                                (s.status === 3 ? '<div class="cancelled-overlay"></div>' : '') + 
                                 (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
                                 '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
@@ -1116,6 +1163,7 @@
                     var statusClass = 'status-pushed';
                     if (newStatus === 1) statusClass = 'status-accepted';
                     if (newStatus === 2) statusClass = 'status-declined';
+                    if (newStatus === 3) statusClass = 'status-cancelled';
                     
                     var typeClass = isAdhoc ? (newStatus === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
                     card.addClass(statusClass + ' ' + typeClass);
