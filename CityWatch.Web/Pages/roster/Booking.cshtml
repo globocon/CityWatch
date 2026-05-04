@@ -1873,7 +1873,7 @@
                                     case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                     case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
                                     case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
-                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                 }
                                 if (imgName) {
                                     statusHtml = '<div class="mt-auto pb-1 text-center">' + 
@@ -3106,7 +3106,7 @@
                                         case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                         case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
                                         case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
-                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                     }
                                     if (imgName) {
                                         statusHtml = '<div class="mt-auto pb-1 text-center">' + 
@@ -3532,7 +3532,8 @@
                     case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                     case 'PAID': imgName = 'STAMP - PAID.png'; break;
                     case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                    case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                 }
 
                 container.find('.status-stamp-img').each(function() {

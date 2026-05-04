@@ -695,9 +695,9 @@ namespace CityWatch.Web.Services
             {
                 "LIVE" => "STAMP - LIVE.png",
                 "PAID" => "STAMP - PAID.png",
-                "CANCELLED" => "STAMP - CANCELD.jpg",
-                "CANCEL" => "STAMP - CANCELD.jpg",
-                "CANCELED" => "STAMP - CANCELD.jpg",
+                "CANCELLED" => "STAMP - CANCELD.png",
+                "CANCEL" => "STAMP - CANCELD.png",
+                "CANCELED" => "STAMP - CANCELD.png",
                 "INVOICED" => "STAMP - INV.png",
                 "INV" => "STAMP - INV.png",
                 "DISPUTED" => "STAMP - DISPUTED.png",
