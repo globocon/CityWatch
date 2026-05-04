@@ -1695,10 +1695,10 @@
             }).on('change', function() {
                 var isCancelled = $(this).val() === 'Cancelled';
                 if (isCancelled) {
-                    $('#modalGuardId').val(null).trigger('change').prop('disabled', true);
-                    $('#modalProviderId').val(null).trigger('change').prop('disabled', true);
-                    $('#modalReliefGuardId').val(null).trigger('change').prop('disabled', true);
-                    $('#modalReliefProviderId').val(null).trigger('change').prop('disabled', true);
+                    $('#modalGuardId').prop('disabled', true);
+                    $('#modalProviderId').prop('disabled', true);
+                    $('#modalReliefGuardId').prop('disabled', true);
+                    $('#modalReliefProviderId').prop('disabled', true);
                 } else {
                     $('#modalGuardId').prop('disabled', false);
                     $('#modalProviderId').prop('disabled', false);
