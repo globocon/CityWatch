@@ -23,6 +23,8 @@ using CityWatch.Data.Helpers;
 using iText.IO.Image;
 using iText.IO.Font.Constants;
 using iText.Kernel.Font;
+using iText.Layout.Renderer;
+using iText.Kernel.Pdf.Canvas;
 
 namespace CityWatch.Web.Services
 {
@@ -544,13 +546,7 @@ namespace CityWatch.Web.Services
 
                                     if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
                                     {
-                                        shiftBlock.Add(new Paragraph("X")
-                                            .SetFontColor(ColorConstants.RED)
-                                            .SetFontSize(14)
-                                            .SetBold()
-                                            .SetTextAlignment(TextAlignment.CENTER)
-                                            .SetMarginTop(-2)
-                                            .SetMarginBottom(-8));
+                                        shiftBlock.SetNextRenderer(new CrossRenderer(shiftBlock));
                                     }
 
                                     var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
@@ -770,6 +766,30 @@ namespace CityWatch.Web.Services
         {
             if (string.IsNullOrEmpty(value)) return "";
             return value.Length <= maxLength ? value : value.Substring(0, maxLength - 2) + "..";
+        }
+
+        private class CrossRenderer : DivRenderer
+        {
+            public CrossRenderer(Div modelElement) : base(modelElement) { }
+
+            public override void Draw(DrawContext drawContext)
+            {
+                base.Draw(drawContext);
+                PdfCanvas canvas = drawContext.GetCanvas();
+                Rectangle rect = GetOccupiedAreaBBox();
+                canvas.SetStrokeColor(ColorConstants.RED);
+                canvas.SetLineWidth(0.8f);
+                canvas.MoveTo(rect.GetLeft(), rect.GetBottom());
+                canvas.LineTo(rect.GetRight(), rect.GetTop());
+                canvas.MoveTo(rect.GetLeft(), rect.GetTop());
+                canvas.LineTo(rect.GetRight(), rect.GetBottom());
+                canvas.Stroke();
+            }
+
+            public override IRenderer GetNextRenderer()
+            {
+                return new CrossRenderer((Div)modelElement);
+            }
         }
     }
 }
