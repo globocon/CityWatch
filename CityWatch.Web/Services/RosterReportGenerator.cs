@@ -764,7 +764,7 @@ namespace CityWatch.Web.Services
                 default: 
                     return new DeviceRgb(255, 183, 77); // Orange
             }
-            }
+            
         }
         private string Truncate(string value, int maxLength)
         {
