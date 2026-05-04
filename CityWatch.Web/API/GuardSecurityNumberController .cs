@@ -4443,7 +4443,12 @@ namespace CityWatch.Web.API
                 var shift = await _context.RosterSchedules.FindAsync(model.ShiftId);
                 if (shift == null) return NotFound(new { isSuccess = false, message = "Shift not found." });
 
-                // 2. Concurrency check: verify the status hasn't changed since the mobile app last fetched data
+                // 2. Concurrency and Status checks
+                if (shift.Status == RosterShiftStatus.Cancelled)
+                {
+                    return BadRequest(new { isSuccess = false, message = "This shift has been cancelled and cannot be modified." });
+                }
+
                 if (shift.Status != model.ExpectedStatus)
                 {
                     return BadRequest(new { isSuccess = false, message = "Shift status has changed. Please refresh the roster." });
@@ -4478,6 +4483,21 @@ namespace CityWatch.Web.API
                     // Picking up a declined shift as a Relief Guard
                     else if (shift.Status == RosterShiftStatus.Declined)
                     {
+                        // Conflict Validation for Relief Guard
+                        var conflict = await _context.RosterSchedules
+                            .Include(s => s.ClientSite)
+                            .FirstOrDefaultAsync(s => s.Id != shift.Id && !s.IsDeleted &&
+                                                      ((s.GuardId == model.CallingGuardId && (s.ReliefGuardId == null || s.ReliefGuardId <= 0)) || s.ReliefGuardId == model.CallingGuardId) &&
+                                                      s.ShiftStart < shift.ShiftEnd && s.ShiftEnd > shift.ShiftStart);
+
+                        if (conflict != null)
+                        {
+                            var siteName = conflict.ClientSite?.Name ?? "another site";
+                            var conflictStart = conflict.ShiftStart.ToString("HH:mm");
+                            var conflictEnd = conflict.ShiftEnd.ToString("HH:mm");
+                            return BadRequest(new { isSuccess = false, message = $"Conflict: You are currently assigned to {siteName} from {conflictStart} to {conflictEnd}." });
+                        }
+
                         shift.ReliefGuardId = model.CallingGuardId;
                         shift.Status = RosterShiftStatus.Accepted;
                         

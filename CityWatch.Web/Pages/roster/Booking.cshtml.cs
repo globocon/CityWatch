@@ -288,7 +288,8 @@ namespace CityWatch.Web.Pages.roster
                             reliefProviderName = s.ReliefProviderName ?? "",
                             reliefReason = s.ReliefReason ?? "",
                             reliefReasonOther = s.ReliefReasonOther ?? "",
-                            shiftType = s.ShiftType ?? "Regular"
+                            shiftType = s.ShiftType ?? "Regular",
+                            adhocOffsiteText = s.AdhocOffsiteText ?? ""
                         })
                         .ToList();
                 }).ToList()
@@ -355,7 +356,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
         {
             // Lock Check
             var today = DateTime.Today;
@@ -388,7 +389,8 @@ namespace CityWatch.Web.Pages.roster
             if (guardId.HasValue)
             {
                 var conflict = await _context.RosterSchedules
-                    .Where(x => x.GuardId == guardId && !x.IsDeleted && x.Id != (shiftId ?? 0) &&
+                    .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -415,6 +417,21 @@ namespace CityWatch.Web.Pages.roster
 
             if (reliefGuardId.HasValue)
             {
+                var reliefConflict = await _context.RosterSchedules
+                    .Where(x => ((x.GuardId == reliefGuardId && x.ReliefGuardId == null) || x.ReliefGuardId == reliefGuardId) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) &&
+                                ((start >= x.ShiftStart && start < x.ShiftEnd) ||
+                                 (end > x.ShiftStart && end <= x.ShiftEnd) ||
+                                 (start <= x.ShiftStart && end >= x.ShiftEnd)))
+                    .Include(x => x.ClientSite)
+                    .FirstOrDefaultAsync();
+
+                if (reliefConflict != null)
+                {
+                    var guard = await _context.Guards.FindAsync(reliefGuardId);
+                    return new JsonResult(new { success = false, message = $"Conflict: Relief Guard {guard.Name} is currently assigned to {reliefConflict.ClientSite.Name} from {reliefConflict.ShiftStart:HH:mm} to {reliefConflict.ShiftEnd:HH:mm}." });
+                }
+
                 var unavailRelief = await _context.GuardUnavailabilities
                     .Where(u => u.GuardId == reliefGuardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
@@ -450,6 +467,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
                 existing.ReliefReasonOther = reliefReasonOther;
+                existing.AdhocOffsiteText = adhocOffsiteText;
 
                 var finalShiftType = shiftType;
                 var finalStatus = RosterShiftStatus.Pushed;
@@ -457,11 +475,20 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
+
+                if (finalStatus == RosterShiftStatus.Cancelled)
+                {
+                    existing.GuardId = null;
+                    existing.ProviderName = null;
+                    existing.ReliefGuardId = null;
+                    existing.ReliefProviderName = null;
+                }
 
                 // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
@@ -531,8 +558,17 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
+
+                if (finalStatus == RosterShiftStatus.Cancelled)
+                {
+                    guardId = null;
+                    providerName = null;
+                    reliefGuardId = null;
+                    reliefProviderName = null;
+                }
 
                 var schedule = new RosterSchedule
                 {
@@ -549,7 +585,8 @@ namespace CityWatch.Web.Pages.roster
                     PayRateId = payRateId,
                     CallsignId = callsignId,
                     ReliefReasonOther = reliefReasonOther,
-                    ShiftType = finalShiftType
+                    ShiftType = finalShiftType,
+                    AdhocOffsiteText = adhocOffsiteText
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -975,7 +1012,8 @@ namespace CityWatch.Web.Pages.roster
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? "",
                                 reliefReasonOther = s.ReliefReasonOther ?? "",
-                                shiftType = s.ShiftType ?? "Regular"
+                                shiftType = s.ShiftType ?? "Regular",
+                                adhocOffsiteText = s.AdhocOffsiteText ?? ""
                             })
                             .ToList();
                     }).ToList()
@@ -1482,6 +1520,11 @@ namespace CityWatch.Web.Pages.roster
             // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular
             var currentType = schedule.ShiftType ?? "Regular";
             var currentStatus = schedule.Status;
+
+            if (currentStatus == RosterShiftStatus.Cancelled)
+            {
+                return new JsonResult(new { success = false, message = "Cancelled shifts cannot be cycled. Use Edit to change status." });
+            }
             
             var nextType = "Regular";
             var nextStatus = RosterShiftStatus.Pushed;

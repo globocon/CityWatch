@@ -527,6 +527,10 @@
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkLWOP" value="LWOP">
                                         <label class="custom-control-label" for="chkLWOP">LWOP</label>
                                     </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkShiftSwap" value="Shift Swap">
+                                        <label class="custom-control-label" for="chkShiftSwap">Shift Swap</label>
+                                    </div>
                                     <div class="custom-control custom-checkbox mb-1 d-flex align-items-center">
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
                                         <label class="custom-control-label" for="chkOther">Other</label>
@@ -540,18 +544,30 @@
 
                     <hr />
 
-                    <div class="form-group">
-                        <label>Position (or Callsign)</label>
-                        <select id="modalCallsignId" class="form-control" style="width: 100%">
-                            <option value="">Select Callsign (Optional)</option>
-                            @if (Model.CallsignList != null)
-                            {
-                                foreach (var callsign in Model.CallsignList)
+                    <div class="form-group row">
+                        <div class="col-6">
+                            <label>Position (or Callsign)</label>
+                            <select id="modalCallsignId" class="form-control" style="width: 100%">
+                                <option value="">Select Callsign (Optional)</option>
+                                @if (Model.CallsignList != null)
                                 {
-                                    <option value="@callsign.Id">@callsign.Name</option>
+                                    foreach (var callsign in Model.CallsignList)
+                                    {
+                                        <option value="@callsign.Id">@callsign.Name</option>
+                                    }
                                 }
-                            }
-                        </select>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="mb-0" style="font-size: 0.85rem;">ADHOC / Offsite</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="chkAdhocOffsiteToggle">
+                                    <label class="custom-control-label" for="chkAdhocOffsiteToggle"></label>
+                                </div>
+                            </div>
+                            <input type="text" id="modalAdhocOffsiteText" class="form-control" placeholder="Enter offsite/adhoc text..." disabled />
+                        </div>
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
@@ -576,6 +592,7 @@
                                 <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
                                 <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
                                 <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                                <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
                             </select>
                         </div>
                     </div>
@@ -858,6 +875,39 @@
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
                 color: #FFFFFF !important;
+            }
+
+            .shift-card.status-cancelled {
+                background: #ffffff !important;
+                color: #B71C1C !important;
+                border: 2px solid #B71C1C !important;
+                overflow: hidden;
+            }
+
+            .shift-card.status-cancelled::before,
+            .shift-card.status-cancelled::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background-color: rgba(183, 28, 28, 0.7);
+                z-index: 10;
+                pointer-events: none;
+            }
+
+            .shift-card.status-cancelled::before {
+                transform: rotate(25deg);
+            }
+
+            .shift-card.status-cancelled::after {
+                transform: rotate(-25deg);
+            }
+
+            .shift-card.status-cancelled div, 
+            .shift-card.status-cancelled span {
+                opacity: 0.5;
             }
 
             .shift-card.shift-relief {
@@ -1354,6 +1404,14 @@
                 loadRoster();
             });
 
+            $('#chkAdhocOffsiteToggle').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#modalAdhocOffsiteText').prop('disabled', false).focus();
+                } else {
+                    $('#modalAdhocOffsiteText').prop('disabled', true).val('');
+                }
+            });
+
             // Group Financial/Supplier mode toggles
             $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
@@ -1634,6 +1692,19 @@
                 dropdownParent: $('#addShiftModal'),
                 templateResult: formatType,
                 templateSelection: formatType
+            }).on('change', function() {
+                var isCancelled = $(this).val() === 'Cancelled';
+                if (isCancelled) {
+                    $('#modalGuardId').val(null).trigger('change').prop('disabled', true);
+                    $('#modalProviderId').val(null).trigger('change').prop('disabled', true);
+                    $('#modalReliefGuardId').val(null).trigger('change').prop('disabled', true);
+                    $('#modalReliefProviderId').val(null).trigger('change').prop('disabled', true);
+                } else {
+                    $('#modalGuardId').prop('disabled', false);
+                    $('#modalProviderId').prop('disabled', false);
+                    $('#modalReliefGuardId').prop('disabled', false);
+                    $('#modalReliefProviderId').prop('disabled', false);
+                }
             });
 
             // Relief Guard Select2 Init
@@ -1781,10 +1852,11 @@
                                 '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
                                     '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
                                     '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>🟩 Live</option>' +
+                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>🟦 Invoiced</option>' +
+                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>🟥 Paid</option>' +
+                                        '<option value="Disputed" style="color:red;" ' + (res.projectStatus === "Disputed" ? "selected" : "") + '>🟧 Disputed</option>' +
+                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                     '</select>' +
                                     '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                 '</div>' +
@@ -1800,6 +1872,7 @@
                                     case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                                     case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                     case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                                    case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
                                     case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
                                 }
                                 if (imgName) {
@@ -1831,6 +1904,7 @@
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
+                                    if (s.status === 3) statusClass = 'status-cancelled';
 
                                     var shiftValue = s.durationHours;
                                     if (projectFinancialMode) {
@@ -1846,7 +1920,7 @@
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                             (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
@@ -1981,6 +2055,8 @@
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
                 $('#modalShiftType').val('Regular').trigger('change');
+                $('#chkAdhocOffsiteToggle').prop('checked', false).trigger('change');
+                $('#modalAdhocOffsiteText').val('').prop('disabled', true);
 
                 // Clear relief
                 $('#modalReliefGuardId').val(null).trigger('change');
@@ -2087,6 +2163,15 @@
                 // Callsign
                 $('#modalCallsignId').val(card.data('callsignid') || "").trigger('change');
 
+                var adhocText = card.data('adhoctext') || "";
+                if (adhocText) {
+                    $('#chkAdhocOffsiteToggle').prop('checked', true);
+                    $('#modalAdhocOffsiteText').val(adhocText).prop('disabled', false);
+                } else {
+                    $('#chkAdhocOffsiteToggle').prop('checked', false);
+                    $('#modalAdhocOffsiteText').val('').prop('disabled', true);
+                }
+
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
                 var currentType = card.data('shifttype') || 'Regular';
@@ -2097,6 +2182,8 @@
                     compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
                 } else if (currentStatus === 2) {
                     compositeType = 'Declined';
+                } else if (currentStatus === 3) {
+                    compositeType = 'Cancelled';
                 }
                 
                 $('#modalShiftType').val(compositeType).trigger('change');
@@ -2200,6 +2287,7 @@
                 var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
 
                 var callsignId = $('#modalCallsignId').val();
+                var adhocOffsiteText = $('#chkAdhocOffsiteToggle').is(':checked') ? $('#modalAdhocOffsiteText').val() : "";
 
                 // Relief Data
                 var reliefGuardData = $('#modalReliefGuardId').select2('data');
@@ -2336,6 +2424,7 @@
                                         reliefReasonOther: reliefReasonOther,
                                         shiftType: shiftType,
                                         status: shiftStatus,
+                                        adhocOffsiteText: adhocOffsiteText,
                                         ignoreUnavailability: ignoreUnavailFlag
                                     },
                                     success: function (res2) {
@@ -2384,6 +2473,7 @@
                             reliefReasonOther: reliefReasonOther,
                             shiftType: shiftType,
                             status: shiftStatus,
+                            adhocOffsiteText: adhocOffsiteText,
                             ignoreUnavailability: ignoreUnavailFlag
                         },
                         success: function (res) {
@@ -2439,6 +2529,7 @@
                         reliefReasonOther: reliefReasonOther,
                         shiftType: shiftType,
                         status: shiftStatus,
+                        adhocOffsiteText: adhocOffsiteText,
                         ignoreUnavailability: ignoreUnavail
                     },
                     success: function (res) {
@@ -2989,10 +3080,11 @@
                                     '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + project.projectId + '">' +
                                         '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
                                         '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>🟩 Live</option>' +
+                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>🟦 Invoiced</option>' +
+                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>🟥 Paid</option>' +
+                                            '<option value="Disputed" style="color:red;" ' + (project.projectStatus === "Disputed" ? "selected" : "") + '>🟧 Disputed</option>' +
+                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                         '</select>' +
                                         '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                     '</div>' +
@@ -3013,6 +3105,7 @@
                                         case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                                         case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                         case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                                        case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
                                         case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
                                     }
                                     if (imgName) {
@@ -3043,6 +3136,7 @@
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
                                         if (s.status === 2) statusClass = 'status-declined';
+                                        if (s.status === 3) statusClass = 'status-cancelled';
 
                                         var shiftValue = s.durationHours;
                                         if (groupFinancialMode) {
@@ -3064,7 +3158,7 @@
                                         rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                             'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                             '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                                 ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
                                                 (s.reliefGuardName || s.reliefProviderName || s.guardName) + 

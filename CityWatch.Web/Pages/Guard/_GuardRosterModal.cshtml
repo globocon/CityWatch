@@ -294,11 +294,12 @@
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
                             </div>
                             <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
-                                <option value="Live">Live (Pending)</option>
-                                <option value="Accepted">Accepted (Green)</option>
-                                <option value="Paid">Paid (Stamp)</option>
-                                <option value="Invoiced">Invoiced (Stamp)</option>
-                                <option value="Cancelled">Cancelled (Black)</option>
+                                <option value="Live">🟩 Live (Pending)</option>
+                                <option value="Accepted">🟩 Accepted (Green)</option>
+                                <option value="Paid">🟥 Paid (Stamp)</option>
+                                <option value="Invoiced">🟦 Invoiced (Stamp)</option>
+                                <option value="Disputed" style="color:red;">🟧 Disputed (Stamp)</option>
+                                <option value="Cancelled">⬛ Cancelled (Black)</option>
                             </select>
                         </div>
 
@@ -439,6 +440,10 @@
                     <div class="custom-control custom-radio mr-3 mb-2">
                         <input type="radio" id="optLWOP" name="cancelReason" class="custom-control-input" value="LWOP">
                         <label class="custom-control-label font-weight-bold" for="optLWOP">LWOP</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optShiftSwap" name="cancelReason" class="custom-control-input" value="Shift Swap">
+                        <label class="custom-control-label font-weight-bold" for="optShiftSwap">Shift Swap</label>
                     </div>
                     <div class="custom-control custom-radio mb-2">
                         <input type="radio" id="optOther" name="cancelReason" class="custom-control-input" value="Other">
@@ -627,6 +632,7 @@
                 case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                 case 'PAID': imgName = 'STAMP - PAID.png'; break;
                 case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
                 case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
             }
             if (imgName) {

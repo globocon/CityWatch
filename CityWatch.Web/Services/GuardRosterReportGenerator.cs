@@ -301,6 +301,13 @@ namespace CityWatch.Web.Services
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
 
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
+                                    {
+                                        borderColor = ColorConstants.RED;
+                                        fontColor = ColorConstants.RED;
+                                        bgColor = ColorConstants.WHITE;
+                                    }
+
                                     // ADHOC Color Overrides
                                     if (shift.ShiftType == "Adhoc")
                                     {
@@ -326,9 +333,20 @@ namespace CityWatch.Web.Services
                                         fontColor = ColorConstants.WHITE;
                                     }
 
-                                    var shiftBlock = new Div().SetBackgroundColor(bgColor).SetMarginBottom(1).SetPadding(1.5f).SetBorder(new SolidBorder(borderColor, 0.5f));
+                                    var shiftBlock = new Div().SetBackgroundColor(bgColor).SetMarginBottom(1).SetPadding(1.5f).SetBorder(new SolidBorder(borderColor, shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled ? 1.0f : 0.5f));
 
-                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
+                                    {
+                                        shiftBlock.Add(new Paragraph("X")
+                                            .SetFontColor(ColorConstants.RED)
+                                            .SetFontSize(14)
+                                            .SetBold()
+                                            .SetTextAlignment(TextAlignment.CENTER)
+                                            .SetMarginTop(-2)
+                                            .SetMarginBottom(-8));
+                                    }
+
+                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled ? "" : "Unknown");
                                     if (isRelief)
                                     {
                                         guardName = "{R} " + guardName;
@@ -407,6 +425,7 @@ namespace CityWatch.Web.Services
                 "CANCELED" => "STAMP - CANCELD.jpg",
                 "INVOICED" => "STAMP - INV.png",
                 "INV" => "STAMP - INV.png",
+                "DISPUTED" => "STAMP - DISPUTED.png",
                 _ => ""
             };
 
@@ -498,9 +517,12 @@ namespace CityWatch.Web.Services
                     return new DeviceRgb(144, 238, 144); // Light Green
                 case CityWatch.Data.Enums.RosterShiftStatus.Declined:
                     return new DeviceRgb(67, 67, 67); // Dark Gray
+                case CityWatch.Data.Enums.RosterShiftStatus.Cancelled:
+                    return ColorConstants.WHITE;
                 case CityWatch.Data.Enums.RosterShiftStatus.Pushed:
                 default: 
                     return new DeviceRgb(255, 183, 77); // Orange
+            }
             }
         }
 
