@@ -165,7 +165,7 @@
                             <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
                             <select id="search_site" class="form-control form-control-sm pl-4"></select>
                         </div>
-                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
+                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
                             <i class="fa fa-plus"></i> Add Site
                         </button>
                     </div>
@@ -860,7 +860,7 @@
                 color: #FFFFFF !important;
             }
 
-            .shift-card.shift-relief.status-pushed.type-regular {
+            .shift-card.shift-relief {
                 background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important;
                 border-left: 3px solid #e1bee7 !important;
             }
