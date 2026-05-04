@@ -553,7 +553,7 @@ namespace CityWatch.Web.Services
                                             .SetMarginBottom(-8));
                                     }
 
-                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled ? "" : "Unknown");
+                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
                                     if (isRelief)
                                     {
                                         guardName = "{R} " + guardName;

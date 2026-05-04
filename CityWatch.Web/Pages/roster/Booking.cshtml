@@ -1923,7 +1923,7 @@
                                         'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                            (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                         '</div>' +
                                         (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
                                         '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
@@ -3161,7 +3161,7 @@
                                             'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                             '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                                 ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                                (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                                (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                             '</div>' +
                                             (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
                                             '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
