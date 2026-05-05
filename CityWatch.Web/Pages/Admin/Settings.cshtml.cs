@@ -4036,18 +4036,15 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSavePayRateGroup(PayRateGroup group)
         {
-            var success = false;
-            var message = "Saved successfully";
             try
             {
                 _configDataProvider.SavePayRateGroup(group);
-                success = true;
+                return new JsonResult(new { success = true, id = group.Id });
             }
             catch (Exception ex)
             {
-                message = ex.Message;
+                return new JsonResult(new { success = false, message = ex.Message });
             }
-            return new JsonResult(new { success, message });
         }
 
         public JsonResult OnPostDeletePayRateGroup(int id)

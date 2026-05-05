@@ -348,8 +348,14 @@ $(document).on('click', '#btnSavePrgSiteAssignment', function () {
             } else {
                 alert('Error: ' + res.message);
             }
-        }).fail(function () {
-            alert('Failed to save assignments.');
+        }).fail(function (xhr) {
+            let errorMessage = 'Failed to save assignments.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                errorMessage = xhr.responseText;
+            }
+            alert('Error: ' + errorMessage);
         });
     }
 });
