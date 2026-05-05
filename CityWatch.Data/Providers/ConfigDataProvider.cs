@@ -54,7 +54,7 @@ namespace CityWatch.Data.Providers
         List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name);
         List<RadioCheckStatus> GetRadioCheckStatusWithOutcome();
         int GetRadioCheckStatusCount();
-        List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false);
+        List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false, bool includeVisualPrefix = false);
 
         //to get functions for settings in radio check-end
         //broadcast banner live events-start
@@ -1079,7 +1079,8 @@ namespace CityWatch.Data.Providers
         }
         public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
         {
-            var radiocheckstatus = _context.RadioCheckStatus.ToList();
+            var radiocheckstatus = _context.RadioCheckStatus.Include(x => x.RadioCheckStatusColor).ToList();
+            /*
             foreach (var item in radiocheckstatus)
             {
                 var radioCheckStatusColor = _context.RadioCheckStatusColor.Where(x => x.Id == item.RadioCheckStatusColorId).ToList();
@@ -1089,6 +1090,7 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+            */
             // return _context.RadioCheckStatus.ToList();
             return radiocheckstatus.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
         }
@@ -1096,7 +1098,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.RadioCheckStatus.Count();
         }
-        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true)
+        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true, bool includeVisualPrefix = false)
         {
             var radioCheckStatuses = GetRadioCheckStatusWithOutcome();
             var items = new List<SelectListItem>();
@@ -1108,8 +1110,43 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in radioCheckStatuses)
             {
-                //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                // Restore separators for empty names - 05-05-2024
+                if (string.IsNullOrWhiteSpace(item.Name))
+                {
+                    items.Add(new SelectListItem("", item.Id.ToString()));
+                    continue;
+                }
+
+                if (includeVisualPrefix)
+                {
+                    // Prepend color indicator and numeric part of Outcome (e.g. [🔴 1]) - 05-05-2024
+                    string outcome = item.RadioCheckStatusColorName ?? "";
+                    string dot = "⚪"; // Default white
+                    string displayOutcome = outcome;
+
+                    if (outcome.Contains("Red", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🔴";
+                        displayOutcome = outcome.Replace("Red", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+                    else if (outcome.Contains("Green", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🟢";
+                        displayOutcome = outcome.Replace("Green", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+                    else if (outcome.Contains("Yellow", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🟡";
+                        displayOutcome = outcome.Replace("Yellow", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+
+                    string formattedText = $"[{dot}{(string.IsNullOrWhiteSpace(displayOutcome) ? "" : " " + displayOutcome)}] {item.Name}";
+                    items.Add(new SelectListItem(formattedText, item.Id.ToString()));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
             }
 
             return items;

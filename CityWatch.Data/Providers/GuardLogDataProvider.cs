@@ -3607,6 +3607,11 @@ namespace CityWatch.Data.Providers
 
         public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata, int controlroomGuardLoginId)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(clientSiteRadioCheck.Status) && clientSiteRadioCheck.Status.StartsWith("[") && clientSiteRadioCheck.Status.Contains("]"))
+            {
+                clientSiteRadioCheck.Status = clientSiteRadioCheck.Status.Substring(clientSiteRadioCheck.Status.IndexOf("]") + 1).Trim();
+            }
 
             try
             {
@@ -3742,8 +3747,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: RED 1 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -3853,13 +3876,33 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard alarm persistence and logbook entry - 05-05-2024 - Reason: RED 2 is "No Change to Status" and should not clear NO GUARD alert.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
 
-                                /* Remove the Notification Row */
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
+
+                                /* Commented out to persist NO GUARD alarm - 05-05-2024 */
+                                /*
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
                                 _context.ClientSiteRadioChecksActivityStatus.RemoveRange(removeList);
                                 _context.SaveChanges();
+                                */
                             }
 
                         }
@@ -3958,13 +4001,33 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard alarm persistence and logbook entry - 05-05-2024 - Reason: RED 3 is "No Change to Status" and should not clear NO GUARD alert.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
 
-                                /* Remove the Notification Row */
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
+
+                                /* Commented out to persist NO GUARD alarm - 05-05-2024 */
+                                /*
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
                                 _context.ClientSiteRadioChecksActivityStatus.RemoveRange(removeList);
                                 _context.SaveChanges();
+                                */
                             }
 
                         }
@@ -4062,8 +4125,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: GREEN 1 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -4354,8 +4435,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: RED 4 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -4510,8 +4609,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: RED 1 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -4620,13 +4737,33 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard alarm persistence and logbook entry - 05-05-2024 - Reason: RED 2 is "No Change to Status" and should not clear NO GUARD alert.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
 
-                                /* Remove the Notification Row */
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
+
+                                /* Commented out to persist NO GUARD alarm - 05-05-2024 */
+                                /*
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
                                 _context.ClientSiteRadioChecksActivityStatus.RemoveRange(removeList);
                                 _context.SaveChanges();
+                                */
                             }
 
                         }
@@ -4727,13 +4864,33 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard alarm persistence and logbook entry - 05-05-2024 - Reason: RED 3 is "No Change to Status" and should not clear NO GUARD alert.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
 
-                                /* Remove the Notification Row */
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
+
+                                /* Commented out to persist NO GUARD alarm - 05-05-2024 */
+                                /*
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
                                 _context.ClientSiteRadioChecksActivityStatus.RemoveRange(removeList);
                                 _context.SaveChanges();
+                                */
                             }
 
                         }
@@ -4834,8 +4991,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: GREEN 1 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -5113,8 +5288,26 @@ namespace CityWatch.Data.Providers
                             }
                             else
                             {
+                                // Modify: No Guard logbook entry - 05-05-2024 - Reason: RED 4 should log to both Site and Control Room logbooks.
                                 _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
                                 _context.SaveChanges();
+
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
+                                };
+                                SaveGuardLog(guardLog);
+                                LogBookEntryFromRcControlRoomMessages(controlroomGuardLoginId, 0, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                 /* Remove the Notification Row */
                                 var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -5427,6 +5620,11 @@ namespace CityWatch.Data.Providers
         public void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                          IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata, string clientSiteNameActionList)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(notifications) && notifications.StartsWith("[") && notifications.Contains("]"))
+            {
+                notifications = notifications.Substring(notifications.IndexOf("]") + 1).Trim();
+            }
 
             var guardInitials = string.Empty;
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
@@ -5526,6 +5724,11 @@ namespace CityWatch.Data.Providers
         public void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                          IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(notifications) && notifications.StartsWith("[") && notifications.Contains("]"))
+            {
+                notifications = notifications.Substring(notifications.IndexOf("]") + 1).Trim();
+            }
 
             var guardInitials = string.Empty;
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
