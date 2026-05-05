@@ -1079,7 +1079,8 @@ namespace CityWatch.Data.Providers
         }
         public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
         {
-            var radiocheckstatus = _context.RadioCheckStatus.ToList();
+            var radiocheckstatus = _context.RadioCheckStatus.Include(x => x.RadioCheckStatusColor).ToList();
+            /*
             foreach (var item in radiocheckstatus)
             {
                 var radioCheckStatusColor = _context.RadioCheckStatusColor.Where(x => x.Id == item.RadioCheckStatusColorId).ToList();
@@ -1089,6 +1090,7 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+            */
             // return _context.RadioCheckStatus.ToList();
             return radiocheckstatus.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
         }
@@ -1108,8 +1110,15 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in radioCheckStatuses)
             {
-                //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                // Prepend color indicator and reference number - 05-05-2024
+                string colorName = item.RadioCheckStatusColor?.Name ?? "";
+                string dot = "⚪"; // Default white
+                if (colorName.Contains("Red", StringComparison.OrdinalIgnoreCase)) dot = "🔴";
+                else if (colorName.Contains("Green", StringComparison.OrdinalIgnoreCase)) dot = "🟢";
+                else if (colorName.Contains("Yellow", StringComparison.OrdinalIgnoreCase)) dot = "🟡";
+
+                string formattedText = $"[{dot} {item.ReferenceNo}] {item.Name}";
+                items.Add(new SelectListItem(formattedText, item.Id.ToString()));
             }
 
             return items;

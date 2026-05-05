@@ -3607,6 +3607,11 @@ namespace CityWatch.Data.Providers
 
         public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata, int controlroomGuardLoginId)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(clientSiteRadioCheck.Status) && clientSiteRadioCheck.Status.StartsWith("[") && clientSiteRadioCheck.Status.Contains("]"))
+            {
+                clientSiteRadioCheck.Status = clientSiteRadioCheck.Status.Substring(clientSiteRadioCheck.Status.IndexOf("]") + 1).Trim();
+            }
 
             try
             {
@@ -5615,6 +5620,11 @@ namespace CityWatch.Data.Providers
         public void LogBookEntryFromRcControlRoomMessagesActionList(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                          IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata, string clientSiteNameActionList)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(notifications) && notifications.StartsWith("[") && notifications.Contains("]"))
+            {
+                notifications = notifications.Substring(notifications.IndexOf("]") + 1).Trim();
+            }
 
             var guardInitials = string.Empty;
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
@@ -5714,6 +5724,11 @@ namespace CityWatch.Data.Providers
         public void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                          IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
         {
+            // Clean up visual prefix if present (e.g. [🔴 1] Status Name -> Status Name) - 05-05-2024
+            if (!string.IsNullOrEmpty(notifications) && notifications.StartsWith("[") && notifications.Contains("]"))
+            {
+                notifications = notifications.Substring(notifications.IndexOf("]") + 1).Trim();
+            }
 
             var guardInitials = string.Empty;
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
