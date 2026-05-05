@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using CityWatch.Data.Helpers;
@@ -370,7 +370,7 @@
                     <i class="fa fa-vcard-o mr-2"></i>
                     <label id="lbl_GuardActivityHeaderSWTagsInfoModal"></label>
 
-                    <!-- ⭐ Add Current Frequency Display -->
+                    <!-- ? Add Current Frequency Display -->
                     <span id="currentFrequencyDisplay"
                           class="badge badge-warning ml-2"
                           style="font-size:14px; padding:6px 10px;">
@@ -523,7 +523,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
-                    <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+                    <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true)"></select>
                     @*  <select id="selectRadioStatus" class="form-control">
                     <option value="" selected>Select</option>
                     <option value="N/A">N/A</option>
@@ -558,7 +558,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
-                    <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+                    <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true)"></select>
 
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
@@ -585,10 +585,10 @@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                     <ul id="itemList" class="list-group">
-                        @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                        @if (@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true) != null)
                         {
 
-                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true))
                             {
 
                                 if (!string.IsNullOrWhiteSpace(item.Text))
@@ -596,7 +596,15 @@
                                     if (item.Text.Trim().ToLower() != "select")
                                     {
                                         <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                            @item.Text
+                                            @if (item.Text.StartsWith("["))
+                                            {
+                                                <span style="font-size: 0.9em; font-weight: 500; color: #555;">@item.Text.Substring(0, item.Text.IndexOf("]") + 1)</span>
+                                                @item.Text.Substring(item.Text.IndexOf("]") + 1)
+                                            }
+                                            else
+                                            {
+                                                @item.Text
+                                            }
                                             <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
 
                                         </li>
@@ -636,10 +644,10 @@
                     <tr>
                     <td colspan="2" class="p-0 b-0">
                     <ul id="itemList" class="list-group d-block w-auto">
-                    @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                    @if (@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true) != null)
                     {
 
-                    foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                    foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true))
                     {
                     if (item.Text != string.Empty)
                     {
@@ -666,7 +674,7 @@
                     </tbody>
                     </table>*@
 
-                    @* <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>*@
+                    @* <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true)"></select>*@
                     @* <select id="selectRadioStatusActive" class="form-control">
                     <option value="" selected>Select</option>
                     <option value="N/A">N/A</option>

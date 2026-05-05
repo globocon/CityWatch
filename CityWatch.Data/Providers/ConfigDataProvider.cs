@@ -1119,14 +1119,28 @@ namespace CityWatch.Data.Providers
 
                 if (includeVisualPrefix)
                 {
-                    // Prepend color indicator and Outcome (e.g. [🔴 Red 1]) - 05-05-2024
+                    // Prepend color indicator and numeric part of Outcome (e.g. [🔴 1]) - 05-05-2024
                     string outcome = item.RadioCheckStatusColorName ?? "";
                     string dot = "⚪"; // Default white
-                    if (outcome.Contains("Red", StringComparison.OrdinalIgnoreCase)) dot = "🔴";
-                    else if (outcome.Contains("Green", StringComparison.OrdinalIgnoreCase)) dot = "🟢";
-                    else if (outcome.Contains("Yellow", StringComparison.OrdinalIgnoreCase)) dot = "🟡";
+                    string displayOutcome = outcome;
 
-                    string formattedText = $"[{dot} {outcome}] {item.Name}";
+                    if (outcome.Contains("Red", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🔴";
+                        displayOutcome = outcome.Replace("Red", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+                    else if (outcome.Contains("Green", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🟢";
+                        displayOutcome = outcome.Replace("Green", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+                    else if (outcome.Contains("Yellow", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dot = "🟡";
+                        displayOutcome = outcome.Replace("Yellow", "", StringComparison.OrdinalIgnoreCase).Trim();
+                    }
+
+                    string formattedText = $"[{dot}{(string.IsNullOrWhiteSpace(displayOutcome) ? "" : " " + displayOutcome)}] {item.Name}";
                     items.Add(new SelectListItem(formattedText, item.Id.ToString()));
                 }
                 else
