@@ -352,6 +352,11 @@ namespace CityWatch.Data.Providers
 
         public void SavePayRateGroupSites(int groupId, List<int> siteIds)
         {
+            if (groupId <= 0 || !_context.PayRateGroups.Any(x => x.Id == groupId))
+            {
+                throw new Exception("Invalid Pay Rate Group ID or Group does not exist.");
+            }
+
             var existingAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).ToList();
             _context.PayRateGroupSites.RemoveRange(existingAssignments);
 

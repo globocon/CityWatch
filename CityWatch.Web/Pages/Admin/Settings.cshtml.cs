@@ -4020,6 +4020,11 @@ namespace CityWatch.Web.Pages.Admin
         {
             try
             {
+                if (groupId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "Invalid Group ID selected." });
+                }
+
                 _configDataProvider.SavePayRateGroupSites(groupId, selectedSites);
                 return new JsonResult(new { success = true });
             }
