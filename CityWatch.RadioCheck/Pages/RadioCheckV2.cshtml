@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using Microsoft.AspNetCore.Http
@@ -585,10 +585,10 @@
                     <input type="hidden" id="guardId" value="" />
                     <input type="hidden" id="nottifcationType" value="" />
                     <ul id="itemList" class="list-group">
-                        @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                        @if (@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true) != null)
                         {
 
-                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true))
                             {
 
                                 if (!string.IsNullOrWhiteSpace(item.Text))
@@ -596,7 +596,15 @@
                                     if (item.Text.Trim().ToLower() != "select")
                                     {
                                         <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                            @item.Text
+                                            @if (item.Text.StartsWith("["))
+                                            {
+                                                <span style="font-size: 0.9em; font-weight: 500; color: #555;">@item.Text.Substring(0, item.Text.IndexOf("]") + 1)</span>
+                                                @item.Text.Substring(item.Text.IndexOf("]") + 1)
+                                            }
+                                            else
+                                            {
+                                                @item.Text
+                                            }
                                             <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
 
                                         </li>
@@ -638,10 +646,10 @@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                     <ul id="itemList2" class="list-group">
-                        @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
+                        @if (@configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true) != null)
                         {
 
-                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown())
+                            foreach (var item in @configDataProvider.GetRadioCheckStatusForDropDown(includeVisualPrefix: true))
                             {
 
                                 if (!string.IsNullOrWhiteSpace(item.Text))
@@ -649,7 +657,15 @@
                                     if (item.Text.Trim().ToLower() != "select")
                                     {
                                         <li class="list-group-item" id="attach_@item.Value" data-index="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                            @item.Text
+                                            @if (item.Text.StartsWith("["))
+                                            {
+                                                <span style="font-size: 0.9em; font-weight: 500; color: #555;">@item.Text.Substring(0, item.Text.IndexOf("]") + 1)</span>
+                                                @item.Text.Substring(item.Text.IndexOf("]") + 1)
+                                            }
+                                            else
+                                            {
+                                                @item.Text
+                                            }
                                             <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
 
                                         </li>

@@ -54,7 +54,7 @@ namespace CityWatch.Data.Providers
         List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name);
         List<RadioCheckStatus> GetRadioCheckStatusWithOutcome();
         int GetRadioCheckStatusCount();
-        List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false);
+        List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false, bool includeVisualPrefix = false);
 
         //to get functions for settings in radio check-end
         //broadcast banner live events-start
@@ -1098,7 +1098,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.RadioCheckStatus.Count();
         }
-        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true)
+        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true, bool includeVisualPrefix = false)
         {
             var radioCheckStatuses = GetRadioCheckStatusWithOutcome();
             var items = new List<SelectListItem>();
@@ -1110,15 +1110,29 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in radioCheckStatuses)
             {
-                // Prepend color indicator and reference number - 05-05-2024
-                string colorName = item.RadioCheckStatusColor?.Name ?? "";
-                string dot = "⚪"; // Default white
-                if (colorName.Contains("Red", StringComparison.OrdinalIgnoreCase)) dot = "🔴";
-                else if (colorName.Contains("Green", StringComparison.OrdinalIgnoreCase)) dot = "🟢";
-                else if (colorName.Contains("Yellow", StringComparison.OrdinalIgnoreCase)) dot = "🟡";
+                // Restore separators for empty names - 05-05-2024
+                if (string.IsNullOrWhiteSpace(item.Name))
+                {
+                    items.Add(new SelectListItem("", item.Id.ToString()));
+                    continue;
+                }
 
-                string formattedText = $"[{dot} {item.ReferenceNo}] {item.Name}";
-                items.Add(new SelectListItem(formattedText, item.Id.ToString()));
+                if (includeVisualPrefix)
+                {
+                    // Prepend color indicator and Outcome (e.g. [🔴 Red 1]) - 05-05-2024
+                    string outcome = item.RadioCheckStatusColorName ?? "";
+                    string dot = "⚪"; // Default white
+                    if (outcome.Contains("Red", StringComparison.OrdinalIgnoreCase)) dot = "🔴";
+                    else if (outcome.Contains("Green", StringComparison.OrdinalIgnoreCase)) dot = "🟢";
+                    else if (outcome.Contains("Yellow", StringComparison.OrdinalIgnoreCase)) dot = "🟡";
+
+                    string formattedText = $"[{dot} {outcome}] {item.Name}";
+                    items.Add(new SelectListItem(formattedText, item.Id.ToString()));
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
             }
 
             return items;
