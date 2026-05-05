@@ -11,6 +11,9 @@ namespace CityWatch.Data.Enums
         Accepted = 1,
 
         [Display(Name = "Declined")]
-        Declined = 2
+        Declined = 2,
+
+        [Display(Name = "Cancelled")]
+        Cancelled = 3
     }
 }

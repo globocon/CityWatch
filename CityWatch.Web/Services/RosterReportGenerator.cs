@@ -23,6 +23,8 @@ using CityWatch.Data.Helpers;
 using iText.IO.Image;
 using iText.IO.Font.Constants;
 using iText.Kernel.Font;
+using iText.Layout.Renderer;
+using iText.Kernel.Pdf.Canvas;
 
 namespace CityWatch.Web.Services
 {
@@ -529,13 +531,25 @@ namespace CityWatch.Web.Services
                                         fontColor = ColorConstants.WHITE;
                                     }
 
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
+                                    {
+                                        borderColor = ColorConstants.RED;
+                                        fontColor = ColorConstants.RED;
+                                        bgColor = ColorConstants.WHITE;
+                                    }
+
                                     var shiftBlock = new Div()
                                         .SetBackgroundColor(bgColor)
                                         .SetMarginBottom(1)
                                         .SetPadding(1.5f)
-                                        .SetBorder(new SolidBorder(borderColor, 0.5f));
+                                        .SetBorder(new SolidBorder(borderColor, shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled ? 1.0f : 0.5f));
 
-                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unknown";
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Cancelled)
+                                    {
+                                        shiftBlock.SetNextRenderer(new CrossRenderer(shiftBlock));
+                                    }
+
+                                    var guardName = shift.ReliefGuard?.Name ?? shift.ReliefProviderName ?? shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
                                     if (isRelief)
                                     {
                                         guardName = "{R} " + guardName;
@@ -681,11 +695,12 @@ namespace CityWatch.Web.Services
             {
                 "LIVE" => "STAMP - LIVE.png",
                 "PAID" => "STAMP - PAID.png",
-                "CANCELLED" => "STAMP - CANCELD.jpg",
-                "CANCEL" => "STAMP - CANCELD.jpg",
-                "CANCELED" => "STAMP - CANCELD.jpg",
+                "CANCELLED" => "STAMP - CANCELD.png",
+                "CANCEL" => "STAMP - CANCELD.png",
+                "CANCELED" => "STAMP - CANCELD.png",
                 "INVOICED" => "STAMP - INV.png",
                 "INV" => "STAMP - INV.png",
+                "DISPUTED" => "STAMP - DISPUTED.png",
                 _ => ""
             };
 
@@ -739,15 +754,42 @@ namespace CityWatch.Web.Services
                     return new DeviceRgb(144, 238, 144); // Light Green
                 case CityWatch.Data.Enums.RosterShiftStatus.Declined:
                     return new DeviceRgb(67, 67, 67); // Dark Gray
+                case CityWatch.Data.Enums.RosterShiftStatus.Cancelled:
+                    return ColorConstants.WHITE;
                 case CityWatch.Data.Enums.RosterShiftStatus.Pushed:
                 default: 
                     return new DeviceRgb(255, 183, 77); // Orange
             }
+            
         }
         private string Truncate(string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value)) return "";
             return value.Length <= maxLength ? value : value.Substring(0, maxLength - 2) + "..";
+        }
+
+        private class CrossRenderer : DivRenderer
+        {
+            public CrossRenderer(Div modelElement) : base(modelElement) { }
+
+            public override void Draw(DrawContext drawContext)
+            {
+                base.Draw(drawContext);
+                PdfCanvas canvas = drawContext.GetCanvas();
+                Rectangle rect = GetOccupiedAreaBBox();
+                canvas.SetStrokeColor(ColorConstants.RED);
+                canvas.SetLineWidth(0.8f);
+                canvas.MoveTo(rect.GetLeft(), rect.GetBottom());
+                canvas.LineTo(rect.GetRight(), rect.GetTop());
+                canvas.MoveTo(rect.GetLeft(), rect.GetTop());
+                canvas.LineTo(rect.GetRight(), rect.GetBottom());
+                canvas.Stroke();
+            }
+
+            public override IRenderer GetNextRenderer()
+            {
+                return new CrossRenderer((Div)modelElement);
+            }
         }
     }
 }

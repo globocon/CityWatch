@@ -59,6 +59,9 @@ namespace CityWatch.Data.Models
         [StringLength(50)]
         public string ShiftType { get; set; }
 
+        [StringLength(255)]
+        public string AdhocOffsiteText { get; set; }
+
         public bool IsDeleted { get; set; }
     }
 }
