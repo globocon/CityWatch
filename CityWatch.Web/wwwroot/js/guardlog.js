@@ -7363,7 +7363,8 @@ $(function () {
                         const messageHtml1 = '';
                         $('#schRunStatusNew').html(messageHtml1);
                         gridGuardLicensesAndLicence.ajax.reload();
-
+                       /* guardSettings.ajax.reload();*/
+                        guardSettings.ajax.reload(null, false);
                         if (!result.dbxUploaded) {
                             $('#complianceValidationDiv').show();
                             displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
