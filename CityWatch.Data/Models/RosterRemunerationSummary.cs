@@ -17,6 +17,11 @@ namespace CityWatch.Data.Models
         [ForeignKey("GuardId")]
         public virtual Guard Guard { get; set; }
 
+        public int? ClientSiteId { get; set; }
+
+        [ForeignKey("ClientSiteId")]
+        public virtual ClientSite ClientSite { get; set; }
+
         public bool IsPaid { get; set; }
 
         public string Notes { get; set; }

@@ -165,7 +165,7 @@
                             <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
                             <select id="search_site" class="form-control form-control-sm pl-4"></select>
                         </div>
-                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;" @(Model.IsLocked ? "disabled" : "")>
+                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
                             <i class="fa fa-plus"></i> Add Site
                         </button>
                     </div>
@@ -433,6 +433,27 @@
     <!-- Hidden Utils -->
     <input type="file" id="coverUploadInput" style="display:none;" accept=".pdf" />
 
+    <!-- Overnight Shift Modal -->
+    <div class="modal fade" id="overnightShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i>Overnight Shift</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+                <div class="modal-footer justify-content-center border-top-0">
+                    <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Edit</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnSplitShift">Split</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Shift Modal -->
     <div class="modal fade" id="addShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -506,6 +527,10 @@
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkLWOP" value="LWOP">
                                         <label class="custom-control-label" for="chkLWOP">LWOP</label>
                                     </div>
+                                    <div class="custom-control custom-checkbox mr-3 mb-1">
+                                        <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkShiftSwap" value="Shift Swap">
+                                        <label class="custom-control-label" for="chkShiftSwap">Shift Swap</label>
+                                    </div>
                                     <div class="custom-control custom-checkbox mb-1 d-flex align-items-center">
                                         <input type="checkbox" class="custom-control-input relief-reason-chk" id="chkOther" value="Other">
                                         <label class="custom-control-label" for="chkOther">Other</label>
@@ -519,18 +544,30 @@
 
                     <hr />
 
-                    <div class="form-group">
-                        <label>Position (or Callsign)</label>
-                        <select id="modalCallsignId" class="form-control" style="width: 100%">
-                            <option value="">Select Callsign (Optional)</option>
-                            @if (Model.CallsignList != null)
-                            {
-                                foreach (var callsign in Model.CallsignList)
+                    <div class="form-group row">
+                        <div class="col-6">
+                            <label>Position (or Callsign)</label>
+                            <select id="modalCallsignId" class="form-control" style="width: 100%">
+                                <option value="">Select Callsign (Optional)</option>
+                                @if (Model.CallsignList != null)
                                 {
-                                    <option value="@callsign.Id">@callsign.Name</option>
+                                    foreach (var callsign in Model.CallsignList)
+                                    {
+                                        <option value="@callsign.Id">@callsign.Name</option>
+                                    }
                                 }
-                            }
-                        </select>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="mb-0" style="font-size: 0.85rem;">ADHOC / Offsite</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="chkAdhocOffsiteToggle">
+                                    <label class="custom-control-label" for="chkAdhocOffsiteToggle"></label>
+                                </div>
+                            </div>
+                            <input type="text" id="modalAdhocOffsiteText" class="form-control" placeholder="Enter offsite/adhoc text..." disabled />
+                        </div>
                     </div>
                     <div class="form-group row">
                         <div class="col-6">
@@ -555,6 +592,7 @@
                                 <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
                                 <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
                                 <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                                <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
                             </select>
                         </div>
                     </div>
@@ -837,6 +875,39 @@
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
                 color: #FFFFFF !important;
+            }
+
+            .shift-card.status-cancelled {
+                background: #ffffff !important;
+                color: #B71C1C !important;
+                border: 2px solid #B71C1C !important;
+                overflow: hidden;
+            }
+
+            .shift-card.status-cancelled::before,
+            .shift-card.status-cancelled::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background-color: rgba(183, 28, 28, 0.7);
+                z-index: 10;
+                pointer-events: none;
+            }
+
+            .shift-card.status-cancelled::before {
+                transform: rotate(25deg);
+            }
+
+            .shift-card.status-cancelled::after {
+                transform: rotate(-25deg);
+            }
+
+            .shift-card.status-cancelled div, 
+            .shift-card.status-cancelled span {
+                opacity: 0.5;
             }
 
             .shift-card.shift-relief {
@@ -1333,6 +1404,14 @@
                 loadRoster();
             });
 
+            $('#chkAdhocOffsiteToggle').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#modalAdhocOffsiteText').prop('disabled', false).focus();
+                } else {
+                    $('#modalAdhocOffsiteText').prop('disabled', true).val('');
+                }
+            });
+
             // Group Financial/Supplier mode toggles
             $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
@@ -1613,6 +1692,19 @@
                 dropdownParent: $('#addShiftModal'),
                 templateResult: formatType,
                 templateSelection: formatType
+            }).on('change', function() {
+                var isCancelled = $(this).val() === 'Cancelled';
+                if (isCancelled) {
+                    $('#modalGuardId').prop('disabled', true);
+                    $('#modalProviderId').prop('disabled', true);
+                    $('#modalReliefGuardId').prop('disabled', true);
+                    $('#modalReliefProviderId').prop('disabled', true);
+                } else {
+                    $('#modalGuardId').prop('disabled', false);
+                    $('#modalProviderId').prop('disabled', false);
+                    $('#modalReliefGuardId').prop('disabled', false);
+                    $('#modalReliefProviderId').prop('disabled', false);
+                }
             });
 
             // Relief Guard Select2 Init
@@ -1760,10 +1852,11 @@
                                 '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + currentGroupId + '">' +
                                     '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
                                     '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                        '<option value="Live" ' + (res.projectStatus === "Live" ? "selected" : "") + '>🟩 Live</option>' +
+                                        '<option value="Invoiced" ' + (res.projectStatus === "Invoiced" ? "selected" : "") + '>🟦 Invoiced</option>' +
+                                        '<option value="Paid" ' + (res.projectStatus === "Paid" ? "selected" : "") + '>🟥 Paid</option>' +
+                                        '<option value="Disputed" ' + (res.projectStatus === "Disputed" ? "selected" : "") + '>🟧 Disputed</option>' +
+                                        '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                     '</select>' +
                                     '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                 '</div>' +
@@ -1779,7 +1872,8 @@
                                     case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                                     case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                     case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                    case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                 }
                                 if (imgName) {
                                     statusHtml = '<div class="mt-auto pb-1 text-center">' + 
@@ -1810,6 +1904,7 @@
                                     var statusClass = 'status-pushed';
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
+                                    if (s.status === 3) statusClass = 'status-cancelled';
 
                                     var shiftValue = s.durationHours;
                                     if (projectFinancialMode) {
@@ -1825,15 +1920,15 @@
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                         'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" data-reliefreasonother="' + (s.reliefReasonOther || '') + '" ' +
-                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                        'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                         '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                             ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                            (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                            (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                         '</div>' +
                                         (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
                                         '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                            '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                        '<div style="font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 1px;">' +
+                                            '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                         '</div>' +
                                         (projectSupplierMode ? 
@@ -1854,6 +1949,7 @@
                                         '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Rate Profile:</span><span class="popup-value">' + s.payRateName + '</span></div>' +
                                         '</div>' +
                                         '</div>';
                                 });
@@ -1959,6 +2055,8 @@
                 $('#modalShiftStart').val('08:00');
                 $('#modalShiftEnd').val('16:00');
                 $('#modalShiftType').val('Regular').trigger('change');
+                $('#chkAdhocOffsiteToggle').prop('checked', false).trigger('change');
+                $('#modalAdhocOffsiteText').val('').prop('disabled', true);
 
                 // Clear relief
                 $('#modalReliefGuardId').val(null).trigger('change');
@@ -2065,6 +2163,15 @@
                 // Callsign
                 $('#modalCallsignId').val(card.data('callsignid') || "").trigger('change');
 
+                var adhocText = card.data('adhoctext') || "";
+                if (adhocText) {
+                    $('#chkAdhocOffsiteToggle').prop('checked', true);
+                    $('#modalAdhocOffsiteText').val(adhocText).prop('disabled', false);
+                } else {
+                    $('#chkAdhocOffsiteToggle').prop('checked', false);
+                    $('#modalAdhocOffsiteText').val('').prop('disabled', true);
+                }
+
                 $('#modalShiftStart').val(start);
                 $('#modalShiftEnd').val(end);
                 var currentType = card.data('shifttype') || 'Regular';
@@ -2075,6 +2182,8 @@
                     compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
                 } else if (currentStatus === 2) {
                     compositeType = 'Declined';
+                } else if (currentStatus === 3) {
+                    compositeType = 'Cancelled';
                 }
                 
                 $('#modalShiftType').val(compositeType).trigger('change');
@@ -2178,6 +2287,7 @@
                 var payRateId = (positionData && positionData.length > 0) ? positionData[0].id : null;
 
                 var callsignId = $('#modalCallsignId').val();
+                var adhocOffsiteText = $('#chkAdhocOffsiteToggle').is(':checked') ? $('#modalAdhocOffsiteText').val() : "";
 
                 // Relief Data
                 var reliefGuardData = $('#modalReliefGuardId').select2('data');
@@ -2202,15 +2312,180 @@
                 }
 
                 // Client-side Validation 1: At least one selected
-                if (!guardId && !providerName) {
+                if (!guardId && !providerName && shiftType !== 'Cancelled') {
                     alert('Please select either a Guard OR a Provider.');
                     return;
                 }
 
-                // Client-side Validation 2: Time check
+                // Client-side Validation 2: Time check (Overnight Shift Split)
                 if (startTime >= endTime) {
-                    alert('End Time must be after Start Time.');
+                    var shiftDate = new Date(currentStartDate);
+                    shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                    var dateStr = shiftDate.toISOString().split('T')[0];
+                    
+                    var nextShiftDate = new Date(shiftDate);
+                    nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+                    var nextDateStr = nextShiftDate.toISOString().split('T')[0];
+
+                    // Calculate Durations
+                    var parts1 = startTime.split(':');
+                    var h1 = parseInt(parts1[0]);
+                    var m1 = parseInt(parts1[1]);
+                    
+                    var parts2 = endTime.split(':');
+                    var h2 = parseInt(parts2[0]);
+                    var m2 = parseInt(parts2[1]);
+
+                    var totalMin1 = (23 - h1) * 60 + (59 - m1);
+                    var hrs1 = Math.floor(totalMin1 / 60);
+                    var mins1 = totalMin1 % 60;
+                    var durationStr1 = hrs1 + 'h ' + mins1 + 'm';
+
+                    var totalMin2 = h2 * 60 + m2 - 1;
+                    var hrs2 = Math.floor(totalMin2 / 60);
+                    var mins2 = totalMin2 % 60;
+                    var durationStr2 = hrs2 + 'h ' + mins2 + 'm';
+
+                    // Update Modal Content
+                    $('#overnightShiftModal .modal-body').html(
+                        '<p class="mb-3 text-muted">This shift crosses midnight. If you split, it will create two shifts:</p>' +
+                        '<div class="alert alert-light border text-left mb-3" style="font-size: 0.9rem;">' +
+                            '<div><i class="fa fa-calendar mr-2 text-primary"></i><strong>' + dateStr + '</strong>: ' + startTime + ' - 23:59 (' + durationStr1 + ')</div>' +
+                            '<div class="mt-2"><i class="fa fa-calendar mr-2 text-success"></i><strong>' + nextDateStr + '</strong>: 00:01 - ' + endTime + ' (' + durationStr2 + ')</div>' +
+                        '</div>' +
+                        '<p class="mb-0 text-muted">Please choose how to proceed.</p>'
+                    );
+
+                    $('#overnightShiftModal').modal('show');
+                    
+                    $('#btnSplitShift').off('click').on('click', function() {
+                        $('#overnightShiftModal').modal('hide');
+                        saveSplitShiftAttempt(false);
+                    });
                     return;
+                }
+
+                function saveSplitShiftAttempt(ignoreUnavailFlag) {
+                    var shiftDate = new Date(currentStartDate);
+                    shiftDate.setDate(shiftDate.getDate() + parseInt(dayIndex));
+                    var dateStr = shiftDate.toISOString().split('T')[0];
+                    
+                    var nextShiftDate = new Date(shiftDate);
+                    nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+                    var nextDateStr = nextShiftDate.toISOString().split('T')[0];
+
+                    var startDateTime1 = dateStr + 'T' + startTime;
+                    var endDateTime1 = dateStr + 'T23:59';
+                    
+                    var startDateTime2 = nextDateStr + 'T00:01';
+                    var endDateTime2 = nextDateStr + 'T' + endTime;
+
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: {
+                            groupId: currentGroupId,
+                            siteId: siteId,
+                            start: startDateTime1,
+                            end: endDateTime1,
+                            guardId: guardId,
+                            providerName: providerName,
+                            payRateId: payRateId,
+                            shiftId: shiftId,
+                            callsignId: callsignId,
+                            reliefGuardId: reliefGuardId,
+                            reliefProviderName: reliefProviderName,
+                            reliefReason: reliefReason,
+                            reliefReasonOther: reliefReasonOther,
+                            shiftType: shiftType,
+                            status: shiftStatus,
+                            ignoreUnavailability: ignoreUnavailFlag
+                        },
+                        success: function (res1) {
+                            if (res1.success) {
+                                $.ajax({
+                                    url: '/roster/Booking?handler=AddShift',
+                                    type: 'POST',
+                                    headers: getHeaders(),
+                                    data: {
+                                        groupId: currentGroupId,
+                                        siteId: siteId,
+                                        start: startDateTime2,
+                                        end: endDateTime2,
+                                        guardId: guardId,
+                                        providerName: providerName,
+                                        payRateId: payRateId,
+                                        shiftId: '', // Always new shift
+                                        callsignId: callsignId,
+                                        reliefGuardId: reliefGuardId,
+                                        reliefProviderName: reliefProviderName,
+                                        reliefReason: reliefReason,
+                                        reliefReasonOther: reliefReasonOther,
+                                        shiftType: shiftType,
+                                        status: shiftStatus,
+                                        adhocOffsiteText: adhocOffsiteText,
+                                        ignoreUnavailability: ignoreUnavailFlag
+                                    },
+                                    success: function (res2) {
+                                        if (res2.success) {
+                                            $('#addShiftModal').modal('hide');
+                                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                                        } else if (res2.isUnavailConflict) {
+                                            if (confirm("Shift 1 saved.\n\nShift 2 Conflict: " + res2.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                                                saveSecondShiftOnly(startDateTime2, endDateTime2, true);
+                                            }
+                                        } else {
+                                            alert('Shift 1 saved, but Shift 2 failed: ' + res2.message);
+                                            if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                                        }
+                                    }
+                                });
+                            } else if (res1.isUnavailConflict) {
+                                if (confirm("Shift 1 Conflict: " + res1.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                                    saveSplitShiftAttempt(true);
+                                }
+                            } else {
+                                alert(res1.message);
+                            }
+                        }
+                    });
+                }
+
+                function saveSecondShiftOnly(start2, end2, ignoreUnavailFlag) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        headers: getHeaders(),
+                        data: {
+                            groupId: currentGroupId,
+                            siteId: siteId,
+                            start: start2,
+                            end: end2,
+                            guardId: guardId,
+                            providerName: providerName,
+                            payRateId: payRateId,
+                            shiftId: '',
+                            callsignId: callsignId,
+                            reliefGuardId: reliefGuardId,
+                            reliefProviderName: reliefProviderName,
+                            reliefReason: reliefReason,
+                            reliefReasonOther: reliefReasonOther,
+                            shiftType: shiftType,
+                            status: shiftStatus,
+                            adhocOffsiteText: adhocOffsiteText,
+                            ignoreUnavailability: ignoreUnavailFlag
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                $('#addShiftModal').modal('hide');
+                                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                            } else {
+                                alert('Shift 2 failed: ' + res.message);
+                                if (activeTab === 'groups') loadBinderRoster(); else loadRoster();
+                            }
+                        }
+                    });
                 }
 
                 // Client-side Validation 3: Relief Reason Validation
@@ -2254,6 +2529,7 @@
                         reliefReasonOther: reliefReasonOther,
                         shiftType: shiftType,
                         status: shiftStatus,
+                        adhocOffsiteText: adhocOffsiteText,
                         ignoreUnavailability: ignoreUnavail
                     },
                     success: function (res) {
@@ -2804,10 +3080,11 @@
                                     '<div class="ml-4 d-flex align-items-center header-status-container" data-project-id="' + project.projectId + '">' +
                                         '<label class="mb-0 mr-2 text-muted font-weight-bold p-0" style="font-size: 0.65rem; text-transform: uppercase;">Status</label>' +
                                         '<select class="form-control form-control-xs project-status-select font-weight-bold" style="width: 100px; height: 24px; padding: 0 5px; font-size: 0.75rem;">' +
-                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>Live</option>' +
-                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>Invoiced</option>' +
-                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>Paid</option>' +
-                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>Cancelled</option>' +
+                                            '<option value="Live" ' + (project.projectStatus === "Live" ? "selected" : "") + '>🟩 Live</option>' +
+                                            '<option value="Invoiced" ' + (project.projectStatus === "Invoiced" ? "selected" : "") + '>🟦 Invoiced</option>' +
+                                            '<option value="Paid" ' + (project.projectStatus === "Paid" ? "selected" : "") + '>🟥 Paid</option>' +
+                                            '<option value="Disputed" ' + (project.projectStatus === "Disputed" ? "selected" : "") + '>🟧 Disputed</option>' +
+                                            '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                         '</select>' +
                                         '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
                                     '</div>' +
@@ -2828,7 +3105,8 @@
                                         case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                                         case 'PAID': imgName = 'STAMP - PAID.png'; break;
                                         case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                                        case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                                        case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                     }
                                     if (imgName) {
                                         statusHtml = '<div class="mt-auto pb-1 text-center">' + 
@@ -2858,6 +3136,7 @@
                                         var statusClass = 'status-pushed';
                                         if (s.status === 1) statusClass = 'status-accepted';
                                         if (s.status === 2) statusClass = 'status-declined';
+                                        if (s.status === 3) statusClass = 'status-cancelled';
 
                                         var shiftValue = s.durationHours;
                                         if (groupFinancialMode) {
@@ -2879,15 +3158,15 @@
                                         rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
                                             'data-reliefguardid="' + (s.reliefGuardId || '') + '" data-reliefguardname="' + (s.reliefGuardName || '') + '" data-reliefguardlicense="' + (s.reliefGuardLicense || '') + '" data-reliefprovider="' + (s.reliefProviderName || '') + '" data-reliefreason="' + (s.reliefReason || '') + '" ' +
-                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '">' +
+                                            'data-start="' + s.shiftStart + '" data-end="' + s.shiftEnd + '" data-shifttype="' + s.shiftType + '" data-adhoctext="' + (s.adhocOffsiteText || '') + '">' +
                                             '<div class="text-truncate" style="font-weight: 600; font-size: 11px;">' + 
                                                 ((s.reliefGuardId || s.reliefProviderName) ? '<span class="relief-badge">{R}</span>' : '<i class="fa fa-user guard-icon"></i>') + 
-                                                (s.reliefGuardName || s.reliefProviderName || s.guardName) + 
+                                                (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                             '</div>' +
                                             (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
                                             '<div class="shift-license" style="margin-top: 1px;">' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
-                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; margin-top: 1px;">' +
-                                                '<span style="opacity: 0.9; overflow: hidden; text-overflow: ellipsis; flex: 1;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
+                                            '<div style="font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 1px;">' +
+                                                '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                                 '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
                                             '</div>' +
                                             (groupSupplierMode ? 
@@ -2908,6 +3187,7 @@
                                             '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Rate Profile:</span><span class="popup-value">' + s.payRateName + '</span></div>' +
                                             '</div>' +
                                             '</div>';
                                     });
@@ -3252,7 +3532,8 @@
                     case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
                     case 'PAID': imgName = 'STAMP - PAID.png'; break;
                     case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
-                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.jpg'; break;
+                    case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                    case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                 }
 
                 container.find('.status-stamp-img').each(function() {

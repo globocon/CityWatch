@@ -941,9 +941,33 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         /* Save the push message for reload to logbook on next day end*/
 
 
+                        var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(Convert.ToInt32(clientSiteId), DateTime.Today).Where(z => z.GuardId == guardid).FirstOrDefault() ;
+                        var guardLoginId=0;
+                        if (guardlogins != null)
+                        {
+                            guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                        }
+                        else
+                        {
+                            var userId = _viewDataService.GetAllUsersIdsClientSiteAccess(clientSiteId);
+                            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                            var newGuardLogin = new GuardLogin
+                            {
+                                LoginDate = DateTime.Now,
+                                GuardId = Convert.ToInt32(guardid),
+                                ClientSiteId = clientSiteId,
+                                ClientSiteLogBookId = logBookId,
+                                PositionId = null,
+                                SmartWandId = null,
+                                OnDuty = DateTime.Now,
+                                OffDuty = DateTime.Now.AddHours(1),
+                                UserId= userId,
+                                IPAddress = IPAddress
+                            };
 
-                        var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
-
+                            // Save and return new login ID
+                            guardLoginId = _guardDataProvider.SaveGuardLogin(newGuardLogin);
+                        }
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
@@ -1262,7 +1286,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (checkedState == true)
                 {
                     svl.SubModule = "Global Push Notification-[Global] [State]";
-                    var clientSitesState = _guardLogDataProvider.GetClientSitesForState(state);
+                    var clientSitesState = _guardLogDataProvider.GetClientSitesForState(state).Where(x => x.IsActive == true);
                     foreach (var item in clientSitesState)
                     {
                         LogBookDetails(item.Id, Notifications, Subject, tmzdata);
@@ -1399,7 +1423,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     if (clientSiteId.Length == 0)
                     {
                         svl.SubModule = "Global Push Notification-[Global] [ClientType]";
-                        var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
+                        var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId) && x.IsActive==true);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
@@ -1668,7 +1692,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (chkNationality == true)
                 {
                     svl.SubModule = "Global Push Notification-[Global] [National]";
-                    var clientsiteIDNationality = _guardLogDataProvider.GetAllClientSites();
+                    var clientsiteIDNationality = _guardLogDataProvider.GetAllClientSites().Where(x=>x.IsActive==true);
                     foreach (var itemAll in clientsiteIDNationality)
                     {
                         LogBookDetails(itemAll.Id, Notifications, Subject, tmzdata);
@@ -1956,8 +1980,38 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             };
                             var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                             /* Save the push message for reload to logbook on next day end*/
-                            var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                            //var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
                             // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                            var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(Convert.ToInt32(Id), DateTime.Today).Where(z => z.GuardId == guardid).FirstOrDefault();
+                            var guardLoginId = 0;
+                            if (guardlogins != null)
+                            {
+                                guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                            }
+                            else
+                            {
+                                var userId = _viewDataService.GetAllUsersIdsClientSiteAccess(Id);
+                                if (userId != 0)
+                                {
+                                    var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                                    var newGuardLogin = new GuardLogin
+                                    {
+                                        LoginDate = DateTime.Now,
+                                        GuardId = Convert.ToInt32(guardid),
+                                        ClientSiteId = Id,
+                                        ClientSiteLogBookId = logBookId,
+                                        PositionId = null,
+                                        SmartWandId = null,
+                                        OnDuty = DateTime.Now,
+                                        OffDuty = DateTime.Now.AddHours(1),
+                                        UserId = userId,
+                                        IPAddress = IPAddress
+                                    };
+
+                                    // Save and return new login ID
+                                    guardLoginId = _guardDataProvider.SaveGuardLogin(newGuardLogin);
+                                }
+                            }
                             var guardLog = new GuardLog()
                             {
                                 ClientSiteLogBookId = logBookId,
@@ -3244,6 +3298,26 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return _smartWandReportGenarator.GenerateSartWandPdfReportWithClientSiteAndGuardIds(ClientSiteId, GuardId);
         }
 
+        public JsonResult OnGetGuardLicenseAndComplianceData(int guardId,string statusColor,string hrGroup)
+        {
+            HrGroup selectedGroup;
+
+            if (hrGroup?.ToLower() == "hr1")
+                selectedGroup = HrGroup.HR1;
+            else if (hrGroup?.ToLower() == "hr2")
+                selectedGroup = HrGroup.HR2;
+            else
+                selectedGroup = HrGroup.HR3;
+            var GuardDetails = _viewDataService.GetGuardLicenseAndComplianceData(guardId).Where(x=>x.HrGroup== selectedGroup);
+            if (AuthUserHelper.IsAdminUserLoggedIn)
+            {
+                foreach (var guard in GuardDetails)
+                {
+                    guard.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
+                }
+            }
+            return new JsonResult(GuardDetails);
+        }
 
 
     }

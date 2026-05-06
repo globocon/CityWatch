@@ -71,15 +71,7 @@ namespace CityWatch.Web.Pages.roster
         {
             var today = DateTime.Today;
             var timesheet = _clientDataProvider.GetTimesheetDetails();
-            DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
-
-            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
-            {
-                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
-                {
-                    firstDayOfWeek = parsedDay;
-                }
-            }
+            DayOfWeek firstDayOfWeek = GetFirstDayOfWeek();
 
             if (startDate == null)
             {
@@ -110,7 +102,7 @@ namespace CityWatch.Web.Pages.roster
 
             // Locking logic: Dec is locked if it's Jan.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            IsLocked = StartDate < firstDayOfCurrentMonth;
+            IsLocked = EndDate < firstDayOfCurrentMonth;
 
             PopulateWeeklyHolidays();
         }
@@ -275,12 +267,13 @@ namespace CityWatch.Web.Pages.roster
                         {
                             id = s.Id,
                             guardId = s.GuardId,
-                            guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
-                            guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
+                            guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
+                            guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : (string.IsNullOrEmpty(s.ProviderName) ? "N/A" : "External"),
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
                             guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             providerName = s.ProviderName,
                             payRateId = s.PayRateId,
+                            payRateName = s.PayRate != null ? s.PayRate.Description : "N/A",
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             callsignId = s.CallsignId,
@@ -295,7 +288,8 @@ namespace CityWatch.Web.Pages.roster
                             reliefProviderName = s.ReliefProviderName ?? "",
                             reliefReason = s.ReliefReason ?? "",
                             reliefReasonOther = s.ReliefReasonOther ?? "",
-                            shiftType = s.ShiftType ?? "Regular"
+                            shiftType = s.ShiftType ?? "Regular",
+                            adhocOffsiteText = s.AdhocOffsiteText ?? ""
                         })
                         .ToList();
                 }).ToList()
@@ -362,12 +356,13 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
         {
             // Lock Check
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            if (start < firstDayOfCurrentMonth)
+            var weekEndDate = StartOfWeek(start, GetFirstDayOfWeek()).AddDays(6);
+            if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
@@ -384,8 +379,8 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "Shift End Time must be greater than Start Time." });
             }
 
-            // Validation 2: Guard OR Provider must be selected
-            if (!guardId.HasValue && string.IsNullOrEmpty(providerName))
+            // Validation 2: Guard OR Provider must be selected (Unless Cancelled)
+            if (!guardId.HasValue && string.IsNullOrEmpty(providerName) && shiftType != "Cancelled")
             {
                 return new JsonResult(new { success = false, message = "Please select a Guard or a Subcontractor Provider." });
             }
@@ -394,7 +389,8 @@ namespace CityWatch.Web.Pages.roster
             if (guardId.HasValue)
             {
                 var conflict = await _context.RosterSchedules
-                    .Where(x => x.GuardId == guardId && !x.IsDeleted && x.Id != (shiftId ?? 0) &&
+                    .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -421,6 +417,21 @@ namespace CityWatch.Web.Pages.roster
 
             if (reliefGuardId.HasValue)
             {
+                var reliefConflict = await _context.RosterSchedules
+                    .Where(x => ((x.GuardId == reliefGuardId && x.ReliefGuardId == null) || x.ReliefGuardId == reliefGuardId) &&
+                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
+                                ((start >= x.ShiftStart && start < x.ShiftEnd) ||
+                                 (end > x.ShiftStart && end <= x.ShiftEnd) ||
+                                 (start <= x.ShiftStart && end >= x.ShiftEnd)))
+                    .Include(x => x.ClientSite)
+                    .FirstOrDefaultAsync();
+
+                if (reliefConflict != null)
+                {
+                    var guard = await _context.Guards.FindAsync(reliefGuardId);
+                    return new JsonResult(new { success = false, message = $"Conflict: Relief Guard {guard.Name} is currently assigned to {reliefConflict.ClientSite.Name} from {reliefConflict.ShiftStart:HH:mm} to {reliefConflict.ShiftEnd:HH:mm}." });
+                }
+
                 var unavailRelief = await _context.GuardUnavailabilities
                     .Where(u => u.GuardId == reliefGuardId && start.Date <= u.ToDate.Date && end.Date >= u.FromDate.Date)
                     .FirstOrDefaultAsync();
@@ -456,6 +467,7 @@ namespace CityWatch.Web.Pages.roster
                 existing.PayRateId = payRateId;
                 existing.CallsignId = callsignId;
                 existing.ReliefReasonOther = reliefReasonOther;
+                existing.AdhocOffsiteText = adhocOffsiteText;
 
                 var finalShiftType = shiftType;
                 var finalStatus = RosterShiftStatus.Pushed;
@@ -463,11 +475,14 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
 
                 existing.ShiftType = finalShiftType;
                 existing.Status = finalStatus;
+
+
 
                 // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
@@ -537,8 +552,11 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
+
+
 
                 var schedule = new RosterSchedule
                 {
@@ -555,7 +573,8 @@ namespace CityWatch.Web.Pages.roster
                     PayRateId = payRateId,
                     CallsignId = callsignId,
                     ReliefReasonOther = reliefReasonOther,
-                    ShiftType = finalShiftType
+                    ShiftType = finalShiftType,
+                    AdhocOffsiteText = adhocOffsiteText
                 };
                 _context.RosterSchedules.Add(schedule);
                 await _context.SaveChangesAsync();
@@ -692,7 +711,8 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
+                if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
@@ -723,7 +743,8 @@ namespace CityWatch.Web.Pages.roster
             {
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                if (schedule.ShiftStart < firstDayOfCurrentMonth)
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
+                if (weekEndDate < firstDayOfCurrentMonth)
                 {
                     return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
                 }
@@ -958,12 +979,13 @@ namespace CityWatch.Web.Pages.roster
                             {
                                 id = s.Id,
                                 guardId = s.GuardId,
-                                guardName = s.GuardId.HasValue ? s.Guard.Name : s.ProviderName,
+                                guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
                                 guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                                 guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
                                 guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                                 providerName = s.ProviderName,
                                 payRateId = s.PayRateId,
+                                payRateName = s.PayRate != null ? s.PayRate.Description : "N/A",
                                 shiftStart = s.ShiftStart.ToString("HH:mm"),
                                 shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                                 callsignId = s.CallsignId,
@@ -978,7 +1000,8 @@ namespace CityWatch.Web.Pages.roster
                                 reliefProviderName = s.ReliefProviderName ?? "",
                                 reliefReason = s.ReliefReason ?? "",
                                 reliefReasonOther = s.ReliefReasonOther ?? "",
-                                shiftType = s.ShiftType ?? "Regular"
+                                shiftType = s.ShiftType ?? "Regular",
+                                adhocOffsiteText = s.AdhocOffsiteText ?? ""
                             })
                             .ToList();
                     }).ToList()
@@ -1169,7 +1192,8 @@ namespace CityWatch.Web.Pages.roster
                         .ToListAsync();
                     
                     // Do not delete shifts that are in previous/locked months
-                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => x.ShiftStart >= firstDayOfCurrentMonth).ToList();
+                    var firstDayOfWeek = GetFirstDayOfWeek();
+                    var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, firstDayOfWeek).AddDays(6) >= firstDayOfCurrentMonth).ToList();
                     
                     foreach (var shift in shiftsAllowedToDelete)
                     {
@@ -1186,7 +1210,7 @@ namespace CityWatch.Web.Pages.roster
 
                 foreach (var targetWeekStart in targetWeeks)
                 {
-                    if (targetWeekStart < firstDayOfCurrentMonth) continue; // Safety check
+                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check
 
                     foreach (var source in sourceSchedules)
                     {
@@ -1475,7 +1499,8 @@ namespace CityWatch.Web.Pages.roster
 
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            if (schedule.ShiftStart < firstDayOfCurrentMonth)
+            var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
+            if (weekEndDate < firstDayOfCurrentMonth)
             {
                 return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
             }
@@ -1483,6 +1508,11 @@ namespace CityWatch.Web.Pages.roster
             // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular
             var currentType = schedule.ShiftType ?? "Regular";
             var currentStatus = schedule.Status;
+
+            if (currentStatus == RosterShiftStatus.Cancelled)
+            {
+                return new JsonResult(new { success = false, message = "Cancelled shifts cannot be cycled. Use Edit to change status." });
+            }
             
             var nextType = "Regular";
             var nextStatus = RosterShiftStatus.Pushed;
@@ -1588,6 +1618,24 @@ namespace CityWatch.Web.Pages.roster
             }
 
             return new JsonResult(new { success = true });
+        }
+        private DayOfWeek GetFirstDayOfWeek()
+        {
+            var timesheet = _clientDataProvider.GetTimesheetDetails();
+            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+            {
+                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                {
+                    return parsedDay;
+                }
+            }
+            return DayOfWeek.Monday;
+        }
+
+        private DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
         }
     }
 }

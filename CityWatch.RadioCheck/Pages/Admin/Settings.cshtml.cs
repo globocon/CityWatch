@@ -431,10 +431,11 @@ namespace CityWatch.RadioCheck.Pages.Admin
                 if (record.id == -1)
                 {
                     message = "Event added successfully.";
-                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate == record.StartDate);
+                    // Updated 2026-05-06 - Allow adding both a regular event and a PH event on the same date, but block duplicates of the same type.
+                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate == record.StartDate && x.IsPublicHoliday == record.IsPublicHoliday);
                     if (existsevents.Count() > 0)
                     {
-                        return new JsonResult(new { status = false, message = "Another event with similar dates exists !!!" });
+                        return new JsonResult(new { status = false, message = "Another event with similar dates and type already exists !!!" });
                     }
 
                     if (record.ReferenceNo != null)
@@ -477,6 +478,14 @@ namespace CityWatch.RadioCheck.Pages.Admin
                 }
                 else
                 {
+                    // Validation for duplicate dates on Update - Added 2026-05-06 - Don't allow same type on same date even via update.
+                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents()
+                        .Where(x => x.id != record.id && x.ExpiryDate == record.ExpiryDate && x.StartDate == record.StartDate && x.IsPublicHoliday == record.IsPublicHoliday);
+                    if (existsevents.Count() > 0)
+                    {
+                        return new JsonResult(new { status = false, message = "Another event with similar dates and type already exists !!!" });
+                    }
+
                     if (record.ReferenceNo != null)
                     {
                         record.ReferenceNo = record.ReferenceNo.Trim();

@@ -1,7 +1,7 @@
 
 var FileuploadFileChanged = null;
 $(function () {
-    //p4-147-lb shade-start
+ //p4-147-lb shade-start
     if ($('#ClientSiteID').val() == 629) {
         var targetDiv = document.querySelector(' body');
 
@@ -6944,7 +6944,8 @@ $(function () {
 
                     /*window.location.href = '/Radio/Check';*/
                     window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                    //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    //window.location.href = 'https://localhost:44348/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                   // window.location.href = 'http://test-rc.c4i-system.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');
