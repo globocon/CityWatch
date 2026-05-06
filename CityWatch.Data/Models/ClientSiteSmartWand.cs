@@ -29,5 +29,6 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSiteId")]
         public ClientSite ClientSite { get; set; }
+        public int? PatrolCarId { get; set; }
     }
 }

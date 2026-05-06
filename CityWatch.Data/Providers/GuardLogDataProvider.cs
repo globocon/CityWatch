@@ -434,6 +434,7 @@ namespace CityWatch.Data.Providers
 
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
+        string GetTagScanGpsFromLogBook(int RecordId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -2006,7 +2007,7 @@ namespace CityWatch.Data.Providers
 
                         var PatrolFqForSite = kpisettingsday[item.ClientSiteId].FirstOrDefault();
                         item.PatrolFqForDayOrHour = PatrolFqForSite?.NoOfPatrols != null ? $"{PatrolFqForSite.NoOfPatrols} P{(PatrolFqForSite.PatrolFrequency == 1 ? "D" : "H")}&nbsp;&nbsp;&nbsp;&nbsp | &nbsp;&nbsp;&nbsp;&nbsp" : item.PatrolFqForDayOrHour;
-                                               
+
                         var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
                         item.SiteName =
                             $"{item.SiteName}" +
@@ -2117,7 +2118,7 @@ namespace CityWatch.Data.Providers
                         var phoneNumbers = smartWandLookup[item.ClientSiteId]
                             .Select(wand => wand.PhoneNumber)
                             .ToList();
-                    
+
 
                         // Format phone numbers and site name
                         var phoneNumbersString = string.Join(",&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
@@ -8251,6 +8252,11 @@ namespace CityWatch.Data.Providers
                 Console.WriteLine($"Error fetching site tag status: {ex.Message}");
                 return new List<SiteTagStatusPendingNew>();
             }
+        }
+
+        public string GetTagScanGpsFromLogBook(int RecordId)
+        {
+            return _context.GuardLogs.Where(x => x.TagScanHitLogRefId != null && x.TagScanHitLogRefId == RecordId)?.Select(x => x.GpsCoordinates)?.FirstOrDefault() ?? "";
         }
     }
 

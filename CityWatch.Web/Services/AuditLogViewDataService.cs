@@ -153,6 +153,7 @@ namespace CityWatch.Web.Services
             List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
             List<ClientSiteSmartWandTagsHitLog> filterLogs = new List<ClientSiteSmartWandTagsHitLog>();
             List<ClientSiteSmartWand> smartWands = new List<ClientSiteSmartWand>();
+            List<IncidentReportPosition> patrolCars = new List<IncidentReportPosition>();
 
             List<Guard> guards = new List<Guard>();
             List<ClientSite> clientSites = new List<ClientSite>();
@@ -162,8 +163,12 @@ namespace CityWatch.Web.Services
             clientSites = _guardLogDataProvider.GetClientSites(Id);
 
             strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
-            smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
-                        
+            //smartWands = _clientSiteWandDataProvider.GetClientSiteAllSmartWands(wsRequest.ClientSiteIds);
+            smartWands = _clientSiteWandDataProvider.GetClientSiteSmartWands();
+            //patrolCars = _clientSiteWandDataProvider.GetPatrolCarsForSite(wsRequest.ClientSiteIds);
+            patrolCars = _clientSiteWandDataProvider.GetPatrolCars();
+
+
             if (strikeLogs.Any())
             {
                 foreach (var item in strikeLogs.Where(x => x.SmartWandId.HasValue && x.SmartWandId.Value > 0))
@@ -172,6 +177,9 @@ namespace CityWatch.Web.Services
                     if (smartWand != null)
                     {
                         item.SmartWandNameId = smartWand.SmartWandId;
+                        item.PatrolCarId = smartWand.PatrolCarId;
+                        item.PatrolCarName = patrolCars?.FirstOrDefault(z=> z.Id ==  smartWand.PatrolCarId)?.Name;
+                        item.GPS = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
                     }
                 }
                                 
@@ -180,6 +188,7 @@ namespace CityWatch.Web.Services
                    (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
                    (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
                    (string.IsNullOrEmpty(wsRequest.SmartWandId) || wsRequest.SmartWandIds.Contains(z.SmartWandNameId)) &&
+                   (string.IsNullOrEmpty(wsRequest.PatrolCarId) || wsRequest.PatrolCarIds.Contains(Convert.ToInt16(z.PatrolCarId))) &&
                    (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
                    (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
                ).ToList();

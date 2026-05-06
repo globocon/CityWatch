@@ -420,6 +420,14 @@
                 <div class="tab-pane" id="KpiLBsmartWandsTab" role="tabpanel" aria-labelledby="KpiLBsmartWandsTab">
                     <div class="row m-0">
                         <div class="col-md-12 text-right pt-3">
+                             @* This is required to add Wand Tags to Smart Wands Gijgo grid. *@
+                            <select id="smartwandPatrolCarGroupsDDL" hidden>
+                                <option value="0">Select</option>
+                                @foreach (var patrolcarGroup in ViewDataService.GetAllPatrolCars())
+                                {
+                                    <option value="@patrolcarGroup.Value">@patrolcarGroup.Text</option>
+                                }
+                            </select>
                             <button class="btn btn-success mb-3" id="add_smart_wand"><i class="fa fa-plus mr-2"></i>Add Smart Wand</button>
                         </div>
                     </div>

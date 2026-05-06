@@ -676,6 +676,7 @@ namespace CityWatch.Web.Pages.Admin
             var tagTypeIds = new List<SelectListItem>();
             var tagLabels = new List<SelectListItem>();
             var smartWandIds = new List<SelectListItem>();
+            var patrolCarIds = new List<SelectListItem>();
             var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
 
             var tags = _viewDataService.GetClientSiteTagIds(arClientSiteIds);
@@ -707,8 +708,18 @@ namespace CityWatch.Web.Pages.Admin
                             .ToList();
 
             smartWandIds = _viewDataService.GetClientSiteSmartWandIds(arClientSiteIds);
+            patrolCarIds = _viewDataService.GetAllPatrolCars();
 
-            return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds });
+            return new JsonResult(new { tagIds, tagTypeIds, tagLabels, smartWandIds, patrolCarIds });
+        }
+
+        public JsonResult OnPostPatrolCarAssociatedSmartWands(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
+        {
+            var smartWandIds = new List<SelectListItem>();
+            //var arPatrolCarIds = patrolCarIds.Split(";").Select(z => int.Parse(z)).ToArray();
+            var arPatrolCarIds = wandStrikeAuditLogRequest.PatrolCarIds;
+            smartWandIds = _viewDataService.GetPatrolCarAssociatedSmartWands(arPatrolCarIds);
+            return new JsonResult(new { smartWandIds });
         }
 
         public IActionResult OnPostWandStrikeAuditSiteLogs(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)

@@ -40,6 +40,8 @@ namespace CityWatch.Data.Providers
         void DeleteClientSiteEquipments(int id);
         bool SaveOfflineSmartWandTagHitDataRecordError(ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced _offlineRecordsNotSynced);
         List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags();
+        List<IncidentReportPosition> GetPatrolCars();
+        List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid);
 
     }
 
@@ -97,6 +99,7 @@ namespace CityWatch.Data.Providers
                     clientSiteSmartWandToUpdate.PhoneNumber = clientSiteSmartWand.PhoneNumber;
                     clientSiteSmartWandToUpdate.SIMProvider = clientSiteSmartWand.SIMProvider;
                     clientSiteSmartWandToUpdate.IMEI = clientSiteSmartWand.IMEI;
+                    clientSiteSmartWandToUpdate.PatrolCarId = clientSiteSmartWand.PatrolCarId;
                 }
             }
             _dbContext.SaveChanges();
@@ -501,6 +504,25 @@ namespace CityWatch.Data.Providers
                 item.TagsType = item.SmartWandTagsType.value;
             }
             return smartwandtags;
+        }
+
+        public List<IncidentReportPosition> GetPatrolCars()
+        {
+            var PatrolCars = _dbContext.IncidentReportPositions.Where(x => x.IsPatrolCar == true).ToList();
+            return PatrolCars;
+        }
+
+        public List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid)
+        {            
+            var PatrolCarIds = _dbContext.ClientSiteSmartWands
+               .Where(x => clientsiteid.Contains(x.ClientSiteId) && x.ClientSite.IsActive == true && x.IsDeleted == false && x.PatrolCarId != null)
+               .Include(x => x.ClientSite)
+               .Select(x => x.PatrolCarId)
+               .Distinct()
+               .ToArray();
+
+            return _dbContext.IncidentReportPositions.Where(x => PatrolCarIds.Contains(x.Id)).ToList();
+
         }
     }
 }

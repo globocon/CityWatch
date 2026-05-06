@@ -10,6 +10,16 @@ $(function () {
     let gritdSmartWands;
     let gridSiteDropboxSettings;
 
+    let smartWandPatrolCarGroupListForDDL = [];
+    $('#smartwandPatrolCarGroupsDDL option').each(function () {
+        var value = $(this).val();
+        var text = $(this).text();
+
+        if (value) {
+            smartWandPatrolCarGroupListForDDL.push({ value: value, text: text });
+        }
+    });
+
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
     $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
@@ -23,17 +33,30 @@ $(function () {
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 150, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
-            { width: 200, field: 'phoneNumber', title: 'Number', editor: true },
-            { width: 150, field: 'simProvider', title: 'SIM Provider', editor: true },
-            { width: 210, field: 'imei', title: 'IMEI', editor: true },
-            /*{ width: 250, renderer: renderderegisterDevice, title: 'Registered Device', align: 'left', editor: false },*/
+            { width: 100, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
+            { width: 190, field: 'phoneNumber', title: 'Number', editor: true },
+            { width: 110, field: 'simProvider', title: 'SIM Provider', editor: true },
+            { width: 170, field: 'imei', title: 'IMEI', editor: true },
             {
                 title: 'Registered Device',
-                width: 210,
+                width: 200,
                 align: 'left',
                 editor: false,
                 tmpl: '<span class="action-placeholder"></span>'
+            },
+            {
+                width: 150,
+                field: 'patrolCarId',
+                title: 'Patrol Car',
+                editor: smartWandPatrolCarGroupEditor, 
+                renderer: function (value, record) {
+                    if (value != null && value != '') {
+                        const item = smartWandPatrolCarGroupListForDDL.find(function (elem) { return elem.value == value });
+                        return item ? item.text : '';
+                    }
+                    else
+                        return "";
+                }
             }
         ],
         rowDataBound: function (e, $row, id, record) {
@@ -51,20 +74,48 @@ $(function () {
             $lastTh.html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
             // Set fixed width (for header)
-            $lastTh.css('width', '150px');
+            $lastTh.css('width', '120px');
 
             // Also set width for body cells
             $grid.find('tbody tr').each(function () {
-                $(this).find('td:last').css('width', '150px');
+                $(this).find('td:last').css('width', '120px');
             });
         }
     });
+    
+    function smartWandPatrolCarGroupEditor($container, value, record) {
+        let $select = $('<select class="form-control form-control-sm"></select>');
+
+        smartWandPatrolCarGroupListForDDL.forEach(item => {
+            $select.append(
+                $('<option>', {
+                    value: item.value,
+                    text: item.text
+                })
+            );
+        });
+
+        $select.val(value);
+
+        // Directly update record (most reliable)
+        $select.on('change', function () {
+            record.patrolCarId = Number($(this).val());
+            $(this).closest('td').data('changed', true);
+        });
+
+        $container.empty().append($select);
+    }
 
     if (gritdSmartWands) {
         gritdSmartWands.on('rowDataChanged', function (e, id, record) {
 
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
+            // FIX: Convert text back to ID
+            if (isNaN(data.patrolCarId)) {
+                const item = smartWandPatrolCarGroupListForDDL.find(x => x.text == data.patrolCarId);
+                data.patrolCarId = item ? Number(item.value) : null;                
+            }
 
             $.ajax({
                 url: '/admin/settings?handler=SmartWandPhoneNumber',
@@ -89,10 +140,7 @@ $(function () {
                             isSmartWandAdding = false;
                     });
                 }
-
             });
-
-
         });
 
         gritdSmartWands.on('rowRemoving', function (e, id, record) {
@@ -163,7 +211,7 @@ $(function () {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
 
