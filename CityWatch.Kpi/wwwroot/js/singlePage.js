@@ -51,6 +51,9 @@ $(function () {
                 editor: smartWandPatrolCarGroupEditor, 
                 renderer: function (value, record) {
                     if (value != null && value != '') {
+                        if (value == '0')
+                            return "";
+
                         const item = smartWandPatrolCarGroupListForDDL.find(function (elem) { return elem.value == value });
                         return item ? item.text : '';
                     }
@@ -113,9 +116,15 @@ $(function () {
             const token = $('input[name="__RequestVerificationToken"]').val();
             // FIX: Convert text back to ID
             if (isNaN(data.patrolCarId)) {
-                const item = smartWandPatrolCarGroupListForDDL.find(x => x.text == data.patrolCarId);
-                data.patrolCarId = item ? Number(item.value) : null;                
+                if ((data.patrolCarId ?? '').toString().toLowerCase() === 'select' || (data.patrolCarId ?? '').toString().toLowerCase() === '0') {
+                    data.patrolCarId = null;
+                }
+                else {
+                    const item = smartWandPatrolCarGroupListForDDL.find(x => x.text == data.patrolCarId);
+                    data.patrolCarId = item ? Number(item.value) : null;
+                }
             }
+            else if ((data.patrolCarId ?? '').toString().toLowerCase() === '0') { data.patrolCarId = null; }
 
             $.ajax({
                 url: '/admin/settings?handler=SmartWandPhoneNumber',
@@ -211,7 +220,7 @@ $(function () {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '0', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
 
