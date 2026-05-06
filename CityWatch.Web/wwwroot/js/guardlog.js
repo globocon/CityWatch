@@ -5101,7 +5101,22 @@ $(function () {
         }
         return value;
     }
+    function formatSites(value, type, data) {
+        if (!value) return "";
 
+        let siteArray = value.split(','); // assuming comma-separated
+        let visible = siteArray.slice(0, 5);
+        let hidden = siteArray.slice(5);
+
+        let html = visible.join(', ');
+
+        if (hidden.length > 0) {
+            html += ` <span class="more-sites" style="display:none;">, ${hidden.join(', ')}</span>
+                  <a href="#" class="toggle-sites"> +${hidden.length} more</a>`;
+        }
+
+        return html;
+    }
 
     function renderGuardActiveCellHrValues(value, type, data) {
 
@@ -5148,7 +5163,10 @@ $(function () {
         { data: 'initial', width: "5%" },
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
-        { data: 'clientSites', orderable: false, width: "15%" },
+            {
+                data: 'clientSites', orderable: false, width: "15%", 'render': function (value, type, data) {
+                    return formatSites(value, type, data);
+                } },
         { data: 'pin', width: "1%", visible: false },
         { data: 'loginDate', visible: false },
         { data: 'isTerminated', visible: false },
@@ -5499,7 +5517,30 @@ $(function () {
     $('#cbIsActive').on('change', function () {
         $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
     });
+    $('#guard_settings tbody').on('click', '.toggle-sites', function (e) {
+        e.preventDefault();
 
+        let moreText = $(this).siblings('.more-sites');
+
+        if (moreText.is(':visible')) {
+            moreText.hide();
+            var data = guardSettings.row($(this).parents('tr')).data();
+            if (!data.clientSites) return "";
+
+            let siteArray = data.clientSites.split(','); // assuming comma-separated
+            let visible = siteArray.slice(0, 5);
+            let hidden = siteArray.slice(5);
+
+            $(this).text(function (_, text) {
+                return text.replace('show less', '+' + hidden.length +'more');
+            });
+        } else {
+           
+           
+            moreText.show();
+            $(this).text(' show less');
+        }
+    });
     $('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
         resetGuardDetailsModal();
         $('.btn-add-guard-addl-details').show();
