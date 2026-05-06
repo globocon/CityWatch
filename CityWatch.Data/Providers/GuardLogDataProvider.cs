@@ -2892,6 +2892,46 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
         }
 
+        /// <summary>
+        /// Fetches all states that have a public holiday defined for today.
+        /// Added by Antigravity - 2026-05-06 - To fix state-specific PH demarcation.
+        /// </summary>
+        private List<string> GetStatesWithPublicHolidayToday()
+        {
+            var dateToCheck = DateTime.Today.Date;
+            // Fetch holidays that are active today (including recurring ones)
+            var holidaysToday = _context.BroadcastBannerCalendarEvents
+                .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate.Date >= dateToCheck && x.StartDate.Date <= dateToCheck)))
+                .ToList();
+
+            var results = new List<string>();
+            foreach (var h in holidaysToday)
+            {
+                // Verify the date match for recurring holidays
+                bool dateMatches = (dateToCheck >= h.StartDate.Date && dateToCheck <= h.ExpiryDate.Date) || 
+                                   (h.RepeatYearly && h.StartDate.Month == dateToCheck.Month && h.StartDate.Day == dateToCheck.Day);
+                
+                if (dateMatches)
+                {
+                    var states = _context.PublicHolidayStates
+                        .Where(s => s.CalendarEventId == h.id && !s.IsDeleted)
+                        .Select(s => s.State.Trim().ToUpper())
+                        .ToList();
+                    
+                    if (states.Count == 0) 
+                    {
+                        // If no specific states are defined, it's considered a National (ALL) holiday.
+                        results.Add("ALL");
+                    }
+                    else
+                    {
+                        results.AddRange(states);
+                    }
+                }
+            }
+            return results.Distinct().ToList();
+        }
+
         /* New Change by dileep for P4 task 17 Start */
         public void GetGuardManningDetails(DayOfWeek currentDay)
         {
@@ -2909,10 +2949,20 @@ namespace CityWatch.Data.Providers
                 /* type 2 for avoid petrol car*/
                 /*IsPHO check if its a public holyday */
                 /*ScheduleisActive activate for particular  Site*/
-                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
+
+                // Fetch PH states today to skip normal manning for those states - Added 2026-05-06 to ensure state-specific PH timing is used instead
+                var phStatesToday = GetStatesWithPublicHolidayToday();
+
+                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).ThenInclude(x => x.ClientSite).
                     Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1 && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
+                    // Skip normal manning if today is a public holiday for this site's state - Added 2026-05-06
+                    var siteState = manning.ClientSiteKpiSetting?.ClientSite?.State?.Trim().ToUpper();
+                    if (phStatesToday.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phStatesToday.Contains(siteState)))
+                    {
+                        continue;
+                    }
                     try
                     {
                         if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
@@ -3073,8 +3123,12 @@ namespace CityWatch.Data.Providers
             /* type 2 for avoid petrol car*/
             /*IsPHO check if its a public holyday */
             /*ScheduleisActive activate for particular  Site*/
+
+            // Fetch PH states today to skip adhoc shifts for those states - Added 2026-05-06 to ensure state-specific PH timing is used instead
+            var phStatesToday = GetStatesWithPublicHolidayToday();
+
             var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettingsADHOC
-            .Include(x => x.ClientSiteKpiSetting)
+            .Include(x => x.ClientSiteKpiSetting).ThenInclude(x => x.ClientSite)
             .Where(x =>
                 x.WeekDay == currentDay &&
                 x.Type == "2" &&
@@ -3086,6 +3140,12 @@ namespace CityWatch.Data.Providers
             .ToList();
             foreach (var manning in clientSiteManningKpiSettings)
             {
+                // Skip adhoc shift if today is a public holiday for this site's state - Added 2026-05-06
+                var siteState = manning.ClientSiteKpiSetting?.ClientSite?.State?.Trim().ToUpper();
+                if (phStatesToday.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phStatesToday.Contains(siteState)))
+                {
+                    continue;
+                }
                 if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
                 {
                     /* Check the number of logins */
@@ -3317,21 +3377,25 @@ namespace CityWatch.Data.Providers
         {
             try
             {
-                //Check today is a public Holiday
+                //Check today is a public Holiday for each site specifically - Updated 2026-05-06 to fix state demarcation issues
+                var phStatesToday = GetStatesWithPublicHolidayToday();
 
-                var IftodayIsAPublicHolday = _context.BroadcastBannerCalendarEvents.Where(x => x.IsPublicHoliday == true && x.StartDate.Date == DateTime.Today.Date).ToList();
-
-
-                if (IftodayIsAPublicHolday.Count != 0 && IftodayIsAPublicHolday != null)
+                if (phStatesToday.Count != 0)
                 {
                     /* get the manning details for public holdday*/
                     /* type 2 for avoid petrol car*/
                     /*IsPHO check if its a public holyday */
                     /*ScheduleisActive activate for particular  Site*/
-                    var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
+                    var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).ThenInclude(x => x.ClientSite).
                         Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart != null && x.EmpHoursEnd != null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                     foreach (var manning in clientSiteManningKpiSettings)
                     {
+                        // Only process if today is actually a public holiday for this site's state - Added 2026-05-06
+                        var siteState = manning.ClientSiteKpiSetting?.ClientSite?.State?.Trim().ToUpper();
+                        if (!(phStatesToday.Contains("ALL") || (!string.IsNullOrEmpty(siteState) && phStatesToday.Contains(siteState))))
+                        {
+                            continue;
+                        }
                         if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
                         {
                             /* Check the number of logins in Rc status */
@@ -3399,7 +3463,8 @@ namespace CityWatch.Data.Providers
                                                         GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
                                                         NotificationType = 1,
-                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' - Fixed 2026-05-06 */
+                                                        CRMSupplier = manning.CrmSupplier,
                                                         UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
                                                         GuardLoginTimeZoneShort = offsetString.ToString(),
                                                     };
