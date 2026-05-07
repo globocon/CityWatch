@@ -3545,19 +3545,32 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDoc',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success)
                 gridStaffDocs.reload();
             showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
 
@@ -3591,22 +3604,35 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDocUsingType',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success) {
                 gridStaffDocsTypeCompanySop.reload();
                 gridStaffDocsTypeTraining.reload();
                 gridStaffDocsTypeTemplatesAndForms.reload();
-                showStatusNotification(data.success, data.message);
             }
+            showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
 
@@ -3636,8 +3662,8 @@ $(function () {
 
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+        if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
 
@@ -3649,22 +3675,35 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDocUsingTypeFour',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success) {
                 gridStaffDocsTypeCompanySop.reload();
                 gridStaffDocsTypeTraining.reload();
                 gridStaffDocsTypeTemplatesAndForms.reload();
-                showStatusNotification(data.success, data.message);
             }
+            showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
     /****** Downloads *******/
@@ -3771,14 +3810,29 @@ $(function () {
     });
 
 
-    const showStatusNotification = function (success, message) {
+    const showStatusNotification = function (success, message, isProgress = false) {
         if (success) {
             $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
         } else {
             $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
         }
+        
         $('.toast .toast-body').html(message);
+        
+        if (isProgress) {
+            $('#toastProgressContainer').show();
+            $('.toast').toast({ autohide: false }); // Don't hide while uploading
+        } else {
+            $('#toastProgressContainer').hide();
+            $('.toast').toast({ autohide: true, delay: 5000 });
+        }
+        
         $('.toast').toast('show');
+    }
+
+    const updateUploadProgress = function (percent) {
+        $('#toastProgressContainer').show();
+        $('#uploadProgressBar').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
     }
 
     const showModal = function (message) {
