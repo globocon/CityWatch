@@ -19,6 +19,27 @@ var tmzdata = {
     'EventDateTimeZoneShort': null,
     'EventDateTimeUtcOffsetMinute': null,
 };
+
+// 07-05-2026 - MP4 Video Playback Support - Global Definition
+window.openVideoPlayer = function (url) {
+    var video = document.getElementById('videoPlayer');
+    var source = document.getElementById('videoSource');
+    if (source && video) {
+        source.src = url;
+        video.load();
+        $('#videoPlayerModal').modal('show');
+        video.play();
+    }
+}
+
+window.closeVideoPlayer = function () {
+    var video = document.getElementById('videoPlayer');
+    if (video) {
+        video.pause();
+        video.src = "";
+    }
+    $('#videoPlayerModal').modal('hide');
+}
 // Task p6#73_TimeZone issue -- added by Binoy - End
 let connection;
 window.onload = function () {
@@ -3303,26 +3324,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
         return buttonHtml;
     }
 
-    // 07-05-2026 - MP4 Video Playback Support
-    window.openVideoPlayer = function(url) {
-        var video = document.getElementById('videoPlayer');
-        var source = document.getElementById('videoSource');
-        if (source && video) {
-            source.src = url;
-            video.load();
-            $('#videoPlayerModal').modal('show');
-            video.play();
-        }
-    }
 
-    window.closeVideoPlayer = function() {
-        var video = document.getElementById('videoPlayer');
-        if (video) {
-            video.pause();
-            video.src = "";
-        }
-        $('#videoPlayerModal').modal('hide');
-    }
 });
 
 
