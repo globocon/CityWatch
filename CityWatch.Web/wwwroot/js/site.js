@@ -3105,7 +3105,7 @@ $(function () {
         columns: [
             { field: 'fileName', title: 'File Name', width: 200 },
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
-            { width: 200, renderer: staffDocsButtonRenderer },
+            { width: 250, renderer: staffDocsButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3173,7 +3173,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-            { width: 270, renderer: editManagerstaffDocsButtonRendererCompanySop },
+            { width: 350, renderer: editManagerstaffDocsButtonRendererCompanySop },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3273,7 +3273,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             //{ width: 200, renderer: staffDocsButtonRendererTraining },
-            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3314,11 +3314,14 @@ $(function () {
     //Staff forms start
     var editManagerstaffDocsButtonRendererFroms;
     editManagerstaffDocsButtonRendererFroms = function (value, record, $cell, $displayEl, id, $grid) {
+        var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_templates_forms" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-                '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $play = $(playBtn).attr('data-key', id),
             $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
             $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
             $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
@@ -3347,7 +3350,7 @@ $(function () {
             $update.hide();
             $cancel.hide();
         });
-        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+        $displayEl.empty().append($replace).append($downlaod).append($play).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
         dataSource: {
@@ -3365,7 +3368,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editField: 'documentModuleName', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
 
-            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
             //{ width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
         ],
         initialized: function (e) {
@@ -5280,7 +5283,7 @@ $(function () {
             { field: 'fileName', title: 'File Name', width: 300 },
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
             { width: 55, field: 'sop', title: 'SOP' },
-            { width: 140, renderer: schButtonRenderer },
+            { width: 220, renderer: schButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -5780,7 +5783,7 @@ gridSchedulesAlarm = $('#staff_document_siteSOPAlarm').grid({
         { field: 'fileName', title: 'File Name', width: 300 },
         { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
         { width: 55, field: 'sop', title: 'SOP' },
-        { width: 140, renderer: schButtonRenderer1 },
+        { width: 220, renderer: schButtonRenderer1 },
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');

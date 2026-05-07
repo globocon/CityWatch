@@ -3291,7 +3291,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
             },
             //{ field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
-            { width: 98, renderer: schButtonRendererNew },
+            { width: 220, renderer: schButtonRendererNew },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
