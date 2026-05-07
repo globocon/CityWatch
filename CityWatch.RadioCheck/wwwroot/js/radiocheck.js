@@ -3299,12 +3299,8 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     });
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
-        if (record.fileName.toLowerCase().endsWith('.mp4')) {
-            buttonHtml += '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'' + record.filePath + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
-        }
+        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
         return buttonHtml;
-
     }
 
     // 07-05-2026 - MP4 Video Playback Support
