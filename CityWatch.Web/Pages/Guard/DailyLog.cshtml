@@ -89,8 +89,8 @@ else
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th scope="col" style="width:80%">File Name</th>
-                                            <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+                                            <th scope="col" style="width:70%">File Name</th>
+                                            <th scope="col" style="width:30%; text-align:center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
 
                                         </tr>
                                     </thead>
@@ -101,13 +101,19 @@ else
                                             <tr>
                                                 <td><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                                 <td>
-                                                    <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>
-                                                    @if (isVideo)
-                                                    {
-                                                        <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('/StaffDocs/@file.FileName')">
-                                                            <i class="fa fa-play mr-1"></i>Play
-                                                        </button>
-                                                    }
+                                                    <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center">
+                                                        <li>
+                                                            <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>
+                                                        </li>
+                                                        @if (isVideo)
+                                                        {
+                                                            <li>
+                                                                <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('/StaffDocs/@file.FileName')" title="Play Video">
+                                                                    <i class="fa fa-play"></i>
+                                                                </button>
+                                                            </li>
+                                                        }
+                                                    </ul>
                                                 </td>
                                             </tr>
 
