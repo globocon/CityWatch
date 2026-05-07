@@ -133,7 +133,7 @@ a.cws-footer-link :visited {
     right: 0;
     bottom: 0;
     width: 100%;
-    background: rgba(0,0,0,0.5) url(../images/loading.gif) no-repeat center center;
+    background: rgba(0,0,0,0.5);
     z-index: 1000;
 }
 

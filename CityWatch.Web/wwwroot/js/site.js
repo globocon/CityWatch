@@ -3813,26 +3813,44 @@ $(function () {
     const showStatusNotification = function (success, message, isProgress = false) {
         if (success) {
             $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
+            $('#loader').hide();
+            $('#loader-percent, #loader-text').hide();
         } else {
             $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
+            $('#loader').hide();
+            $('#loader-percent, #loader-text').hide();
         }
         
         $('.toast .toast-body').html(message);
         
         if (isProgress) {
             $('#toastProgressContainer').show();
-            $('.toast').toast({ autohide: false }); // Don't hide while uploading
+            $('.toast').toast({ autohide: false });
+            $('.toast').toast('show');
+            
+            // Show full-screen loader during progress
+            $('#loader').show();
+            $('#loader-percent').text('0%').show();
+            $('#loader-text').text(message).show();
         } else {
             $('#toastProgressContainer').hide();
             $('.toast').toast({ autohide: true, delay: 5000 });
+            $('.toast').toast('show');
+            
+            // Safety timeout to ensure it hides even if the toast was already visible
+            setTimeout(function() {
+                $('.toast').toast('hide');
+            }, 5000);
         }
-        
-        $('.toast').toast('show');
     }
 
     const updateUploadProgress = function (percent) {
         $('#toastProgressContainer').show();
         $('#uploadProgressBar').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
+        
+        // Also update full-screen loader
+        $('#loader').show();
+        $('#loader-percent').text(percent + '%').show();
     }
 
     const showModal = function (message) {
