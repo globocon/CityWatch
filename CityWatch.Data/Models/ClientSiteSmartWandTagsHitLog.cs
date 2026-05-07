@@ -39,6 +39,15 @@ namespace CityWatch.Data.Models
         public bool IsOfflineRecord { get; set; } = false;
         public DateTime? OfflineRecordSyncUtcDateTime { get; set; }
         public bool IsScanFromLinkedSite { get; set; } = false;
+
+        [NotMapped]
+        public int? PatrolCarId { get; set; }
+
+        [NotMapped]
+        public string? PatrolCarName { get; set; }
+
+        [NotMapped]
+        public string? GPS { get; set; }
     }
 
     public class ClientSiteSmartWandTagsHitLogCacheOffline

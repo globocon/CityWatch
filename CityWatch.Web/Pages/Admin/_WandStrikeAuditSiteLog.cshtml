@@ -49,13 +49,16 @@
 				<div class="custom-control custom-switch">
 					<input type="checkbox" class="custom-control-input" id="patrolCarToggle">
 					<label class="custom-control-label" for="patrolCarToggle"></label>
-					<input type="hidden" id="IspatrolCarToggle" name="IspatrolCarDownselect">
 				</div>
 			</div>
-
-			<select class="form-control mx-1 wandstrikemultiselect"
-					multiple="multiple"
-					id="wandstrikePatrolCarId">
+			<select class="form-control mx-1 wandstrikemultiselect"	multiple="multiple"	id="wandstrikePatrolCarId" disabled="true">
+				@{
+					var patrolCars = viewDataService.GetAllPatrolCars();
+					foreach (var patrolCar in patrolCars)
+					{						
+						<option value="@patrolCar.Value" >@patrolCar.Text</option>
+					}
+				}
 			</select>
 		</div>
 
@@ -86,9 +89,9 @@
 						<i class="fa fa-arrow-down mr-1"></i>Site
 					</button>
 
-					@* <button type="button" class="btn btn-primary" id="btnDownloadWandstrikeAuditReportMoSun">
+					<button type="button" class="btn btn-primary" id="btnDownloadWandstrikeAuditReportMonSun">
 						<i class="fa fa-arrow-down mr-1"></i>Mon-Sun
-					</button> *@
+					</button>
 
 				</div>
 			</div>
@@ -100,6 +103,8 @@
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagTypeId" />
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagLabel" />
 		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.SmartWandId" />
+		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.PatrolCarId" />
+		<input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.IspatrolCarToggleOn" />
 
 		<div class="row">			
 			<div class="col-md-5">
