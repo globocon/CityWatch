@@ -64,7 +64,7 @@ else
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th scope="col" style="width:70%">File Name</th>
+                                        <th scope="col" style="width:70%; text-align:left">File Name</th>
                                         <th scope="col" style="width:30%; text-align:center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
 
                                     </tr>
@@ -74,9 +74,9 @@ else
                                     {
                                         var isVideo = file.FileName.ToLower().EndsWith(".mp4");
                                         <tr>
-                                            <td><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
+                                            <td style="text-align:left"><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                             <td>
-                                                <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center">
+                                                <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center justify-content-center">
                                                     <li>
                                                         <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>
                                                     </li>
