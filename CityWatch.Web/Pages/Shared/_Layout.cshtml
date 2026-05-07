@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
@@ -184,9 +184,9 @@
                                 }
                                 else if (alldocWithModeleName.Count > 1)
                                 {
-                                    <a href="#" data-toggle="modal" data-target=".bd-example-modal-lg" title="Click here"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
+                                    <a href="#" data-toggle="modal" data-target="#helpModal" title="Click here"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
                                     <!-- Modal -->
-                                    <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-lg">
                                             <div class="modal-content">
                                                 <div class="modal-header">
@@ -199,29 +199,35 @@
                                                     <table class="table table-hover">
                                                         <thead>
                                                             <tr>
-                                                                <th scope="col" style="width:80%">File Name</th>
-                                                                <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+                                                                <th scope="col" style="width:70%; text-align:left">File Name</th>
+                                                                <th scope="col" style="width:30%"><i class="fa fa-cogs" aria-hidden="true"></i></th>
 
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             @foreach (var file in alldocWithModeleName)
                                                             {
+                                                                var isVideo = file.FileName.ToLower().EndsWith(".mp4");
                                                                 <tr>
-                                                                    <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                                    <td style="text-align:left"><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                                                     <td>
-
-                                                                        <ul style="list-style-type:none;padding-left:0;">
+                                                                        <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center">
                                                                             <li>
                                                                                 <a href="#" class="btn btn-outline-success ml-2">
-                                                                                    <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
+                                                                                    <i class="fa fa-download mr-1 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
                                                                                 </a>
                                                                             </li>
+                                                                            @if (isVideo)
+                                                                            {
+                                                                                <li>
+                                                                                    <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('/StaffDocs/@file.FileName')" title="Play Video">
+                                                                                        <i class="fa fa-play"></i>
+                                                                                    </button>
+                                                                                </li>
+                                                                            }
                                                                         </ul>
-                                                                        @*<a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
                                                                     </td>
                                                                 </tr>
-
                                                             }
 
                                                         </tbody>
@@ -416,6 +422,52 @@
             </div>
         </div>
     </div>
+
+    <!-- Video Player Modal - 07-05-2026 - MP4 Playback Support -->
+    <div class="modal fade" id="videoPlayerModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Video Player</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" onclick="closeVideoPlayer()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <video id="videoPlayer" class="w-100" controls controlsList="nodownload">
+                        <source id="videoSource" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Status Notification Toast -->
+    <div class="toast hide" role="status" aria-live="polite" aria-atomic="true" data-delay="5000" style="position: fixed !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important; right: auto !important; z-index: 10000 !important; min-width: 300px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;">
+        <div class="toast-header">
+            <strong class="mr-auto" id="toastStatusTitle">Status</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body" id="toastStatusBody"></div>
+        <div id="toastProgressContainer" class="px-3 pb-3" style="display: none;">
+            <div class="progress" style="height: 10px; border-radius: 5px;">
+                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Full-screen Loader with Percentage -->
+    <div id="loader" style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000;">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; font-family: sans-serif;">
+            <img src="/images/loading.gif" alt="Loading..." style="width: 64px; height: 64px;" />
+            <div id="loader-percent" style="margin-top: 15px; font-size: 24px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); display: none;">0%</div>
+            <div id="loader-text" style="margin-top: 5px; font-size: 16px; display: none;">Uploading file...</div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery-editable-select/dist/jquery-editable-select.min.js"></script>

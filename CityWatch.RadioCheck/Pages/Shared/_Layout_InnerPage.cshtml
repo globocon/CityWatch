@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Hosting
 @using Microsoft.Extensions.Hosting
 @using System.Security.Claims;
 @using CityWatch.Data.Providers;
@@ -101,24 +101,33 @@
                                                 <table class="table table-hover">
                                                     <thead>
                                                         <tr>
-                                                            <th scope="col" style="width:80%">File Name</th>
-                                                            <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+                                                            <th scope="col" style="width:70%">File Name</th>
+                                                            <th scope="col" style="width:30%"><i class="fa fa-cogs" aria-hidden="true"></i></th>
 
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach (var file in alldocWithModeleName)
                                                         {
+                                                            var isVideo = file.FileName.ToLower().EndsWith(".mp4");
                                                             <tr>
-                                                                <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                                <td><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                                                 <td>
 
-                                                                    <ul style="list-style-type:none;padding-left:0;">
+                                                                    <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center">
                                                                         <li>
                                                                             <a href="#" class="btn btn-outline-success ml-2">
-                                                                                <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
+                                                                                <i class="fa fa-download mr-1 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
                                                                             </a>
                                                                         </li>
+                                                                        @if (isVideo)
+                                                                        {
+                                                                            <li>
+                                                                                <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('https://www.cws-ir.com/StaffDocs/@file.FileName')" title="Play Video">
+                                                                                    <i class="fa fa-play"></i>
+                                                                                </button>
+                                                                            </li>
+                                                                        }
                                                                     </ul>
                                                                   @* <a href="https://www.cws-ir.com/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
                                                                 </td>
@@ -185,23 +194,32 @@
                                                 <table class="table table-hover">
                                                     <thead>
                                                         <tr>
-                                                            <th scope="col" style="width:80%">File Name</th>
-                                                            <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+                                                            <th scope="col" style="width:70%">File Name</th>
+                                                            <th scope="col" style="width:30%"><i class="fa fa-cogs" aria-hidden="true"></i></th>
 
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach (var file in alldocWithModeleName)
                                                         {
+                                                            var isVideo = file.FileName.ToLower().EndsWith(".mp4");
                                                             <tr>
-                                                                <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                                <td><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                                                 <td>
-                                                                    <ul style="list-style-type:none;padding-left:0;">
+                                                                    <ul style="list-style-type:none;padding-left:0;" class="d-flex align-items-center">
                                                                         <li>
                                                                             <a href="#" class="btn btn-outline-success ml-2">
-                                                                                <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
+                                                                                <i class="fa fa-download mr-1 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
                                                                             </a>
                                                                         </li>
+                                                                        @if (isVideo)
+                                                                        {
+                                                                            <li>
+                                                                                <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('https://www.cws-ir.com/StaffDocs/@file.FileName')" title="Play Video">
+                                                                                    <i class="fa fa-play"></i>
+                                                                                </button>
+                                                                            </li>
+                                                                        }
                                                                     </ul>
                                                                     @*<a href="https://www.cws-ir.com/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
                                                                 </td>
@@ -323,6 +341,26 @@
 
     <script src="~/js/radiocheck.js" asp-append-version="true"></script>*@
     @* New Script*@
+    <!-- Video Player Modal - 07-05-2026 - MP4 Playback Support -->
+    <div class="modal fade" id="videoPlayerModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Video Player</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" onclick="closeVideoPlayer()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <video id="videoPlayer" class="w-100" controls controlsList="nodownload">
+                        <source id="videoSource" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.4.0/css/buttons.dataTables.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -339,6 +377,26 @@
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src=" https://cdn.datatables.net/plug-ins/1.13.7/features/scrollResize/dataTables.scrollResize.min.js"></script>
     <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.min.js"></script>
+    <!-- Global Video Player Modal -->
+    <div class="modal fade" id="videoPlayerModal" tabindex="-1" role="dialog" aria-labelledby="videoPlayerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="videoPlayerModalLabel">Video Playback</h5>
+                    <button type="button" class="close text-white" onclick="closeVideoPlayer()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <video id="videoPlayer" controls style="width: 100%;" controlsList="nodownload">
+                        <source id="videoSource" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/luxon/luxon.min.js" asp-append-version="true"></script>
     <!-- For SignalR notification-->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

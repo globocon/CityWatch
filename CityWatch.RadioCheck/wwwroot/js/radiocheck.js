@@ -1,4 +1,4 @@
-﻿let nIntervId;
+let nIntervId;
 let DuressAlarmNotificationPending = false;
 const duration = 60 * 3;
 var isPaused = false;
@@ -19,6 +19,27 @@ var tmzdata = {
     'EventDateTimeZoneShort': null,
     'EventDateTimeUtcOffsetMinute': null,
 };
+
+// 07-05-2026 - MP4 Video Playback Support - Global Definition
+window.openVideoPlayer = function (url) {
+    var video = document.getElementById('videoPlayer');
+    var source = document.getElementById('videoSource');
+    if (source && video) {
+        source.src = url;
+        video.load();
+        $('#videoPlayerModal').modal('show');
+        video.play();
+    }
+}
+
+window.closeVideoPlayer = function () {
+    var video = document.getElementById('videoPlayer');
+    if (video) {
+        video.pause();
+        video.src = "";
+    }
+    $('#videoPlayerModal').modal('hide');
+}
 // Task p6#73_TimeZone issue -- added by Binoy - End
 let connection;
 window.onload = function () {
@@ -3291,7 +3312,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
             },
             //{ field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 93 },
-            { width: 98, renderer: schButtonRendererNew },
+            { width: 220, renderer: schButtonRendererNew },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3299,11 +3320,11 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     });
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
-
+        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
         return buttonHtml;
-
     }
+
+
 });
 
 
