@@ -3301,7 +3301,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
         let buttonHtml = '';
         buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
         if (record.fileName.toLowerCase().endsWith('.mp4')) {
-            buttonHtml += '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'' + record.filePath + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>';
+            buttonHtml += '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'' + record.filePath + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
         }
         return buttonHtml;
 

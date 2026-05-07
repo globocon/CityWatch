@@ -3116,7 +3116,7 @@ $(function () {
     var editManagerstaffDocsButtonRendererCompanySop;
     editManagerstaffDocsButtonRendererCompanySop = function (value, record, $cell, $displayEl, id, $grid) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
-        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>' : '';
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
                 '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
@@ -3215,7 +3215,7 @@ $(function () {
     var editManagerstaffDocsButtonRendererTraining;
     editManagerstaffDocsButtonRendererTraining = function (value, record, $cell, $displayEl, id, $grid) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
-        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>' : '';
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_training" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
                 '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
@@ -3315,7 +3315,7 @@ $(function () {
     var editManagerstaffDocsButtonRendererFroms;
     editManagerstaffDocsButtonRendererFroms = function (value, record, $cell, $displayEl, id, $grid) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
-        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>' : '';
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_templates_forms" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
                 '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
@@ -3409,7 +3409,7 @@ $(function () {
 
     function staffDocsButtonRenderer(value, record) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
-        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>' : '';
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads" method="post">' +
             '<i class="fa fa-upload mr-2"></i>Replace' +
@@ -3423,7 +3423,7 @@ $(function () {
     function staffDocsButtonRendererCompanySop(value, record) {
         let playBtn = '';
         if (record.fileName.toLowerCase().endsWith('.mp4')) {
-            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>';
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
         }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_company_sop" method="post">' +
@@ -3437,7 +3437,7 @@ $(function () {
     function staffDocsButtonRendererTraining(value, record) {
         let playBtn = '';
         if (record.fileName.toLowerCase().endsWith('.mp4')) {
-            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>';
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
         }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_training" method="post">' +
@@ -3451,7 +3451,7 @@ $(function () {
     function staffDocsButtonRendererTemplatesAndForms(value, record) {
         let playBtn = '';
         if (record.fileName.toLowerCase().endsWith('.mp4')) {
-            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>';
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
         }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_templates_forms" method="post">' +
