@@ -39,13 +39,21 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public double SumOfHours
         {
-            get {
-                if (!string.IsNullOrEmpty(EmpHoursEnd) && !string.IsNullOrEmpty(EmpHoursStart))
+            get
+            {
+                if (IsPHO != 1)
                 {
-                   
-                    var totalMin = (TimeSpan.Parse(EmpHoursEnd + ":00") - TimeSpan.Parse(EmpHoursStart + ":00")).TotalMinutes;
-                    var hours = Math.Ceiling(totalMin / 60);
-                    return hours;
+                    if (!string.IsNullOrEmpty(EmpHoursEnd) && !string.IsNullOrEmpty(EmpHoursStart))
+                    {
+
+                        var totalMin = (TimeSpan.Parse(EmpHoursEnd + ":00") - TimeSpan.Parse(EmpHoursStart + ":00")).TotalMinutes;
+                        var hours = Math.Ceiling(totalMin / 60);
+                        return hours;
+                    }
+                    else
+                    {
+                        return 0.0;
+                    }
                 }
                 else
                 {
