@@ -1,4 +1,4 @@
-﻿let nIntervId;
+let nIntervId;
 let DuressAlarmNotificationPending = false;
 const duration = 60 * 3;
 var isPaused = false;
@@ -3300,9 +3300,32 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
         buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i>Download</a>';
-
+        if (record.fileName.toLowerCase().endsWith('.mp4')) {
+            buttonHtml += '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'' + record.filePath + record.fileName + '\')"><i class="fa fa-play mr-2"></i>Play</button>';
+        }
         return buttonHtml;
 
+    }
+
+    // 07-05-2026 - MP4 Video Playback Support
+    window.openVideoPlayer = function(url) {
+        var video = document.getElementById('videoPlayer');
+        var source = document.getElementById('videoSource');
+        if (source && video) {
+            source.src = url;
+            video.load();
+            $('#videoPlayerModal').modal('show');
+            video.play();
+        }
+    }
+
+    window.closeVideoPlayer = function() {
+        var video = document.getElementById('videoPlayer');
+        if (video) {
+            video.pause();
+            video.src = "";
+        }
+        $('#videoPlayerModal').modal('hide');
     }
 });
 

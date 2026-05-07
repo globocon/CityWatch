@@ -97,10 +97,17 @@ else
                                     <tbody>
                                         @foreach (var file in clientSiteSOp)
                                         {
+                                            var isVideo = file.FileName.ToLower().EndsWith(".mp4");
                                             <tr>
-                                                <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                <td><span style="color:@(isVideo ? "blue" : "red")"><i class="fa @(isVideo ? "fa-file-video-o" : "fa-file-pdf-o")" aria-hidden="true"></i></span> @file.FileName</td>
                                                 <td>
-                                                    <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                                    <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>
+                                                    @if (isVideo)
+                                                    {
+                                                        <button type="button" class="btn btn-outline-primary ml-2" onclick="openVideoPlayer('/StaffDocs/@file.FileName')">
+                                                            <i class="fa fa-play mr-1"></i>Play
+                                                        </button>
+                                                    }
                                                 </td>
                                             </tr>
 
@@ -1320,6 +1327,27 @@ else
     </div>
 </div>
 @Html.AntiForgeryToken()
+
+<!-- Video Player Modal - 07-05-2026 - MP4 Playback Support -->
+<div class="modal fade" id="videoPlayerModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Video Player</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" onclick="closeVideoPlayer()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <video id="videoPlayer" class="w-100" controls controlsList="nodownload">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section PageHeader {
     <h3 class="text-center">LOGBOOK PORTAL</h3>
 }

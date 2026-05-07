@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using Microsoft.AspNetCore.Http
@@ -895,6 +895,27 @@
 
 <!-- logbook model popup end-->
 @Html.AntiForgeryToken()
+
+<!-- Video Player Modal - 07-05-2026 - MP4 Playback Support -->
+<div class="modal fade" id="videoPlayerModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Video Player</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" onclick="closeVideoPlayer()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <video id="videoPlayer" class="w-100" controls controlsList="nodownload">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
 <partial name="_RadioCheckListModels" />
 @section PageHeader {
     <h3 class="text-center">RADIO CHECKLIST</h3>
