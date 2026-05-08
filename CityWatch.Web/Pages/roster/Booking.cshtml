@@ -1378,12 +1378,21 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
-            var projectFinancialMode = false;
-            var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
-            var projectSupplierMode = false;
-            var groupFinancialMode = false;
-            var groupFinancialRateType = 'guard'; // 'guard' or 'sell'
-            var groupSupplierMode = false;
+            var projectFinancialMode = sessionStorage.getItem('projectFinancialMode') === 'true';
+            var projectFinancialRateType = sessionStorage.getItem('projectFinancialRateType') || 'guard'; // 'guard' or 'sell'
+            var projectSupplierMode = sessionStorage.getItem('projectSupplierMode') === 'true';
+            var groupFinancialMode = sessionStorage.getItem('groupFinancialMode') === 'true';
+            var groupFinancialRateType = sessionStorage.getItem('groupFinancialRateType') || 'guard'; // 'guard' or 'sell'
+            var groupSupplierMode = sessionStorage.getItem('groupSupplierMode') === 'true';
+
+            // Sync UI toggles with session state
+            $('#projectFinancialMaster').prop('checked', projectFinancialMode);
+            $('#designToggle1').prop('checked', projectFinancialRateType === 'sell').prop('disabled', !projectFinancialMode);
+            $('#designToggle2').prop('checked', projectSupplierMode);
+            
+            $('#groupFinancialMaster').prop('checked', groupFinancialMode);
+            $('#binderToggle1').prop('checked', groupFinancialRateType === 'sell').prop('disabled', !groupFinancialMode);
+            $('#binderToggle2').prop('checked', groupSupplierMode);
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
@@ -1430,9 +1439,11 @@
             // Project Financial/Supplier mode toggles
             $('#projectFinancialMaster').on('change', function() {
                 projectFinancialMode = $(this).is(':checked');
+                sessionStorage.setItem('projectFinancialMode', projectFinancialMode);
                 if (!projectFinancialMode) {
                     $('#designToggle1').prop('checked', false);
                     projectFinancialRateType = 'guard';
+                    sessionStorage.setItem('projectFinancialRateType', projectFinancialRateType);
                 }
                 $('#designToggle1').prop('disabled', !projectFinancialMode);
                 loadRoster();
@@ -1440,11 +1451,13 @@
 
             $('#designToggle1').on('change', function() {
                 projectFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                sessionStorage.setItem('projectFinancialRateType', projectFinancialRateType);
                 loadRoster();
             });
 
             $('#designToggle2').on('change', function() {
                 projectSupplierMode = $(this).is(':checked');
+                sessionStorage.setItem('projectSupplierMode', projectSupplierMode);
                 loadRoster();
             });
 
@@ -1459,9 +1472,11 @@
             // Group Financial/Supplier mode toggles
             $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
+                sessionStorage.setItem('groupFinancialMode', groupFinancialMode);
                 if (!groupFinancialMode) {
                     $('#binderToggle1').prop('checked', false);
                     groupFinancialRateType = 'guard';
+                    sessionStorage.setItem('groupFinancialRateType', groupFinancialRateType);
                 }
                 $('#binderToggle1').prop('disabled', !groupFinancialMode);
                 loadBinderRoster();
@@ -1469,11 +1484,13 @@
 
             $('#binderToggle1').on('change', function() {
                 groupFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                sessionStorage.setItem('groupFinancialRateType', groupFinancialRateType);
                 loadBinderRoster();
             });
 
             $('#binderToggle2').on('change', function() {
                 groupSupplierMode = $(this).is(':checked');
+                sessionStorage.setItem('groupSupplierMode', groupSupplierMode);
                 loadBinderRoster();
             });
 
