@@ -386,7 +386,9 @@ namespace CityWatch.Web.Pages.roster
             }
 
             // Validation 3: Conflict Detection (If Guard is selected)
-            if (guardId.HasValue)
+            // If a relief guard or relief provider is assigned, the main guard is not actually working this shift.
+            // Therefore, we skip the conflict and unavailability checks for the main guard for this specific shift instance.
+            if (guardId.HasValue && !reliefGuardId.HasValue && string.IsNullOrEmpty(reliefProviderName))
             {
                 var conflict = await _context.RosterSchedules
                     .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
