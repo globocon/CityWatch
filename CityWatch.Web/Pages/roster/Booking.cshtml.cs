@@ -1280,6 +1280,27 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
+        public async Task<JsonResult> OnGetGuardDailySchedule(int guardId, DateTime date)
+        {
+            var schedules = await _context.RosterSchedules
+                .Include(x => x.ClientSite)
+                .Where(x => (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
+                            !x.IsDeleted && x.Status != RosterShiftStatus.Cancelled &&
+                            x.ShiftStart.Date <= date.Date && x.ShiftEnd.Date >= date.Date)
+                .OrderBy(x => x.ShiftStart)
+                .Select(x => new
+                {
+                    projectName = x.ClientSite != null ? x.ClientSite.Name : "Unknown",
+                    date = x.ShiftStart.ToString("dd MMM yyyy"),
+                    startTime = x.ShiftStart.ToString("HH:mm"),
+                    endTime = x.ShiftEnd.ToString("HH:mm"),
+                    isRelief = x.ReliefGuardId == guardId
+                })
+                .ToListAsync();
+
+            return new JsonResult(new { success = true, data = schedules });
+        }
+
         public JsonResult OnGetSearchSites(string search)
         {
             var results = _viewDataService.GetUserClientSites(string.Empty, search);
