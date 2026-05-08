@@ -520,8 +520,8 @@
                                     <div style="flex-grow: 1; width: 0;">
                                         <select id="modalGuardId" class="form-control" style="width: 100%"></select>
                                     </div>
-                                    <button type="button" class="btn btn-outline-info btn-sm ml-2 btn-view-guard-schedule" data-target-id="modalGuardId" title="View Guard Schedule" style="height: 38px; display: none;">
-                                        <i class="fa fa-calendar-alt"></i>
+                                    <button type="button" class="btn btn-info btn-sm ml-1 btn-view-guard-schedule" data-target-id="modalGuardId" title="View Guard Schedule" style="height: 38px; width: 38px; padding: 0; display: none;">
+                                        <i class="fa fa-calendar"></i>
                                     </button>
                                 </div>
                             </div>
@@ -543,8 +543,8 @@
                                     <div style="flex-grow: 1; width: 0;">
                                         <select id="modalReliefGuardId" class="form-control" style="width: 100%"></select>
                                     </div>
-                                    <button type="button" class="btn btn-outline-info btn-sm ml-2 btn-view-guard-schedule" data-target-id="modalReliefGuardId" title="View Guard Schedule" style="height: 38px; display: none;">
-                                        <i class="fa fa-calendar-alt"></i>
+                                    <button type="button" class="btn btn-info btn-sm ml-1 btn-view-guard-schedule" data-target-id="modalReliefGuardId" title="View Guard Schedule" style="height: 38px; width: 38px; padding: 0; display: none;">
+                                        <i class="fa fa-calendar"></i>
                                     </button>
                                 </div>
                             </div>
@@ -3646,6 +3646,11 @@
                             if(res.data && res.data.length > 0) {
                                 $.each(res.data, function(i, s) {
                                     var role = s.isRelief ? '<span class="badge" style="background:#6f42c1; color:white;">Relief</span>' : '<span class="badge badge-primary">Main</span>';
+                                    if (!s.isRelief && s.reliefName) {
+                                        role += '<div style="font-size: 0.75rem; margin-top: 2px;" class="text-muted"><i class="fa fa-level-up-alt fa-rotate-90 mr-1"></i>Relieved by:<br>' + s.reliefName + '</div>';
+                                    } else if (s.isRelief && s.mainGuardName) {
+                                        role += '<div style="font-size: 0.75rem; margin-top: 2px;" class="text-muted"><i class="fa fa-level-up-alt fa-rotate-90 mr-1"></i>Relieving:<br>' + s.mainGuardName + '</div>';
+                                    }
                                     tbody.append('<tr><td class="text-left">' + s.projectName + '</td><td>' + role + '</td><td>' + s.date + '</td><td>' + s.startTime + ' - ' + s.endTime + '</td></tr>');
                                 });
                             } else {

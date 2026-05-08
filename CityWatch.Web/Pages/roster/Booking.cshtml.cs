@@ -1284,6 +1284,8 @@ namespace CityWatch.Web.Pages.roster
         {
             var schedules = await _context.RosterSchedules
                 .Include(x => x.ClientSite)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
                 .Where(x => (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
                             !x.IsDeleted && x.Status != RosterShiftStatus.Cancelled &&
                             x.ShiftStart.Date <= date.Date && x.ShiftEnd.Date >= date.Date)
@@ -1294,7 +1296,9 @@ namespace CityWatch.Web.Pages.roster
                     date = x.ShiftStart.ToString("dd MMM yyyy"),
                     startTime = x.ShiftStart.ToString("HH:mm"),
                     endTime = x.ShiftEnd.ToString("HH:mm"),
-                    isRelief = x.ReliefGuardId == guardId
+                    isRelief = x.ReliefGuardId == guardId,
+                    reliefName = x.ReliefGuardId != null ? x.ReliefGuard.Name : x.ReliefProviderName,
+                    mainGuardName = x.GuardId != null ? x.Guard.Name : x.ProviderName
                 })
                 .ToListAsync();
 
