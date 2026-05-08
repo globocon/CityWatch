@@ -386,7 +386,9 @@ namespace CityWatch.Web.Pages.roster
             }
 
             // Validation 3: Conflict Detection (If Guard is selected)
-            if (guardId.HasValue)
+            // If a relief guard or relief provider is assigned, the main guard is not actually working this shift.
+            // Therefore, we skip the conflict and unavailability checks for the main guard for this specific shift instance.
+            if (guardId.HasValue && !reliefGuardId.HasValue && string.IsNullOrEmpty(reliefProviderName))
             {
                 var conflict = await _context.RosterSchedules
                     .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
@@ -1276,6 +1278,31 @@ namespace CityWatch.Web.Pages.roster
                 _logger.LogError(ex, "Error during Roster Rollover");
                 return new JsonResult(new { success = false, message = "An error occurred during rollover." });
             }
+        }
+
+        public async Task<JsonResult> OnGetGuardDailySchedule(int guardId, DateTime date)
+        {
+            var schedules = await _context.RosterSchedules
+                .Include(x => x.ClientSite)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Where(x => (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
+                            !x.IsDeleted && x.Status != RosterShiftStatus.Cancelled &&
+                            x.ShiftStart.Date <= date.Date && x.ShiftEnd.Date >= date.Date)
+                .OrderBy(x => x.ShiftStart)
+                .Select(x => new
+                {
+                    projectName = x.ClientSite != null ? x.ClientSite.Name : "Unknown",
+                    date = x.ShiftStart.ToString("dd MMM yyyy"),
+                    startTime = x.ShiftStart.ToString("HH:mm"),
+                    endTime = x.ShiftEnd.ToString("HH:mm"),
+                    isRelief = x.ReliefGuardId == guardId,
+                    reliefName = x.ReliefGuardId != null ? x.ReliefGuard.Name : x.ReliefProviderName,
+                    mainGuardName = x.GuardId != null ? x.Guard.Name : x.ProviderName
+                })
+                .ToListAsync();
+
+            return new JsonResult(new { success = true, data = schedules });
         }
 
         public JsonResult OnGetSearchSites(string search)

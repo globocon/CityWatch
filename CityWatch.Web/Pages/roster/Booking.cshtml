@@ -454,6 +454,36 @@
         </div>
     </div>
 
+    <!-- Guard Schedule Modal -->
+    <div class="modal fade" id="guardScheduleModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fa fa-calendar-alt mr-2"></i>Guard Schedule: <span id="gsModalGuardName"></span></h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 text-center">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Role</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gsModalBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Shift Modal -->
     <div class="modal fade" id="addShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -486,7 +516,14 @@
                         <div class="tab-pane fade show active" id="modal-guard" role="tabpanel">
                             <div class="form-group">
                                 <label>Guard</label>
-                                <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+                                <div class="d-flex align-items-center">
+                                    <div style="flex-grow: 1; width: 0;">
+                                        <select id="modalGuardId" class="form-control" style="width: 100%"></select>
+                                    </div>
+                                    <button type="button" class="btn btn-info btn-sm ml-1 btn-view-guard-schedule" data-target-id="modalGuardId" title="View Guard Schedule" style="height: 38px; width: 38px; padding: 0; display: none;">
+                                        <i class="fa fa-calendar"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Provider (Subcontractor)</label>
@@ -502,7 +539,14 @@
                             </div>
                             <div class="form-group">
                                 <label>Relief Guard</label>
-                                <select id="modalReliefGuardId" class="form-control" style="width: 100%"></select>
+                                <div class="d-flex align-items-center">
+                                    <div style="flex-grow: 1; width: 0;">
+                                        <select id="modalReliefGuardId" class="form-control" style="width: 100%"></select>
+                                    </div>
+                                    <button type="button" class="btn btn-info btn-sm ml-1 btn-view-guard-schedule" data-target-id="modalReliefGuardId" title="View Guard Schedule" style="height: 38px; width: 38px; padding: 0; display: none;">
+                                        <i class="fa fa-calendar"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Relief Provider</label>
@@ -1334,12 +1378,21 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
-            var projectFinancialMode = false;
-            var projectFinancialRateType = 'guard'; // 'guard' or 'sell'
-            var projectSupplierMode = false;
-            var groupFinancialMode = false;
-            var groupFinancialRateType = 'guard'; // 'guard' or 'sell'
-            var groupSupplierMode = false;
+            var projectFinancialMode = sessionStorage.getItem('projectFinancialMode') === 'true';
+            var projectFinancialRateType = sessionStorage.getItem('projectFinancialRateType') || 'guard'; // 'guard' or 'sell'
+            var projectSupplierMode = sessionStorage.getItem('projectSupplierMode') === 'true';
+            var groupFinancialMode = sessionStorage.getItem('groupFinancialMode') === 'true';
+            var groupFinancialRateType = sessionStorage.getItem('groupFinancialRateType') || 'guard'; // 'guard' or 'sell'
+            var groupSupplierMode = sessionStorage.getItem('groupSupplierMode') === 'true';
+
+            // Sync UI toggles with session state
+            $('#projectFinancialMaster').prop('checked', projectFinancialMode);
+            $('#designToggle1').prop('checked', projectFinancialRateType === 'sell').prop('disabled', !projectFinancialMode);
+            $('#designToggle2').prop('checked', projectSupplierMode);
+            
+            $('#groupFinancialMaster').prop('checked', groupFinancialMode);
+            $('#binderToggle1').prop('checked', groupFinancialRateType === 'sell').prop('disabled', !groupFinancialMode);
+            $('#binderToggle2').prop('checked', groupSupplierMode);
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
 
@@ -1386,9 +1439,11 @@
             // Project Financial/Supplier mode toggles
             $('#projectFinancialMaster').on('change', function() {
                 projectFinancialMode = $(this).is(':checked');
+                sessionStorage.setItem('projectFinancialMode', projectFinancialMode);
                 if (!projectFinancialMode) {
                     $('#designToggle1').prop('checked', false);
                     projectFinancialRateType = 'guard';
+                    sessionStorage.setItem('projectFinancialRateType', projectFinancialRateType);
                 }
                 $('#designToggle1').prop('disabled', !projectFinancialMode);
                 loadRoster();
@@ -1396,11 +1451,13 @@
 
             $('#designToggle1').on('change', function() {
                 projectFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                sessionStorage.setItem('projectFinancialRateType', projectFinancialRateType);
                 loadRoster();
             });
 
             $('#designToggle2').on('change', function() {
                 projectSupplierMode = $(this).is(':checked');
+                sessionStorage.setItem('projectSupplierMode', projectSupplierMode);
                 loadRoster();
             });
 
@@ -1415,9 +1472,11 @@
             // Group Financial/Supplier mode toggles
             $('#groupFinancialMaster').on('change', function() {
                 groupFinancialMode = $(this).is(':checked');
+                sessionStorage.setItem('groupFinancialMode', groupFinancialMode);
                 if (!groupFinancialMode) {
                     $('#binderToggle1').prop('checked', false);
                     groupFinancialRateType = 'guard';
+                    sessionStorage.setItem('groupFinancialRateType', groupFinancialRateType);
                 }
                 $('#binderToggle1').prop('disabled', !groupFinancialMode);
                 loadBinderRoster();
@@ -1425,11 +1484,13 @@
 
             $('#binderToggle1').on('change', function() {
                 groupFinancialRateType = $(this).is(':checked') ? 'sell' : 'guard';
+                sessionStorage.setItem('groupFinancialRateType', groupFinancialRateType);
                 loadBinderRoster();
             });
 
             $('#binderToggle2').on('change', function() {
                 groupSupplierMode = $(this).is(':checked');
+                sessionStorage.setItem('groupSupplierMode', groupSupplierMode);
                 loadBinderRoster();
             });
 
@@ -3547,6 +3608,82 @@
                     }
                 });
             }
+
+            // Guard Schedule Viewer Logic
+            function toggleGuardScheduleButton(selectEl) {
+                var btn = $('.btn-view-guard-schedule[data-target-id="' + $(selectEl).attr('id') + '"]');
+                if ($(selectEl).val()) {
+                    btn.show();
+                } else {
+                    btn.hide();
+                }
+            }
+
+            $('#modalGuardId, #modalReliefGuardId').on('change', function() {
+                toggleGuardScheduleButton(this);
+            });
+
+            $('.btn-view-guard-schedule').on('click', function(e) {
+                e.preventDefault();
+                var targetId = $(this).data('target-id');
+                var selectEl = $('#' + targetId);
+                var guardId = selectEl.val();
+                
+                if (!guardId) return;
+
+                var guardData = selectEl.select2('data');
+                var guardName = (guardData && guardData.length > 0) ? guardData[0].text : 'Selected Guard';
+                
+                // Attempt to strip out trailing license/provider info if it exists in the text
+                if (guardName.indexOf(' - ') > -1) {
+                    guardName = guardName.split(' - ')[0];
+                } else if (guardName.indexOf(' (') > -1) {
+                     guardName = guardName.substring(0, guardName.indexOf(' ('));
+                }
+
+                // Get date currently being edited
+                var shiftDate = new Date(currentStartDate);
+                shiftDate.setDate(shiftDate.getDate() + parseInt($('#modalDayIndex').val() || 0));
+                var dateStr = shiftDate.toISOString().split('T')[0];
+
+                var btn = $(this);
+                var originalIcon = btn.html();
+                btn.html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                $.ajax({
+                    url: '/roster/Booking?handler=GuardDailySchedule',
+                    type: 'GET',
+                    data: { guardId: guardId, date: dateStr },
+                    success: function(res) {
+                        btn.html(originalIcon).prop('disabled', false);
+                        if(res.success) {
+                            $('#gsModalGuardName').text(guardName);
+                            var tbody = $('#gsModalBody');
+                            tbody.empty();
+                            if(res.data && res.data.length > 0) {
+                                $.each(res.data, function(i, s) {
+                                    var role = s.isRelief ? '<span class="badge" style="background:#6f42c1; color:white;">Relief</span>' : '<span class="badge badge-primary">Main</span>';
+                                    if (!s.isRelief && s.reliefName) {
+                                        role += '<div style="font-size: 0.75rem; margin-top: 2px;" class="text-muted"><i class="fa fa-level-up-alt fa-rotate-90 mr-1"></i>Relieved by:<br>' + s.reliefName + '</div>';
+                                    } else if (s.isRelief && s.mainGuardName) {
+                                        role += '<div style="font-size: 0.75rem; margin-top: 2px;" class="text-muted"><i class="fa fa-level-up-alt fa-rotate-90 mr-1"></i>Relieving:<br>' + s.mainGuardName + '</div>';
+                                    }
+                                    tbody.append('<tr><td class="text-left">' + s.projectName + '</td><td>' + role + '</td><td>' + s.date + '</td><td>' + s.startTime + ' - ' + s.endTime + '</td></tr>');
+                                });
+                            } else {
+                                tbody.append('<tr><td colspan="4" class="text-muted text-center py-3">No shifts scheduled for this day</td></tr>');
+                            }
+                            $('#guardScheduleModal').modal('show');
+                        } else {
+                            alert('Failed to load schedule.');
+                        }
+                    },
+                    error: function() {
+                        btn.html(originalIcon).prop('disabled', false);
+                        alert('Error communicating with server.');
+                    }
+                });
+            });
 
             // SignalR Connection for Real-time Roster Updates
             if (typeof signalR !== 'undefined') {
