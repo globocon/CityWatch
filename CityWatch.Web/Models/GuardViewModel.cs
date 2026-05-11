@@ -130,5 +130,6 @@ namespace CityWatch.Web.Models
         public bool IsAdminRosterAccess { get { return _guard.IsAdminRosterAccess; } }
         public bool IsAdminRosterBaseAccess { get { return _guard.IsAdminRosterBaseAccess; } }
         public bool IsAdminRosterGSAccess { get { return _guard.IsAdminRosterGSAccess; } }
+        public bool IsROEditorAccess { get { return _guard.IsROEditorAccess; } }
     }
 }

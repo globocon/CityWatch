@@ -147,5 +147,6 @@ namespace CityWatch.Data.Models
         public bool IsAdminRosterAccess { get; set; }
         public bool IsAdminRosterBaseAccess { get; set; }
         public bool IsAdminRosterGSAccess { get; set; }
+        public bool IsROEditorAccess { get; set; }
     }
 }

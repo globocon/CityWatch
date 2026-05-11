@@ -4979,6 +4979,9 @@ $(function () {
         if (data.isAdminRosterGSAccess) {
             selectedValues.push(20);
         }
+        if (data.isROEditorAccess) {
+            selectedValues.push(21);
+        }
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
@@ -9954,7 +9957,7 @@ $(function () {
                 $('#mdlAuthGuardForRosterSelector').modal('hide');
                 // Open the roster modal for the selected site
                 if (typeof openGuardRosterPortal === 'function') {
-                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId);
+                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId, result.isROEditor);
                 } else {
                     alert('Roster component not loaded correctly.');
                 }

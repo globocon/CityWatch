@@ -201,6 +201,17 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     
+    .roster-delete-icon {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .roster-delete-icon:hover {
+        transform: scale(1.3) !important;
+        background: #fff !important;
+        color: #ff0000 !important;
+    }
+    
     .guard-shift-actions {
         margin-top: 8px;
         padding-top: 6px;
@@ -359,6 +370,9 @@
                     </div>
                 </div>
 
+                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
+                        <i class="fa fa-pencil-square-o mr-2"></i>Edit Roster
+                    </button>
                     <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
                         <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
                     </button>
@@ -519,11 +533,21 @@
     var adminRateType = 'guard'; // 'guard' or 'sell'
     var currentRosterStatus = 'Live';
     var lastGuardRosterData = null;
+    var isROEditor = false;
+    var isEditMode = false;
     
     // Public Holiday Orange Sun SVG
     const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
+    const addIconBtn = `<div class="text-center mt-2"><button class="btn btn-sm btn-outline-primary rounded-circle p-0" style="width: 24px; height: 24px; line-height: 22px;" onclick="openRosterShiftModal(this)"><i class="fa fa-plus"></i></button></div>`;
 
     $(document).ready(function() {
+        $('#btnToggleRosterEditMode').on('click', function() {
+            isEditMode = !isEditMode;
+            $(this).toggleClass('btn-dark btn-primary');
+            $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
+            $(this).html(isEditMode ? '<i class="fa fa-check mr-2"></i>Exit Edit Mode' : '<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+            loadGuardRoster();
+        });
         $('#btnPrevWeekGuard').on('click', function() {
             var parts = guardRosterStartDate.split('-');
             var d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -623,10 +647,22 @@
         });
     });
 
-    function openGuardRosterPortal(siteId, _isAdmin, guardId) {
+    function openGuardRosterPortal(siteId, _isAdmin, guardId, _isROEditor) {
         currentGuardSiteId = siteId;
-        isAdminRoster = _isAdmin === true;
+        isAdminRoster = _isAdmin;
         loggedGuardId = guardId ? parseInt(guardId) : null;
+        isROEditor = _isROEditor || _isAdmin; // Admins are editors by default
+        isEditMode = false; // Always start with edit mode off
+        
+        // Reset Edit Button
+        $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
+        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+
+        if (isROEditor) {
+            $('#btnToggleRosterEditMode').removeClass('d-none');
+        } else {
+            $('#btnToggleRosterEditMode').addClass('d-none');
+        }
         
         if (isAdminRoster) {
             $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
@@ -948,6 +984,11 @@
                         
                         rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '" title="' + phReason + '">';
                         
+                        if (isEditMode) {
+                            var dateStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
+                            rowHtml += '<div class="text-center mb-1"><button class="btn btn-xs btn-outline-primary rounded-circle p-0" style="width: 20px; height: 20px; line-height: 18px;" onclick="openAddShiftModal(\'' + dateStr + '\', ' + row.siteId + ')"><i class="fa fa-plus"></i></button></div>';
+                        }
+                        
                         dayShifts.forEach(function (s) {
                             var guardId = s.reliefGuardId || s.guardId;
                             var guardName = s.reliefGuardName || s.guardName;
@@ -988,7 +1029,8 @@
 
                             rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
                                 'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '">' +
-                                (belongsToLoggedGuard ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
+                                (isEditMode ? '<i class="fa fa-times-circle text-danger roster-delete-icon" style="position: absolute; top: -5px; right: -5px; font-size: 16px; background: white; border-radius: 50%;" onclick="deleteGuardRosterShift(event, ' + s.id + ')"></i>' : '') +
+                                (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
                                     (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
@@ -1090,6 +1132,30 @@
 
     function formatGuardDate(date) {
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function openAddShiftModal(date, siteId) {
+        // Redirect to Booking page for this site and date
+        window.location.href = '/roster/Booking?startDate=' + date + '&groupId=' + siteId;
+    }
+    
+    function deleteGuardRosterShift(event, shiftId) {
+        if (event) event.stopPropagation();
+        if (confirm('Are you sure you want to delete this shift?')) {
+            $.ajax({
+                url: '/roster/GuardRosterAction?handler=DeleteShift',
+                type: 'POST',
+                data: { id: shiftId },
+                headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+                success: function(res) {
+                    if (res.success) {
+                        loadGuardRoster();
+                    } else {
+                        alert('Error: ' + res.message);
+                    }
+                }
+            });
+        }
     }
 
     // Click-to-cycle status logic for Guard Roster

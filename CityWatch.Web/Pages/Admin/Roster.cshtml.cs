@@ -230,12 +230,16 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             if (guard.IsActive)
                             {
-                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess)
+                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess || guard.IsROEditorAccess)
                                 {
                                     if (guard.Pin == pin.Trim())
                                     {
                                         Issuccess = true;
-                                        string role = guard.IsAdminRosterAccess ? "GSS" : (guard.IsAdminRosterGSAccess ? "GS" : "Base");
+                                        string role = "ROEditor";
+                                        if (guard.IsAdminRosterAccess) role = "GSS";
+                                        else if (guard.IsAdminRosterGSAccess) role = "GS";
+                                        else if (guard.IsAdminRosterBaseAccess) role = "Base";
+                                        
                                         HttpContext.Session.SetString("BookingAccessRole", role);
                                     }
                                     else
@@ -346,7 +350,15 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
-            return new JsonResult(new { success = isSuccess || isSystemAdmin, message = message, guardId = guardId, isAdminRoster = isSuccess && guard != null && guard.IsAdminRosterAccess || isSystemAdmin });
+            bool isRosterAdmin = isSuccess && guard != null && (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess);
+            
+            return new JsonResult(new { 
+                success = isSuccess || isSystemAdmin, 
+                message = message, 
+                guardId = guardId, 
+                isAdminRoster = isRosterAdmin || isSystemAdmin,
+                isROEditor = isSystemAdmin || isRosterAdmin || (isSuccess && guard != null && guard.IsROEditorAccess)
+            });
         }
     }
 }

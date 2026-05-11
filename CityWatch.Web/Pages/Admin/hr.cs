@@ -464,6 +464,10 @@ namespace CityWatch.Web.Pages.Admin
                         guard.IsAdminRosterAccess = false;
                         guard.IsAdminRosterBaseAccess = false;
                     }
+                    else if (val == 21)
+                    {
+                        guard.IsROEditorAccess = true;
+                    }
 
                 }
             }
