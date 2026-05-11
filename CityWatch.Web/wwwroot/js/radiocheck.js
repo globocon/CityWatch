@@ -1770,7 +1770,7 @@ $('#btnRosterDetails').on('click', function () {
     if (fromLogbook && guardId) {
         // Skip PIN verification in logbook context
         $.ajax({
-            url: '/Admin/Roster?handler=GetGuardPermissions',
+            url: '/Admin/GuardSettings?handler=GetGuardPermissions',
             type: 'GET',
             data: { guardId: guardId }
         }).done(function (result) {

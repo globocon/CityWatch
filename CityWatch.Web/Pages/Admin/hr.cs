@@ -2154,6 +2154,20 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage, isROEditor });
         }
 
+        public JsonResult OnGetGetGuardPermissions(int guardId)
+        {
+            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId)?.FirstOrDefault();
+            bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
+            bool isRosterAdmin = guard != null && (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess);
+            bool isROEditor = isSystemAdmin || isRosterAdmin || (guard != null && guard.IsROEditorAccess);
+
+            return new JsonResult(new
+            {
+                isAdminRoster = isRosterAdmin || isSystemAdmin,
+                isROEditor = isROEditor
+            });
+        }
+
 
 
 
