@@ -558,6 +558,62 @@
     </div>
 </div>
 
+<!-- Modal for Quick Edit (RO + Editor) -->
+<div class="modal fade" id="guardEditShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white p-3">
+                <h6 class="modal-title font-weight-bold"><i class="fa fa-pencil mr-2"></i>Edit Shift Details</h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="geModalShiftId" />
+                <input type="hidden" id="geModalGroupId" />
+                <input type="hidden" id="geModalSiteId" />
+
+                <div class="form-group mb-3">
+                    <label class="small font-weight-bold text-muted mb-1 text-uppercase">Guard / Provider</label>
+                    <input type="text" id="geModalGuardName" class="form-control bg-light" readonly />
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Shift Start</label>
+                            <input type="time" id="geModalShiftStart" class="form-control bg-light" readonly />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Shift End</label>
+                            <input type="time" id="geModalShiftEnd" class="form-control bg-light" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="small font-weight-bold text-muted mb-1 text-uppercase">Payment Profile</label>
+                    <select id="geModalPayRateGroupId" class="form-control" style="width: 100%" disabled></select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="small font-weight-bold text-muted mb-1 text-uppercase">Rate Profile</label>
+                    <select id="geModalPositionId" class="form-control" style="width: 100%"></select>
+                </div>
+
+                <div class="form-group mb-0">
+                        <input type="text" id="geModalPayRate" class="form-control font-weight-bold" style="color: transparent;" readonly />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light p-2">
+                <button type="button" class="btn btn-secondary btn-sm font-weight-bold" data-dismiss="modal">CLOSE</button>
+                <button type="button" class="btn btn-primary btn-sm px-4 font-weight-bold" id="btnSaveGuardEditShift">SAVE CHANGES</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     var guardRosterStartDate = null;
@@ -600,6 +656,37 @@
             guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             loadGuardRoster();
             if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        // Initialize Rate Profile Search for Quick Edit
+        $('#geModalPositionId').select2({
+            placeholder: 'Select Rate Profile',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardEditShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { 
+                    return { 
+                        search: params.term,
+                        groupId: $('#geModalGroupId').val()
+                    }; 
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            if (data && data.guardPayRate !== undefined) {
+                $('#geModalPayRate').val(data.guardPayRate);
+            }
+        });
+
+        $('#btnSaveGuardEditShift').on('click', function() {
+            saveGuardRosterShift();
         });
 
         $('#btnDownloadGuardPdf').on('click', function() {
@@ -1060,9 +1147,12 @@
                             var isFutureOrToday = shiftDate >= today;
 
                             rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
-                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '">' +
+                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
+                                'data-guard-name="' + s.guardName + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
+                                'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
+                                'data-buy-rate="' + s.buyRate + '">' +
                                 (isEditMode ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
-                                (isEditMode ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
+                                (isEditMode ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
                                 (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
@@ -1172,9 +1262,105 @@
         window.location.href = '/roster/Booking?startDate=' + date + '&groupId=' + siteId;
     }
 
-    function openEditShiftModal(shiftId, siteId) {
-        // Redirect to Booking page with specific shift selected for editing
-        window.location.href = '/roster/Booking?editShiftId=' + shiftId + '&groupId=' + siteId;
+    function openEditShiftModal(shiftId, groupId, siteId) {
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        
+        $('#geModalShiftId').val(shiftId);
+        $('#geModalGroupId').val(groupId);
+        $('#geModalSiteId').val(siteId);
+        
+        $('#geModalGuardName').val(card.data('guard-name'));
+        $('#geModalShiftStart').val(card.data('shift-start'));
+        $('#geModalShiftEnd').val(card.data('shift-end'));
+        
+        var pgId = card.data('payrate-group-id');
+        var prId = card.data('payrate-id');
+        
+        // Load Payment Profile (Read-only)
+        if (pgId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRateGroups',
+                dataType: 'json',
+                data: { search: '', siteId: siteId },
+                success: function(data) {
+                    var group = data.results.find(function(g) { return g.id == pgId; });
+                    if (group) {
+                        $('#geModalPayRateGroupId').empty().append(new Option(group.text, group.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPayRateGroupId').empty().trigger('change');
+        }
+        
+        // Load Rate Profile
+        if (prId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                data: { search: '', id: prId },
+                success: function(data) {
+                    var rate = data.results.find(function(r) { return r.id == prId; });
+                    if (rate) {
+                        $('#geModalPositionId').empty().append(new Option(rate.text, rate.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPositionId').empty().trigger('change');
+        }
+        
+        // Load Pay Rate from card data (but keep transparent)
+        $('#geModalPayRate').val(card.data('buy-rate'));
+        
+        $('#guardEditShiftModal').modal('show');
+    }
+
+    function saveGuardRosterShift() {
+        var shiftId = $('#geModalShiftId').val();
+        var groupId = $('#geModalGroupId').val();
+        var siteId = $('#geModalSiteId').val();
+        var payRateId = $('#geModalPositionId').val();
+        var payRate = $('#geModalPayRate').val();
+        
+        if (!payRateId) { alert('Please select a Rate Profile.'); return; }
+        if (!payRate || isNaN(payRate)) { alert('Please enter a valid Pay Rate.'); return; }
+        
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        
+        // Prepare data matching OnPostAddShift in Booking.cshtml.cs
+        var postData = {
+            groupId: groupId,
+            siteId: siteId,
+            shiftId: shiftId,
+            payRateId: payRateId,
+            payRate: payRate, // This will be used in the updated handler if needed, or we just rely on standard fields
+            // Re-pass existing values to avoid overwriting with nulls
+            start: card.data('shift-start'),
+            end: card.data('shift-end'),
+            guardId: card.data('guard-id'),
+            shiftType: card.data('type'),
+            status: card.data('status'),
+            reliefGuardId: card.data('relief-guard-id')
+        };
+        
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData,
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            success: function(res) {
+                if (res.success) {
+                    $('#guardEditShiftModal').modal('hide');
+                    loadGuardRoster(); // Refresh the grid
+                } else {
+                    alert('Failed to save: ' + res.message);
+                }
+            },
+            error: function() {
+                alert('An error occurred while saving.');
+            }
+        });
     }
     
     function deleteGuardRosterShift(event, shiftId) {

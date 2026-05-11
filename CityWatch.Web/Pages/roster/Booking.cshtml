@@ -86,14 +86,17 @@
 <div class="container-fluid">
     <ul class="nav nav-tabs custom-roster-tabs mb-2" id="rosterTabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="projects-tab" data-toggle="tab" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
+            <a class="nav-link @(Model.ActiveTab == "projects" ? "active" : "")" id="projects-tab" data-toggle="tab" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="groups-tab" data-toggle="tab" href="#groups" role="tab" aria-controls="groups" aria-selected="false">Groups</a>
+            <a class="nav-link @(Model.ActiveTab == "groups" ? "active" : "")" id="groups-tab" data-toggle="tab" href="#groups" role="tab" aria-controls="groups" aria-selected="false">Groups</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
-        </li>
+        @if (Model.RosterAccessRole != "ROEditor")
+        {
+            <li class="nav-item">
+                <a class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
+            </li>
+        }
     </ul>
 
     <div class="tab-content" id="rosterTabContent">
@@ -145,11 +148,17 @@
                             </div>
                         </div>
                         
-                        <!-- Action Buttons -->
-                        <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
-                        <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                        @if (Model.RosterAccessRole != "ROEditor")
+                        {
+                            <!-- Action Buttons -->
+                            <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteGroup" title="Delete Project"><i class="fa fa-trash"></i></button>
+                        }
                         <button class="btn btn-outline-success btn-sm ml-1" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o"></i></button>
-                        <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
+                        @if (Model.RosterAccessRole != "ROEditor")
+                        {
+                            <button class="btn btn-outline-info btn-sm ml-1" id="btnShowRollover" title="Roster Rollover"><i class="fa fa-copy"></i></button>
+                        }
                     </div>
                 </div>
 
@@ -164,15 +173,18 @@
 
                 <!-- Add Site Selection -->
                 <div class="col-auto ml-4">
-                    <div class="d-flex align-items-center">
-                        <div class="position-relative" style="width: 280px;">
-                            <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
-                            <select id="search_site" class="form-control form-control-sm pl-4"></select>
+                    @if (Model.RosterAccessRole != "ROEditor")
+                    {
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative" style="width: 280px;">
+                                <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px; z-index: 5;"></i>
+                                <select id="search_site" class="form-control form-control-sm pl-4"></select>
+                            </div>
+                            <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
+                                <i class="fa fa-plus"></i> Add Site
+                            </button>
                         </div>
-                        <button class="btn btn-success btn-sm ml-2 px-3" id="btnAddSite" title="Add Site" style="white-space: nowrap;">
-                            <i class="fa fa-plus"></i> Add Site
-                        </button>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
@@ -2084,6 +2096,18 @@
                                 $(this).text(val.toFixed(2).replace(/\.00$/, '') + 'h');
                             }
                         });
+                        
+                        // Check if we need to auto-open a shift for editing (e.g. from Guard Portal)
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var editShiftId = urlParams.get('editShiftId');
+                        if (editShiftId) {
+                            setTimeout(function() {
+                                editShift(editShiftId);
+                                // Clear parameter so it doesn't reopen on refresh
+                                var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?groupId=' + currentGroupId;
+                                window.history.replaceState({ path: newUrl }, '', newUrl);
+                            }, 500);
+                        }
                     }
                 });
             }
@@ -2520,6 +2544,7 @@
                                         guardId: guardId,
                                         providerName: providerName,
                                         payRateId: payRateId,
+                                        payRate: $('#modalPayRate').val(),
                                         shiftId: '', // Always new shift
                                         callsignId: callsignId,
                                         reliefGuardId: reliefGuardId,
@@ -2569,6 +2594,7 @@
                             guardId: guardId,
                             providerName: providerName,
                             payRateId: payRateId,
+                            payRate: $('#modalPayRate').val(),
                             shiftId: '',
                             callsignId: callsignId,
                             reliefGuardId: reliefGuardId,
@@ -2625,6 +2651,7 @@
                         guardId: guardId,
                         providerName: providerName,
                         payRateId: payRateId,
+                        payRate: $('#modalPayRate').val(),
                         shiftId: shiftId,
                         callsignId: callsignId,
                         reliefGuardId: reliefGuardId,

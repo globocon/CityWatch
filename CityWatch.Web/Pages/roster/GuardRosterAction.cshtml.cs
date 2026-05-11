@@ -86,6 +86,7 @@ namespace CityWatch.Web.Pages.roster
                         .Select(s => new
                         {
                             s.Id,
+                            groupId = s.RosterGroupId,
                             shiftStart = s.ShiftStart.ToString("HH:mm"),
                             shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                             guardName = s.Guard != null ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
@@ -102,7 +103,9 @@ namespace CityWatch.Web.Pages.roster
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                             sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
-                            buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                            payRateId = s.PayRateId,
+                            payRateGroupId = s.PayRate != null ? s.PayRate.PayRateGroupId : (int?)null
                         })
                         .ToList<object>();
                     days.Add(dayShifts);
@@ -110,6 +113,7 @@ namespace CityWatch.Web.Pages.roster
 
                 results.Add(new
                 {
+                    siteId = site.Id,
                     siteName = site.Name,
                     clientTypeName = site.ClientType?.Name ?? "Security Service",
                     days = days
