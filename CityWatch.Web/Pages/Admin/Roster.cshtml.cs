@@ -8,6 +8,7 @@ using System;
 using CityWatch.Web.Services;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -19,6 +20,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
         public string ClientNameTitle { get; set; }
+        public bool CanDirectAccessBooking { get; set; }
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService)
@@ -66,7 +68,40 @@ namespace CityWatch.Web.Pages.Admin
 
                     ClientNameTitle = "Citywatch Security";
                 }
+
+            // Check if user has direct access to booking
+            if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser || 
+                AuthUserHelper.IsAdminAuditor || AuthUserHelper.IsAdminThirdParty || AuthUserHelper.IsAdminInvestigator)
+            {
+                CanDirectAccessBooking = true;
             }
+            else
+            {
+                var role = HttpContext.Session.GetString("BookingAccessRole");
+                if (role == "GSS")
+                {
+                    CanDirectAccessBooking = true;
+                }
+                else
+                {
+                    // Check if they are logged in as a guard with G$S access
+                    var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+                    if (guardLoginId.HasValue)
+                    {
+                        var guardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId.Value);
+                        if (guardLogin != null)
+                        {
+                            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardLogin.GuardId).FirstOrDefault();
+                            if (guard != null && guard.IsActive && guard.IsAdminRosterAccess)
+                            {
+                                CanDirectAccessBooking = true;
+                                HttpContext.Session.SetString("BookingAccessRole", "GSS");
+                            }
+                        }
+                    }
+                }
+            }
+        }
             }
         public JsonResult OnGetGuardID(string LicenseNo)
         {
@@ -186,6 +221,7 @@ namespace CityWatch.Web.Pages.Admin
                     if (isSystemAdmin && guardLicNo == "ADMIN" && pin == "ADMIN")
                     {
                         Issuccess = true;
+                        HttpContext.Session.SetString("BookingAccessRole", "GSS");
                     }
                     else if (!string.IsNullOrEmpty(guardLicNo) && !string.IsNullOrEmpty(pin))
                     {
@@ -194,11 +230,13 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             if (guard.IsActive)
                             {
-                                if (guard.IsAdminRosterAccess)
+                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess)
                                 {
                                     if (guard.Pin == pin.Trim())
                                     {
                                         Issuccess = true;
+                                        string role = guard.IsAdminRosterAccess ? "GSS" : (guard.IsAdminRosterGSAccess ? "GS" : "Base");
+                                        HttpContext.Session.SetString("BookingAccessRole", role);
                                     }
                                     else
                                     {

@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Enums;
@@ -449,6 +449,14 @@ namespace CityWatch.Web.Pages.Admin
                     else if (val == 18)
                     {
                         guard.IsAdminRosterAccess = true;
+                    }
+                    else if (val == 19)
+                    {
+                        guard.IsAdminRosterBaseAccess = true;
+                    }
+                    else if (val == 20)
+                    {
+                        guard.IsAdminRosterGSAccess = true;
                     }
 
                 }

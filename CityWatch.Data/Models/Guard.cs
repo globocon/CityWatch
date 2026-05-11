@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Providers;
+using CityWatch.Data.Providers;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -145,5 +145,7 @@ namespace CityWatch.Data.Models
 
         public bool IsPCARAccess { get; set; }
         public bool IsAdminRosterAccess { get; set; }
+        public bool IsAdminRosterBaseAccess { get; set; }
+        public bool IsAdminRosterGSAccess { get; set; }
     }
 }

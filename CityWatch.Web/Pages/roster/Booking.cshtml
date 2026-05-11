@@ -119,27 +119,37 @@
                 <div class="col-auto mr-4">
                     <div id="project_actions" style="display:none; white-space: nowrap;">
                         <!-- Design Toggles -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                            <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
-                            <input type="checkbox" id="projectFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
-                            
-                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                            <div class="custom-control custom-switch mr-2">
-                                <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
-                                <label class="custom-control-label" for="designToggle1"></label>
+                        @if (Model.RosterAccessRole != "Base")
+                        {
+                            <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                                <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                <input type="checkbox" id="projectFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                                
+                                @if (Model.RosterAccessRole == "GSS")
+                                {
+                                    <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                                    <div class="custom-control custom-switch mr-2">
+                                        <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
+                                        <label class="custom-control-label" for="designToggle1"></label>
+                                    </div>
+                                    <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                                }
                             </div>
-                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
-                        </div>
-                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
-                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
-                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
-                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                        }
+
+                        @if (Model.RosterAccessRole == "GSS")
+                        {
+                            <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                                <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                    <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                    <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                                </div>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="designToggle2">
+                                    <label class="custom-control-label" for="designToggle2"></label>
+                                </div>
                             </div>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="designToggle2">
-                                <label class="custom-control-label" for="designToggle2"></label>
-                            </div>
-                        </div>
+                        }
                         
                         <!-- Action Buttons -->
                         <button class="btn btn-outline-warning btn-sm" id="btnEditGroup" title="Edit Project"><i class="fa fa-pencil"></i></button>
@@ -256,27 +266,36 @@
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
-                              <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                                  <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
-                                  <input type="checkbox" id="groupFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
-                                  
-                                  <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                                  <div class="custom-control custom-switch mr-2">
-                                      <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
-                                      <label class="custom-control-label" for="binderToggle1"></label>
+                              @if (Model.RosterAccessRole != "Base")
+                              {
+                                  <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                                      <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                                      <input type="checkbox" id="groupFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                                      
+                                      @if (Model.RosterAccessRole == "GSS")
+                                      {
+                                          <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                                          <div class="custom-control custom-switch mr-2">
+                                              <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
+                                              <label class="custom-control-label" for="binderToggle1"></label>
+                                          </div>
+                                          <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                                      }
                                   </div>
-                                  <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
-                              </div>
-                             <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
-                                 <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
-                                     <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
-                                     <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                              }
+                             @if (Model.RosterAccessRole == "GSS")
+                             {
+                                 <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                                     <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                         <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                         <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                                     </div>
+                                     <div class="custom-control custom-switch">
+                                         <input type="checkbox" class="custom-control-input" id="binderToggle2">
+                                         <label class="custom-control-label" for="binderToggle2"></label>
+                                     </div>
                                  </div>
-                                 <div class="custom-control custom-switch">
-                                     <input type="checkbox" class="custom-control-input" id="binderToggle2">
-                                     <label class="custom-control-label" for="binderToggle2"></label>
-                                 </div>
-                             </div>
+                             }
 
                              <button class="btn btn-outline-warning btn-sm" id="btnEditBinder" title="Edit Group Name"><i class="fa fa-pencil"></i></button>
                              <button class="btn btn-outline-danger btn-sm ml-1" id="btnDeleteBinder" title="Delete Group"><i class="fa fa-trash"></i></button>
@@ -626,7 +645,14 @@
                     <div class="form-group row">
                         <div class="col-6">
                             <label>Payment Profile</label>
-                            <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
+                            @if (Model.RosterAccessRole == "Base")
+                            {
+                                <select id="modalPayRateGroupId" class="form-control" style="width: 100%" disabled></select>
+                            }
+                            else
+                            {
+                                <select id="modalPayRateGroupId" class="form-control" style="width: 100%"></select>
+                            }
                         </div>
                         <div class="col-6">
                             <label>Type</label>
@@ -647,15 +673,18 @@
                                 <option value="">Select Group First</option>
                             </select>
                         </div>
-                         <div class="col-6">
-                            <label>Pay Rate</label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">$</span>
+                        @if (Model.RosterAccessRole != "Base")
+                        {
+                            <div class="col-6">
+                                <label>Pay Rate</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">$</span>
+                                    </div>
+                                    <input type="text" id="modalPayRate" class="form-control" readonly />
                                 </div>
-                                <input type="text" id="modalPayRate" class="form-control" readonly />
                             </div>
-                        </div>
+                        }
                     </div>
 
                 </div>
@@ -1378,12 +1407,34 @@
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
             var activeTab = '@Model.ActiveTab';
             var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+            var rosterAccessRole = '@Model.RosterAccessRole';
             var projectFinancialMode = sessionStorage.getItem('projectFinancialMode') === 'true';
             var projectFinancialRateType = sessionStorage.getItem('projectFinancialRateType') || 'guard'; // 'guard' or 'sell'
             var projectSupplierMode = sessionStorage.getItem('projectSupplierMode') === 'true';
+
+            // Apply Role Restrictions
+            if (rosterAccessRole === 'Base') {
+                projectFinancialMode = false;
+                projectFinancialRateType = 'guard';
+                projectSupplierMode = false;
+            } else if (rosterAccessRole === 'GS') {
+                projectFinancialRateType = 'guard';
+                projectSupplierMode = false;
+            }
+
             var groupFinancialMode = sessionStorage.getItem('groupFinancialMode') === 'true';
             var groupFinancialRateType = sessionStorage.getItem('groupFinancialRateType') || 'guard'; // 'guard' or 'sell'
             var groupSupplierMode = sessionStorage.getItem('groupSupplierMode') === 'true';
+
+            // Apply Role Restrictions for Groups
+            if (rosterAccessRole === 'Base') {
+                groupFinancialMode = false;
+                groupFinancialRateType = 'guard';
+                groupSupplierMode = false;
+            } else if (rosterAccessRole === 'GS') {
+                groupFinancialRateType = 'guard';
+                groupSupplierMode = false;
+            }
 
             // Sync UI toggles with session state
             $('#projectFinancialMaster').prop('checked', projectFinancialMode);

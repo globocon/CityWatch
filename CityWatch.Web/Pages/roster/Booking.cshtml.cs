@@ -57,6 +57,7 @@ namespace CityWatch.Web.Pages.roster
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
         public string ActiveTab { get; set; }
+        public string RosterAccessRole { get; set; }
         public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
 
         public class PublicHolidayDayInfo
@@ -90,6 +91,8 @@ namespace CityWatch.Web.Pages.roster
             SelectedGroupId = groupId;
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
+
+            RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)

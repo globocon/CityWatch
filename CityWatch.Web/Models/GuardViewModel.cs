@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -128,5 +128,7 @@ namespace CityWatch.Web.Models
 
         public int GuardRcSiteAccessCount { get; set; }
         public bool IsAdminRosterAccess { get { return _guard.IsAdminRosterAccess; } }
+        public bool IsAdminRosterBaseAccess { get { return _guard.IsAdminRosterBaseAccess; } }
+        public bool IsAdminRosterGSAccess { get { return _guard.IsAdminRosterGSAccess; } }
     }
 }
