@@ -422,7 +422,7 @@
                         <div class="col-md-12 text-right pt-3">
                              @* This is required to add Wand Tags to Smart Wands Gijgo grid. *@
                             <select id="smartwandPatrolCarGroupsDDL" hidden>
-                                <option value="0">Select</option>
+                                <option value="-1">&nbsp;</option>
                                 @foreach (var patrolcarGroup in ViewDataService.GetAllPatrolCars())
                                 {
                                     <option value="@patrolcarGroup.Value">@patrolcarGroup.Text</option>
